@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Review Business — Businesses</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}
+.app{display:flex;min-height:100vh}
+.sidebar{width:244px;background:#111827;color:#fff;padding:22px 14px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px}
+.logo{width:38px;height:38px;border-radius:10px;background:#3768e8;display:grid;place-items:center;font-weight:800}
+.brand strong{display:block;font-size:16px}.brand small{color:#8992a5}
+.section{font-size:10px;color:#6f788a;letter-spacing:1.4px;margin:20px 10px 8px}
+.nav{display:block;color:#cbd2df;text-decoration:none;padding:11px 12px;border-radius:9px;margin:3px 0;font-size:14px}
+.nav.active,.nav:hover{background:#202a3c;color:#fff}
+.main{flex:1;min-width:0}
+.top{height:72px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+.top h1{font-size:21px;margin:0}.top p{margin:4px 0 0;color:#7a8496;font-size:13px}
+.add{border:0;background:#3768e8;color:#fff;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer}
+.content{padding:26px;max-width:1500px;margin:auto}
+.toolbar{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+.search{flex:1;min-width:230px;position:relative}.search input{width:100%;padding:11px 13px 11px 36px;border:1px solid #dfe4ec;border-radius:8px;outline:none}.search span{position:absolute;left:12px;top:10px;color:#7d8798}
+select{padding:10px 12px;border:1px solid #dfe4ec;border-radius:8px;background:#fff;color:#394355}
+.count{margin-left:auto;color:#778196;font-size:13px}
+.table-wrap{background:#fff;border:1px solid #e4e8ef;border-radius:12px;overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:1000px}
+th,td{text-align:left;padding:14px 16px;border-bottom:1px solid #edf0f4;font-size:13px;white-space:nowrap}
+th{background:#fafbfc;color:#687286;font-size:11px;text-transform:uppercase;letter-spacing:.6px}
+tr:last-child td{border-bottom:0}
+.biz{display:flex;align-items:center;gap:10px}.avatar{width:36px;height:36px;border-radius:9px;background:#eef3ff;color:#3768e8;display:grid;place-items:center;font-weight:800}.biz strong{display:block}.biz small{color:#8992a3}
+.badge{display:inline-flex;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}.active{background:#eaf8ed;color:#27843b}.expired{background:#fff0ef;color:#c43b34}.suspended{background:#eef0f4;color:#667085}.soon{background:#fff6df;color:#a76a00}
+.actions button{border:0;background:none;color:#3768e8;font-weight:700;cursor:pointer;margin-right:10px;padding:3px}.actions .danger{color:#c43b34}
+.empty{padding:50px;text-align:center;color:#7d8798}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.overlay.show{display:flex}
+.modal{width:min(680px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:15px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modal h2{margin:0;font-size:20px}.close{border:0;background:#f0f2f6;border-radius:8px;width:34px;height:34px;cursor:pointer}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field.full{grid-column:1/-1}.field label{display:block;font-size:12px;font-weight:700;color:#596477;margin-bottom:6px}.field input,.field select{width:100%;padding:11px;border:1px solid #dfe4ec;border-radius:8px;outline:none}
+.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.secondary{border:1px solid #dfe4ec;background:#fff;padding:10px 15px;border-radius:8px;cursor:pointer}.primary{border:0;background:#3768e8;color:#fff;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer}
+.toast{position:fixed;right:22px;bottom:22px;background:#172033;color:#fff;padding:12px 16px;border-radius:9px;display:none;z-index:20;font-size:13px}.toast.show{display:block}
+@media(max-width:800px){.sidebar{display:none}.content{padding:16px}.top{padding:0 16px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.count{width:100%;margin-left:0}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+  <div class="brand"><div class="logo">QR</div><div><strong>QR Review Business</strong><small>Admin Panel · V1</small></div></div>
+  <div class="section">MAIN</div>
+  <a class="nav" href="index.html">⌂ &nbsp; Dashboard</a>
+  <a class="nav active" href="businesses.html">▣ &nbsp; Businesses <span id="navCount" style="float:right">128</span></a>
+  <a class="nav" href="#">▤ &nbsp; QR Codes</a>
+  <a class="nav" href="#">₹ &nbsp; Payments</a>
+  <a class="nav" href="#">◔ &nbsp; Renewals</a>
+  <a class="nav" href="#">▥ &nbsp; Analytics</a>
+  <a class="nav" href="#">♧ &nbsp; Notifications</a>
+  <div class="section">SYSTEM</div>
+  <a class="nav" href="#">◉ &nbsp; Admin Users</a>
+  <a class="nav" href="#">≡ &nbsp; Activity Logs</a>
+  <a class="nav" href="#">⚙ &nbsp; Settings</a>
+</aside>
+
+<main class="main">
+<header class="top">
+  <div><h1>Businesses</h1><p>Manage businesses, subscriptions, QR activity and renewals.</p></div>
+  <button class="add" onclick="openModal()">+ Add Business</button>
+</header>
+
+<section class="content">
+  <div class="toolbar">
+    <div class="search"><span>⌕</span><input id="search" placeholder="Search business, owner, phone or ID..." oninput="render()"></div>
+    <select id="status" onchange="render()"><option value="">All Status</option><option>Active</option><option>Expiring Soon</option><option>Expired</option><option>Suspended</option><option>Payment Pending</option></select>
+    <select id="type" onchange="render()"><option value="">All Types</option><option>Salon</option><option>Medical</option><option>Garage</option><option>Library</option><option>Restaurant</option><option>Other</option></select>
+    <select id="plan" onchange="render()"><option value="">All Plans</option><option value="29">₹29 Basic</option><option value="49">₹49 Standard</option><option value="99">₹99 Premium</option></select>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Business</th><th>Owner / Phone</th><th>Type</th><th>Plan</th><th>Status</th><th>Expiry</th><th>QR Scans</th><th>Actions</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</section>
+</main>
+</div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-head"><h2>Add New Business</h2><button class="close" onclick="closeModal()">×</button></div>
+    <form id="businessForm" onsubmit="addBusiness(event)">
+      <div class="form-grid">
+        <div class="field"><label>Business Name *</label><input id="businessName" required></div>
+        <div class="field"><label>Business Type *</label><select id="businessType" required><option value="">Select type</option><option>Salon</option><option>Medical</option><option>Garage</option><option>Library</option><option>Restaurant</option><option>Other</option></select></div>
+        <div class="field"><label>Owner Name *</label><input id="owner" required></div>
+        <div class="field"><label>Owner WhatsApp / Phone *</label><input id="phone" type="tel" required></div>
+        <div class="field full"><label>Google Review Link *</label><input id="reviewLink" type="url" placeholder="https://g.page/..." required></div>
+        <div class="field full"><label>Address *</label><input id="address" required></div>
+        <div class="field"><label>Plan *</label><select id="businessPlan" required><option value="29">₹29 Basic</option><option value="49">₹49 Standard</option><option value="99">₹99 Premium</option></select></div>
+        <div class="field"><label>Duration *</label><select id="duration"><option value="30">30 Days</option><option value="60">60 Days</option><option value="90">90 Days</option></select></div>
+        <div class="field"><label>Start Date</label><input id="startDate" type="date"></div>
+        <div class="field"><label>Payment Status</label><select id="paymentStatus"><option>Paid</option><option>Pending</option></select></div>
+        <div class="field"><label>Payment Method</label><select id="paymentMethod"><option>UPI</option><option>Cash</option><option>Other</option></select></div>
+      </div>
+      <div class="modal-actions"><button type="button" class="secondary" onclick="closeModal()">Cancel</button><button class="primary">Create Business</button></div>
+    </form>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="data.js"></script>
+<script>
+"use strict";
+
+function getData(){ return QRReviewData.getBusinesses(); }
+
+function planName(plan){
+  const p=QRReviewData.read().settings.plans[plan];
+  return p ? p.name : String(plan||"");
+}
+
+function planPrice(plan){
+  const p=QRReviewData.read().settings.plans[plan];
+  return p ? p.price : Number(plan||0);
+}
+
+function statusClass(s){
+  return s==="Active"?"active":
+         s==="Expired"?"expired":
+         s==="Suspended"?"suspended":
+         s==="Expiring Soon"?"soon":"expired";
+}
+
+function formatDate(value){
+  if(!value) return "—";
+  const d=new Date(value+(String(value).length===10?"T00:00:00":""));
+  if(Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});
+}
+
+function escapeHtml(value){
+  return String(value??"").replace(/[&<>"']/g,function(ch){
+    return ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[ch];
+  });
+}
+
+function render(){
+  const q=document.getElementById("search").value.toLowerCase().trim();
+  const st=document.getElementById("status").value;
+  const ty=document.getElementById("type").value;
+  const pl=document.getElementById("plan").value;
+  const all=getData();
+
+  const rows=all.filter(function(b){
+    const hay=[b.id,b.name,b.owner,b.phone,b.type].join(" ").toLowerCase();
+    return (!q||hay.includes(q))&&(!st||b.status===st)&&(!ty||b.type===ty)&&(!pl||String(planPrice(b.plan))===pl);
+  });
+
+  document.getElementById("count").textContent=`Showing ${rows.length} of ${all.length} businesses`;
+  document.getElementById("navCount").textContent=all.length;
+
+  document.getElementById("tbody").innerHTML=rows.length?rows.map(function(b){
+    const initials=escapeHtml(b.name.split(" ").map(x=>x[0]).slice(0,2).join(""));
+    return `<tr>
+      <td><div class="biz"><div class="avatar">${initials}</div><div><strong>${escapeHtml(b.name)}</strong><small>${escapeHtml(b.id)}</small></div></div></td>
+      <td><strong>${escapeHtml(b.owner)}</strong><br><small>${escapeHtml(b.phone)}</small></td>
+      <td>${escapeHtml(b.type)}</td>
+      <td>₹${planPrice(b.plan)} ${escapeHtml(planName(b.plan))}</td>
+      <td><span class="badge ${statusClass(b.status)}">${escapeHtml(b.status)}</span></td>
+      <td>${formatDate(b.expiry)}</td>
+      <td>${Number(b.scans||0).toLocaleString("en-IN")}</td>
+      <td class="actions">
+        <button onclick="viewBusiness('${b.id}')">View</button>
+        <button onclick="renewBusiness('${b.id}')">Renew</button>
+        <button class="danger" onclick="toggleSuspend('${b.id}')">${b.status==="Suspended"?"Activate":"Suspend"}</button>
+      </td>
+    </tr>`;
+  }).join(""):`<tr><td colspan="8"><div class="empty">No businesses found.</div></td></tr>`;
+}
+
+function openModal(){
+  document.getElementById("overlay").classList.add("show");
+  document.getElementById("startDate").value=new Date().toISOString().slice(0,10);
+}
+
+function closeModal(){ document.getElementById("overlay").classList.remove("show"); }
+
+function addBusiness(event){
+  event.preventDefault();
+
+  const name=document.getElementById("businessName").value.trim();
+  const type=document.getElementById("businessType").value;
+  const owner=document.getElementById("owner").value.trim();
+  const phone=document.getElementById("phone").value.trim();
+  const reviewLink=document.getElementById("reviewLink").value.trim();
+  const address=document.getElementById("address").value.trim();
+  const price=Number(document.getElementById("businessPlan").value);
+  const plan=price===29?"basic":price===49?"standard":"premium";
+  const duration=Number(document.getElementById("duration").value);
+  const startDate=document.getElementById("startDate").value||new Date().toISOString().slice(0,10);
+  const expiryDate=new Date(startDate+"T00:00:00");
+  expiryDate.setDate(expiryDate.getDate()+duration);
+  const paymentStatus=document.getElementById("paymentStatus").value;
+  const paymentMethod=document.getElementById("paymentMethod").value;
+
+  const business=QRReviewData.addBusiness({
+    name,type,owner,phone,reviewLink,address,plan,
+    status:paymentStatus==="Pending"?"Payment Pending":"Active",
+    expiry:expiryDate.toISOString().slice(0,10),
+    scans:0,qrStatus:"Active",qrType:"Counter QR",created:startDate
+  });
+
+  QRReviewData.addActivity({
+    activity:`Business created: ${name}`,
+    admin:"Super Admin",businessId:business.id,action:"Create Business"
+  });
+
+  QRReviewData.addNotification({
+    title:"New business created",
+    message:`${name} (${business.id}) was added successfully.`,
+    businessId:business.id
+  });
+
+  QRReviewData.addPayment({
+    businessId:business.id,amount:price,method:paymentMethod,
+    status:paymentStatus,date:startDate
+  });
+
+  closeModal();
+  document.getElementById("businessForm").reset();
+  render();
+  toast("Business added successfully");
+}
+
+function viewBusiness(id){
+  const b=QRReviewData.getBusiness(id);
+  if(!b) return;
+  alert("Business Details\n\n"+
+    `${b.name}\nID: ${b.id}\nOwner: ${b.owner}\nPhone: ${b.phone}\n`+
+    `Type: ${b.type}\nPlan: ₹${planPrice(b.plan)} ${planName(b.plan)}\n`+
+    `Status: ${b.status}\nExpiry: ${formatDate(b.expiry)}\nQR Scans: ${Number(b.scans||0)}`);
+}
+
+function renewBusiness(id){
+  const b=QRReviewData.getBusiness(id);
+  if(!b) return;
+
+  const p=QRReviewData.read().settings.plans[b.plan];
+  const current=new Date(b.expiry||new Date());
+  const base=current>new Date()?current:new Date();
+  base.setDate(base.getDate()+(p?p.duration:30));
+
+  QRReviewData.updateBusiness(id,{
+    status:"Active",expiry:base.toISOString().slice(0,10),qrStatus:"Active"
+  });
+
+  QRReviewData.addActivity({
+    activity:`Business renewed: ${b.name}`,
+    admin:"Super Admin",businessId:id,action:"Renew Business"
+  });
+
+  QRReviewData.addNotification({
+    title:"Business renewed",
+    message:`${b.name} has been renewed successfully.`,
+    businessId:id
+  });
+
+  render();
+  toast(`${b.name} renewed successfully`);
+}
+
+function toggleSuspend(id){
+  const b=QRReviewData.getBusiness(id);
+  if(!b) return;
+
+  const next=b.status==="Suspended"?"Active":"Suspended";
+  QRReviewData.updateBusiness(id,{
+    status:next,qrStatus:next==="Suspended"?"Disabled":"Active"
+  });
+
+  QRReviewData.addActivity({
+    activity:`${b.name}: ${next}`,
+    admin:"Super Admin",businessId:id,
+    action:next==="Suspended"?"Suspend Business":"Activate Business"
+  });
+
+  render();
+  toast(`${b.name}: ${next}`);
+}
+
+function toast(message){
+  const t=document.getElementById("toast");
+  t.textContent=message;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+window.addEventListener("qrReviewDataChanged",render);
+render();
+</script>
+</body>
+</html>
