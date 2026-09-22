@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Review Business — QR Codes</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}.sidebar{width:244px;background:#111827;color:#fff;padding:22px 14px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px}.logo{width:38px;height:38px;border-radius:10px;background:#3768e8;display:grid;place-items:center;font-weight:800}.brand strong{display:block;font-size:16px}.brand small{color:#8992a5}
+.section{font-size:10px;color:#6f788a;letter-spacing:1.4px;margin:20px 10px 8px}.nav{display:block;color:#cbd2df;text-decoration:none;padding:11px 12px;border-radius:9px;margin:3px 0;font-size:14px}.nav.active,.nav:hover{background:#202a3c;color:#fff}
+.main{flex:1;min-width:0}.top{height:72px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:21px;margin:0}.top p{margin:4px 0 0;color:#7a8496;font-size:13px}
+.add{border:0;background:#3768e8;color:#fff;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer}.content{padding:26px;max-width:1500px;margin:auto}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}.stat{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:16px}.stat small{color:#7a8496}.stat strong{display:block;font-size:25px;margin-top:7px}
+.toolbar{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.search{flex:1;min-width:230px;position:relative}.search input{width:100%;padding:11px 13px 11px 36px;border:1px solid #dfe4ec;border-radius:8px;outline:none}.search span{position:absolute;left:12px;top:10px;color:#7d8798}
+select{padding:10px 12px;border:1px solid #dfe4ec;border-radius:8px;background:#fff;color:#394355}.count{margin-left:auto;color:#778196;font-size:13px}
+.table-wrap{background:#fff;border:1px solid #e4e8ef;border-radius:12px;overflow:auto}table{width:100%;border-collapse:collapse;min-width:1000px}th,td{text-align:left;padding:14px 16px;border-bottom:1px solid #edf0f4;font-size:13px;white-space:nowrap}th{background:#fafbfc;color:#687286;font-size:11px;text-transform:uppercase;letter-spacing:.6px}tr:last-child td{border-bottom:0}
+.biz{display:flex;align-items:center;gap:10px}.avatar{width:36px;height:36px;border-radius:9px;background:#eef3ff;color:#3768e8;display:grid;place-items:center;font-weight:800}.biz strong{display:block}.biz small{color:#8992a3}
+.badge{display:inline-flex;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}.active{background:#eaf8ed;color:#27843b}.disabled{background:#eef0f4;color:#667085}
+.actions button{border:0;background:none;color:#3768e8;font-weight:700;cursor:pointer;margin-right:9px;padding:3px}.actions .danger{color:#c43b34}
+.empty{padding:50px;text-align:center;color:#7d8798}.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.overlay.show{display:flex}.modal{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:15px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modal h2{margin:0;font-size:20px}.close{border:0;background:#f0f2f6;border-radius:8px;width:34px;height:34px;cursor:pointer}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field.full{grid-column:1/-1}.field label{display:block;font-size:12px;font-weight:700;color:#596477;margin-bottom:6px}.field input,.field select{width:100%;padding:11px;border:1px solid #dfe4ec;border-radius:8px;outline:none}
+.preview{display:grid;place-items:center;background:#f7f8fb;border:1px dashed #d7dce5;border-radius:10px;padding:18px;margin-top:14px}.qrbox{width:160px;height:160px;background:#fff;border:10px solid #fff;display:grid;place-items:center;box-shadow:0 2px 10px rgba(0,0,0,.08)}.qr-pattern{font-size:34px;font-weight:900;letter-spacing:-6px;line-height:.8;transform:rotate(-8deg)}
+.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.secondary{border:1px solid #dfe4ec;background:#fff;padding:10px 15px;border-radius:8px;cursor:pointer}.primary{border:0;background:#3768e8;color:#fff;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer}
+.toast{position:fixed;right:22px;bottom:22px;background:#172033;color:#fff;padding:12px 16px;border-radius:9px;display:none;z-index:20;font-size:13px}.toast.show{display:block}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}}@media(max-width:800px){.sidebar{display:none}.content{padding:16px}.top{padding:0 16px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.count{width:100%;margin-left:0}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="logo">QR</div><div><strong>QR Review Business</strong><small>Admin Panel · V1</small></div></div>
+<div class="section">MAIN</div>
+<a class="nav" href="index.html">⌂ &nbsp; Dashboard</a>
+<a class="nav" href="businesses.html">▣ &nbsp; Businesses <span style="float:right">128</span></a>
+<a class="nav active" href="qr-codes.html">▤ &nbsp; QR Codes</a>
+<a class="nav" href="#">₹ &nbsp; Payments</a><a class="nav" href="#">◔ &nbsp; Renewals</a><a class="nav" href="#">▥ &nbsp; Analytics</a><a class="nav" href="#">♧ &nbsp; Notifications</a>
+<div class="section">SYSTEM</div><a class="nav" href="#">◉ &nbsp; Admin Users</a><a class="nav" href="#">≡ &nbsp; Activity Logs</a><a class="nav" href="#">⚙ &nbsp; Settings</a>
+</aside>
+<main class="main">
+<header class="top"><div><h1>QR Codes</h1><p>Create, manage and track QR codes for businesses.</p></div><button class="add" onclick="openModal()">+ Create QR</button></header>
+<section class="content">
+<div class="stats">
+<div class="stat"><small>Total QR Codes</small><strong id="total">0</strong></div><div class="stat"><small>Active QR</small><strong id="active">0</strong></div><div class="stat"><small>Total Scans</small><strong id="scans">0</strong></div><div class="stat"><small>Disabled QR</small><strong id="disabled">0</strong></div>
+</div>
+<div class="toolbar">
+<div class="search"><span>⌕</span><input id="search" placeholder="Search business or QR ID..." oninput="render()"></div>
+<select id="status" onchange="render()"><option value="">All Status</option><option>Active</option><option>Disabled</option></select>
+<select id="type" onchange="render()"><option value="">All Types</option><option>Counter QR</option><option>Table QR</option><option>Bill QR</option><option>Poster QR</option><option>Packaging QR</option></select>
+<span class="count" id="count"></span>
+</div>
+<div class="table-wrap"><table><thead><tr><th>QR Code</th><th>Business</th><th>Type</th><th>Status</th><th>Total Scans</th><th>Last Scan</th><th>Created</th><th>Actions</th></tr></thead><tbody id="tbody"></tbody></table></div>
+</section></main></div>
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+<div class="modal-head"><h2>Create QR Code</h2><button class="close" onclick="closeModal()">×</button></div>
+<form id="qrForm" onsubmit="createQR(event)">
+<div class="form-grid">
+<div class="field full"><label>Business *</label><select id="business" required><option value="">Select business</option><option>Caliber Library</option><option>Shree Salon</option><option>Ayush Medical</option><option>Gupta Garage</option><option>Priya Beauty</option><option>Metro Repairs</option><option>City Care Clinic</option><option>Readers Point</option><option>Royal Family Restaurant</option><option>Style Hub</option></select></div>
+<div class="field"><label>QR Type *</label><select id="qrType"><option>Counter QR</option><option>Table QR</option><option>Bill QR</option><option>Poster QR</option><option>Packaging QR</option></select></div>
+<div class="field"><label>Campaign Name</label><input id="campaign" placeholder="e.g. Counter 1"></div>
+<div class="field full"><label>Destination / Review Link *</label><input id="url" type="url" placeholder="https://g.page/..." required></div>
+</div>
+<div class="preview"><div class="qrbox"><div class="qr-pattern">▦<br>▦▦</div></div><small style="color:#7a8496;margin-top:9px">Preview placeholder — real QR generation will be connected in the backend stage.</small></div>
+<div class="modal-actions"><button type="button" class="secondary" onclick="closeModal()">Cancel</button><button class="primary">Create QR</button></div>
+</form></div></div>
+<div class="toast" id="toast"></div>
+<script>
+const qrs=[
+{id:"QR-00128",business:"Caliber Library",type:"Counter QR",status:"Active",scans:245,last:"22 Sep 2026, 5:42 PM",created:"20 Aug 2026"},
+{id:"QR-00127",business:"Shree Salon",type:"Counter QR",status:"Active",scans:183,last:"22 Sep 2026, 4:18 PM",created:"20 Aug 2026"},
+{id:"QR-00126",business:"Ayush Medical",type:"Bill QR",status:"Active",scans:421,last:"22 Sep 2026, 3:57 PM",created:"19 Aug 2026"},
+{id:"QR-00125",business:"Gupta Garage",type:"Poster QR",status:"Disabled",scans:312,last:"19 Sep 2026, 6:31 PM",created:"18 Aug 2026"},
+{id:"QR-00124",business:"Priya Beauty",type:"Counter QR",status:"Disabled",scans:198,last:"18 Sep 2026, 2:10 PM",created:"18 Aug 2026"},
+{id:"QR-00123",business:"Metro Repairs",type:"Packaging QR",status:"Active",scans:566,last:"22 Sep 2026, 1:42 PM",created:"17 Aug 2026"},
+{id:"QR-00122",business:"City Care Clinic",type:"Counter QR",status:"Active",scans:734,last:"22 Sep 2026, 5:03 PM",created:"15 Aug 2026"},
+{id:"QR-00121",business:"Readers Point",type:"Poster QR",status:"Active",scans:389,last:"21 Sep 2026, 7:21 PM",created:"14 Aug 2026"},
+{id:"QR-00120",business:"Royal Family Restaurant",type:"Table QR",status:"Active",scans:892,last:"22 Sep 2026, 6:02 PM",created:"12 Aug 2026"},
+{id:"QR-00119",business:"Style Hub",type:"Counter QR",status:"Disabled",scans:104,last:"10 Sep 2026, 4:15 PM",created:"10 Aug 2026"}];
+function render(){const q=document.getElementById("search").value.toLowerCase(),st=document.getElementById("status").value,ty=document.getElementById("type").value;const rows=qrs.filter(x=>(!q||[x.id,x.business].join(" ").toLowerCase().includes(q))&&(!st||x.status===st)&&(!ty||x.type===ty));document.getElementById("total").textContent=qrs.length;document.getElementById("active").textContent=qrs.filter(x=>x.status==="Active").length;document.getElementById("disabled").textContent=qrs.filter(x=>x.status==="Disabled").length;document.getElementById("scans").textContent=qrs.reduce((a,b)=>a+b.scans,0).toLocaleString("en-IN");document.getElementById("count").textContent=`Showing ${rows.length} of ${qrs.length} QR codes`;document.getElementById("tbody").innerHTML=rows.length?rows.map(x=>`<tr><td><div class="biz"><div class="avatar">QR</div><div><strong>${x.id}</strong><small>${x.campaign||"Default"}</small></div></div></td><td><strong>${x.business}</strong></td><td>${x.type}</td><td><span class="badge ${x.status==="Active"?"active":"disabled"}">${x.status}</span></td><td>${x.scans.toLocaleString("en-IN")}</td><td>${x.last}</td><td>${x.created}</td><td class="actions"><button onclick="preview('${x.id}')">Preview</button><button onclick="downloadQR('${x.id}')">Download</button><button class="danger" onclick="toggleQR('${x.id}')">${x.status==="Active"?"Disable":"Enable"}</button></td></tr>`).join(""):`<tr><td colspan="8"><div class="empty">No QR codes found.</div></td></tr>`}
+function openModal(){document.getElementById("overlay").classList.add("show")}function closeModal(){document.getElementById("overlay").classList.remove("show")}
+function createQR(e){e.preventDefault();const business=document.getElementById("business").value,type=document.getElementById("qrType").value;const n=qrs.length+129;qrs.unshift({id:"QR-"+String(n).padStart(5,"0"),business,type,status:"Active",scans:0,last:"—",created:new Date().toLocaleDateString("en-GB",{day:"2-digit",month:"short",year:"numeric"})});closeModal();document.getElementById("qrForm").reset();render();toast("QR code created successfully")}
+function preview(id){const x=qrs.find(q=>q.id===id);alert(`QR Preview
+
+${x.id}
+${x.business}
+Type: ${x.type}
+Scans: ${x.scans}
+Status: ${x.status}`)}
+function downloadQR(id){toast(`${id} download will be connected with real QR generation next`)}function toggleQR(id){const x=qrs.find(q=>q.id===id);x.status=x.status==="Active"?"Disabled":"Active";toast(`${id}: ${x.status}`);render()}function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}render();
+</script></body></html>
