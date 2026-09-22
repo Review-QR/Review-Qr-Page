@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Review Business — Settings</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}.sidebar{width:244px;background:#111827;color:#fff;padding:22px 14px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px}.logo{width:38px;height:38px;border-radius:10px;background:#3768e8;display:grid;place-items:center;font-weight:800}.brand strong{display:block;font-size:16px}.brand small{color:#8992a5}
+.section{font-size:10px;color:#6f788a;letter-spacing:1.4px;margin:20px 10px 8px}.nav{display:block;color:#cbd2df;text-decoration:none;padding:11px 12px;border-radius:9px;margin:3px 0;font-size:14px}.nav.active,.nav:hover{background:#202a3c;color:#fff}
+.main{flex:1;min-width:0}.top{height:72px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:21px;margin:0}.top p{margin:4px 0 0;color:#7a8496;font-size:13px}
+.content{padding:26px;max-width:1100px;margin:auto}.tabs{display:flex;gap:6px;background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:7px;margin-bottom:16px;overflow:auto}.tab{border:0;background:transparent;padding:10px 14px;border-radius:8px;color:#687286;cursor:pointer;white-space:nowrap;font-weight:700}.tab.active{background:#eef3ff;color:#3768e8}
+.panel{display:none}.panel.active{display:block}.card{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:20px;margin-bottom:16px}.card h2{margin:0;font-size:16px}.sub{margin:5px 0 18px;color:#8992a3;font-size:12px}.form{display:grid;grid-template-columns:1fr 1fr;gap:14px}.field label{display:block;font-size:12px;font-weight:700;color:#687286;margin-bottom:6px}.field input,.field select{width:100%;padding:10px 11px;border:1px solid #dfe4ec;border-radius:8px;outline:none;background:#fff}.full{grid-column:1/-1}
+.plan-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.plan{border:1px solid #e1e6ef;border-radius:10px;padding:15px}.plan strong{font-size:18px}.plan input{margin-top:10px;width:100%;padding:9px;border:1px solid #dfe4ec;border-radius:7px}.switch-row{display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #edf0f4}.switch-row:last-child{border-bottom:0}.switch-row strong{font-size:13px}.switch-row small{display:block;color:#8992a3;font-size:11px;margin-top:3px}.switch{position:relative;width:46px;height:25px}.switch input{display:none}.slider{position:absolute;inset:0;background:#cbd2df;border-radius:20px;cursor:pointer}.slider:before{content:"";position:absolute;width:19px;height:19px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}.switch input:checked+.slider{background:#3768e8}.switch input:checked+.slider:before{transform:translateX(21px)}
+.savebar{position:sticky;bottom:12px;display:flex;justify-content:flex-end;gap:9px;background:rgba(245,247,251,.94);padding:12px 0}.btn{border:1px solid #dfe4ec;background:#fff;padding:10px 16px;border-radius:8px;cursor:pointer;font-weight:700;color:#4b5567}.primary{background:#3768e8;color:#fff;border-color:#3768e8}
+.note{background:#f7f8fb;border-radius:9px;padding:12px;color:#687286;font-size:12px;line-height:1.5}.danger-zone{border:1px solid #f0c8c5}.danger{color:#c43b34}
+.toast{position:fixed;right:20px;bottom:20px;background:#172033;color:#fff;padding:12px 16px;border-radius:9px;display:none;z-index:20;font-size:13px}.toast.show{display:block}
+@media(max-width:850px){.sidebar{display:none}.content{padding:16px}.top{padding:0 16px}.form{grid-template-columns:1fr}.full{grid-column:auto}.plan-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="logo">QR</div><div><strong>QR Review Business</strong><small>Admin Panel · V1</small></div></div>
+<div class="section">MAIN</div>
+<a class="nav" href="index.html">⌂ &nbsp; Dashboard</a>
+<a class="nav" href="businesses.html">▣ &nbsp; Businesses <span style="float:right">128</span></a>
+<a class="nav" href="qr-codes.html">▤ &nbsp; QR Codes</a>
+<a class="nav" href="payments.html">₹ &nbsp; Payments</a>
+<a class="nav" href="renewals.html">◔ &nbsp; Renewals</a>
+<a class="nav" href="analytics.html">▥ &nbsp; Analytics</a>
+<a class="nav" href="notifications.html">♧ &nbsp; Notifications</a>
+<div class="section">SYSTEM</div>
+<a class="nav" href="admin-users.html">◉ &nbsp; Admin Users</a>
+<a class="nav" href="activity-logs.html">≡ &nbsp; Activity Logs</a>
+<a class="nav active" href="settings.html">⚙ &nbsp; Settings</a>
+</aside>
+<main class="main">
+<header class="top"><div><h1>Settings</h1><p>Configure plans, QR, payments, notifications and admin preferences.</p></div></header>
+<section class="content">
+<div class="tabs">
+<button class="tab active" onclick="showTab('general',this)">General</button>
+<button class="tab" onclick="showTab('plans',this)">Plans & Pricing</button>
+<button class="tab" onclick="showTab('qr',this)">QR Settings</button>
+<button class="tab" onclick="showTab('payment',this)">Payments</button>
+<button class="tab" onclick="showTab('whatsapp',this)">WhatsApp</button>
+<button class="tab" onclick="showTab('notify',this)">Notifications</button>
+<button class="tab" onclick="showTab('security',this)">Security</button>
+</div>
+
+<div id="general" class="panel active">
+<div class="card"><h2>Business Settings</h2><div class="sub">Basic information shown across the admin panel.</div>
+<div class="form">
+<div class="field"><label>Business / Product Name</label><input value="QR Review Business"></div>
+<div class="field"><label>Admin Panel Version</label><input value="V1" readonly></div>
+<div class="field"><label>Support Email</label><input value="support@qrreview.local"></div>
+<div class="field"><label>Support Phone</label><input value="9876500000"></div>
+<div class="field"><label>Currency</label><select><option>INR — ₹</option><option>USD — $</option></select></div>
+<div class="field"><label>Timezone</label><select><option>Asia/Kolkata (IST)</option></select></div>
+</div></div>
+<div class="card"><h2>System Preferences</h2><div class="sub">Default behaviour for the admin dashboard.</div>
+<div class="switch-row"><div><strong>Auto-expire QR on subscription expiry</strong><small>Disable the QR automatically when a plan expires.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="switch-row"><div><strong>Show renewal alerts on dashboard</strong><small>Show upcoming renewals in the dashboard.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="switch-row"><div><strong>Record admin activity logs</strong><small>Store important admin actions for audit history.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+</div>
+</div>
+
+<div id="plans" class="panel">
+<div class="card"><h2>Plans & Pricing</h2><div class="sub">Manage subscription tiers used when adding or renewing a business.</div>
+<div class="plan-grid">
+<div class="plan"><strong>Basic</strong><div class="sub">₹29 plan</div><label>Price (₹)</label><input value="29"><label style="display:block;margin-top:9px;font-size:12px;font-weight:700;color:#687286">Duration</label><select style="width:100%;margin-top:6px;padding:9px;border:1px solid #dfe4ec;border-radius:7px"><option>30 Days</option><option>60 Days</option><option>90 Days</option></select></div>
+<div class="plan"><strong>Standard</strong><div class="sub">₹49 plan</div><label>Price (₹)</label><input value="49"><label style="display:block;margin-top:9px;font-size:12px;font-weight:700;color:#687286">Duration</label><select style="width:100%;margin-top:6px;padding:9px;border:1px solid #dfe4ec;border-radius:7px"><option>30 Days</option><option>60 Days</option><option>90 Days</option></select></div>
+<div class="plan"><strong>Premium</strong><div class="sub">₹99 plan</div><label>Price (₹)</label><input value="99"><label style="display:block;margin-top:9px;font-size:12px;font-weight:700;color:#687286">Duration</label><select style="width:100%;margin-top:6px;padding:9px;border:1px solid #dfe4ec;border-radius:7px"><option>30 Days</option><option>60 Days</option><option>90 Days</option></select></div>
+</div></div>
+<div class="card"><h2>Plan Controls</h2><div class="switch-row"><div><strong>Allow new businesses to select plans</strong><small>Show plan selection in the Add Business form.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div><div class="switch-row"><div><strong>Allow manual renewal</strong><small>Admins can renew a business without online payment.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div></div>
+</div>
+
+<div id="qr" class="panel">
+<div class="card"><h2>QR Code Settings</h2><div class="sub">Default QR behaviour and display options.</div>
+<div class="form">
+<div class="field"><label>Default QR Type</label><select><option>Counter QR</option><option>Table QR</option><option>Poster QR</option><option>Bill QR</option><option>Packaging QR</option></select></div>
+<div class="field"><label>QR Redirect Mode</label><select><option>Google Review Link</option><option>Custom Landing Page</option></select></div>
+<div class="field"><label>QR Name Prefix</label><input value="QR-"></div>
+<div class="field"><label>Review Page Heading</label><input value="Share your feedback"></div>
+</div></div>
+<div class="card"><h2>QR Controls</h2>
+<div class="switch-row"><div><strong>Enable QR scan tracking</strong><small>Count scans and store last-scan information.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="switch-row"><div><strong>Allow QR regeneration</strong><small>Admins can generate a replacement QR for a business.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="switch-row"><div><strong>Block expired QR automatically</strong><small>Expired subscriptions cannot use active QR links.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+</div></div>
+
+<div id="payment" class="panel">
+<div class="card"><h2>Payment / UPI Settings</h2><div class="sub">Payment configuration for future online renewal integration.</div>
+<div class="form">
+<div class="field"><label>Payment Method</label><select><option>UPI</option><option>UPI + Cash</option><option>UPI + Cash + Card</option></select></div>
+<div class="field"><label>UPI ID</label><input placeholder="yourupi@bank" value=""></div>
+<div class="field"><label>Payment Display Name</label><input value="QR Review Business"></div>
+<div class="field"><label>Default Payment Status</label><select><option>Pending</option><option>Paid</option></select></div>
+</div>
+<div class="note" style="margin-top:15px">UPI/payment gateway credentials should be connected through a secure backend later. Do not store secret keys directly in this frontend HTML file.</div>
+</div></div>
+
+<div id="whatsapp" class="panel">
+<div class="card"><h2>WhatsApp Settings</h2><div class="sub">Prepare the admin panel for WhatsApp renewal reminders.</div>
+<div class="form">
+<div class="field"><label>Business WhatsApp Number</label><input value="9876500000"></div>
+<div class="field"><label>Country Code</label><input value="+91"></div>
+<div class="field full"><label>Default Renewal Message</label><input value="Namaste {{owner}}, {{business}} ka QR subscription {{expiry}} ko expire ho raha hai. Renewal ke liye payment link: {{payment_link}}"></div>
+</div>
+</div>
+<div class="card"><div class="switch-row"><div><strong>Enable WhatsApp reminders</strong><small>Show WhatsApp reminder actions in Renewals.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div></div>
+</div>
+
+<div id="notify" class="panel">
+<div class="card"><h2>Notification Settings</h2><div class="sub">Choose which alerts appear in the admin panel.</div>
+<div class="switch-row"><div><strong>Renewal due alerts</strong><small>Notify admins before a subscription expires.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="switch-row"><div><strong>Payment pending alerts</strong><small>Notify when a renewal payment remains pending.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="switch-row"><div><strong>QR disabled alerts</strong><small>Notify when a QR code is disabled or expired.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="switch-row"><div><strong>New business alerts</strong><small>Notify admins after a new business is created.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+</div></div>
+
+<div id="security" class="panel">
+<div class="card"><h2>Admin & Security</h2><div class="sub">Security preferences for administrator accounts.</div>
+<div class="switch-row"><div><strong>Require strong passwords</strong><small>Require stronger passwords for admin accounts.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="switch-row"><div><strong>Session timeout</strong><small>Automatically end inactive admin sessions.</small></div><select style="width:130px"><option>30 minutes</option><option>1 hour</option><option>4 hours</option></select></div>
+<div class="switch-row"><div><strong>Login activity logging</strong><small>Record admin login and logout events.</small></div><label class="switch"><input type="checkbox" checked><span class="slider"></span></label></div>
+<div class="note" style="margin-top:15px">Authentication, passwords, sessions and permissions must ultimately be enforced by the backend. These controls are frontend-ready settings for V1.</div>
+</div>
+<div class="card danger-zone"><h2 class="danger">Danger Zone</h2><div class="sub">These actions should require backend authorization.</div><button class="btn danger" onclick="alert('Demo only — backend authorization required.')">Reset Demo Settings</button></div>
+</div>
+
+<div class="savebar"><button class="btn" onclick="location.reload()">Discard</button><button class="btn primary" onclick="saveSettings()">Save Settings</button></div>
+</section></main></div>
+<div class="toast" id="toast">Settings saved</div>
+<script>
+function showTab(id,btn){document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));btn.classList.add("active")}
+function saveSettings(){const t=document.getElementById("toast");t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+</script>
+</body>
+</html>
