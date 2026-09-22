@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Review Business — Analytics</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}.sidebar{width:244px;background:#111827;color:#fff;padding:22px 14px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px}.logo{width:38px;height:38px;border-radius:10px;background:#3768e8;display:grid;place-items:center;font-weight:800}.brand strong{display:block;font-size:16px}.brand small{color:#8992a5}
+.section{font-size:10px;color:#6f788a;letter-spacing:1.4px;margin:20px 10px 8px}.nav{display:block;color:#cbd2df;text-decoration:none;padding:11px 12px;border-radius:9px;margin:3px 0;font-size:14px}.nav.active,.nav:hover{background:#202a3c;color:#fff}
+.main{flex:1;min-width:0}.top{height:72px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:21px;margin:0}.top p{margin:4px 0 0;color:#7a8496;font-size:13px}
+.content{padding:26px;max-width:1500px;margin:auto}.filters{display:flex;gap:10px;justify-content:flex-end;margin-bottom:16px}select{padding:10px 12px;border:1px solid #dfe4ec;border-radius:8px;background:#fff;color:#394355}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}.stat{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:16px}.stat small{color:#7a8496}.stat strong{display:block;font-size:25px;margin-top:7px}.change{font-size:11px;color:#27843b;margin-top:6px}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px}.card{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:18px}.card h2{font-size:16px;margin:0}.sub{font-size:12px;color:#8992a3;margin:5px 0 16px}
+.chart{height:250px;position:relative;border-bottom:1px solid #dfe4ec;border-left:1px solid #dfe4ec;padding:10px 14px 0 28px}.gridline{position:absolute;left:28px;right:0;border-top:1px dashed #e8ebf0}.g1{top:35px}.g2{top:90px}.g3{top:145px}.g4{top:200px}.bars{height:220px;display:flex;align-items:flex-end;justify-content:space-around;gap:12px;position:relative;z-index:2}.barwrap{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px}.bar{width:32px;border-radius:6px 6px 0 0;background:#3768e8;min-height:4px}.barwrap span{font-size:10px;color:#8992a3}
+.legend{display:flex;gap:18px;margin-top:12px;font-size:11px;color:#6f788a}.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#3768e8;margin-right:5px}
+.donut-area{display:flex;align-items:center;gap:22px;min-height:250px}.donut{width:170px;height:170px;border-radius:50%;background:conic-gradient(#3768e8 0 50%,#52a85c 50% 86%,#7a4de8 86% 100%);position:relative}.donut:after{content:"";position:absolute;inset:43px;background:#fff;border-radius:50%}.donut-label{position:absolute;inset:0;display:grid;place-items:center;z-index:2;font-weight:800;font-size:22px}.legend-list{flex:1}.legend-list div{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #edf0f4;font-size:13px}.legend-list div:last-child{border:0}.legend-list span:first-child:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#3768e8;margin-right:7px}.legend-list .green:before{background:#52a85c}.legend-list .purple:before{background:#7a4de8}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}.rank{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #edf0f4}.rank:last-child{border:0}.num{width:24px;color:#8992a3;font-weight:700}.rank .avatar{width:34px;height:34px;border-radius:9px;background:#eef3ff;color:#3768e8;display:grid;place-items:center;font-weight:800}.rank-main{flex:1}.rank-main strong{display:block;font-size:13px}.rank-main small{color:#8992a3}.rank-value{font-weight:800}
+.breakdown{margin-top:8px}.line{display:flex;align-items:center;gap:10px;margin:14px 0}.line-label{width:110px;font-size:12px}.track{height:9px;background:#edf0f4;border-radius:10px;flex:1;overflow:hidden}.fill{height:100%;background:#3768e8;border-radius:10px}.value{width:45px;text-align:right;font-size:12px;font-weight:700}
+@media(max-width:1000px){.grid{grid-template-columns:1fr}.two{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}@media(max-width:700px){.sidebar{display:none}.content{padding:16px}.top{padding:0 16px}.filters{justify-content:flex-start;flex-wrap:wrap}.donut-area{flex-direction:column;justify-content:center}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="logo">QR</div><div><strong>QR Review Business</strong><small>Admin Panel · V1</small></div></div>
+<div class="section">MAIN</div>
+<a class="nav" href="index.html">⌂ &nbsp; Dashboard</a>
+<a class="nav" href="businesses.html">▣ &nbsp; Businesses <span style="float:right">128</span></a>
+<a class="nav" href="qr-codes.html">▤ &nbsp; QR Codes</a>
+<a class="nav" href="payments.html">₹ &nbsp; Payments</a>
+<a class="nav" href="renewals.html">◔ &nbsp; Renewals</a>
+<a class="nav active" href="analytics.html">▥ &nbsp; Analytics</a>
+<a class="nav" href="#">♧ &nbsp; Notifications</a>
+<div class="section">SYSTEM</div><a class="nav" href="#">◉ &nbsp; Admin Users</a><a class="nav" href="#">≡ &nbsp; Activity Logs</a><a class="nav" href="#">⚙ &nbsp; Settings</a>
+</aside>
+<main class="main">
+<header class="top"><div><h1>Analytics</h1><p>Understand scans, revenue, plans and business performance.</p></div></header>
+<section class="content">
+<div class="filters"><select id="range" onchange="render()"><option>Last 7 Days</option><option>Last 30 Days</option><option>Last 6 Months</option><option>This Year</option></select></div>
+<div class="stats">
+<div class="stat"><small>Total QR Scans</small><strong id="scans">5,482</strong><div class="change">+21.3% vs last period</div></div>
+<div class="stat"><small>Unique Businesses</small><strong>128</strong><div class="change">+8 this month</div></div>
+<div class="stat"><small>Revenue</small><strong>₹8,940</strong><div class="change">+14.6% vs last period</div></div>
+<div class="stat"><small>Active QR Rate</small><strong>85.2%</strong><div class="change">109 / 128 active</div></div>
+</div>
+
+<div class="grid">
+<div class="card"><h2>QR Scan Overview</h2><div class="sub">Month-wise scan activity</div>
+<div class="chart"><div class="gridline g1"></div><div class="gridline g2"></div><div class="gridline g3"></div><div class="gridline g4"></div>
+<div class="bars"><div class="barwrap"><div class="bar" style="height:35%"></div><span>Apr</span></div><div class="barwrap"><div class="bar" style="height:48%"></div><span>May</span></div><div class="barwrap"><div class="bar" style="height:43%"></div><span>Jun</span></div><div class="barwrap"><div class="bar" style="height:64%"></div><span>Jul</span></div><div class="barwrap"><div class="bar" style="height:73%"></div><span>Aug</span></div><div class="barwrap"><div class="bar" style="height:91%"></div><span>Sep</span></div></div></div>
+<div class="legend"><span><i class="dot"></i>QR scans</span><span>Current period</span></div>
+</div>
+<div class="card"><h2>Plan-wise Split</h2><div class="sub">Businesses by subscription plan</div>
+<div class="donut-area"><div class="donut"><div class="donut-label">128</div></div><div class="legend-list"><div><span>₹29 Basic</span><strong>64</strong></div><div><span class="green">₹49 Standard</span><strong>46</strong></div><div><span class="purple">₹99 Premium</span><strong>18</strong></div></div></div>
+</div>
+</div>
+
+<div class="two">
+<div class="card"><h2>Top Scanned Businesses</h2><div class="sub">Businesses with highest QR activity</div>
+<div class="rank"><span class="num">1</span><div class="avatar">RF</div><div class="rank-main"><strong>Royal Family Restaurant</strong><small>Table QR</small></div><span class="rank-value">892</span></div>
+<div class="rank"><span class="num">2</span><div class="avatar">CC</div><div class="rank-main"><strong>City Care Clinic</strong><small>Counter QR</small></div><span class="rank-value">734</span></div>
+<div class="rank"><span class="num">3</span><div class="avatar">MR</div><div class="rank-main"><strong>Metro Repairs</strong><small>Packaging QR</small></div><span class="rank-value">566</span></div>
+<div class="rank"><span class="num">4</span><div class="avatar">AM</div><div class="rank-main"><strong>Ayush Medical</strong><small>Bill QR</small></div><span class="rank-value">421</span></div>
+</div>
+
+<div class="card"><h2>Business Type Breakdown</h2><div class="sub">Businesses by category</div>
+<div class="breakdown"><div class="line"><span class="line-label">Salon</span><div class="track"><div class="fill" style="width:78%"></div></div><span class="value">32</span></div><div class="line"><span class="line-label">Medical</span><div class="track"><div class="fill" style="width:62%"></div></div><span class="value">25</span></div><div class="line"><span class="line-label">Garage</span><div class="track"><div class="fill" style="width:48%"></div></div><span class="value">19</span></div><div class="line"><span class="line-label">Library</span><div class="track"><div class="fill" style="width:39%"></div></div><span class="value">16</span></div><div class="line"><span class="line-label">Restaurant</span><div class="track"><div class="fill" style="width:30%"></div></div><span class="value">12</span></div></div>
+</div>
+</div>
+</section></main></div>
+<script>
+document.getElementById("range").addEventListener("change",function(){});
+</script>
+</body>
+</html>
