@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Review Business — Payments</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}.sidebar{width:244px;background:#111827;color:#fff;padding:22px 14px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px}.logo{width:38px;height:38px;border-radius:10px;background:#3768e8;display:grid;place-items:center;font-weight:800}.brand strong{display:block;font-size:16px}.brand small{color:#8992a5}
+.section{font-size:10px;color:#6f788a;letter-spacing:1.4px;margin:20px 10px 8px}.nav{display:block;color:#cbd2df;text-decoration:none;padding:11px 12px;border-radius:9px;margin:3px 0;font-size:14px}.nav.active,.nav:hover{background:#202a3c;color:#fff}
+.main{flex:1;min-width:0}.top{height:72px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:21px;margin:0}.top p{margin:4px 0 0;color:#7a8496;font-size:13px}
+.content{padding:26px;max-width:1500px;margin:auto}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}.stat{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:16px}.stat small{color:#7a8496}.stat strong{display:block;font-size:25px;margin-top:7px}
+.toolbar{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.search{flex:1;min-width:230px;position:relative}.search input{width:100%;padding:11px 13px 11px 36px;border:1px solid #dfe4ec;border-radius:8px;outline:none}.search span{position:absolute;left:12px;top:10px;color:#7d8798}
+select{padding:10px 12px;border:1px solid #dfe4ec;border-radius:8px;background:#fff;color:#394355}.count{margin-left:auto;color:#778196;font-size:13px}
+.table-wrap{background:#fff;border:1px solid #e4e8ef;border-radius:12px;overflow:auto}table{width:100%;border-collapse:collapse;min-width:1120px}th,td{text-align:left;padding:14px 16px;border-bottom:1px solid #edf0f4;font-size:13px;white-space:nowrap}th{background:#fafbfc;color:#687286;font-size:11px;text-transform:uppercase;letter-spacing:.6px}tr:last-child td{border-bottom:0}
+.biz{display:flex;align-items:center;gap:10px}.avatar{width:36px;height:36px;border-radius:9px;background:#eef3ff;color:#3768e8;display:grid;place-items:center;font-weight:800}.biz strong{display:block}.biz small{color:#8992a3}
+.badge{display:inline-flex;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}.paid{background:#eaf8ed;color:#27843b}.pending{background:#fff6df;color:#a76a00}.failed{background:#fff0ef;color:#c43b34}.refunded{background:#eef0f4;color:#667085}
+.actions button{border:0;background:none;color:#3768e8;font-weight:700;cursor:pointer;margin-right:9px;padding:3px}.actions .danger{color:#c43b34}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.overlay.show{display:flex}.modal{width:min(560px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:15px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modal h2{margin:0;font-size:20px}.close{border:0;background:#f0f2f6;border-radius:8px;width:34px;height:34px;cursor:pointer}.detail{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail div{background:#f7f8fb;border-radius:9px;padding:12px}.detail small{display:block;color:#7a8496;margin-bottom:4px}.detail strong{font-size:14px}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.secondary{border:1px solid #dfe4ec;background:#fff;padding:10px 15px;border-radius:8px;cursor:pointer}.primary{border:0;background:#3768e8;color:#fff;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer}
+.toast{position:fixed;right:22px;bottom:22px;background:#172033;color:#fff;padding:12px 16px;border-radius:9px;display:none;z-index:20;font-size:13px}.toast.show{display:block}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}}@media(max-width:800px){.sidebar{display:none}.content{padding:16px}.top{padding:0 16px}.count{width:100%;margin-left:0}.detail{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="logo">QR</div><div><strong>QR Review Business</strong><small>Admin Panel · V1</small></div></div>
+<div class="section">MAIN</div>
+<a class="nav" href="index.html">⌂ &nbsp; Dashboard</a>
+<a class="nav" href="businesses.html">▣ &nbsp; Businesses <span style="float:right">128</span></a>
+<a class="nav" href="qr-codes.html">▤ &nbsp; QR Codes</a>
+<a class="nav active" href="payments.html">₹ &nbsp; Payments</a>
+<a class="nav" href="#">◔ &nbsp; Renewals</a><a class="nav" href="#">▥ &nbsp; Analytics</a><a class="nav" href="#">♧ &nbsp; Notifications</a>
+<div class="section">SYSTEM</div><a class="nav" href="#">◉ &nbsp; Admin Users</a><a class="nav" href="#">≡ &nbsp; Activity Logs</a><a class="nav" href="#">⚙ &nbsp; Settings</a>
+</aside>
+<main class="main">
+<header class="top"><div><h1>Payments</h1><p>Track revenue, pending payments and subscription transactions.</p></div></header>
+<section class="content">
+<div class="stats">
+<div class="stat"><small>Total Revenue</small><strong id="revenue">₹0</strong></div>
+<div class="stat"><small>This Month</small><strong id="month">₹0</strong></div>
+<div class="stat"><small>Pending Amount</small><strong id="pending">₹0</strong></div>
+<div class="stat"><small>Transactions</small><strong id="transactions">0</strong></div>
+</div>
+<div class="toolbar">
+<div class="search"><span>⌕</span><input id="search" placeholder="Search business, owner or transaction ID..." oninput="render()"></div>
+<select id="status" onchange="render()"><option value="">All Status</option><option>Paid</option><option>Pending</option><option>Failed</option><option>Refunded</option></select>
+<select id="method" onchange="render()"><option value="">All Methods</option><option>UPI</option><option>Cash</option><option>Other</option></select>
+<select id="plan" onchange="render()"><option value="">All Plans</option><option value="29">₹29</option><option value="49">₹49</option><option value="99">₹99</option></select>
+<span class="count" id="count"></span>
+</div>
+<div class="table-wrap"><table><thead><tr><th>Transaction</th><th>Business / Owner</th><th>Plan</th><th>Amount</th><th>Date</th><th>Method</th><th>Status</th><th>Actions</th></tr></thead><tbody id="tbody"></tbody></table></div>
+</section></main></div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+<div class="modal-head"><h2>Payment Details</h2><button class="close" onclick="closeModal()">×</button></div>
+<div id="details" class="detail"></div>
+<div class="modal-actions"><button class="secondary" onclick="closeModal()">Close</button><button class="primary" onclick="toast('Payment receipt feature will be connected later')">Receipt</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const payments=[
+{id:"TXN-10028",business:"Caliber Library",owner:"Rahul",plan:49,amount:49,date:"22 Sep 2026",method:"UPI",status:"Paid"},
+{id:"TXN-10027",business:"Shree Salon",owner:"Shreya",plan:29,amount:29,date:"22 Sep 2026",method:"UPI",status:"Paid"},
+{id:"TXN-10026",business:"Ayush Medical",owner:"Ayush",plan:99,amount:99,date:"21 Sep 2026",method:"UPI",status:"Paid"},
+{id:"TXN-10025",business:"Gupta Garage",owner:"Rakesh",plan:49,amount:49,date:"20 Sep 2026",method:"Cash",status:"Pending"},
+{id:"TXN-10024",business:"Priya Beauty",owner:"Priya",plan:29,amount:29,date:"18 Sep 2026",method:"UPI",status:"Pending"},
+{id:"TXN-10023",business:"Metro Repairs",owner:"Mohit",plan:99,amount:99,date:"17 Sep 2026",method:"UPI",status:"Paid"},
+{id:"TXN-10022",business:"City Care Clinic",owner:"Neha",plan:49,amount:49,date:"15 Sep 2026",method:"UPI",status:"Paid"},
+{id:"TXN-10021",business:"Readers Point",owner:"Amit",plan:29,amount:29,date:"14 Sep 2026",method:"Cash",status:"Failed"},
+{id:"TXN-10020",business:"Royal Family Restaurant",owner:"Vikas",plan:99,amount:99,date:"12 Sep 2026",method:"UPI",status:"Paid"},
+{id:"TXN-10019",business:"Style Hub",owner:"Pooja",plan:49,amount:49,date:"10 Sep 2026",method:"Other",status:"Refunded"}
+];
+function render(){
+const q=document.getElementById("search").value.toLowerCase(),st=document.getElementById("status").value,m=document.getElementById("method").value,p=document.getElementById("plan").value;
+const rows=payments.filter(x=>(!q||[x.id,x.business,x.owner].join(" ").toLowerCase().includes(q))&&(!st||x.status===st)&&(!m||x.method===m)&&(!p||String(x.plan)===p));
+const paid=payments.filter(x=>x.status==="Paid").reduce((a,b)=>a+b.amount,0),pend=payments.filter(x=>x.status==="Pending").reduce((a,b)=>a+b.amount,0);
+document.getElementById("revenue").textContent="₹"+paid.toLocaleString("en-IN");document.getElementById("month").textContent="₹"+paid.toLocaleString("en-IN");document.getElementById("pending").textContent="₹"+pend.toLocaleString("en-IN");document.getElementById("transactions").textContent=payments.length;document.getElementById("count").textContent=`Showing ${rows.length} of ${payments.length} transactions`;
+document.getElementById("tbody").innerHTML=rows.length?rows.map(x=>`<tr><td><strong>${x.id}</strong></td><td><div class="biz"><div class="avatar">${x.business.split(" ").map(a=>a[0]).slice(0,2).join("")}</div><div><strong>${x.business}</strong><small>${x.owner}</small></div></div></td><td>₹${x.plan}</td><td><strong>₹${x.amount}</strong></td><td>${x.date}</td><td>${x.method}</td><td><span class="badge ${x.status.toLowerCase()}">${x.status}</span></td><td class="actions"><button onclick="viewPayment('${x.id}')">View</button>${x.status==="Pending"?`<button onclick="markPaid('${x.id}')">Mark Paid</button>`:""}${x.status==="Pending"?`<button onclick="sendLink('${x.id}')">Payment Link</button>`:""}</td></tr>`).join(""):`<tr><td colspan="8"><div style="padding:50px;text-align:center;color:#7d8798">No payments found.</div></td></tr>`;
+}
+function viewPayment(id){const x=payments.find(p=>p.id===id);document.getElementById("details").innerHTML=`<div><small>Transaction ID</small><strong>${x.id}</strong></div><div><small>Status</small><strong>${x.status}</strong></div><div><small>Business</small><strong>${x.business}</strong></div><div><small>Owner</small><strong>${x.owner}</strong></div><div><small>Plan</small><strong>₹${x.plan}</strong></div><div><small>Amount</small><strong>₹${x.amount}</strong></div><div><small>Date</small><strong>${x.date}</strong></div><div><small>Method</small><strong>${x.method}</strong></div>`;document.getElementById("overlay").classList.add("show")}
+function closeModal(){document.getElementById("overlay").classList.remove("show")}
+function markPaid(id){const x=payments.find(p=>p.id===id);x.status="Paid";toast(`${x.id} marked as paid`);render()}
+function sendLink(id){const x=payments.find(p=>p.id===id);toast(`Payment link prepared for ${x.business}`)}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+render();
+</script>
+</body>
+</html>
