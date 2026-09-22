@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Review Business — Renewals</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}.sidebar{width:244px;background:#111827;color:#fff;padding:22px 14px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px}.logo{width:38px;height:38px;border-radius:10px;background:#3768e8;display:grid;place-items:center;font-weight:800}.brand strong{display:block;font-size:16px}.brand small{color:#8992a5}
+.section{font-size:10px;color:#6f788a;letter-spacing:1.4px;margin:20px 10px 8px}.nav{display:block;color:#cbd2df;text-decoration:none;padding:11px 12px;border-radius:9px;margin:3px 0;font-size:14px}.nav.active,.nav:hover{background:#202a3c;color:#fff}
+.main{flex:1;min-width:0}.top{height:72px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:21px;margin:0}.top p{margin:4px 0 0;color:#7a8496;font-size:13px}
+.content{padding:26px;max-width:1500px;margin:auto}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}.stat{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:16px}.stat small{color:#7a8496}.stat strong{display:block;font-size:25px;margin-top:7px}
+.toolbar{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.search{flex:1;min-width:230px;position:relative}.search input{width:100%;padding:11px 13px 11px 36px;border:1px solid #dfe4ec;border-radius:8px;outline:none}.search span{position:absolute;left:12px;top:10px;color:#7d8798}
+select{padding:10px 12px;border:1px solid #dfe4ec;border-radius:8px;background:#fff;color:#394355}.count{margin-left:auto;color:#778196;font-size:13px}
+.table-wrap{background:#fff;border:1px solid #e4e8ef;border-radius:12px;overflow:auto}table{width:100%;border-collapse:collapse;min-width:1160px}th,td{text-align:left;padding:14px 16px;border-bottom:1px solid #edf0f4;font-size:13px;white-space:nowrap}th{background:#fafbfc;color:#687286;font-size:11px;text-transform:uppercase;letter-spacing:.6px}tr:last-child td{border-bottom:0}
+.biz{display:flex;align-items:center;gap:10px}.avatar{width:36px;height:36px;border-radius:9px;background:#eef3ff;color:#3768e8;display:grid;place-items:center;font-weight:800}.biz strong{display:block}.biz small{color:#8992a3}
+.badge{display:inline-flex;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}.today{background:#fff0ef;color:#c43b34}.soon{background:#fff6df;color:#a76a00}.week{background:#eef3ff;color:#3768e8}.expired{background:#eeeef2;color:#667085}.paid{background:#eaf8ed;color:#27843b}.pending{background:#fff6df;color:#a76a00}
+.actions button{border:0;background:none;color:#3768e8;font-weight:700;cursor:pointer;margin-right:9px;padding:3px}.actions .danger{color:#c43b34}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.overlay.show{display:flex}.modal{width:min(560px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:15px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modal h2{margin:0;font-size:20px}.close{border:0;background:#f0f2f6;border-radius:8px;width:34px;height:34px;cursor:pointer}.detail{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail div{background:#f7f8fb;border-radius:9px;padding:12px}.detail small{display:block;color:#7a8496;margin-bottom:4px}.detail strong{font-size:14px}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.secondary{border:1px solid #dfe4ec;background:#fff;padding:10px 15px;border-radius:8px;cursor:pointer}.primary{border:0;background:#3768e8;color:#fff;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer}
+.toast{position:fixed;right:22px;bottom:22px;background:#172033;color:#fff;padding:12px 16px;border-radius:9px;display:none;z-index:20;font-size:13px}.toast.show{display:block}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}}@media(max-width:800px){.sidebar{display:none}.content{padding:16px}.top{padding:0 16px}.count{width:100%;margin-left:0}.detail{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="logo">QR</div><div><strong>QR Review Business</strong><small>Admin Panel · V1</small></div></div>
+<div class="section">MAIN</div>
+<a class="nav" href="index.html">⌂ &nbsp; Dashboard</a>
+<a class="nav" href="businesses.html">▣ &nbsp; Businesses <span style="float:right">128</span></a>
+<a class="nav" href="qr-codes.html">▤ &nbsp; QR Codes</a>
+<a class="nav" href="payments.html">₹ &nbsp; Payments</a>
+<a class="nav active" href="renewals.html">◔ &nbsp; Renewals</a>
+<a class="nav" href="#">▥ &nbsp; Analytics</a><a class="nav" href="#">♧ &nbsp; Notifications</a>
+<div class="section">SYSTEM</div><a class="nav" href="#">◉ &nbsp; Admin Users</a><a class="nav" href="#">≡ &nbsp; Activity Logs</a><a class="nav" href="#">⚙ &nbsp; Settings</a>
+</aside>
+<main class="main">
+<header class="top"><div><h1>Renewals</h1><p>Manage upcoming expiries, reminders and subscription renewals.</p></div></header>
+<section class="content">
+<div class="stats">
+<div class="stat"><small>Expiring Today</small><strong id="today">0</strong></div>
+<div class="stat"><small>Next 3 Days</small><strong id="three">0</strong></div>
+<div class="stat"><small>Next 7 Days</small><strong id="seven">0</strong></div>
+<div class="stat"><small>Already Expired</small><strong id="expired">0</strong></div>
+</div>
+<div class="toolbar">
+<div class="search"><span>⌕</span><input id="search" placeholder="Search business, owner or phone..." oninput="render()"></div>
+<select id="bucket" onchange="render()"><option value="">All Renewal Status</option><option value="Today">Today</option><option value="3 Days">Next 3 Days</option><option value="7 Days">Next 7 Days</option><option value="Expired">Expired</option></select>
+<select id="payment" onchange="render()"><option value="">All Payments</option><option>Paid</option><option>Pending</option></select>
+<span class="count" id="count"></span>
+</div>
+<div class="table-wrap"><table><thead><tr><th>Business</th><th>Owner / WhatsApp</th><th>Plan</th><th>Expiry Date</th><th>Renewal</th><th>Payment</th><th>Amount</th><th>Actions</th></tr></thead><tbody id="tbody"></tbody></table></div>
+</section></main></div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+<div class="modal-head"><h2>Renewal Details</h2><button class="close" onclick="closeModal()">×</button></div>
+<div id="details" class="detail"></div>
+<div class="modal-actions"><button class="secondary" onclick="closeModal()">Close</button><button class="primary" onclick="confirmRenew()">Renew Now</button></div>
+</div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const renewals=[
+{id:"QR-00128",business:"Caliber Library",owner:"Rahul",phone:"9876543210",plan:49,expiry:"24 Sep 2026",bucket:"3 Days",payment:"Pending"},
+{id:"QR-00127",business:"Shree Salon",owner:"Shreya",phone:"9876501122",plan:29,expiry:"25 Sep 2026",bucket:"3 Days",payment:"Pending"},
+{id:"QR-00126",business:"Ayush Medical",owner:"Ayush",phone:"9876502211",plan:99,expiry:"25 Sep 2026",bucket:"3 Days",payment:"Paid"},
+{id:"QR-00125",business:"Gupta Garage",owner:"Rakesh",phone:"9876503311",plan:49,expiry:"20 Sep 2026",bucket:"Expired",payment:"Pending"},
+{id:"QR-00124",business:"Priya Beauty",owner:"Priya",phone:"9876504411",plan:29,expiry:"18 Sep 2026",bucket:"Expired",payment:"Pending"},
+{id:"QR-00123",business:"Metro Repairs",owner:"Mohit",phone:"9876505511",plan:99,expiry:"17 Sep 2026",bucket:"Expired",payment:"Paid"},
+{id:"QR-00122",business:"City Care Clinic",owner:"Neha",phone:"9876506611",plan:49,expiry:"28 Sep 2026",bucket:"7 Days",payment:"Pending"},
+{id:"QR-00121",business:"Readers Point",owner:"Amit",phone:"9876507711",plan:29,expiry:"29 Sep 2026",bucket:"7 Days",payment:"Paid"},
+{id:"QR-00120",business:"Royal Family Restaurant",owner:"Vikas",phone:"9876508811",plan:99,expiry:"01 Oct 2026",bucket:"7 Days",payment:"Pending"},
+{id:"QR-00119",business:"Style Hub",owner:"Pooja",phone:"9876509911",plan:49,expiry:"30 Sep 2026",bucket:"7 Days",payment:"Pending"}
+];
+let selected=null;
+function render(){
+const q=document.getElementById("search").value.toLowerCase(),b=document.getElementById("bucket").value,p=document.getElementById("payment").value;
+const rows=renewals.filter(x=>(!q||[x.id,x.business,x.owner,x.phone].join(" ").toLowerCase().includes(q))&&(!b||x.bucket===b)&&(!p||x.payment===p));
+document.getElementById("today").textContent=renewals.filter(x=>x.bucket==="Today").length;
+document.getElementById("three").textContent=renewals.filter(x=>x.bucket==="3 Days").length;
+document.getElementById("seven").textContent=renewals.filter(x=>x.bucket==="7 Days").length;
+document.getElementById("expired").textContent=renewals.filter(x=>x.bucket==="Expired").length;
+document.getElementById("count").textContent=`Showing ${rows.length} of ${renewals.length} renewals`;
+document.getElementById("tbody").innerHTML=rows.length?rows.map(x=>{
+const cls=x.bucket==="Expired"?"expired":x.bucket==="Today"?"today":x.bucket==="3 Days"?"soon":"week";
+return `<tr><td><div class="biz"><div class="avatar">${x.business.split(" ").map(a=>a[0]).slice(0,2).join("")}</div><div><strong>${x.business}</strong><small>${x.id}</small></div></div></td><td><strong>${x.owner}</strong><br><small>${x.phone}</small></td><td>₹${x.plan}</td><td>${x.expiry}</td><td><span class="badge ${cls}">${x.bucket==="Expired"?"Expired":x.bucket}</span></td><td><span class="badge ${x.payment==="Paid"?"paid":"pending"}">${x.payment}</span></td><td><strong>₹${x.plan}</strong></td><td class="actions"><button onclick="viewRenewal('${x.id}')">View</button><button onclick="reminder('${x.id}')">WhatsApp</button>${x.payment==="Pending"?`<button onclick="paymentLink('${x.id}')">Payment Link</button>`:""}<button onclick="renew('${x.id}')">Renew</button></td></tr>`;
+}).join(""):`<tr><td colspan="8"><div style="padding:50px;text-align:center;color:#7d8798">No renewals found.</div></td></tr>`;
+}
+function viewRenewal(id){selected=renewals.find(x=>x.id===id);document.getElementById("details").innerHTML=`<div><small>Business</small><strong>${selected.business}</strong></div><div><small>Business ID</small><strong>${selected.id}</strong></div><div><small>Owner</small><strong>${selected.owner}</strong></div><div><small>WhatsApp</small><strong>${selected.phone}</strong></div><div><small>Current Plan</small><strong>₹${selected.plan}</strong></div><div><small>Expiry</small><strong>${selected.expiry}</strong></div><div><small>Renewal Status</small><strong>${selected.bucket}</strong></div><div><small>Payment</small><strong>${selected.payment}</strong></div>`;document.getElementById("overlay").classList.add("show")}
+function closeModal(){document.getElementById("overlay").classList.remove("show");selected=null}
+function confirmRenew(){if(selected)renew(selected.id);closeModal()}
+function renew(id){const x=renewals.find(r=>r.id===id);x.bucket="7 Days";x.payment="Paid";toast(`${x.business} renewed successfully`);render()}
+function reminder(id){const x=renewals.find(r=>r.id===id);toast(`WhatsApp reminder prepared for ${x.owner} (${x.phone})`)}
+function paymentLink(id){const x=renewals.find(r=>r.id===id);toast(`Payment link prepared for ${x.business}`)}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+render();
+</script>
+</body>
+</html>
