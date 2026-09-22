@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Review Business — Notifications</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}.sidebar{width:244px;background:#111827;color:#fff;padding:22px 14px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px}.logo{width:38px;height:38px;border-radius:10px;background:#3768e8;display:grid;place-items:center;font-weight:800}.brand strong{display:block;font-size:16px}.brand small{color:#8992a5}
+.section{font-size:10px;color:#6f788a;letter-spacing:1.4px;margin:20px 10px 8px}.nav{display:block;color:#cbd2df;text-decoration:none;padding:11px 12px;border-radius:9px;margin:3px 0;font-size:14px}.nav.active,.nav:hover{background:#202a3c;color:#fff}
+.main{flex:1;min-width:0}.top{height:72px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:21px;margin:0}.top p{margin:4px 0 0;color:#7a8496;font-size:13px}
+.content{padding:26px;max-width:1200px;margin:auto}.top-actions{display:flex;gap:9px}.btn{border:1px solid #dfe4ec;background:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:700;color:#4b5567}.btn.primary{background:#3768e8;color:#fff;border-color:#3768e8}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}.stat{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:16px}.stat small{color:#7a8496}.stat strong{display:block;font-size:25px;margin-top:7px}
+.toolbar{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.search{flex:1;min-width:240px;position:relative}.search input{width:100%;padding:11px 13px 11px 36px;border:1px solid #dfe4ec;border-radius:8px;outline:none}.search span{position:absolute;left:12px;top:10px;color:#7d8798}select{padding:10px 12px;border:1px solid #dfe4ec;border-radius:8px;background:#fff;color:#394355}.count{margin-left:auto;color:#778196;font-size:13px}
+.list{background:#fff;border:1px solid #e4e8ef;border-radius:12px;overflow:hidden}.item{display:flex;gap:14px;padding:17px 18px;border-bottom:1px solid #edf0f4;align-items:flex-start}.item:last-child{border-bottom:0}.item.unread{background:#fbfcff}.icon{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-weight:800;flex-shrink:0}.blue{background:#eef3ff;color:#3768e8}.orange{background:#fff6df;color:#a76a00}.red{background:#fff0ef;color:#c43b34}.green{background:#eaf8ed;color:#27843b}.purple{background:#f2edff;color:#7047d9}.body{flex:1;min-width:0}.body strong{font-size:14px}.body p{margin:5px 0;color:#687286;font-size:13px;line-height:1.45}.meta{font-size:11px;color:#929aaa}.dot{width:8px;height:8px;border-radius:50%;background:#3768e8;margin-top:7px;flex-shrink:0}.actions{display:flex;gap:7px;flex-shrink:0}.actions button{border:0;background:none;color:#3768e8;font-weight:700;cursor:pointer;padding:4px}.actions .danger{color:#c43b34}
+.empty{padding:55px;text-align:center;color:#7d8798}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}}@media(max-width:700px){.sidebar{display:none}.content{padding:16px}.top{padding:0 16px}.item{flex-wrap:wrap}.actions{width:100%;padding-left:54px}.count{width:100%;margin-left:0}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="logo">QR</div><div><strong>QR Review Business</strong><small>Admin Panel · V1</small></div></div>
+<div class="section">MAIN</div>
+<a class="nav" href="index.html">⌂ &nbsp; Dashboard</a>
+<a class="nav" href="businesses.html">▣ &nbsp; Businesses <span style="float:right">128</span></a>
+<a class="nav" href="qr-codes.html">▤ &nbsp; QR Codes</a>
+<a class="nav" href="payments.html">₹ &nbsp; Payments</a>
+<a class="nav" href="renewals.html">◔ &nbsp; Renewals</a>
+<a class="nav" href="analytics.html">▥ &nbsp; Analytics</a>
+<a class="nav active" href="notifications.html">♧ &nbsp; Notifications</a>
+<div class="section">SYSTEM</div><a class="nav" href="#">◉ &nbsp; Admin Users</a><a class="nav" href="#">≡ &nbsp; Activity Logs</a><a class="nav" href="#">⚙ &nbsp; Settings</a>
+</aside>
+<main class="main">
+<header class="top"><div><h1>Notifications</h1><p>Renewal, payment, QR and business alerts.</p></div><div class="top-actions"><button class="btn" onclick="markAll()">Mark all as read</button></div></header>
+<section class="content">
+<div class="stats">
+<div class="stat"><small>Total Notifications</small><strong id="total">0</strong></div>
+<div class="stat"><small>Unread</small><strong id="unread">0</strong></div>
+<div class="stat"><small>Renewal Alerts</small><strong id="renewal">0</strong></div>
+<div class="stat"><small>Payment Alerts</small><strong id="payment">0</strong></div>
+</div>
+<div class="toolbar">
+<div class="search"><span>⌕</span><input id="search" placeholder="Search notification or business..." oninput="render()"></div>
+<select id="filter" onchange="render()"><option value="">All Notifications</option><option value="Renewal">Renewal</option><option value="Payment">Payment</option><option value="QR">QR</option><option value="Business">Business</option></select>
+<select id="read" onchange="render()"><option value="">All</option><option value="Unread">Unread</option><option value="Read">Read</option></select>
+<span class="count" id="count"></span>
+</div>
+<div class="list" id="list"></div>
+</section></main></div>
+<script>
+const notifications=[
+{id:1,type:"Renewal",title:"Renewal due in 2 days",text:"Caliber Library subscription expires on 24 Sep 2026.",time:"10 min ago",business:"Caliber Library",read:false,icon:"↻",color:"orange"},
+{id:2,type:"Payment",title:"Payment pending",text:"Gupta Garage has an outstanding renewal payment of ₹49.",time:"25 min ago",business:"Gupta Garage",read:false,icon:"₹",color:"red"},
+{id:3,type:"QR",title:"QR code disabled",text:"QR-00125 for Gupta Garage is currently disabled.",time:"1 hour ago",business:"Gupta Garage",read:false,icon:"QR",color:"red"},
+{id:4,type:"Business",title:"New business registered",text:"A new business profile was added to the system.",time:"2 hours ago",business:"New Business",read:true,icon:"+",color:"green"},
+{id:5,type:"Renewal",title:"Renewal due in 3 days",text:"Shree Salon subscription expires on 25 Sep 2026.",time:"3 hours ago",business:"Shree Salon",read:false,icon:"↻",color:"orange"},
+{id:6,type:"Payment",title:"Payment received",text:"₹99 payment received successfully from Ayush Medical.",time:"5 hours ago",business:"Ayush Medical",read:true,icon:"₹",color:"green"},
+{id:7,type:"QR",title:"New QR code created",text:"A new Counter QR was created for Metro Repairs.",time:"Yesterday",business:"Metro Repairs",read:true,icon:"QR",color:"blue"},
+{id:8,type:"Renewal",title:"Business subscription expired",text:"Priya Beauty subscription has expired and needs renewal.",time:"Yesterday",business:"Priya Beauty",read:false,icon:"!",color:"red"},
+{id:9,type:"Business",title:"Business profile updated",text:"City Care Clinic business details were updated.",time:"2 days ago",business:"City Care Clinic",read:true,icon:"✓",color:"purple"},
+{id:10,type:"Payment",title:"Payment link reminder",text:"Payment link is still pending for Style Hub.",time:"2 days ago",business:"Style Hub",read:true,icon:"₹",color:"orange"}
+];
+function render(){
+const q=document.getElementById("search").value.toLowerCase(),f=document.getElementById("filter").value,r=document.getElementById("read").value;
+const rows=notifications.filter(x=>(!q||[x.title,x.text,x.business].join(" ").toLowerCase().includes(q))&&(!f||x.type===f)&&(!r||(r==="Unread"?!x.read:x.read)));
+document.getElementById("total").textContent=notifications.length;document.getElementById("unread").textContent=notifications.filter(x=>!x.read).length;document.getElementById("renewal").textContent=notifications.filter(x=>x.type==="Renewal").length;document.getElementById("payment").textContent=notifications.filter(x=>x.type==="Payment").length;document.getElementById("count").textContent=`Showing ${rows.length} of ${notifications.length} notifications`;
+document.getElementById("list").innerHTML=rows.length?rows.map(x=>`<div class="item ${x.read?"":"unread"}"><div class="icon ${x.color}">${x.icon}</div><div class="body"><strong>${x.title}</strong><p>${x.text}</p><span class="meta">${x.business} · ${x.time}</span></div>${x.read?"":"<span class='dot'></span>"}<div class="actions"><button onclick="toggleRead(${x.id})">${x.read?"Mark unread":"Mark read"}</button><button class="danger" onclick="removeNotification(${x.id})">Delete</button></div></div>`).join(""):`<div class="empty">No notifications found.</div>`;
+}
+function toggleRead(id){const x=notifications.find(n=>n.id===id);x.read=!x.read;render()}
+function markAll(){notifications.forEach(x=>x.read=true);render();toast("All notifications marked as read")}
+function removeNotification(id){const i=notifications.findIndex(n=>n.id===id);if(i>-1)notifications.splice(i,1);render();toast("Notification removed")}
+function toast(msg){alert(msg)}
+render();
+</script>
+</body>
+</html>
