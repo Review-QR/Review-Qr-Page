@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#111827" />
+  <title>QR Review Business — Admin Dashboard</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --surface: #ffffff;
+      --surface-2: #f8fafc;
+      --text: #111827;
+      --muted: #667085;
+      --border: #e5e7eb;
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --sidebar: #111827;
+      --sidebar-muted: #9ca3af;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.07);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app {
+      min-height: 100vh;
+      display: flex;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar);
+      color: #fff;
+      padding: 22px 16px;
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 50;
+      overflow-y: auto;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 4px 8px 24px;
+    }
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: #2563eb;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .brand strong { display: block; font-size: 15px; }
+    .brand span { display: block; color: #9ca3af; font-size: 11px; margin-top: 2px; }
+
+    .nav-title {
+      color: #6b7280;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .12em;
+      padding: 10px 11px;
+    }
+    .nav {
+      display: grid;
+      gap: 5px;
+    }
+    .nav button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      color: #d1d5db;
+      background: transparent;
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 12px;
+      text-align: left;
+    }
+    .nav button:hover { background: rgba(255,255,255,.07); }
+    .nav button.active { background: #1f2937; color: #fff; }
+    .nav .icon { width: 18px; text-align: center; font-size: 15px; }
+    .nav .badge {
+      margin-left: auto;
+      min-width: 22px;
+      padding: 2px 6px;
+      border-radius: 99px;
+      background: #374151;
+      color: #e5e7eb;
+      font-size: 10px;
+      text-align: center;
+    }
+
+    .sidebar-bottom {
+      margin-top: 24px;
+      border-top: 1px solid #1f2937;
+      padding-top: 16px;
+    }
+    .admin-card {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      background: #0b1220;
+    }
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: #dbeafe;
+      color: #1d4ed8;
+      font-weight: 800;
+      font-size: 12px;
+    }
+    .admin-card strong { display: block; font-size: 12px; }
+    .admin-card span { color: #9ca3af; font-size: 10px; }
+
+    .main {
+      margin-left: 260px;
+      width: calc(100% - 260px);
+      min-width: 0;
+    }
+
+    .topbar {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 0 26px;
+      background: rgba(255,255,255,.92);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(10px);
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .menu-button {
+      display: none;
+      border: 1px solid var(--border);
+      background: #fff;
+      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+    }
+    .page-title h1 { margin: 0; font-size: 20px; letter-spacing: -.02em; }
+    .page-title p { margin: 3px 0 0; font-size: 12px; color: var(--muted); }
+    .topbar-actions { display: flex; align-items: center; gap: 10px; }
+    .icon-button {
+      width: 40px; height: 40px;
+      display: grid; place-items: center;
+      border: 1px solid var(--border); background: #fff; border-radius: 10px;
+    }
+    .primary-button {
+      border: 0;
+      background: var(--primary);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .primary-button:hover { background: var(--primary-dark); }
+
+    .content {
+      padding: 24px 26px 40px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .notice {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 12px 14px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      font-size: 12px;
+    }
+    .notice button {
+      background: transparent;
+      border: 0;
+      color: #1e40af;
+      font-weight: 700;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 17px;
+      box-shadow: var(--shadow);
+    }
+    .stat-top { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+    .stat-label { color: var(--muted); font-size: 11px; }
+    .stat-icon {
+      width: 32px; height: 32px; display: grid; place-items: center;
+      background: var(--surface-2); border-radius: 9px; font-size: 14px;
+    }
+    .stat-value { margin-top: 10px; font-size: 26px; line-height: 1; font-weight: 800; letter-spacing: -.03em; }
+    .stat-foot { margin-top: 9px; font-size: 10px; color: var(--muted); }
+    .positive { color: var(--success); font-weight: 700; }
+    .negative { color: var(--danger); font-weight: 700; }
+
+    .grid-2-1 {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 17px 18px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .card-header h2 { margin: 0; font-size: 14px; }
+    .card-header p { margin: 3px 0 0; color: var(--muted); font-size: 10px; }
+    .card-body { padding: 18px; }
+
+    .chart-wrap { height: 278px; position: relative; }
+    .chart-svg { width: 100%; height: 100%; overflow: visible; }
+    .grid-line { stroke: #e5e7eb; stroke-width: 1; }
+    .axis-text { fill: #98a2b3; font-size: 10px; }
+    .chart-line { fill: none; stroke: var(--primary); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+    .chart-area { fill: url(#chartFill); }
+    .point { fill: #fff; stroke: var(--primary); stroke-width: 3; }
+
+    .mini-grid { display: grid; gap: 10px; }
+    .split-row { display: grid; gap: 6px; }
+    .split-head { display: flex; justify-content: space-between; font-size: 11px; }
+    .track { height: 8px; background: #eef2f7; border-radius: 99px; overflow: hidden; }
+    .fill { height: 100%; border-radius: inherit; background: var(--primary); }
+    .fill.green { background: #16a34a; }
+    .fill.orange { background: #f59e0b; }
+    .fill.purple { background: #7c3aed; }
+    .fill.gray { background: #64748b; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 650px; }
+    th, td { text-align: left; padding: 12px 18px; border-bottom: 1px solid #f0f2f5; font-size: 11px; }
+    th { color: var(--muted); font-size: 10px; text-transform: uppercase; letter-spacing: .06em; background: #fbfcfe; }
+    tbody tr:hover { background: #fafcff; }
+    .business-cell { display: flex; align-items: center; gap: 9px; min-width: 180px; }
+    .business-logo { width: 30px; height: 30px; border-radius: 8px; background: #eff6ff; color: #1d4ed8; display: grid; place-items: center; font-weight: 800; font-size: 10px; }
+    .business-cell strong { display: block; font-size: 11px; }
+    .business-cell span { color: var(--muted); font-size: 9px; }
+    .status {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 8px; border-radius: 99px; font-weight: 700; font-size: 9px;
+    }
+    .status::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .active-status { color: #15803d; background: #f0fdf4; }
+    .expired-status { color: #b91c1c; background: #fef2f2; }
+    .pending-status { color: #b45309; background: #fffbeb; }
+    .action-link { color: var(--primary); border: 0; background: transparent; font-weight: 700; padding: 0; font-size: 10px; }
+    .action-link + .action-link { margin-left: 9px; }
+
+    .activity-list { display: grid; }
+    .activity-item { display: flex; gap: 11px; padding: 12px 0; border-bottom: 1px solid #f0f2f5; }
+    .activity-item:last-child { border-bottom: 0; }
+    .activity-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); margin-top: 5px; flex: none; }
+    .activity-item strong { display: inline; font-size: 11px; }
+    .activity-item p { margin: 2px 0 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
+    .activity-item time { color: #98a2b3; font-size: 9px; }
+
+    .scan-box { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .scan-metric { padding: 14px; border: 1px solid var(--border); border-radius: 12px; background: #fbfcfe; }
+    .scan-metric span { display: block; color: var(--muted); font-size: 10px; }
+    .scan-metric strong { display: block; margin-top: 5px; font-size: 22px; }
+    .compare { margin-top: 6px; font-size: 9px; }
+
+    .empty { padding: 26px 18px; text-align: center; color: var(--muted); font-size: 11px; }
+
+    .drawer {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, .42);
+      display: none;
+      z-index: 80;
+    }
+    .drawer.open { display: block; }
+    .drawer-panel {
+      width: min(420px, 92vw);
+      height: 100%;
+      margin-left: auto;
+      background: #fff;
+      padding: 18px;
+      box-shadow: -10px 0 40px rgba(15, 23, 42, .14);
+      overflow-y: auto;
+    }
+    .drawer-head { display: flex; align-items: center; justify-content: space-between; }
+    .drawer-head h3 { margin: 0; font-size: 16px; }
+    .form-grid { display: grid; gap: 12px; margin-top: 20px; }
+    .field label { display: block; font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+    .field input, .field select {
+      width: 100%;
+      height: 40px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 0 10px;
+      outline: none;
+      background: #fff;
+    }
+    .field input:focus, .field select:focus { border-color: #93c5fd; box-shadow: 0 0 0 3px rgba(37, 99, 235, .08); }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #111827;
+      color: #fff;
+      padding: 11px 14px;
+      border-radius: 10px;
+      font-size: 11px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: .25s ease;
+      z-index: 120;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    .section-anchor { scroll-margin-top: 90px; }
+
+    @media (max-width: 1250px) {
+      .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 950px) {
+      .sidebar { transform: translateX(-100%); transition: transform .25s ease; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; width: 100%; }
+      .menu-button { display: inline-grid; place-items: center; }
+      .grid-2-1, .grid-2 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .content { padding: 16px 13px 30px; }
+      .topbar { padding: 0 13px; height: 64px; }
+      .topbar-actions .primary-button { display: none; }
+      .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+      .stat-card { padding: 14px; }
+      .stat-value { font-size: 22px; }
+      .page-title h1 { font-size: 17px; }
+      .notice { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">QR</div>
+        <div>
+          <strong>QR Review Business</strong>
+          <span>Admin Panel • V1</span>
+        </div>
+      </div>
+
+      <div class="nav-title">Main</div>
+      <nav class="nav">
+        <button class="active" data-section="dashboard"><span class="icon">⌂</span> Dashboard</button>
+        <button data-section="businesses"><span class="icon">▣</span> Businesses <span class="badge">128</span></button>
+        <button data-section="qr"><span class="icon">▦</span> QR Codes</button>
+        <button data-section="payments"><span class="icon">₹</span> Payments</button>
+        <button data-section="renewals"><span class="icon">↻</span> Renewals <span class="badge">7</span></button>
+        <button data-section="analytics"><span class="icon">◫</span> Analytics</button>
+        <button data-section="notifications"><span class="icon">◌</span> Notifications <span class="badge">4</span></button>
+      </nav>
+
+      <div class="nav-title">System</div>
+      <nav class="nav">
+        <button data-section="admins"><span class="icon">◎</span> Admin Users</button>
+        <button data-section="logs"><span class="icon">≡</span> Activity Logs</button>
+        <button data-section="settings"><span class="icon">⚙</span> Settings</button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="admin-card">
+          <div class="avatar">A</div>
+          <div>
+            <strong>Super Admin</strong>
+            <span>admin@qrreview.local</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-button" id="menuButton" aria-label="Open menu">☰</button>
+          <div class="page-title">
+            <h1>Dashboard</h1>
+            <p>Monitor businesses, QR activity, renewals and revenue.</p>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-button" id="notifyButton" title="Notifications">🔔</button>
+          <button class="primary-button" id="addBusinessButton">+ Add Business</button>
+        </div>
+      </header>
+
+      <div class="content" id="dashboard">
+        <div class="notice">
+          <div><strong>Demo mode:</strong> ये figures sample data हैं। Real database/API connect होने पर automatic update होंगे.</div>
+          <button id="dismissNotice">Dismiss</button>
+        </div>
+
+        <section class="stats-grid section-anchor">
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">Total Businesses</span><span class="stat-icon">🏢</span></div>
+            <div class="stat-value">128</div>
+            <div class="stat-foot"><span class="positive">+8</span> this month</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">Active</span><span class="stat-icon">✅</span></div>
+            <div class="stat-value">109</div>
+            <div class="stat-foot">85.2% of all businesses</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">Expired</span><span class="stat-icon">⏱️</span></div>
+            <div class="stat-value">12</div>
+            <div class="stat-foot"><span class="negative">Needs renewal</span></div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">Suspended</span><span class="stat-icon">⛔</span></div>
+            <div class="stat-value">7</div>
+            <div class="stat-foot">Manual admin action</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">This Month Revenue</span><span class="stat-icon">₹</span></div>
+            <div class="stat-value">₹8,940</div>
+            <div class="stat-foot"><span class="positive">+14.6%</span> vs last month</div>
+          </article>
+          <article class="stat-card">
+            <div class="stat-top"><span class="stat-label">QR Scans</span><span class="stat-icon">▦</span></div>
+            <div class="stat-value">5,482</div>
+            <div class="stat-foot"><span class="positive">+21.3%</span> vs last month</div>
+          </article>
+        </section>
+
+        <section class="grid-2-1">
+          <article class="card section-anchor" id="analytics">
+            <div class="card-header">
+              <div>
+                <h2>Revenue Overview</h2>
+                <p>Month-wise earning trend</p>
+              </div>
+              <select id="revenueRange" style="border:1px solid var(--border); border-radius:9px; padding:7px 9px; font-size:10px;">
+                <option>Last 7 months</option>
+                <option>Last 12 months</option>
+              </select>
+            </div>
+            <div class="card-body">
+              <div class="chart-wrap">
+                <svg class="chart-svg" viewBox="0 0 760 280" role="img" aria-label="Revenue line chart">
+                  <defs>
+                    <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#2563eb" stop-opacity="0.22" />
+                      <stop offset="100%" stop-color="#2563eb" stop-opacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <line class="grid-line" x1="55" y1="35" x2="735" y2="35" />
+                  <line class="grid-line" x1="55" y1="90" x2="735" y2="90" />
+                  <line class="grid-line" x1="55" y1="145" x2="735" y2="145" />
+                  <line class="grid-line" x1="55" y1="200" x2="735" y2="200" />
+                  <line class="grid-line" x1="55" y1="255" x2="735" y2="255" />
+                  <text class="axis-text" x="8" y="38">₹12k</text>
+                  <text class="axis-text" x="8" y="93">₹9k</text>
+                  <text class="axis-text" x="8" y="148">₹6k</text>
+                  <text class="axis-text" x="8" y="203">₹3k</text>
+                  <text class="axis-text" x="20" y="258">₹0</text>
+                  <path class="chart-area" d="M 75 186 L 185 160 L 295 178 L 405 124 L 515 104 L 625 77 L 715 62 L 715 255 L 75 255 Z" />
+                  <path class="chart-line" d="M 75 186 L 185 160 L 295 178 L 405 124 L 515 104 L 625 77 L 715 62" />
+                  <circle class="point" cx="75" cy="186" r="5" /><circle class="point" cx="185" cy="160" r="5" />
+                  <circle class="point" cx="295" cy="178" r="5" /><circle class="point" cx="405" cy="124" r="5" />
+                  <circle class="point" cx="515" cy="104" r="5" /><circle class="point" cx="625" cy="77" r="5" />
+                  <circle class="point" cx="715" cy="62" r="5" />
+                  <text class="axis-text" x="66" y="273">Mar</text><text class="axis-text" x="176" y="273">Apr</text>
+                  <text class="axis-text" x="286" y="273">May</text><text class="axis-text" x="396" y="273">Jun</text>
+                  <text class="axis-text" x="506" y="273">Jul</text><text class="axis-text" x="616" y="273">Aug</text>
+                  <text class="axis-text" x="706" y="273">Sep</text>
+                </svg>
+              </div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header">
+              <div>
+                <h2>Plan-wise Split</h2>
+                <p>Businesses by subscription plan</p>
+              </div>
+            </div>
+            <div class="card-body mini-grid">
+              <div class="split-row"><div class="split-head"><span>₹29 Basic</span><strong>64</strong></div><div class="track"><div class="fill" style="width:50%"></div></div></div>
+              <div class="split-row"><div class="split-head"><span>₹49 Standard</span><strong>46</strong></div><div class="track"><div class="fill green" style="width:36%"></div></div></div>
+              <div class="split-row"><div class="split-head"><span>₹99 Premium</span><strong>18</strong></div><div class="track"><div class="fill purple" style="width:14%"></div></div></div>
+              <div style="height:2px"></div>
+              <div class="split-row"><div class="split-head"><span>Active businesses</span><strong>109 / 128</strong></div><div class="track"><div class="fill orange" style="width:85.2%"></div></div></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid-2">
+          <article class="card" id="renewals">
+            <div class="card-header">
+              <div><h2>Renewal Due</h2><p>Next 3 days</p></div>
+              <button class="action-link" data-action="view-renewals">View all</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Business</th><th>Expiry</th><th>Status</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="business-cell"><div class="business-logo">CL</div><div><strong>Caliber Library</strong><span>Library • ₹49</span></div></div></td><td>24 Sep 2026</td><td><span class="status pending-status">2 days</span></td><td><button class="action-link" data-reminder="Caliber Library">Reminder Bhejo</button></td></tr>
+                  <tr><td><div class="business-cell"><div class="business-logo">SS</div><div><strong>Shree Salon</strong><span>Salon • ₹29</span></div></div></td><td>25 Sep 2026</td><td><span class="status pending-status">3 days</span></td><td><button class="action-link" data-reminder="Shree Salon">Reminder Bhejo</button></td></tr>
+                  <tr><td><div class="business-cell"><div class="business-logo">AM</div><div><strong>Ayush Medical</strong><span>Medical • ₹99</span></div></div></td><td>25 Sep 2026</td><td><span class="status pending-status">3 days</span></td><td><button class="action-link" data-reminder="Ayush Medical">Reminder Bhejo</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="card" id="payments">
+            <div class="card-header">
+              <div><h2>Payment Pending</h2><p>Expired and not renewed</p></div>
+              <button class="action-link" data-action="view-payments">View all</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Business</th><th>Plan</th><th>Due</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td><div class="business-cell"><div class="business-logo">GS</div><div><strong>Gupta Garage</strong><span>Owner: Rakesh</span></div></div></td><td>₹49</td><td><span class="status expired-status">Expired</span></td><td><button class="action-link" data-payment="Gupta Garage">Payment Link</button></td></tr>
+                  <tr><td><div class="business-cell"><div class="business-logo">PV</div><div><strong>Priya Beauty</strong><span>Owner: Priya</span></div></div></td><td>₹29</td><td><span class="status expired-status">Expired</span></td><td><button class="action-link" data-payment="Priya Beauty">Payment Link</button></td></tr>
+                  <tr><td><div class="business-cell"><div class="business-logo">MR</div><div><strong>Metro Repairs</strong><span>Owner: Mohit</span></div></div></td><td>₹99</td><td><span class="status expired-status">Expired</span></td><td><button class="action-link" data-payment="Metro Repairs">Payment Link</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="grid-2">
+          <article class="card">
+            <div class="card-header"><div><h2>Business Type Breakdown</h2><p>Current registered businesses</p></div></div>
+            <div class="card-body mini-grid">
+              <div class="split-row"><div class="split-head"><span>Salon</span><strong>34</strong></div><div class="track"><div class="fill" style="width:75%"></div></div></div>
+              <div class="split-row"><div class="split-head"><span>Medical</span><strong>26</strong></div><div class="track"><div class="fill green" style="width:57%"></div></div></div>
+              <div class="split-row"><div class="split-head"><span>Garage</span><strong>18</strong></div><div class="track"><div class="fill orange" style="width:40%"></div></div></div>
+              <div class="split-row"><div class="split-head"><span>Library</span><strong>12</strong></div><div class="track"><div class="fill purple" style="width:27%"></div></div></div>
+              <div class="split-row"><div class="split-head"><span>Restaurant</span><strong>21</strong></div><div class="track"><div class="fill gray" style="width:46%"></div></div></div>
+              <div class="split-row"><div class="split-head"><span>Other</span><strong>17</strong></div><div class="track"><div class="fill" style="width:37%"></div></div></div>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="card-header"><div><h2>Total Scans</h2><p>This month vs previous month</p></div></div>
+            <div class="card-body">
+              <div class="scan-box">
+                <div class="scan-metric"><span>This Month</span><strong>5,482</strong><div class="compare positive">+21.3%</div></div>
+                <div class="scan-metric"><span>Last Month</span><strong>4,520</strong><div class="compare">Baseline</div></div>
+              </div>
+              <div style="margin-top:16px; font-size:10px; color:var(--muted);">Top scan source: <strong style="color:var(--text);">Counter QR — 1,284 scans</strong></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="card">
+          <div class="card-header"><div><h2>Recent Activity</h2><p>Latest admin and business events</p></div><button class="action-link" data-action="view-logs">View logs</button></div>
+          <div class="card-body activity-list">
+            <div class="activity-item"><span class="activity-dot"></span><div><strong>Caliber Library renewed its plan.</strong><p>₹49 payment recorded successfully. <time>10 minutes ago</time></p></div></div>
+            <div class="activity-item"><span class="activity-dot"></span><div><strong>New business registered: Shree Salon.</strong><p>₹29 Basic plan • QR generated. <time>42 minutes ago</time></p></div></div>
+            <div class="activity-item"><span class="activity-dot"></span><div><strong>QR expired: Gupta Garage.</strong><p>Renewal required before activation. <time>1 hour ago</time></p></div></div>
+            <div class="activity-item"><span class="activity-dot"></span><div><strong>Ayush Medical received 18 new scans.</strong><p>Counter QR campaign is currently active. <time>2 hours ago</time></p></div></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="drawer" id="drawer">
+    <div class="drawer-panel">
+      <div class="drawer-head">
+        <h3>Add New Business</h3>
+        <button class="icon-button" id="closeDrawer" aria-label="Close">✕</button>
+      </div>
+      <form class="form-grid" id="businessForm">
+        <div class="field"><label>Business Name</label><input required name="businessName" placeholder="e.g. Shree Salon" /></div>
+        <div class="field"><label>Business Type</label><select name="type"><option>Salon</option><option>Medical</option><option>Garage</option><option>Library</option><option>Restaurant</option><option>Other</option></select></div>
+        <div class="field"><label>Owner Name</label><input name="owner" placeholder="Owner name" /></div>
+        <div class="field"><label>Owner WhatsApp / Phone</label><input required name="phone" inputmode="tel" placeholder="10 digit number" /></div>
+        <div class="field"><label>Google Review Link</label><input required name="reviewLink" type="url" placeholder="https://g.page/..." /></div>
+        <div class="field"><label>Plan</label><select name="plan"><option value="29">₹29 Basic</option><option value="49">₹49 Standard</option><option value="99">₹99 Premium</option></select></div>
+        <div class="field"><label>Active Duration</label><select name="duration"><option value="30">30 Days</option><option value="60">60 Days</option><option value="90">90 Days</option></select></div>
+        <div class="field"><label>Address</label><input name="address" placeholder="Business address" /></div>
+        <button class="primary-button" type="submit">Create Business + Generate QR</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const drawer = document.getElementById('drawer');
+    const toast = document.getElementById('toast');
+    const menuButton = document.getElementById('menuButton');
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    function openDrawer() {
+      drawer.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeDrawer() {
+      drawer.classList.remove('open');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('addBusinessButton').addEventListener('click', openDrawer);
+    document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
+    drawer.addEventListener('click', (e) => { if (e.target === drawer) closeDrawer(); });
+    menuButton.addEventListener('click', () => sidebar.classList.toggle('open'));
+
+    document.getElementById('dismissNotice').addEventListener('click', (e) => {
+      e.target.closest('.notice').remove();
+    });
+
+    document.getElementById('notifyButton').addEventListener('click', () => showToast('4 notifications waiting.'));
+
+    document.querySelectorAll('.nav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const section = btn.dataset.section;
+        const map = {
+          dashboard: 'dashboard',
+          analytics: 'analytics',
+          renewals: 'renewals',
+          payments: 'payments'
+        };
+        if (map[section]) document.getElementById(map[section]).scrollIntoView({behavior:'smooth'});
+        if (window.innerWidth <= 950) sidebar.classList.remove('open');
+        if (!map[section] && section !== 'dashboard') showToast(section.charAt(0).toUpperCase() + section.slice(1) + ' module will be built in the next phase.');
+      });
+    });
+
+    document.querySelectorAll('[data-reminder]').forEach(btn => {
+      btn.addEventListener('click', () => showToast('WhatsApp reminder draft ready for ' + btn.dataset.reminder + '.'));
+    });
+    document.querySelectorAll('[data-payment]').forEach(btn => {
+      btn.addEventListener('click', () => showToast('Payment link action opened for ' + btn.dataset.payment + '.'));
+    });
+    document.querySelectorAll('[data-action]').forEach(btn => {
+      btn.addEventListener('click', () => showToast('This section will be expanded in the next phase.'));
+    });
+
+    document.getElementById('revenueRange').addEventListener('change', (e) => {
+      showToast('Chart range changed to ' + e.target.value + ' (demo data).');
+    });
+
+    document.getElementById('businessForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const form = new FormData(e.target);
+      const business = form.get('businessName');
+      closeDrawer();
+      e.target.reset();
+      showToast(business + ' created successfully (demo mode).');
+    });
+  </script>
+</body>
+</html>
