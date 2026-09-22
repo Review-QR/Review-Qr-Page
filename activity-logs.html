@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Review Business — Activity Logs</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}.sidebar{width:244px;background:#111827;color:#fff;padding:22px 14px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px}.logo{width:38px;height:38px;border-radius:10px;background:#3768e8;display:grid;place-items:center;font-weight:800}.brand strong{display:block;font-size:16px}.brand small{color:#8992a5}
+.section{font-size:10px;color:#6f788a;letter-spacing:1.4px;margin:20px 10px 8px}.nav{display:block;color:#cbd2df;text-decoration:none;padding:11px 12px;border-radius:9px;margin:3px 0;font-size:14px}.nav.active,.nav:hover{background:#202a3c;color:#fff}
+.main{flex:1;min-width:0}.top{height:72px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:21px;margin:0}.top p{margin:4px 0 0;color:#7a8496;font-size:13px}
+.content{padding:26px;max-width:1300px;margin:auto}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}.stat{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:16px}.stat small{color:#7a8496}.stat strong{display:block;font-size:25px;margin-top:7px}
+.toolbar{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.search{flex:1;min-width:230px;position:relative}.search input{width:100%;padding:11px 13px 11px 36px;border:1px solid #dfe4ec;border-radius:8px;outline:none}.search span{position:absolute;left:12px;top:10px;color:#7d8798}
+select{padding:10px 12px;border:1px solid #dfe4ec;border-radius:8px;background:#fff;color:#394355}.count{margin-left:auto;color:#778196;font-size:13px}
+.table-wrap{background:#fff;border:1px solid #e4e8ef;border-radius:12px;overflow:auto}table{width:100%;border-collapse:collapse;min-width:1100px}th,td{text-align:left;padding:14px 16px;border-bottom:1px solid #edf0f4;font-size:13px;white-space:nowrap}th{background:#fafbfc;color:#687286;font-size:11px;text-transform:uppercase;letter-spacing:.6px}tr:last-child td{border-bottom:0}
+.action{display:flex;align-items:center;gap:9px}.icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;font-weight:800}.blue{background:#eef3ff;color:#3768e8}.green{background:#eaf8ed;color:#27843b}.orange{background:#fff6df;color:#a76a00}.red{background:#fff0ef;color:#c43b34}.purple{background:#f2edff;color:#7047d9}
+.badge{display:inline-flex;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}.success{background:#eaf8ed;color:#27843b}.warning{background:#fff6df;color:#a76a00}.danger{background:#fff0ef;color:#c43b34}.neutral{background:#eef0f4;color:#667085}
+.view{border:0;background:none;color:#3768e8;font-weight:700;cursor:pointer}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.overlay.show{display:flex}.modal{width:min(600px,100%);background:#fff;border-radius:15px;padding:24px}.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modal h2{margin:0;font-size:20px}.close{border:0;background:#f0f2f6;border-radius:8px;width:34px;height:34px;cursor:pointer}.detail{display:grid;grid-template-columns:1fr 1fr;gap:12px}.detail div{background:#f7f8fb;border-radius:9px;padding:12px}.detail small{display:block;color:#7a8496;margin-bottom:4px}.detail strong{font-size:14px}.modal-actions{display:flex;justify-content:flex-end;margin-top:20px}.secondary{border:1px solid #dfe4ec;background:#fff;padding:10px 15px;border-radius:8px;cursor:pointer}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}}@media(max-width:750px){.sidebar{display:none}.content{padding:16px}.top{padding:0 16px}.count{width:100%;margin-left:0}.detail{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="logo">QR</div><div><strong>QR Review Business</strong><small>Admin Panel · V1</small></div></div>
+<div class="section">MAIN</div>
+<a class="nav" href="index.html">⌂ &nbsp; Dashboard</a>
+<a class="nav" href="businesses.html">▣ &nbsp; Businesses <span style="float:right">128</span></a>
+<a class="nav" href="qr-codes.html">▤ &nbsp; QR Codes</a>
+<a class="nav" href="payments.html">₹ &nbsp; Payments</a>
+<a class="nav" href="renewals.html">◔ &nbsp; Renewals</a>
+<a class="nav" href="analytics.html">▥ &nbsp; Analytics</a>
+<a class="nav" href="notifications.html">♧ &nbsp; Notifications</a>
+<div class="section">SYSTEM</div>
+<a class="nav" href="#">◉ &nbsp; Admin Users</a>
+<a class="nav active" href="activity-logs.html">≡ &nbsp; Activity Logs</a>
+<a class="nav" href="#">⚙ &nbsp; Settings</a>
+</aside>
+<main class="main">
+<header class="top"><div><h1>Activity Logs</h1><p>Track admin actions and system activity across the business.</p></div></header>
+<section class="content">
+<div class="stats">
+<div class="stat"><small>Total Activities</small><strong id="total">0</strong></div>
+<div class="stat"><small>Today</small><strong id="today">0</strong></div>
+<div class="stat"><small>Admin Actions</small><strong id="admins">0</strong></div>
+<div class="stat"><small>System Events</small><strong id="system">0</strong></div>
+</div>
+<div class="toolbar">
+<div class="search"><span>⌕</span><input id="search" placeholder="Search action, admin or business..." oninput="render()"></div>
+<select id="action" onchange="render()"><option value="">All Actions</option><option>Business</option><option>QR</option><option>Payment</option><option>Renewal</option><option>Notification</option><option>Settings</option></select>
+<select id="admin" onchange="render()"><option value="">All Admins</option><option>Super Admin</option><option>Admin Rahul</option><option>Support Admin</option><option>System</option></select>
+<select id="period" onchange="render()"><option value="">All Dates</option><option value="Today">Today</option><option value="Yesterday">Yesterday</option><option value="Older">Older</option></select>
+<span class="count" id="count"></span>
+</div>
+<div class="table-wrap"><table><thead><tr><th>Activity</th><th>Admin / Actor</th><th>Business</th><th>Action</th><th>Date & Time</th><th>Device / IP</th><th>Details</th></tr></thead><tbody id="tbody"></tbody></table></div>
+</section></main></div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+<div class="modal-head"><h2>Activity Details</h2><button class="close" onclick="closeModal()">×</button></div>
+<div class="detail" id="detail"></div>
+<div class="modal-actions"><button class="secondary" onclick="closeModal()">Close</button></div>
+</div></div>
+
+<script>
+const logs=[
+{id:"LOG-5010",title:"Business renewed",admin:"Super Admin",business:"Caliber Library",action:"Renewal",time:"22 Sep 2026, 6:18 PM",period:"Today",device:"iPad · Admin",ip:"192.168.1.20",details:"Subscription renewed for ₹49."},
+{id:"LOG-5009",title:"Payment marked as paid",admin:"Super Admin",business:"Ayush Medical",action:"Payment",time:"22 Sep 2026, 5:55 PM",period:"Today",device:"iPad · Admin",ip:"192.168.1.20",details:"Transaction TXN-10026 marked Paid."},
+{id:"LOG-5008",title:"QR code created",admin:"Admin Rahul",business:"Metro Repairs",action:"QR",time:"22 Sep 2026, 5:31 PM",period:"Today",device:"Chrome · Desktop",ip:"10.0.0.14",details:"Created Packaging QR QR-00123."},
+{id:"LOG-5007",title:"Renewal reminder prepared",admin:"Super Admin",business:"Shree Salon",action:"Notification",time:"22 Sep 2026, 5:12 PM",period:"Today",device:"iPad · Admin",ip:"192.168.1.20",details:"WhatsApp renewal reminder prepared."},
+{id:"LOG-5006",title:"Business registered",admin:"Admin Rahul",business:"New Business",action:"Business",time:"22 Sep 2026, 4:42 PM",period:"Today",device:"Chrome · Desktop",ip:"10.0.0.14",details:"New business profile created."},
+{id:"LOG-5005",title:"QR code disabled",admin:"Super Admin",business:"Gupta Garage",action:"QR",time:"22 Sep 2026, 3:28 PM",period:"Today",device:"iPad · Admin",ip:"192.168.1.20",details:"QR-00125 disabled manually."},
+{id:"LOG-5004",title:"Payment link prepared",admin:"Support Admin",business:"Priya Beauty",action:"Payment",time:"21 Sep 2026, 7:18 PM",period:"Yesterday",device:"Chrome · Desktop",ip:"10.0.0.22",details:"Renewal payment link prepared for ₹29."},
+{id:"LOG-5003",title:"Business activated",admin:"Super Admin",business:"Style Hub",action:"Business",time:"21 Sep 2026, 4:05 PM",period:"Yesterday",device:"iPad · Admin",ip:"192.168.1.20",details:"Business status changed to Active."},
+{id:"LOG-5002",title:"Settings updated",admin:"Super Admin",business:"—",action:"Settings",time:"20 Sep 2026, 6:40 PM",period:"Older",device:"iPad · Admin",ip:"192.168.1.20",details:"Admin notification settings updated."},
+{id:"LOG-5001",title:"System activity sync",admin:"System",business:"—",action:"Settings",time:"20 Sep 2026, 12:10 PM",period:"Older",device:"Server",ip:"Internal",details:"Scheduled system activity sync completed."}
+];
+function actionClass(a){return a==="Payment"?"green":a==="QR"?"blue":a==="Renewal"?"orange":a==="Notification"?"purple":a==="Settings"?"neutral":"blue"}
+function render(){
+const q=document.getElementById("search").value.toLowerCase(),a=document.getElementById("action").value,u=document.getElementById("admin").value,p=document.getElementById("period").value;
+const rows=logs.filter(x=>(!q||[x.id,x.title,x.admin,x.business,x.details].join(" ").toLowerCase().includes(q))&&(!a||x.action===a)&&(!u||x.admin===u)&&(!p||x.period===p));
+document.getElementById("total").textContent=logs.length;document.getElementById("today").textContent=logs.filter(x=>x.period==="Today").length;document.getElementById("admins").textContent=logs.filter(x=>x.admin!=="System").length;document.getElementById("system").textContent=logs.filter(x=>x.admin==="System").length;document.getElementById("count").textContent=`Showing ${rows.length} of ${logs.length} activities`;
+document.getElementById("tbody").innerHTML=rows.length?rows.map(x=>`<tr><td><div class="action"><div class="icon ${actionClass(x.action)}">${x.action==="Payment"?"₹":x.action==="QR"?"QR":x.action==="Renewal"?"↻":x.action==="Notification"?"♧":x.action==="Settings"?"⚙":"+"}</div><div><strong>${x.title}</strong><small style="display:block;color:#8992a3">${x.id}</small></div></div></td><td><strong>${x.admin}</strong></td><td>${x.business}</td><td><span class="badge ${x.action==="Payment"?"success":x.action==="QR"?"warning":"neutral"}">${x.action}</span></td><td>${x.time}</td><td>${x.device}<br><small style="color:#8992a3">${x.ip}</small></td><td><button class="view" onclick="view('${x.id}')">View</button></td></tr>`).join(""):`<tr><td colspan="7"><div style="padding:50px;text-align:center;color:#7d8798">No activity found.</div></td></tr>`;
+}
+function view(id){const x=logs.find(l=>l.id===id);document.getElementById("detail").innerHTML=`<div><small>Activity ID</small><strong>${x.id}</strong></div><div><small>Action</small><strong>${x.action}</strong></div><div><small>Title</small><strong>${x.title}</strong></div><div><small>Admin / Actor</small><strong>${x.admin}</strong></div><div><small>Business</small><strong>${x.business}</strong></div><div><small>Date & Time</small><strong>${x.time}</strong></div><div><small>Device</small><strong>${x.device}</strong></div><div><small>IP</small><strong>${x.ip}</strong></div><div style="grid-column:1/-1"><small>Details</small><strong>${x.details}</strong></div>`;document.getElementById("overlay").classList.add("show")}
+function closeModal(){document.getElementById("overlay").classList.remove("show")}
+render();
+</script>
+</body>
+</html>
