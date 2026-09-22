@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QR Review Business — Admin Users</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:#f5f7fb;color:#172033}
+button,input,select{font:inherit}.app{display:flex;min-height:100vh}.sidebar{width:244px;background:#111827;color:#fff;padding:22px 14px;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:11px;padding:5px 9px 25px}.logo{width:38px;height:38px;border-radius:10px;background:#3768e8;display:grid;place-items:center;font-weight:800}.brand strong{display:block;font-size:16px}.brand small{color:#8992a5}
+.section{font-size:10px;color:#6f788a;letter-spacing:1.4px;margin:20px 10px 8px}.nav{display:block;color:#cbd2df;text-decoration:none;padding:11px 12px;border-radius:9px;margin:3px 0;font-size:14px}.nav.active,.nav:hover{background:#202a3c;color:#fff}
+.main{flex:1;min-width:0}.top{height:72px;background:#fff;border-bottom:1px solid #e6e9ef;display:flex;align-items:center;justify-content:space-between;padding:0 28px}.top h1{font-size:21px;margin:0}.top p{margin:4px 0 0;color:#7a8496;font-size:13px}
+.content{padding:26px;max-width:1350px;margin:auto}.top-actions{display:flex;gap:9px}.btn{border:1px solid #dfe4ec;background:#fff;padding:10px 14px;border-radius:8px;cursor:pointer;font-weight:700;color:#4b5567}.btn.primary{background:#3768e8;color:#fff;border-color:#3768e8}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}.stat{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:16px}.stat small{color:#7a8496}.stat strong{display:block;font-size:25px;margin-top:7px}
+.toolbar{background:#fff;border:1px solid #e4e8ef;border-radius:12px;padding:15px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px}.search{flex:1;min-width:230px;position:relative}.search input{width:100%;padding:11px 13px 11px 36px;border:1px solid #dfe4ec;border-radius:8px;outline:none}.search span{position:absolute;left:12px;top:10px;color:#7d8798}
+select{padding:10px 12px;border:1px solid #dfe4ec;border-radius:8px;background:#fff;color:#394355}.count{margin-left:auto;color:#778196;font-size:13px}
+.table-wrap{background:#fff;border:1px solid #e4e8ef;border-radius:12px;overflow:auto}table{width:100%;border-collapse:collapse;min-width:1050px}th,td{text-align:left;padding:14px 16px;border-bottom:1px solid #edf0f4;font-size:13px;white-space:nowrap}th{background:#fafbfc;color:#687286;font-size:11px;text-transform:uppercase;letter-spacing:.6px}tr:last-child td{border-bottom:0}
+.user{display:flex;align-items:center;gap:10px}.avatar{width:38px;height:38px;border-radius:10px;background:#eef3ff;color:#3768e8;display:grid;place-items:center;font-weight:800}.user strong{display:block}.user small{color:#8992a3}
+.badge{display:inline-flex;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:700}.active{background:#eaf8ed;color:#27843b}.suspended{background:#fff0ef;color:#c43b34}.super{background:#f2edff;color:#7047d9}.admin{background:#eef3ff;color:#3768e8}.support{background:#fff6df;color:#a76a00}
+.actions button{border:0;background:none;color:#3768e8;font-weight:700;cursor:pointer;margin-right:9px;padding:3px}.actions .danger{color:#c43b34}
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:10}.overlay.show{display:flex}.modal{width:min(620px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:15px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.modal h2{margin:0;font-size:20px}.close{border:0;background:#f0f2f6;border-radius:8px;width:34px;height:34px;cursor:pointer}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;font-size:12px;font-weight:700;color:#687286;margin-bottom:6px}.field input,.field select{width:100%;padding:10px;border:1px solid #dfe4ec;border-radius:8px;outline:none}.full{grid-column:1/-1}.permissions{background:#f7f8fb;border-radius:9px;padding:12px}.permissions label{display:block;margin:8px 0;font-size:13px;color:#4b5567}.modal-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}.secondary{border:1px solid #dfe4ec;background:#fff;padding:10px 15px;border-radius:8px;cursor:pointer}.primary{border:0;background:#3768e8;color:#fff;padding:10px 15px;border-radius:8px;font-weight:700;cursor:pointer}
+@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}}@media(max-width:750px){.sidebar{display:none}.content{padding:16px}.top{padding:0 16px}.form{grid-template-columns:1fr}.full{grid-column:auto}.count{width:100%;margin-left:0}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar">
+<div class="brand"><div class="logo">QR</div><div><strong>QR Review Business</strong><small>Admin Panel · V1</small></div></div>
+<div class="section">MAIN</div>
+<a class="nav" href="index.html">⌂ &nbsp; Dashboard</a>
+<a class="nav" href="businesses.html">▣ &nbsp; Businesses <span style="float:right">128</span></a>
+<a class="nav" href="qr-codes.html">▤ &nbsp; QR Codes</a>
+<a class="nav" href="payments.html">₹ &nbsp; Payments</a>
+<a class="nav" href="renewals.html">◔ &nbsp; Renewals</a>
+<a class="nav" href="analytics.html">▥ &nbsp; Analytics</a>
+<a class="nav" href="notifications.html">♧ &nbsp; Notifications</a>
+<div class="section">SYSTEM</div>
+<a class="nav active" href="admin-users.html">◉ &nbsp; Admin Users</a>
+<a class="nav" href="activity-logs.html">≡ &nbsp; Activity Logs</a>
+<a class="nav" href="#">⚙ &nbsp; Settings</a>
+</aside>
+<main class="main">
+<header class="top"><div><h1>Admin Users</h1><p>Manage administrators, roles, status and access permissions.</p></div><div class="top-actions"><button class="btn primary" onclick="openAdd()">+ Add Admin</button></div></header>
+<section class="content">
+<div class="stats">
+<div class="stat"><small>Total Admin Users</small><strong id="total">0</strong></div>
+<div class="stat"><small>Active Admins</small><strong id="active">0</strong></div>
+<div class="stat"><small>Suspended</small><strong id="suspended">0</strong></div>
+<div class="stat"><small>Super Admins</small><strong id="super">0</strong></div>
+</div>
+<div class="toolbar">
+<div class="search"><span>⌕</span><input id="search" placeholder="Search admin, email or phone..." oninput="render()"></div>
+<select id="role" onchange="render()"><option value="">All Roles</option><option>Super Admin</option><option>Admin</option><option>Support Admin</option></select>
+<select id="status" onchange="render()"><option value="">All Status</option><option>Active</option><option>Suspended</option></select>
+<span class="count" id="count"></span>
+</div>
+<div class="table-wrap"><table><thead><tr><th>Admin User</th><th>Email / Phone</th><th>Role</th><th>Status</th><th>Last Login</th><th>Created</th><th>Actions</th></tr></thead><tbody id="tbody"></tbody></table></div>
+</section></main></div>
+
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()"><div class="modal">
+<div class="modal-head"><h2 id="modalTitle">Add Admin User</h2><button class="close" onclick="closeModal()">×</button></div>
+<div class="form">
+<div class="field"><label>Full Name *</label><input id="name" placeholder="Admin name"></div>
+<div class="field"><label>Role *</label><select id="roleForm"><option>Admin</option><option>Super Admin</option><option>Support Admin</option></select></div>
+<div class="field"><label>Email *</label><input id="email" type="email" placeholder="admin@example.com"></div>
+<div class="field"><label>Phone</label><input id="phone" placeholder="10-digit phone"></div>
+<div class="field"><label>Status</label><select id="statusForm"><option>Active</option><option>Suspended</option></select></div>
+<div class="field"><label>Temporary Password</label><input id="password" type="password" placeholder="Set during account creation"></div>
+<div class="field full"><label>Permissions</label><div class="permissions">
+<label><input type="checkbox" checked> Dashboard & Analytics</label>
+<label><input type="checkbox" checked> Businesses & QR Codes</label>
+<label><input type="checkbox" checked> Payments & Renewals</label>
+<label><input type="checkbox" checked> Notifications & Activity Logs</label>
+<label><input type="checkbox"> Admin Users & Settings</label>
+</div></div>
+</div>
+<div class="modal-actions"><button class="secondary" onclick="closeModal()">Cancel</button><button class="primary" onclick="saveAdmin()">Save Admin</button></div>
+</div></div>
+
+<script>
+const admins=[
+{id:1,name:"Super Admin",email:"admin@qrreview.local",phone:"9876500001",role:"Super Admin",status:"Active",login:"22 Sep 2026, 6:40 PM",created:"01 Aug 2026"},
+{id:2,name:"Admin Rahul",email:"rahul@qrreview.local",phone:"9876500002",role:"Admin",status:"Active",login:"22 Sep 2026, 5:58 PM",created:"05 Aug 2026"},
+{id:3,name:"Support Admin",email:"support@qrreview.local",phone:"9876500003",role:"Support Admin",status:"Active",login:"22 Sep 2026, 4:22 PM",created:"10 Aug 2026"},
+{id:4,name:"Operations Admin",email:"ops@qrreview.local",phone:"9876500004",role:"Admin",status:"Active",login:"21 Sep 2026, 7:10 PM",created:"14 Aug 2026"},
+{id:5,name:"Finance Admin",email:"finance@qrreview.local",phone:"9876500005",role:"Admin",status:"Suspended",login:"18 Sep 2026, 3:15 PM",created:"18 Aug 2026"},
+{id:6,name:"Support Team",email:"team@qrreview.local",phone:"9876500006",role:"Support Admin",status:"Active",login:"20 Sep 2026, 11:35 AM",created:"20 Aug 2026"}
+];
+let editId=null;
+function roleClass(r){return r==="Super Admin"?"super":r==="Admin"?"admin":"support"}
+function render(){
+const q=document.getElementById("search").value.toLowerCase(),r=document.getElementById("role").value,s=document.getElementById("status").value;
+const rows=admins.filter(x=>(!q||[x.name,x.email,x.phone].join(" ").toLowerCase().includes(q))&&(!r||x.role===r)&&(!s||x.status===s));
+document.getElementById("total").textContent=admins.length;document.getElementById("active").textContent=admins.filter(x=>x.status==="Active").length;document.getElementById("suspended").textContent=admins.filter(x=>x.status==="Suspended").length;document.getElementById("super").textContent=admins.filter(x=>x.role==="Super Admin").length;document.getElementById("count").textContent=`Showing ${rows.length} of ${admins.length} admin users`;
+document.getElementById("tbody").innerHTML=rows.length?rows.map(x=>`<tr><td><div class="user"><div class="avatar">${x.name.split(" ").map(a=>a[0]).slice(0,2).join("")}</div><div><strong>${x.name}</strong><small>ADMIN-${String(x.id).padStart(3,"0")}</small></div></div></td><td><strong>${x.email}</strong><br><small>${x.phone}</small></td><td><span class="badge ${roleClass(x.role)}">${x.role}</span></td><td><span class="badge ${x.status==="Active"?"active":"suspended"}">${x.status}</span></td><td>${x.login}</td><td>${x.created}</td><td class="actions"><button onclick="editAdmin(${x.id})">Edit</button><button onclick="toggleStatus(${x.id})" class="${x.status==="Active"?"danger":""}">${x.status==="Active"?"Suspend":"Activate"}</button></td></tr>`).join(""):`<tr><td colspan="7"><div style="padding:50px;text-align:center;color:#7d8798">No admin users found.</div></td></tr>`;
+}
+function openAdd(){editId=null;document.getElementById("modalTitle").textContent="Add Admin User";["name","email","phone","password"].forEach(id=>document.getElementById(id).value="");document.getElementById("roleForm").value="Admin";document.getElementById("statusForm").value="Active";document.getElementById("overlay").classList.add("show")}
+function editAdmin(id){const x=admins.find(a=>a.id===id);editId=id;document.getElementById("modalTitle").textContent="Edit Admin User";document.getElementById("name").value=x.name;document.getElementById("email").value=x.email;document.getElementById("phone").value=x.phone;document.getElementById("roleForm").value=x.role;document.getElementById("statusForm").value=x.status;document.getElementById("password").value="";document.getElementById("overlay").classList.add("show")}
+function saveAdmin(){const name=document.getElementById("name").value.trim(),email=document.getElementById("email").value.trim();if(!name||!email){alert("Please enter name and email.");return}if(editId){const x=admins.find(a=>a.id===editId);x.name=name;x.email=email;x.phone=document.getElementById("phone").value;x.role=document.getElementById("roleForm").value;x.status=document.getElementById("statusForm").value}else{admins.unshift({id:Date.now(),name,email,phone:document.getElementById("phone").value,role:document.getElementById("roleForm").value,status:document.getElementById("statusForm").value,login:"Never",created:"22 Sep 2026"})}closeModal();render()}
+function toggleStatus(id){const x=admins.find(a=>a.id===id);x.status=x.status==="Active"?"Suspended":"Active";render()}
+function closeModal(){document.getElementById("overlay").classList.remove("show")}
+render();
+</script>
+</body>
+</html>
