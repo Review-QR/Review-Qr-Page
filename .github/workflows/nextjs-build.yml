@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - nextjs-migration
+
   pull_request:
     branches:
       - nextjs-migration
