@@ -24,5 +24,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build Next.js application
+       - name: Build Next.js application
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
         run: npm run build
