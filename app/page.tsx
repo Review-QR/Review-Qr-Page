@@ -1,17 +1,105 @@
-export default function HomePage() {
+import Link from "next/link";
+import { getBusinesses } from "../lib/data";
+
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  let businesses = [];
+  let errorMessage = "";
+
+  try {
+    businesses = await getBusinesses();
+  } catch (error) {
+    errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Unable to load business data.";
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const totalBusinesses = businesses.length;
+
+  const activeBusinesses = businesses.filter(
+    (business) =>
+      business.status === "active" &&
+      (!business.expiry || business.expiry >= today)
+  ).length;
+
+  const expiredBusinesses = businesses.filter(
+    (business) => business.expiry && business.expiry < today
+  ).length;
+
+  const activeQrCodes = businesses.filter(
+    (business) =>
+      business.qr_status === "active" &&
+      (!business.expiry || business.expiry >= today)
+  ).length;
+
+  const totalScans = businesses.reduce(
+    (total, business) => total + (business.scans ?? 0),
+    0
+  );
+
+  const basicCount = businesses.filter(
+    (business) => business.plan === "Basic"
+  ).length;
+
+  const standardCount = businesses.filter(
+    (business) => business.plan === "Standard"
+  ).length;
+
+  const premiumCount = businesses.filter(
+    (business) => business.plan === "Premium"
+  ).length;
+
+  const recentBusinesses = [...businesses]
+    .sort((a, b) => {
+      const dateA = a.created_at ?? a.created ?? "";
+      const dateB = b.created_at ?? b.created ?? "";
+
+      return dateB.localeCompare(dateA);
+    })
+    .slice(0, 5);
+
   return (
     <main className="container">
       <div style={{ marginBottom: "32px" }}>
         <h1 className="page-title">Review-QR Dashboard</h1>
+
         <p className="page-description">
           QR Review Management Platform
         </p>
       </div>
 
+      {errorMessage && (
+        <div
+          className="card"
+          style={{
+            marginBottom: "24px",
+            border: "1px solid #fecaca",
+            background: "#fef2f2",
+          }}
+        >
+          <strong style={{ color: "#b91c1c" }}>
+            Supabase data load failed
+          </strong>
+
+          <p
+            style={{
+              margin: "8px 0 0",
+              color: "#7f1d1d",
+            }}
+          >
+            {errorMessage}
+          </p>
+        </div>
+      )}
+
       <section
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
           gap: "16px",
           marginBottom: "24px",
         }}
@@ -20,32 +108,114 @@ export default function HomePage() {
           <p style={{ color: "#64748b", margin: "0 0 8px" }}>
             Total Businesses
           </p>
-          <h2 style={{ margin: 0, fontSize: "30px" }}>128</h2>
+
+          <h2 style={{ margin: 0, fontSize: "30px" }}>
+            {totalBusinesses}
+          </h2>
+        </div>
+
+        <div className="card">
+          <p style={{ color: "#64748b", margin: "0 0 8px" }}>
+            Active Businesses
+          </p>
+
+          <h2 style={{ margin: 0, fontSize: "30px" }}>
+            {activeBusinesses}
+          </h2>
+        </div>
+
+        <div className="card">
+          <p style={{ color: "#64748b", margin: "0 0 8px" }}>
+            Expired Businesses
+          </p>
+
+          <h2 style={{ margin: 0, fontSize: "30px" }}>
+            {expiredBusinesses}
+          </h2>
         </div>
 
         <div className="card">
           <p style={{ color: "#64748b", margin: "0 0 8px" }}>
             Active QR Codes
           </p>
-          <h2 style={{ margin: 0, fontSize: "30px" }}>109</h2>
+
+          <h2 style={{ margin: 0, fontSize: "30px" }}>
+            {activeQrCodes}
+          </h2>
         </div>
 
         <div className="card">
           <p style={{ color: "#64748b", margin: "0 0 8px" }}>
-            Total Scans
+            Total QR Scans
           </p>
-          <h2 style={{ margin: 0, fontSize: "30px" }}>5,482</h2>
-        </div>
 
-        <div className="card">
-          <p style={{ color: "#64748b", margin: "0 0 8px" }}>
-            Monthly Revenue
-          </p>
-          <h2 style={{ margin: 0, fontSize: "30px" }}>₹12,450</h2>
+          <h2 style={{ margin: 0, fontSize: "30px" }}>
+            {totalScans.toLocaleString("en-IN")}
+          </h2>
         </div>
       </section>
 
       <section className="card">
+        <h2 style={{ marginTop: 0 }}>Plan-wise Businesses</h2>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "12px",
+          }}
+        >
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "10px",
+              background: "#f8fafc",
+            }}
+          >
+            <p style={{ margin: "0 0 6px", color: "#64748b" }}>
+              Basic
+            </p>
+
+            <strong style={{ fontSize: "24px" }}>
+              {basicCount}
+            </strong>
+          </div>
+
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "10px",
+              background: "#f8fafc",
+            }}
+          >
+            <p style={{ margin: "0 0 6px", color: "#64748b" }}>
+              Standard
+            </p>
+
+            <strong style={{ fontSize: "24px" }}>
+              {standardCount}
+            </strong>
+          </div>
+
+          <div
+            style={{
+              padding: "16px",
+              borderRadius: "10px",
+              background: "#f8fafc",
+            }}
+          >
+            <p style={{ margin: "0 0 6px", color: "#64748b" }}>
+              Premium
+            </p>
+
+            <strong style={{ fontSize: "24px" }}>
+              {premiumCount}
+            </strong>
+          </div>
+        </div>
+      </section>
+
+      <section className="card" style={{ marginTop: "24px" }}>
         <h2 style={{ marginTop: 0 }}>Quick Actions</h2>
 
         <div
@@ -55,20 +225,25 @@ export default function HomePage() {
             gap: "12px",
           }}
         >
-          <button
+          <Link
+            href="/businesses"
             style={{
-              border: 0,
+              display: "inline-block",
+              textDecoration: "none",
               borderRadius: "8px",
               padding: "12px 18px",
               background: "#0f172a",
               color: "#ffffff",
             }}
           >
-            Add Business
-          </button>
+            Add / Manage Business
+          </Link>
 
-          <button
+          <Link
+            href="/qr-codes"
             style={{
+              display: "inline-block",
+              textDecoration: "none",
               border: "1px solid #cbd5e1",
               borderRadius: "8px",
               padding: "12px 18px",
@@ -77,10 +252,13 @@ export default function HomePage() {
             }}
           >
             QR Codes
-          </button>
+          </Link>
 
-          <button
+          <Link
+            href="/payments"
             style={{
+              display: "inline-block",
+              textDecoration: "none",
               border: "1px solid #cbd5e1",
               borderRadius: "8px",
               padding: "12px 18px",
@@ -89,10 +267,13 @@ export default function HomePage() {
             }}
           >
             Payments
-          </button>
+          </Link>
 
-          <button
+          <Link
+            href="/analytics"
             style={{
+              display: "inline-block",
+              textDecoration: "none",
               border: "1px solid #cbd5e1",
               borderRadius: "8px",
               padding: "12px 18px",
@@ -101,8 +282,68 @@ export default function HomePage() {
             }}
           >
             Analytics
-          </button>
+          </Link>
         </div>
+      </section>
+
+      <section className="card" style={{ marginTop: "24px" }}>
+        <h2 style={{ marginTop: 0 }}>Recent Businesses</h2>
+
+        {recentBusinesses.length === 0 ? (
+          <p style={{ color: "#64748b" }}>
+            No businesses found in Supabase.
+          </p>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gap: "12px",
+            }}
+          >
+            {recentBusinesses.map((business) => (
+              <div
+                key={business.id}
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "16px",
+                  padding: "14px 16px",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "10px",
+                  flexWrap: "wrap",
+                }}
+              >
+                <div>
+                  <strong>{business.name}</strong>
+
+                  <div
+                    style={{
+                      marginTop: "4px",
+                      color: "#64748b",
+                      fontSize: "14px",
+                    }}
+                  >
+                    {business.type || "Business"}{" "}
+                    {business.plan ? `• ${business.plan}` : ""}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    fontSize: "14px",
+                    color:
+                      business.status === "active"
+                        ? "#15803d"
+                        : "#b45309",
+                  }}
+                >
+                  {business.status || "pending"}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="card" style={{ marginTop: "24px" }}>
@@ -110,9 +351,17 @@ export default function HomePage() {
 
         <div style={{ display: "grid", gap: "12px" }}>
           <div>🟢 Next.js Foundation — Ready</div>
-          <div>🟡 Supabase Database — Next Stage</div>
+
+          <div>
+            {errorMessage
+              ? "🔴 Supabase Database — Connection/Data Error"
+              : "🟢 Supabase Database — Connected"}
+          </div>
+
           <div>🟡 Authentication — Next Stage</div>
+
           <div>🟡 QR Engine — Next Stage</div>
+
           <div>🟡 Cashfree Payments — Next Stage</div>
         </div>
       </section>
