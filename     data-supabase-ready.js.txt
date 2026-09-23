@@ -1,0 +1,111 @@
+/* QR Review Business - Supabase Data Layer V3 */
+(function(){
+"use strict";
+const SUPABASE_URL="https://czzeyhpelwafmoiufhvu.supabase.co";
+const SUPABASE_KEY="sb_publishable_Wzrhz2BkKsLjQqbIDE6p9A_ZYBkvhOr";
+const API=SUPABASE_URL+"/rest/v1/businesses";
+const STORAGE_KEY="qr_review_business_data_v1";
+
+const defaults={
+version:3,
+settings:{businessName:"QR Review Business",currency:"INR",timezone:"Asia/Kolkata",
+plans:{basic:{name:"Basic",price:29,duration:30},standard:{name:"Standard",price:49,duration:30},premium:{name:"Premium",price:99,duration:30}}},
+businesses:[
+{id:"QR-00128",name:"Caliber Library",owner:"Rahul",phone:"9876543210",type:"Library",plan:"standard",status:"Expiring Soon",expiry:"2026-09-24",scans:245,qrStatus:"Active",qrType:"Counter QR",reviewLink:"",address:"",created:"2026-08-20"},
+{id:"QR-00127",name:"Shree Salon",owner:"Shreya",phone:"9876501122",type:"Salon",plan:"basic",status:"Expiring Soon",expiry:"2026-09-25",scans:183,qrStatus:"Active",qrType:"Counter QR",reviewLink:"",address:"",created:"2026-08-20"},
+{id:"QR-00126",name:"Ayush Medical",owner:"Ayush",phone:"9876502211",type:"Medical",plan:"premium",status:"Expiring Soon",expiry:"2026-09-25",scans:421,qrStatus:"Active",qrType:"Bill QR",reviewLink:"",address:"",created:"2026-08-19"},
+{id:"QR-00125",name:"Gupta Garage",owner:"Rakesh",phone:"9876503311",type:"Garage",plan:"standard",status:"Expired",expiry:"2026-09-20",scans:312,qrStatus:"Disabled",qrType:"Poster QR",reviewLink:"",address:"",created:"2026-08-18"},
+{id:"QR-00124",name:"Priya Beauty",owner:"Priya",phone:"9876504411",type:"Salon",plan:"basic",status:"Expired",expiry:"2026-09-18",scans:198,qrStatus:"Disabled",qrType:"Counter QR",reviewLink:"",address:"",created:"2026-08-18"},
+{id:"QR-00123",name:"Metro Repairs",owner:"Mohit",phone:"9876505511",type:"Garage",plan:"premium",status:"Expired",expiry:"2026-09-17",scans:566,qrStatus:"Active",qrType:"Packaging QR",reviewLink:"",address:"",created:"2026-08-17"},
+{id:"QR-00122",name:"City Care Clinic",owner:"Neha",phone:"9876506611",type:"Medical",plan:"standard",status:"Active",expiry:"2026-10-15",scans:734,qrStatus:"Active",qrType:"Counter QR",reviewLink:"",address:"",created:"2026-08-15"},
+{id:"QR-00121",name:"Readers Point",owner:"Amit",phone:"9876507711",type:"Library",plan:"basic",status:"Active",expiry:"2026-10-28",scans:389,qrStatus:"Active",qrType:"Poster QR",reviewLink:"",address:"",created:"2026-08-14"},
+{id:"QR-00120",name:"Royal Family Restaurant",owner:"Vikas",phone:"9876508811",type:"Restaurant",plan:"premium",status:"Active",expiry:"2026-11-02",scans:892,qrStatus:"Active",qrType:"Table QR",reviewLink:"",address:"",created:"2026-08-12"},
+{id:"QR-00119",name:"Style Hub",owner:"Pooja",phone:"9876509911",type:"Salon",plan:"standard",status:"Suspended",expiry:"2026-09-30",scans:104,qrStatus:"Disabled",qrType:"Counter QR",reviewLink:"",address:"",created:"2026-08-10"}],
+payments:[],notifications:[],activityLogs:[],
+admins:[
+{id:"ADMIN-001",name:"Super Admin",email:"admin@qrreview.local",phone:"9876500001",role:"Super Admin",status:"Active"},
+{id:"ADMIN-002",name:"Admin Rahul",email:"rahul@qrreview.local",phone:"9876500002",role:"Admin",status:"Active"},
+{id:"ADMIN-003",name:"Support Admin",email:"support@qrreview.local",phone:"9876500003",role:"Support Admin",status:"Active"}]
+};
+
+function clone(x){return JSON.parse(JSON.stringify(x));}
+function read(){
+try{
+let raw=localStorage.getItem(STORAGE_KEY);
+if(!raw){let d=clone(defaults);localStorage.setItem(STORAGE_KEY,JSON.stringify(d));return d;}
+let d=JSON.parse(raw);
+d.businesses=Array.isArray(d.businesses)?d.businesses:[];
+d.payments=Array.isArray(d.payments)?d.payments:[];
+d.notifications=Array.isArray(d.notifications)?d.notifications:[];
+d.activityLogs=Array.isArray(d.activityLogs)?d.activityLogs:[];
+d.settings=d.settings||clone(defaults.settings);
+return d;
+}catch(e){return clone(defaults);}
+}
+function write(d){
+try{localStorage.setItem(STORAGE_KEY,JSON.stringify(d));window.dispatchEvent(new CustomEvent("qrReviewDataChanged",{detail:d}));return true;}
+catch(e){console.error("Local storage error",e);return false;}
+}
+function headers(extra){
+return Object.assign({apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,"Content-Type":"application/json"},extra||{});
+}
+function toCloud(b){
+return {id:String(b.id),name:b.name||"New Business",owner:b.owner||"",phone:b.phone||"",type:b.type||"Other",plan:b.plan||"basic",status:b.status||"Active",expiry:b.expiry||null,scans:Number(b.scans||0),qr_status:b.qrStatus||"Active",qr_type:b.qrType||"Counter QR",review_link:b.reviewLink||"",address:b.address||"",created:b.created||new Date().toISOString().slice(0,10)};
+}
+function fromCloud(r){
+return {id:r.id,name:r.name||"",owner:r.owner||"",phone:r.phone||"",type:r.type||"Other",plan:r.plan||"basic",status:r.status||"Active",expiry:r.expiry||"",scans:Number(r.scans||0),qrStatus:r.qr_status||"Active",qrType:r.qr_type||"Counter QR",reviewLink:r.review_link||"",address:r.address||"",created:r.created||""};
+}
+async function cloudSave(item){
+let r=await fetch(API,{method:"POST",headers:headers({Prefer:"resolution=merge-duplicates,return=representation"}),body:JSON.stringify([toCloud(item)])});
+if(!r.ok)throw new Error(await r.text());
+return r.json();
+}
+async function cloudDelete(id){
+let r=await fetch(API+"?id=eq."+encodeURIComponent(id),{method:"DELETE",headers:headers()});
+if(!r.ok)throw new Error(await r.text());
+}
+function nextId(){
+let nums=read().businesses.map(b=>Number(String(b.id||"").replace(/\D/g,""))||0);
+return "QR-"+String((nums.length?Math.max.apply(null,nums):0)+1).padStart(5,"0");
+}
+function addBusiness(b){
+let d=read();
+let item={id:b.id||nextId(),name:b.name||"New Business",owner:b.owner||"",phone:b.phone||"",type:b.type||"Other",plan:b.plan||"basic",status:b.status||"Active",expiry:b.expiry||"",scans:Number(b.scans||0),qrStatus:b.qrStatus||"Active",qrType:b.qrType||"Counter QR",reviewLink:b.reviewLink||"",address:b.address||"",created:b.created||new Date().toISOString().slice(0,10)};
+d.businesses.unshift(item);
+if(!write(d))throw new Error("Local save failed");
+cloudSave(item).then(()=>console.log("Supabase saved",item.id)).catch(e=>console.error("Supabase save failed",e));
+return item;
+}
+function updateBusiness(id,patch){
+let d=read(),i=d.businesses.findIndex(b=>b.id===id);if(i<0)return null;
+d.businesses[i]=Object.assign({},d.businesses[i],patch);let item=d.businesses[i];if(!write(d))return null;
+cloudSave(item).catch(e=>console.error("Cloud update failed",e));return item;
+}
+function removeBusiness(id){
+let d=read();d.businesses=d.businesses.filter(b=>b.id!==id);d.payments=d.payments.filter(p=>p.businessId!==id);write(d);cloudDelete(id).catch(e=>console.error("Cloud delete failed",e));
+}
+function addPayment(p){
+let d=read(),item={id:p.id||"TXN-"+Date.now(),businessId:p.businessId||"",amount:Number(p.amount||0),method:p.method||"UPI",status:p.status||"Pending",date:p.date||new Date().toISOString().slice(0,10)};
+d.payments.unshift(item);write(d);return item;
+}
+function addActivity(a){
+let d=read();d.activityLogs.unshift({id:a.id||"LOG-"+Date.now(),activity:a.activity||"System activity",admin:a.admin||"Super Admin",businessId:a.businessId||"",action:a.action||"System",dateTime:a.dateTime||new Date().toISOString()});d.activityLogs=d.activityLogs.slice(0,200);write(d);
+}
+function addNotification(n){
+let d=read();d.notifications.unshift({id:n.id||"NOT-"+Date.now(),title:n.title||"Notification",message:n.message||"",businessId:n.businessId||"",read:false,createdAt:n.createdAt||new Date().toISOString()});write(d);
+}
+function getStats(){
+let d=read(),b=d.businesses,p=d.payments;
+return {totalBusinesses:b.length,active:b.filter(x=>x.status==="Active").length,expired:b.filter(x=>x.status==="Expired").length,suspended:b.filter(x=>x.status==="Suspended").length,totalScans:b.reduce((s,x)=>s+Number(x.scans||0),0),activeQR:b.filter(x=>x.qrStatus==="Active").length,disabledQR:b.filter(x=>x.qrStatus==="Disabled").length,revenue:p.filter(x=>x.status==="Paid").reduce((s,x)=>s+Number(x.amount||0),0),pendingAmount:p.filter(x=>x.status==="Pending").reduce((s,x)=>s+Number(x.amount||0),0)};
+}
+
+window.QRReviewData={
+STORAGE_KEY:STORAGE_KEY,SUPABASE_URL:SUPABASE_URL,defaultData:clone(defaults),
+read:read,write:write,
+getBusinesses:function(){return read().businesses||[];},
+getBusiness:function(id){return (read().businesses||[]).find(b=>b.id===id)||null;},
+addBusiness:addBusiness,updateBusiness:updateBusiness,removeBusiness:removeBusiness,
+addPayment:addPayment,addActivity:addActivity,addNotification:addNotification,getStats:getStats
+};
+window.addEventListener("storage",function(e){if(e.key===STORAGE_KEY)window.dispatchEvent(new CustomEvent("qrReviewDataChanged"));});
+})();
