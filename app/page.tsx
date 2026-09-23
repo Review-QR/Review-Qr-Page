@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { getBusinesses } from "../lib/data";
+import type { Business } from "../lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  let businesses = [];
+  let businesses: Business[] = [];
   let errorMessage = "";
 
   try {
