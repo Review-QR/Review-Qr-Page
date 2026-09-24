@@ -1,6 +1,6 @@
 import Link from "next/link";
 import LogoutButton from "./logout-button";
-import { getBusinesses } from "../lib/data";
+import { createSupabaseServerClient } from "../lib/supabase-server";
 import type { Business } from "../lib/types";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +10,18 @@ export default async function HomePage() {
   let errorMessage = "";
 
   try {
-    businesses = await getBusinesses();
+    const supabase = await createSupabaseServerClient();
+
+    const { data, error } = await supabase
+      .from("businesses")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    businesses = data ?? [];
   } catch (error) {
     errorMessage =
       error instanceof Error
@@ -24,7 +35,7 @@ export default async function HomePage() {
 
   const activeBusinesses = businesses.filter(
     (business) =>
-      business.status === "active" &&
+      String(business.status ?? "").toLowerCase() === "active" &&
       (!business.expiry || business.expiry >= today)
   ).length;
 
@@ -34,7 +45,7 @@ export default async function HomePage() {
 
   const activeQrCodes = businesses.filter(
     (business) =>
-      business.qr_status === "active" &&
+      String(business.qr_status ?? "").toLowerCase() === "active" &&
       (!business.expiry || business.expiry >= today)
   ).length;
 
@@ -44,15 +55,18 @@ export default async function HomePage() {
   );
 
   const basicCount = businesses.filter(
-    (business) => business.plan === "Basic"
+    (business) =>
+      String(business.plan ?? "").toLowerCase() === "basic"
   ).length;
 
   const standardCount = businesses.filter(
-    (business) => business.plan === "Standard"
+    (business) =>
+      String(business.plan ?? "").toLowerCase() === "standard"
   ).length;
 
   const premiumCount = businesses.filter(
-    (business) => business.plan === "Premium"
+    (business) =>
+      String(business.plan ?? "").toLowerCase() === "premium"
   ).length;
 
   const recentBusinesses = [...businesses]
@@ -66,6 +80,7 @@ export default async function HomePage() {
 
   return (
     <main className="container">
+      {/* Header */}
       <div
         style={{
           marginBottom: "32px",
@@ -87,6 +102,7 @@ export default async function HomePage() {
         <LogoutButton />
       </div>
 
+      {/* Supabase Error */}
       {errorMessage && (
         <div
           className="card"
@@ -111,75 +127,137 @@ export default async function HomePage() {
         </div>
       )}
 
+      {/* Main Statistics */}
       <section
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+          gridTemplateColumns:
+            "repeat(auto-fit, minmax(200px, 1fr))",
           gap: "16px",
           marginBottom: "24px",
         }}
       >
+        {/* Total Businesses */}
         <div className="card">
-          <p style={{ color: "#64748b", margin: "0 0 8px" }}>
+          <p
+            style={{
+              color: "#64748b",
+              margin: "0 0 8px",
+            }}
+          >
             Total Businesses
           </p>
 
-          <h2 style={{ margin: 0, fontSize: "30px" }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "30px",
+            }}
+          >
             {totalBusinesses}
           </h2>
         </div>
 
+        {/* Active Businesses */}
         <div className="card">
-          <p style={{ color: "#64748b", margin: "0 0 8px" }}>
+          <p
+            style={{
+              color: "#64748b",
+              margin: "0 0 8px",
+            }}
+          >
             Active Businesses
           </p>
 
-          <h2 style={{ margin: 0, fontSize: "30px" }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "30px",
+            }}
+          >
             {activeBusinesses}
           </h2>
         </div>
 
+        {/* Expired Businesses */}
         <div className="card">
-          <p style={{ color: "#64748b", margin: "0 0 8px" }}>
+          <p
+            style={{
+              color: "#64748b",
+              margin: "0 0 8px",
+            }}
+          >
             Expired Businesses
           </p>
 
-          <h2 style={{ margin: 0, fontSize: "30px" }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "30px",
+            }}
+          >
             {expiredBusinesses}
           </h2>
         </div>
 
+        {/* Active QR Codes */}
         <div className="card">
-          <p style={{ color: "#64748b", margin: "0 0 8px" }}>
+          <p
+            style={{
+              color: "#64748b",
+              margin: "0 0 8px",
+            }}
+          >
             Active QR Codes
           </p>
 
-          <h2 style={{ margin: 0, fontSize: "30px" }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "30px",
+            }}
+          >
             {activeQrCodes}
           </h2>
         </div>
 
+        {/* Total Scans */}
         <div className="card">
-          <p style={{ color: "#64748b", margin: "0 0 8px" }}>
+          <p
+            style={{
+              color: "#64748b",
+              margin: "0 0 8px",
+            }}
+          >
             Total QR Scans
           </p>
 
-          <h2 style={{ margin: 0, fontSize: "30px" }}>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "30px",
+            }}
+          >
             {totalScans.toLocaleString("en-IN")}
           </h2>
         </div>
       </section>
 
+      {/* Plan Wise Businesses */}
       <section className="card">
-        <h2 style={{ marginTop: 0 }}>Plan-wise Businesses</h2>
+        <h2 style={{ marginTop: 0 }}>
+          Plan-wise Businesses
+        </h2>
 
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gridTemplateColumns:
+              "repeat(auto-fit, minmax(180px, 1fr))",
             gap: "12px",
           }}
         >
+          {/* Basic */}
           <div
             style={{
               padding: "16px",
@@ -187,7 +265,12 @@ export default async function HomePage() {
               background: "#f8fafc",
             }}
           >
-            <p style={{ margin: "0 0 6px", color: "#64748b" }}>
+            <p
+              style={{
+                margin: "0 0 6px",
+                color: "#64748b",
+              }}
+            >
               Basic
             </p>
 
@@ -196,6 +279,7 @@ export default async function HomePage() {
             </strong>
           </div>
 
+          {/* Standard */}
           <div
             style={{
               padding: "16px",
@@ -203,7 +287,12 @@ export default async function HomePage() {
               background: "#f8fafc",
             }}
           >
-            <p style={{ margin: "0 0 6px", color: "#64748b" }}>
+            <p
+              style={{
+                margin: "0 0 6px",
+                color: "#64748b",
+              }}
+            >
               Standard
             </p>
 
@@ -212,6 +301,7 @@ export default async function HomePage() {
             </strong>
           </div>
 
+          {/* Premium */}
           <div
             style={{
               padding: "16px",
@@ -219,7 +309,12 @@ export default async function HomePage() {
               background: "#f8fafc",
             }}
           >
-            <p style={{ margin: "0 0 6px", color: "#64748b" }}>
+            <p
+              style={{
+                margin: "0 0 6px",
+                color: "#64748b",
+              }}
+            >
               Premium
             </p>
 
@@ -230,8 +325,14 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="card" style={{ marginTop: "24px" }}>
-        <h2 style={{ marginTop: 0 }}>Quick Actions</h2>
+      {/* Quick Actions */}
+      <section
+        className="card"
+        style={{ marginTop: "24px" }}
+      >
+        <h2 style={{ marginTop: 0 }}>
+          Quick Actions
+        </h2>
 
         <div
           style={{
@@ -301,12 +402,20 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="card" style={{ marginTop: "24px" }}>
-        <h2 style={{ marginTop: 0 }}>Recent Businesses</h2>
+      {/* Recent Businesses */}
+      <section
+        className="card"
+        style={{ marginTop: "24px" }}
+      >
+        <h2 style={{ marginTop: 0 }}>
+          Recent Businesses
+        </h2>
 
         {recentBusinesses.length === 0 ? (
           <p style={{ color: "#64748b" }}>
-            No businesses found in Supabase.
+            {errorMessage
+              ? "Business data could not be loaded."
+              : "No businesses found in Supabase."}
           </p>
         ) : (
           <div
@@ -339,8 +448,11 @@ export default async function HomePage() {
                       fontSize: "14px",
                     }}
                   >
-                    {business.type || "Business"}{" "}
-                    {business.plan ? `• ${business.plan}` : ""}
+                    {business.type || "Business"}
+
+                    {business.plan
+                      ? ` • ${business.plan}`
+                      : ""}
                   </div>
                 </div>
 
@@ -348,7 +460,9 @@ export default async function HomePage() {
                   style={{
                     fontSize: "14px",
                     color:
-                      business.status === "active"
+                      String(
+                        business.status ?? ""
+                      ).toLowerCase() === "active"
                         ? "#15803d"
                         : "#b45309",
                   }}
@@ -361,11 +475,24 @@ export default async function HomePage() {
         )}
       </section>
 
-      <section className="card" style={{ marginTop: "24px" }}>
-        <h2 style={{ marginTop: 0 }}>System Status</h2>
+      {/* System Status */}
+      <section
+        className="card"
+        style={{ marginTop: "24px" }}
+      >
+        <h2 style={{ marginTop: 0 }}>
+          System Status
+        </h2>
 
-        <div style={{ display: "grid", gap: "12px" }}>
-          <div>🟢 Next.js Foundation — Ready</div>
+        <div
+          style={{
+            display: "grid",
+            gap: "12px",
+          }}
+        >
+          <div>
+            🟢 Next.js Foundation — Ready
+          </div>
 
           <div>
             {errorMessage
@@ -373,11 +500,17 @@ export default async function HomePage() {
               : "🟢 Supabase Database — Connected"}
           </div>
 
-          <div>🟡 Authentication — Next Stage</div>
+          <div>
+            🟢 Authentication — Connected
+          </div>
 
-          <div>🟡 QR Engine — Next Stage</div>
+          <div>
+            🟢 QR Engine — Connected
+          </div>
 
-          <div>🟡 Cashfree Payments — Next Stage</div>
+          <div>
+            🟡 Cashfree Payments — Next Stage
+          </div>
         </div>
       </section>
     </main>
