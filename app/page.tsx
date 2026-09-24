@@ -1,4 +1,5 @@
 import Link from "next/link";
+import LogoutButton from "./logout-button";
 import { getBusinesses } from "../lib/data";
 import type { Business } from "../lib/types";
 
@@ -65,12 +66,25 @@ export default async function HomePage() {
 
   return (
     <main className="container">
-      <div style={{ marginBottom: "32px" }}>
-        <h1 className="page-title">Review-QR Dashboard</h1>
+      <div
+        style={{
+          marginBottom: "32px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          gap: "16px",
+          flexWrap: "wrap",
+        }}
+      >
+        <div>
+          <h1 className="page-title">Review-QR Dashboard</h1>
 
-        <p className="page-description">
-          QR Review Management Platform
-        </p>
+          <p className="page-description">
+            QR Review Management Platform
+          </p>
+        </div>
+
+        <LogoutButton />
       </div>
 
       {errorMessage && (
