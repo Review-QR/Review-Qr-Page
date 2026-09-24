@@ -19,11 +19,9 @@ export default async function ScanPage({ params }: ScanPageProps) {
       <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
         <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
           <div className="mb-4 text-5xl">🔍</div>
-
           <h1 className="text-2xl font-bold text-slate-900">
             QR Not Found
           </h1>
-
           <p className="mt-3 text-slate-600">
             This QR code does not exist or could not be found.
           </p>
@@ -43,5 +41,42 @@ export default async function ScanPage({ params }: ScanPageProps) {
       <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
         <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
           <div className="mb-4 text-5xl">⏸️</div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            QR Temporarily Inactive
+          </h1>
+          <p className="mt-3 text-slate-600">
+            This QR code is currently inactive or its subscription has expired.
+          </p>
+          <p className="mt-5 text-sm text-slate-400">
+            Business: {business.name}
+          </p>
+        </div>
+      </main>
+    );
+  }
 
-          <h1 className="text-
+  if (!business.review_link) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+          <div className="mb-4 text-5xl">⚠️</div>
+          <h1 className="text-2xl font-bold text-slate-900">
+            Review Link Missing
+          </h1>
+          <p className="mt-3 text-slate-600">
+            The review link for this business has not been configured yet.
+          </p>
+          <p className="mt-5 text-sm text-slate-400">
+            Business: {business.name}
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  await supabase.rpc("increment_business_scan", {
+    p_business_id: business.id,
+  });
+
+  redirect(business.review_link);
+}
