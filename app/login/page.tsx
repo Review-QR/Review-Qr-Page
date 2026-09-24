@@ -1,14 +1,11 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const next = searchParams.get("next") || "/";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -37,7 +34,7 @@ export default function LoginPage() {
         return;
       }
 
-      router.replace(next.startsWith("/") ? next : "/");
+      router.replace("/");
       router.refresh();
     } catch (error) {
       console.error(error);
@@ -63,12 +60,6 @@ export default function LoginPage() {
             Admin panel me sign in karein
           </p>
         </div>
-
-        {searchParams.get("error") === "not_admin" && (
-          <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-            Is account ko admin access nahi diya gaya hai.
-          </div>
-        )}
 
         {message && (
           <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
