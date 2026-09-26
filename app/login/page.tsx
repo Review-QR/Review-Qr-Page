@@ -1,48 +1,24 @@
 "use client";
 
-import { FormEvent, useState } from "react";
-import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { useActionState, useEffect, useState } from "react";
+import { signInAction } from "./actions";
 
 export default function LoginPage() {
-  const router = useRouter();
+  const [state, formAction, pending] = useActionState(signInAction, {
+    message: "",
+  });
+  const [queryMessage, setQueryMessage] = useState("");
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
+  useEffect(() => {
+    const error = new URLSearchParams(window.location.search).get("error");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!email.trim() || !password) {
-      setMessage("Email aur password dono required hain.");
-      return;
+    if (error === "not_admin") {
+      setQueryMessage(
+        "Your account does not have active administrator access. Contact an administrator."
+      );
     }
-
-    try {
-      setLoading(true);
-      setMessage("");
-
-      const { error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
-      });
-
-      if (error) {
-        setMessage("Login failed. Email/password check karein.");
-        return;
-      }
-
-      router.replace("/");
-      router.refresh();
-    } catch (error) {
-      console.error(error);
-      setMessage("Login nahi ho paaya. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  }, []);
+  const message = state.message || queryMessage;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
@@ -67,7 +43,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form action={formAction} className="space-y-5">
           <div>
             <label className="mb-2 block text-sm font-medium text-slate-700">
               Email
@@ -75,10 +51,10 @@ export default function LoginPage() {
 
             <input
               type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              name="email"
               placeholder="admin@example.com"
               autoComplete="email"
+              required
               className="w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-500"
             />
           </div>
@@ -90,20 +66,20 @@ export default function LoginPage() {
 
             <input
               type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
+              name="password"
               placeholder="••••••••"
               autoComplete="current-password"
+              required
               className="w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-500"
             />
           </div>
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={pending}
             className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {pending ? "Signing in..." : "Sign In"}
           </button>
         </form>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   addBusiness,
   deleteBusiness,
@@ -8,6 +8,7 @@ import {
   updateBusiness,
 } from "@/lib/data";
 import type { Business } from "@/lib/types";
+import MerchantAccessForm from "./merchant-access-form";
 
 const BUSINESS_TYPES = [
   "Salon",
@@ -78,7 +79,7 @@ export default function BusinessesPage() {
     expiry: "",
   });
 
-  async function loadBusinesses() {
+  const loadBusinesses = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getBusinesses();
@@ -89,11 +90,11 @@ export default function BusinessesPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
-    loadBusinesses();
-  }, []);
+    void loadBusinesses();
+  }, [loadBusinesses]);
 
   function handleChange(field: keyof typeof form, value: string) {
     setForm((previous) => ({
@@ -120,6 +121,7 @@ export default function BusinessesPage() {
       setMessage("");
 
       const selectedPlan = PLANS.find((plan) => plan.name === form.plan);
+      const registrationDate = new Date().toISOString().slice(0, 10);
 
       const business: Business = {
         id: generateBusinessId(),
@@ -135,7 +137,9 @@ export default function BusinessesPage() {
         qr_type: "review",
         review_link: form.review_link.trim(),
         address: form.address.trim() || null,
-        created: new Date().toISOString().slice(0, 10),
+        created: registrationDate,
+        registration_date: registrationDate,
+        merchant_status: "pending",
       };
 
       await addBusiness(business);
@@ -307,7 +311,7 @@ export default function BusinessesPage() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium">
-                  Owner Name
+                  Merchant / Owner Name
                 </label>
 
                 <input
@@ -320,13 +324,15 @@ export default function BusinessesPage() {
 
               <div>
                 <label className="mb-1 block text-sm font-medium">
-                  Phone
+                  Merchant registered mobile number
                 </label>
 
                 <input
                   value={form.phone}
                   onChange={(e) => handleChange("phone", e.target.value)}
                   placeholder="9876543210"
+                  type="tel"
+                  autoComplete="tel"
                   inputMode="numeric"
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500"
                 />
@@ -495,7 +501,7 @@ export default function BusinessesPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px]">
+                <table className="w-full min-w-[1180px]">
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-sm font-semibold">
@@ -524,6 +530,10 @@ export default function BusinessesPage() {
 
                       <th className="px-4 py-3 text-left text-sm font-semibold">
                         QR
+                      </th>
+
+                      <th className="px-4 py-3 text-left text-sm font-semibold">
+                        Merchant Access
                       </th>
 
                       <th className="px-4 py-3 text-right text-sm font-semibold">
@@ -588,6 +598,14 @@ export default function BusinessesPage() {
                           >
                             {business.qr_status || "inactive"}
                           </span>
+                        </td>
+
+                        <td className="px-4 py-4">
+                          <MerchantAccessForm
+                            businessId={business.id}
+                            merchantStatus={business.merchant_status}
+                            onSuccess={loadBusinesses}
+                          />
                         </td>
 
                         <td className="px-4 py-4">
@@ -678,7 +696,7 @@ export default function BusinessesPage() {
 
                 <div>
                   <label className="mb-1 block text-sm font-medium">
-                    Owner Name
+                    Merchant / Owner Name
                   </label>
 
                   <input
@@ -695,7 +713,7 @@ export default function BusinessesPage() {
 
                 <div>
                   <label className="mb-1 block text-sm font-medium">
-                    Phone
+                    Merchant registered mobile number
                   </label>
 
                   <input
@@ -706,6 +724,8 @@ export default function BusinessesPage() {
                         phone: e.target.value,
                       })
                     }
+                    type="tel"
+                    autoComplete="tel"
                     className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500"
                   />
                 </div>

@@ -51,6 +51,8 @@ export async function addBusiness(
       qr_type: business.qr_type ?? "review",
       review_link: business.review_link ?? null,
       address: business.address ?? null,
+      registration_date: business.registration_date ?? null,
+      merchant_status: business.merchant_status ?? "pending",
     })
     .select()
     .single();
