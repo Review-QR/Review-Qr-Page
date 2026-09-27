@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { safeReviewLink } from "@/lib/safe-review-link";
 
 type MyQrCodeProps = {
   businessId: string;
@@ -46,6 +47,7 @@ export default function MyQrCode({
   const [origin, setOrigin] = useState("");
   const [message, setMessage] = useState("");
   const usable = isQrUsable(qrStatus, expiry);
+  const safeLink = safeReviewLink(reviewLink);
   const scanUrl = origin
     ? `${origin}/r/${encodeURIComponent(businessId)}`
     : "";
@@ -185,9 +187,9 @@ export default function MyQrCode({
             </button>
           </div>
 
-          {reviewLink?.trim() ? (
+          {safeLink ? (
             <a
-              href={reviewLink}
+              href={safeLink}
               target="_blank"
               rel="noreferrer"
               className="inline-flex rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"

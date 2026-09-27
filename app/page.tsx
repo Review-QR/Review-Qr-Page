@@ -27,11 +27,8 @@ export default async function HomePage() {
     }
 
     businesses = data ?? [];
-  } catch (error) {
-    errorMessage =
-      error instanceof Error
-        ? error.message
-        : "Unable to load business data.";
+  } catch {
+    errorMessage = "Unable to load business data. Please try again later.";
   }
 
   const today = new Date().toISOString().slice(0, 10);
@@ -40,12 +37,22 @@ export default async function HomePage() {
 
   const activeBusinesses = businesses.filter(
     (business) =>
-      String(business.status ?? "").toLowerCase() === "active" &&
+      ["active", "expiring soon"].includes(
+        String(business.status ?? "").trim().toLowerCase()
+      ) &&
       (!business.expiry || business.expiry >= today)
   ).length;
 
   const expiredBusinesses = businesses.filter(
-    (business) => business.expiry && business.expiry < today
+    (business) => {
+      const status = String(business.status ?? "").trim().toLowerCase();
+      return status === "expired" || (status !== "suspended" && Boolean(business.expiry && business.expiry < today));
+    }
+  ).length;
+
+  const suspendedBusinesses = businesses.filter(
+    (business) =>
+      String(business.status ?? "").trim().toLowerCase() === "suspended"
   ).length;
 
   const activeQrCodes = businesses.filter(
@@ -202,6 +209,25 @@ export default async function HomePage() {
             }}
           >
             {expiredBusinesses}
+          </h2>
+        </div>
+        {/* Suspended Businesses */}
+        <div className="card">
+          <p
+            style={{
+              color: "#64748b",
+              margin: "0 0 8px",
+            }}
+          >
+            Suspended Businesses
+          </p>
+          <h2
+            style={{
+              margin: 0,
+              fontSize: "30px",
+            }}
+          >
+            {suspendedBusinesses}
           </h2>
         </div>
 

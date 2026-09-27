@@ -1,14 +1,15 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
-import {
-  addBusiness,
-  deleteBusiness,
-  getBusinesses,
-  updateBusiness,
-} from "@/lib/data";
+import { getBusinesses } from "@/lib/data";
 import type { Business } from "@/lib/types";
+import { safeReviewLink } from "@/lib/safe-review-link";
 import MerchantAccessForm from "./merchant-access-form";
+import {
+  createAdminBusiness,
+  deleteAdminBusiness,
+  updateAdminBusiness,
+} from "./actions";
 
 const BUSINESS_TYPES = [
   "Salon",
@@ -30,10 +31,6 @@ const PLANS = [
 
 const STATUSES = ["active", "expiring soon", "expired", "suspended"];
 const QR_STATUSES = ["active", "disabled"];
-
-function generateBusinessId() {
-  return `QR-${Date.now().toString().slice(-8)}`;
-}
 
 function getStatusClass(status?: string | null) {
   switch ((status || "").toLowerCase()) {
@@ -84,8 +81,7 @@ export default function BusinessesPage() {
       setLoading(true);
       const data = await getBusinesses();
       setBusinesses(data);
-    } catch (error) {
-      console.error(error);
+    } catch {
       setMessage("Businesses load nahi ho paaye.");
     } finally {
       setLoading(false);
@@ -121,10 +117,7 @@ export default function BusinessesPage() {
       setMessage("");
 
       const selectedPlan = PLANS.find((plan) => plan.name === form.plan);
-      const registrationDate = new Date().toISOString().slice(0, 10);
-
-      const business: Business = {
-        id: generateBusinessId(),
+      const result = await createAdminBusiness({
         name: form.name.trim(),
         owner: form.owner.trim() || null,
         phone: form.phone.trim() || null,
@@ -132,20 +125,21 @@ export default function BusinessesPage() {
         plan: form.plan,
         status: "active",
         expiry: form.expiry || null,
-        scans: 0,
         qr_status: "active",
-        qr_type: "review",
         review_link: form.review_link.trim(),
         address: form.address.trim() || null,
-        created: registrationDate,
-        registration_date: registrationDate,
-        merchant_status: "pending",
-      };
-
-      await addBusiness(business);
+      });
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
+      if (!result.business) {
+        setMessage("Business was created but could not be loaded. Please refresh the page.");
+        return;
+      }
 
       setMessage(
-        `${business.name} successfully add ho gaya. Plan: ${selectedPlan?.name} ₹${selectedPlan?.price}`
+        `${result.business.name} successfully add ho gaya. Plan: ${selectedPlan?.name} ₹${selectedPlan?.price}`
       );
 
       setForm({
@@ -160,13 +154,8 @@ export default function BusinessesPage() {
       });
 
       await loadBusinesses();
-    } catch (error) {
-      console.error(error);
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Business save nahi ho paaya."
-      );
+    } catch {
+      setMessage("Business save nahi ho paaya. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -196,7 +185,7 @@ export default function BusinessesPage() {
       setSaving(true);
       setMessage("");
 
-      await updateBusiness(editingBusiness.id, {
+      const result = await updateAdminBusiness(editingBusiness.id, {
         name: editingBusiness.name.trim(),
         owner: editingBusiness.owner?.trim() || null,
         phone: editingBusiness.phone?.trim() || null,
@@ -208,17 +197,16 @@ export default function BusinessesPage() {
         review_link: editingBusiness.review_link.trim(),
         address: editingBusiness.address?.trim() || null,
       });
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
 
       setEditingBusiness(null);
       setMessage("Business successfully update ho gaya.");
       await loadBusinesses();
-    } catch (error) {
-      console.error(error);
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : "Business update nahi ho paaya."
-      );
+    } catch {
+      setMessage("Business update nahi ho paaya. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -232,12 +220,15 @@ export default function BusinessesPage() {
     if (!confirmed) return;
 
     try {
-      await deleteBusiness(id);
+      const result = await deleteAdminBusiness(id);
+      if (!result.success) {
+        setMessage(result.message);
+        return;
+      }
       setMessage("Business delete ho gaya.");
       await loadBusinesses();
-    } catch (error) {
-      console.error(error);
-      setMessage("Business delete nahi ho paaya.");
+    } catch {
+      setMessage("Business delete nahi ho paaya. Please try again.");
     }
   }
 
@@ -610,9 +601,9 @@ export default function BusinessesPage() {
 
                         <td className="px-4 py-4">
                           <div className="flex justify-end gap-2">
-                            {business.review_link && (
+                            {safeReviewLink(business.review_link) && (
                               <a
-                                href={business.review_link}
+                                href={safeReviewLink(business.review_link)!}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="rounded-lg border border-blue-200 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50"

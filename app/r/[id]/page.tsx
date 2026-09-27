@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { safeReviewLink } from "@/lib/safe-review-link";
 
 type ScanPageProps = {
   params: Promise<{ id: string }>;
@@ -60,7 +61,8 @@ export default async function ScanPage({ params }: ScanPageProps) {
     );
   }
 
-  if (!business.review_link) {
+  const reviewLink = safeReviewLink(business.review_link);
+  if (!reviewLink) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-50 p-6">
         <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm">
@@ -86,5 +88,5 @@ export default async function ScanPage({ params }: ScanPageProps) {
     p_business_id: business.id,
   });
 
-  redirect(business.review_link);
+  redirect(reviewLink);
 }

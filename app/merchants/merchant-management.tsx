@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
 import LogoutButton from "@/app/logout-button";
 import type { Business } from "@/lib/types";
+import { safeReviewLink } from "@/lib/safe-review-link";
 import {
   provisionMerchantAction,
   resetMerchantPasswordAction,
@@ -230,9 +231,9 @@ function DetailDialog({
                   <div className="grid gap-1 sm:grid-cols-[9rem_minmax(0,1fr)]" key={label}>
                     <dt className="text-xs font-medium text-slate-500">{label}</dt>
                     <dd className="break-words text-sm text-slate-800">
-                      {label === "Google Review Link" && value ? (
+                      {label === "Google Review Link" && safeReviewLink(value) ? (
                         <a
-                          href={value}
+                          href={safeReviewLink(value)!}
                           target="_blank"
                           rel="noreferrer"
                           className="text-blue-700 underline underline-offset-2"

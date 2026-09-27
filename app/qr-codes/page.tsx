@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getBusinesses } from "@/lib/data";
+import { safeReviewLink } from "@/lib/safe-review-link";
 import type { Business } from "@/lib/types";
 
 function isQrUsable(business: Business) {
@@ -344,14 +345,20 @@ export default function QrCodesPage() {
                         Test Scan
                       </a>
 
-                      <a
-                        href={business.review_link || "#"}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
-                      >
-                        Review Link
-                      </a>
+                      {safeReviewLink(business.review_link) ? (
+                        <a
+                          href={safeReviewLink(business.review_link)!}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100"
+                        >
+                          Review Link
+                        </a>
+                      ) : (
+                        <span className="rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-400">
+                          Review Link Unavailable
+                        </span>
+                      )}
 
                       <button
                         type="button"

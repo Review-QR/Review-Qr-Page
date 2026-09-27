@@ -8,8 +8,7 @@ export async function getBusinesses(): Promise<Business[]> {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Failed to fetch businesses:", error);
-    throw new Error(error.message);
+    throw new Error("Unable to load businesses.");
   }
 
   return data ?? [];
@@ -25,75 +24,8 @@ export async function getBusiness(
     .maybeSingle();
 
   if (error) {
-    console.error("Failed to fetch business:", error);
-    throw new Error(error.message);
+    throw new Error("Unable to load the business.");
   }
 
   return data;
-}
-
-export async function addBusiness(
-  business: Business
-): Promise<Business> {
-  const { data, error } = await supabase
-    .from("businesses")
-    .insert({
-      id: business.id,
-      name: business.name,
-      owner: business.owner ?? null,
-      phone: business.phone ?? null,
-      type: business.type ?? null,
-      plan: business.plan ?? null,
-      status: business.status ?? "pending",
-      expiry: business.expiry ?? null,
-      scans: business.scans ?? 0,
-      qr_status: business.qr_status ?? "inactive",
-      qr_type: business.qr_type ?? "review",
-      review_link: business.review_link ?? null,
-      address: business.address ?? null,
-      registration_date: business.registration_date ?? null,
-      merchant_status: business.merchant_status ?? "pending",
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Failed to add business:", error);
-    throw new Error(error.message);
-  }
-
-  return data;
-}
-
-export async function updateBusiness(
-  id: string,
-  updates: Partial<Business>
-): Promise<Business> {
-  const { data, error } = await supabase
-    .from("businesses")
-    .update(updates)
-    .eq("id", id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error("Failed to update business:", error);
-    throw new Error(error.message);
-  }
-
-  return data;
-}
-
-export async function deleteBusiness(
-  id: string
-): Promise<void> {
-  const { error } = await supabase
-    .from("businesses")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    console.error("Failed to delete business:", error);
-    throw new Error(error.message);
-  }
 }
