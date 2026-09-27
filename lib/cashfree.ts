@@ -819,6 +819,200 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
   return { status: "NOT_SUCCESS", httpStatus: response.status };
 }
 
+/** Recovers a merchant order using only its server-signed Cashfree order context. */
+export async function verifyCashfreeMerchantOrderBySignedContext(input: {
+  orderId: string;
+  authenticatedBusinessId: string;
+}): Promise<CashfreeVerificationResult> {
+  if (!ORDER_ID_PATTERN.test(input.orderId)) {
+    return { status: "VERIFICATION_ERROR", httpStatus: null };
+  }
+
+  let client: CashfreeClient;
+  try {
+    client = createCashfreeClient();
+  } catch {
+    return { status: "VERIFICATION_ERROR", httpStatus: null };
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `${client.apiBaseUrl}/orders/${encodeURIComponent(input.orderId)}`,
+      client.createRequestInit({
+        method: "GET",
+        cache: "no-store",
+        signal: AbortSignal.timeout(20_000),
+      }),
+    );
+  } catch {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: null,
+      orderStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "API_ERROR",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: null };
+  }
+
+  if (!response.ok) {
+    await response.body?.cancel();
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "API_ERROR",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    Array.isArray(payload)
+  ) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  const order = payload as {
+    order_id?: unknown;
+    order_status?: unknown;
+    order_amount?: unknown;
+    order_currency?: unknown;
+    order_paid_at?: unknown;
+    order_tags?: unknown;
+  };
+
+  const orderIdMatches = order.order_id === input.orderId;
+  const fieldsAreValid =
+    orderIdMatches &&
+    typeof order.order_status === "string" &&
+    typeof order.order_amount === "number" &&
+    typeof order.order_currency === "string" &&
+    !!order.order_tags &&
+    typeof order.order_tags === "object" &&
+    !Array.isArray(order.order_tags);
+  if (!fieldsAreValid) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      responseOrderId: order.order_id,
+      httpStatus: response.status,
+      orderStatus: order.order_status,
+      orderAmount: order.order_amount,
+      orderCurrency: order.order_currency,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  const orderTags = order.order_tags as Record<string, unknown>;
+  const signedContext = readSignedOrderContext(
+    orderTags.review_qr_context,
+    input.orderId,
+  );
+  if (!signedContext || signedContext.businessId !== input.authenticatedBusinessId) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      responseOrderId: order.order_id,
+      httpStatus: response.status,
+      orderStatus: order.order_status,
+      orderAmount: order.order_amount,
+      orderCurrency: order.order_currency,
+      requiredFieldsValid: true,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  if (order.order_status !== "PAID") {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      responseOrderId: order.order_id,
+      httpStatus: response.status,
+      orderStatus: order.order_status,
+      orderAmount: order.order_amount,
+      orderCurrency: order.order_currency,
+      requiredFieldsValid: true,
+      branch: "NOT_SUCCESS",
+    });
+    return { status: "NOT_SUCCESS", httpStatus: response.status };
+  }
+
+  if (
+    order.order_amount !== signedContext.amount ||
+    order.order_currency !== "INR"
+  ) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      responseOrderId: order.order_id,
+      httpStatus: response.status,
+      orderStatus: order.order_status,
+      orderAmount: order.order_amount,
+      orderCurrency: order.order_currency,
+      requiredFieldsValid: true,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  logCashfreeVerificationDiagnostic({
+    orderId: input.orderId,
+    responseOrderId: order.order_id,
+    httpStatus: response.status,
+    orderStatus: order.order_status,
+    orderAmount: order.order_amount,
+    orderCurrency: order.order_currency,
+    requiredFieldsValid: true,
+    branch: "PAID_MATCH",
+  });
+
+  const paidAt =
+    typeof order.order_paid_at === "string"
+      ? Date.parse(order.order_paid_at)
+      : Number.NaN;
+  return {
+    status: "VERIFIED_SUCCESS",
+    httpStatus: response.status,
+    planId: signedContext.planId,
+    amount: signedContext.amount,
+    currency: "INR",
+    paidAt: Number.isFinite(paidAt)
+      ? new Date(paidAt).toISOString()
+      : new Date().toISOString(),
+  };
+}
+
 /** Explicitly creates one test-only ₹29 Sandbox order for connectivity checks. */
 export async function createCashfreeSandboxTestOrder(): Promise<CashfreeSandboxTestOrderResult> {
   const result = await createOrder({

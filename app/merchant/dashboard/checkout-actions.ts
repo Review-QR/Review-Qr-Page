@@ -3,6 +3,7 @@
 import { allowedPlanIds, appConfig, type PlanId } from "@/lib/config";
 import {
   createCashfreeMerchantCheckoutOrder,
+  verifyCashfreeMerchantOrderBySignedContext,
   verifyCashfreeMerchantCheckoutOrder,
 } from "@/lib/cashfree";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
@@ -82,11 +83,16 @@ export async function verifyMerchantCheckoutOrder(
   }
 
   try {
-    const verification = await verifyCashfreeMerchantCheckoutOrder({
-      orderId: submittedOrderId,
-      verificationToken: submittedVerificationToken,
-      authenticatedBusinessId: merchant.businessId,
-    });
+    const verification = submittedVerificationToken.length > 0
+      ? await verifyCashfreeMerchantCheckoutOrder({
+          orderId: submittedOrderId,
+          verificationToken: submittedVerificationToken,
+          authenticatedBusinessId: merchant.businessId,
+        })
+      : await verifyCashfreeMerchantOrderBySignedContext({
+          orderId: submittedOrderId,
+          authenticatedBusinessId: merchant.businessId,
+        });
 
     if (verification.status !== "VERIFIED_SUCCESS") return verification;
 

@@ -27,6 +27,8 @@ type CashfreeCheckoutSdk = (options: { mode: "sandbox" }) => {
   }): Promise<CashfreeCheckoutResult>;
 };
 
+const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32}$/;
+
 declare global {
   interface Window {
     Cashfree?: CashfreeCheckoutSdk;
@@ -70,6 +72,8 @@ export default function SubscriptionCheckout({
   const [verificationOrderId, setVerificationOrderId] = useState<string | null>(null);
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
   const [verifying, setVerifying] = useState(false);
+  const [recoveryOrderId, setRecoveryOrderId] = useState("");
+  const [recoveryMessage, setRecoveryMessage] = useState("");
 
   async function beginCheckout() {
     const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
@@ -166,6 +170,43 @@ export default function SubscriptionCheckout({
     }
   }
 
+  async function recoverExistingPayment() {
+    const orderId = recoveryOrderId.trim();
+    if (!ORDER_ID_PATTERN.test(orderId)) {
+      setRecoveryMessage("Enter a valid Review-QR payment reference.");
+      return;
+    }
+    if (pending || verifying) return;
+
+    setVerifying(true);
+    setRecoveryMessage("Checking payment status with Cashfree…");
+    try {
+      const result = await verifyMerchantCheckoutOrder(orderId, "");
+      if (result.status === "VERIFIED_SUCCESS") {
+        setRecoveryMessage(
+          result.applied
+            ? "Payment verified and your subscription was renewed."
+            : "This verified payment was already applied. Your subscription was not renewed twice.",
+        );
+        router.refresh();
+      } else if (result.status === "NOT_SUCCESS") {
+        setRecoveryMessage(
+          "Cashfree has not confirmed a successful payment. Your subscription remains unchanged.",
+        );
+      } else {
+        setRecoveryMessage(
+          "Payment status could not be verified. Please try again later; your subscription remains unchanged.",
+        );
+      }
+    } catch {
+      setRecoveryMessage(
+        "Payment status could not be verified. Please try again later; your subscription remains unchanged.",
+      );
+    } finally {
+      setVerifying(false);
+    }
+  }
+
   return (
     <div className="mt-6 border-t border-slate-100 pt-5">
       <div>
@@ -251,6 +292,47 @@ export default function SubscriptionCheckout({
           </button>
         </div>
       )}
+      <div className="mt-6 border-t border-slate-100 pt-5">
+        <h3 className="text-sm font-semibold text-slate-900">
+          Recover an existing payment
+        </h3>
+        <p className="mt-1 text-sm text-slate-500">
+          Enter the Review-QR payment reference to check an existing order.
+        </p>
+        <label
+          htmlFor="existing-payment-order-id"
+          className="mt-3 block text-sm font-medium text-slate-700"
+        >
+          Payment reference
+        </label>
+        <input
+          id="existing-payment-order-id"
+          type="text"
+          autoComplete="off"
+          value={recoveryOrderId}
+          onChange={(event) => setRecoveryOrderId(event.target.value)}
+          placeholder="rqr_…"
+          disabled={pending || verifying}
+          className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 sm:max-w-md"
+        />
+        <button
+          type="button"
+          onClick={() => void recoverExistingPayment()}
+          disabled={pending || verifying}
+          className="mt-3 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {verifying ? "Checking…" : "Recover & Check"}
+        </button>
+        {recoveryMessage && (
+          <p
+            role="status"
+            aria-live="polite"
+            className={`mt-3 text-sm ${recoveryMessage.startsWith("Payment verified") || recoveryMessage.startsWith("This verified payment") ? "text-blue-700" : "text-rose-700"}`}
+          >
+            {recoveryMessage}
+          </p>
+        )}
+      </div>
     </div>
   );
 }
