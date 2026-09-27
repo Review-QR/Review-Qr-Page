@@ -58,6 +58,38 @@ export type CashfreeVerificationResult =
   | { status: "NOT_SUCCESS"; httpStatus: number }
   | { status: "VERIFICATION_ERROR"; httpStatus: number | null };
 
+const CASHFREE_DIAGNOSTIC_ORDER_ID =
+  "rqr_1fd0c151ae9d4340b01f34dec39b8182";
+
+function logCashfreeVerificationDiagnostic(input: {
+  orderId: string;
+  responseOrderId?: unknown;
+  httpStatus: number | null;
+  orderStatus: unknown;
+  orderAmount: unknown;
+  orderCurrency: unknown;
+  requiredFieldsValid: boolean;
+  branch: "PAID_MATCH" | "NOT_SUCCESS" | "RESPONSE_INVALID" | "API_ERROR";
+}): void {
+  if (input.orderId !== CASHFREE_DIAGNOSTIC_ORDER_ID) return;
+
+  console.info("[cashfree-verification-diagnostic]", {
+    httpStatus: input.httpStatus,
+    order_id:
+      typeof input.responseOrderId === "string"
+        ? input.responseOrderId
+        : input.orderId,
+    order_status:
+      typeof input.orderStatus === "string" ? input.orderStatus : null,
+    order_amount:
+      typeof input.orderAmount === "number" ? input.orderAmount : null,
+    order_currency:
+      typeof input.orderCurrency === "string" ? input.orderCurrency : null,
+    requiredFieldsValid: input.requiredFieldsValid,
+    branch: input.branch,
+  });
+}
+
 type CheckoutOrderClaims = {
   version: 1;
   orderId: string;
@@ -677,11 +709,29 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
       }),
     );
   } catch {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: null,
+      orderStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "API_ERROR",
+    });
     return { status: "VERIFICATION_ERROR", httpStatus: null };
   }
 
   if (!response.ok) {
     await response.body?.cancel();
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "API_ERROR",
+    });
     return { status: "VERIFICATION_ERROR", httpStatus: response.status };
   }
 
@@ -695,15 +745,35 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
   try {
     result = (await response.json()) as typeof result;
   } catch {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
     return { status: "VERIFICATION_ERROR", httpStatus: response.status };
   }
 
-  if (
-    result.order_id !== input.orderId ||
-    typeof result.order_status !== "string" ||
-    typeof result.order_amount !== "number" ||
-    typeof result.order_currency !== "string"
-  ) {
+  const requiredFieldsValid =
+    result.order_id === input.orderId &&
+    typeof result.order_status === "string" &&
+    typeof result.order_amount === "number" &&
+    typeof result.order_currency === "string";
+
+  if (!requiredFieldsValid) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      responseOrderId: result.order_id,
+      httpStatus: response.status,
+      orderStatus: result.order_status,
+      orderAmount: result.order_amount,
+      orderCurrency: result.order_currency,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
     return { status: "VERIFICATION_ERROR", httpStatus: response.status };
   }
 
@@ -712,6 +782,15 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
     result.order_amount === claims.amount &&
     result.order_currency === claims.currency
   ) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: result.order_status,
+      orderAmount: result.order_amount,
+      orderCurrency: result.order_currency,
+      requiredFieldsValid: true,
+      branch: "PAID_MATCH",
+    });
     const parsedPaidAt =
       typeof result.order_paid_at === "string"
         ? Date.parse(result.order_paid_at)
@@ -728,6 +807,15 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
     };
   }
 
+  logCashfreeVerificationDiagnostic({
+    orderId: input.orderId,
+    httpStatus: response.status,
+    orderStatus: result.order_status,
+    orderAmount: result.order_amount,
+    orderCurrency: result.order_currency,
+    requiredFieldsValid: true,
+    branch: "NOT_SUCCESS",
+  });
   return { status: "NOT_SUCCESS", httpStatus: response.status };
 }
 
