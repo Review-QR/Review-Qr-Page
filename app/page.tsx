@@ -1,11 +1,16 @@
 import Link from "next/link";
 import LogoutButton from "./logout-button";
-import { createSupabaseServerClient } from "../lib/supabase-server";
+import {
+  createSupabaseServerClient,
+  requireActiveAdmin,
+} from "../lib/supabase-server";
 import type { Business } from "../lib/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  await requireActiveAdmin();
+
   let businesses: Business[] = [];
   let errorMessage = "";
 
