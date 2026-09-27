@@ -32,3 +32,15 @@ export const appConfig = {
 } as const;
 
 export type PlanId = keyof typeof appConfig.plans;
+
+const planOrder: PlanId[] = ["basic", "standard", "premium"];
+
+export function allowedPlanIds(currentPlan: string | null): PlanId[] {
+  const normalizedPlan = currentPlan?.trim().toLowerCase();
+  const currentPlanId = planOrder.find(
+    (planId) => appConfig.plans[planId].name.toLowerCase() === normalizedPlan,
+  );
+
+  if (!currentPlanId) return [];
+  return planOrder.slice(planOrder.indexOf(currentPlanId));
+}

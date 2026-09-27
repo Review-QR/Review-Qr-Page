@@ -1,7 +1,8 @@
 import { merchantSignOutAction } from "@/app/merchant/login/actions";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
-import { appConfig } from "@/lib/config";
+import { allowedPlanIds, appConfig } from "@/lib/config";
 import MyQrCode from "./my-qr-code";
+import SubscriptionCheckout from "./subscription-checkout";
 
 export const dynamic = "force-dynamic";
 
@@ -115,6 +116,11 @@ export default async function MerchantDashboardPage() {
   const ownerName = merchant.ownerName?.trim() || merchant.businessName;
   const businessStatus = merchant.businessStatus?.trim() || "—";
   const plan = matchingPlan(merchant.plan);
+  const checkoutPlans = allowedPlanIds(merchant.plan).map((planId) => ({
+    id: planId,
+    ...appConfig.plans[planId],
+    isCurrent: plan?.name === appConfig.plans[planId].name,
+  }));
   const expiryDays = expiryDayDifference(merchant.expiry);
   const subscriptionState = subscriptionStatus(merchant.businessStatus, expiryDays);
 
@@ -229,6 +235,7 @@ export default async function MerchantDashboardPage() {
             <ProfileField label="Days Remaining / Expired Duration" value={daysLabel(expiryDays)} />
             <ProfileField label="Renewal Status" value={renewalStatus(expiryDays)} />
           </dl>
+          <SubscriptionCheckout plans={checkoutPlans} />
         </section>
 
         <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
