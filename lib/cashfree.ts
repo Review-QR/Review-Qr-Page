@@ -66,6 +66,7 @@ function logCashfreeVerificationDiagnostic(input: {
   responseOrderId?: unknown;
   httpStatus: number | null;
   orderStatus: unknown;
+  paymentStatus?: unknown;
   orderAmount: unknown;
   orderCurrency: unknown;
   requiredFieldsValid: boolean;
@@ -81,6 +82,8 @@ function logCashfreeVerificationDiagnostic(input: {
         : input.orderId,
     order_status:
       typeof input.orderStatus === "string" ? input.orderStatus : null,
+    payment_status:
+      typeof input.paymentStatus === "string" ? input.paymentStatus : null,
     order_amount:
       typeof input.orderAmount === "number" ? input.orderAmount : null,
     order_currency:
@@ -561,6 +564,356 @@ export type CashfreeWebhookOrderVerification =
   | { status: "UNMAPPED" }
   | { status: "VERIFICATION_ERROR" };
 
+type SignedCashfreeOrderContext = {
+  businessId: string;
+  planId: PlanId;
+  amount: number;
+};
+
+type CashfreeOrderContextResult =
+  | {
+      status: "FOUND";
+      httpStatus: number;
+      context: SignedCashfreeOrderContext;
+    }
+  | { status: "UNMAPPED" }
+  | { status: "VERIFICATION_ERROR"; httpStatus: number | null };
+
+type CashfreePaymentVerification =
+  | {
+      status: "VERIFIED_SUCCESS";
+      httpStatus: number;
+      amount: number;
+      currency: "INR";
+      paidAt: string;
+    }
+  | { status: "NOT_SUCCESS"; httpStatus: number }
+  | { status: "VERIFICATION_ERROR"; httpStatus: number | null };
+
+/** Reads the order only to confirm its ID and verify its signed merchant context. */
+async function fetchSignedCashfreeOrderContext(input: {
+  orderId: string;
+  client: CashfreeClient;
+}): Promise<CashfreeOrderContextResult> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${input.client.apiBaseUrl}/orders/${encodeURIComponent(input.orderId)}`,
+      input.client.createRequestInit({
+        method: "GET",
+        cache: "no-store",
+        signal: AbortSignal.timeout(20_000),
+      }),
+    );
+  } catch {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: null,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "API_ERROR",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: null };
+  }
+
+  if (!response.ok) {
+    await response.body?.cancel();
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "API_ERROR",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+  if (
+    typeof payload !== "object" ||
+    payload === null ||
+    Array.isArray(payload)
+  ) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  const order = payload as {
+    order_id?: unknown;
+    order_amount?: unknown;
+    order_currency?: unknown;
+    order_tags?: unknown;
+  };
+  if (order.order_id !== input.orderId) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      responseOrderId: order.order_id,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: order.order_amount,
+      orderCurrency: order.order_currency,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "UNMAPPED" };
+  }
+  if (
+    typeof order.order_amount !== "number" ||
+    typeof order.order_currency !== "string" ||
+    typeof order.order_tags !== "object" ||
+    order.order_tags === null ||
+    Array.isArray(order.order_tags)
+  ) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      responseOrderId: order.order_id,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: order.order_amount,
+      orderCurrency: order.order_currency,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  const orderTags = order.order_tags as Record<string, unknown>;
+  const context = readSignedOrderContext(
+    orderTags.review_qr_context,
+    input.orderId,
+  );
+  if (!context) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      responseOrderId: order.order_id,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: order.order_amount,
+      orderCurrency: order.order_currency,
+      requiredFieldsValid: true,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "UNMAPPED" };
+  }
+  if (
+    order.order_amount !== context.amount ||
+    order.order_currency !== "INR"
+  ) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      responseOrderId: order.order_id,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: order.order_amount,
+      orderCurrency: order.order_currency,
+      requiredFieldsValid: true,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  return { status: "FOUND", httpStatus: response.status, context };
+}
+
+/** Uses Cashfree payment attempts, not order_status, as the payment authority. */
+async function verifyCashfreePaymentForContext(input: {
+  orderId: string;
+  client: CashfreeClient;
+  context: SignedCashfreeOrderContext;
+}): Promise<CashfreePaymentVerification> {
+  let response: Response;
+  try {
+    response = await fetch(
+      `${input.client.apiBaseUrl}/orders/${encodeURIComponent(input.orderId)}/payments`,
+      input.client.createRequestInit({
+        method: "GET",
+        cache: "no-store",
+        signal: AbortSignal.timeout(20_000),
+      }),
+    );
+  } catch {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: null,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "API_ERROR",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: null };
+  }
+
+  if (!response.ok) {
+    await response.body?.cancel();
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "API_ERROR",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  let payload: unknown;
+  try {
+    payload = await response.json();
+  } catch {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+  if (!Array.isArray(payload)) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  const payments = payload.filter(
+    (payment): payment is Record<string, unknown> =>
+      typeof payment === "object" && payment !== null && !Array.isArray(payment),
+  );
+  if (payments.length !== payload.length) {
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: null,
+      orderAmount: null,
+      orderCurrency: null,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  const successfulPayments = payments.filter(
+    (payment) => payment.payment_status === "SUCCESS",
+  );
+  if (successfulPayments.length === 0) {
+    const latestPayment = payments.at(-1);
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: latestPayment?.payment_status,
+      orderAmount: latestPayment?.payment_amount,
+      orderCurrency: latestPayment?.payment_currency,
+      requiredFieldsValid: true,
+      branch: "NOT_SUCCESS",
+    });
+    return { status: "NOT_SUCCESS", httpStatus: response.status };
+  }
+
+  const payment = successfulPayments.find(
+    (candidate) =>
+      candidate.payment_amount === input.context.amount &&
+      candidate.payment_currency === "INR",
+  );
+  if (!payment) {
+    const mismatchedPayment = successfulPayments[0];
+    logCashfreeVerificationDiagnostic({
+      orderId: input.orderId,
+      httpStatus: response.status,
+      orderStatus: null,
+      paymentStatus: mismatchedPayment.payment_status,
+      orderAmount: mismatchedPayment.payment_amount,
+      orderCurrency: mismatchedPayment.payment_currency,
+      requiredFieldsValid: false,
+      branch: "RESPONSE_INVALID",
+    });
+    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+  }
+
+  logCashfreeVerificationDiagnostic({
+    orderId: input.orderId,
+    httpStatus: response.status,
+    orderStatus: null,
+    paymentStatus: payment.payment_status,
+    orderAmount: payment.payment_amount,
+    orderCurrency: payment.payment_currency,
+    requiredFieldsValid: true,
+    branch: "PAID_MATCH",
+  });
+
+  const paymentTime =
+    typeof payment.payment_time === "string"
+      ? Date.parse(payment.payment_time)
+      : Number.NaN;
+  const completionTime =
+    typeof payment.payment_completion_time === "string"
+      ? Date.parse(payment.payment_completion_time)
+      : Number.NaN;
+  const paidAt = Number.isFinite(completionTime)
+    ? completionTime
+    : paymentTime;
+
+  return {
+    status: "VERIFIED_SUCCESS",
+    httpStatus: response.status,
+    amount: input.context.amount,
+    currency: "INR",
+    paidAt: Number.isFinite(paidAt)
+      ? new Date(paidAt).toISOString()
+      : new Date().toISOString(),
+  };
+}
+
 /** Verifies a webhook order through Cashfree and resolves only signed server-created order tags. */
 export async function verifyCashfreeWebhookOrder(
   orderId: string,
@@ -574,70 +927,29 @@ export async function verifyCashfreeWebhookOrder(
     return { status: "VERIFICATION_ERROR" };
   }
 
-  let response: Response;
-  try {
-    response = await fetch(
-      `${client.apiBaseUrl}/orders/${encodeURIComponent(orderId)}`,
-      client.createRequestInit({
-        method: "GET",
-        cache: "no-store",
-        signal: AbortSignal.timeout(20_000),
-      }),
-    );
-  } catch {
-    return { status: "VERIFICATION_ERROR" };
-  }
-  if (!response.ok) {
-    await response.body?.cancel();
+  const orderContext = await fetchSignedCashfreeOrderContext({ orderId, client });
+  if (orderContext.status !== "FOUND") {
+    if (orderContext.status === "UNMAPPED") return { status: "UNMAPPED" };
     return { status: "VERIFICATION_ERROR" };
   }
 
-  let order: {
-    order_id?: unknown;
-    order_status?: unknown;
-    order_amount?: unknown;
-    order_currency?: unknown;
-    order_paid_at?: unknown;
-    order_tags?: unknown;
-  };
-  try {
-    order = (await response.json()) as typeof order;
-  } catch {
-    return { status: "VERIFICATION_ERROR" };
-  }
-  if (order.order_id !== orderId) return { status: "UNMAPPED" };
-  if (order.order_status !== "PAID") return { status: "NOT_SUCCESS" };
-
-  const tags =
-    order.order_tags && typeof order.order_tags === "object"
-      ? (order.order_tags as Record<string, unknown>)
-      : null;
-  const context = readSignedOrderContext(
-    tags?.review_qr_context,
+  const payment = await verifyCashfreePaymentForContext({
     orderId,
-  );
-  if (!context) return { status: "UNMAPPED" };
-
-  if (
-    order.order_amount !== context.amount ||
-    order.order_currency !== "INR"
-  ) {
+    client,
+    context: orderContext.context,
+  });
+  if (payment.status !== "VERIFIED_SUCCESS") {
+    if (payment.status === "NOT_SUCCESS") return { status: "NOT_SUCCESS" };
     return { status: "VERIFICATION_ERROR" };
   }
 
-  const parsedPaidAt =
-    typeof order.order_paid_at === "string"
-      ? Date.parse(order.order_paid_at)
-      : Number.NaN;
   return {
     status: "VERIFIED_SUCCESS",
     orderId,
-    businessId: context.businessId,
-    planId: context.planId,
-    amount: context.amount,
-    paidAt: Number.isFinite(parsedPaidAt)
-      ? new Date(parsedPaidAt).toISOString()
-      : new Date().toISOString(),
+    businessId: orderContext.context.businessId,
+    planId: orderContext.context.planId,
+    amount: payment.amount,
+    paidAt: payment.paidAt,
   };
 }
 
@@ -698,125 +1010,45 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
     return { status: "VERIFICATION_ERROR", httpStatus: null };
   }
 
-  let response: Response;
-  try {
-    response = await fetch(
-      `${client.apiBaseUrl}/orders/${encodeURIComponent(input.orderId)}`,
-      client.createRequestInit({
-        method: "GET",
-        cache: "no-store",
-        signal: AbortSignal.timeout(20_000),
-      }),
-    );
-  } catch {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      httpStatus: null,
-      orderStatus: null,
-      orderAmount: null,
-      orderCurrency: null,
-      requiredFieldsValid: false,
-      branch: "API_ERROR",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: null };
-  }
-
-  if (!response.ok) {
-    await response.body?.cancel();
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      httpStatus: response.status,
-      orderStatus: null,
-      orderAmount: null,
-      orderCurrency: null,
-      requiredFieldsValid: false,
-      branch: "API_ERROR",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
-  }
-
-  let result: {
-    order_id?: unknown;
-    order_status?: unknown;
-    order_amount?: unknown;
-    order_currency?: unknown;
-    order_paid_at?: unknown;
-  };
-  try {
-    result = (await response.json()) as typeof result;
-  } catch {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      httpStatus: response.status,
-      orderStatus: null,
-      orderAmount: null,
-      orderCurrency: null,
-      requiredFieldsValid: false,
-      branch: "RESPONSE_INVALID",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
-  }
-
-  const requiredFieldsValid =
-    result.order_id === input.orderId &&
-    typeof result.order_status === "string" &&
-    typeof result.order_amount === "number" &&
-    typeof result.order_currency === "string";
-
-  if (!requiredFieldsValid) {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      responseOrderId: result.order_id,
-      httpStatus: response.status,
-      orderStatus: result.order_status,
-      orderAmount: result.order_amount,
-      orderCurrency: result.order_currency,
-      requiredFieldsValid: false,
-      branch: "RESPONSE_INVALID",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
-  }
-
-  if (
-    result.order_status === "PAID" &&
-    result.order_amount === claims.amount &&
-    result.order_currency === claims.currency
-  ) {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      httpStatus: response.status,
-      orderStatus: result.order_status,
-      orderAmount: result.order_amount,
-      orderCurrency: result.order_currency,
-      requiredFieldsValid: true,
-      branch: "PAID_MATCH",
-    });
-    const parsedPaidAt =
-      typeof result.order_paid_at === "string"
-        ? Date.parse(result.order_paid_at)
-        : Number.NaN;
+  const orderContext = await fetchSignedCashfreeOrderContext({
+    orderId: input.orderId,
+    client,
+  });
+  if (orderContext.status !== "FOUND") {
     return {
-      status: "VERIFIED_SUCCESS",
-      httpStatus: response.status,
-      planId: claims.planId,
-      amount: claims.amount,
-      currency: claims.currency,
-      paidAt: Number.isFinite(parsedPaidAt)
-        ? new Date(parsedPaidAt).toISOString()
-        : new Date().toISOString(),
+      status: "VERIFICATION_ERROR",
+      httpStatus:
+        orderContext.status === "VERIFICATION_ERROR"
+          ? orderContext.httpStatus
+          : null,
     };
   }
 
-  logCashfreeVerificationDiagnostic({
+  const context = orderContext.context;
+  if (
+    context.businessId !== input.authenticatedBusinessId ||
+    context.businessId !== claims.businessId ||
+    context.planId !== claims.planId ||
+    context.amount !== claims.amount
+  ) {
+    return { status: "VERIFICATION_ERROR", httpStatus: orderContext.httpStatus };
+  }
+
+  const payment = await verifyCashfreePaymentForContext({
     orderId: input.orderId,
-    httpStatus: response.status,
-    orderStatus: result.order_status,
-    orderAmount: result.order_amount,
-    orderCurrency: result.order_currency,
-    requiredFieldsValid: true,
-    branch: "NOT_SUCCESS",
+    client,
+    context,
   });
-  return { status: "NOT_SUCCESS", httpStatus: response.status };
+  if (payment.status !== "VERIFIED_SUCCESS") return payment;
+
+  return {
+    status: "VERIFIED_SUCCESS",
+    httpStatus: payment.httpStatus,
+    planId: context.planId,
+    amount: payment.amount,
+    currency: payment.currency,
+    paidAt: payment.paidAt,
+  };
 }
 
 /** Recovers a merchant order using only its server-signed Cashfree order context. */
@@ -835,181 +1067,40 @@ export async function verifyCashfreeMerchantOrderBySignedContext(input: {
     return { status: "VERIFICATION_ERROR", httpStatus: null };
   }
 
-  let response: Response;
-  try {
-    response = await fetch(
-      `${client.apiBaseUrl}/orders/${encodeURIComponent(input.orderId)}`,
-      client.createRequestInit({
-        method: "GET",
-        cache: "no-store",
-        signal: AbortSignal.timeout(20_000),
-      }),
-    );
-  } catch {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      httpStatus: null,
-      orderStatus: null,
-      orderAmount: null,
-      orderCurrency: null,
-      requiredFieldsValid: false,
-      branch: "API_ERROR",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: null };
-  }
-
-  if (!response.ok) {
-    await response.body?.cancel();
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      httpStatus: response.status,
-      orderStatus: null,
-      orderAmount: null,
-      orderCurrency: null,
-      requiredFieldsValid: false,
-      branch: "API_ERROR",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
-  }
-
-  let payload: unknown;
-  try {
-    payload = await response.json();
-  } catch {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      httpStatus: response.status,
-      orderStatus: null,
-      orderAmount: null,
-      orderCurrency: null,
-      requiredFieldsValid: false,
-      branch: "RESPONSE_INVALID",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
-  }
-  if (
-    typeof payload !== "object" ||
-    payload === null ||
-    Array.isArray(payload)
-  ) {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      httpStatus: response.status,
-      orderStatus: null,
-      orderAmount: null,
-      orderCurrency: null,
-      requiredFieldsValid: false,
-      branch: "RESPONSE_INVALID",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
-  }
-
-  const order = payload as {
-    order_id?: unknown;
-    order_status?: unknown;
-    order_amount?: unknown;
-    order_currency?: unknown;
-    order_paid_at?: unknown;
-    order_tags?: unknown;
-  };
-
-  const orderIdMatches = order.order_id === input.orderId;
-  const fieldsAreValid =
-    orderIdMatches &&
-    typeof order.order_status === "string" &&
-    typeof order.order_amount === "number" &&
-    typeof order.order_currency === "string" &&
-    !!order.order_tags &&
-    typeof order.order_tags === "object" &&
-    !Array.isArray(order.order_tags);
-  if (!fieldsAreValid) {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      responseOrderId: order.order_id,
-      httpStatus: response.status,
-      orderStatus: order.order_status,
-      orderAmount: order.order_amount,
-      orderCurrency: order.order_currency,
-      requiredFieldsValid: false,
-      branch: "RESPONSE_INVALID",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
-  }
-
-  const orderTags = order.order_tags as Record<string, unknown>;
-  const signedContext = readSignedOrderContext(
-    orderTags.review_qr_context,
-    input.orderId,
-  );
-  if (!signedContext || signedContext.businessId !== input.authenticatedBusinessId) {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      responseOrderId: order.order_id,
-      httpStatus: response.status,
-      orderStatus: order.order_status,
-      orderAmount: order.order_amount,
-      orderCurrency: order.order_currency,
-      requiredFieldsValid: true,
-      branch: "RESPONSE_INVALID",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
-  }
-
-  if (order.order_status !== "PAID") {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      responseOrderId: order.order_id,
-      httpStatus: response.status,
-      orderStatus: order.order_status,
-      orderAmount: order.order_amount,
-      orderCurrency: order.order_currency,
-      requiredFieldsValid: true,
-      branch: "NOT_SUCCESS",
-    });
-    return { status: "NOT_SUCCESS", httpStatus: response.status };
-  }
-
-  if (
-    order.order_amount !== signedContext.amount ||
-    order.order_currency !== "INR"
-  ) {
-    logCashfreeVerificationDiagnostic({
-      orderId: input.orderId,
-      responseOrderId: order.order_id,
-      httpStatus: response.status,
-      orderStatus: order.order_status,
-      orderAmount: order.order_amount,
-      orderCurrency: order.order_currency,
-      requiredFieldsValid: true,
-      branch: "RESPONSE_INVALID",
-    });
-    return { status: "VERIFICATION_ERROR", httpStatus: response.status };
-  }
-
-  logCashfreeVerificationDiagnostic({
+  const orderContext = await fetchSignedCashfreeOrderContext({
     orderId: input.orderId,
-    responseOrderId: order.order_id,
-    httpStatus: response.status,
-    orderStatus: order.order_status,
-    orderAmount: order.order_amount,
-    orderCurrency: order.order_currency,
-    requiredFieldsValid: true,
-    branch: "PAID_MATCH",
+    client,
   });
+  if (orderContext.status !== "FOUND") {
+    return {
+      status: "VERIFICATION_ERROR",
+      httpStatus:
+        orderContext.status === "VERIFICATION_ERROR"
+          ? orderContext.httpStatus
+          : null,
+    };
+  }
+  if (orderContext.context.businessId !== input.authenticatedBusinessId) {
+    return {
+      status: "VERIFICATION_ERROR",
+      httpStatus: orderContext.httpStatus,
+    };
+  }
 
-  const paidAt =
-    typeof order.order_paid_at === "string"
-      ? Date.parse(order.order_paid_at)
-      : Number.NaN;
+  const payment = await verifyCashfreePaymentForContext({
+    orderId: input.orderId,
+    client,
+    context: orderContext.context,
+  });
+  if (payment.status !== "VERIFIED_SUCCESS") return payment;
+
   return {
     status: "VERIFIED_SUCCESS",
-    httpStatus: response.status,
-    planId: signedContext.planId,
-    amount: signedContext.amount,
-    currency: "INR",
-    paidAt: Number.isFinite(paidAt)
-      ? new Date(paidAt).toISOString()
-      : new Date().toISOString(),
+    httpStatus: payment.httpStatus,
+    planId: orderContext.context.planId,
+    amount: payment.amount,
+    currency: payment.currency,
+    paidAt: payment.paidAt,
   };
 }
 
