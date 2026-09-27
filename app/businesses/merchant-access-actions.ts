@@ -189,7 +189,7 @@ export async function setMerchantAccountStatusAction(
     return failure("This merchant account status cannot be changed with that action.");
   }
 
-  const { data: updatedBusiness, error: updateError } = await administratorClient
+  const { data: updatedBusiness, error: updateError } = await adminClient
     .from("businesses")
     .update({ merchant_status: nextStatus })
     .eq("id", businessId)
