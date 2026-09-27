@@ -76,6 +76,8 @@ export default function SubscriptionCheckout({
   const [recoveryMessage, setRecoveryMessage] = useState("");
 
   async function beginCheckout() {
+    if (pending || verifying) return;
+
     const selectedPlan = plans.find((plan) => plan.id === selectedPlanId);
     if (!selectedPlan) {
       setMessage("Select an available plan to continue.");
@@ -137,7 +139,7 @@ export default function SubscriptionCheckout({
   }
 
   async function checkPaymentStatus() {
-    if (!verificationOrderId || !verificationToken || verifying) return;
+    if (!verificationOrderId || !verificationToken || pending || verifying) return;
 
     setVerifying(true);
     setMessageTone("info");
@@ -234,7 +236,7 @@ export default function SubscriptionCheckout({
                 value={plan.id}
                 checked={selectedPlanId === plan.id}
                 onChange={() => setSelectedPlanId(plan.id)}
-                disabled={pending}
+                disabled={pending || verifying}
                 className="mt-1 accent-blue-600"
               />
               <span className="min-w-0">
@@ -260,13 +262,13 @@ export default function SubscriptionCheckout({
       <button
         type="button"
         onClick={() => void beginCheckout()}
-        disabled={pending || plans.length === 0}
+        disabled={pending || verifying || plans.length === 0}
         className="mt-4 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {pending ? "Preparing checkout…" : "Continue to Checkout"}
       </button>
       <p className="mt-2 text-xs text-slate-500">
-        This Sandbox checkout does not update your subscription or expiry date.
+        Your subscription updates only after Cashfree confirms payment and Review-QR verifies and applies it.
       </p>
       {message && (
         <p
