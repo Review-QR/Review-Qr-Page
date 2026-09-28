@@ -3,19 +3,21 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMerchantBrowserClient } from "@/lib/supabase-merchant-browser";
-import { completeTrustitProfile } from "./actions";
+import { completeTrustitBypassPassword, completeTrustitProfile, createTrustitAccountWithoutOtp } from "./actions";
 
 const supabase = createMerchantBrowserClient();
 const inputClass = "mt-1 w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
 
-export default function RegisterAccount() {
+export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending }: { skipPhoneOtp: boolean; passwordSetupPending: boolean }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [stage, setStage] = useState<"account" | "otp" | "password">("account");
+  const [stage, setStage] = useState<"bypass" | "account" | "otp" | "password" | "bypass-password">(
+    passwordSetupPending ? "bypass-password" : skipPhoneOtp ? "bypass" : "account",
+  );
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -62,12 +64,39 @@ export default function RegisterAccount() {
     } finally { setBusy(false); }
   }
 
-  return <form onSubmit={stage === "account" ? sendOtp : stage === "otp" ? verifyOtp : createPassword} className="mt-7 space-y-5">
-    {stage === "account" && <><label className="block text-left text-sm font-medium">Full Name<input className={inputClass} autoComplete="name" maxLength={160} value={name} onChange={e=>setName(e.target.value)} required /></label><label className="block text-left text-sm font-medium">Mobile Number<input className={inputClass} type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={mobile} onChange={e=>setMobile(e.target.value)} required /><span className="mt-1 block text-xs font-normal text-slate-500">OTP verification uses the phone Auth provider configured for this project.</span></label></>}
+  async function createAccountWithoutOtp(event: React.FormEvent) {
+    event.preventDefault(); setBusy(true); setMessage("");
+    try {
+      const result = await createTrustitAccountWithoutOtp({ fullName: name, mobile });
+      if (!result.success) { setMessage(result.message); return; }
+      setStage("bypass-password");
+      setMessage("Account created. Now choose a password for your account.");
+    } catch {
+      setMessage("Your account could not be saved just now. Please try again.");
+    } finally { setBusy(false); }
+  }
+
+  async function setTemporaryAccountPassword(event: React.FormEvent) {
+    event.preventDefault(); setBusy(true); setMessage("");
+    if (password.length < 12 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password) || password !== confirm) {
+      setMessage("Use at least 12 characters, including a letter and a number; both passwords must match."); setBusy(false); return;
+    }
+    try {
+      const result = await completeTrustitBypassPassword({ password, confirmation: confirm });
+      if (!result.success) { setMessage(result.message); return; }
+      setPassword(""); setConfirm("");
+      router.push("/register/business"); router.refresh();
+    } catch {
+      setMessage("Password could not be saved just now. Please try again.");
+    } finally { setBusy(false); }
+  }
+
+  return <form onSubmit={stage === "bypass" ? createAccountWithoutOtp : stage === "account" ? sendOtp : stage === "otp" ? verifyOtp : stage === "bypass-password" ? setTemporaryAccountPassword : createPassword} className="mt-7 space-y-5">
+    {(stage === "account" || stage === "bypass") && <><label className="block text-left text-sm font-medium">Full Name<input className={inputClass} autoComplete="name" maxLength={160} value={name} onChange={e=>setName(e.target.value)} required /></label><label className="block text-left text-sm font-medium">Mobile Number<input className={inputClass} type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={mobile} onChange={e=>setMobile(e.target.value)} required />{stage === "account" && <span className="mt-1 block text-xs font-normal text-slate-500">OTP verification uses the phone Auth provider configured for this project.</span>}</label></>}
     {stage === "otp" && <label className="block text-left text-sm font-medium">SMS verification code<input className={inputClass} inputMode="numeric" autoComplete="one-time-code" maxLength={12} value={otp} onChange={e=>setOtp(e.target.value)} required /></label>}
-    {stage === "password" && <><label className="block text-left text-sm font-medium">Create Password<input className={inputClass} type="password" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} required /></label><label className="block text-left text-sm font-medium">Confirm Password<input className={inputClass} type="password" autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)} required /></label><p className="text-left text-xs text-slate-500">At least 12 characters, with a letter and number. Your password stays with Supabase Auth and is never shown to an administrator.</p></>}
-    <button disabled={busy} className="w-full rounded-xl bg-blue-700 px-5 py-3.5 font-semibold text-white hover:bg-blue-800 disabled:opacity-50">{busy ? "Please wait…" : stage === "account" ? "Send OTP" : stage === "otp" ? "Verify Mobile" : "Create Account"}</button>
-    {stage !== "account" && <button type="button" disabled={busy} onClick={()=>{setStage(stage === "password" ? "otp" : "account"); setMessage("")}} className="w-full py-1 text-sm font-medium text-slate-600">Back</button>}
+    {(stage === "password" || stage === "bypass-password") && <><label className="block text-left text-sm font-medium">Create Password<input className={inputClass} type="password" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} required /></label><label className="block text-left text-sm font-medium">Confirm Password<input className={inputClass} type="password" autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)} required /></label><p className="text-left text-xs text-slate-500">At least 12 characters, with a letter and number. Your password stays with Supabase Auth and is never shown to an administrator.</p></>}
+    <button disabled={busy} className="w-full rounded-xl bg-blue-700 px-5 py-3.5 font-semibold text-white hover:bg-blue-800 disabled:opacity-50">{busy ? "Please wait…" : stage === "account" ? "Send OTP" : stage === "otp" ? "Verify Mobile" : stage === "bypass" ? "Create Account" : stage === "bypass-password" ? "Set Password" : "Create Account"}</button>
+    {stage !== "account" && stage !== "bypass" && stage !== "bypass-password" && <button type="button" disabled={busy} onClick={()=>{setStage(stage === "password" ? "otp" : "account"); setMessage("")}} className="w-full py-1 text-sm font-medium text-slate-600">Back</button>}
     {message && <p role="status" className="text-left text-sm text-slate-600">{message}</p>}
   </form>;
 }

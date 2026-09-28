@@ -4,7 +4,16 @@ import { randomUUID } from "node:crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import { appConfig, type PlanId } from "@/lib/config";
-import { getTrustitUser, safeActionError } from "@/lib/trustit-onboarding";
+import {
+  getTrustitUser,
+  isTrustitPhoneOtpBypassEnabled,
+  isValidTrustitPassword,
+  normalizeTrustitPhone,
+  safeActionError,
+  trustitBypassMetadataKeys,
+} from "@/lib/trustit-onboarding";
+import { createMerchantActionClient } from "@/lib/supabase-merchant-server";
+import { merchantAuthEmail } from "@/lib/merchant-identity";
 import {
   createCashfreeMerchantCheckoutOrder,
   verifyCashfreeMerchantOrderBySignedContext,
@@ -28,6 +37,157 @@ export async function completeTrustitProfile(fullName: string): Promise<ActionRe
       p_full_name: fullName.trim(),
     });
     if (error) return { success: false, message: "Is mobile number se account already registered ho sakta hai. Login karein ya dobara try karein." };
+    return { success: true };
+  } catch {
+    return safeActionError();
+  }
+}
+
+async function existingMerchantForUser(userId: string) {
+  const { data, error } = await createSupabaseAdminClient()
+    .from("merchant_accounts")
+    .select("business_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return !error && Boolean(data);
+}
+
+async function completeTemporaryTrustitProfile(userId: string, fullName: string): Promise<ActionResult> {
+  const { error } = await createSupabaseAdminClient().rpc("complete_trustit_profile", {
+    p_user_id: userId,
+    p_full_name: fullName,
+  });
+  return error
+    ? { success: false, message: "Your account could not be prepared. Please try again." }
+    : { success: true };
+}
+
+async function discardIncompleteTrustitUser(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  merchantClient?: Awaited<ReturnType<typeof createMerchantActionClient>>,
+) {
+  if (merchantClient) {
+    try { await merchantClient.auth.signOut(); } catch { /* Best-effort session cleanup. */ }
+  }
+  try { await admin.auth.admin.deleteUser(userId); } catch { /* Do not expose cleanup details. */ }
+}
+
+export async function createTrustitAccountWithoutOtp(input: {
+  fullName: string;
+  mobile: string;
+}): Promise<ActionResult> {
+  if (!isTrustitPhoneOtpBypassEnabled()) {
+    return { success: false, message: "Please use the mobile verification steps to continue." };
+  }
+
+  const fullName = typeof input?.fullName === "string" ? input.fullName.trim() : "";
+  const phone = normalizeTrustitPhone(input?.mobile);
+  if (!fullName || fullName.length > 160 || !phone) {
+    return { success: false, message: "Check your name and mobile number, then try again." };
+  }
+
+  let admin: ReturnType<typeof createSupabaseAdminClient> | null = null;
+  let merchantClient: Awaited<ReturnType<typeof createMerchantActionClient>> | undefined;
+  let createdUserId: string | null = null;
+  try {
+    merchantClient = await createMerchantActionClient();
+    const { data: authData, error: authError } = await merchantClient.auth.getUser();
+    if (authError) return { success: false, message: "Please sign in again to continue." };
+    if (authData.user) {
+      const user = authData.user;
+      const isPendingNewTrustitUser = user.app_metadata?.[trustitBypassMetadataKeys.signup] === true
+        && user.app_metadata?.[trustitBypassMetadataKeys.passwordComplete] !== true
+        && user.phone_confirmed_at
+        && user.phone === phone;
+      if (!isPendingNewTrustitUser) {
+        return { success: false, message: "An account may already use this number. Please use Merchant Login." };
+      }
+      if (await existingMerchantForUser(user.id)) {
+        return { success: false, message: "An account may already use this number. Please use Merchant Login." };
+      }
+      return completeTemporaryTrustitProfile(user.id, fullName);
+    }
+
+    admin = createSupabaseAdminClient();
+    const email = merchantAuthEmail(phone);
+    // Keep this temporary credential server-side until the user sets their own
+    // password in the next step. Never return it from this server action.
+    const temporaryPassword = `${randomUUID()}${randomUUID()}`;
+    const { data: created, error: createError } = await admin.auth.admin.createUser({
+      email,
+      email_confirm: true,
+      phone,
+      phone_confirm: true,
+      password: temporaryPassword,
+      app_metadata: {
+        [trustitBypassMetadataKeys.signup]: true,
+        [trustitBypassMetadataKeys.passwordComplete]: false,
+      },
+      user_metadata: { full_name: fullName },
+    });
+
+    let userId = created.user?.id;
+    if (createError) {
+      return createError.code === "phone_exists" || createError.code === "email_exists"
+        ? { success: false, message: "An account may already use this number. Please use Merchant Login." }
+        : { success: false, message: "Your account could not be created. Please try again." };
+    }
+
+    if (!userId) return { success: false, message: "Your account could not be created. Please try again." };
+    createdUserId = userId;
+    const { data: signedIn, error: signInError } = await merchantClient.auth.signInWithPassword({ email, password: temporaryPassword });
+    if (signInError || signedIn.user?.id !== userId || signedIn.user.phone !== phone || !signedIn.user.phone_confirmed_at) {
+      await discardIncompleteTrustitUser(admin, userId, merchantClient);
+      createdUserId = null;
+      return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
+    }
+
+    const profile = await completeTemporaryTrustitProfile(userId, fullName);
+    if (!profile.success) {
+      await discardIncompleteTrustitUser(admin, userId, merchantClient);
+      createdUserId = null;
+      return profile;
+    }
+    return profile;
+  } catch {
+    if (admin && createdUserId) await discardIncompleteTrustitUser(admin, createdUserId, merchantClient);
+    return safeActionError();
+  }
+}
+
+export async function completeTrustitBypassPassword(input: {
+  password: string;
+  confirmation: string;
+}): Promise<ActionResult> {
+  const password = typeof input?.password === "string" ? input.password : "";
+  const confirmation = typeof input?.confirmation === "string" ? input.confirmation : "";
+  if (!isValidTrustitPassword(password, confirmation)) {
+    return { success: false, message: "Check your password and try again." };
+  }
+
+  try {
+    const client = await createMerchantActionClient();
+    const { data, error } = await client.auth.getUser();
+    const user = data.user;
+    if (error || !user?.phone_confirmed_at
+      || user.app_metadata?.[trustitBypassMetadataKeys.signup] !== true
+      || user.app_metadata?.[trustitBypassMetadataKeys.passwordComplete] === true) {
+      return { success: false, message: "This account cannot complete password setup. Please start again or contact support." };
+    }
+
+    const { error: passwordError } = await client.auth.updateUser({ password });
+    if (passwordError) return { success: false, message: "Password could not be saved. Please try again." };
+
+    const admin = createSupabaseAdminClient();
+    const { error: metadataError } = await admin.auth.admin.updateUserById(user.id, {
+      app_metadata: {
+        ...user.app_metadata,
+        [trustitBypassMetadataKeys.signup]: true,
+        [trustitBypassMetadataKeys.passwordComplete]: true,
+      },
+    });
+    if (metadataError) return { success: false, message: "Password could not be confirmed. Please try again." };
     return { success: true };
   } catch {
     return safeActionError();
