@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMerchantBrowserClient } from "@/lib/supabase-merchant-browser";
-import { completeTrustitBypassPassword, completeTrustitProfile, createTrustitAccountWithoutOtp } from "./actions";
+import { completeTrustitBypassPassword, completeTrustitProfile, createTrustitAccountWithoutOtp, logoutTrustitMerchantSession } from "./actions";
 
 const supabase = createMerchantBrowserClient();
 const inputClass = "mt-1 w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
 
-export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending }: { skipPhoneOtp: boolean; passwordSetupPending: boolean }) {
+export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, hasBlockingSession }: { skipPhoneOtp: boolean; passwordSetupPending: boolean; hasBlockingSession: boolean }) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -20,6 +20,17 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending }: 
   );
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+
+  async function logoutAndStartNewAccount() {
+    setBusy(true); setMessage("");
+    try {
+      const result = await logoutTrustitMerchantSession();
+      if (!result.success) { setMessage(result.message); return; }
+      router.refresh();
+    } catch {
+      setMessage("Could not sign out. Please try again.");
+    } finally { setBusy(false); }
+  }
 
   async function sendOtp(event: React.FormEvent) {
     event.preventDefault(); setBusy(true); setMessage("");
@@ -90,6 +101,8 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending }: 
       setMessage("Password could not be saved just now. Please try again.");
     } finally { setBusy(false); }
   }
+
+  if (hasBlockingSession) return <div className="mt-7 space-y-4"><p className="text-sm text-slate-700">A merchant session is already active. Sign out before starting a new account.</p><button type="button" disabled={busy} onClick={logoutAndStartNewAccount} className="w-full rounded-xl bg-blue-700 px-5 py-3.5 font-semibold text-white hover:bg-blue-800 disabled:opacity-50">{busy ? "Signing out…" : "Logout & Start New Account"}</button>{message && <p role="status" className="text-sm text-slate-600">{message}</p>}</div>;
 
   return <form onSubmit={stage === "bypass" ? createAccountWithoutOtp : stage === "account" ? sendOtp : stage === "otp" ? verifyOtp : stage === "bypass-password" ? setTemporaryAccountPassword : createPassword} className="mt-7 space-y-5">
     {(stage === "account" || stage === "bypass") && <><label className="block text-left text-sm font-medium">Full Name<input className={inputClass} autoComplete="name" maxLength={160} value={name} onChange={e=>setName(e.target.value)} required /></label><label className="block text-left text-sm font-medium">Mobile Number<input className={inputClass} type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={mobile} onChange={e=>setMobile(e.target.value)} required />{stage === "account" && <span className="mt-1 block text-xs font-normal text-slate-500">OTP verification uses the phone Auth provider configured for this project.</span>}</label></>}

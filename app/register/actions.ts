@@ -12,7 +12,7 @@ import {
   safeActionError,
   trustitBypassMetadataKeys,
 } from "@/lib/trustit-onboarding";
-import { createMerchantActionClient } from "@/lib/supabase-merchant-server";
+import { createMerchantActionClient, createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import { merchantAuthEmail } from "@/lib/merchant-identity";
 import {
   createCashfreeMerchantCheckoutOrder,
@@ -20,6 +20,35 @@ import {
 } from "@/lib/cashfree";
 
 export type ActionResult = { success: true; value?: string } | { success: false; message: string };
+
+export async function hasBlockingTrustitMerchantSession(): Promise<boolean> {
+  try {
+    const client = await createMerchantServerClient();
+    const { data: sessionData } = await client.auth.getSession();
+    if (!sessionData.session) return false;
+
+    const { data, error } = await client.auth.getUser();
+    if (error || !data.user) return true;
+    const user = data.user;
+    const isPendingTrustitPasswordSetup = Boolean(user.phone_confirmed_at)
+      && user.app_metadata?.[trustitBypassMetadataKeys.signup] === true
+      && user.app_metadata?.[trustitBypassMetadataKeys.passwordComplete] !== true;
+    return !isPendingTrustitPasswordSetup;
+  } catch {
+    return false;
+  }
+}
+
+export async function logoutTrustitMerchantSession(): Promise<ActionResult> {
+  try {
+    const client = await createMerchantActionClient();
+    const { error } = await client.auth.signOut();
+    if (error) return { success: false, message: "Could not sign out. Please try again." };
+    return { success: true };
+  } catch {
+    return safeActionError();
+  }
+}
 
 async function currentUser() {
   const result = await getTrustitUser();
