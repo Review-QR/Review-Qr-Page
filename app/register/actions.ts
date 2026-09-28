@@ -139,17 +139,38 @@ export async function createTrustitAccountWithoutOtp(input: {
 
     if (!userId) return { success: false, message: "Your account could not be created. Please try again." };
     createdUserId = userId;
-    const { data: signedIn, error: signInError } = await merchantClient.auth.signInWithPassword({ email, password: temporaryPassword });
-    if (signInError || !signedIn.session || signedIn.user?.id !== userId || signedIn.session.user.id !== userId) {
+    const { data: authRecord, error: authRecordError } = await admin.auth.admin.getUserById(userId);
+    const authUser = authRecord.user;
+    const authPhone = normalizeTrustitPhone(authUser?.phone);
+    if (authRecordError || authUser?.id !== userId || !authPhone || authPhone !== phone || !authUser.phone_confirmed_at) {
       await discardIncompleteTrustitUser(admin, userId, merchantClient);
       createdUserId = null;
       return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
     }
 
-    const { data: authRecord, error: authRecordError } = await admin.auth.admin.getUserById(userId);
-    const authUser = authRecord.user;
-    const authPhone = normalizeTrustitPhone(authUser?.phone);
-    if (authRecordError || authUser?.id !== userId || !authPhone || authPhone !== phone || !authUser.phone_confirmed_at) {
+    if (authUser.phone !== phone) {
+      const { error: canonicalPhoneError } = await admin.auth.admin.updateUserById(userId, {
+        phone,
+        phone_confirm: true,
+      });
+      if (canonicalPhoneError) {
+        await discardIncompleteTrustitUser(admin, userId, merchantClient);
+        createdUserId = null;
+        return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
+      }
+
+      const { data: canonicalRecord, error: canonicalRecordError } = await admin.auth.admin.getUserById(userId);
+      const canonicalUser = canonicalRecord.user;
+      if (canonicalRecordError || canonicalUser?.id !== userId || canonicalUser.phone !== phone
+        || normalizeTrustitPhone(canonicalUser.phone) !== phone || !canonicalUser.phone_confirmed_at) {
+        await discardIncompleteTrustitUser(admin, userId, merchantClient);
+        createdUserId = null;
+        return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
+      }
+    }
+
+    const { data: signedIn, error: signInError } = await merchantClient.auth.signInWithPassword({ email, password: temporaryPassword });
+    if (signInError || !signedIn.session || signedIn.user?.id !== userId || signedIn.session.user.id !== userId) {
       await discardIncompleteTrustitUser(admin, userId, merchantClient);
       createdUserId = null;
       return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
