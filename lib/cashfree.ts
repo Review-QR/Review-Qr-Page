@@ -371,6 +371,8 @@ async function createOrder(input: {
   orderTags?: Record<string, string>;
   notifyUrl?: string;
   orderId?: string;
+  customerName?: string;
+  customerPhone?: string;
 }): Promise<CashfreeOrderResult> {
   if (!Number.isFinite(input.amount) || input.amount < 1 || !input.customerId) {
     return {
@@ -411,9 +413,9 @@ async function createOrder(input: {
           order_currency: "INR",
           customer_details: {
             customer_id: input.customerId,
-            customer_name: "Review QR Sandbox Test",
+            customer_name: input.customerName ?? "Review QR Sandbox Test",
             customer_email: "sandbox-test@example.com",
-            customer_phone: "9999999999",
+            customer_phone: input.customerPhone ?? "9999999999",
           },
           order_note: input.orderNote,
           ...(input.orderTags ? { order_tags: input.orderTags } : {}),
@@ -484,6 +486,9 @@ async function createOrder(input: {
 export async function createCashfreeMerchantCheckoutOrder(input: {
   planId: PlanId;
   businessId: string;
+  customerName?: string;
+  customerPhone?: string;
+  orderId?: string;
 }): Promise<CashfreeOrderResult> {
   const plan = appConfig.plans[input.planId];
   const notifyUrl = configuredWebhookUrl();
@@ -495,13 +500,44 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
     };
   }
 
-  const orderId = `rqr_${randomUUID().replaceAll("-", "")}`;
+  const orderId = input.orderId ?? `rqr_${randomUUID().replaceAll("-", "")}`;
+  if (!ORDER_ID_PATTERN.test(orderId)) {
+    return { success: false, httpStatus: null, error: "The payment reference is invalid." };
+  }
 
-  return createOrder({
+  let result: CashfreeOrderResult;
+  if (input.orderId) {
+    const existing = await fetchExistingMerchantOrder({
+      orderId,
+      businessId: input.businessId,
+      planId: input.planId,
+    });
+    if (existing.status === "FOUND") result = existing.order;
+    else if (existing.status === "ERROR") {
+      return { success: false, httpStatus: existing.httpStatus, error: "Payment service is temporarily unavailable. Please try again." };
+    } else result = await createOrder({
+      amount: plan.price,
+      customerId: input.businessId,
+      orderNote: `Review-QR ${plan.name} Sandbox checkout`,
+      orderId,
+      customerName: input.customerName,
+      customerPhone: input.customerPhone,
+      orderTags: {
+        review_qr_context: signOrderContext({ orderId, businessId: input.businessId, planId: input.planId }),
+      },
+      notifyUrl,
+    });
+    if (!result.success) {
+      const recovered = await fetchExistingMerchantOrder({ orderId, businessId: input.businessId, planId: input.planId });
+      if (recovered.status === "FOUND") result = recovered.order;
+    }
+  } else result = await createOrder({
     amount: plan.price,
     customerId: input.businessId,
     orderNote: `Review-QR ${plan.name} Sandbox checkout`,
     orderId,
+    customerName: input.customerName,
+    customerPhone: input.customerPhone,
     orderTags: {
       review_qr_context: signOrderContext({
         orderId,
@@ -510,17 +546,51 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
       }),
     },
     notifyUrl,
-  }).then((result) => {
-    if (!result.success) return result;
-    return {
-      ...result,
-      verificationToken: createCheckoutVerificationToken({
-        orderId: result.orderId,
-        businessId: input.businessId,
-        planId: input.planId,
-      }),
-    };
   });
+  if (!result.success) return result;
+  return {
+    ...result,
+    verificationToken: createCheckoutVerificationToken({
+      orderId: result.orderId,
+      businessId: input.businessId,
+      planId: input.planId,
+    }),
+  };
+}
+
+async function fetchExistingMerchantOrder(input: {
+  orderId: string;
+  businessId: string;
+  planId: PlanId;
+}): Promise<
+  | { status: "FOUND"; order: CashfreeOrderResult & { success: true } }
+  | { status: "MISSING" }
+  | { status: "ERROR"; httpStatus: number | null }
+> {
+  let client: CashfreeClient;
+  try { client = createCashfreeClient(); } catch { return { status: "ERROR", httpStatus: null }; }
+  let response: Response;
+  try {
+    response = await fetch(`${client.apiBaseUrl}/orders/${encodeURIComponent(input.orderId)}`, client.createRequestInit({
+      method: "GET", cache: "no-store", signal: AbortSignal.timeout(20_000),
+    }));
+  } catch { return { status: "ERROR", httpStatus: null }; }
+  if (response.status === 404) { await response.body?.cancel(); return { status: "MISSING" }; }
+  if (!response.ok) { await response.body?.cancel(); return { status: "ERROR", httpStatus: response.status }; }
+  let payload: unknown;
+  try { payload = await response.json(); } catch { return { status: "ERROR", httpStatus: response.status }; }
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) return { status: "ERROR", httpStatus: response.status };
+  const order = payload as { order_id?: unknown; order_status?: unknown; order_amount?: unknown; order_currency?: unknown; payment_session_id?: unknown; order_tags?: unknown };
+  const tags = typeof order.order_tags === "object" && order.order_tags !== null && !Array.isArray(order.order_tags)
+    ? order.order_tags as Record<string, unknown> : {};
+  const context = readSignedOrderContext(tags.review_qr_context, input.orderId);
+  if (order.order_id !== input.orderId || order.order_status !== "ACTIVE"
+    || order.order_amount !== appConfig.plans[input.planId].price || order.order_currency !== "INR"
+    || typeof order.payment_session_id !== "string" || !order.payment_session_id
+    || context?.businessId !== input.businessId || context.planId !== input.planId) {
+    return { status: "ERROR", httpStatus: response.status };
+  }
+  return { status: "FOUND", order: { success: true, httpStatus: response.status, orderId: input.orderId, orderStatus: "ACTIVE", paymentSessionId: order.payment_session_id } };
 }
 
 export type CashfreeWebhookOrderVerification =

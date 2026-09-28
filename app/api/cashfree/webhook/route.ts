@@ -122,6 +122,38 @@ export async function POST(request: Request): Promise<Response> {
 
   try {
     const admin = createSupabaseAdminClient();
+    const { data: onboarding, error: onboardingLookupError } = await admin
+      .from("onboarding_sessions")
+      .select("business_id, selected_plan, payment_mode, status, user_id")
+      .eq("payment_reference", verified.orderId)
+      .eq("business_id", verified.businessId)
+      .maybeSingle();
+    if (onboardingLookupError) return jsonResponse(503, "retry");
+    // Route every Trustit one-time order through its onboarding finalizer, including
+    // completed sessions. Falling through to the legacy renewal RPC on a duplicate
+    // webhook would extend the business a second time.
+    if (onboarding?.payment_mode === "one_time"
+      && onboarding.selected_plan === appConfig.plans[verified.planId].name
+      && typeof onboarding.user_id === "string") {
+      const { data: finalized, error: finalizeError } = await admin.rpc(
+        "finalize_trustit_one_time_payment",
+        {
+          p_business_id: verified.businessId,
+          p_cashfree_order_id: verified.orderId,
+          p_plan: onboarding.selected_plan,
+          p_amount: verified.amount,
+          p_currency: "INR",
+          p_paid_at: verified.paidAt,
+        },
+      );
+      if (finalizeError || !Array.isArray(finalized) || !finalized[0]) {
+        return jsonResponse(503, "retry");
+      }
+      const result = (finalized[0] as { result?: unknown }).result;
+      return result === "applied" || result === "already_applied"
+        ? jsonResponse(200, result)
+        : jsonResponse(503, "retry");
+    }
     const { data, error } = await admin.rpc(
       "apply_verified_cashfree_payment",
       {

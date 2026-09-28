@@ -18,20 +18,20 @@ export async function merchantSignInAction(
 
   const supabase = await createMerchantActionClient();
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: merchantAuthEmail(businessId),
-      password,
-    });
+    const isMobileLogin = /^\+[1-9][0-9]{7,14}$/.test(businessId);
+    const { data, error } = isMobileLogin
+      ? await supabase.auth.signInWithPassword({ phone: businessId, password })
+      : await supabase.auth.signInWithPassword({ email: merchantAuthEmail(businessId), password });
     if (error || !data.user) {
       return { message: "Business ID or password is incorrect." };
     }
 
-    const { data: mapping, error: mappingError } = await supabase
+    let mappingQuery = supabase
       .from("merchant_accounts")
       .select("business_id")
-      .eq("business_id", businessId)
-      .eq("user_id", data.user.id)
-      .maybeSingle();
+      .eq("user_id", data.user.id);
+    if (!isMobileLogin) mappingQuery = mappingQuery.eq("business_id", businessId);
+    const { data: mapping, error: mappingError } = await mappingQuery.maybeSingle();
     if (mappingError || !mapping) {
       await supabase.auth.signOut();
       return { message: "This merchant account is not active. Contact an administrator." };
@@ -40,7 +40,7 @@ export async function merchantSignInAction(
     const { data: business, error: businessError } = await supabase
       .from("businesses")
       .select("id")
-      .eq("id", businessId)
+      .eq("id", mapping.business_id)
       .eq("merchant_status", "active")
       .maybeSingle();
     if (businessError || !business) {

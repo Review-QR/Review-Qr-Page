@@ -1,0 +1,17 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createTrustitOneTimeCheckout, verifyTrustitOneTimePayment } from "../actions";
+
+type CashfreeSdk = (options:{mode:"sandbox"})=>{checkout(options:{paymentSessionId:string;redirectTarget:"_modal"}):Promise<{error?:unknown;redirect?:unknown;paymentDetails?:unknown}>};
+declare global { interface Window { Cashfree?: CashfreeSdk } }
+let sdkLoading:Promise<void>|null=null;
+function loadSdk(){if(window.Cashfree)return Promise.resolve();if(!sdkLoading)sdkLoading=new Promise<void>((resolve,reject)=>{const script=document.createElement("script");script.src="https://sdk.cashfree.com/js/v3/cashfree.js";script.async=true;script.onload=()=>window.Cashfree?resolve():reject();script.onerror=()=>reject();document.head.appendChild(script)}).catch(e=>{sdkLoading=null;throw e});return sdkLoading;}
+
+export default function OneTimeCheckout({initialOrderId}:{initialOrderId:string|null}){
+ const router=useRouter();const [orderId,setOrderId]=useState(initialOrderId??"");const [busy,setBusy]=useState(false);const [message,setMessage]=useState("");
+ async function start(){if(busy)return;setBusy(true);setMessage("");try{const result=await createTrustitOneTimeCheckout();if(!result.success){setMessage(result.message);return}if(!result.orderId||!result.paymentSessionId){setOrderId(result.orderId??"");setMessage("An existing payment is saved. Use Recover & Check to verify it, or finish its checkout if you already opened it.");return}setOrderId(result.orderId);await loadSdk();if(!window.Cashfree)throw new Error();await window.Cashfree({mode:"sandbox"}).checkout({paymentSessionId:result.paymentSessionId,redirectTarget:"_modal"});setMessage("Payment submitted. Trustit will activate your business only after server-side verification.")}catch{setMessage("Checkout could not be completed. If you submitted payment, use Recover & Check before trying again.")}finally{setBusy(false)}}
+ async function check(){if(busy||!/^rqr_[a-f0-9]{32}$/.test(orderId))return;setBusy(true);setMessage("Payment verify ho raha hai. Please thoda wait karein.");try{const result=await verifyTrustitOneTimePayment(orderId);setMessage(result.success?"Payment verified. Your business is now active.":result.message);if(result.success){router.push("/merchant/dashboard");router.refresh()}}catch{setMessage("Payment status could not be verified yet. Please try again later.")}finally{setBusy(false)}}
+ return <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-5"><h3 className="font-bold text-slate-900">Pay Once</h3><p className="mt-1 text-sm text-slate-600">Pay for 30 days of service. Your business and QR activate after the payment is verified.</p>{orderId&&<label className="mt-4 block text-sm font-medium">Payment reference<input className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={orderId} readOnly /></label>}<div className="mt-4 flex flex-wrap gap-3"><button type="button" disabled={busy} onClick={()=>void start()} className="rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white disabled:opacity-50">{busy?"Please wait…":"Continue to Cashfree"}</button>{orderId&&<button type="button" disabled={busy} onClick={()=>void check()} className="rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 disabled:opacity-50">Recover & Check</button>}</div>{message&&<p role="status" className="mt-3 text-sm text-slate-700">{message}</p>}</div>
+}

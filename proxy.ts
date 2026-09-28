@@ -5,7 +5,8 @@ import { merchantSessionCookieName } from "@/lib/supabase-config";
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isMerchantRequest =
-    pathname === "/merchant" || pathname.startsWith("/merchant/");
+    pathname === "/merchant" || pathname.startsWith("/merchant/") ||
+    pathname === "/register" || pathname.startsWith("/register/");
   return updateSupabaseSession(
     request,
     isMerchantRequest ? merchantSessionCookieName : undefined

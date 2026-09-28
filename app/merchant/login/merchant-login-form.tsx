@@ -17,7 +17,7 @@ export default function MerchantLoginForm() {
       )}
       <div>
         <label htmlFor="businessId" className="mb-1 block text-sm font-medium text-slate-700">
-          Business ID
+          Business ID or verified mobile (+country code)
         </label>
         <input
           id="businessId"

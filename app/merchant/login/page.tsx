@@ -40,8 +40,9 @@ export default async function MerchantLoginPage() {
             </>
           ) : (
             <>
-              <p className="mt-2 text-sm text-slate-500">Use the Business ID and password provided by your administrator.</p>
+              <p className="mt-2 text-sm text-slate-500">Existing merchants can sign in with Business ID; self-registered merchants can use their verified mobile number.</p>
               <MerchantLoginForm />
+              <p className="mt-5 text-sm text-slate-600">New Business? <Link href="/register" className="font-semibold text-blue-700">Register here</Link></p>
             </>
           )}
         </div>

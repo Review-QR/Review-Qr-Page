@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import AdminNavigation from "@/app/admin-navigation";
 import "./globals.css";
@@ -6,7 +6,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Review-QR",
   description: "QR Review Management Platform",
+  manifest: "/manifest.webmanifest",
 };
+
+export const viewport: Viewport = { themeColor: "#1d4ed8" };
 
 export default function RootLayout({
   children,

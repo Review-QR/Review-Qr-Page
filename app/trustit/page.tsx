@@ -1,0 +1,11 @@
+import Link from "next/link";
+
+export default function TrustitPage() {
+  return <main className="min-h-screen bg-gradient-to-b from-sky-50 to-white text-slate-900">
+    <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-6"><Link href="/trustit" className="text-2xl font-extrabold tracking-tight text-blue-700">Trustit</Link><Link href="/merchant/login" className="text-sm font-semibold text-slate-700 hover:text-blue-700">Merchant Login</Link></header>
+    <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 pb-20 pt-10 md:grid-cols-2 md:pt-20">
+      <div><p className="inline-flex rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-800">Simple QR Review Platform</p><h1 className="mt-6 text-4xl font-extrabold leading-tight sm:text-5xl">Apne har Customer ko ek Review ka mauka dein.</h1><p className="mt-5 text-lg text-slate-600">Scan QR → Google Review → Business Growth</p><p className="mt-3 text-slate-600">Apna business add karein, apna account banayein aur apne review QR ko manage karein.</p><div className="mt-8 flex flex-wrap gap-3"><Link href="/register" className="rounded-xl bg-blue-700 px-6 py-3 font-semibold text-white shadow-sm hover:bg-blue-800">Apna Business Add Karein</Link><Link href="/merchant/login" className="rounded-xl border border-slate-300 bg-white px-6 py-3 font-semibold text-slate-700 hover:bg-slate-50">Merchant Login</Link></div></div>
+      <div className="rounded-3xl border border-blue-100 bg-white p-7 shadow-xl shadow-blue-100/60"><h2 className="text-xl font-bold">Simple monthly plans</h2><p className="mt-1 text-slate-500">₹29/month se shuru</p><div className="mt-6 grid gap-3 sm:grid-cols-3">{[["Basic","₹29"],["Standard","₹49"],["Premium","₹99"]].map(([plan,price])=><div key={plan} className="rounded-xl bg-slate-50 p-4"><p className="text-sm text-slate-500">{plan}</p><p className="mt-1 text-xl font-bold">{price}<span className="text-xs font-normal text-slate-500">/month</span></p></div>)}</div><ul className="mt-6 space-y-3 text-sm text-slate-700"><li>✓ Easy QR for your business</li><li>✓ Your Google Review link</li><li>✓ Live scan count</li><li>✓ Apna account, apna password</li></ul></div>
+    </section>
+  </main>;
+}
