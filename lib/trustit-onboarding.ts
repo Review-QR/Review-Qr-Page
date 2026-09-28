@@ -13,9 +13,38 @@ export function isTrustitPhoneOtpBypassEnabled() {
 
 export function normalizeTrustitPhone(value: unknown): string | null {
   if (typeof value !== "string" || value.length > 32) return null;
-  const normalized = value.trim().replace(/[\s()-]/g, "");
-  const phone = normalized.startsWith("+") ? normalized : `+91${normalized}`;
-  return /^\+[1-9][0-9]{7,14}$/.test(phone) ? phone : null;
+  const input = value.trim();
+  if (!input || /[^0-9+()\s-]/.test(input)) return null;
+
+  let inParentheses = false;
+  let parenthesesContainDigit = false;
+  for (const character of input) {
+    if (character === "(") {
+      if (inParentheses) return null;
+      inParentheses = true;
+      parenthesesContainDigit = false;
+    } else if (character === ")") {
+      if (!inParentheses || !parenthesesContainDigit) return null;
+      inParentheses = false;
+    } else if (inParentheses && /[0-9]/.test(character)) {
+      parenthesesContainDigit = true;
+    }
+  }
+  if (inParentheses) return null;
+
+  const compact = input.replace(/[\s()-]/g, "");
+  if (!/^\+?[0-9]+$/.test(compact)) return null;
+
+  if (compact.startsWith("+")) {
+    const digits = compact.slice(1);
+    if (!/^[1-9][0-9]{7,14}$/.test(digits)) return null;
+    if (digits.startsWith("91") && !/^91[6-9][0-9]{9}$/.test(digits)) return null;
+    return `+${digits}`;
+  }
+
+  if (/^[6-9][0-9]{9}$/.test(compact)) return `+91${compact}`;
+  if (/^91[6-9][0-9]{9}$/.test(compact)) return `+${compact}`;
+  return null;
 }
 
 export function isValidTrustitPassword(password: string, confirmation: string) {
