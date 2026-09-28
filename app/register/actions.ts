@@ -140,7 +140,8 @@ export async function createTrustitAccountWithoutOtp(input: {
     if (!userId) return { success: false, message: "Your account could not be created. Please try again." };
     createdUserId = userId;
     const { data: signedIn, error: signInError } = await merchantClient.auth.signInWithPassword({ email, password: temporaryPassword });
-    if (signInError || signedIn.user?.id !== userId || signedIn.user.phone !== phone || !signedIn.user.phone_confirmed_at) {
+    const signedInPhone = normalizeTrustitPhone(signedIn.user?.phone);
+    if (signInError || signedIn.user?.id !== userId || !signedInPhone || signedInPhone !== phone || !signedIn.user.phone_confirmed_at) {
       await discardIncompleteTrustitUser(admin, userId, merchantClient);
       createdUserId = null;
       return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
