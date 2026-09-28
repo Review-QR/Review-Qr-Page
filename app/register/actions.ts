@@ -92,9 +92,12 @@ export async function createTrustitAccountWithoutOtp(input: {
   let createdUserId: string | null = null;
   try {
     merchantClient = await createMerchantActionClient();
-    const { data: authData, error: authError } = await merchantClient.auth.getUser();
-    if (authError) return { success: false, message: "Please sign in again to continue." };
-    if (authData.user) {
+    const { data: sessionData, error: sessionError } = await merchantClient.auth.getSession();
+    if (sessionError) return { success: false, message: "Please try again to continue." };
+    if (sessionData.session) {
+      // A stored session must be validated with Auth before it can be resumed.
+      const { data: authData, error: authError } = await merchantClient.auth.getUser();
+      if (authError || !authData.user) return { success: false, message: "Please sign in again to continue." };
       const user = authData.user;
       const isPendingNewTrustitUser = user.app_metadata?.[trustitBypassMetadataKeys.signup] === true
         && user.app_metadata?.[trustitBypassMetadataKeys.passwordComplete] !== true
