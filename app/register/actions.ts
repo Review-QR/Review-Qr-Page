@@ -19,6 +19,7 @@ import {
   createCashfreeMerchantCheckoutOrder,
   verifyCashfreeMerchantOrderBySignedContext,
 } from "@/lib/cashfree";
+import { logTrustitCheckoutStage } from "@/lib/trustit-checkout-diagnostics";
 
 export type ActionResult = { success: true; value?: string } | { success: false; message: string; code?: "duplicate_mobile" };
 
@@ -416,16 +417,43 @@ export async function createTrustitOneTimeCheckout(): Promise<ActionResult & { o
     if (error || !prepared || typeof prepared.business_id !== "string" || typeof prepared.plan !== "string" || typeof prepared.mobile !== "string") return { success: false, message: "Your registration session may have expired. Please start again." };
     const planId = (Object.keys(appConfig.plans) as PlanId[]).find((id) => appConfig.plans[id].name === prepared.plan);
     if (!planId) return safeActionError();
+    logTrustitCheckoutStage("return_url_validation_start");
     const returnUrl = configuredTrustitPaymentReturnUrl();
-    if (!returnUrl) return { success: false, message: "Payment service is temporarily unavailable. Please try again." };
+    if (!returnUrl) {
+      logTrustitCheckoutStage("return_url_validation_failed");
+      return { success: false, message: "Payment service is temporarily unavailable. Please try again." };
+    }
+    logTrustitCheckoutStage("return_url_validation_success");
     const proposedOrderId = `rqr_${randomUUID().replaceAll("-", "")}`;
-    const reserved = await admin.rpc("reserve_trustit_one_time_order", { p_user_id: context.user.id, p_order_id: proposedOrderId });
+    logTrustitCheckoutStage("order_reservation_start");
+    let reserved: Awaited<ReturnType<typeof admin.rpc>>;
+    try {
+      reserved = await admin.rpc("reserve_trustit_one_time_order", { p_user_id: context.user.id, p_order_id: proposedOrderId });
+    } catch (error) {
+      logTrustitCheckoutStage("order_reservation_failed");
+      throw error;
+    }
     const reservation = Array.isArray(reserved.data) ? reserved.data[0] as { payment_reference?: unknown; is_new?: unknown } | undefined : undefined;
-    if (reserved.error || typeof reservation?.payment_reference !== "string") return safeActionError();
-    const order = await createCashfreeMerchantCheckoutOrder({ planId, businessId: prepared.business_id, orderId: reservation.payment_reference, customerName: typeof prepared.full_name === "string" ? prepared.full_name : undefined, customerPhone: prepared.mobile.replace(/^\+/, ""), returnUrl });
+    if (reserved.error || typeof reservation?.payment_reference !== "string") {
+      logTrustitCheckoutStage("order_reservation_failed");
+      return safeActionError();
+    }
+    logTrustitCheckoutStage("order_reservation_success");
+    const order = await createCashfreeMerchantCheckoutOrder({ planId, businessId: prepared.business_id, orderId: reservation.payment_reference, customerName: typeof prepared.full_name === "string" ? prepared.full_name : undefined, customerPhone: prepared.mobile.replace(/^\+/, ""), returnUrl, diagnosticScope: "trustit_registration" });
     if (!order.success) return { success: false, message: order.error };
-    const recorded = await admin.rpc("record_trustit_payment_session", { p_user_id: context.user.id, p_payment_reference: order.orderId, p_payment_session_id: order.paymentSessionId });
-    if (recorded.error) return { success: false, message: "Payment setup could not be saved. Please try again." };
+    logTrustitCheckoutStage("payment_session_recording_start");
+    let recorded: Awaited<ReturnType<typeof admin.rpc>>;
+    try {
+      recorded = await admin.rpc("record_trustit_payment_session", { p_user_id: context.user.id, p_payment_reference: order.orderId, p_payment_session_id: order.paymentSessionId });
+    } catch (error) {
+      logTrustitCheckoutStage("payment_session_recording_failed");
+      throw error;
+    }
+    if (recorded.error) {
+      logTrustitCheckoutStage("payment_session_recording_failed");
+      return { success: false, message: "Payment setup could not be saved. Please try again." };
+    }
+    logTrustitCheckoutStage("payment_session_recording_success");
     return { success: true, orderId: order.orderId, paymentSessionId: order.paymentSessionId };
   } catch { return safeActionError(); }
 }

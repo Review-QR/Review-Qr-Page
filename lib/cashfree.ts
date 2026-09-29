@@ -7,10 +7,40 @@ import {
 } from "node:crypto";
 import { isIP } from "node:net";
 import { appConfig, type PlanId } from "@/lib/config";
+import { logTrustitCheckoutStage, type TrustitCheckoutDiagnosticStage } from "@/lib/trustit-checkout-diagnostics";
 
 const CASHFREE_API_VERSION = "2026-01-01";
 const CASHFREE_SANDBOX_ORIGIN = "https://sandbox.cashfree.com";
 const CASHFREE_SANDBOX_PATH = "/pg";
+
+function logTrustitCashfreeHttpCategory(operation: "lookup" | "create", status: number): void {
+  const category = status >= 200 && status < 300
+    ? "2xx"
+    : status >= 300 && status < 400
+      ? "3xx"
+      : status >= 400 && status < 500
+        ? "4xx"
+        : status >= 500 && status < 600
+          ? "5xx"
+          : "other";
+  const stages = {
+    lookup: {
+      "2xx": "cashfree_lookup_http_2xx",
+      "3xx": "cashfree_lookup_http_3xx",
+      "4xx": "cashfree_lookup_http_4xx",
+      "5xx": "cashfree_lookup_http_5xx",
+      other: "cashfree_lookup_http_other",
+    },
+    create: {
+      "2xx": "cashfree_create_http_2xx",
+      "3xx": "cashfree_create_http_3xx",
+      "4xx": "cashfree_create_http_4xx",
+      "5xx": "cashfree_create_http_5xx",
+      other: "cashfree_create_http_other",
+    },
+  } as const;
+  logTrustitCheckoutStage(stages[operation][category]);
+}
 
 export type CashfreeSandboxTestOrderResult =
   | {
@@ -386,6 +416,7 @@ async function createOrder(input: {
   orderId?: string;
   customerName?: string;
   customerPhone?: string;
+  diagnosticScope?: "trustit_registration";
 }): Promise<CashfreeOrderResult> {
   if (!Number.isFinite(input.amount) || input.amount < 1 || !input.customerId) {
     return {
@@ -396,15 +427,18 @@ async function createOrder(input: {
   }
 
   let client: CashfreeClient;
+  if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_client_configuration_start");
   try {
     client = createCashfreeClient();
   } catch {
+    if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_client_configuration_failed");
     return {
       success: false,
       httpStatus: null,
       error: "Payment service is temporarily unavailable. Please try again.",
     };
   }
+  if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_client_configuration_success");
 
   const orderId = input.orderId ?? `rqr_${randomUUID().replaceAll("-", "")}`;
   const idempotencyKey = randomUUID();
@@ -444,6 +478,7 @@ async function createOrder(input: {
       }),
     );
   } catch {
+    if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_create_network_error");
     return {
       success: false,
       httpStatus: null,
@@ -451,6 +486,7 @@ async function createOrder(input: {
     };
   }
 
+  if (input.diagnosticScope === "trustit_registration") logTrustitCashfreeHttpCategory("create", response.status);
   if (!response.ok) {
     await response.body?.cancel();
     return {
@@ -460,6 +496,7 @@ async function createOrder(input: {
     };
   }
 
+  if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("order_response_validation_start");
   let result: {
     order_id?: unknown;
     order_status?: unknown;
@@ -472,6 +509,7 @@ async function createOrder(input: {
       payment_session_id?: unknown;
     };
   } catch {
+    if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("order_response_validation_failed");
     return {
       success: false,
       httpStatus: response.status,
@@ -485,6 +523,7 @@ async function createOrder(input: {
     typeof result.payment_session_id !== "string" ||
     !result.payment_session_id
   ) {
+    if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("order_response_validation_failed");
     return {
       success: false,
       httpStatus: response.status,
@@ -492,6 +531,7 @@ async function createOrder(input: {
     };
   }
 
+  if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("order_response_validation_success");
   return {
     success: true,
     httpStatus: response.status,
@@ -508,16 +548,21 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
   customerPhone?: string;
   orderId?: string;
   returnUrl?: string;
+  diagnosticScope?: "trustit_registration";
 }): Promise<CashfreeOrderResult> {
+  const diagnoseTrustitRegistration = input.diagnosticScope === "trustit_registration";
   const plan = appConfig.plans[input.planId];
+  if (diagnoseTrustitRegistration) logTrustitCheckoutStage("cashfree_webhook_configuration_start");
   const notifyUrl = configuredWebhookUrl();
   if (!notifyUrl) {
+    if (diagnoseTrustitRegistration) logTrustitCheckoutStage("cashfree_webhook_configuration_failed");
     return {
       success: false,
       httpStatus: null,
       error: "Payment service is temporarily unavailable. Please try again.",
     };
   }
+  if (diagnoseTrustitRegistration) logTrustitCheckoutStage("cashfree_webhook_configuration_success");
 
   const orderId = input.orderId ?? `rqr_${randomUUID().replaceAll("-", "")}`;
   if (!ORDER_ID_PATTERN.test(orderId)) {
@@ -530,6 +575,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
       orderId,
       businessId: input.businessId,
       planId: input.planId,
+      diagnosticScope: input.diagnosticScope,
     });
     if (existing.status === "FOUND") result = existing.order;
     else if (existing.status === "ERROR") {
@@ -541,6 +587,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
       orderId,
       customerName: input.customerName,
       customerPhone: input.customerPhone,
+      diagnosticScope: input.diagnosticScope,
       orderTags: {
         review_qr_context: signOrderContext({ orderId, businessId: input.businessId, planId: input.planId }),
       },
@@ -548,7 +595,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
       returnUrl: input.returnUrl,
     });
     if (!result.success) {
-      const recovered = await fetchExistingMerchantOrder({ orderId, businessId: input.businessId, planId: input.planId });
+      const recovered = await fetchExistingMerchantOrder({ orderId, businessId: input.businessId, planId: input.planId, diagnosticScope: input.diagnosticScope });
       if (recovered.status === "FOUND") result = recovered.order;
     }
   } else result = await createOrder({
@@ -558,6 +605,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
     orderId,
     customerName: input.customerName,
     customerPhone: input.customerPhone,
+    diagnosticScope: input.diagnosticScope,
     orderTags: {
       review_qr_context: signOrderContext({
         orderId,
@@ -583,24 +631,41 @@ async function fetchExistingMerchantOrder(input: {
   orderId: string;
   businessId: string;
   planId: PlanId;
+  diagnosticScope?: "trustit_registration";
 }): Promise<
   | { status: "FOUND"; order: CashfreeOrderResult & { success: true } }
   | { status: "MISSING" }
   | { status: "ERROR"; httpStatus: number | null }
 > {
   let client: CashfreeClient;
-  try { client = createCashfreeClient(); } catch { return { status: "ERROR", httpStatus: null }; }
+  if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_client_configuration_start");
+  try { client = createCashfreeClient(); } catch {
+    if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_client_configuration_failed");
+    return { status: "ERROR", httpStatus: null };
+  }
+  if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_client_configuration_success");
   let response: Response;
   try {
     response = await fetch(`${client.apiBaseUrl}/orders/${encodeURIComponent(input.orderId)}`, client.createRequestInit({
       method: "GET", cache: "no-store", signal: AbortSignal.timeout(20_000),
     }));
-  } catch { return { status: "ERROR", httpStatus: null }; }
+  } catch {
+    if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_lookup_network_error");
+    return { status: "ERROR", httpStatus: null };
+  }
+  if (input.diagnosticScope === "trustit_registration") logTrustitCashfreeHttpCategory("lookup", response.status);
   if (response.status === 404) { await response.body?.cancel(); return { status: "MISSING" }; }
   if (!response.ok) { await response.body?.cancel(); return { status: "ERROR", httpStatus: response.status }; }
+  if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_lookup_response_validation_start");
   let payload: unknown;
-  try { payload = await response.json(); } catch { return { status: "ERROR", httpStatus: response.status }; }
-  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) return { status: "ERROR", httpStatus: response.status };
+  try { payload = await response.json(); } catch {
+    if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_lookup_response_validation_failed");
+    return { status: "ERROR", httpStatus: response.status };
+  }
+  if (typeof payload !== "object" || payload === null || Array.isArray(payload)) {
+    if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_lookup_response_validation_failed");
+    return { status: "ERROR", httpStatus: response.status };
+  }
   const order = payload as { order_id?: unknown; order_status?: unknown; order_amount?: unknown; order_currency?: unknown; payment_session_id?: unknown; order_tags?: unknown };
   const tags = typeof order.order_tags === "object" && order.order_tags !== null && !Array.isArray(order.order_tags)
     ? order.order_tags as Record<string, unknown> : {};
@@ -609,8 +674,10 @@ async function fetchExistingMerchantOrder(input: {
     || order.order_amount !== appConfig.plans[input.planId].price || order.order_currency !== "INR"
     || typeof order.payment_session_id !== "string" || !order.payment_session_id
     || context?.businessId !== input.businessId || context.planId !== input.planId) {
+    if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_lookup_response_validation_failed");
     return { status: "ERROR", httpStatus: response.status };
   }
+  if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_lookup_response_validation_success");
   return { status: "FOUND", order: { success: true, httpStatus: response.status, orderId: input.orderId, orderStatus: "ACTIVE", paymentSessionId: order.payment_session_id } };
 }
 
