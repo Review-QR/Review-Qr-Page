@@ -48,7 +48,8 @@ export function normalizeTrustitPhone(value: unknown): string | null {
 }
 
 export function isValidTrustitPassword(password: string, confirmation: string) {
-  return password.length >= 12
+  return password.length >= 6
+    && password.length <= 16
     && /[A-Za-z]/.test(password)
     && /[0-9]/.test(password)
     && password === confirmation;

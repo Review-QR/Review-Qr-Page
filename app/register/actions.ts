@@ -19,25 +19,45 @@ import {
   verifyCashfreeMerchantOrderBySignedContext,
 } from "@/lib/cashfree";
 
-export type ActionResult = { success: true; value?: string } | { success: false; message: string };
+export type ActionResult = { success: true; value?: string } | { success: false; message: string; code?: "duplicate_mobile" };
 
 type TrustitSignupStage =
-  | "create_auth_user_start" | "create_auth_user_success" | "create_auth_user_failed"
-  | "phone_validation_start" | "phone_validation_success" | "phone_validation_failed"
-  | "phone_canonicalization_start" | "phone_canonicalization_success" | "phone_canonicalization_failed"
-  | "password_signin_start" | "password_signin_success" | "password_signin_failed"
-  | "session_validation_start" | "session_validation_success" | "session_validation_failed"
-  | "complete_profile_start" | "complete_profile_success" | "complete_profile_failed"
+  | "create_auth_user_start"
+  | "create_auth_user_success"
+  | "create_auth_user_failed"
+  | "phone_validation_start"
+  | "phone_validation_success"
+  | "phone_validation_failed"
+  | "phone_canonicalization_start"
+  | "phone_canonicalization_success"
+  | "phone_canonicalization_failed"
+  | "password_signin_start"
+  | "password_signin_success"
+  | "password_signin_failed"
+  | "session_validation_start"
+  | "session_validation_success"
+  | "session_validation_failed"
+  | "complete_profile_start"
+  | "complete_profile_success"
+  | "complete_profile_failed"
   | "signup_success";
 
 function logTrustitSignupStage(stage: TrustitSignupStage) {
   console.info(`TRUSTIT_SIGNUP_STAGE=${stage}`);
 }
 
-async function runTrustitSignupOperation<T>(startStage: TrustitSignupStage, failureStage: TrustitSignupStage, operation: () => Promise<T> | PromiseLike<T>): Promise<T> {
+async function runTrustitSignupOperation<T>(
+  startStage: TrustitSignupStage,
+  failureStage: TrustitSignupStage,
+  operation: () => Promise<T> | PromiseLike<T>,
+): Promise<T> {
   logTrustitSignupStage(startStage);
-  try { return await operation(); }
-  catch (error) { logTrustitSignupStage(failureStage); throw error; }
+  try {
+    return await operation();
+  } catch (error) {
+    logTrustitSignupStage(failureStage);
+    throw error;
+  }
 }
 
 export async function hasBlockingTrustitMerchantSession(): Promise<boolean> {
@@ -74,9 +94,10 @@ async function currentUser() {
   return result?.user ?? null;
 }
 
-export async function completeTrustitProfile(fullName: string): Promise<ActionResult> {
+export async function completeTrustitProfile(fullName: string, businessName: string): Promise<ActionResult> {
   const context = await getTrustitUser();
-  if (!context || typeof fullName !== "string" || fullName.trim().length < 1 || fullName.trim().length > 160) {
+  if (!context || typeof fullName !== "string" || fullName.trim().length < 1 || fullName.trim().length > 160
+    || typeof businessName !== "string" || businessName.trim().length < 1 || businessName.trim().length > 160) {
     return { success: false, message: "Verify your mobile number to continue." };
   }
   try {
@@ -84,7 +105,12 @@ export async function completeTrustitProfile(fullName: string): Promise<ActionRe
       p_user_id: context.user.id,
       p_full_name: fullName.trim(),
     });
-    if (error) return { success: false, message: "Is mobile number se account already registered ho sakta hai. Login karein ya dobara try karein." };
+    if (error) {
+      const duplicate = error.message === "Mobile is already registered" || error.message === "Merchant account already exists";
+      return duplicate
+        ? { success: false, code: "duplicate_mobile", message: "This mobile number is already registered." }
+        : { success: false, message: "Your account could not be prepared. Please try again." };
+    }
     return { success: true };
   } catch {
     return safeActionError();
@@ -101,16 +127,23 @@ async function existingMerchantForUser(userId: string) {
 }
 
 async function completeTemporaryTrustitProfile(userId: string, fullName: string): Promise<ActionResult> {
-  const { error } = await runTrustitSignupOperation("complete_profile_start", "complete_profile_failed", () => createSupabaseAdminClient().rpc("complete_trustit_profile", {
-    p_user_id: userId,
-    p_full_name: fullName,
-  }));
-  if (error) {
-    logTrustitSignupStage("complete_profile_failed");
-    return { success: false, message: "Your account could not be prepared. Please try again." };
+  const { error } = await runTrustitSignupOperation(
+    "complete_profile_start",
+    "complete_profile_failed",
+    () => createSupabaseAdminClient().rpc("complete_trustit_profile", {
+      p_user_id: userId,
+      p_full_name: fullName,
+    }),
+  );
+  if (!error) {
+    logTrustitSignupStage("complete_profile_success");
+    return { success: true };
   }
-  logTrustitSignupStage("complete_profile_success");
-  return { success: true };
+  logTrustitSignupStage("complete_profile_failed");
+  const duplicate = error.message === "Mobile is already registered" || error.message === "Merchant account already exists";
+  return duplicate
+    ? { success: false, code: "duplicate_mobile", message: "This mobile number is already registered." }
+    : { success: false, message: "Your account could not be prepared. Please try again." };
 }
 
 async function discardIncompleteTrustitUser(
@@ -125,67 +158,77 @@ async function discardIncompleteTrustitUser(
 }
 
 export async function createTrustitAccountWithoutOtp(input: {
+  businessName: string;
   fullName: string;
   mobile: string;
+  password: string;
 }): Promise<ActionResult> {
   if (!isTrustitPhoneOtpBypassEnabled()) {
     return { success: false, message: "Please use the mobile verification steps to continue." };
   }
 
+  const businessName = typeof input?.businessName === "string" ? input.businessName.trim() : "";
   const fullName = typeof input?.fullName === "string" ? input.fullName.trim() : "";
   const phone = normalizeTrustitPhone(input?.mobile);
-  if (!fullName || fullName.length > 160 || !phone) {
-    return { success: false, message: "Check your name and mobile number, then try again." };
+  const password = typeof input?.password === "string" ? input.password : "";
+  if (!businessName || businessName.length > 160 || !fullName || fullName.length > 160 || !phone) {
+    return { success: false, message: "Enter a valid business name, owner name, and mobile number." };
+  }
+  if (!isValidTrustitPassword(password, password)) {
+    return { success: false, message: "Password must be 6–16 characters and include a letter and a number." };
   }
 
   let admin: ReturnType<typeof createSupabaseAdminClient> | null = null;
   let merchantClient: Awaited<ReturnType<typeof createMerchantActionClient>> | undefined;
   let createdUserId: string | null = null;
   try {
-    merchantClient = await createMerchantActionClient();
-    const { data: sessionData, error: sessionError } = await merchantClient.auth.getSession();
+    const signupMerchantClient = await createMerchantActionClient();
+    merchantClient = signupMerchantClient;
+    const { data: sessionData, error: sessionError } = await signupMerchantClient.auth.getSession();
     if (sessionError) return { success: false, message: "Please try again to continue." };
     if (sessionData.session) {
       // A stored session must be validated with Auth before it can be resumed.
-      const { data: authData, error: authError } = await merchantClient.auth.getUser();
+      const { data: authData, error: authError } = await signupMerchantClient.auth.getUser();
       if (authError || !authData.user) return { success: false, message: "Please sign in again to continue." };
       const user = authData.user;
       const isPendingNewTrustitUser = user.app_metadata?.[trustitBypassMetadataKeys.signup] === true
         && user.app_metadata?.[trustitBypassMetadataKeys.passwordComplete] !== true
         && user.phone_confirmed_at
-        && user.phone === phone;
+        && normalizeTrustitPhone(user.phone) === phone;
       if (!isPendingNewTrustitUser) {
-        return { success: false, message: "An account may already use this number. Please use Merchant Login." };
+        return { success: false, code: "duplicate_mobile", message: "This mobile number is already registered." };
       }
       if (await existingMerchantForUser(user.id)) {
-        return { success: false, message: "An account may already use this number. Please use Merchant Login." };
+        return { success: false, code: "duplicate_mobile", message: "This mobile number is already registered." };
       }
       return completeTemporaryTrustitProfile(user.id, fullName);
     }
 
-    admin = createSupabaseAdminClient();
+    const signupAdmin = createSupabaseAdminClient();
+    admin = signupAdmin;
     const email = merchantAuthEmail(phone);
-    // Keep this temporary credential server-side until the user sets their own
-    // password in the next step. Never return it from this server action.
-    const temporaryPassword = `${randomUUID()}${randomUUID()}`;
-    const { data: created, error: createError } = await runTrustitSignupOperation("create_auth_user_start", "create_auth_user_failed", () => admin!.auth.admin.createUser({
-      email,
-      email_confirm: true,
-      phone,
-      phone_confirm: true,
-      password: temporaryPassword,
-      app_metadata: {
-        [trustitBypassMetadataKeys.signup]: true,
-        [trustitBypassMetadataKeys.passwordComplete]: false,
-      },
-      user_metadata: { full_name: fullName },
-    }));
+    const { data: created, error: createError } = await runTrustitSignupOperation(
+      "create_auth_user_start",
+      "create_auth_user_failed",
+      () => signupAdmin.auth.admin.createUser({
+        email,
+        email_confirm: true,
+        phone,
+        phone_confirm: true,
+        password,
+        app_metadata: {
+          [trustitBypassMetadataKeys.signup]: true,
+          [trustitBypassMetadataKeys.passwordComplete]: true,
+        },
+        user_metadata: { full_name: fullName },
+      }),
+    );
 
     let userId = created.user?.id;
     if (createError) {
       logTrustitSignupStage("create_auth_user_failed");
       return createError.code === "phone_exists" || createError.code === "email_exists"
-        ? { success: false, message: "An account may already use this number. Please use Merchant Login." }
+        ? { success: false, code: "duplicate_mobile", message: "This mobile number is already registered." }
         : { success: false, message: "Your account could not be created. Please try again." };
     }
 
@@ -195,54 +238,65 @@ export async function createTrustitAccountWithoutOtp(input: {
     }
     logTrustitSignupStage("create_auth_user_success");
     createdUserId = userId;
-    const { data: authRecord, error: authRecordError } = await runTrustitSignupOperation("phone_validation_start", "phone_validation_failed", () => admin!.auth.admin.getUserById(userId));
+    const { data: authRecord, error: authRecordError } = await runTrustitSignupOperation(
+      "phone_validation_start",
+      "phone_validation_failed",
+      () => signupAdmin.auth.admin.getUserById(userId),
+    );
     const authUser = authRecord.user;
     const authPhone = normalizeTrustitPhone(authUser?.phone);
     if (authRecordError || authUser?.id !== userId || !authPhone || authPhone !== phone || !authUser.phone_confirmed_at) {
       logTrustitSignupStage("phone_validation_failed");
-      await discardIncompleteTrustitUser(admin, userId, merchantClient);
+      await discardIncompleteTrustitUser(signupAdmin, userId, signupMerchantClient);
       createdUserId = null;
       return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
     }
     logTrustitSignupStage("phone_validation_success");
 
     if (authUser.phone !== phone) {
-      logTrustitSignupStage("phone_canonicalization_start");
-      const { error: canonicalPhoneError } = await admin.auth.admin.updateUserById(userId, {
-        phone,
-        phone_confirm: true,
-      });
-      if (canonicalPhoneError) {
-        logTrustitSignupStage("phone_canonicalization_failed");
-        await discardIncompleteTrustitUser(admin, userId, merchantClient);
-        createdUserId = null;
-        return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
-      }
+      const canonicalizationSucceeded = await runTrustitSignupOperation(
+        "phone_canonicalization_start",
+        "phone_canonicalization_failed",
+        async () => {
+          const { error: canonicalPhoneError } = await signupAdmin.auth.admin.updateUserById(userId, {
+            phone,
+            phone_confirm: true,
+          });
+          if (canonicalPhoneError) return false;
 
-      const { data: canonicalRecord, error: canonicalRecordError } = await admin.auth.admin.getUserById(userId);
-      const canonicalUser = canonicalRecord.user;
-      if (canonicalRecordError || canonicalUser?.id !== userId || canonicalUser.phone !== phone
-        || normalizeTrustitPhone(canonicalUser.phone) !== phone || !canonicalUser.phone_confirmed_at) {
+          const { data: canonicalRecord, error: canonicalRecordError } = await signupAdmin.auth.admin.getUserById(userId);
+          const canonicalUser = canonicalRecord.user;
+          const canonicalPhone = normalizeTrustitPhone(canonicalUser?.phone);
+          return !canonicalRecordError && canonicalUser?.id === userId && Boolean(canonicalPhone)
+            && canonicalPhone === phone && Boolean(canonicalUser.phone_confirmed_at);
+        },
+      );
+      if (!canonicalizationSucceeded) {
         logTrustitSignupStage("phone_canonicalization_failed");
-        await discardIncompleteTrustitUser(admin, userId, merchantClient);
+        await discardIncompleteTrustitUser(signupAdmin, userId, signupMerchantClient);
         createdUserId = null;
         return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
       }
       logTrustitSignupStage("phone_canonicalization_success");
     }
 
-    const { data: signedIn, error: signInError } = await runTrustitSignupOperation("password_signin_start", "password_signin_failed", () => merchantClient!.auth.signInWithPassword({ email, password: temporaryPassword }));
+    const { data: signedIn, error: signInError } = await runTrustitSignupOperation(
+      "password_signin_start",
+      "password_signin_failed",
+      () => signupMerchantClient.auth.signInWithPassword({ email, password }),
+    );
     if (signInError) {
       logTrustitSignupStage("password_signin_failed");
-      await discardIncompleteTrustitUser(admin, userId, merchantClient);
+      await discardIncompleteTrustitUser(signupAdmin, userId, signupMerchantClient);
       createdUserId = null;
       return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
     }
     logTrustitSignupStage("password_signin_success");
+
     logTrustitSignupStage("session_validation_start");
     if (!signedIn.session || signedIn.user?.id !== userId || signedIn.session.user.id !== userId) {
       logTrustitSignupStage("session_validation_failed");
-      await discardIncompleteTrustitUser(admin, userId, merchantClient);
+      await discardIncompleteTrustitUser(signupAdmin, userId, signupMerchantClient);
       createdUserId = null;
       return { success: false, message: "Your account was created but could not be signed in. Please contact support." };
     }
@@ -294,6 +348,28 @@ export async function completeTrustitBypassPassword(input: {
       },
     });
     if (metadataError) return { success: false, message: "Password could not be confirmed. Please try again." };
+    return { success: true };
+  } catch {
+    return safeActionError();
+  }
+}
+
+export async function completeTrustitOtpPassword(password: string): Promise<ActionResult> {
+  if (typeof password !== "string" || !isValidTrustitPassword(password, password)) {
+    return { success: false, message: "Use a password of 6–16 characters with a letter and a number." };
+  }
+
+  try {
+    const client = await createMerchantActionClient();
+    const { data, error } = await client.auth.getUser();
+    const user = data.user;
+    if (error || !user?.phone_confirmed_at
+      || user.app_metadata?.[trustitBypassMetadataKeys.signup] === true) {
+      return { success: false, message: "Verify your mobile number to continue." };
+    }
+
+    const { error: passwordError } = await client.auth.updateUser({ password });
+    if (passwordError) return { success: false, message: "Password could not be saved. Please try again." };
     return { success: true };
   } catch {
     return safeActionError();

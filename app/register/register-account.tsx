@@ -1,25 +1,36 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMerchantBrowserClient } from "@/lib/supabase-merchant-browser";
-import { completeTrustitBypassPassword, completeTrustitProfile, createTrustitAccountWithoutOtp, logoutTrustitMerchantSession } from "./actions";
+import { completeTrustitBypassPassword, completeTrustitOtpPassword, completeTrustitProfile, createTrustitAccountWithoutOtp, logoutTrustitMerchantSession } from "./actions";
 
 const supabase = createMerchantBrowserClient();
-const inputClass = "mt-1 w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
+const inputClass = "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-700 focus:ring-4 focus:ring-blue-100";
+
+function isPasswordValid(password: string) {
+  return password.length >= 6 && password.length <= 16 && /[A-Za-z]/.test(password) && /[0-9]/.test(password);
+}
 
 export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, hasBlockingSession }: { skipPhoneOtp: boolean; passwordSetupPending: boolean; hasBlockingSession: boolean }) {
   const router = useRouter();
+  const [businessName, setBusinessName] = useState("");
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [stage, setStage] = useState<"bypass" | "account" | "otp" | "password" | "bypass-password">(
-    passwordSetupPending ? "bypass-password" : skipPhoneOtp ? "bypass" : "account",
+  const [stage, setStage] = useState<"details" | "otp" | "password" | "pending-password">(
+    passwordSetupPending ? "pending-password" : "details",
   );
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [duplicateMobile, setDuplicateMobile] = useState(false);
+
+  function report(result: { success: boolean; message: string; code?: string }) {
+    setDuplicateMobile(result.code === "duplicate_mobile");
+    setMessage(result.message);
+  }
 
   async function logoutAndStartNewAccount() {
     setBusy(true); setMessage("");
@@ -33,7 +44,7 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, ha
   }
 
   async function sendOtp(event: React.FormEvent) {
-    event.preventDefault(); setBusy(true); setMessage("");
+    event.preventDefault(); setBusy(true); setMessage(""); setDuplicateMobile(false);
     const normalized = mobile.replace(/[\s()-]/g, "");
     const phone = normalized.startsWith("+") ? normalized : `+91${normalized}`;
     if (!/^\+[1-9][0-9]{7,14}$/.test(phone)) { setMessage("Enter a valid mobile number with country code."); setBusy(false); return; }
@@ -51,65 +62,83 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, ha
     try {
       const { error } = await supabase.auth.verifyOtp({ phone: mobile, token: otp.trim(), type: "sms" });
       if (error) { setMessage("That code could not be verified. Check it and try again."); return; }
-      setStage("password"); setMessage("Mobile verified. Create a password for your account.");
+      setStage("password"); setMessage("Mobile verified. Create your password to continue.");
     } catch {
       setMessage("We could not verify the code just now. Check your connection and try again.");
     } finally { setBusy(false); }
   }
 
-  async function createPassword(event: React.FormEvent) {
-    event.preventDefault(); setMessage("");
-    if (password.length < 12 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password) || password !== confirm) { setMessage("Use at least 12 characters, including a letter and a number; both passwords must match."); return; }
+  async function createAccountWithoutOtp(event: React.FormEvent) {
+    event.preventDefault(); setMessage(""); setDuplicateMobile(false);
+    if (!businessName.trim() || !name.trim() || !mobile.trim()) {
+      setMessage("Enter your business name, owner name, and mobile number to continue.");
+      return;
+    }
+    if (!isPasswordValid(password)) {
+      setMessage("Password must be 6–16 characters and include a letter and a number.");
+      return;
+    }
     setBusy(true);
     try {
-      // Check the verified phone and create/resume the onboarding profile before
-      // changing an existing Auth password for a number already tied to a merchant.
-      const profile = await completeTrustitProfile(name);
-      if (!profile.success) { setMessage(profile.message); return; }
-      const { error } = await supabase.auth.updateUser({ password });
-      if (error) { setMessage("Password could not be saved. Please try again."); return; }
-      setPassword(""); setConfirm("");
-      router.push("/register/business"); router.refresh();
+      const result = await createTrustitAccountWithoutOtp({ businessName, fullName: name, mobile, password });
+      if (!result.success) { report(result); return; }
+      window.sessionStorage.setItem("trustit_business_name", businessName.trim());
+      router.push("/register/business");
+      router.refresh();
     } catch {
       setMessage("Your account could not be saved just now. Please try again.");
-    } finally { setBusy(false); }
+    } finally { setBusy(false); setPassword(""); }
   }
 
-  async function createAccountWithoutOtp(event: React.FormEvent) {
-    event.preventDefault(); setBusy(true); setMessage("");
+  async function createVerifiedAccount(event: React.FormEvent) {
+    event.preventDefault(); setMessage(""); setDuplicateMobile(false);
+    if (!isPasswordValid(password)) { setMessage("Password must be 6–16 characters and include a letter and a number."); return; }
+    setBusy(true);
     try {
-      const result = await createTrustitAccountWithoutOtp({ fullName: name, mobile });
-      if (!result.success) { setMessage(result.message); return; }
-      setStage("bypass-password");
-      setMessage("Account created. Now choose a password for your account.");
+      const profile = await completeTrustitProfile(name, businessName);
+      if (!profile.success) { report(profile); return; }
+      const passwordResult = await completeTrustitOtpPassword(password);
+      if (!passwordResult.success) { setMessage(passwordResult.message); return; }
+      window.sessionStorage.setItem("trustit_business_name", businessName.trim());
+      setPassword("");
+      router.push("/register/business");
+      router.refresh();
     } catch {
       setMessage("Your account could not be saved just now. Please try again.");
-    } finally { setBusy(false); }
+    } finally { setBusy(false); setPassword(""); }
   }
 
-  async function setTemporaryAccountPassword(event: React.FormEvent) {
-    event.preventDefault(); setBusy(true); setMessage("");
-    if (password.length < 12 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password) || password !== confirm) {
-      setMessage("Use at least 12 characters, including a letter and a number; both passwords must match."); setBusy(false); return;
-    }
+  async function setPendingAccountPassword(event: React.FormEvent) {
+    event.preventDefault(); setMessage("");
+    if (!isPasswordValid(password)) { setMessage("Password must be 6–16 characters and include a letter and a number."); return; }
+    setBusy(true);
     try {
-      const result = await completeTrustitBypassPassword({ password, confirmation: confirm });
+      const result = await completeTrustitBypassPassword({ password, confirmation: password });
       if (!result.success) { setMessage(result.message); return; }
-      setPassword(""); setConfirm("");
-      router.push("/register/business"); router.refresh();
+      setPassword(""); router.push("/register/business"); router.refresh();
     } catch {
-      setMessage("Password could not be saved just now. Please try again.");
-    } finally { setBusy(false); }
+      setMessage("Password could not be saved. Please try again.");
+    } finally { setBusy(false); setPassword(""); }
   }
 
-  if (hasBlockingSession) return <div className="mt-7 space-y-4"><p className="text-sm text-slate-700">A merchant session is already active. Sign out before starting a new account.</p><button type="button" disabled={busy} onClick={logoutAndStartNewAccount} className="w-full rounded-xl bg-blue-700 px-5 py-3.5 font-semibold text-white hover:bg-blue-800 disabled:opacity-50">{busy ? "Signing out…" : "Logout & Start New Account"}</button>{message && <p role="status" className="text-sm text-slate-600">{message}</p>}</div>;
+  if (hasBlockingSession) return <div className="mt-8 rounded-2xl border border-amber-200 bg-amber-50 p-5"><p className="text-sm font-semibold text-slate-900">A merchant session is already active.</p><p className="mt-1 text-sm leading-6 text-slate-600">Sign out before creating a different account. Your current account will not be changed.</p><button type="button" disabled={busy} onClick={logoutAndStartNewAccount} className="mt-4 min-h-12 w-full rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white transition hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 disabled:opacity-50">{busy ? "Signing out…" : "Logout & Start New Account"}</button>{message && <p role="alert" className="mt-3 text-sm text-rose-800">{message}</p>}</div>;
 
-  return <form onSubmit={stage === "bypass" ? createAccountWithoutOtp : stage === "account" ? sendOtp : stage === "otp" ? verifyOtp : stage === "bypass-password" ? setTemporaryAccountPassword : createPassword} className="mt-7 space-y-5">
-    {(stage === "account" || stage === "bypass") && <><label className="block text-left text-sm font-medium">Full Name<input className={inputClass} autoComplete="name" maxLength={160} value={name} onChange={e=>setName(e.target.value)} required /></label><label className="block text-left text-sm font-medium">Mobile Number<input className={inputClass} type="tel" autoComplete="tel" placeholder="+91 98765 43210" value={mobile} onChange={e=>setMobile(e.target.value)} required />{stage === "account" && <span className="mt-1 block text-xs font-normal text-slate-500">OTP verification uses the phone Auth provider configured for this project.</span>}</label></>}
-    {stage === "otp" && <label className="block text-left text-sm font-medium">SMS verification code<input className={inputClass} inputMode="numeric" autoComplete="one-time-code" maxLength={12} value={otp} onChange={e=>setOtp(e.target.value)} required /></label>}
-    {(stage === "password" || stage === "bypass-password") && <><label className="block text-left text-sm font-medium">Create Password<input className={inputClass} type="password" autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} required /></label><label className="block text-left text-sm font-medium">Confirm Password<input className={inputClass} type="password" autoComplete="new-password" value={confirm} onChange={e=>setConfirm(e.target.value)} required /></label><p className="text-left text-xs text-slate-500">At least 12 characters, with a letter and number. Your password stays with Supabase Auth and is never shown to an administrator.</p></>}
-    <button disabled={busy} className="w-full rounded-xl bg-blue-700 px-5 py-3.5 font-semibold text-white hover:bg-blue-800 disabled:opacity-50">{busy ? "Please wait…" : stage === "account" ? "Send OTP" : stage === "otp" ? "Verify Mobile" : stage === "bypass" ? "Create Account" : stage === "bypass-password" ? "Set Password" : "Create Account"}</button>
-    {stage !== "account" && stage !== "bypass" && stage !== "bypass-password" && <button type="button" disabled={busy} onClick={()=>{setStage(stage === "password" ? "otp" : "account"); setMessage("")}} className="w-full py-1 text-sm font-medium text-slate-600">Back</button>}
-    {message && <p role="status" className="text-left text-sm text-slate-600">{message}</p>}
+  const formSubmit = stage === "details" ? (skipPhoneOtp ? createAccountWithoutOtp : sendOtp) : stage === "otp" ? verifyOtp : stage === "password" ? createVerifiedAccount : setPendingAccountPassword;
+  const showDetails = stage === "details" || stage === "otp";
+
+  return <form onSubmit={formSubmit} className="mt-8 space-y-5">
+    {showDetails && <>
+      <label className="block text-sm font-semibold text-slate-800">Business Name<input className={inputClass} autoComplete="organization" maxLength={160} value={businessName} onChange={event => setBusinessName(event.target.value)} required disabled={stage !== "details"} /></label>
+      <label className="block text-sm font-semibold text-slate-800">Owner Name<input className={inputClass} autoComplete="name" maxLength={160} value={name} onChange={event => setName(event.target.value)} required disabled={stage !== "details"} /></label>
+      <label className="block text-sm font-semibold text-slate-800">Mobile Number<input className={inputClass} type="tel" autoComplete="tel" inputMode="tel" placeholder="+91 98765 43210" maxLength={24} value={mobile} onChange={event => setMobile(event.target.value)} required /></label>
+      {!skipPhoneOtp && <p className="-mt-3 text-xs leading-5 text-slate-500">OTP verification uses the phone Auth provider configured for this project.</p>}
+      {stage === "details" && <><label className="block text-sm font-semibold text-slate-800">Create Your Password<input className={inputClass} type="password" autoComplete="new-password" minLength={6} maxLength={16} value={password} onChange={event => setPassword(event.target.value)} required aria-describedby="password-help" /></label><p id="password-help" className="-mt-3 text-xs leading-5 text-slate-500">Password must be 6–16 characters, with at least one letter and one number.</p></>}
+    </>}
+    {stage === "otp" && <label className="block text-sm font-semibold text-slate-800">SMS verification code<input className={inputClass} inputMode="numeric" autoComplete="one-time-code" maxLength={12} value={otp} onChange={event => setOtp(event.target.value)} required /></label>}
+    {(stage === "password" || stage === "pending-password") && <><label className="block text-sm font-semibold text-slate-800">Create Your Password<input className={inputClass} type="password" autoComplete="new-password" minLength={6} maxLength={16} value={password} onChange={event => setPassword(event.target.value)} required aria-describedby="password-help" /></label><p id="password-help" className="-mt-3 text-xs leading-5 text-slate-500">Password must be 6–16 characters, with at least one letter and one number.</p></>}
+    <button disabled={busy} className="min-h-12 w-full rounded-xl bg-blue-700 px-5 py-3.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700 focus-visible:ring-offset-2 disabled:cursor-wait disabled:opacity-60">{busy ? "Please wait…" : stage === "details" ? (skipPhoneOtp ? "Create Your Business Account" : "Send OTP") : stage === "otp" ? "Verify OTP" : stage === "password" ? "Create Your Business Account" : "Set Password & Continue"}</button>
+    {(stage === "otp" || stage === "password") && <button type="button" disabled={busy} onClick={() => { setStage(stage === "password" ? "otp" : "details"); setMessage(""); }} className="min-h-10 w-full rounded-lg px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700">Back</button>}
+    {message && <div role={duplicateMobile ? "alert" : "status"} className={`rounded-xl px-4 py-3 text-sm leading-6 ${duplicateMobile ? "border border-amber-200 bg-amber-50 text-amber-950" : "bg-slate-50 text-slate-700"}`}><p>{message}</p>{duplicateMobile && <Link href="/merchant/login" className="mt-1 inline-block font-semibold text-blue-800 underline underline-offset-2">Merchant Login</Link>}</div>}
+    <p className="border-t border-slate-100 pt-4 text-center text-sm text-slate-600">Already have an account? <Link href="/merchant/login" className="font-semibold text-blue-800 underline underline-offset-2">Merchant Login</Link></p>
   </form>;
 }
