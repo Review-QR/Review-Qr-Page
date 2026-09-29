@@ -55,7 +55,7 @@ export type CashfreeVerificationResult =
       currency: "INR";
       paidAt: string;
     }
-  | { status: "NOT_SUCCESS"; httpStatus: number }
+  | { status: "NOT_SUCCESS"; httpStatus: number; terminalFailure: boolean }
   | { status: "VERIFICATION_ERROR"; httpStatus: number | null };
 
 type CheckoutOrderClaims = {
@@ -183,6 +183,18 @@ function configuredWebhookUrl(): string | null {
       return null;
     }
     return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+export function configuredTrustitPaymentReturnUrl(): string | null {
+  const webhookUrl = configuredWebhookUrl();
+  if (!webhookUrl) return null;
+
+  try {
+    const origin = new URL(webhookUrl).origin;
+    return `${origin}/register/payment?order_id={order_id}`;
   } catch {
     return null;
   }
@@ -370,6 +382,7 @@ async function createOrder(input: {
   orderNote: string;
   orderTags?: Record<string, string>;
   notifyUrl?: string;
+  returnUrl?: string;
   orderId?: string;
   customerName?: string;
   customerPhone?: string;
@@ -419,8 +432,13 @@ async function createOrder(input: {
           },
           order_note: input.orderNote,
           ...(input.orderTags ? { order_tags: input.orderTags } : {}),
-          ...(input.notifyUrl
-            ? { order_meta: { notify_url: input.notifyUrl } }
+          ...(input.notifyUrl || input.returnUrl
+            ? {
+                order_meta: {
+                  ...(input.notifyUrl ? { notify_url: input.notifyUrl } : {}),
+                  ...(input.returnUrl ? { return_url: input.returnUrl } : {}),
+                },
+              }
             : {}),
         }),
       }),
@@ -489,6 +507,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
   customerName?: string;
   customerPhone?: string;
   orderId?: string;
+  returnUrl?: string;
 }): Promise<CashfreeOrderResult> {
   const plan = appConfig.plans[input.planId];
   const notifyUrl = configuredWebhookUrl();
@@ -526,6 +545,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
         review_qr_context: signOrderContext({ orderId, businessId: input.businessId, planId: input.planId }),
       },
       notifyUrl,
+      returnUrl: input.returnUrl,
     });
     if (!result.success) {
       const recovered = await fetchExistingMerchantOrder({ orderId, businessId: input.businessId, planId: input.planId });
@@ -546,6 +566,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
       }),
     },
     notifyUrl,
+    returnUrl: input.returnUrl,
   });
   if (!result.success) return result;
   return {
@@ -622,7 +643,7 @@ type CashfreePaymentVerification =
       currency: "INR";
       paidAt: string;
     }
-  | { status: "NOT_SUCCESS"; httpStatus: number }
+  | { status: "NOT_SUCCESS"; httpStatus: number; terminalFailure: boolean }
   | { status: "VERIFICATION_ERROR"; httpStatus: number | null };
 
 /** Reads the order only to confirm its ID and verify its signed merchant context. */
@@ -747,8 +768,10 @@ async function verifyCashfreePaymentForContext(input: {
     (payment) => payment.payment_status === "SUCCESS",
   );
   if (successfulPayments.length === 0) {
-    const latestPayment = payments.at(-1);
-    return { status: "NOT_SUCCESS", httpStatus: response.status };
+    const terminalFailure = payments.length > 0 && payments.every((payment) =>
+      payment.payment_status === "FAILED" || payment.payment_status === "USER_DROPPED",
+    );
+    return { status: "NOT_SUCCESS", httpStatus: response.status, terminalFailure };
   }
 
   const payment = successfulPayments.find(

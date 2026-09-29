@@ -15,6 +15,7 @@ import {
 import { createMerchantActionClient, createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import { merchantAuthEmail } from "@/lib/merchant-identity";
 import {
+  configuredTrustitPaymentReturnUrl,
   createCashfreeMerchantCheckoutOrder,
   verifyCashfreeMerchantOrderBySignedContext,
 } from "@/lib/cashfree";
@@ -415,11 +416,13 @@ export async function createTrustitOneTimeCheckout(): Promise<ActionResult & { o
     if (error || !prepared || typeof prepared.business_id !== "string" || typeof prepared.plan !== "string" || typeof prepared.mobile !== "string") return { success: false, message: "Your registration session may have expired. Please start again." };
     const planId = (Object.keys(appConfig.plans) as PlanId[]).find((id) => appConfig.plans[id].name === prepared.plan);
     if (!planId) return safeActionError();
+    const returnUrl = configuredTrustitPaymentReturnUrl();
+    if (!returnUrl) return { success: false, message: "Payment service is temporarily unavailable. Please try again." };
     const proposedOrderId = `rqr_${randomUUID().replaceAll("-", "")}`;
     const reserved = await admin.rpc("reserve_trustit_one_time_order", { p_user_id: context.user.id, p_order_id: proposedOrderId });
     const reservation = Array.isArray(reserved.data) ? reserved.data[0] as { payment_reference?: unknown; is_new?: unknown } | undefined : undefined;
     if (reserved.error || typeof reservation?.payment_reference !== "string") return safeActionError();
-    const order = await createCashfreeMerchantCheckoutOrder({ planId, businessId: prepared.business_id, orderId: reservation.payment_reference, customerName: typeof prepared.full_name === "string" ? prepared.full_name : undefined, customerPhone: prepared.mobile.replace(/^\+/, "") });
+    const order = await createCashfreeMerchantCheckoutOrder({ planId, businessId: prepared.business_id, orderId: reservation.payment_reference, customerName: typeof prepared.full_name === "string" ? prepared.full_name : undefined, customerPhone: prepared.mobile.replace(/^\+/, ""), returnUrl });
     if (!order.success) return { success: false, message: order.error };
     const recorded = await admin.rpc("record_trustit_payment_session", { p_user_id: context.user.id, p_payment_reference: order.orderId, p_payment_session_id: order.paymentSessionId });
     if (recorded.error) return { success: false, message: "Payment setup could not be saved. Please try again." };
@@ -427,26 +430,34 @@ export async function createTrustitOneTimeCheckout(): Promise<ActionResult & { o
   } catch { return safeActionError(); }
 }
 
-export async function verifyTrustitOneTimePayment(orderId: string): Promise<ActionResult> {
+export type TrustitPaymentVerificationResult =
+  | { success: true; value?: string }
+  | { success: false; message: string; status: "pending" | "failed" | "error" };
+
+export async function verifyTrustitOneTimePayment(orderId: string): Promise<TrustitPaymentVerificationResult> {
   const context = await getTrustitUser();
-  if (!context || typeof orderId !== "string" || !/^rqr_[a-f0-9]{32}$/.test(orderId)) return { success: false, message: "Enter a valid payment reference." };
+  if (!context || typeof orderId !== "string" || !/^rqr_[a-f0-9]{32}$/.test(orderId)) return { success: false, status: "error", message: "We could not verify this payment. Please return to your registration and try again." };
   try {
     // Registration orders are bound to a pending business rather than an active merchant.
     // Resolve the server-owned onboarding link before applying the verified payment.
     const admin = createSupabaseAdminClient();
     const { data: session, error: lookupError } = await admin.from("onboarding_sessions").select("business_id, selected_plan, user_id").eq("payment_reference", orderId).eq("user_id", context.user.id).maybeSingle();
-    if (lookupError || !session?.business_id || !session.selected_plan || session.user_id !== context.user.id) return { success: false, message: "Payment verify ho raha hai. Please thoda wait karein." };
+    if (lookupError || !session?.business_id || !session.selected_plan || session.user_id !== context.user.id) return { success: false, status: "error", message: "We could not verify this payment. Please return to your registration and try again." };
     const verifiedOwned = await verifyCashfreeMerchantOrderBySignedContext({ orderId, authenticatedBusinessId: session.business_id });
-    if (verifiedOwned.status === "NOT_SUCCESS") return { success: false, message: "Payment is not confirmed yet. If Cashfree shows it as processing, check again shortly. Your business and QR stay inactive until confirmation." };
-    if (verifiedOwned.status !== "VERIFIED_SUCCESS" || appConfig.plans[verifiedOwned.planId].name !== session.selected_plan) return { success: false, message: "Payment verify ho raha hai. Please thoda wait karein." };
+    if (verifiedOwned.status === "NOT_SUCCESS") {
+      return verifiedOwned.terminalFailure
+        ? { success: false, status: "failed", message: "Payment was not completed. You can try again." }
+        : { success: false, status: "pending", message: "Payment confirmation is still pending." };
+    }
+    if (verifiedOwned.status !== "VERIFIED_SUCCESS" || appConfig.plans[verifiedOwned.planId].name !== session.selected_plan) return { success: false, status: "error", message: "We could not verify this payment. Please return to your registration and try again." };
     const { data, error } = await admin.rpc("finalize_trustit_one_time_payment", {
       p_business_id: session.business_id, p_cashfree_order_id: orderId,
       p_plan: session.selected_plan, p_amount: verifiedOwned.amount,
       p_currency: verifiedOwned.currency, p_paid_at: verifiedOwned.paidAt,
     });
-    if (error || !Array.isArray(data) || !data[0]) return { success: false, message: "Payment verify ho raha hai. Please thoda wait karein." };
+    if (error || !Array.isArray(data) || !data[0]) return { success: false, status: "pending", message: "Payment confirmation is still pending." };
     return { success: true, value: String((data[0] as { result?: unknown }).result ?? "applied") };
-  } catch { return safeActionError(); }
+  } catch { return { success: false, status: "pending", message: "Payment confirmation is still pending." }; }
 }
 
 export async function getTrustitResumeState() {
