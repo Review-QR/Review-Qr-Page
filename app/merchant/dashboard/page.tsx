@@ -1,267 +1,104 @@
-import { merchantSignOutAction } from "@/app/merchant/login/actions";
+import Link from "next/link";
+import { appConfig } from "@/lib/config";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
-import { allowedPlanIds, appConfig } from "@/lib/config";
-import MyQrCode from "./my-qr-code";
-import PaymentHistory from "./payment-history";
-import SubscriptionCheckout from "./subscription-checkout";
+import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 
 export const dynamic = "force-dynamic";
 
-function merchantStatusClass(status: string) {
-  switch (status.trim().toLowerCase()) {
-    case "active":
-      return "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200";
-    case "pending":
-      return "bg-amber-50 text-amber-700 ring-1 ring-amber-200";
-    case "suspended":
-      return "bg-rose-50 text-rose-700 ring-1 ring-rose-200";
-    default:
-      return "bg-slate-100 text-slate-600 ring-1 ring-slate-200";
-  }
-}
-
-function businessStatusClass(status: string) {
-  switch (status.trim().toLowerCase()) {
-    case "active":
-      return "status-pill--active";
-    case "pending":
-    case "expiring soon":
-      return "status-pill--pending";
-    case "expired":
-    case "suspended":
-      return "status-pill--expired";
-    default:
-      return "status-pill--pending";
-  }
-}
-
-function matchingPlan(plan: string | null) {
-  const normalizedPlan = plan?.trim().toLowerCase();
-  return Object.values(appConfig.plans).find(
-    (availablePlan) => availablePlan.name.toLowerCase() === normalizedPlan
-  );
-}
-
-function expiryDayDifference(expiry: string | null) {
+function daysUntilExpiry(expiry: string | null) {
   if (!expiry || !/^\d{4}-\d{2}-\d{2}$/.test(expiry)) return null;
-
   const expiryTime = Date.parse(`${expiry}T00:00:00Z`);
-  if (!Number.isFinite(expiryTime) || new Date(expiryTime).toISOString().slice(0, 10) !== expiry) {
-    return null;
-  }
-
+  if (!Number.isFinite(expiryTime) || new Date(expiryTime).toISOString().slice(0, 10) !== expiry) return null;
   const today = new Date().toISOString().slice(0, 10);
-  const todayTime = Date.parse(`${today}T00:00:00Z`);
-  return Math.trunc((expiryTime - todayTime) / 86_400_000);
+  return Math.trunc((expiryTime - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);
 }
 
-function daysLabel(days: number | null) {
-  if (days === null) return "—";
-  if (days === 0) return "Expires Today";
-  if (days > 0) return `${days} Day${days === 1 ? "" : "s"} Remaining`;
-  const elapsed = Math.abs(days);
-  return `Expired ${elapsed} Day${elapsed === 1 ? "" : "s"} Ago`;
-}
-
-function subscriptionStatus(status: string | null, days: number | null) {
-  const normalizedStatus = status?.trim().toLowerCase();
-  if (normalizedStatus === "suspended") return "Suspended";
-  if (normalizedStatus === "expired" || (days !== null && days < 0)) return "Expired";
-  if (
-    normalizedStatus === "expiring soon" ||
-    (days !== null && days >= 0 && days <= appConfig.subscription.expiryWarningDays)
-  ) {
-    return "Expiring Soon";
-  }
-  if (normalizedStatus === "active") return "Active";
-  return status?.trim() || "—";
-}
-
-function subscriptionStatusClass(status: string) {
-  switch (status.toLowerCase()) {
-    case "active":
-      return "bg-emerald-100 text-emerald-700";
-    case "expiring soon":
-      return "bg-amber-100 text-amber-700";
+function statusTone(status: string | null) {
+  switch (status?.trim().toLowerCase()) {
+    case "active": return "bg-emerald-100 text-emerald-800";
+    case "pending": return "bg-amber-100 text-amber-800";
     case "expired":
-    case "suspended":
-      return "bg-rose-100 text-rose-700";
-    default:
-      return "bg-slate-100 text-slate-700";
+    case "suspended": return "bg-rose-100 text-rose-800";
+    default: return "bg-slate-100 text-slate-700";
   }
 }
 
-function renewalStatus(days: number | null) {
-  if (days === null) return "Not set";
-  if (days < 0) return "Renewal required";
-  if (days === 0) return "Due today";
-  if (days <= appConfig.subscription.expiryWarningDays) return "Due soon";
-  return "Not due";
-}
-
-function ProfileField({ label, value }: { label: string; value: string | null }) {
+function SummaryCard({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-      <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
-        {label}
-      </dt>
-      <dd className="mt-1 break-words text-sm font-medium text-slate-800">
-        {value?.trim() || "—"}
-      </dd>
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-medium text-slate-500">{label}</p>
+      <p className="mt-2 text-xl font-semibold text-slate-900">{value}</p>
+      {detail && <p className="mt-1 text-sm text-slate-500">{detail}</p>}
     </div>
   );
 }
 
+const actions = [
+  { href: "/merchant/dashboard/business", title: "My Business", description: "View your registered business details." },
+  { href: "/merchant/dashboard/qr", title: "My QR Code", description: "Download, print, or share your Trustit scan QR." },
+  { href: "/merchant/dashboard/subscription", title: "Subscription", description: "Review your plan and renewal options." },
+  { href: "/merchant/dashboard/payments", title: "Payments", description: "View payments for your business." },
+];
+
 export default async function MerchantDashboardPage() {
   const merchant = await requireActiveMerchant();
-  const ownerName = merchant.ownerName?.trim() || merchant.businessName;
-  const businessStatus = merchant.businessStatus?.trim() || "—";
-  const plan = matchingPlan(merchant.plan);
-  const checkoutPlans = allowedPlanIds(merchant.plan).map((planId) => ({
-    id: planId,
-    ...appConfig.plans[planId],
-    isCurrent: plan?.name === appConfig.plans[planId].name,
-  }));
-  const expiryDays = expiryDayDifference(merchant.expiry);
-  const subscriptionState = subscriptionStatus(merchant.businessStatus, expiryDays);
+  const supabase = await createMerchantServerClient();
+  const { data: currentSubscription } = await supabase
+    .from("subscriptions")
+    .select("auto_renew")
+    .eq("business_id", merchant.businessId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const expiryDays = daysUntilExpiry(merchant.expiry);
+  const expiryLabel = expiryDays === null
+    ? "Not set"
+    : expiryDays < 0
+      ? `Expired ${Math.abs(expiryDays)} day${Math.abs(expiryDays) === 1 ? "" : "s"} ago`
+      : expiryDays === 0
+        ? "Expires today"
+        : `${expiryDays} day${expiryDays === 1 ? "" : "s"} remaining`;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 text-slate-900 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <header className="flex flex-col gap-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
-          <div className="flex items-center gap-3">
-            <div
-              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600 text-xl font-bold text-white"
-              aria-hidden="true"
-            >
-              QR
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-                Review-QR Merchant
-              </p>
-              <h1 className="mt-1 text-lg font-bold text-slate-900 sm:text-xl">
-                {merchant.businessName}
-              </h1>
-              <p className="font-mono text-xs text-slate-500">
-                Business ID: {merchant.businessId}
-              </p>
-            </div>
-          </div>
-          <form action={merchantSignOutAction}>
-            <button
-              type="submit"
-              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 sm:w-auto"
-            >
-              Merchant Logout
-            </button>
-          </form>
-        </header>
+    <div className="space-y-8">
+      <section className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-white p-6 shadow-sm sm:p-8">
+        <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">Merchant dashboard</p>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+          Welcome, {merchant.ownerName?.trim() || merchant.businessName}
+        </h1>
+        <p className="mt-2 text-slate-600">Here’s an overview of {merchant.businessName}.</p>
+        <div className="mt-5 flex flex-wrap items-center gap-2">
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Active Merchant</span>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusTone(merchant.businessStatus)}`}>
+            Business: {merchant.businessStatus?.trim() || "Unknown"}
+          </span>
+          <span className="font-mono text-xs text-slate-500">Business ID: {merchant.businessId}</span>
+        </div>
+      </section>
 
-        <section className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-6 shadow-sm sm:p-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <p className="text-sm font-medium text-blue-700">MERCHANT DASHBOARD</p>
-              <h2 className="mt-2 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-                Welcome, {ownerName} 👋
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-                Manage your business from your Review-QR merchant dashboard.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <span
-                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold capitalize ${merchantStatusClass(merchant.merchantStatus)}`}
-              >
-                <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
-                Merchant: {merchant.merchantStatus}
-              </span>
-              <span className={`status-pill ${businessStatusClass(businessStatus)}`}>
-                <span aria-hidden="true" />Business: {businessStatus}
-              </span>
-            </div>
-          </div>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-blue-100 bg-white/80 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                Business Name
-              </p>
-              <p className="mt-1 font-semibold text-slate-900">{merchant.businessName}</p>
-            </div>
-            <div className="rounded-xl border border-blue-100 bg-white/80 p-4">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                Business ID
-              </p>
-              <p className="mt-1 font-mono font-semibold text-slate-900">{merchant.businessId}</p>
-            </div>
-          </div>
-        </section>
+      <section aria-label="Business summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <SummaryCard label="Current plan" value={merchant.plan?.trim() || "—"} />
+        <SummaryCard label="QR status" value={merchant.qrStatus?.trim() || "—"} />
+        <SummaryCard label="Expiry date" value={merchant.expiry || "—"} detail={expiryLabel} />
+        <SummaryCard label="Renewal status" value={currentSubscription?.auto_renew === null || currentSubscription?.auto_renew === undefined ? "—" : currentSubscription.auto_renew ? "On" : "Off"} />
+      </section>
 
-        <MyQrCode
-          businessId={merchant.businessId}
-          businessName={merchant.businessName}
-          qrStatus={merchant.qrStatus}
-          expiry={merchant.expiry}
-          reviewLink={merchant.reviewLink}
-        />
-
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-          <div className="mb-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-              MY SUBSCRIPTION
-            </p>
-            <h2 className="mt-1 text-lg font-bold text-slate-900">My Subscription</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Subscription details for your authenticated business.
-            </p>
-          </div>
-          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <ProfileField label="Current Plan" value={plan?.name ?? merchant.plan} />
-            <ProfileField
-              label="Monthly Price"
-              value={plan ? `₹${plan.price}/month` : null}
-            />
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                Subscription Status
-              </dt>
-              <dd className="mt-2">
-                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${subscriptionStatusClass(subscriptionState)}`}>
-                  {subscriptionState}
-                </span>
-              </dd>
-            </div>
-            <ProfileField label="Registration Date" value={merchant.registrationDate} />
-            <ProfileField label="Expiry Date" value={merchant.expiry} />
-            <ProfileField label="Days Remaining / Expired Duration" value={daysLabel(expiryDays)} />
-            <ProfileField label="Renewal Status" value={renewalStatus(expiryDays)} />
-          </dl>
-          <SubscriptionCheckout plans={checkoutPlans} />
-        </section>
-
-        <PaymentHistory businessId={merchant.businessId} />
-
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-          <div className="mb-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-              BUSINESS PROFILE
-            </p>
-            <h2 className="mt-1 text-lg font-bold text-slate-900">Your business information</h2>
-            <p className="mt-1 text-sm text-slate-500">
-              This profile is linked to your authenticated merchant account.
-            </p>
-          </div>
-          <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <ProfileField label="Business Name" value={merchant.businessName} />
-            <ProfileField label="Business ID" value={merchant.businessId} />
-            <ProfileField label="Owner / Merchant Name" value={merchant.ownerName} />
-            <ProfileField label="Registered Mobile" value={merchant.registeredMobile} />
-            <ProfileField label="Business Type" value={merchant.businessType} />
-            <ProfileField label="Address" value={merchant.address} />
-            <ProfileField label="Business Status" value={businessStatus} />
-          </dl>
-        </section>
-      </div>
-    </main>
+      <section>
+        <div className="mb-4">
+          <h2 className="text-lg font-semibold text-slate-950">Quick actions</h2>
+          <p className="mt-1 text-sm text-slate-500">Manage your business, QR code, plan, and payments.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {actions.map((action) => (
+            <Link key={action.href} href={action.href} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md">
+              <span className="text-base font-semibold text-slate-900 group-hover:text-blue-700">{action.title}</span>
+              <span className="mt-1 block text-sm text-slate-500">{action.description}</span>
+              <span className="mt-4 inline-block text-sm font-semibold text-blue-700">Open <span aria-hidden="true">→</span></span>
+            </Link>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }

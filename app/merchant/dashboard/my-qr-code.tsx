@@ -46,6 +46,7 @@ export default function MyQrCode({
 }: MyQrCodeProps) {
   const [origin, setOrigin] = useState("");
   const [message, setMessage] = useState("");
+  const [messageTone, setMessageTone] = useState<"success" | "error">("success");
   const usable = isQrUsable(qrStatus, expiry);
   const safeLink = safeReviewLink(reviewLink);
   const scanUrl = origin
@@ -62,6 +63,50 @@ export default function MyQrCode({
 
   useEffect(() => setOrigin(window.location.origin), []);
 
+  async function copyScanLink(successMessage = "Trustit QR link copied.") {
+    setMessage("");
+    if (!scanUrl) {
+      setMessageTone("error");
+      setMessage("The Trustit QR link is not ready yet.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(scanUrl);
+      setMessageTone("success");
+      setMessage(successMessage);
+    } catch {
+      setMessageTone("error");
+      setMessage("Could not copy the Trustit QR link. Check your browser permissions and try again.");
+    }
+  }
+
+  async function shareQr() {
+    setMessage("");
+    if (!usable || !scanUrl) {
+      setMessageTone("error");
+      setMessage("The Trustit QR link is unavailable.");
+      return;
+    }
+    if (typeof navigator.share !== "function") {
+      await copyScanLink("Native sharing is unavailable, so the Trustit QR link was copied.");
+      return;
+    }
+    try {
+      await navigator.share({
+        title: `${businessName} review QR`,
+        text: `Open the Trustit review page for ${businessName}.`,
+        url: scanUrl,
+      });
+      setMessageTone("success");
+      setMessage("Trustit QR link shared.");
+    } catch (error) {
+      setMessageTone("error");
+      setMessage(error instanceof DOMException && error.name === "AbortError"
+        ? "Sharing was cancelled."
+        : "Could not share the Trustit QR link.");
+    }
+  }
+
   async function downloadQr() {
     setMessage("");
     try {
@@ -77,6 +122,7 @@ export default function MyQrCode({
       link.remove();
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
     } catch (error) {
+      setMessageTone("error");
       setMessage(error instanceof Error ? error.message : "Failed to download QR code.");
     }
   }
@@ -85,6 +131,7 @@ export default function MyQrCode({
     setMessage("");
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
+      setMessageTone("error");
       setMessage("Allow pop-ups to print this QR code.");
       return;
     }
@@ -185,6 +232,22 @@ export default function MyQrCode({
             >
               Print QR
             </button>
+            <button
+              type="button"
+              onClick={() => void shareQr()}
+              disabled={!usable || !scanUrl}
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Share QR
+            </button>
+            <button
+              type="button"
+              onClick={() => void copyScanLink()}
+              disabled={!usable || !scanUrl}
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Copy QR Link
+            </button>
           </div>
 
           {safeLink ? (
@@ -199,7 +262,7 @@ export default function MyQrCode({
           ) : (
             <p className="text-sm text-slate-500">Google Review link is unavailable.</p>
           )}
-          {message && <p role="status" className="text-sm text-rose-700">{message}</p>}
+          {message && <p role="status" aria-live="polite" className={`text-sm ${messageTone === "error" ? "text-rose-700" : "text-emerald-700"}`}>{message}</p>}
         </div>
       </div>
     </section>
