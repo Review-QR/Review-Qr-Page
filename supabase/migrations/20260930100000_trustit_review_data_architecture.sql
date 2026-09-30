@@ -80,6 +80,10 @@ create table public.review_generations (
   constraint review_generations_session_business_fkey
     foreign key (review_session_id, business_id)
     references public.review_sessions (id, business_id) on delete cascade,
+  constraint review_generations_rating_matches_session_fkey
+    foreign key (review_session_id, business_id, rating_context)
+    references public.review_sessions (id, business_id, selected_rating)
+    on delete cascade,
   constraint review_generations_session_number_key
     unique (review_session_id, generation_number)
 );
