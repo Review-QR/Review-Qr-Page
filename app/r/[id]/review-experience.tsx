@@ -1,22 +1,33 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import type { CreateReviewSessionAction } from "./review-session-types";
+import type {
+  CreateReviewSessionAction,
+  ReviewExperienceCategory,
+  SaveReviewExperiencesAction,
+} from "./review-session-types";
 
 type ReviewExperienceProps = {
   businessName: string;
+  experienceCategories: ReviewExperienceCategory[];
   createReviewSession: CreateReviewSessionAction;
+  saveExperiences: SaveReviewExperiencesAction;
 };
 
 export default function ReviewExperience({
   businessName,
+  experienceCategories,
   createReviewSession,
+  saveExperiences,
 }: ReviewExperienceProps) {
   const [isPending, startTransition] = useTransition();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [showNextStep, setShowNextStep] = useState(false);
+  const [step, setStep] = useState<"rating" | "experiences" | "complete">(
+    "rating",
+  );
   const requestInProgress = useRef(false);
 
   function selectRating(rating: number) {
@@ -36,6 +47,49 @@ export default function ReviewExperience({
         setSessionId(result.sessionId);
       } catch {
         setError("We couldn't save your rating right now. Please try again.");
+      } finally {
+        requestInProgress.current = false;
+      }
+    });
+  }
+
+  function toggleExperience(categoryKey: string) {
+    if (isPending) return;
+    setError(null);
+    setSelectedCategories((current) => {
+      if (current.includes(categoryKey)) {
+        return current.filter((key) => key !== categoryKey);
+      }
+      if (current.length >= 10) return current;
+      return [...current, categoryKey];
+    });
+  }
+
+  function saveSelectedExperiences() {
+    if (
+      requestInProgress.current ||
+      !sessionId ||
+      selectedCategories.length < 1 ||
+      selectedCategories.length > 10
+    ) {
+      return;
+    }
+    requestInProgress.current = true;
+    setError(null);
+
+    startTransition(async () => {
+      try {
+        const result = await saveExperiences(selectedCategories);
+        if (!result.ok) {
+          setError(result.message);
+          return;
+        }
+        setSelectedCategories(result.categoryKeys);
+        setStep("complete");
+      } catch {
+        setError(
+          "We couldn't save your experience details right now. Please try again.",
+        );
       } finally {
         requestInProgress.current = false;
       }
@@ -70,7 +124,7 @@ export default function ReviewExperience({
             </p>
           </div>
 
-          {!showNextStep ? (
+          {step === "rating" ? (
             <div className="mt-9 rounded-2xl bg-slate-50 px-4 py-6 text-center sm:px-6 sm:py-8">
               <h2 className="text-sm font-semibold text-slate-700">
                 Rate your experience
@@ -110,7 +164,8 @@ export default function ReviewExperience({
                   <p className="font-medium text-indigo-700">Saving your rating…</p>
                 ) : selectedRating !== null ? (
                   <p className="font-semibold text-slate-800">
-                    Thanks! You selected {selectedRating} {selectedRating === 1 ? "star" : "stars"}.
+                    Thanks! You selected {selectedRating}{" "}
+                    {selectedRating === 1 ? "star" : "stars"}.
                     <span className="mt-1 block text-xs font-normal text-slate-500">
                       Your rating is saved for this session and can’t be changed.
                     </span>
@@ -129,26 +184,78 @@ export default function ReviewExperience({
               {sessionId ? (
                 <button
                   type="button"
-                  onClick={() => setShowNextStep(true)}
+                  onClick={() => setStep("experiences")}
                   className="mt-6 w-full rounded-xl bg-indigo-600 px-5 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-200 sm:w-auto sm:min-w-48"
                 >
                   Continue
                 </button>
               ) : null}
             </div>
-          ) : (
+          ) : step === "experiences" ? (
             <div className="mt-9 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-5 py-8 text-center sm:px-8">
+              <h2 className="text-xl font-bold text-slate-900">
+                What stood out in your experience?
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                Select all that genuinely reflect your visit.
+              </p>
+              <p className="mt-3 text-xs leading-5 text-slate-600">
+                Only choose things that match your actual experience. These selections will help shape your review draft later.
+              </p>
+              <div className="mt-6 grid gap-3 text-left sm:grid-cols-2">
+                {experienceCategories.map((category) => {
+                  const isSelected = selectedCategories.includes(category.key);
+                  return (
+                    <button
+                      key={category.key}
+                      type="button"
+                      aria-pressed={isSelected}
+                      disabled={isPending}
+                      onClick={() => toggleExperience(category.key)}
+                      className={`min-h-14 rounded-xl border px-4 py-3 text-left text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-200 disabled:cursor-default ${
+                        isSelected
+                          ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
+                          : "border-slate-200 bg-white text-slate-800 hover:border-indigo-300 hover:bg-indigo-50"
+                      }`}
+                    >
+                      <span className="flex items-center justify-between gap-3">
+                        <span>{category.label}</span>
+                        <span aria-hidden="true">{isSelected ? "✓" : "＋"}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-4 text-xs text-slate-600">
+                You can select more than one. Choose up to 10.
+              </p>
+              {error ? (
+                <p role="alert" className="mt-4 text-sm font-medium text-rose-700">
+                  {error}
+                </p>
+              ) : null}
+              <button
+                type="button"
+                disabled={isPending || selectedCategories.length === 0}
+                onClick={saveSelectedExperiences}
+                className="mt-6 w-full rounded-xl bg-indigo-600 px-5 py-3.5 text-base font-semibold text-white shadow-sm transition hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-200 disabled:cursor-not-allowed disabled:bg-slate-300 sm:w-auto sm:min-w-48"
+              >
+                {isPending ? "Saving your selections…" : "Continue"}
+              </button>
+            </div>
+          ) : (
+            <div className="mt-9 rounded-2xl border border-emerald-100 bg-emerald-50/70 px-5 py-8 text-center sm:px-8">
               <div
                 aria-hidden="true"
-                className="mx-auto grid size-12 place-items-center rounded-full bg-white text-xl text-indigo-700 shadow-sm"
+                className="mx-auto grid size-12 place-items-center rounded-full bg-white text-xl text-emerald-700 shadow-sm"
               >
                 ✓
               </div>
               <h2 className="mt-4 text-xl font-bold text-slate-900">
-                Your rating is saved
+                Experience details saved
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                You selected {selectedRating} {selectedRating === 1 ? "star" : "stars"}. The next part of your review experience will be available soon.
+                These will be used to help shape your review draft.
               </p>
             </div>
           )}

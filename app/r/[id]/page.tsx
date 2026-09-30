@@ -2,7 +2,11 @@ import { randomUUID } from "node:crypto";
 import { supabase } from "@/lib/supabase";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import ReviewExperience from "./review-experience";
-import { createReviewSessionForBusiness } from "./review-session";
+import {
+  createReviewSessionForBusiness,
+  getReviewExperienceCategoriesForBusiness,
+  saveReviewSessionExperiencesForBusiness,
+} from "./review-session";
 
 type ScanPageProps = {
   params: Promise<{ id: string }>;
@@ -57,17 +61,39 @@ export default async function ScanPage({ params }: ScanPageProps) {
     p_business_id: business.id,
   });
 
+  const experienceCategories = await getReviewExperienceCategoriesForBusiness(
+    business.id,
+  );
+  if (experienceCategories.length === 0) {
+    return (
+      <ScanMessage icon="💬" title="Feedback is temporarily unavailable">
+        Please try again later. This business’s feedback options are being
+        prepared.
+      </ScanMessage>
+    );
+  }
+
   const qrBusinessId = business.id;
   const reviewSessionId = randomUUID();
   async function createSessionAction(rating: number) {
     "use server";
     return createReviewSessionForBusiness(qrBusinessId, reviewSessionId, rating);
   }
+  async function saveExperiencesAction(categoryKeys: string[]) {
+    "use server";
+    return saveReviewSessionExperiencesForBusiness(
+      qrBusinessId,
+      reviewSessionId,
+      categoryKeys,
+    );
+  }
 
   return (
     <ReviewExperience
       businessName={business.name}
+      experienceCategories={experienceCategories}
       createReviewSession={createSessionAction}
+      saveExperiences={saveExperiencesAction}
     />
   );
 }
