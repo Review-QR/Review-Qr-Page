@@ -44,11 +44,11 @@ test("PDF pages use the physical poster dimensions rather than a default page si
 test("download filenames include sanitized template, merchant, business ID, and safe extensions", () => {
   assert.equal(
     getQrTemplateFilename("template_1", "Café / North & South", "QR-45180409", "png"),
-    "Trustit-Restaurant-Cafe-North-South-QR-QR-45180409.png",
+    "Trustit-Classic-Portrait-Cafe-North-South-QR-QR-45180409.png",
   );
   assert.equal(
     getQrTemplateFilename("template_4", "Shop", "../QR/45 18", "pdf"),
-    "Trustit-Retail-Shop-Shop-QR-QR-45-18.pdf",
+    "Trustit-Local-Landscape-Shop-QR-QR-45-18.pdf",
   );
 });
 
@@ -82,4 +82,26 @@ test("selected template and preview expose PNG, PDF, and print controls", () => 
   assert.match(gallerySource, /Preparing print…/);
   assert.match(gallerySource, /window\.print\(\)/);
   assert.match(gallerySource, /aria-label="Download and print QR poster"/);
+});
+
+
+test("all five QR designs consume one merchant business category instead of template categories", () => {
+  assert.match(gallerySource, /businessType: string \\| null/);
+  assert.match(gallerySource, /const category = getBusinessCategoryProfile\\(businessType\\)/);
+  assert.match(gallerySource, /const content = \\{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category \\}/);
+  assert.match(gallerySource, /<CategoryArt kind=\\{category\\.artKind\\}/);
+  assert.match(gallerySource, /\\{category\\.label\\}/);
+  assert.match(gallerySource, /\\{category\\.message\\}/);
+  for (const hardCodedCategory of [
+    "Restaurant · Dining</p>",
+    "Hotel · Stay · Hospitality</p>",
+    "Laundry · Fresh care</p>",
+    "Retail · Shop local</p>",
+    "Salon · Beauty · Care</p>",
+  ]) {
+    assert.equal(gallerySource.includes(hardCodedCategory), false, `Hard-coded category remains: ${hardCodedCategory}`);
+  }
+  assert.match(gallerySource, /Sweet Shop · Sweets & Treats/);
+  assert.match(gallerySource, /Hotel · Stay · Hospitality/);
+  assert.match(gallerySource, /Laundry · Fresh Care/);
 });
