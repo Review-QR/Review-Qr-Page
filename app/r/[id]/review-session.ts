@@ -2,17 +2,40 @@ import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
-import { supabase } from "@/lib/supabase";
+import {
+  localReviewDraftProvider,
+  requestReviewDraft,
+} from "@/lib/review-draft-provider";
+import {
+  areValidReviewExperiences,
+  isUsableReviewSession,
+  nextReviewGenerationNumber,
+} from "@/lib/review-generation-guards";
+import {
+  executeClaimedReviewGeneration,
+  type ReviewGenerationClaim,
+} from "@/lib/review-generation-execution";
 import type {
   CreateReviewSessionResult,
+  GenerateReviewDraftResult,
   ReviewExperienceCategory,
   SaveReviewExperiencesResult,
+  SubmitTrustitReviewResult,
+  TrustitReviewSubmission,
 } from "./review-session-types";
+import { validateGoogleReviewHandoff } from "@/lib/google-review-handoff";
+import { isValidOptionalMobile } from "@/lib/trustit-review-validation";
 
 const GENERIC_FAILURE =
   "We couldn't save your rating right now. Please try again.";
 const EXPERIENCE_SAVE_FAILURE =
   "We couldn't save your experience details right now. Please try again.";
+const DRAFT_FAILURE =
+  "We couldn't prepare your review draft right now. Please try again.";
+const HANDOFF_FAILURE =
+  "We couldn't open this business's review page. Please scan the QR code again.";
+const TRUSTIT_SUBMIT_FAILURE =
+  "We couldn't share your review right now. Please check the details and try again.";
 
 const SESSION_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -35,6 +58,8 @@ function isEligibleQrBusiness(business: Record<string, unknown> | null) {
   if (!business) return false;
   const today = new Date().toISOString().slice(0, 10);
   return (
+    String(business.status ?? "").toLowerCase() === "active" &&
+    String(business.merchant_status ?? "").toLowerCase() === "active" &&
     String(business.qr_status ?? "").toLowerCase() === "active" &&
     (!business.expiry || String(business.expiry) >= today) &&
     Boolean(safeReviewLink(business.review_link))
@@ -42,7 +67,8 @@ function isEligibleQrBusiness(business: Record<string, unknown> | null) {
 }
 
 async function resolveQrBusiness(businessId: string) {
-  const { data, error } = await supabase.rpc("get_business_for_qr", {
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin.rpc("get_trustit_review_business", {
     p_business_id: businessId,
   });
   const business = (Array.isArray(data) ? data[0] : data) as
@@ -60,13 +86,9 @@ export async function getReviewExperienceCategoriesForBusiness(
 
   try {
     const admin = createSupabaseAdminClient();
-    const { data: business, error: businessError } = await admin
-      .from("businesses")
-      .select("type")
-      .eq("id", businessId)
-      .maybeSingle();
+    const business = await resolveQrBusiness(businessId);
 
-    if (businessError || !business?.type) return [];
+    if (!business || typeof business.type !== "string") return [];
 
     // The registration flow stores clinics as "Clinic"; the configured
     // customer experience taxonomy names that category family "Medical".
@@ -127,7 +149,7 @@ export async function createReviewSessionForBusiness(
         current_generation_number: 0,
         expires_at: expiresAt,
       })
-      .select("id, business_id, selected_rating, expires_at")
+      .select("id, business_id, selected_rating, expires_at, current_generation_number")
       .single();
 
     if (insertError || !session) {
@@ -201,7 +223,7 @@ export async function saveReviewSessionExperiencesForBusiness(
     const admin = createSupabaseAdminClient();
     const { data: session, error: sessionError } = await admin
       .from("review_sessions")
-      .select("id, business_id, selected_rating, expires_at")
+      .select("id, business_id, selected_rating, expires_at, current_generation_number")
       .eq("id", sessionId)
       .eq("business_id", businessId)
       .maybeSingle();
@@ -286,5 +308,299 @@ export async function saveReviewSessionExperiencesForBusiness(
     return { ok: true, categoryKeys: normalizedKeys };
   } catch {
     return { ok: false, message: EXPERIENCE_SAVE_FAILURE };
+  }
+}
+
+export async function generateReviewDraftForBusiness(
+  businessId: string,
+  sessionId: string,
+): Promise<GenerateReviewDraftResult> {
+  if (!isValidBusinessId(businessId) || !isValidSessionId(sessionId)) {
+    return { ok: false, message: DRAFT_FAILURE };
+  }
+
+  try {
+    const business = await resolveQrBusiness(businessId);
+    if (!business) {
+      return {
+        ok: false,
+        message: "This QR code is currently unavailable. Please scan it again.",
+      };
+    }
+
+    const admin = createSupabaseAdminClient();
+    const { data: session, error: sessionError } = await admin
+      .from("review_sessions")
+      .select("id, business_id, selected_rating, expires_at, current_generation_number")
+      .eq("id", sessionId)
+      .eq("business_id", businessId)
+      .maybeSingle();
+    if (sessionError || !isUsableReviewSession(session, businessId, sessionId)) {
+      return {
+        ok: false,
+        message: "Your review session has expired. Please scan the QR code again.",
+      };
+    }
+
+    const { data: experiences, error: experiencesError } = await admin
+      .from("review_session_experiences")
+      .select("review_session_id, business_id, category_key, category_label_snapshot")
+      .eq("review_session_id", sessionId)
+      .eq("business_id", businessId)
+      .order("category_key", { ascending: true });
+    if (experiencesError || !experiences?.length || experiences.length > 10) {
+      return {
+        ok: false,
+        message: "Your saved experiences could not be verified. Please start again.",
+      };
+    }
+
+    const businessRecord = await resolveQrBusiness(businessId);
+    if (
+      !businessRecord ||
+      businessRecord.id !== businessId ||
+      typeof businessRecord.name !== "string" ||
+      typeof businessRecord.type !== "string"
+    ) {
+      return { ok: false, message: DRAFT_FAILURE };
+    }
+    const businessName = businessRecord.name;
+
+    const businessType =
+      businessRecord.type === "Clinic" ? "Medical" : businessRecord.type;
+    const experienceKeys = experiences.map((experience) => experience.category_key);
+    const { data: enabledCategories, error: categoriesError } = await admin
+      .from("review_experience_categories")
+      .select("category_key")
+      .eq("business_type", businessType)
+      .eq("is_enabled", true)
+      .in("category_key", experienceKeys);
+    if (
+      categoriesError ||
+      !areValidReviewExperiences(
+        experiences,
+        businessId,
+        sessionId,
+        enabledCategories?.map((category) => category.category_key) ?? [],
+      )
+    ) {
+      return {
+        ok: false,
+        message: "Some saved experiences are no longer available. Please scan the QR code again.",
+      };
+    }
+
+    const generationNumber = nextReviewGenerationNumber(session.current_generation_number);
+    if (generationNumber === null) return { ok: false, message: DRAFT_FAILURE };
+    const experienceContext = experiences.map((experience) => ({
+      key: experience.category_key,
+      label: experience.category_label_snapshot,
+    }));
+    const { data: claimData, error: claimError } = await admin.rpc(
+      "claim_review_generation",
+      {
+        p_business_id: businessId,
+        p_review_session_id: sessionId,
+        p_generation_number: generationNumber,
+        p_rating_context: session.selected_rating,
+        p_experience_context: experienceContext,
+      },
+    );
+    const claim = (Array.isArray(claimData) ? claimData[0] : claimData) as
+      | ReviewGenerationClaim
+      | null;
+    if (claimError || !claim) return { ok: false, message: DRAFT_FAILURE };
+
+    const execution = await executeClaimedReviewGeneration(
+      claim,
+      async () => {
+        const generated = await requestReviewDraft(localReviewDraftProvider, {
+          businessName,
+          rating: session.selected_rating,
+          variation: generationNumber,
+          experienceLabels: experiences.map(
+            (experience) => experience.category_label_snapshot,
+          ),
+        });
+        if (!generated.ok) throw new Error("Review draft generation failed");
+        return generated.draft;
+      },
+      async (claimToken, generatedText) => {
+        const { data, error } = await admin.rpc("finish_review_generation", {
+          p_business_id: businessId,
+          p_review_session_id: sessionId,
+          p_generation_number: generationNumber,
+          p_claim_token: claimToken,
+          p_generated_text: generatedText,
+        });
+        return error ? null : (data as "generated" | "failed" | null);
+      },
+    );
+
+    if (!execution.ok) {
+      return {
+        ok: false,
+        message:
+          execution.reason === "pending"
+            ? "Your review draft is already being prepared. Please try again shortly."
+            : DRAFT_FAILURE,
+      };
+    }
+
+    const draft = execution.draft;
+    const { error: sessionUpdateError } = await admin
+      .from("review_sessions")
+      .update({
+        current_review_text: draft,
+        current_generation_number: generationNumber,
+        review_status: "draft_ready",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", sessionId)
+      .eq("business_id", businessId);
+    if (sessionUpdateError) return { ok: false, message: DRAFT_FAILURE };
+    return { ok: true, draft };
+  } catch {
+    return { ok: false, message: DRAFT_FAILURE };
+  }
+}
+
+const VALID_RELATIONS = new Set([
+  "mother", "father", "husband", "wife", "brother", "sister", "son", "daughter",
+]);
+
+function validOccasionList(value: unknown, familyCount: number): value is TrustitReviewSubmission["occasions"] {
+  if (!Array.isArray(value) || value.length > 2 * (familyCount + 1)) return false;
+  const seen = new Set<string>();
+  return value.every((item) => {
+    if (!item || (item.owner !== "customer" && item.owner !== "family") ||
+      (item.occasion !== "birthday" && item.occasion !== "anniversary") ||
+      !Number.isInteger(item.month) || item.month < 1 || item.month > 12 ||
+      !Number.isInteger(item.day) || item.day < 1 || item.day > [31,29,31,30,31,30,31,31,30,31,30,31][item.month - 1]) return false;
+    const familyIndex = item.owner === "family" ? item.familyIndex : -1;
+    if (item.owner === "family" && (!Number.isInteger(familyIndex) || familyIndex < 0 || familyIndex >= familyCount)) return false;
+    const key = `${item.owner}:${familyIndex}:${item.occasion}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+export async function submitTrustitReviewForBusiness(
+  businessId: string,
+  sessionId: string,
+  submission: TrustitReviewSubmission,
+): Promise<SubmitTrustitReviewResult> {
+  if (!isValidBusinessId(businessId) || !isValidSessionId(sessionId) || !submission || typeof submission !== "object") {
+    return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
+  }
+  const family = submission.familyMembers;
+  const customerName = submission.customerName;
+  const customerMobile = submission.customerMobile;
+  if (typeof submission.reviewText !== "string" || !submission.reviewText.trim() || submission.reviewText.length > 10000 ||
+    typeof customerName !== "string" || !customerName.trim() || customerName.length > 160 ||
+    typeof customerMobile !== "string" || !isValidOptionalMobile(customerMobile) ||
+    typeof submission.shareDetails !== "boolean" || !Array.isArray(family) || family.length > 8 ||
+    (!submission.shareDetails && (customerMobile.trim() || family.length || submission.occasions?.length)) ||
+    (submission.shareDetails && !customerMobile.trim()) ||
+    family.some((member) => !member || typeof member.name !== "string" || !member.name.trim() || member.name.length > 160 ||
+      typeof member.relation !== "string" || !VALID_RELATIONS.has(member.relation) ||
+      typeof member.mobile !== "string" || !isValidOptionalMobile(member.mobile)) ||
+    !validOccasionList(submission.occasions, family.length)) {
+    return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
+  }
+  try {
+    const business = await resolveQrBusiness(businessId);
+    if (!business) return { ok: false, message: "This QR code is unavailable. Please scan it again." };
+    const admin = createSupabaseAdminClient();
+    const { data, error } = await admin.rpc("submit_trustit_review", {
+      p_business_id: businessId,
+      p_review_session_id: sessionId,
+      p_review_text: submission.reviewText,
+      p_customer_name: customerName.trim(),
+      p_customer_mobile: submission.shareDetails ? customerMobile.trim() : null,
+      p_share_details: submission.shareDetails,
+      p_family_members: submission.shareDetails ? family : [],
+      p_occasions: submission.shareDetails ? submission.occasions : [],
+    });
+    if (error || typeof data !== "string") return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
+    return { ok: true };
+  } catch {
+    return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
+  }
+}
+
+export async function handoffGoogleReviewForBusiness(
+  businessId: string,
+  sessionId: string,
+  editedText: string,
+): Promise<{ ok: true; reviewUrl: string } | { ok: false; message: string }> {
+  if (!isValidBusinessId(businessId) || !isValidSessionId(sessionId)) {
+    return { ok: false, message: HANDOFF_FAILURE };
+  }
+
+  try {
+    const admin = createSupabaseAdminClient();
+    const [{ data: businessData, error: businessError }, { data: session, error: sessionError }] =
+      await Promise.all([
+        admin.rpc("get_trustit_review_business", { p_business_id: businessId }),
+        admin
+          .from("review_sessions")
+          .select("id, business_id, selected_rating, expires_at, review_status, current_generation_number")
+          .eq("id", sessionId)
+          .eq("business_id", businessId)
+          .maybeSingle(),
+      ]);
+
+    const business = (Array.isArray(businessData) ? businessData[0] : businessData) as
+      | Record<string, unknown>
+      | null;
+
+    if (businessError || sessionError || !business || !session) {
+      return { ok: false, message: HANDOFF_FAILURE };
+    }
+
+    const { data: generation, error: generationError } = await admin
+      .from("review_generations")
+      .select("generation_status, generated_text")
+      .eq("review_session_id", sessionId)
+      .eq("business_id", businessId)
+      .eq("generation_number", session.current_generation_number)
+      .maybeSingle();
+
+    if (generationError) return { ok: false, message: HANDOFF_FAILURE };
+
+    const validated = validateGoogleReviewHandoff({
+      business: business as Parameters<typeof validateGoogleReviewHandoff>[0]["business"],
+      session,
+      generation,
+      businessId,
+      sessionId,
+      editedText,
+    });
+    if (!validated.ok) return { ok: false, message: HANDOFF_FAILURE };
+
+    const updatedAt = new Date().toISOString();
+    const { data: updatedSession, error: updateError } = await admin
+      .from("review_sessions")
+      .update({
+        current_review_text: validated.reviewText,
+        google_status: "redirected",
+        updated_at: updatedAt,
+      })
+      .eq("id", sessionId)
+      .eq("business_id", businessId)
+      .eq("review_status", "draft_ready")
+      .gt("expires_at", updatedAt)
+      .select("id")
+      .maybeSingle();
+
+    if (updateError || !updatedSession) {
+      return { ok: false, message: HANDOFF_FAILURE };
+    }
+
+    return { ok: true, reviewUrl: validated.reviewUrl };
+  } catch {
+    return { ok: false, message: HANDOFF_FAILURE };
   }
 }

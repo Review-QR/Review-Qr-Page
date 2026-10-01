@@ -4,8 +4,11 @@ import { safeReviewLink } from "@/lib/safe-review-link";
 import ReviewExperience from "./review-experience";
 import {
   createReviewSessionForBusiness,
+  generateReviewDraftForBusiness,
   getReviewExperienceCategoriesForBusiness,
+  handoffGoogleReviewForBusiness,
   saveReviewSessionExperiencesForBusiness,
+  submitTrustitReviewForBusiness,
 } from "./review-session";
 
 type ScanPageProps = {
@@ -87,6 +90,18 @@ export default async function ScanPage({ params }: ScanPageProps) {
       categoryKeys,
     );
   }
+  async function generateReviewDraftAction() {
+    "use server";
+    return generateReviewDraftForBusiness(qrBusinessId, reviewSessionId);
+  }
+  async function googleReviewHandoffAction(editedText: string) {
+    "use server";
+    return handoffGoogleReviewForBusiness(qrBusinessId, reviewSessionId, editedText);
+  }
+  async function submitTrustitReviewAction(submission: import("./review-session-types").TrustitReviewSubmission) {
+    "use server";
+    return submitTrustitReviewForBusiness(qrBusinessId, reviewSessionId, submission);
+  }
 
   return (
     <ReviewExperience
@@ -94,6 +109,9 @@ export default async function ScanPage({ params }: ScanPageProps) {
       experienceCategories={experienceCategories}
       createReviewSession={createSessionAction}
       saveExperiences={saveExperiencesAction}
+      generateReviewDraft={generateReviewDraftAction}
+      googleReviewHandoff={googleReviewHandoffAction}
+      submitTrustitReview={submitTrustitReviewAction}
     />
   );
 }
