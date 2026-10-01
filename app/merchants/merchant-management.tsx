@@ -214,13 +214,21 @@ function DetailDialog({
               {business.name}
             </h2>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
-            Close
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              href={`/merchants/${business.id}/reviews`}
+              className="rounded-lg bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+            >
+              Trustit Customer Data
+            </Link>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50"
+            >
+              Close
+            </button>
+          </div>
         </header>
         <div className="grid gap-5 md:grid-cols-2">
           {detailGroups.map((group) => (
