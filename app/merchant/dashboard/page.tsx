@@ -35,6 +35,7 @@ function SummaryCard({ label, value, detail }: { label: string; value: string; d
 
 const actions = [
   { href: "/merchant/dashboard/business", title: "My Business", description: "View your registered business details." },
+  { href: "/merchant/dashboard/reviews", title: "Trustit Reviews", description: "See scans, ratings, customer names, reviews, and selected experience points." },
   { href: "/merchant/dashboard/qr", title: "My QR Code", description: "Download, print, or share your Trustit scan QR." },
   { href: "/merchant/dashboard/subscription", title: "Subscription", description: "Review your plan and renewal options." },
   { href: "/merchant/dashboard/payments", title: "Payments", description: "View payments for your business." },
