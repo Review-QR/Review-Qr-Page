@@ -48,7 +48,7 @@ test("download filenames include sanitized template, merchant, business ID, and 
   );
   assert.equal(
     getQrTemplateFilename("template_4", "Shop", "../QR/45 18", "pdf"),
-    "Trustit-Local-Landscape-Shop-Shop-QR-QR-45-18.pdf",
+    "Trustit-Local-Landscape-Shop-QR-QR-45-18.pdf",
   );
 });
 
