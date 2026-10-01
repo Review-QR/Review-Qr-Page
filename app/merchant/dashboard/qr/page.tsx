@@ -16,6 +16,7 @@ export default async function MerchantQrPage() {
       <MyQrCode
         businessId={merchant.businessId}
         businessName={merchant.businessName}
+        businessType={merchant.businessType}
         qrStatus={merchant.qrStatus}
         expiry={merchant.expiry}
         reviewLink={merchant.reviewLink}
