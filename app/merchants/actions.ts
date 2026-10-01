@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createSupabaseActionClient } from "@/lib/supabase-server";
 
@@ -53,6 +54,16 @@ export async function deleteMerchantAction(
       success: false,
       message: `The database did not confirm merchant deletion: ${deletionError.message}. Refresh and verify the merchant before retrying.`,
     };
+  }
+
+  // The RPC transaction has committed the business deletion. Invalidate the
+  // server-rendered merchant list as well as the client's optimistic row state.
+  try {
+    revalidatePath("/merchants");
+  } catch (error) {
+    console.error("Merchant list revalidation failed", {
+      error: error instanceof Error ? error.message : "unknown error",
+    });
   }
 
   if (typeof authUserId === "string") {

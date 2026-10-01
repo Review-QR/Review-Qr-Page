@@ -15,30 +15,26 @@ test("Trustit customer data route requires an active admin before privileged rea
   assert.doesNotMatch(route, /"use client"/);
 });
 
-test("Trustit admin data reads use session RLS rather than requiring service-role table grants", async () => {
+test("Trustit admin data reads use the authenticated active-admin session and business-scoped queries", async () => {
   const route = await read("./[businessId]/trustit-customer-data/page.tsx");
-  const policies = await read("../../supabase/migrations/20261001082605_20261001140000_restrict_merchant_customer_data.sql");
-  const businessPolicies = await read("../../supabase/migrations/20260927104243_secure_business_access.sql");
   assert.match(route, /createSupabaseServerClient/);
-  assert.match(businessPolicies, /grant select on table public\.businesses to authenticated/);
-  assert.match(businessPolicies, /create policy businesses_select_active_admin[\s\S]*?for select to authenticated[\s\S]*?admin\.is_active = true/);
-  for (const policy of [
-    "trustit_reviews_select_active_admin",
-    "review_customer_profiles_select_active_admin",
-    "review_family_members_select_active_admin",
-    "review_special_occasions_select_active_admin",
-    "review_generations_select_active_admin",
-    "review_session_experiences_select_active_admin",
-    "review_sessions_select_active_admin",
-  ]) {
-    assert.match(policies, new RegExp(`create policy ${policy}[\\s\\S]*?for select to authenticated[\\s\\S]*?admin\\.is_active = true`));
+  assert.ok(route.indexOf("await requireActiveAdmin()") < route.indexOf("createSupabaseServerClient()"));
+  assert.match(route, /\.from\("businesses"\)[\s\S]*?\.eq\("id", businessId\)/);
+  for (const table of ["trustit_reviews", "review_sessions", "review_session_experiences", "review_customer_profiles", "review_family_members", "review_special_occasions"]) {
+    assert.match(route, new RegExp(`from\\("${table}"\\)[\\s\\S]*?eq\\("business_id", businessId\\)`));
   }
-  for (const table of ["trustit_reviews", "review_customer_profiles", "review_family_members", "review_special_occasions", "review_generations", "review_session_experiences", "review_sessions"]) {
-    assert.match(policies, new RegExp(`drop policy if exists ${table}_select_own_business on public\\.${table}`));
-    assert.doesNotMatch(policies, new RegExp(`create policy ${table}_select_own_business`));
+  assert.doesNotMatch(route, /createSupabaseAdminClient/);
+});
+
+test("admin Trustit customer data is presented as one horizontally scrollable spreadsheet row per submission", async () => {
+  const route = await read("./[businessId]/trustit-customer-data/page.tsx");
+  for (const column of ["Customer", "Mobile Number", "Rating", "Review", "Selected Experience Points", "Date of Birth", "Anniversary", "Family Members", "Family Member Mobile", "Family Member DOB", "Family Member Anniversary", "Submitted"]) {
+    assert.match(route, new RegExp(`<th[^>]*>${column}</th>`));
   }
-  assert.match(policies, /grant select on table[\s\S]*?to authenticated/);
-  assert.doesNotMatch(policies, /create policy [\s\S]*?to service_role/);
+  assert.match(route, /overflow-auto/);
+  assert.match(route, /reviews\.map\(\(review\) =>/);
+  assert.match(route, /font-bold text-slate-900">\{experiences\.length \?/);
+  assert.doesNotMatch(route, /What stood out in your experience\?/i);
 });
 
 test("merchant profile exposes the Trustit Customer Data route", async () => {
@@ -53,14 +49,21 @@ test("merchant Trustit reviews use the scoped summary RPC rather than direct PII
   assert.match(page, /rpc\("get_merchant_trustit_reviews", \{ p_business_id: merchant\.businessId \}\)/);
   assert.doesNotMatch(page, /\.from\("trustit_reviews"\)/);
   assert.doesNotMatch(page, /customer_mobile|family_members|occasion/i);
+  assert.match(page, /Customer: \{review\.customer_name/);
+  assert.match(page, /Review:<\/span> \{review\.review_text\}/);
+  assert.match(page, /selected_experiences\.map\(\(point\) => `• \$\{point\}`\)\.join\(" "\)/);
+  assert.match(page, /<strong className="ml-2 text-slate-900">/);
+  assert.doesNotMatch(page, /What stood out|Selected experiences:|\[.*selected_experiences/i);
 });
 
 test("delete action validates identity and active admin server-side", async () => {
   const action = await read("./actions.ts");
+  assert.ok(action.indexOf("BUSINESS_ID_PATTERN.test(businessIdInput)") < action.indexOf("createSupabaseActionClient()"));
   assert.match(action, /auth\.getClaims\(\)/);
   assert.match(action, /\.eq\("is_active", true\)/);
   assert.match(action, /BUSINESS_ID_PATTERN\.test\(businessIdInput\)/);
   assert.match(action, /admin_delete_merchant/);
+  assert.ok(action.indexOf("if (adminError || !admin)") < action.indexOf("adminClient.rpc("));
 });
 
 test("delete UI requires explicit confirmation and prevents duplicate submission", async () => {
@@ -70,6 +73,26 @@ test("delete UI requires explicit confirmation and prevents duplicate submission
   assert.match(ui, />\{pending \? "Deleting…" : "Delete Permanently"\}<\/button>/);
   assert.match(ui, /if \(submitting\.current\) return/);
   assert.match(ui, /disabled=\{pending/);
+  assert.ok(ui.indexOf("submitting.current = true") < ui.indexOf("deleteMerchantAction(business.id)"));
+  assert.match(ui, /setMessageIsError\(!result\.success\)/);
+  assert.match(ui, /role=\{messageIsError \? "alert" : "status"\}/);
+});
+
+test("successful merchant deletion refreshes the list without waiting for a manual reload", async () => {
+  const action = await read("./actions.ts");
+  const ui = await read("./merchant-management.tsx");
+  assert.match(action, /revalidatePath\("\/merchants"\)/);
+  assert.match(ui, /setRows\(\(current\) => current\.filter\(\(business\) => business\.id !== deleteTarget\.id\)\)/);
+  assert.match(ui, /router\.refresh\(\)/);
+  assert.match(ui, /if \(result\.businessDeleted\) setDeleteTarget\(null\)/);
+});
+
+test("failed deletion stays visible and presents an actionable error", async () => {
+  const action = await read("./actions.ts");
+  const ui = await read("./merchant-management.tsx");
+  assert.match(action, /if \(deletionError\)\s*\{[\s\S]*?success: false/);
+  assert.match(ui, /The deletion request could not be completed/);
+  assert.match(ui, /if \(result\.businessDeleted\) onDeleted\(result\)/);
 });
 
 test("database deletion is active-admin checked, scoped, and service-role only", async () => {

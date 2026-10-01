@@ -89,6 +89,7 @@ export default async function TrustitCustomerDataPage({
   const occasions = occasionResults.flatMap((result) => result.data ?? []) as Occasion[];
   const customerOccasion = (profileId: string, key: string) => occasions.find((item) => item.customer_profile_id === profileId && item.occasion_key === key);
   const familyOccasion = (familyId: string, key: string) => occasions.find((item) => item.family_member_id === familyId && item.occasion_key === key);
+  const submittedAtLabel = (value: string) => new Date(value).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
 
   return (
     <main className="dashboard-shell">
@@ -98,20 +99,48 @@ export default async function TrustitCustomerDataPage({
       </header>
       <section className="dashboard-panel">
         <div className="section-heading"><div><p className="section-kicker">SUBMITTED TRUSTIT REVIEWS</p><h2>Customer submissions</h2></div><span className="count-badge">{reviews?.length ?? 0}</span></div>
-        {!reviews?.length ? <p className="empty-state">No submitted Trustit customer records are available for this merchant.</p> : <div className="space-y-4">
-          {reviews.map((review) => {
-            const profile = profilesBySession.get(review.review_session_id);
-            const family = profile ? familiesByProfile.get(profile.id) ?? [] : [];
-            return <article key={review.id} className="rounded-xl border border-slate-200 p-4 sm:p-6">
-              <header className="flex flex-wrap items-start justify-between gap-3"><div><h3 className="font-semibold text-slate-900">{review.customer_name || "Customer chose not to share a name"}</h3><p className="text-sm text-slate-500">{review.customer_mobile || "Mobile not shared"} · {new Date(review.submitted_at).toLocaleString()}</p></div><span className="rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-800">{review.rating}/5</span></header>
-              <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-800">{review.review_text}</p>
-              <p className="mt-4 text-xs text-slate-500">Selected experiences: {(experiencesBySession.get(review.review_session_id) ?? []).join(", ") || "None recorded"}</p>
-              {profile && <div className="mt-5 grid gap-4 border-t border-slate-100 pt-4 md:grid-cols-2">
-                <section><h4 className="text-sm font-semibold text-slate-800">Customer occasions</h4><dl className="mt-2 space-y-1 text-sm text-slate-600"><div>Birthday: {dateLabel(customerOccasion(profile.id, "birthday"))}</div><div>Anniversary: {dateLabel(customerOccasion(profile.id, "anniversary"))}</div></dl></section>
-                <section><h4 className="text-sm font-semibold text-slate-800">Family members</h4>{family.length ? <ul className="mt-2 space-y-3">{family.map((member) => <li key={member.id} className="rounded-lg bg-slate-50 p-3 text-sm"><strong>{member.name || "Name not shared"}</strong><span className="text-slate-500"> · {member.relationship}</span><p className="text-slate-600">{member.mobile || "Mobile not shared"}</p><p className="text-slate-600">Birthday: {dateLabel(familyOccasion(member.id, "birthday"))} · Anniversary: {dateLabel(familyOccasion(member.id, "anniversary"))}</p></li>)}</ul> : <p className="mt-2 text-sm text-slate-500">No family members shared.</p>}</section>
-              </div>}
-            </article>;
-          })}
+        {!reviews?.length ? <p className="empty-state">No submitted Trustit customer records are available for this merchant.</p> : <div className="max-h-[75vh] overflow-auto rounded-xl border border-slate-200">
+          <table className="w-full min-w-[2200px] border-collapse text-left text-sm">
+            <thead className="sticky top-0 z-10 bg-slate-100 text-xs font-semibold uppercase tracking-wide text-slate-600 shadow-sm">
+              <tr>
+                <th scope="col" className="px-3 py-3">Customer</th>
+                <th scope="col" className="px-3 py-3">Mobile Number</th>
+                <th scope="col" className="px-3 py-3">Rating</th>
+                <th scope="col" className="px-3 py-3">Review</th>
+                <th scope="col" className="px-3 py-3">Selected Experience Points</th>
+                <th scope="col" className="px-3 py-3">Date of Birth</th>
+                <th scope="col" className="px-3 py-3">Anniversary</th>
+                <th scope="col" className="px-3 py-3">Family Members</th>
+                <th scope="col" className="px-3 py-3">Family Member Mobile</th>
+                <th scope="col" className="px-3 py-3">Family Member DOB</th>
+                <th scope="col" className="px-3 py-3">Family Member Anniversary</th>
+                <th scope="col" className="px-3 py-3">Submitted</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200 bg-white">
+              {reviews.map((review) => {
+                const profile = profilesBySession.get(review.review_session_id);
+                const family = profile ? familiesByProfile.get(profile.id) ?? [] : [];
+                const experiences = experiencesBySession.get(review.review_session_id) ?? [];
+                return (
+                  <tr key={review.id} className="align-top hover:bg-slate-50">
+                    <td className="max-w-48 px-3 py-3 font-medium text-slate-900">{review.customer_name || "Name not shared"}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-slate-700">{review.customer_mobile || "Not shared"}</td>
+                    <td className="whitespace-nowrap px-3 py-3 font-semibold text-slate-900">{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)} {review.rating}/5</td>
+                    <td className="max-w-[28rem] whitespace-pre-wrap px-3 py-3 text-slate-700">{review.review_text}</td>
+                    <td className="max-w-[24rem] px-3 py-3 font-bold text-slate-900">{experiences.length ? experiences.map((point) => `• ${point}`).join(" ") : "—"}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-slate-700">{profile ? dateLabel(customerOccasion(profile.id, "birthday")) : "—"}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-slate-700">{profile ? dateLabel(customerOccasion(profile.id, "anniversary")) : "—"}</td>
+                    <td className="px-3 py-3 text-slate-700">{family.length ? family.map((member) => <div key={member.id}>{member.name || "Name not shared"} · {member.relationship}</div>) : "—"}</td>
+                    <td className="px-3 py-3 text-slate-700">{family.length ? family.map((member) => <div key={member.id}>{member.mobile || "Not shared"}</div>) : "—"}</td>
+                    <td className="px-3 py-3 text-slate-700">{family.length ? family.map((member) => <div key={member.id}>{dateLabel(familyOccasion(member.id, "birthday"))}</div>) : "—"}</td>
+                    <td className="px-3 py-3 text-slate-700">{family.length ? family.map((member) => <div key={member.id}>{dateLabel(familyOccasion(member.id, "anniversary"))}</div>) : "—"}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-slate-700">{submittedAtLabel(review.submitted_at)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>}
       </section>
     </main>
