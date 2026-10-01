@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { requireActiveAdmin, createSupabaseServerClient } from "@/lib/supabase-server";
-import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import InviteMerchantForm from "./invite-merchant-form";
 import { listMerchantInvites } from "./actions";
+import RevokeInviteButton from "./revoke-invite-button";
 
 export const dynamic = "force-dynamic";
 
