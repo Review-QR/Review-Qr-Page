@@ -136,23 +136,50 @@ test("My QR page uses the authenticated merchant identity and loads the saved te
   assert.match(auth, /qrTemplate: business\.qr_template \|\| "template_1"/);
 });
 
-test("five distinct Trustit designs share one authenticated merchant QR destination", async () => {
+test("five category-specific Trustit print designs use the required dimensions and one merchant QR", async () => {
   const gallery = await read("./qr/qr-template-gallery.tsx");
   const definitions = await read("./qr/templates.ts");
   const qrUtility = await read("../../../lib/trustit-qr.ts");
   assert.equal((definitions.match(/id: "template_[1-5]"/g) ?? []).length, 5);
+  for (const [name, size, orientation, ratio] of [
+    ["Restaurant", "4 × 6 in", "Portrait", "2 / 3"],
+    ["Hotel / Stay", "4 × 6 in", "Portrait", "2 / 3"],
+    ["Laundry", "4 × 6 in", "Portrait", "2 / 3"],
+    ["Retail Shop", "6 × 4 in", "Landscape", "3 / 2"],
+    ["Salon / Beauty", "6 × 4 in", "Landscape", "3 / 2"],
+  ]) {
+    const row = definitions.slice(definitions.indexOf(`name: "${name}"`)).split("\n", 1)[0];
+    assert.ok(row.includes(`printSize: "${size}"`), `${name} print size`);
+    assert.ok(row.includes(`orientation: "${orientation}"`), `${name} orientation`);
+    assert.ok(row.includes(`ratio: "${ratio}"`), `${name} ratio`);
+  }
   assert.match(gallery, /buildTrustitReviewUrl\(origin, businessId\)/);
   assert.match(gallery, /buildTrustitQrImageUrl\(reviewRoute\)/);
   assert.match(qrUtility, /\/r\/\$\{encodeURIComponent\(businessId\)\}/);
   assert.match(gallery, /flex snap-x snap-mandatory gap-4 overflow-x-auto/);
+  assert.match(gallery, /onTouch|overflow-x-auto/);
   assert.match(gallery, /Preview/);
   assert.match(gallery, /Choose Your QR Template/);
-  assert.match(gallery, /Merchant-specific preview/);
-  const trustitMarks = gallery.slice(gallery.indexOf("function TrustitMark"), gallery.indexOf("function merchantInitials"));
+  assert.match(gallery, /Merchant-specific print preview/);
+  assert.match(gallery, /data-print-size=\{template\.printSize\}/);
+  assert.match(gallery, /data-orientation=\{template\.orientation\}/);
+  assert.match(gallery, /data-ratio=\{template\.ratio\}/);
+  const trustitMarks = gallery.slice(gallery.indexOf("function TrustitMark"), gallery.indexOf("function GoogleReviewMark"));
   assert.equal((trustitMarks.match(/templateId === "template_[1-5]"/g) ?? []).length, 5);
+  for (const component of ["RestaurantPoster", "HotelPoster", "LaundryPoster", "RetailPoster", "SalonPoster"]) {
+    assert.match(gallery, new RegExp(`function ${component}\\(`));
+  }
+  for (const kind of ["restaurant", "hotel", "laundry", "retail", "salon"]) assert.ok(gallery.includes(`kind="${kind}"`), `${kind} illustration`);
+  assert.equal((gallery.match(/<TrustitMark templateId=/g) ?? []).length, 5);
+  assert.equal((gallery.match(/<GoogleMessage/g) ?? []).length, 5);
+  assert.match(gallery, /SCAN TO REVIEW/);
+  assert.match(gallery, /aria-label="Five stars"/);
+  assert.doesNotMatch(gallery, /merchantInitials|logo placeholder|Add Logo|Merchant Logo|merchant_logo|logo_url/i);
   assert.match(qrUtility, /api\.qrserver\.com\/v1\/create-qr-code/);
   assert.match(gallery, /object-contain/);
-  assert.match(gallery, /Enjoyed your visit\? Share your honest experience/);
+  assert.match(gallery, /rounded-2xl bg-white p-2\.5/);
+  assert.match(gallery, /qrStatus, expiry/);
+  assert.match(gallery, /status\?\.trim\(\)\.toLowerCase\(\) === "active"/);
 });
 
 test("template preference save is authenticated, validated, and bound to the session merchant", async () => {
