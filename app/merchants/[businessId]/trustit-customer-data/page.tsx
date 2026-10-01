@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { requireActiveAdmin } from "@/lib/supabase-server";
+import { createSupabaseServerClient, requireActiveAdmin } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
@@ -26,12 +25,9 @@ export default async function TrustitCustomerDataPage({
   const { businessId } = await params;
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(businessId)) notFound();
 
-  let admin;
-  try {
-    admin = createSupabaseAdminClient();
-  } catch {
-    return <PageError message="Customer data is not configured on this server." />;
-  }
+  // Use the signed-in admin session so the existing active-admin RLS policies
+  // authorize every read. The service-role key has no SELECT grant on businesses.
+  const admin = await createSupabaseServerClient();
 
   const { data: business, error: businessError } = await admin
     .from("businesses")

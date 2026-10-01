@@ -7,11 +7,38 @@ const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 test("Trustit customer data route requires an active admin before privileged reads", async () => {
   const route = await read("./[businessId]/trustit-customer-data/page.tsx");
   assert.match(route, /await requireActiveAdmin\(\)/);
-  assert.match(route, /createSupabaseAdminClient\(\)/);
+  assert.match(route, /createSupabaseServerClient\(\)/);
+  assert.doesNotMatch(route, /createSupabaseAdminClient/);
   assert.match(route, /\.eq\("business_id", businessId\)/);
   assert.match(route, /\.in\("customer_profile_id", profileIds\)/);
   assert.match(route, /\.in\("family_member_id", familyIds\)/);
   assert.doesNotMatch(route, /"use client"/);
+});
+
+test("Trustit admin data reads use session RLS rather than requiring service-role table grants", async () => {
+  const route = await read("./[businessId]/trustit-customer-data/page.tsx");
+  const policies = await read("../../supabase/migrations/20261001082605_20261001140000_restrict_merchant_customer_data.sql");
+  const businessPolicies = await read("../../supabase/migrations/20260927104243_secure_business_access.sql");
+  assert.match(route, /createSupabaseServerClient/);
+  assert.match(businessPolicies, /grant select on table public\.businesses to authenticated/);
+  assert.match(businessPolicies, /create policy businesses_select_active_admin[\s\S]*?for select to authenticated[\s\S]*?admin\.is_active = true/);
+  for (const policy of [
+    "trustit_reviews_select_active_admin",
+    "review_customer_profiles_select_active_admin",
+    "review_family_members_select_active_admin",
+    "review_special_occasions_select_active_admin",
+    "review_generations_select_active_admin",
+    "review_session_experiences_select_active_admin",
+    "review_sessions_select_active_admin",
+  ]) {
+    assert.match(policies, new RegExp(`create policy ${policy}[\\s\\S]*?for select to authenticated[\\s\\S]*?admin\\.is_active = true`));
+  }
+  for (const table of ["trustit_reviews", "review_customer_profiles", "review_family_members", "review_special_occasions", "review_generations", "review_session_experiences", "review_sessions"]) {
+    assert.match(policies, new RegExp(`drop policy if exists ${table}_select_own_business on public\\.${table}`));
+    assert.doesNotMatch(policies, new RegExp(`create policy ${table}_select_own_business`));
+  }
+  assert.match(policies, /grant select on table[\s\S]*?to authenticated/);
+  assert.doesNotMatch(policies, /create policy [\s\S]*?to service_role/);
 });
 
 test("merchant profile exposes the Trustit Customer Data route", async () => {
