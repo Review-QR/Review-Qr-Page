@@ -25,6 +25,17 @@ export type GenerateReviewDraftResult =
 
 export type GenerateReviewDraftAction = () => Promise<GenerateReviewDraftResult>;
 
+export type RestoredReviewSession = {
+  rating: number;
+  selectedExperiences: ReviewExperienceCategory[];
+  draft: string | null;
+  submitted: boolean;
+} | null;
+
+export type SaveReviewDraftAction = (
+  editedText: string,
+) => Promise<{ ok: true } | { ok: false; message: string }>;
+
 export type GoogleReviewHandoffResult =
   | { ok: true; reviewUrl: string }
   | { ok: false; message: string };

@@ -8,6 +8,7 @@ const navigation = [
   { href: "/merchant/dashboard", label: "Dashboard" },
   { href: "/merchant/dashboard/business", label: "My Business" },
   { href: "/merchant/dashboard/qr", label: "My QR Code" },
+  { href: "/merchant/dashboard/reviews", label: "Customer Reviews" },
   { href: "/merchant/dashboard/subscription", label: "Subscription" },
   { href: "/merchant/dashboard/payments", label: "Payments" },
 ];

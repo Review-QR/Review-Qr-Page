@@ -1,5 +1,7 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
+import { cookies } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import {
@@ -20,6 +22,7 @@ import type {
   GenerateReviewDraftResult,
   ReviewExperienceCategory,
   SaveReviewExperiencesResult,
+  RestoredReviewSession,
   SubmitTrustitReviewResult,
   TrustitReviewSubmission,
 } from "./review-session-types";
@@ -40,6 +43,33 @@ const TRUSTIT_SUBMIT_FAILURE =
 const SESSION_ID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CATEGORY_KEY_PATTERN = /^[a-z][a-z0-9_]{0,63}$/;
+
+function reviewSessionCookieName(businessId: string) {
+  const suffix = createHash("sha256").update(businessId).digest("hex").slice(0, 20);
+  return `trustit_review_session_${suffix}`;
+}
+
+export async function getReviewSessionCookie(businessId: string) {
+  if (!isValidBusinessId(businessId)) return null;
+  try {
+    const value = (await cookies()).get(reviewSessionCookieName(businessId))?.value;
+    return isValidSessionId(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setReviewSessionCookie(businessId: string, sessionId: string) {
+  if (!isValidBusinessId(businessId) || !isValidSessionId(sessionId)) return;
+  const cookieStore = await cookies();
+  cookieStore.set(reviewSessionCookieName(businessId), sessionId, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 30 * 60,
+  });
+}
 
 function isValidBusinessId(businessId: unknown): businessId is string {
   return (
@@ -107,6 +137,66 @@ export async function getReviewExperienceCategoriesForBusiness(
     }));
   } catch {
     return [];
+  }
+}
+
+export async function restoreReviewSessionForBusiness(
+  businessId: string,
+  sessionId: string,
+): Promise<RestoredReviewSession> {
+  if (!isValidBusinessId(businessId) || !isValidSessionId(sessionId)) return null;
+  try {
+    const business = await resolveQrBusiness(businessId);
+    if (!business) return null;
+    const admin = createSupabaseAdminClient();
+    const { data: session, error: sessionError } = await admin
+      .from("review_sessions")
+      .select("id, business_id, selected_rating, current_review_text, review_status, current_generation_number, expires_at")
+      .eq("id", sessionId)
+      .eq("business_id", businessId)
+      .maybeSingle();
+    if (sessionError || !session || !Number.isInteger(session.selected_rating) ||
+      session.selected_rating < 1 || session.selected_rating > 5 ||
+      (session.review_status !== "submitted" && (!session.expires_at || session.expires_at <= new Date().toISOString())) ||
+      !["in_progress", "draft_ready", "submitted"].includes(session.review_status)) return null;
+
+    const { data: experiences, error: experiencesError } = await admin
+      .from("review_session_experiences")
+      .select("review_session_id, business_id, category_key, category_label_snapshot, selected_at")
+      .eq("review_session_id", sessionId)
+      .eq("business_id", businessId)
+      .order("selected_at", { ascending: true });
+    if (experiencesError || (experiences?.length ?? 0) > 10) return null;
+    const selectedExperiences = (experiences ?? []).map((item) => ({
+      key: item.category_key,
+      label: item.category_label_snapshot,
+    }));
+    if (experiences?.some((item) => item.review_session_id !== sessionId || item.business_id !== businessId ||
+      !CATEGORY_KEY_PATTERN.test(item.category_key) || !item.category_label_snapshot?.trim())) return null;
+
+    let draft: string | null = null;
+    if (session.current_generation_number > 0) {
+      const { data: generation, error: generationError } = await admin
+        .from("review_generations")
+        .select("generation_status, generated_text")
+        .eq("review_session_id", sessionId)
+        .eq("business_id", businessId)
+        .eq("generation_number", session.current_generation_number)
+        .maybeSingle();
+      if (generationError || generation?.generation_status !== "generated" || !generation.generated_text) return null;
+      draft = typeof session.current_review_text === "string" && session.current_review_text.trim()
+        ? session.current_review_text
+        : generation.generated_text;
+    }
+    if (session.review_status === "draft_ready" && !draft) return null;
+    return {
+      rating: session.selected_rating,
+      selectedExperiences,
+      draft,
+      submitted: session.review_status === "submitted",
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -465,6 +555,58 @@ export async function generateReviewDraftForBusiness(
   }
 }
 
+export async function saveReviewDraftEditForBusiness(
+  businessId: string,
+  sessionId: string,
+  editedText: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  if (!isValidBusinessId(businessId) || !isValidSessionId(sessionId) ||
+    typeof editedText !== "string" || !editedText.trim() || editedText.length > 10000) {
+    return { ok: false, message: "Enter a valid review before continuing." };
+  }
+  try {
+    const business = await resolveQrBusiness(businessId);
+    if (!business) return { ok: false, message: "This QR code is currently unavailable. Please scan it again." };
+    const admin = createSupabaseAdminClient();
+    const { data: session, error: sessionError } = await admin
+      .from("review_sessions")
+      .select("id, business_id, review_status, current_generation_number, expires_at")
+      .eq("id", sessionId)
+      .eq("business_id", businessId)
+      .maybeSingle();
+    if (sessionError || !session || session.review_status !== "draft_ready" ||
+      !session.expires_at || session.expires_at <= new Date().toISOString() ||
+      !Number.isInteger(session.current_generation_number) || session.current_generation_number < 1) {
+      return { ok: false, message: "Your review session has expired. Please scan the QR code again." };
+    }
+    const { data: generation, error: generationError } = await admin
+      .from("review_generations")
+      .select("generation_status, generated_text")
+      .eq("review_session_id", sessionId)
+      .eq("business_id", businessId)
+      .eq("generation_number", session.current_generation_number)
+      .maybeSingle();
+    if (generationError || generation?.generation_status !== "generated" || !generation.generated_text) {
+      return { ok: false, message: "Your review draft could not be verified. Please try again." };
+    }
+    const updatedAt = new Date().toISOString();
+    const { data: updated, error: updateError } = await admin
+      .from("review_sessions")
+      .update({ current_review_text: editedText, updated_at: updatedAt })
+      .eq("id", sessionId)
+      .eq("business_id", businessId)
+      .eq("review_status", "draft_ready")
+      .eq("current_generation_number", session.current_generation_number)
+      .gt("expires_at", updatedAt)
+      .select("id")
+      .maybeSingle();
+    if (updateError || !updated) return { ok: false, message: "Your draft could not be saved. Please try again." };
+    return { ok: true };
+  } catch {
+    return { ok: false, message: "Your draft could not be saved. Please try again." };
+  }
+}
+
 const VALID_RELATIONS = new Set([
   "mother", "father", "husband", "wife", "brother", "sister", "son", "daughter",
 ]);
@@ -473,12 +615,14 @@ function validOccasionList(value: unknown, familyCount: number): value is Trusti
   if (!Array.isArray(value) || value.length > 2 * (familyCount + 1)) return false;
   const seen = new Set<string>();
   return value.every((item) => {
-    if (!item || (item.owner !== "customer" && item.owner !== "family") ||
+    if (!item || typeof item !== "object" || Array.isArray(item) ||
+      (item.owner !== "customer" && item.owner !== "family") ||
       (item.occasion !== "birthday" && item.occasion !== "anniversary") ||
       !Number.isInteger(item.month) || item.month < 1 || item.month > 12 ||
       !Number.isInteger(item.day) || item.day < 1 || item.day > [31,29,31,30,31,30,31,31,30,31,30,31][item.month - 1]) return false;
     const familyIndex = item.owner === "family" ? item.familyIndex : -1;
     if (item.owner === "family" && (!Number.isInteger(familyIndex) || familyIndex < 0 || familyIndex >= familyCount)) return false;
+    if (item.owner === "customer" && item.familyIndex !== undefined) return false;
     const key = `${item.owner}:${familyIndex}:${item.occasion}`;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -513,6 +657,45 @@ export async function submitTrustitReviewForBusiness(
     const business = await resolveQrBusiness(businessId);
     if (!business) return { ok: false, message: "This QR code is unavailable. Please scan it again." };
     const admin = createSupabaseAdminClient();
+    const { data: session, error: sessionError } = await admin
+      .from("review_sessions")
+      .select("id, business_id, selected_rating, expires_at, review_status, current_generation_number")
+      .eq("id", sessionId)
+      .eq("business_id", businessId)
+      .maybeSingle();
+    if (sessionError || !isUsableReviewSession(session, businessId, sessionId) ||
+      !["draft_ready", "submitted"].includes(session.review_status) ||
+      !Number.isInteger(session.current_generation_number) || session.current_generation_number < 1) {
+      return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
+    }
+    const { data: experiences, error: experiencesError } = await admin
+      .from("review_session_experiences")
+      .select("review_session_id, business_id, category_key, category_label_snapshot")
+      .eq("review_session_id", sessionId)
+      .eq("business_id", businessId);
+    const businessType = business.type === "Clinic" ? "Medical" : business.type;
+    const { data: enabledCategories, error: categoriesError } = await admin
+      .from("review_experience_categories")
+      .select("category_key")
+      .eq("business_type", businessType)
+      .eq("is_enabled", true)
+      .in("category_key", (experiences ?? []).map((item) => item.category_key));
+    if (experiencesError || categoriesError || !areValidReviewExperiences(
+      experiences,
+      businessId,
+      sessionId,
+      enabledCategories?.map((item) => item.category_key) ?? [],
+    )) return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
+    const { data: generation, error: generationError } = await admin
+      .from("review_generations")
+      .select("generation_status, generated_text")
+      .eq("review_session_id", sessionId)
+      .eq("business_id", businessId)
+      .eq("generation_number", session.current_generation_number)
+      .maybeSingle();
+    if (generationError || generation?.generation_status !== "generated" || !generation.generated_text) {
+      return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
+    }
     const { data, error } = await admin.rpc("submit_trustit_review", {
       p_business_id: businessId,
       p_review_session_id: sessionId,

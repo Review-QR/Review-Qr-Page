@@ -5,8 +5,12 @@ import ReviewExperience from "./review-experience";
 import {
   createReviewSessionForBusiness,
   generateReviewDraftForBusiness,
+  getReviewSessionCookie,
   getReviewExperienceCategoriesForBusiness,
   handoffGoogleReviewForBusiness,
+  restoreReviewSessionForBusiness,
+  saveReviewDraftEditForBusiness,
+  setReviewSessionCookie,
   saveReviewSessionExperiencesForBusiness,
   submitTrustitReviewForBusiness,
 } from "./review-session";
@@ -77,10 +81,26 @@ export default async function ScanPage({ params }: ScanPageProps) {
   }
 
   const qrBusinessId = business.id;
-  const reviewSessionId = randomUUID();
+  const cookieSessionId = await getReviewSessionCookie(qrBusinessId);
+  const restoredSession = cookieSessionId
+    ? await restoreReviewSessionForBusiness(qrBusinessId, cookieSessionId)
+    : null;
+  // On the first rating action this render's UUID is persisted in an HttpOnly
+  // cookie. The action response re-renders this route with that same ID, so all
+  // later server actions remain bound to the restored session.
+  const reviewSessionId = restoredSession && cookieSessionId ? cookieSessionId : randomUUID();
+  const restoredCategories = restoredSession?.selectedExperiences ?? [];
+  const customerCategories = [...experienceCategories];
+  for (const saved of restoredCategories) {
+    if (!customerCategories.some((category) => category.key === saved.key)) {
+      customerCategories.push(saved);
+    }
+  }
   async function createSessionAction(rating: number) {
     "use server";
-    return createReviewSessionForBusiness(qrBusinessId, reviewSessionId, rating);
+    const result = await createReviewSessionForBusiness(qrBusinessId, reviewSessionId, rating);
+    if (result.ok) await setReviewSessionCookie(qrBusinessId, result.sessionId);
+    return result;
   }
   async function saveExperiencesAction(categoryKeys: string[]) {
     "use server";
@@ -98,6 +118,10 @@ export default async function ScanPage({ params }: ScanPageProps) {
     "use server";
     return handoffGoogleReviewForBusiness(qrBusinessId, reviewSessionId, editedText);
   }
+  async function saveReviewDraftAction(editedText: string) {
+    "use server";
+    return saveReviewDraftEditForBusiness(qrBusinessId, reviewSessionId, editedText);
+  }
   async function submitTrustitReviewAction(submission: import("./review-session-types").TrustitReviewSubmission) {
     "use server";
     return submitTrustitReviewForBusiness(qrBusinessId, reviewSessionId, submission);
@@ -106,11 +130,13 @@ export default async function ScanPage({ params }: ScanPageProps) {
   return (
     <ReviewExperience
       businessName={business.name}
-      experienceCategories={experienceCategories}
+      experienceCategories={customerCategories}
+      initialSession={restoredSession}
       createReviewSession={createSessionAction}
       saveExperiences={saveExperiencesAction}
       generateReviewDraft={generateReviewDraftAction}
       googleReviewHandoff={googleReviewHandoffAction}
+      saveReviewDraft={saveReviewDraftAction}
       submitTrustitReview={submitTrustitReviewAction}
     />
   );

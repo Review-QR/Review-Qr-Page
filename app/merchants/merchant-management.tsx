@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import LogoutButton from "@/app/logout-button";
 import type { Business } from "@/lib/types";
 import { safeReviewLink } from "@/lib/safe-review-link";
@@ -11,6 +12,7 @@ import {
   setMerchantAccountStatusAction,
   type MerchantAccessState,
 } from "@/app/businesses/merchant-access-actions";
+import { deleteMerchantAction, type DeleteMerchantResult } from "@/app/merchants/actions";
 
 const INITIAL_ACTION_STATE: MerchantAccessState = { message: "", success: false };
 const MERCHANT_STATUSES = ["all", "pending", "active", "suspended", "expired"] as const;
@@ -250,6 +252,14 @@ function DetailDialog({
             </section>
           ))}
         </div>
+        <div className="mt-5 border-t border-slate-100 pt-4">
+          <Link
+            href={`/merchants/${encodeURIComponent(business.id)}/trustit-customer-data`}
+            className="inline-flex rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+          >
+            Trustit Customer Data
+          </Link>
+        </div>
       </section>
     </div>
   );
@@ -261,12 +271,14 @@ function MerchantActions({
   onProvisioned,
   onStatusChange,
   onView,
+  onDelete,
 }: {
   business: Business;
   provisioned: boolean;
   onProvisioned: (businessId: string) => void;
   onStatusChange: (businessId: string, status: MerchantStatus) => void;
   onView: () => void;
+  onDelete: () => void;
 }) {
   const status = normalized(business.merchant_status || "pending");
   const canManage = provisioned && (status === "active" || status === "suspended");
@@ -279,38 +291,68 @@ function MerchantActions({
     [business.id, onStatusChange]
   );
 
-  if (status === "pending" && !provisioned) {
-    return (
-      <PasswordActionForm
-        businessId={business.id}
-        mode="activate"
-        onSuccess={handleProvisioned}
-      />
-    );
-  }
+  return (
+    <div className="flex min-w-64 flex-col items-start gap-2">
+      <div className="flex flex-wrap items-start gap-2">
+        <button type="button" onClick={onView} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">View</button>
+        {status === "pending" && !provisioned ? (
+          <PasswordActionForm businessId={business.id} mode="activate" onSuccess={handleProvisioned} />
+        ) : canManage ? (
+          <>
+            <PasswordActionForm businessId={business.id} mode="reset" />
+            <StatusActionForm businessId={business.id} nextStatus={status === "active" ? "suspended" : "active"} onSuccess={handleStatusChange} />
+          </>
+        ) : <span className="self-center text-xs text-amber-700">Account mapping needs review</span>}
+        <button type="button" onClick={onDelete} className="rounded-lg border border-rose-300 bg-white px-3 py-2 text-xs font-semibold text-rose-700 transition hover:bg-rose-50">Delete</button>
+      </div>
+    </div>
+  );
+}
 
-  if (!canManage) {
-    return <span className="text-xs text-amber-700">Account mapping needs review</span>;
+function DeleteConfirmationDialog({
+  business,
+  onClose,
+  onDeleted,
+}: {
+  business: Business;
+  onClose: () => void;
+  onDeleted: (result: DeleteMerchantResult) => void;
+}) {
+  const [pending, setPending] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageIsError, setMessageIsError] = useState(false);
+  const submitting = useRef(false);
+
+  async function submitDeletion() {
+    if (submitting.current) return;
+    submitting.current = true;
+    setPending(true);
+    setMessage("");
+    let result: DeleteMerchantResult;
+    try {
+      result = await deleteMerchantAction(business.id);
+    } catch {
+      result = { success: false, message: "The deletion request could not be completed. Check the merchant state before retrying." };
+    } finally {
+      submitting.current = false;
+      setPending(false);
+    }
+    setMessage(result.message);
+    setMessageIsError(!result.success);
+    if (result.businessDeleted) onDeleted(result);
   }
 
   return (
-    <div className="flex min-w-64 flex-wrap items-start gap-2">
-      <button
-        type="button"
-        onClick={onView}
-        className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50"
-      >
-        View
-      </button>
-      <PasswordActionForm
-        businessId={business.id}
-        mode="reset"
-      />
-      <StatusActionForm
-        businessId={business.id}
-        nextStatus={status === "active" ? "suspended" : "active"}
-        onSuccess={handleStatusChange}
-      />
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/50 p-4" role="presentation" onClick={() => { if (!pending) onClose(); }}>
+      <section role="alertdialog" aria-modal="true" aria-labelledby="delete-merchant-title" aria-describedby="delete-merchant-description" className="w-full max-w-lg rounded-2xl border border-rose-200 bg-white p-5 shadow-2xl sm:p-7" onClick={(event) => event.stopPropagation()}>
+        <h2 id="delete-merchant-title" className="text-xl font-bold text-slate-900">Delete Merchant?</h2>
+        <p id="delete-merchant-description" className="mt-3 text-sm leading-6 text-slate-600">This will permanently delete <strong>{business.name}</strong> and all merchant-owned data associated with this account. This action cannot be undone.</p>
+        {message && <p className={`mt-4 text-sm ${messageIsError ? "text-rose-700" : "text-emerald-700"}`} role={messageIsError ? "alert" : "status"}>{message}</p>}
+        <div className="mt-6 flex flex-col-reverse justify-end gap-2 sm:flex-row">
+          <button type="button" disabled={pending} onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60">Cancel</button>
+          <button type="button" disabled={pending || Boolean(message && !messageIsError)} onClick={submitDeletion} className="rounded-lg bg-rose-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-rose-800 disabled:cursor-wait disabled:opacity-60">{pending ? "Deleting…" : "Delete Permanently"}</button>
+        </div>
+      </section>
     </div>
   );
 }
@@ -330,6 +372,12 @@ export default function MerchantManagement({
   const [statusFilter, setStatusFilter] = useState<(typeof MERCHANT_STATUSES)[number]>("all");
   const [planFilter, setPlanFilter] = useState<(typeof PLANS)[number]>("all");
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Business | null>(null);
+  const [deleteNotice, setDeleteNotice] = useState("");
+  const [deleteNoticeIsError, setDeleteNoticeIsError] = useState(false);
+  const [identityCleanupBusinessId, setIdentityCleanupBusinessId] = useState<string | null>(null);
+  const [identityCleanupPending, setIdentityCleanupPending] = useState(false);
+  const router = useRouter();
   const today = new Date().toISOString().slice(0, 10);
 
   const filteredRows = useMemo(() => {
@@ -513,6 +561,7 @@ export default function MerchantManagement({
                           onProvisioned={markProvisioned}
                           onStatusChange={updateStatus}
                           onView={() => setSelectedBusiness(business)}
+                          onDelete={() => { setDeleteNotice(""); setDeleteNoticeIsError(false); setIdentityCleanupBusinessId(null); setDeleteTarget(business); }}
                         />
                       </td>
                     </tr>
@@ -531,6 +580,44 @@ export default function MerchantManagement({
           onClose={() => setSelectedBusiness(null)}
         />
       )}
+      {deleteTarget && (
+        <DeleteConfirmationDialog
+          business={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onDeleted={(result) => {
+            if (result.success || result.businessDeleted) {
+              setRows((current) => current.filter((business) => business.id !== deleteTarget.id));
+              setProvisionedIds((current) => {
+                const next = new Set(current);
+                next.delete(deleteTarget.id);
+                return next;
+              });
+              router.refresh();
+            }
+            setDeleteNotice(result.message);
+            setDeleteNoticeIsError(!result.success);
+            setIdentityCleanupBusinessId(result.identityCleanupPending ? deleteTarget.id : null);
+            if (result.businessDeleted) setDeleteTarget(null);
+          }}
+        />
+      )}
+      {deleteNotice && !deleteTarget && <div className={`fixed bottom-4 right-4 z-[70] max-w-md rounded-xl px-4 py-3 text-sm text-white shadow-xl ${deleteNoticeIsError ? "bg-rose-800" : "bg-slate-900"}`} role={deleteNoticeIsError ? "alert" : "status"}>
+        <p>{deleteNotice}</p>
+        {identityCleanupBusinessId && <button type="button" disabled={identityCleanupPending} className="mt-3 rounded-md border border-white/50 px-3 py-1.5 font-semibold hover:bg-white/10 disabled:opacity-60" onClick={async () => {
+          if (identityCleanupPending) return;
+          setIdentityCleanupPending(true);
+          try {
+            const result = await deleteMerchantAction(identityCleanupBusinessId);
+            setDeleteNotice(result.message);
+            setDeleteNoticeIsError(!result.success);
+            if (!result.identityCleanupPending) setIdentityCleanupBusinessId(null);
+          } catch {
+            setDeleteNotice("Identity cleanup could not be confirmed. Retry after checking the Auth account state.");
+          } finally {
+            setIdentityCleanupPending(false);
+          }
+        }}>{identityCleanupPending ? "Retrying…" : "Retry identity cleanup"}</button>}
+      </div>}
     </main>
   );
 }

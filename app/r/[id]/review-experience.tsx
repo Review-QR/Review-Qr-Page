@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useId, useRef, useState, useTransition } from "react";
 import { TRUSTIT_RELATIONS, isValidMonthDay, validDaysForMonth, validateTrustitReviewInput } from "@/lib/trustit-review-validation";
 import type {
   CreateReviewSessionAction,
   GenerateReviewDraftAction,
   GoogleReviewHandoffAction,
   ReviewExperienceCategory,
+  RestoredReviewSession,
+  SaveReviewDraftAction,
   SaveReviewExperiencesAction,
   SubmitTrustitReviewAction,
   TrustitReviewSubmission,
@@ -15,10 +17,12 @@ import type {
 type ReviewExperienceProps = {
   businessName: string;
   experienceCategories: ReviewExperienceCategory[];
+  initialSession: RestoredReviewSession;
   createReviewSession: CreateReviewSessionAction;
   saveExperiences: SaveReviewExperiencesAction;
   generateReviewDraft: GenerateReviewDraftAction;
   googleReviewHandoff: GoogleReviewHandoffAction;
+  saveReviewDraft: SaveReviewDraftAction;
   submitTrustitReview: SubmitTrustitReviewAction;
 };
 
@@ -45,20 +49,21 @@ function monthDays(month: string) {
 function OccasionRow({ label, value, onChange }: {
   label: string; value: Occasion; onChange: (next: Occasion) => void;
 }) {
+  const inputId = useId();
   const validDays = monthDays(value.month);
   return (
-    <div className="flex min-h-12 flex-wrap items-center gap-x-3 gap-y-2 border-t border-slate-100 py-2">
-      <label className="flex min-w-28 items-center gap-2 text-sm font-medium text-slate-800">
+    <div className="flex min-h-12 flex-nowrap items-center gap-2 border-t border-slate-100 py-2">
+      <label className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-slate-800 sm:gap-2 sm:text-sm">
         <input type="checkbox" checked={value.enabled} onChange={(e) => onChange({ enabled: e.target.checked, month: e.target.checked ? value.month : "", day: e.target.checked ? value.day : "" })} />
         {label}
       </label>
-      {value.enabled ? <div className="flex flex-1 flex-wrap items-center gap-2 sm:flex-nowrap">
-        <label className="sr-only">{label} month</label>
-        <select value={value.month} onChange={(e) => onChange({ ...value, month: e.target.value, day: "" })} className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2 py-2 text-sm">
+      {value.enabled ? <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1">
+        <label htmlFor={`${inputId}-month`} className="sr-only">{label} month</label>
+        <select id={`${inputId}-month`} value={value.month} onChange={(e) => onChange({ ...value, month: e.target.value, day: "" })} className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-1 py-2 text-xs sm:px-2 sm:text-sm">
           <option value="">Month *</option>{months.map((month) => <option key={month}>{month}</option>)}
         </select>
-        <label className="sr-only">{label} date</label>
-        <select disabled={!value.month} value={value.day} onChange={(e) => onChange({ ...value, day: e.target.value })} className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-2 py-2 text-sm">
+        <label htmlFor={`${inputId}-date`} className="sr-only">{label} date</label>
+        <select id={`${inputId}-date`} disabled={!value.month} value={value.day} onChange={(e) => onChange({ ...value, day: e.target.value })} className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-1 py-2 text-xs sm:px-2 sm:text-sm">
           <option value="">Date *</option>{validDays.map((day) => <option key={day} value={day}>{day}</option>)}
         </select>
       </div> : null}
@@ -67,17 +72,17 @@ function OccasionRow({ label, value, onChange }: {
 }
 
 export default function ReviewExperience({
-  businessName, experienceCategories, createReviewSession, saveExperiences,
-  generateReviewDraft, googleReviewHandoff, submitTrustitReview,
+  businessName, experienceCategories, initialSession, createReviewSession, saveExperiences,
+  generateReviewDraft, googleReviewHandoff, saveReviewDraft, submitTrustitReview,
 }: ReviewExperienceProps) {
   const [isPending, startTransition] = useTransition();
-  const [selectedRating, setSelectedRating] = useState<number | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedRating, setSelectedRating] = useState<number | null>(initialSession?.rating ?? null);
+  const [hasSession, setHasSession] = useState(Boolean(initialSession));
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSession?.selectedExperiences.map((experience) => experience.key) ?? []);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [draft, setDraft] = useState("");
-  const [step, setStep] = useState<"feedback" | "draft" | "trustit" | "submitted">("feedback");
+  const [draft, setDraft] = useState(initialSession?.draft ?? "");
+  const [step, setStep] = useState<"feedback" | "draft" | "trustit" | "submitted">(initialSession?.submitted ? "submitted" : initialSession?.draft ? "draft" : "feedback");
   const [shareDetails, setShareDetails] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
@@ -85,6 +90,7 @@ export default function ReviewExperience({
   const [anniversary, setAnniversary] = useState<Occasion>(emptyOccasion());
   const [family, setFamily] = useState<FamilyMember[]>([]);
   const [formErrors, setFormErrors] = useState<string[]>([]);
+  const [isOpeningGoogle, setIsOpeningGoogle] = useState(false);
   const requestInProgress = useRef(false);
 
   function runAction(work: () => Promise<void>) {
@@ -99,12 +105,12 @@ export default function ReviewExperience({
   }
 
   function selectRating(rating: number) {
-    if (requestInProgress.current || sessionId || selectedRating !== null) return;
+    if (requestInProgress.current || hasSession || selectedRating !== null) return;
     runAction(async () => {
       const result = await createReviewSession(rating);
       if (!result.ok) { setError(result.message); return; }
       setSelectedRating(result.rating);
-      setSessionId(result.sessionId);
+      setHasSession(true);
     });
   }
 
@@ -116,13 +122,18 @@ export default function ReviewExperience({
   }
 
   function makeDraft(regenerate = false) {
-    if (!sessionId || !selectedRating || selectedCategories.length < 1) return;
+    if (!hasSession || !selectedRating || selectedCategories.length < 1) return;
     const returnStep = step;
     runAction(async () => {
       if (!regenerate) {
         const saved = await saveExperiences(selectedCategories);
         if (!saved.ok) { setError(saved.message); return; }
         setSelectedCategories(saved.categoryKeys);
+      } else {
+        // Keep the current manual edit as the persisted fallback if the next
+        // generation fails.
+        const savedDraft = await saveReviewDraft(draft);
+        if (!savedDraft.ok) { setError(savedDraft.message); return; }
       }
       const result = await generateReviewDraft();
       if (!result.ok) { setError(result.message); return; }
@@ -135,15 +146,30 @@ export default function ReviewExperience({
   }
 
   async function copyAndGoogle() {
-    if (!draft.trim()) return;
+    if (!draft.trim() || !hasSession || requestInProgress.current) return;
+    requestInProgress.current = true;
+    setIsOpeningGoogle(true);
     setError(null);
     try {
+      // Clipboard must be invoked directly from the user's click to preserve
+      // browser user activation. The server persists the exact same value.
       await navigator.clipboard.writeText(draft);
       setCopied(true);
       const result = await googleReviewHandoff(draft);
       if (!result.ok) { setError(result.message); return; }
       window.location.assign(result.reviewUrl);
     } catch { setError("Copy or review-page opening is unavailable. Please try again."); }
+    finally { requestInProgress.current = false; setIsOpeningGoogle(false); }
+  }
+
+  function continueOnTrustit() {
+    if (!hasSession || !draft.trim()) return;
+    runAction(async () => {
+      const result = await saveReviewDraft(draft);
+      if (!result.ok) { setError(result.message); return; }
+      setStep("trustit");
+      setTimeout(() => document.getElementById("trustit-review-form")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+    });
   }
 
   function updateFamily(index: number, updater: (member: FamilyMember) => FamilyMember) {
@@ -177,7 +203,7 @@ export default function ReviewExperience({
       });
     }
     setFormErrors(issues);
-    if (issues.length || !sessionId || !selectedRating || !draft.trim()) return;
+    if (issues.length || !hasSession || !selectedRating || !draft.trim()) return;
     runAction(async () => {
       const result = await submitTrustitReview(payload);
       if (!result.ok) { setError(result.message); return; }
@@ -205,8 +231,8 @@ export default function ReviewExperience({
             <div className="mt-5 flex justify-center gap-1" role="group" aria-label="Choose a rating from 1 to 5 stars">
               {[1, 2, 3, 4, 5].map((rating) => <button key={rating} type="button" aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} aria-pressed={selectedRating === rating} disabled={isPending || selectedRating !== null} onClick={() => selectRating(rating)} className={`grid size-12 place-items-center rounded-lg text-4xl disabled:cursor-default ${selectedRating && rating <= selectedRating ? "text-amber-400" : "text-slate-300 hover:bg-slate-50"}`}><span aria-hidden="true">★</span></button>)}
             </div>
-            {isPending && !sessionId ? <p className="mt-2 text-center text-sm text-indigo-700">Saving your rating…</p> : null}
-            {sessionId && step === "feedback" && <section className="mt-6 border-t border-slate-100 pt-5" aria-live="polite">
+            {isPending && !hasSession ? <p className="mt-2 text-center text-sm text-indigo-700">Saving your rating…</p> : null}
+            {hasSession && step === "feedback" && <section className="mt-6 border-t border-slate-100 pt-5" aria-live="polite">
               <h2 className="text-lg font-bold text-slate-900">What stood out in your experience?</h2>
               <p className="mt-1 text-sm text-slate-500">Choose up to 10 that reflect your visit.</p>
               <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">{experienceCategories.map((category) => {
@@ -219,12 +245,13 @@ export default function ReviewExperience({
             {step === "draft" && <section id="review-draft-section" className="mt-6 border-t border-slate-100 pt-5">
               <h2 className="text-lg font-bold text-slate-900">Your Review Draft</h2>
               <p className="mt-1 text-sm text-slate-500">Edit this in your own words before sharing.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-500">This is only a draft based on the details you selected. Please make sure it reflects your real experience. Trustit does not post reviews to Google; the Google option opens the business’s official review page for you to review and submit yourself.</p>
               <textarea aria-label="Your editable review draft" value={draft} maxLength={10000} rows={5} onChange={(e) => { setDraft(e.target.value); setCopied(false); }} className="mt-3 w-full rounded-lg border border-slate-300 p-3 text-sm leading-6 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100" />
-              {error && <p role="alert" className="mt-2 text-sm text-rose-700">{error}</p>}{copied && <p role="status" className="mt-2 text-sm text-emerald-700">Draft copied.</p>}
+              {error && <p role="alert" className="mt-2 text-sm text-rose-700">{error}</p>}{copied && <p role="status" className="mt-2 text-sm text-emerald-700">Review copied. Paste it on Google to submit.</p>}
               <button type="button" disabled={isPending} onClick={() => makeDraft(true)} className="mt-3 min-h-11 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800 disabled:opacity-50">{isPending ? "Regenerating…" : "Regenerate Review"}</button>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                <button type="button" disabled={isPending || !draft.trim()} onClick={copyAndGoogle} className="min-h-12 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white disabled:bg-slate-300">Copy Draft &amp; Review on Google Business</button>
-                <button type="button" disabled={isPending || !draft.trim()} onClick={() => { setError(null); setStep("trustit"); setTimeout(() => document.getElementById("trustit-review-form")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0); }} className="min-h-12 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-900">Review on Trustit Platform</button>
+                <button type="button" disabled={isPending || isOpeningGoogle || !draft.trim()} onClick={copyAndGoogle} className="min-h-12 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white disabled:bg-slate-300">{isOpeningGoogle ? "Opening Google Review…" : "Copy Draft & Review on Google Business"}</button>
+                <button type="button" disabled={isPending || isOpeningGoogle || !draft.trim()} onClick={continueOnTrustit} className="min-h-12 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-900">Review on Trustit Platform</button>
               </div>
             </section>}
             {step === "trustit" && <form id="trustit-review-form" onSubmit={submitReview} className="mt-6 border-t border-slate-100 pt-5">
@@ -232,12 +259,13 @@ export default function ReviewExperience({
               <p className="mt-1 text-sm text-slate-600">Your {selectedRating}-star rating is retained.</p>
               <textarea aria-label="Review text" value={draft} maxLength={10000} rows={4} onChange={(e) => setDraft(e.target.value)} className="mt-3 w-full rounded-lg border border-slate-300 p-3 text-sm leading-6" />
               <button type="button" disabled={isPending} onClick={() => makeDraft(true)} className="mt-2 min-h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold">{isPending ? "Regenerating…" : "Regenerate Review"}</button>
-              <label className="mt-5 block text-sm font-semibold text-slate-800">Your Name *</label>
-              <input maxLength={160} value={customerName} onChange={(e) => setCustomerName(e.target.value)} autoComplete="name" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" placeholder="Enter your name" />
+              <label htmlFor="trustit-customer-name" className="mt-5 block text-sm font-semibold text-slate-800">Your Name *</label>
+              <input id="trustit-customer-name" maxLength={160} value={customerName} onChange={(e) => setCustomerName(e.target.value)} autoComplete="name" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" placeholder="Enter your name" />
+              <p className="mt-1 text-xs leading-5 text-slate-500">Your name is stored with this Trustit review and visible to the business. Mobile, family, and occasion details are shared only if you opt in below.</p>
               <label className="mt-4 flex min-h-11 items-center gap-2 text-sm text-slate-800"><input type="checkbox" checked={shareDetails} onChange={(e) => { setShareDetails(e.target.checked); if (!e.target.checked) { setCustomerMobile(""); setBirthday(emptyOccasion()); setAnniversary(emptyOccasion()); setFamily([]); } }} />Want to share some personal details?</label>
               {shareDetails && <div className="mt-2 border-l-2 border-indigo-100 pl-3">
-                <label className="block text-sm font-semibold text-slate-800">Mobile Number *</label>
-                <input type="tel" maxLength={32} value={customerMobile} onChange={(e) => setCustomerMobile(e.target.value)} autoComplete="tel" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" placeholder="Mobile number" />
+                <label htmlFor="trustit-customer-mobile" className="block text-sm font-semibold text-slate-800">Mobile Number *</label>
+                <input id="trustit-customer-mobile" type="tel" maxLength={32} value={customerMobile} onChange={(e) => setCustomerMobile(e.target.value)} autoComplete="tel" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" placeholder="Mobile number" />
                 <div className="mt-3 rounded-lg border border-slate-200 px-3"><OccasionRow label="Birthday" value={birthday} onChange={setBirthday} /><OccasionRow label="Anniversary" value={anniversary} onChange={setAnniversary} /></div>
                 <div className="mt-4 space-y-3">{family.map((member, index) => <fieldset key={index} className="rounded-lg border border-slate-200 p-3"><legend className="px-1 text-sm font-semibold">Family member {index + 1}</legend>
                   <div className="grid gap-2 sm:grid-cols-3"><input maxLength={160} aria-label="Family member name" placeholder="Name *" value={member.name} onChange={(e) => updateFamily(index, (m) => ({ ...m, name: e.target.value }))} className="min-h-10 rounded-md border border-slate-300 px-2 text-sm" /><select aria-label="Family member relation" value={member.relation} onChange={(e) => updateFamily(index, (m) => ({ ...m, relation: e.target.value }))} className="min-h-10 rounded-md border border-slate-300 px-2 text-sm"><option value="">Relation *</option>{relations.map((relation) => <option key={relation} value={relation}>{relation[0].toUpperCase() + relation.slice(1)}</option>)}</select><input type="tel" maxLength={32} aria-label="Family member mobile optional" placeholder="Mobile (optional)" value={member.mobile} onChange={(e) => updateFamily(index, (m) => ({ ...m, mobile: e.target.value }))} className="min-h-10 rounded-md border border-slate-300 px-2 text-sm" /></div>
