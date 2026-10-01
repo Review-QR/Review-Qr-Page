@@ -17,8 +17,12 @@ const BUSINESS_TYPES = [
   "Garage",
   "Library",
   "Restaurant",
-  "Pan Shop",
+  "Sweet Shop",
+  "Bakery",
   "Cafe",
+  "Hotel / Stay",
+  "Laundry",
+  "Pan Shop",
   "Retail",
   "Other",
 ];
