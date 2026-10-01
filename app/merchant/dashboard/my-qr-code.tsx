@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { safeReviewLink } from "@/lib/safe-review-link";
+import { buildTrustitQrImageUrl, buildTrustitReviewUrl } from "@/lib/trustit-qr";
 
 type MyQrCodeProps = {
   businessId: string;
@@ -51,12 +52,8 @@ export default function MyQrCode({
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
   const usable = isQrUsable(qrStatus, expiry);
   const safeLink = safeReviewLink(reviewLink);
-  const scanUrl = origin
-    ? `${origin}/r/${encodeURIComponent(businessId)}`
-    : "";
-  const imageUrl = scanUrl
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=400x400&margin=12&data=${encodeURIComponent(scanUrl)}`
-    : "";
+  const scanUrl = buildTrustitReviewUrl(origin, businessId);
+  const imageUrl = buildTrustitQrImageUrl(scanUrl);
   const statusLabel = usable
     ? "Active"
     : expiry && expiry < new Date().toISOString().slice(0, 10)

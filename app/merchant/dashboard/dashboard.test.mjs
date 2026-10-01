@@ -95,8 +95,11 @@ test("subscription and payment summary use existing records scoped to the authen
 test("QR card reuses the existing business scan identity and exposes view, download, and test actions", async () => {
   const page = await read("./page.tsx");
   const qr = await read("./my-qr-code.tsx");
+  const qrUtility = await read("../../../lib/trustit-qr.ts");
   assert.match(page, /<MyQrCode[\s\S]*?businessId=\{merchant\.businessId\}/);
-  assert.match(qr, /\/r\/\$\{encodeURIComponent\(businessId\)\}/);
+  assert.match(qr, /buildTrustitReviewUrl\(origin, businessId\)/);
+  assert.match(qrUtility, /new URL\(`\/r\/\$\{encodeURIComponent\(businessId\)\}`/);
+  assert.match(qrUtility, /api\.qrserver\.com\/v1\/create-qr-code/);
   assert.match(qr, /Download QR/);
   assert.match(qr, /Test Scan/);
   assert.match(page, /\/merchant\/dashboard\/qr/);
@@ -120,4 +123,52 @@ test("dashboard is responsive and navigation keeps existing merchant routes", as
   assert.match(page, /xl:grid-cols/);
   for (const path of ["business", "qr", "reviews", "subscription", "payments"]) assert.ok(layout.includes(`/merchant/dashboard/${path}`));
   assert.match(layout, /label: "Analytics"/);
+});
+
+test("My QR page uses the authenticated merchant identity and loads the saved template preference", async () => {
+  const page = await read("./qr/page.tsx");
+  const auth = await read("../../../lib/merchant-auth.ts");
+  assert.match(page, /await requireActiveMerchant\(\)/);
+  assert.match(page, /businessId=\{merchant\.businessId\}/);
+  assert.match(page, /businessName=\{merchant\.businessName\}/);
+  assert.match(page, /initialTemplate=\{merchant\.qrTemplate\}/);
+  assert.match(auth, /qr_template/);
+  assert.match(auth, /qrTemplate: business\.qr_template \|\| "template_1"/);
+});
+
+test("five distinct Trustit designs share one authenticated merchant QR destination", async () => {
+  const gallery = await read("./qr/qr-template-gallery.tsx");
+  const definitions = await read("./qr/templates.ts");
+  const qrUtility = await read("../../../lib/trustit-qr.ts");
+  assert.equal((definitions.match(/id: "template_[1-5]"/g) ?? []).length, 5);
+  assert.match(gallery, /buildTrustitReviewUrl\(origin, businessId\)/);
+  assert.match(gallery, /buildTrustitQrImageUrl\(reviewRoute\)/);
+  assert.match(qrUtility, /\/r\/\$\{encodeURIComponent\(businessId\)\}/);
+  assert.match(gallery, /flex snap-x snap-mandatory gap-4 overflow-x-auto/);
+  assert.match(gallery, /Preview/);
+  assert.match(gallery, /Choose Your QR Template/);
+  assert.match(gallery, /Merchant-specific preview/);
+  const trustitMarks = gallery.slice(gallery.indexOf("function TrustitMark"), gallery.indexOf("function merchantInitials"));
+  assert.equal((trustitMarks.match(/templateId === "template_[1-5]"/g) ?? []).length, 5);
+  assert.match(qrUtility, /api\.qrserver\.com\/v1\/create-qr-code/);
+  assert.match(gallery, /object-contain/);
+  assert.match(gallery, /Enjoyed your visit\? Share your honest experience/);
+});
+
+test("template preference save is authenticated, validated, and bound to the session merchant", async () => {
+  const action = await read("./qr/actions.ts");
+  const migration = await read("../../../supabase/migrations/20261001170000_merchant_qr_template_preference.sql");
+  assert.match(action, /getActiveMerchant\(\)/);
+  assert.match(action, /isQrTemplateId\(templateId\)/);
+  assert.match(action, /rpc\("set_merchant_qr_template", \{ p_template_id: templateId \}\)/);
+  assert.doesNotMatch(action, /businessId\s*:/);
+  assert.match(migration, /qr_template text not null default 'template_1'/i);
+  assert.match(migration, /business\.id = account\.business_id/i);
+  assert.match(migration, /account\.user_id = \(select auth\.uid\(\)\)/i);
+  assert.match(migration, /business\.merchant_status = 'active'/i);
+  assert.match(migration, /business\.deleted_at is null/i);
+  assert.match(migration, /set search_path = ''/i);
+  assert.match(migration, /revoke all on function public\.set_merchant_qr_template\(text\)\s+from public, anon, authenticated, service_role/i);
+  assert.match(migration, /grant execute on function public\.set_merchant_qr_template\(text\) to authenticated/i);
+  assert.doesNotMatch(migration, /enable row level security|create policy|grant .* to anon/i);
 });

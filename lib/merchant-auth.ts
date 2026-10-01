@@ -15,6 +15,7 @@ export type MerchantContext = {
   plan: string | null;
   registrationDate: string | null;
   qrStatus: string | null;
+  qrTemplate: string;
   expiry: string | null;
   reviewLink: string | null;
 };
@@ -36,7 +37,7 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
 
     const { data: business, error: businessError } = await supabase
       .from("businesses")
-      .select("id, name, owner, phone, type, address, status, merchant_status, plan, registration_date, qr_status, expiry, review_link, deleted_at")
+      .select("id, name, owner, phone, type, address, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, deleted_at")
       .eq("id", mapping.business_id)
       .eq("merchant_status", "active")
       .is("deleted_at", null)
@@ -55,6 +56,7 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
       plan: business.plan,
       registrationDate: business.registration_date,
       qrStatus: business.qr_status,
+      qrTemplate: business.qr_template || "template_1",
       expiry: business.expiry,
       reviewLink: business.review_link,
     };
