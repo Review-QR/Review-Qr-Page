@@ -81,7 +81,7 @@ export default async function MerchantInvitePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {(invites ?? []).map((invite: any) => (
+              {(invites ?? []).map((invite) => (
                 <tr key={invite.id}>
                   <td className="px-3 py-4">
                     <div className="font-semibold text-slate-800">{invite.businesses?.name ?? "—"}</div>
