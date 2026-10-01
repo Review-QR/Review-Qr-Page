@@ -10,6 +10,7 @@ type ExportAction = "png" | "pdf" | "print";
 type Props = {
   businessId: string;
   businessName: string;
+  businessType: string | null;
   qrStatus: string | null;
   expiry: string | null;
   initialTemplate: string;
@@ -44,8 +45,57 @@ function FiveStars({ dark = false, compact = false }: { dark?: boolean; compact?
   return <span className={`font-bold tracking-[0.12em] text-amber-500 ${dark ? "text-amber-300" : ""} ${compact ? "text-sm" : "text-xl"}`} aria-label="Five stars">★★★★★</span>;
 }
 
-function CategoryArt({ kind, className = "" }: { kind: "restaurant" | "hotel" | "laundry" | "retail" | "salon"; className?: string }) {
+type CategoryArtKind = "food" | "hotel" | "laundry" | "retail" | "salon" | "universal";
+
+type BusinessCategoryProfile = {
+  label: string;
+  message: string;
+  artKind: CategoryArtKind;
+};
+
+function getBusinessCategoryProfile(businessType: string | null): BusinessCategoryProfile {
+  const value = String(businessType ?? "").trim().toLowerCase();
+
+  if (/(sweet|mithai|bakery|cake|dessert|restaurant|food|cafe|cafeteria|dhaba|bistro|fast food)/.test(value)) {
+    if (/(sweet|mithai|bakery|cake|dessert)/.test(value)) {
+      return { label: "Sweet Shop · Sweets & Treats", message: "Loved our sweets? Tell us about your experience.", artKind: "food" };
+    }
+    if (/(cafe|cafeteria|dhaba|bistro|fast food)/.test(value)) {
+      return { label: "Cafe · Food & Dining", message: "Loved your visit? Tell us how we did.", artKind: "food" };
+    }
+    return { label: "Restaurant · Dining", message: "Loved your meal? Tell us how we did.", artKind: "food" };
+  }
+
+  if (/(hotel|stay|resort|lodge|guest house|homestay|hospitality)/.test(value)) {
+    return { label: "Hotel · Stay · Hospitality", message: "Thank you for staying with us. How was your visit?", artKind: "hotel" };
+  }
+
+  if (/(laundry|dry clean|dry-clean|cleaning|wash)/.test(value)) {
+    return { label: "Laundry · Fresh Care", message: "Fresh clothes, fresh feedback. Share your experience.", artKind: "laundry" };
+  }
+
+  if (/(salon|beauty|spa|parlour|parlor|barber|hair)/.test(value)) {
+    return { label: "Salon · Beauty · Care", message: "Loved your new look? We’d love your honest feedback.", artKind: "salon" };
+  }
+
+  if (/(retail|shop|store|grocery|market|supermarket|pan shop|stationery|boutique)/.test(value)) {
+    return { label: "Retail · Shop Local", message: "Thanks for shopping with us. Tell us about your experience.", artKind: "retail" };
+  }
+
+  return { label: "Customer Experience", message: "Thank you for visiting us. We’d love your feedback.", artKind: "universal" };
+}
+
+function CategoryArt({ kind, className = "" }: { kind: CategoryArtKind; className?: string }) {
   const line = { fill: "none", stroke: "currentColor", strokeWidth: 3, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+  if (kind === "food") return (
+    <svg aria-hidden="true" viewBox="0 0 170 100" className={className}>
+      <circle cx="92" cy="54" r="30" fill="#fffdf8" stroke="currentColor" strokeWidth="3" opacity=".95" />
+      <path d="M66 54h52M92 28c-10 10-15 20-15 30s5 20 15 26c10-6 15-16 15-26s-5-20-15-30Z" fill="none" stroke="currentColor" strokeWidth="2.5" opacity=".45" />
+      <path d="M72 49c10-11 29-11 40 0-10 12-30 12-40 0Z" fill="#d18b4a" opacity=".9" />
+      <path d="M25 18v63m-7-63v20c0 7 14 7 14 0V18m-7 20v43m74-63v19m0-19c8 7 12 15 12 24m0 0v39" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      <path d="M125 30c8-7 17-7 23 0v25h-23Zm0 25h23m-12-25v25" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+    </svg>
+  );
   if (kind === "restaurant") return (
     <svg aria-hidden="true" viewBox="0 0 150 100" className={className}>
       <g color="currentColor"><circle cx="80" cy="53" r="35" fill="#fffdf8" stroke="currentColor" strokeWidth="3" opacity=".95" /><circle cx="80" cy="53" r="25" {...line} opacity=".45" /><circle cx="80" cy="53" r="16" {...line} opacity=".7" /><path d="M18 18v63m-8-63v21c0 8 16 8 16 0V18m-8 21v42m100-63c-12 19-12 34 0 39v24m0-63v39m18-39v63" {...line} /></g>
@@ -76,11 +126,19 @@ function CategoryArt({ kind, className = "" }: { kind: "restaurant" | "hotel" | 
       <path d="m153 33 19 8v41l-19 9-19-9V41Z" fill="#fff1e2" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" /><path d="M145 42c0-13 16-13 16 0m-10 35 5 4 8-9" {...line} />
     </svg>
   );
-  return (
+  if (kind === "salon") return (
     <svg aria-hidden="true" viewBox="0 0 190 120" className={className}>
       <path d="M38 108V28h75v80m-86 0h96" fill="#fff" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /><path d="M52 42h47v43H52z" fill="#fbe2df" stroke="currentColor" strokeWidth="3" /><path d="M62 52h27v25H62z" fill="#d5e7e1" stroke="currentColor" strokeWidth="2" />
       <path d="m129 24 28 17-26 43-28-17Zm-11 52-22 34m16-9 11 7m-4-27 11 7" fill="#f8c7bf" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
       <path d="m24 37 21 9m-3-16 4 29m0-29-4 29m-7-23 14 2m-15 8 16 2" {...line} /><path d="M139 91h28v17h-28z" fill="#e8c6a0" stroke="currentColor" strokeWidth="3" /><path d="M145 90c0-10 16-10 16 0" {...line} />
+    </svg>
+  );
+  return (
+    <svg aria-hidden="true" viewBox="0 0 190 120" className={className}>
+      <path d="M28 102V48h134v54M18 102h154M42 48V28h34v20m38 0V28h34v20" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
+      <path d="M51 68h26v24H51zm36 0h26v24H87zm36 0h16v24h-16z" fill="currentColor" opacity=".15" stroke="currentColor" strokeWidth="2" />
+      <circle cx="145" cy="31" r="9" fill="#fff" stroke="currentColor" strokeWidth="3" />
+      <path d="M141 31h8m-4-4v8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -104,16 +162,16 @@ function GoogleMessage({ dark = false, compact = false }: { dark?: boolean; comp
   return <div className={`flex flex-wrap items-center justify-center gap-x-2 gap-y-1 ${compact ? "text-[9px]" : "text-xs"}`}><GoogleReviewMark dark={dark} compact={compact} /><span className={dark ? "text-slate-300" : "text-slate-600"}>Also share your feedback on Google</span></div>;
 }
 
-function RestaurantPoster({ name, businessId, qrUrl, usable, compact }: PosterContentProps) {
+function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
   return (
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -right-10 top-28 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
       <TrustitMark templateId="template_1" className="relative z-10 text-emerald-800" compact={compact} />
-      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-16" : "h-24"}`}><CategoryArt kind="restaurant" className={compact ? "h-14 w-28 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">Restaurant · Dining</p>
+      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-16" : "h-24"}`}><CategoryArt kind={category.artKind} className={compact ? "h-14 w-28 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
-      <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>Loved your meal? Tell us how we did.</p>
+      <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
       <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-emerald-800 font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       <div className="mt-3"><GoogleMessage compact={compact} /></div>
@@ -122,16 +180,16 @@ function RestaurantPoster({ name, businessId, qrUrl, usable, compact }: PosterCo
   );
 }
 
-function HotelPoster({ name, businessId, qrUrl, usable, compact }: PosterContentProps) {
+function HotelPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
   return (
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -left-16 top-20 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
       <TrustitMark templateId="template_2" className="relative z-10 text-[#d9c28e]" compact={compact} />
-      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-16" : "h-24"}`}><CategoryArt kind="hotel" className={compact ? "h-14 w-32 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">Hotel · Stay · Hospitality</p>
+      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-16" : "h-24"}`}><CategoryArt kind={category.artKind} className={compact ? "h-14 w-32 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>
       <BusinessName name={name} dark compact={compact} />
       <FiveStars dark compact={compact} />
-      <p className={`mt-1 max-w-xs text-slate-100 ${compact ? "text-[11px]" : "text-sm"}`}>Thank you for staying with us. How was your visit?</p>
+      <p className={`mt-1 max-w-xs text-slate-100 ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
       <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-[#e5ce98] font-bold text-[#183a45] ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       <div className="mt-3"><GoogleMessage dark compact={compact} /></div>
@@ -140,16 +198,16 @@ function HotelPoster({ name, businessId, qrUrl, usable, compact }: PosterContent
   );
 }
 
-function LaundryPoster({ name, businessId, qrUrl, usable, compact }: PosterContentProps) {
+function LaundryPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
   return (
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eef8fb] text-center text-[#183e55] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute inset-x-0 bottom-24 h-20 bg-[radial-gradient(ellipse_at_center,#cae8f1_0%,transparent_70%)]" />
       <TrustitMark templateId="template_3" className="relative z-10 text-[#237c9d]" compact={compact} />
-      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-16" : "h-24"}`}><CategoryArt kind="laundry" className={compact ? "h-14 w-28 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">Laundry · Fresh care</p>
+      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-16" : "h-24"}`}><CategoryArt kind={category.artKind} className={compact ? "h-14 w-28 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
+      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
-      <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>Fresh clothes, fresh feedback. Share your experience.</p>
+      <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
       <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-[#247f9e] font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       <div className="mt-3"><GoogleMessage compact={compact} /></div>
@@ -158,17 +216,17 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact }: PosterConte
   );
 }
 
-function RetailPoster({ name, businessId, qrUrl, usable, compact }: PosterContentProps) {
+function RetailPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
   return (
     <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-hidden bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 w-2 bg-[#cf963e]" />
       <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
         <TrustitMark templateId="template_4" className="text-[#846021]" compact={compact} />
-        <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a07127] ${compact ? "text-[9px]" : "text-xs"}`}>Retail · Shop local</p>
+        <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a07127] ${compact ? "text-[9px]" : "text-xs"}`}>{category.label}</p>
         <BusinessName name={name} landscape compact={compact} />
         <FiveStars compact={compact} />
-        <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>Thanks for shopping with us. Tell us about your experience.</p>
-        <CategoryArt kind="retail" className={`mt-2 text-[#9d742f] ${compact ? "h-9 w-20" : "h-24 w-40"}`} />
+        <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>{category.message}</p>
+        <CategoryArt kind={category.artKind} className={`mt-2 text-[#9d742f] ${compact ? "h-9 w-20" : "h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#895d1d] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
         <div className="mt-2"><GoogleMessage compact={compact} /></div>
         {!compact && <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
@@ -182,17 +240,17 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact }: PosterConten
   );
 }
 
-function SalonPoster({ name, businessId, qrUrl, usable, compact }: PosterContentProps) {
+function SalonPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
   return (
     <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-hidden bg-[#fff3f1] text-[#432b35] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 w-2 bg-[#bb7189]" />
       <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
         <TrustitMark templateId="template_5" className="text-[#99586f]" compact={compact} />
-        <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a35070] ${compact ? "text-[9px]" : "text-xs"}`}>Salon · Beauty · Care</p>
+        <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a35070] ${compact ? "text-[9px]" : "text-xs"}`}>{category.label}</p>
         <BusinessName name={name} landscape compact={compact} />
         <FiveStars compact={compact} />
-        <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>Loved your new look? We’d love your honest feedback.</p>
-        <CategoryArt kind="salon" className={`mt-2 text-[#a65c79] ${compact ? "h-9 w-20" : "h-24 w-40"}`} />
+        <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>{category.message}</p>
+        <CategoryArt kind={category.artKind} className={`mt-2 text-[#a65c79] ${compact ? "h-9 w-20" : "h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#a45170] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
         <div className="mt-2"><GoogleMessage compact={compact} /></div>
         {!compact && <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
@@ -206,17 +264,18 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact }: PosterContent
   );
 }
 
-type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean };
+type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean; category: BusinessCategoryProfile };
 
-function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsable, compact = false }: {
+function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsable, category, compact = false }: {
   templateId: QrTemplateId;
   businessName: string;
   businessId: string;
   qrUrl: string;
   qrUsable: boolean;
+  category: BusinessCategoryProfile;
   compact?: boolean;
 }) {
-  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact };
+  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact, category };
   const template = qrTemplates.find((item) => item.id === templateId)!;
   const aspect = template.ratio === "3 / 2" ? "aspect-[3/2]" : "aspect-[2/3]";
   return (
@@ -235,7 +294,7 @@ function isQrUsable(status: string | null, expiry: string | null) {
   return status?.trim().toLowerCase() === "active" && (!expiry || expiry >= today);
 }
 
-export default function QrTemplateGallery({ businessId, businessName, qrStatus, expiry, initialTemplate }: Props) {
+export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate }: Props) {
   const [origin, setOrigin] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<QrTemplateId>(qrTemplates.some((template) => template.id === initialTemplate) ? initialTemplate as QrTemplateId : "template_1");
   const [previewTemplate, setPreviewTemplate] = useState<QrTemplateId | null>(null);
@@ -248,6 +307,7 @@ export default function QrTemplateGallery({ businessId, businessName, qrStatus, 
   const reviewRoute = buildTrustitReviewUrl(origin, businessId);
   const qrUrl = buildTrustitQrImageUrl(reviewRoute);
   const qrUsable = isQrUsable(qrStatus, expiry);
+  const category = getBusinessCategoryProfile(businessType);
   const exportTemplateId = previewTemplate ?? selectedTemplate;
   const exportTemplate = qrTemplates.find((template) => template.id === exportTemplateId)!;
   const exportDimensions = getQrTemplatePrintDimensions(exportTemplateId);
@@ -453,7 +513,7 @@ export default function QrTemplateGallery({ businessId, businessName, qrStatus, 
         className="pointer-events-none fixed -left-[20000px] top-0 -z-10 overflow-hidden"
         style={{ width: exportTemplate.ratio === "3 / 2" ? "660px" : "440px" }}
       >
-        <PosterByTemplate templateId={exportTemplateId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} />
+        <PosterByTemplate templateId={exportTemplateId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} />
       </div>
 
       {previewTemplate && (
@@ -464,7 +524,7 @@ export default function QrTemplateGallery({ businessId, businessName, qrStatus, 
               <button type="button" onClick={() => setPreviewTemplate(null)} className="rounded-full border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" aria-label="Close template preview">Close</button>
             </div>
             <div data-qr-preview="true" className={`mx-auto w-full ${previewTemplate === "template_4" || previewTemplate === "template_5" ? "max-w-5xl" : "max-w-[440px]"}`}>
-              <PosterByTemplate templateId={previewTemplate} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} />
+              <PosterByTemplate templateId={previewTemplate} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} />
             </div>
             {exportButtons(previewTemplate, "mt-4")}
             <button type="button" onClick={() => { chooseTemplate(previewTemplate); setPreviewTemplate(null); }} disabled={isPending || selectedTemplate === previewTemplate} className="mt-2 w-full rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800 disabled:opacity-60">{selectedTemplate === previewTemplate ? "This is your selected design" : isPending ? "Saving…" : "Select this design"}</button>
