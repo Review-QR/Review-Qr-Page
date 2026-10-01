@@ -5,6 +5,17 @@ import { createSupabaseActionClient } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { merchantRegistrationUrl, createMerchantInviteToken } from "./invite-utils";
 
+export type MerchantInviteRow = {
+  id: string;
+  business_id: string;
+  status: "pending" | "used" | "expired" | "revoked";
+  expires_at: string;
+  created_at: string;
+  used_at: string | null;
+  revoked_at: string | null;
+  businesses: { name: string; owner: string | null; phone: string | null } | null;
+};
+
 export type MerchantInviteActionState = {
   success: boolean;
   message: string;
@@ -106,7 +117,7 @@ export async function revokeMerchantInviteAction(inviteId: string): Promise<Merc
   }
 }
 
-export async function listMerchantInvites() {
+export async function listMerchantInvites(): Promise<MerchantInviteRow[] | null> {
   const actorUserId = await getActiveAdmin();
   if (!actorUserId) return null;
 
@@ -124,5 +135,5 @@ export async function listMerchantInvites() {
     .limit(100);
 
   if (error) return [];
-  return data ?? [];
+  return (data ?? []) as unknown as MerchantInviteRow[];
 }
