@@ -9,6 +9,7 @@ type MyQrCodeProps = {
   qrStatus: string | null;
   expiry: string | null;
   reviewLink: string | null;
+  totalScans?: number;
 };
 
 function isQrUsable(qrStatus: string | null, expiry: string | null) {
@@ -43,6 +44,7 @@ export default function MyQrCode({
   qrStatus,
   expiry,
   reviewLink,
+  totalScans,
 }: MyQrCodeProps) {
   const [origin, setOrigin] = useState("");
   const [message, setMessage] = useState("");
@@ -213,9 +215,14 @@ export default function MyQrCode({
                 </span>
               </dd>
             </div>
+            {totalScans !== undefined && <div className="rounded-xl border border-slate-200 p-4 sm:col-span-2 md:col-span-1">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Total Scans</dt>
+              <dd className="mt-1 font-semibold text-slate-900">{Number.isFinite(totalScans) ? totalScans.toLocaleString("en-IN") : "0"}</dd>
+            </div>}
           </dl>
 
           <div className="flex flex-wrap gap-2">
+            {scanUrl && usable && <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Test Scan</a>}
             <button
               type="button"
               onClick={() => void downloadQr()}

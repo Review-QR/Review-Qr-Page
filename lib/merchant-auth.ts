@@ -36,9 +36,10 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
 
     const { data: business, error: businessError } = await supabase
       .from("businesses")
-      .select("id, name, owner, phone, type, address, status, merchant_status, plan, registration_date, qr_status, expiry, review_link")
+      .select("id, name, owner, phone, type, address, status, merchant_status, plan, registration_date, qr_status, expiry, review_link, deleted_at")
       .eq("id", mapping.business_id)
       .eq("merchant_status", "active")
+      .is("deleted_at", null)
       .maybeSingle();
     if (businessError || !business) return null;
 

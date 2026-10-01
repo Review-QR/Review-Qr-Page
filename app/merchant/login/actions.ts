@@ -53,6 +53,7 @@ export async function merchantSignInAction(
       .select("id")
       .eq("id", mapping.business_id)
       .eq("merchant_status", "active")
+      .is("deleted_at", null)
       .maybeSingle();
     if (businessError || !business) {
       await supabase.auth.signOut();

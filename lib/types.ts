@@ -16,4 +16,6 @@ export type Business = {
   created_at?: string | null;
   registration_date?: string | null;
   merchant_status?: string | null;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
 };

@@ -2,41 +2,67 @@ import Link from "next/link";
 import { appConfig } from "@/lib/config";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
+import MyQrCode from "./my-qr-code";
+import ScanAnalytics from "./scan-analytics";
 
 export const dynamic = "force-dynamic";
 
-function daysUntilExpiry(expiry: string | null) {
-  if (!expiry || !/^\d{4}-\d{2}-\d{2}$/.test(expiry)) return null;
-  const expiryTime = Date.parse(`${expiry}T00:00:00Z`);
-  if (!Number.isFinite(expiryTime) || new Date(expiryTime).toISOString().slice(0, 10) !== expiry) return null;
-  const today = new Date().toISOString().slice(0, 10);
-  return Math.trunc((expiryTime - Date.parse(`${today}T00:00:00Z`)) / 86_400_000);
+type DashboardStats = {
+  total_scans: number | string;
+  this_month_scans: number | string;
+  total_reviews: number | string;
+  average_rating: number | string | null;
+  rating_5_count: number | string;
+  rating_4_count: number | string;
+  rating_3_count: number | string;
+  rating_2_count: number | string;
+  rating_1_count: number | string;
+  experience_counts: unknown;
+};
+
+type Review = {
+  review_id: string;
+  customer_name: string | null;
+  rating: number;
+  review_text: string;
+  selected_experiences: string[];
+  submitted_at: string;
+};
+
+type Payment = { cashfree_order_id: string; amount: number | string; currency: string; payment_status: string; created_at: string };
+type ExperienceCount = { label: string; count: number };
+
+function count(value: number | string | null | undefined) {
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 }
 
-function statusTone(status: string | null) {
-  switch (status?.trim().toLowerCase()) {
-    case "active": return "bg-emerald-100 text-emerald-800";
-    case "pending": return "bg-amber-100 text-amber-800";
-    case "expired":
-    case "suspended": return "bg-rose-100 text-rose-800";
-    default: return "bg-slate-100 text-slate-700";
-  }
+function dateLabel(value: string | null | undefined) {
+  if (!value) return "—";
+  const date = new Date(value.length === 10 ? `${value}T00:00:00Z` : value);
+  return Number.isFinite(date.getTime())
+    ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeZone: "Asia/Kolkata" }).format(date)
+    : "—";
 }
 
-function SummaryCard({ label, value, detail }: { label: string; value: string; detail?: string }) {
-  return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-sm font-medium text-slate-500">{label}</p>
-      <p className="mt-2 text-xl font-semibold text-slate-900">{value}</p>
-      {detail && <p className="mt-1 text-sm text-slate-500">{detail}</p>}
-    </div>
-  );
+function amountLabel(amount: number | string | null | undefined, currency = "INR") {
+  const value = typeof amount === "number" ? amount : Number(amount);
+  if (!Number.isFinite(value)) return "—";
+  return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
+}
+
+function infoField(label: string, value: string | null | undefined) {
+  return <div key={label} className="rounded-xl border border-slate-200 px-4 py-3"><dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt><dd className="mt-1 break-words text-sm font-semibold text-slate-900">{value?.trim() || "—"}</dd></div>;
+}
+
+function StatCard({ label, value, detail }: { label: string; value: string; detail?: string }) {
+  return <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"><p className="text-sm font-medium text-slate-500">{label}</p><p className="mt-2 text-2xl font-bold text-slate-950">{value}</p>{detail && <p className="mt-1 text-sm text-slate-500">{detail}</p>}</div>;
 }
 
 const actions = [
-  { href: "/merchant/dashboard/business", title: "My Business", description: "View your registered business details." },
-  { href: "/merchant/dashboard/qr", title: "My QR Code", description: "Download, print, or share your Trustit scan QR." },
+  { href: "/merchant/dashboard/qr", title: "View QR", description: "View and download your Trustit QR." },
   { href: "/merchant/dashboard/reviews", title: "Customer Reviews", description: "Read customer feedback shared on Trustit." },
+  { href: "/merchant/dashboard/business", title: "My Business", description: "View your registered business details." },
   { href: "/merchant/dashboard/subscription", title: "Subscription", description: "Review your plan and renewal options." },
   { href: "/merchant/dashboard/payments", title: "Payments", description: "View payments for your business." },
 ];
@@ -44,62 +70,70 @@ const actions = [
 export default async function MerchantDashboardPage() {
   const merchant = await requireActiveMerchant();
   const supabase = await createMerchantServerClient();
-  const { data: currentSubscription } = await supabase
-    .from("subscriptions")
-    .select("auto_renew")
-    .eq("business_id", merchant.businessId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const [statsResult, activityResult, reviewsResult, subscriptionResult, paymentsResult] = await Promise.all([
+    supabase.rpc("get_merchant_dashboard_stats", { p_business_id: merchant.businessId }),
+    supabase.rpc("get_merchant_scan_activity", { p_business_id: merchant.businessId, p_days: 90 }),
+    supabase.rpc("get_merchant_trustit_reviews", { p_business_id: merchant.businessId }).order("submitted_at", { ascending: false }).limit(5),
+    supabase.from("subscriptions").select("amount, status, starts_at, expires_at, auto_renew, created_at").eq("business_id", merchant.businessId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+    supabase.from("payment_records").select("cashfree_order_id, amount, currency, payment_status, created_at").eq("business_id", merchant.businessId).order("created_at", { ascending: false }).limit(5),
+  ]);
 
-  const expiryDays = daysUntilExpiry(merchant.expiry);
-  const expiryLabel = expiryDays === null
-    ? "Not set"
-    : expiryDays < 0
-      ? `Expired ${Math.abs(expiryDays)} day${Math.abs(expiryDays) === 1 ? "" : "s"} ago`
-      : expiryDays === 0
-        ? "Expires today"
-        : `${expiryDays} day${expiryDays === 1 ? "" : "s"} remaining`;
+  const stats = (statsResult.data?.[0] ?? null) as DashboardStats | null;
+  const activity = activityResult.error ? null : (activityResult.data ?? []) as { scan_date: string; scans: number | string }[];
+  const reviews = reviewsResult.error ? null : (reviewsResult.data ?? []) as Review[];
+  const subscription = subscriptionResult.data;
+  const payments = paymentsResult.error ? null : (paymentsResult.data ?? []) as Payment[];
+  const planConfig = Object.values(appConfig.plans).find((plan) => plan.name.toLowerCase() === merchant.plan?.trim().toLowerCase());
+  const planPrice = subscription?.amount ?? planConfig?.price;
+  const subscriptionStatus = subscription?.status || merchant.businessStatus || "Unknown";
+  const statusClass = String(subscriptionStatus).toLowerCase() === "active" ? "bg-emerald-100 text-emerald-800" : String(subscriptionStatus).toLowerCase() === "expired" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800";
+  const experienceCounts = Array.isArray(stats?.experience_counts) ? stats.experience_counts as ExperienceCount[] : [];
+  const ratingCounts = [5, 4, 3, 2, 1].map((rating) => ({
+    rating,
+    total: count(stats?.[`rating_${rating}_count` as keyof DashboardStats] as number | string | undefined),
+  }));
+  const totalReviews = count(stats?.total_reviews);
+  const average = stats?.average_rating == null ? null : Number(stats.average_rating);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-7">
       <section className="rounded-3xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-white p-6 shadow-sm sm:p-8">
-        <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">Merchant dashboard</p>
-        <h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
-          Welcome, {merchant.ownerName?.trim() || merchant.businessName}
-        </h1>
-        <p className="mt-2 text-slate-600">Here’s an overview of {merchant.businessName}.</p>
-        <div className="mt-5 flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">Active Merchant</span>
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusTone(merchant.businessStatus)}`}>
-            Business: {merchant.businessStatus?.trim() || "Unknown"}
-          </span>
-          <span className="font-mono text-xs text-slate-500">Business ID: {merchant.businessId}</span>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div><p className="text-sm font-semibold uppercase tracking-wider text-blue-700">Merchant dashboard</p><h1 className="mt-2 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">{merchant.businessName}</h1><p className="mt-1 font-mono text-sm text-slate-600">{merchant.businessId}</p><span className="mt-3 inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">● {merchant.merchantStatus}</span></div>
+          <div className="rounded-2xl border border-slate-200 bg-white/90 px-5 py-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Current Plan</p><p className="mt-1 text-lg font-bold text-slate-900">{merchant.plan || "—"}</p><p className="mt-2 text-sm text-slate-600">Expiry: {dateLabel(subscription?.expires_at ?? merchant.expiry)}</p></div>
         </div>
       </section>
 
-      <section aria-label="Business summary" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <SummaryCard label="Current plan" value={merchant.plan?.trim() || "—"} />
-        <SummaryCard label="QR status" value={merchant.qrStatus?.trim() || "—"} />
-        <SummaryCard label="Expiry date" value={merchant.expiry || "—"} detail={expiryLabel} />
-        <SummaryCard label="Renewal status" value={currentSubscription?.auto_renew === null || currentSubscription?.auto_renew === undefined ? "—" : currentSubscription.auto_renew ? "On" : "Off"} />
+      <section aria-label="Merchant statistics" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard label="Total Scans" value={stats ? count(stats.total_scans).toLocaleString("en-IN") : "—"} />
+        <StatCard label="This Month's Scans" value={stats ? count(stats.this_month_scans).toLocaleString("en-IN") : "—"} />
+        <StatCard label="Total Reviews" value={stats ? totalReviews.toLocaleString("en-IN") : "—"} detail={stats && totalReviews === 0 ? "No reviews yet" : undefined} />
+        <StatCard label="Average Rating" value={average !== null && Number.isFinite(average) ? `${average.toFixed(1)} / 5` : "— / 5"} detail={stats && totalReviews === 0 ? "No reviews yet" : undefined} />
       </section>
 
-      <section>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-slate-950">Quick actions</h2>
-          <p className="mt-1 text-sm text-slate-500">Manage your business, QR code, plan, and payments.</p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {actions.map((action) => (
-            <Link key={action.href} href={action.href} className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md">
-              <span className="text-base font-semibold text-slate-900 group-hover:text-blue-700">{action.title}</span>
-              <span className="mt-1 block text-sm text-slate-500">{action.description}</span>
-              <span className="mt-4 inline-block text-sm font-semibold text-blue-700">Open <span aria-hidden="true">→</span></span>
-            </Link>
-          ))}
-        </div>
+      {!statsResult.error && !stats ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800" role="status">Dashboard analytics are not available for this merchant account.</p> : null}
+
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
+        <ScanAnalytics activity={activity ?? []} />
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">REVIEW SUMMARY</p><h2 className="mt-1 text-lg font-bold text-slate-900">Customer ratings</h2><div className="mt-3 flex items-end gap-2"><strong className="text-3xl text-slate-950">{average !== null && Number.isFinite(average) ? average.toFixed(1) : "—"}</strong><span className="pb-1 text-sm text-slate-500">/ 5 · {totalReviews} reviews</span></div><div className="mt-5 space-y-3">{ratingCounts.map(({ rating, total }) => <div key={rating} className="flex items-center gap-3 text-sm"><span className="w-14 shrink-0 text-amber-600">{"★".repeat(rating)}{"☆".repeat(5 - rating)}</span><div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-amber-400" style={{ width: `${totalReviews ? (total / totalReviews) * 100 : 0}%` }} /></div><span className="w-8 text-right font-medium text-slate-700">{total}</span></div>)}</div></section>
       </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">CUSTOMER EXPERIENCE</p><h2 className="mt-1 text-lg font-bold text-slate-900">Selected experience points</h2>{!stats || experienceCounts.length === 0 ? <p className="mt-5 rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">No customer feedback yet.</p> : <ol className="mt-4 space-y-3">{experienceCounts.map((item) => <li key={item.label} className="flex items-center justify-between gap-4 border-b border-slate-100 pb-3 last:border-0"><span className="text-sm font-medium text-slate-800">{item.label}</span><span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-800">{count(item.count)}</span></li>)}</ol>}</section>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">LATEST FEEDBACK</p><h2 className="mt-1 text-lg font-bold text-slate-900">Recent Reviews</h2></div><Link href="/merchant/dashboard/reviews" className="shrink-0 text-sm font-semibold text-blue-700 hover:text-blue-900">View All Reviews →</Link></div>{reviews === null ? <p className="mt-4 text-sm text-rose-700">Reviews are temporarily unavailable.</p> : reviews.length === 0 ? <p className="mt-4 rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">No reviews yet.</p> : <div className="mt-4 space-y-3">{reviews.map((review) => <article key={review.review_id} className="rounded-xl border border-slate-100 p-4"><p className="text-sm font-semibold text-slate-900">Customer: {review.customer_name || "Name not shared"}</p><p className="mt-1 text-sm font-semibold text-amber-600" aria-label={`${review.rating} out of 5 stars`}>{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)} <span className="text-slate-700">{review.rating}/5</span></p><p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700"><strong>Review:</strong> {review.review_text}{review.selected_experiences?.length > 0 && <strong className="ml-2 text-slate-900">{review.selected_experiences.map((point) => `• ${point}`).join(" ")}</strong>}</p><time className="mt-2 block text-xs text-slate-400">{dateLabel(review.submitted_at)}</time></article>)}</div>}</section>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-2">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><div className="mb-4"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">MY BUSINESS</p><h2 className="mt-1 text-lg font-bold text-slate-900">Business details</h2></div><dl className="grid gap-3 sm:grid-cols-2">{infoField("Business Name", merchant.businessName)}{infoField("Business ID", merchant.businessId)}{infoField("Business Type", merchant.businessType)}{infoField("Owner / Merchant Name", merchant.ownerName)}{infoField("Mobile", merchant.registeredMobile)}{infoField("Address", merchant.address)}</dl><Link href="/merchant/dashboard/business" className="mt-4 inline-flex text-sm font-semibold text-blue-700">My Business →</Link></section>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">SUBSCRIPTION</p><h2 className="mt-1 text-lg font-bold text-slate-900">Current subscription</h2></div><span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusClass}`}>{subscriptionStatus}</span></div><dl className="mt-4 grid gap-3 sm:grid-cols-2">{infoField("Current Plan", merchant.plan)}{infoField("Price", planPrice == null ? null : `${amountLabel(planPrice)} / month`)}{infoField("Start Date", dateLabel(subscription?.starts_at ?? merchant.registrationDate))}{infoField("Expiry Date", dateLabel(subscription?.expires_at ?? merchant.expiry))}</dl><Link href="/merchant/dashboard/subscription" className="mt-4 inline-flex text-sm font-semibold text-blue-700">Renew Plan →</Link></section>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(18rem,1fr)]">
+        <div><MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} /></div>
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">PAYMENTS</p><h2 className="mt-1 text-lg font-bold text-slate-900">Recent payments</h2></div><Link href="/merchant/dashboard/payments" className="text-sm font-semibold text-blue-700">View All Payments →</Link></div>{payments === null ? <p className="mt-4 text-sm text-rose-700">Payment history is temporarily unavailable.</p> : payments.length === 0 ? <p className="mt-4 rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">No payments yet.</p> : <div className="mt-4 overflow-x-auto"><table className="w-full min-w-[400px] text-left text-sm"><thead><tr className="border-b border-slate-200 text-xs uppercase text-slate-500"><th className="py-2">Date</th><th className="py-2">Amount</th><th className="py-2">Status</th></tr></thead><tbody>{payments.map((payment) => <tr key={payment.cashfree_order_id} className="border-b border-slate-100 last:border-0"><td className="py-3">{dateLabel(payment.created_at)}</td><td className="py-3 font-medium">{amountLabel(payment.amount, payment.currency)}</td><td className="py-3 capitalize">{payment.payment_status.replaceAll("_", " ")}</td></tr>)}</tbody></table></div>}</section>
+      </section>
+
+      <section><div className="mb-4"><h2 className="text-lg font-semibold text-slate-950">Quick actions</h2></div><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">{actions.map((action) => <Link key={action.href} href={action.href} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition hover:border-blue-200 hover:shadow-md"><span className="font-semibold text-slate-900">{action.title}</span><span className="mt-1 block text-sm text-slate-500">{action.description}</span></Link>)}</div></section>
     </div>
   );
 }

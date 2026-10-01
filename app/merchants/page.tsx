@@ -27,8 +27,9 @@ export default async function MerchantsPage() {
       supabase
         .from("businesses")
         .select(
-          "id, name, owner, phone, type, plan, expiry, status, qr_status, registration_date, merchant_status, address, review_link"
+          "id, name, owner, phone, type, plan, expiry, status, qr_status, registration_date, merchant_status, address, review_link, deleted_at, deleted_by"
         )
+        .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       adminClient.from("merchant_accounts").select("business_id"),
     ]);

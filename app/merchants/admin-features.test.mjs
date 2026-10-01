@@ -56,43 +56,102 @@ test("merchant Trustit reviews use the scoped summary RPC rather than direct PII
   assert.doesNotMatch(page, /What stood out|Selected experiences:|\[.*selected_experiences/i);
 });
 
-test("delete action validates identity and active admin server-side", async () => {
+test("merchant lifecycle actions require an authenticated active admin server-side", async () => {
   const action = await read("./actions.ts");
-  assert.ok(action.indexOf("BUSINESS_ID_PATTERN.test(businessIdInput)") < action.indexOf("createSupabaseActionClient()"));
   assert.match(action, /auth\.getClaims\(\)/);
   assert.match(action, /\.eq\("is_active", true\)/);
   assert.match(action, /BUSINESS_ID_PATTERN\.test\(businessIdInput\)/);
   assert.match(action, /admin_delete_merchant/);
-  assert.ok(action.indexOf("if (adminError || !admin)") < action.indexOf("adminClient.rpc("));
+  assert.match(action, /admin_soft_delete_merchant/);
+  assert.match(action, /admin_restore_merchant/);
+  assert.ok(action.indexOf("if (adminError || !admin)") < action.indexOf("export async function softDeleteMerchantAction"));
 });
 
-test("delete UI requires explicit confirmation and prevents duplicate submission", async () => {
+test("active merchant deletion only soft-deletes, preserves the row, and refreshes both lists", async () => {
+  const action = await read("./actions.ts");
+  const ui = await read("./merchant-management.tsx");
+  const migration = await read("../../supabase/migrations/20261001140000_two_stage_merchant_deletion.sql");
+  const softAction = action.slice(action.indexOf("export async function softDeleteMerchantAction"), action.indexOf("export async function restoreMerchantAction"));
+  assert.match(softAction, /admin_soft_delete_merchant/);
+  assert.doesNotMatch(softAction, /admin_delete_merchant/);
+  assert.match(migration, /set deleted_at = pg_catalog\.now\(\), deleted_by = p_actor_user_id\s+where id = p_business_id and deleted_at is null/);
+  assert.match(action, /revalidatePath\("\/merchants\/deleted"\)/);
+  assert.match(ui, /Move Merchant to Deleted Merchants/);
+  assert.match(ui, /Move to Deleted Merchants/);
+  assert.match(ui, /router\.refresh\(\)/);
+  assert.match(await read("./page.tsx"), /deleted_at, deleted_by/);
+  assert.match(await read("./page.tsx"), /\.is\("deleted_at", null\)/);
+});
+
+test("soft delete does not delete merchant-owned customer, payment, or account data", async () => {
+  const migration = await read("../../supabase/migrations/20261001140000_two_stage_merchant_deletion.sql");
+  const softFunction = migration.slice(migration.indexOf("create or replace function public.admin_soft_delete_merchant"), migration.indexOf("create or replace function public.admin_restore_merchant"));
+  assert.match(softFunction, /update public\.businesses/);
+  assert.doesNotMatch(softFunction, /\bdelete\s+from\b/i);
+  assert.match(migration, /deleted_by uuid references public\.admin_users\(user_id\) on delete set null/);
+});
+
+test("restore is active-admin checked, clears deletion metadata, and revalidates both lists", async () => {
+  const action = await read("./actions.ts");
+  const migration = await read("../../supabase/migrations/20261001140000_two_stage_merchant_deletion.sql");
+  const restoreAction = action.slice(action.indexOf("export async function restoreMerchantAction"), action.indexOf("export async function permanentlyDeleteMerchantAction"));
+  assert.match(restoreAction, /admin_restore_merchant/);
+  assert.match(migration, /set deleted_at = null, deleted_by = null\s+where id = p_business_id and deleted_at is not null/);
+  assert.match(restoreAction, /revalidateMerchantLists\(\)/);
+  assert.match(await read("./deleted/deleted-merchant-management.tsx"), /Restore Merchant/);
+});
+
+test("permanent deletion requires a typed ID and the database rejects active merchants", async () => {
+  const action = await read("./actions.ts");
+  const ui = await read("./deleted/deleted-merchant-management.tsx");
+  const migration = await read("../../supabase/migrations/20261001140000_two_stage_merchant_deletion.sql");
+  const permanentAction = action.slice(action.indexOf("export async function permanentlyDeleteMerchantAction"));
+  assert.match(permanentAction, /typedBusinessId !== businessIdInput/);
+  assert.match(permanentAction, /admin_delete_merchant/);
+  assert.match(migration, /business\.deleted_at is not null\s+for update/);
+  assert.match(ui, /This will permanently delete this merchant and its associated merchant data\. This action cannot be undone\./);
+  assert.match(ui, /typedId !== target\.business\.id/);
+  assert.match(ui, /Delete Permanently/);
+  assert.match(await read("./merchant-management.tsx"), /softDeleteMerchantAction/);
+  assert.doesNotMatch(await read("./merchant-management.tsx"), /permanentlyDeleteMerchantAction/);
+});
+
+test("deleted merchants are active-admin-only and actor identities resolve from admin data", async () => {
+  const page = await read("./deleted/page.tsx");
+  const ui = await read("./deleted/deleted-merchant-management.tsx");
+  assert.match(page, /await requireActiveAdmin\(\)/);
+  assert.match(page, /\.not\("deleted_at", "is", null\)/);
+  assert.match(page, /rpc\("get_deleted_merchant_actors"/);
+  assert.match(ui, /No deleted merchants/);
+});
+
+test("Deleted By lookup returns only requested identities to active admins", async () => {
+  const sql = await read("../../supabase/migrations/20261001160000_admin_deleted_merchant_actor_lookup.sql");
+  assert.match(sql, /actor\.user_id = \(select auth\.uid\(\)\)/);
+  assert.match(sql, /actor\.is_active = true/);
+  assert.match(sql, /where admin\.user_id = any\(p_user_ids\)/);
+  assert.match(sql, /revoke all on function public\.get_deleted_merchant_actors\(uuid\[\]\)\s+from public, anon, authenticated, service_role/);
+  assert.match(sql, /grant execute on function public\.get_deleted_merchant_actors\(uuid\[\]\) to authenticated/);
+});
+
+test("merchant deletion dialog requires confirmation and prevents duplicate requests", async () => {
   const ui = await read("./merchant-management.tsx");
   assert.match(ui, /role="alertdialog"/);
   assert.match(ui, />Cancel<\/button>/);
-  assert.match(ui, />\{pending \? "Deleting…" : "Delete Permanently"\}<\/button>/);
+  assert.match(ui, />\{pending \? "Moving…" : "Move to Deleted Merchants"\}<\/button>/);
   assert.match(ui, /if \(submitting\.current\) return/);
   assert.match(ui, /disabled=\{pending/);
-  assert.ok(ui.indexOf("submitting.current = true") < ui.indexOf("deleteMerchantAction(business.id)"));
+  assert.ok(ui.indexOf("submitting.current = true") < ui.indexOf("softDeleteMerchantAction(business.id)"));
   assert.match(ui, /setMessageIsError\(!result\.success\)/);
   assert.match(ui, /role=\{messageIsError \? "alert" : "status"\}/);
 });
 
-test("successful merchant deletion refreshes the list without waiting for a manual reload", async () => {
+test("soft-delete failure is not reported as a success", async () => {
   const action = await read("./actions.ts");
   const ui = await read("./merchant-management.tsx");
-  assert.match(action, /revalidatePath\("\/merchants"\)/);
-  assert.match(ui, /setRows\(\(current\) => current\.filter\(\(business\) => business\.id !== deleteTarget\.id\)\)/);
-  assert.match(ui, /router\.refresh\(\)/);
-  assert.match(ui, /if \(result\.businessDeleted\) setDeleteTarget\(null\)/);
-});
-
-test("failed deletion stays visible and presents an actionable error", async () => {
-  const action = await read("./actions.ts");
-  const ui = await read("./merchant-management.tsx");
-  assert.match(action, /if \(deletionError\)\s*\{[\s\S]*?success: false/);
-  assert.match(ui, /The deletion request could not be completed/);
-  assert.match(ui, /if \(result\.businessDeleted\) onDeleted\(result\)/);
+  assert.match(action, /The merchant could not be moved to Deleted Merchants/);
+  assert.match(ui, /setDeleteNoticeIsError\(!result\.success\)/);
+  assert.match(ui, /if \(result\.success\) setDeleteTarget\(null\)/);
 });
 
 test("database deletion is active-admin checked, scoped, and service-role only", async () => {
@@ -153,20 +212,21 @@ test("pending Auth cleanup blocks new account and onboarding writes, and support
 test("database errors stop before Auth API deletion and the SQL function fails transactionally", async () => {
   const action = await read("./actions.ts");
   const sql = await read("../../supabase/migrations/20261001130000_admin_delete_merchant.sql");
-  assert.ok(action.indexOf("if (deletionError)") < action.indexOf("auth.admin.deleteUser"));
+  const permanentAction = action.slice(action.indexOf("export async function permanentlyDeleteMerchantAction"));
+  assert.ok(permanentAction.indexOf("if (error)") < permanentAction.indexOf("auth.admin.deleteUser"));
   assert.match(sql, /raise exception 'Merchant does not exist'/);
   assert.match(sql, /raise exception 'Merchant deletion did not complete'/);
-  assert.match(action, /The database did not confirm merchant deletion/);
+  assert.match(action, /The database did not confirm permanent deletion/);
 });
 
 test("Auth API failure is reported as partial completion with a retry path", async () => {
   const action = await read("./actions.ts");
-  const ui = await read("./merchant-management.tsx");
+  const ui = await read("./deleted/deleted-merchant-management.tsx");
   assert.match(action, /businessDeleted: true,\s+identityCleanupPending: true/);
-  assert.match(action, /sign-in identity could not be removed|sign-in identity remains/);
-  assert.match(action, /return \{ success: true, businessDeleted: true, message: "Merchant deleted successfully\." \}/);
-  assert.match(ui, /if \(result\.businessDeleted\) setDeleteTarget\(null\)/);
-  assert.match(ui, /Retry identity cleanup/);
+  assert.match(action, /sign-in identity cleanup is pending/);
+  assert.match(action, /Merchant permanently deleted/);
+  assert.match(ui, /result\.identityCleanupPending \? target\.business\.id/);
+  assert.match(ui, /Retry Auth identity cleanup/);
 });
 
 test("migration has no DROP, RLS-policy, or broad business data statements", async () => {
