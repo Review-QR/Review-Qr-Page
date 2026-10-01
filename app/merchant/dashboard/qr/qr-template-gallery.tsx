@@ -96,12 +96,6 @@ function CategoryArt({ kind, className = "" }: { kind: CategoryArtKind; classNam
       <path d="M125 30c8-7 17-7 23 0v25h-23Zm0 25h23m-12-25v25" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
     </svg>
   );
-  if (kind === "restaurant") return (
-    <svg aria-hidden="true" viewBox="0 0 150 100" className={className}>
-      <g color="currentColor"><circle cx="80" cy="53" r="35" fill="#fffdf8" stroke="currentColor" strokeWidth="3" opacity=".95" /><circle cx="80" cy="53" r="25" {...line} opacity=".45" /><circle cx="80" cy="53" r="16" {...line} opacity=".7" /><path d="M18 18v63m-8-63v21c0 8 16 8 16 0V18m-8 21v42m100-63c-12 19-12 34 0 39v24m0-63v39m18-39v63" {...line} /></g>
-      <path d="M62 46c8-12 24-12 34 0-9 13-25 13-34 0Z" fill="#d18b4a" opacity=".88" />
-    </svg>
-  );
   if (kind === "hotel") return (
     <svg aria-hidden="true" viewBox="0 0 170 100" className={className}>
       <path d="M17 77V35h13v25h109V44c0-8 6-14 14-14h2v47M30 57c0-10 7-17 17-17h17c8 0 14 6 14 14v6H30Zm51 0c0-10 7-17 17-17h24c6 0 10 5 10 11v9H81Z" fill="#fff8e9" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
