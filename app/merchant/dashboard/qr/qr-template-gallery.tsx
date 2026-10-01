@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl } from "@/lib/trustit-qr";
 import { saveQrTemplateAction } from "./actions";
-import { qrTemplates, type QrTemplateId } from "./templates";
+import { getQrTemplateFilename, getQrTemplatePrintCss, getQrTemplatePrintDimensions, qrTemplates, type QrTemplateId } from "./templates";
+
+type ExportAction = "png" | "pdf" | "print";
 
 type Props = {
   businessId: string;
@@ -238,16 +240,23 @@ export default function QrTemplateGallery({ businessId, businessName, qrStatus, 
   const [selectedTemplate, setSelectedTemplate] = useState<QrTemplateId>(qrTemplates.some((template) => template.id === initialTemplate) ? initialTemplate as QrTemplateId : "template_1");
   const [previewTemplate, setPreviewTemplate] = useState<QrTemplateId | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const [exportStatus, setExportStatus] = useState("");
+  const [exportAction, setExportAction] = useState<ExportAction | null>(null);
   const [isPending, startTransition] = useTransition();
   const galleryRef = useRef<HTMLDivElement>(null);
+  const exportStageRef = useRef<HTMLDivElement>(null);
   const reviewRoute = buildTrustitReviewUrl(origin, businessId);
   const qrUrl = buildTrustitQrImageUrl(reviewRoute);
   const qrUsable = isQrUsable(qrStatus, expiry);
+  const exportTemplateId = previewTemplate ?? selectedTemplate;
+  const exportTemplate = qrTemplates.find((template) => template.id === exportTemplateId)!;
+  const exportDimensions = getQrTemplatePrintDimensions(exportTemplateId);
 
   useEffect(() => setOrigin(window.location.origin), []);
 
   function chooseTemplate(templateId: QrTemplateId) {
     setStatusMessage("");
+    setExportStatus("");
     startTransition(async () => {
       const result = await saveQrTemplateAction(templateId);
       if (!result.ok) {
@@ -261,6 +270,141 @@ export default function QrTemplateGallery({ businessId, businessName, qrStatus, 
 
   function scrollGallery(direction: -1 | 1) {
     galleryRef.current?.scrollBy({ left: direction * Math.max(260, galleryRef.current.clientWidth * 0.75), behavior: "smooth" });
+  }
+
+  async function replaceExportQr() {
+    if (!qrUsable || !reviewRoute) throw new Error("A valid active business QR is required for export.");
+    const poster = exportStageRef.current?.querySelector<HTMLElement>(`[data-template-id="${exportTemplateId}"]`);
+    const qrImage = poster?.querySelector<HTMLImageElement>('img[alt^="Trustit review QR for "]');
+    if (!poster || !qrImage) throw new Error("The selected QR poster is not ready to export.");
+
+    const previousSource = qrImage.src;
+    const qrCodeModule = await import("qrcode");
+    const qrPng = await qrCodeModule.default.toDataURL(reviewRoute, {
+      errorCorrectionLevel: "H",
+      margin: 4,
+      width: 1200,
+      color: { dark: "#000000", light: "#ffffff" },
+    });
+    qrImage.src = qrPng;
+    await qrImage.decode();
+    await document.fonts.ready;
+
+    return {
+      poster,
+      restore: () => { qrImage.src = previousSource; },
+    };
+  }
+
+  async function makePosterPng() {
+    const { poster, restore } = await replaceExportQr();
+    try {
+      const { domToPng } = await import("modern-screenshot");
+      const png = await domToPng(poster, {
+        scale: 4,
+        backgroundColor: "#ffffff",
+        style: { borderRadius: "0px", boxShadow: "none" },
+      });
+      const image = new Image();
+      image.src = png;
+      await image.decode();
+
+      const expectedRatio = exportDimensions.widthIn / exportDimensions.heightIn;
+      if (Math.abs(image.width / image.height - expectedRatio) > 0.002) {
+        throw new Error("The exported poster dimensions do not match the selected print size.");
+      }
+      if (image.width < exportDimensions.widthIn * 300 || image.height < exportDimensions.heightIn * 300) {
+        throw new Error("The exported poster resolution is below 300 DPI.");
+      }
+      return png;
+    } finally {
+      restore();
+    }
+  }
+
+  async function downloadPoster(templateId: QrTemplateId, format: "png" | "pdf") {
+    if (!qrUsable) {
+      setExportStatus("Downloads are available when this business QR is active and unexpired.");
+      return;
+    }
+
+    setExportAction(format);
+    setExportStatus("");
+    try {
+      const png = await makePosterPng();
+      const filename = getQrTemplateFilename(templateId, businessName, businessId, format);
+      if (format === "pdf") {
+        const { jsPDF } = await import("jspdf");
+        const { widthIn, heightIn, orientation } = getQrTemplatePrintDimensions(templateId);
+        const pdf = new jsPDF({ orientation, unit: "in", format: [widthIn, heightIn], compress: true });
+        pdf.addImage(png, "PNG", 0, 0, widthIn, heightIn, undefined, "FAST");
+        pdf.save(filename);
+      } else {
+        const link = document.createElement("a");
+        link.href = png;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+      setExportStatus(`${filename} is ready.`);
+    } catch (error) {
+      setExportStatus(error instanceof Error ? error.message : "The poster could not be exported.");
+    } finally {
+      setExportAction(null);
+    }
+  }
+
+  async function printPoster() {
+    if (!qrUsable) {
+      setExportStatus("Printing is available when this business QR is active and unexpired.");
+      return;
+    }
+    setExportAction("print");
+    setExportStatus("");
+    let restoreQr: (() => void) | undefined;
+    let printStyle: HTMLStyleElement | undefined;
+    let printRoot: HTMLDivElement | null = null;
+    let timeout: number | undefined;
+    const cleanup = () => {
+      if (timeout) window.clearTimeout(timeout);
+      window.removeEventListener("afterprint", cleanup);
+      if (printStyle?.isConnected) printStyle.remove();
+      if (printRoot?.id === "trustit-print-root") printRoot.removeAttribute("id");
+      restoreQr?.();
+      setExportAction(null);
+    };
+
+    try {
+      const exportQr = await replaceExportQr();
+      printRoot = exportStageRef.current;
+      if (!printRoot) throw new Error("The selected QR poster is not ready to print.");
+      restoreQr = exportQr.restore;
+      printRoot.id = "trustit-print-root";
+      printStyle = document.createElement("style");
+      printStyle.dataset.trustitPrint = "true";
+      printStyle.textContent = getQrTemplatePrintCss(exportTemplateId);
+      document.head.appendChild(printStyle);
+      window.addEventListener("afterprint", cleanup);
+      timeout = window.setTimeout(cleanup, 60_000);
+      window.print();
+      setExportStatus(`Print dialog opened for ${exportTemplate.printSize} ${exportTemplate.orientation.toLowerCase()}.`);
+    } catch (error) {
+      cleanup();
+      setExportStatus(error instanceof Error ? error.message : "The poster could not be printed.");
+    }
+  }
+
+  function exportButtons(templateId: QrTemplateId, className = "") {
+    const disabled = !qrUsable || Boolean(exportAction);
+    const buttonClass = "rounded-lg border border-slate-300 bg-white px-2 py-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
+    return (
+      <div className={`grid grid-cols-3 gap-2 ${className}`} aria-label="Download and print QR poster">
+        <button type="button" className={buttonClass} disabled={disabled} onClick={() => void downloadPoster(templateId, "png")}>{exportAction === "png" ? "Preparing PNG…" : "Download PNG"}</button>
+        <button type="button" className={buttonClass} disabled={disabled} onClick={() => void downloadPoster(templateId, "pdf")}>{exportAction === "pdf" ? "Preparing PDF…" : "Download PDF"}</button>
+        <button type="button" className={buttonClass} disabled={disabled} onClick={() => void printPoster()}>{exportAction === "print" ? "Preparing print…" : "Print"}</button>
+      </div>
+    );
   }
 
   return (
@@ -294,12 +438,23 @@ export default function QrTemplateGallery({ businessId, businessName, qrStatus, 
                   <button type="button" onClick={() => setPreviewTemplate(template.id)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Preview</button>
                   <button type="button" onClick={() => chooseTemplate(template.id)} disabled={isPending || isSelected} className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-default disabled:opacity-60">{isSelected ? "Selected" : isPending ? "Saving…" : "Select"}</button>
                 </div>
+                {isSelected && exportButtons(template.id, "mt-2")}
               </div>
             </article>
           );
         })}
       </div>
       <p role="status" aria-live="polite" className={`min-h-5 text-sm ${statusMessage.includes("could not") || statusMessage.startsWith("Sign in") || statusMessage.startsWith("Choose") ? "text-rose-700" : "text-emerald-700"}`}>{statusMessage}</p>
+      <p role="status" aria-live="polite" className="min-h-5 text-sm text-slate-600">{exportStatus}</p>
+
+      <div
+        ref={exportStageRef}
+        aria-hidden="true"
+        className="pointer-events-none fixed -left-[20000px] top-0 -z-10 overflow-hidden"
+        style={{ width: exportTemplate.ratio === "3 / 2" ? "660px" : "440px" }}
+      >
+        <PosterByTemplate templateId={exportTemplateId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} />
+      </div>
 
       {previewTemplate && (
         <div role="presentation" onClick={() => setPreviewTemplate(null)} className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6">
@@ -308,10 +463,11 @@ export default function QrTemplateGallery({ businessId, businessName, qrStatus, 
               <div><p className="text-xs font-semibold uppercase tracking-widest text-blue-700">Merchant-specific print preview</p><h2 id="qr-preview-title" className="mt-1 text-lg font-bold text-slate-950">{qrTemplates.find((template) => template.id === previewTemplate)?.name} · {qrTemplates.find((template) => template.id === previewTemplate)?.printSize} {qrTemplates.find((template) => template.id === previewTemplate)?.orientation}</h2></div>
               <button type="button" onClick={() => setPreviewTemplate(null)} className="rounded-full border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" aria-label="Close template preview">Close</button>
             </div>
-            <div className={`mx-auto w-full ${previewTemplate === "template_4" || previewTemplate === "template_5" ? "max-w-5xl" : "max-w-[440px]"}`}>
+            <div data-qr-preview="true" className={`mx-auto w-full ${previewTemplate === "template_4" || previewTemplate === "template_5" ? "max-w-5xl" : "max-w-[440px]"}`}>
               <PosterByTemplate templateId={previewTemplate} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} />
             </div>
-            <button type="button" onClick={() => { chooseTemplate(previewTemplate); setPreviewTemplate(null); }} disabled={isPending || selectedTemplate === previewTemplate} className="mt-4 w-full rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800 disabled:opacity-60">{selectedTemplate === previewTemplate ? "This is your selected design" : isPending ? "Saving…" : "Select this design"}</button>
+            {exportButtons(previewTemplate, "mt-4")}
+            <button type="button" onClick={() => { chooseTemplate(previewTemplate); setPreviewTemplate(null); }} disabled={isPending || selectedTemplate === previewTemplate} className="mt-2 w-full rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800 disabled:opacity-60">{selectedTemplate === previewTemplate ? "This is your selected design" : isPending ? "Saving…" : "Select this design"}</button>
           </section>
         </div>
       )}
