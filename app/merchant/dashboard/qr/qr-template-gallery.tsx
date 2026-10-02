@@ -78,14 +78,16 @@ function BusinessIndicators({ icons, compact = false, dark = false }: { icons: B
   </ul>;
 }
 
-function BusinessName({ name, dark = false, landscape = false, compact = false }: { name: string; dark?: boolean; landscape?: boolean; compact?: boolean }) {
-  return <h3 className={`line-clamp-2 max-w-full break-words font-bold leading-tight ${dark ? "text-white" : "text-slate-950"} ${compact ? landscape ? "text-sm" : "text-lg" : landscape ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"}`}>{name}</h3>;
+function BusinessName({ name, dark = false, landscape = false, compact = false, responsive = false }: { name: string; dark?: boolean; landscape?: boolean; compact?: boolean; responsive?: boolean }) {
+  const size = compact ? landscape ? "text-sm" : "text-lg" : responsive ? landscape ? "text-sm sm:text-2xl lg:text-4xl" : "text-lg sm:text-2xl lg:text-3xl" : landscape ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl";
+  return <h3 className={`line-clamp-2 max-w-full break-words font-bold leading-tight ${dark ? "text-white" : "text-slate-950"} ${size}`}>{name}</h3>;
 }
 
-function ReviewQr({ url, usable, businessName, compact = false, landscape = false }: { url: string; usable: boolean; businessName: string; compact?: boolean; landscape?: boolean }) {
+function ReviewQr({ url, usable, businessName, compact = false, landscape = false, responsive = false }: { url: string; usable: boolean; businessName: string; compact?: boolean; landscape?: boolean; responsive?: boolean }) {
   const size = compact
     ? landscape ? "h-20 w-20 sm:h-24 sm:w-24" : "h-28 w-28"
-    : landscape ? "h-48 w-48 sm:h-56 sm:w-56" : "h-52 w-52 sm:h-56 sm:w-56";
+    : responsive ? landscape ? "h-20 w-20 sm:h-40 sm:w-40 lg:h-56 lg:w-56" : "h-28 w-28 sm:h-40 sm:w-40 lg:h-56 lg:w-56"
+      : landscape ? "h-48 w-48 sm:h-56 sm:w-56" : "h-52 w-52 sm:h-56 sm:w-56";
   return (
     <div className={`inline-flex items-center justify-center rounded-2xl bg-white p-2.5 shadow-md ring-1 ring-slate-900/10 ${compact ? "p-2" : "p-3"}`}>
       {usable && url ? <img src={url} alt={`Trustit review QR for ${businessName}`} className={`${size} max-w-full object-contain`} /> : <div className={`${size} flex items-center justify-center bg-slate-50 p-3 text-center text-xs font-medium text-slate-600`}>QR unavailable while the business is inactive or expired</div>}
@@ -97,16 +99,16 @@ function GoogleMessage({ dark = false, compact = false }: { dark?: boolean; comp
   return <div className={`flex flex-wrap items-center justify-center gap-x-2 gap-y-1 ${compact ? "text-[9px]" : "text-xs"}`}><GoogleReviewMark dark={dark} compact={compact} /><span className={dark ? "text-slate-300" : "text-slate-600"}>Also share your feedback on Google</span></div>;
 }
 
-function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function RestaurantPoster({ name, businessId, qrUrl, usable, compact, responsive, category }: PosterContentProps) {
   return (
-    <div className={`relative flex h-full w-full flex-col items-center overflow-visible bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
+    <div className={`relative flex h-full w-full flex-col items-center overflow-visible bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : responsive ? "p-2 sm:p-6 lg:p-8" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -right-10 top-28 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
       <TrustitMark templateId="template_1" className="relative z-10 text-emerald-800" compact={compact} />
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>
-      <BusinessName name={name} compact={compact} />
+      <BusinessName name={name} compact={compact} responsive={responsive} />
       <FiveStars compact={compact} />
       <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
-      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
+      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} responsive={responsive} /></div>
       <BusinessIndicators icons={category.primaryIcons} compact={compact} />
       <p className={`rounded-full bg-emerald-800 font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       <div className="mt-3"><GoogleMessage compact={compact} /></div>
@@ -115,16 +117,16 @@ function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category }
   );
 }
 
-function HotelPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function HotelPoster({ name, businessId, qrUrl, usable, compact, responsive, category }: PosterContentProps) {
   return (
-    <div className={`relative flex h-full w-full flex-col items-center overflow-visible bg-[#173b48] text-center text-white ${compact ? "p-3" : "p-6 sm:p-8"}`}>
+    <div className={`relative flex h-full w-full flex-col items-center overflow-visible bg-[#173b48] text-center text-white ${compact ? "p-3" : responsive ? "p-2 sm:p-6 lg:p-8" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -left-16 top-20 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
       <TrustitMark templateId="template_2" className="relative z-10 text-[#d9c28e]" compact={compact} />
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>
-      <BusinessName name={name} dark compact={compact} />
+      <BusinessName name={name} dark compact={compact} responsive={responsive} />
       <FiveStars dark compact={compact} />
       <p className={`mt-1 max-w-xs text-slate-100 ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
-      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
+      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} responsive={responsive} /></div>
       <BusinessIndicators icons={category.primaryIcons} compact={compact} dark />
       <p className={`rounded-full bg-[#e5ce98] font-bold text-[#183a45] ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       <div className="mt-3"><GoogleMessage dark compact={compact} /></div>
@@ -133,16 +135,16 @@ function HotelPoster({ name, businessId, qrUrl, usable, compact, category }: Pos
   );
 }
 
-function LaundryPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function LaundryPoster({ name, businessId, qrUrl, usable, compact, responsive, category }: PosterContentProps) {
   return (
-    <div className={`relative flex h-full w-full flex-col items-center overflow-visible bg-[#eef8fb] text-center text-[#183e55] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
+    <div className={`relative flex h-full w-full flex-col items-center overflow-visible bg-[#eef8fb] text-center text-[#183e55] ${compact ? "p-3" : responsive ? "p-2 sm:p-6 lg:p-8" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute inset-x-0 bottom-24 h-20 bg-[radial-gradient(ellipse_at_center,#cae8f1_0%,transparent_70%)]" />
       <TrustitMark templateId="template_3" className="relative z-10 text-[#237c9d]" compact={compact} />
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>
-      <BusinessName name={name} compact={compact} />
+      <BusinessName name={name} compact={compact} responsive={responsive} />
       <FiveStars compact={compact} />
       <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
-      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
+      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} responsive={responsive} /></div>
       <BusinessIndicators icons={category.primaryIcons} compact={compact} />
       <p className={`rounded-full bg-[#247f9e] font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       <div className="mt-3"><GoogleMessage compact={compact} /></div>
@@ -151,14 +153,14 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact, category }: P
   );
 }
 
-function RetailPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function RetailPoster({ name, businessId, qrUrl, usable, compact, responsive, category }: PosterContentProps) {
   return (
-    <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-visible bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
+    <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-visible bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : responsive ? "gap-2 p-2 sm:gap-4 sm:p-6 lg:gap-8 lg:p-9" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 w-2 bg-[#cf963e]" />
       <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
         <TrustitMark templateId="template_4" className="text-[#846021]" compact={compact} />
         <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a07127] ${compact ? "text-[9px]" : "text-xs"}`}>{category.label}</p>
-        <BusinessName name={name} landscape compact={compact} />
+        <BusinessName name={name} landscape compact={compact} responsive={responsive} />
         <FiveStars compact={compact} />
         <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>{category.message}</p>
         <BusinessIndicators icons={category.primaryIcons} compact={compact} />
@@ -167,7 +169,7 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category }: Po
         {!compact && <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
       </div>
       <div className="relative z-10 flex flex-col items-center gap-2">
-        <ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} landscape />
+        <ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} landscape responsive={responsive} />
         <span className="text-center text-[9px] font-semibold uppercase tracking-wider text-[#6a512b]">Honest reviews welcome</span>
       </div>
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-16 right-28 h-36 w-36 rounded-full border-[14px] border-[#f0dcba]" />
@@ -175,14 +177,14 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category }: Po
   );
 }
 
-function SalonPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function SalonPoster({ name, businessId, qrUrl, usable, compact, responsive, category }: PosterContentProps) {
   return (
-    <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-visible bg-[#fff3f1] text-[#432b35] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
+    <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-visible bg-[#fff3f1] text-[#432b35] ${compact ? "gap-2 p-3" : responsive ? "gap-2 p-2 sm:gap-4 sm:p-6 lg:gap-8 lg:p-9" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 w-2 bg-[#bb7189]" />
       <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
         <TrustitMark templateId="template_5" className="text-[#99586f]" compact={compact} />
         <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a35070] ${compact ? "text-[9px]" : "text-xs"}`}>{category.label}</p>
-        <BusinessName name={name} landscape compact={compact} />
+        <BusinessName name={name} landscape compact={compact} responsive={responsive} />
         <FiveStars compact={compact} />
         <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>{category.message}</p>
         <BusinessIndicators icons={category.primaryIcons} compact={compact} />
@@ -191,7 +193,7 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category }: Pos
         {!compact && <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
       </div>
       <div className="relative z-10 flex flex-col items-center gap-2">
-        <ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} landscape />
+        <ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} landscape responsive={responsive} />
         <span className="text-center text-[9px] font-semibold uppercase tracking-wider text-[#805767]">Your feedback matters</span>
       </div>
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-16 right-28 h-36 w-36 rounded-full border-[14px] border-[#f3d9df]" />
@@ -199,9 +201,9 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category }: Pos
   );
 }
 
-type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean; category: BusinessCategoryProfile };
+type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean; responsive: boolean; category: BusinessCategoryProfile };
 
-function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsable, category, compact = false }: {
+function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsable, category, compact = false, responsive = false }: {
   templateId: QrTemplateId;
   businessName: string;
   businessId: string;
@@ -209,8 +211,9 @@ function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsabl
   qrUsable: boolean;
   category: BusinessCategoryProfile;
   compact?: boolean;
+  responsive?: boolean;
 }) {
-  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact, category };
+  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact, responsive, category };
   const template = qrTemplates.find((item) => item.id === templateId)!;
   const aspect = template.ratio === "3 / 2" ? "aspect-[3/2]" : "aspect-[2/3]";
   return (
@@ -238,7 +241,7 @@ export function QrPosterPreview({ businessId, businessName, businessType, qrStat
   templateId: QrTemplateId;
   qrUrl: string;
 }) {
-  return <PosterByTemplate templateId={templateId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={isQrUsable(qrStatus, expiry)} category={getBusinessCategoryProfile(businessType)} />;
+  return <PosterByTemplate templateId={templateId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={isQrUsable(qrStatus, expiry)} category={getBusinessCategoryProfile(businessType)} responsive />;
 }
 
 export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, onTemplateChange }: Props) {
@@ -472,7 +475,7 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
               <button type="button" onClick={() => setPreviewTemplate(null)} className="rounded-full border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" aria-label="Close template preview">Close</button>
             </div>
             <div data-qr-preview="true" className={`mx-auto w-full ${previewTemplate === "template_4" || previewTemplate === "template_5" ? "max-w-5xl" : "max-w-[440px]"}`}>
-              <PosterByTemplate templateId={previewTemplate} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} />
+              <PosterByTemplate templateId={previewTemplate} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} responsive />
             </div>
             {exportButtons(previewTemplate, "mt-4")}
             <button type="button" onClick={() => { chooseTemplate(previewTemplate); setPreviewTemplate(null); }} disabled={isPending || selectedTemplate === previewTemplate} className="mt-2 w-full rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800 disabled:opacity-60">{selectedTemplate === previewTemplate ? "This is your selected design" : isPending ? "Saving…" : "Select this design"}</button>

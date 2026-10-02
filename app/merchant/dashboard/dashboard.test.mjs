@@ -109,6 +109,8 @@ test("QR card reuses the existing business scan identity and exposes view, downl
   assert.match(experience, /onTemplateChange=\{setSelectedTemplate\}/);
   assert.match(experience, /templateId=\{template\.id\}/);
   assert.match(qr, /<QrPosterPreview[\s\S]*?templateId=\{selectedTemplate\}/);
+  const gallery = await read("./qr/qr-template-gallery.tsx");
+  assert.match(gallery, /<PosterByTemplate[\s\S]*?templateId=\{previewTemplate\}[\s\S]*?responsive/);
   assert.match(qr, /data-testid="selected-qr-preview"/);
   assert.doesNotMatch(qr, /min-h-\[360px\]|h-\[\d+px\].*data-testid="selected-qr-preview"/);
   assert.match(qr, /Preview &amp; change template/);

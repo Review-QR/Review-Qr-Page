@@ -88,7 +88,7 @@ test("selected template and preview expose PNG, PDF, and print controls", () => 
 test("all five QR designs consume one merchant business category instead of template categories", () => {
   assert.match(gallerySource, /businessType: string \| null/);
   assert.match(gallerySource, /const category = getBusinessCategoryProfile\(businessType\)/);
-  assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category \}/);
+  assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, responsive, category \}/);
   assert.match(gallerySource, /<BusinessIndicators icons=\{category\.primaryIcons\}/);
   assert.match(gallerySource, /import \{ findBusinessType, getBusinessIconGlyph, type BusinessIcon \} from "@\/lib\/config\/business-types"/);
   assert.doesNotMatch(gallerySource, /CategoryArt|artKind/);
