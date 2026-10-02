@@ -5,27 +5,14 @@ import { getBusinesses } from "@/lib/data";
 import type { Business } from "@/lib/types";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import MerchantAccessForm from "./merchant-access-form";
+import { businessTypes } from "@/lib/config/business-types";
 import {
   createAdminBusiness,
   deleteAdminBusiness,
   updateAdminBusiness,
 } from "./actions";
 
-const BUSINESS_TYPES = [
-  "Salon",
-  "Medical",
-  "Garage",
-  "Library",
-  "Restaurant",
-  "Sweet Shop",
-  "Bakery",
-  "Cafe",
-  "Hotel / Stay",
-  "Laundry",
-  "Pan Shop",
-  "Retail",
-  "Other",
-];
+const BUSINESS_TYPES = [...new Set([...businessTypes.map((businessType) => businessType.name), "Medical", "Cafe/Restaurant", "Shop", "Other"])];
 
 const PLANS = [
   { name: "Basic", price: 29 },

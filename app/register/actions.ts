@@ -385,9 +385,10 @@ export async function saveTrustitBusiness(input: {
   const user = await currentUser();
   const name = input?.name?.trim();
   const address = input?.address?.trim();
-  const reviewLink = safeReviewLink(input?.reviewLink);
-  if (!user || !name || name.length > 160 || (!findBusinessType(input?.type) && input?.type !== "Other") || !address || address.length > 1000 || !reviewLink) {
-    return { success: false, message: "Please check the business details and HTTPS Google Review link." };
+  const rawReviewLink = typeof input?.reviewLink === "string" ? input.reviewLink.trim() : "";
+  const reviewLink = rawReviewLink ? safeReviewLink(rawReviewLink) : null;
+  if (!user || !name || name.length > 160 || (!findBusinessType(input?.type) && input?.type !== "Other") || !address || address.length > 1000 || (rawReviewLink !== "" && !reviewLink)) {
+    return { success: false, message: "Please check the business details and, if provided, use a valid HTTPS Google Review link." };
   }
   try {
     const { data, error } = await createSupabaseAdminClient().rpc("create_trustit_business_for_onboarding", {

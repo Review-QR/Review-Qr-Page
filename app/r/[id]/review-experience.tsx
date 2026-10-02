@@ -82,7 +82,7 @@ export default function ReviewExperience({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [draft, setDraft] = useState(initialSession?.draft ?? "");
-  const [step, setStep] = useState<"feedback" | "draft" | "trustit" | "submitted">(initialSession?.submitted ? "submitted" : initialSession?.draft ? "draft" : "feedback");
+  const [step, setStep] = useState<"rating" | "experience" | "review" | "details" | "thankyou">(initialSession?.submitted ? "thankyou" : initialSession?.draft ? "review" : initialSession?.rating ? "experience" : "rating");
   const [shareDetails, setShareDetails] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
@@ -92,6 +92,8 @@ export default function ReviewExperience({
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [isOpeningGoogle, setIsOpeningGoogle] = useState(false);
   const requestInProgress = useRef(false);
+  const progressSteps = ["Rating", "Experience", "Review", "Details", "Thank You"];
+  const progressIndex = step === "rating" ? 0 : step === "experience" ? 1 : step === "review" ? 2 : step === "details" ? 3 : 4;
 
   function runAction(work: () => Promise<void>) {
     if (requestInProgress.current) return;
@@ -111,6 +113,8 @@ export default function ReviewExperience({
       if (!result.ok) { setError(result.message); return; }
       setSelectedRating(result.rating);
       setHasSession(true);
+      setStep("experience");
+      setTimeout(() => document.getElementById("review-step-experience")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
     });
   }
 
@@ -139,9 +143,9 @@ export default function ReviewExperience({
       if (!result.ok) { setError(result.message); return; }
       setDraft(result.draft);
       setCopied(false);
-      const nextStep = regenerate && returnStep === "trustit" ? "trustit" : "draft";
+      const nextStep = regenerate && returnStep === "details" ? "details" : "review";
       setStep(nextStep);
-      setTimeout(() => document.getElementById(nextStep === "trustit" ? "trustit-review-form" : "review-draft-section")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+      setTimeout(() => document.getElementById(nextStep === "details" ? "trustit-review-form" : "review-draft-section")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
     });
   }
 
@@ -167,7 +171,7 @@ export default function ReviewExperience({
     runAction(async () => {
       const result = await saveReviewDraft(draft);
       if (!result.ok) { setError(result.message); return; }
-      setStep("trustit");
+      setStep("details");
       setTimeout(() => document.getElementById("trustit-review-form")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
     });
   }
@@ -207,32 +211,36 @@ export default function ReviewExperience({
     runAction(async () => {
       const result = await submitTrustitReview(payload);
       if (!result.ok) { setError(result.message); return; }
-      setStep("submitted");
+      setStep("thankyou");
       setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
     });
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10">
+    <main className="min-h-screen bg-[#faf7f0] px-4 py-5 text-[#14243a] sm:px-6 sm:py-8">
       <div className="mx-auto w-full max-w-2xl">
         <header className="mb-5 flex items-center justify-center gap-2" aria-label="Trustit">
-          <span className="grid size-8 place-items-center rounded-lg bg-indigo-600 text-sm font-extrabold text-white">T</span>
+          <span className="grid size-8 place-items-center rounded-lg bg-amber-700 text-sm font-extrabold text-white">T</span>
           <span className="text-lg font-bold text-slate-900">Trustit</span>
         </header>
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
+        <section className="rounded-[1.75rem] border border-[#eee5d5] bg-white p-5 shadow-[0_22px_65px_-42px_rgba(31,41,55,.35)] sm:p-8">
+          <nav aria-label="Review progress" className="sticky top-0 z-10 -mx-5 mb-5 border-y border-[#eee5d5] bg-white/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8">
+            <ol className="grid grid-cols-5 gap-1.5">{progressSteps.map((label, index) => <li key={label} aria-current={index === progressIndex ? "step" : undefined} className={`min-w-0 text-[10px] font-semibold sm:text-xs ${index === progressIndex ? "text-amber-900" : index < progressIndex ? "text-emerald-700" : "text-slate-400"}`}><span className="flex items-center gap-1"><span className={`grid size-5 shrink-0 place-items-center rounded-full text-[9px] ${index === progressIndex ? "bg-amber-700 text-white" : index < progressIndex ? "bg-emerald-100 text-emerald-800" : "bg-slate-100"}`}>{index < progressIndex ? "✓" : index + 1}</span><span className="truncate">{label}</span></span><span className={`mt-1.5 block h-1 rounded-full ${index === progressIndex ? "bg-amber-700" : index < progressIndex ? "bg-emerald-500" : "bg-slate-100"}`} /></li>)}</ol>
+          </nav>
           <div className="text-center">
-            <p className="text-xs font-bold uppercase text-indigo-600">Your feedback matters</p>
+            <p className="text-xs font-bold uppercase tracking-[.16em] text-amber-800">Your feedback matters</p>
             <h1 className="mt-2 break-words text-2xl font-bold text-slate-950">{businessName}</h1>
-            {step !== "submitted" && <><p className="mt-3 text-lg font-semibold text-slate-800">How was your experience?</p><p className="mt-1 text-sm text-slate-500">Rate your experience</p></>}
+            {step === "rating" && <><p className="mt-3 text-lg font-semibold text-slate-800">How was your experience?</p><p className="mt-1 text-sm text-slate-500">Tap a star to rate your visit.</p></>}
             {selectedRating && <p className="mt-2 text-sm text-slate-600">{selectedRating} of 5 stars · saved for this session</p>}
           </div>
 
-          {step === "submitted" ? <div className="py-10 text-center" role="status"><p className="text-2xl font-bold text-emerald-800">Thank you for sharing your review.</p><p className="mt-2 text-sm text-slate-600">Your feedback has been shared on Trustit.</p></div> : <>
-            <div className="mt-5 flex justify-center gap-1" role="group" aria-label="Choose a rating from 1 to 5 stars">
+          {step === "thankyou" ? <div className="py-7 text-center" role="status"><span className="mx-auto grid size-14 place-items-center rounded-full bg-emerald-100 text-3xl font-bold text-emerald-800">✓</span><p className="mt-4 text-2xl font-bold text-[#14243a]">Thank you for sharing your review!</p><p className="mt-2 text-sm text-slate-600">Your feedback has been shared on Trustit.</p><div className="mt-5 rounded-2xl border border-[#eee5d5] bg-[#fffaf0] p-4 text-left"><p className="text-sm font-semibold">{selectedRating ?? "—"} of 5 stars</p><p className="mt-2 text-sm text-amber-900">{experienceCategories.filter(category => selectedCategories.includes(category.key)).map(category => category.label).join(" · ") || "Your experience"}</p><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{draft}</p></div><button type="button" disabled={isOpeningGoogle} onClick={copyAndGoogle} className="mt-5 min-h-12 w-full rounded-xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50">{isOpeningGoogle ? "Opening Google Review…" : "Review on Google"}</button>{error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}<a href="/trustit" className="mt-3 inline-block text-sm font-semibold text-amber-900 underline underline-offset-2">Back to Home</a></div> : <>
+            {step === "rating" && <div className="mt-5 flex justify-center gap-1" role="group" aria-label="Choose a rating from 1 to 5 stars">
               {[1, 2, 3, 4, 5].map((rating) => <button key={rating} type="button" aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} aria-pressed={selectedRating === rating} disabled={isPending || selectedRating !== null} onClick={() => selectRating(rating)} className={`grid size-12 place-items-center rounded-lg text-4xl disabled:cursor-default ${selectedRating && rating <= selectedRating ? "text-amber-400" : "text-slate-300 hover:bg-slate-50"}`}><span aria-hidden="true">★</span></button>)}
             </div>
+            }
             {isPending && !hasSession ? <p className="mt-2 text-center text-sm text-indigo-700">Saving your rating…</p> : null}
-            {hasSession && step === "feedback" && <section className="mt-6 border-t border-slate-100 pt-5" aria-live="polite">
+            {hasSession && step === "experience" && <section id="review-step-experience" className="mt-6 scroll-mt-24 border-t border-[#eee5d5] pt-5" aria-live="polite">
               <h2 className="text-lg font-bold text-slate-900">What stood out in your experience?</h2>
               <p className="mt-1 text-sm text-slate-500">Choose up to 10 that reflect your visit.</p>
               <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">{experienceCategories.map((category) => {
@@ -242,7 +250,7 @@ export default function ReviewExperience({
               {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
               <button type="button" disabled={isPending || selectedCategories.length === 0} onClick={() => makeDraft()} className="mt-5 min-h-12 w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white disabled:bg-slate-300">{isPending ? "Preparing your draft…" : "Continue"}</button>
             </section>}
-            {step === "draft" && <section id="review-draft-section" className="mt-6 border-t border-slate-100 pt-5">
+            {step === "review" && <section id="review-draft-section" className="mt-6 scroll-mt-24 border-t border-[#eee5d5] pt-5">
               <h2 className="text-lg font-bold text-slate-900">Your Review Draft</h2>
               <p className="mt-1 text-sm text-slate-500">Edit this in your own words before sharing.</p>
               <p className="mt-2 text-xs leading-5 text-slate-500">This is only a draft based on the details you selected. Please make sure it reflects your real experience. Trustit does not post reviews to Google; the Google option opens the business’s official review page for you to review and submit yourself.</p>
@@ -254,17 +262,17 @@ export default function ReviewExperience({
                 <button type="button" disabled={isPending || isOpeningGoogle || !draft.trim()} onClick={continueOnTrustit} className="min-h-12 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-900">Review on Trustit Platform</button>
               </div>
             </section>}
-            {step === "trustit" && <form id="trustit-review-form" onSubmit={submitReview} className="mt-6 border-t border-slate-100 pt-5">
+            {step === "details" && <form id="trustit-review-form" onSubmit={submitReview} className="mt-6 scroll-mt-24 border-t border-[#eee5d5] pt-5">
               <h2 className="text-lg font-bold text-slate-900">Your Review</h2>
               <p className="mt-1 text-sm text-slate-600">Your {selectedRating}-star rating is retained.</p>
               <textarea aria-label="Review text" value={draft} maxLength={10000} rows={4} onChange={(e) => setDraft(e.target.value)} className="mt-3 w-full rounded-lg border border-slate-300 p-3 text-sm leading-6" />
               <button type="button" disabled={isPending} onClick={() => makeDraft(true)} className="mt-2 min-h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold">{isPending ? "Regenerating…" : "Regenerate Review"}</button>
-              <label htmlFor="trustit-customer-name" className="mt-5 block text-sm font-semibold text-slate-800">Your Name *</label>
+              <label htmlFor="trustit-customer-name" className="mt-5 block text-sm font-semibold text-slate-800">Your Name <span className="font-normal text-slate-500">(optional)</span></label>
               <input id="trustit-customer-name" maxLength={160} value={customerName} onChange={(e) => setCustomerName(e.target.value)} autoComplete="name" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" placeholder="Enter your name" />
               <p className="mt-1 text-xs leading-5 text-slate-500">Your name is stored with this Trustit review and visible to the business. Mobile, family, and occasion details are shared only if you opt in below.</p>
               <label className="mt-4 flex min-h-11 items-center gap-2 text-sm text-slate-800"><input type="checkbox" checked={shareDetails} onChange={(e) => { setShareDetails(e.target.checked); if (!e.target.checked) { setCustomerMobile(""); setBirthday(emptyOccasion()); setAnniversary(emptyOccasion()); setFamily([]); } }} />Want to share some personal details?</label>
               {shareDetails && <div className="mt-2 border-l-2 border-indigo-100 pl-3">
-                <label htmlFor="trustit-customer-mobile" className="block text-sm font-semibold text-slate-800">Mobile Number *</label>
+                <label htmlFor="trustit-customer-mobile" className="block text-sm font-semibold text-slate-800">Mobile Number <span className="font-normal text-slate-500">(optional)</span></label>
                 <input id="trustit-customer-mobile" type="tel" maxLength={32} value={customerMobile} onChange={(e) => setCustomerMobile(e.target.value)} autoComplete="tel" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" placeholder="Mobile number" />
                 <div className="mt-3 rounded-lg border border-slate-200 px-3"><OccasionRow label="Birthday" value={birthday} onChange={setBirthday} /><OccasionRow label="Anniversary" value={anniversary} onChange={setAnniversary} /></div>
                 <div className="mt-4 space-y-3">{family.map((member, index) => <fieldset key={index} className="rounded-lg border border-slate-200 p-3"><legend className="px-1 text-sm font-semibold">Family member {index + 1}</legend>
@@ -279,7 +287,7 @@ export default function ReviewExperience({
               <button type="submit" disabled={isPending || !draft.trim()} className="mt-4 min-h-12 w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white disabled:bg-slate-300">{isPending ? "Sharing your review…" : "Share Your Review on Trustit"}</button>
             </form>}
           </>}
-          {error && step !== "feedback" && step !== "draft" && step !== "trustit" ? <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p> : null}
+          {error && step !== "rating" && step !== "review" && step !== "details" ? <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p> : null}
         </section>
         <p className="mt-4 text-center text-xs text-slate-500">Your feedback helps {businessName} understand how it can serve you better.</p>
       </div>

@@ -25,8 +25,8 @@ export function validateTrustitReviewInput(input: {
   occasions: Array<{ owner: string; familyIndex?: number; occasion: string; month: number; day: number }>;
 }) {
   const errors: string[] = [];
-  if (!input.customerName.trim() || input.customerName.length > 160) errors.push("Enter your name.");
-  if (input.shareDetails && !/^[+0-9(). -]{7,32}$/.test(input.customerMobile)) errors.push("Enter a valid mobile number to share personal details.");
+  if (input.customerName.length > 160) errors.push("Your name must be 160 characters or fewer.");
+  if (input.shareDetails && !isValidOptionalMobile(input.customerMobile)) errors.push("Enter a valid mobile number to share personal details.");
   if (!input.shareDetails && (input.customerMobile || input.familyMembers.length || input.occasions.length)) errors.push("Turn on personal details to include contact or occasion information.");
   if (input.familyMembers.length > 8) errors.push("You can add up to 8 family members.");
   input.familyMembers.forEach((member, index) => {

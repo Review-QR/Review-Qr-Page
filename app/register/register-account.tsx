@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createMerchantBrowserClient } from "@/lib/supabase-merchant-browser";
 import { completeTrustitBypassPassword, completeTrustitOtpPassword, completeTrustitProfile, createTrustitAccountWithoutOtp, logoutTrustitMerchantSession } from "./actions";
+import BusinessTypePicker from "./business-type-picker";
 
 const supabase = createMerchantBrowserClient();
 const inputClass = "mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-4 py-3.5 text-base text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-700 focus:ring-4 focus:ring-blue-100";
@@ -13,9 +14,10 @@ function isPasswordValid(password: string) {
   return password.length >= 6 && password.length <= 16 && /[A-Za-z]/.test(password) && /[0-9]/.test(password);
 }
 
-export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, hasBlockingSession }: { skipPhoneOtp: boolean; passwordSetupPending: boolean; hasBlockingSession: boolean }) {
+export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, hasBlockingSession, onComplete }: { skipPhoneOtp: boolean; passwordSetupPending: boolean; hasBlockingSession: boolean; onComplete?: (businessName: string, businessType: string) => void }) {
   const router = useRouter();
   const [businessName, setBusinessName] = useState("");
+  const [businessType, setBusinessType] = useState("");
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [otp, setOtp] = useState("");
@@ -26,6 +28,13 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, ha
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [duplicateMobile, setDuplicateMobile] = useState(false);
+
+  useEffect(() => {
+    const savedBusiness = window.sessionStorage.getItem("trustit_business_name");
+    const savedType = window.sessionStorage.getItem("trustit_business_type");
+    if (savedBusiness) setBusinessName(savedBusiness);
+    if (savedType) setBusinessType(savedType);
+  }, []);
 
   function report(result: { success: boolean; message: string; code?: string }) {
     setDuplicateMobile(result.code === "duplicate_mobile");
@@ -70,8 +79,8 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, ha
 
   async function createAccountWithoutOtp(event: React.FormEvent) {
     event.preventDefault(); setMessage(""); setDuplicateMobile(false);
-    if (!businessName.trim() || !name.trim() || !mobile.trim()) {
-      setMessage("Enter your business name, owner name, and mobile number to continue.");
+    if (!businessName.trim() || !businessType || !name.trim() || !mobile.trim()) {
+      setMessage("Enter your business name, category, owner name, and mobile number to continue.");
       return;
     }
     if (!isPasswordValid(password)) {
@@ -83,8 +92,8 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, ha
       const result = await createTrustitAccountWithoutOtp({ businessName, fullName: name, mobile, password });
       if (!result.success) { report(result); return; }
       window.sessionStorage.setItem("trustit_business_name", businessName.trim());
-      router.push("/register/business");
-      router.refresh();
+      window.sessionStorage.setItem("trustit_business_type", businessType);
+      if (onComplete) onComplete(businessName.trim(), businessType); else { router.push("/register/business"); router.refresh(); }
     } catch {
       setMessage("Your account could not be saved just now. Please try again.");
     } finally { setBusy(false); setPassword(""); }
@@ -92,6 +101,7 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, ha
 
   async function createVerifiedAccount(event: React.FormEvent) {
     event.preventDefault(); setMessage(""); setDuplicateMobile(false);
+    if (!businessName.trim() || !businessType) { setMessage("Enter your business name and category to continue."); return; }
     if (!isPasswordValid(password)) { setMessage("Password must be 6–16 characters and include a letter and a number."); return; }
     setBusy(true);
     try {
@@ -100,9 +110,9 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, ha
       const passwordResult = await completeTrustitOtpPassword(password);
       if (!passwordResult.success) { setMessage(passwordResult.message); return; }
       window.sessionStorage.setItem("trustit_business_name", businessName.trim());
+      window.sessionStorage.setItem("trustit_business_type", businessType);
       setPassword("");
-      router.push("/register/business");
-      router.refresh();
+      if (onComplete) onComplete(businessName.trim(), businessType); else { router.push("/register/business"); router.refresh(); }
     } catch {
       setMessage("Your account could not be saved just now. Please try again.");
     } finally { setBusy(false); setPassword(""); }
@@ -115,7 +125,7 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, ha
     try {
       const result = await completeTrustitBypassPassword({ password, confirmation: password });
       if (!result.success) { setMessage(result.message); return; }
-      setPassword(""); router.push("/register/business"); router.refresh();
+      setPassword(""); if (onComplete) onComplete(businessName.trim(), businessType); else { router.push("/register/business"); router.refresh(); }
     } catch {
       setMessage("Password could not be saved. Please try again.");
     } finally { setBusy(false); setPassword(""); }
@@ -129,6 +139,7 @@ export default function RegisterAccount({ skipPhoneOtp, passwordSetupPending, ha
   return <form onSubmit={formSubmit} className="mt-8 space-y-5">
     {showDetails && <>
       <label className="block text-sm font-semibold text-slate-800">Business Name<input className={inputClass} autoComplete="organization" maxLength={160} value={businessName} onChange={event => setBusinessName(event.target.value)} required disabled={stage !== "details"} /></label>
+      <BusinessTypePicker value={businessType} onChange={setBusinessType} />
       <label className="block text-sm font-semibold text-slate-800">Owner Name<input className={inputClass} autoComplete="name" maxLength={160} value={name} onChange={event => setName(event.target.value)} required disabled={stage !== "details"} /></label>
       <label className="block text-sm font-semibold text-slate-800">Mobile Number<input className={inputClass} type="tel" autoComplete="tel" inputMode="tel" placeholder="+91 98765 43210" maxLength={24} value={mobile} onChange={event => setMobile(event.target.value)} required /></label>
       {!skipPhoneOtp && <p className="-mt-3 text-xs leading-5 text-slate-500">OTP verification uses the phone Auth provider configured for this project.</p>}

@@ -1,20 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { searchBusinessTypes } from "@/lib/config/business-types";
 
 const inputClass = "mt-1 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
 
-export default function BusinessTypePicker() {
+export default function BusinessTypePicker({ value = "", onChange }: { value?: string; onChange?: (value: string) => void }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState("");
   const [open, setOpen] = useState(false);
   const matches = useMemo(() => searchBusinessTypes(query).slice(0, 8), [query]);
 
+  useEffect(() => {
+    if (value) { setSelected(value); setQuery(value); }
+  }, [value]);
+
   function choose(name: string) {
     setSelected(name);
     setQuery(name);
     setOpen(false);
+    onChange?.(name);
   }
 
   return (
@@ -32,14 +37,14 @@ export default function BusinessTypePicker() {
         placeholder="Search business types"
         value={query}
         onFocus={() => setOpen(true)}
-        onChange={(event) => { setQuery(event.target.value); setSelected(""); setOpen(true); }}
+        onChange={(event) => { setQuery(event.target.value); setSelected(""); onChange?.(""); setOpen(true); }}
         onKeyDown={(event) => {
           if (event.key === "Escape") setOpen(false);
           if (event.key === "Enter" && matches.length === 1) { event.preventDefault(); choose(matches[0].name); }
         }}
         required
       />
-      <input type="hidden" name="type" value={selected} />
+      <input type="hidden" name="type" value={selected || value} />
       {open && matches.length > 0 && (
         <ul id="business-type-results" role="listbox" className="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
           {matches.map((type) => (

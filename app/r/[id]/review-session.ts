@@ -3,6 +3,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { getReviewTaxonomyType } from "@/lib/config/business-types";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import {
   localReviewDraftProvider,
@@ -120,9 +121,7 @@ export async function getReviewExperienceCategoriesForBusiness(
 
     if (!business || typeof business.type !== "string") return [];
 
-    // The registration flow stores clinics as "Clinic"; the configured
-    // customer experience taxonomy names that category family "Medical".
-    const businessType = business.type === "Clinic" ? "Medical" : business.type;
+    const businessType = getReviewTaxonomyType(business.type);
     const { data: categories, error: categoriesError } = await admin
       .from("review_experience_categories")
       .select("category_key, display_label")
@@ -456,8 +455,7 @@ export async function generateReviewDraftForBusiness(
     }
     const businessName = businessRecord.name;
 
-    const businessType =
-      businessRecord.type === "Clinic" ? "Medical" : businessRecord.type;
+    const businessType = getReviewTaxonomyType(businessRecord.type);
     const experienceKeys = experiences.map((experience) => experience.category_key);
     const { data: enabledCategories, error: categoriesError } = await admin
       .from("review_experience_categories")
@@ -642,11 +640,10 @@ export async function submitTrustitReviewForBusiness(
   const customerName = submission.customerName;
   const customerMobile = submission.customerMobile;
   if (typeof submission.reviewText !== "string" || !submission.reviewText.trim() || submission.reviewText.length > 10000 ||
-    typeof customerName !== "string" || !customerName.trim() || customerName.length > 160 ||
+    typeof customerName !== "string" || customerName.length > 160 ||
     typeof customerMobile !== "string" || !isValidOptionalMobile(customerMobile) ||
     typeof submission.shareDetails !== "boolean" || !Array.isArray(family) || family.length > 8 ||
     (!submission.shareDetails && (customerMobile.trim() || family.length || submission.occasions?.length)) ||
-    (submission.shareDetails && !customerMobile.trim()) ||
     family.some((member) => !member || typeof member.name !== "string" || !member.name.trim() || member.name.length > 160 ||
       typeof member.relation !== "string" || !VALID_RELATIONS.has(member.relation) ||
       typeof member.mobile !== "string" || !isValidOptionalMobile(member.mobile)) ||
@@ -655,7 +652,7 @@ export async function submitTrustitReviewForBusiness(
   }
   try {
     const business = await resolveQrBusiness(businessId);
-    if (!business) return { ok: false, message: "This QR code is unavailable. Please scan it again." };
+    if (!business || typeof business.type !== "string") return { ok: false, message: "This QR code is unavailable. Please scan it again." };
     const admin = createSupabaseAdminClient();
     const { data: session, error: sessionError } = await admin
       .from("review_sessions")
@@ -673,7 +670,7 @@ export async function submitTrustitReviewForBusiness(
       .select("review_session_id, business_id, category_key, category_label_snapshot")
       .eq("review_session_id", sessionId)
       .eq("business_id", businessId);
-    const businessType = business.type === "Clinic" ? "Medical" : business.type;
+    const businessType = getReviewTaxonomyType(business.type);
     const { data: enabledCategories, error: categoriesError } = await admin
       .from("review_experience_categories")
       .select("category_key")
@@ -700,7 +697,7 @@ export async function submitTrustitReviewForBusiness(
       p_business_id: businessId,
       p_review_session_id: sessionId,
       p_review_text: submission.reviewText,
-      p_customer_name: customerName.trim(),
+      p_customer_name: customerName.trim() || "Guest",
       p_customer_mobile: submission.shareDetails ? customerMobile.trim() : null,
       p_share_details: submission.shareDetails,
       p_family_members: submission.shareDetails ? family : [],
