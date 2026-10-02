@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { requireActiveAdmin, createSupabaseServerClient } from "@/lib/supabase-server";
 import InviteMerchantForm from "./invite-merchant-form";
-import { listMerchantInvites } from "./actions";
-import RevokeInviteButton from "./revoke-invite-button";
+import { listMerchantInvites, type MerchantInviteRow } from "./actions";
 
 export const dynamic = "force-dynamic";
 
 export default async function MerchantInvitePage() {
   await requireActiveAdmin();
   const supabase = await createSupabaseServerClient();
-  const admin = createSupabaseAdminClient();
 
   const [{ data: businesses }, invites] = await Promise.all([
     supabase
@@ -21,15 +19,12 @@ export default async function MerchantInvitePage() {
     listMerchantInvites(),
   ]);
 
-  const pendingBusinessIds = new Set(
-    (invites ?? [])
-      .filter((invite: any) => invite.status === "pending")
-      .map((invite: any) => invite.business_id),
-  );
+  const pendingBusinessIds = new Set((invites ?? [])
+    .filter((invite: MerchantInviteRow) => invite.status === "pending")
+    .map((invite: MerchantInviteRow) => invite.business_id));
 
-  const eligibleBusinesses = (businesses ?? []).filter(
-    (business: any) => !pendingBusinessIds.has(business.id),
-  );
+  const eligibleBusinesses = ((businesses ?? []) as { id: string; name: string; owner: string | null; phone: string | null }[])
+    .filter((business) => !pendingBusinessIds.has(business.id));
 
   return (
     <main className="dashboard-shell">
@@ -57,7 +52,7 @@ export default async function MerchantInvitePage() {
             <p className="mt-1 text-sm text-slate-500">The link expires after 48 hours, is stored only as a hash, and can be consumed once.</p>
           </div>
         </div>
-        <InviteMerchantForm businesses={eligibleBusinesses as any[]} />
+        <InviteMerchantForm businesses={eligibleBusinesses} />
       </section>
 
       <section className="dashboard-panel">
@@ -81,7 +76,7 @@ export default async function MerchantInvitePage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 bg-white">
-              {(invites ?? []).map((invite) => (
+              {(invites ?? []).map((invite: MerchantInviteRow) => (
                 <tr key={invite.id}>
                   <td className="px-3 py-4">
                     <div className="font-semibold text-slate-800">{invite.businesses?.name ?? "—"}</div>

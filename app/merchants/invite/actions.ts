@@ -50,37 +50,16 @@ export async function createMerchantInviteAction(
 
   try {
     const admin = createSupabaseAdminClient();
-    const { data: business, error: businessError } = await admin
-      .from("businesses")
-      .select("id, name, owner, phone, merchant_status, deleted_at")
-      .eq("id", businessId)
-      .maybeSingle();
-
-    if (businessError || !business || business.deleted_at) {
-      return { success: false, message: "Merchant business not found." };
-    }
-    if (business.merchant_status !== "pending") {
-      return { success: false, message: "Only a pending merchant can receive a registration invitation." };
-    }
-
-    const { data: mapping, error: mappingError } = await admin
-      .from("merchant_accounts")
-      .select("business_id")
-      .eq("business_id", businessId)
-      .maybeSingle();
-    if (mappingError) return { success: false, message: "Could not verify the merchant account state." };
-    if (mapping) return { success: false, message: "This merchant already has an account." };
-
     const { token, tokenHash } = createMerchantInviteToken();
     const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
 
-    const { error } = await admin.rpc("admin_create_merchant_invite", {
+    const { data, error } = await admin.rpc("admin_create_merchant_invite", {
       p_business_id: businessId,
       p_actor_user_id: actorUserId,
       p_token_hash: tokenHash,
       p_expires_at: expiresAt,
     });
-    if (error) return { success: false, message: "The merchant invitation could not be created. Please try again." };
+    if (error || !data) return { success: false, message: "The merchant invitation could not be created. The business may no longer be eligible." };
 
     const registrationUrl = merchantRegistrationUrl(token);
     revalidatePath("/merchants/invite");
@@ -88,7 +67,7 @@ export async function createMerchantInviteAction(
 
     return {
       success: true,
-      message: `Registration link created for ${business.name}. It expires in 48 hours and can be used once.`,
+      message: "Registration link created. It expires in 48 hours and can be used once.",
       registrationUrl,
     };
   } catch {
@@ -121,19 +100,33 @@ export async function listMerchantInvites(): Promise<MerchantInviteRow[] | null>
   const actorUserId = await getActiveAdmin();
   if (!actorUserId) return null;
 
-  const admin = createSupabaseAdminClient();
-  await admin
-    .from("merchant_invites")
-    .update({ status: "expired" })
-    .eq("status", "pending")
-    .lte("expires_at", new Date().toISOString());
-
-  const { data, error } = await admin
-    .from("merchant_invites")
-    .select("id, business_id, status, expires_at, created_at, used_at, revoked_at, businesses(name, owner, phone)")
-    .order("created_at", { ascending: false })
-    .limit(100);
-
+  const { data, error } = await createSupabaseAdminClient().rpc("admin_list_merchant_invites", {
+    p_actor_user_id: actorUserId,
+  });
   if (error) return [];
-  return (data ?? []) as unknown as MerchantInviteRow[];
+  return ((data ?? []) as {
+    id: string;
+    business_id: string;
+    status: MerchantInviteRow["status"];
+    expires_at: string;
+    created_at: string;
+    used_at: string | null;
+    revoked_at: string | null;
+    business_name: string | null;
+    business_owner: string | null;
+    business_phone: string | null;
+  }[]).map((invite) => ({
+    id: invite.id,
+    business_id: invite.business_id,
+    status: invite.status,
+    expires_at: invite.expires_at,
+    created_at: invite.created_at,
+    used_at: invite.used_at,
+    revoked_at: invite.revoked_at,
+    businesses: invite.business_name ? {
+      name: invite.business_name,
+      owner: invite.business_owner,
+      phone: invite.business_phone,
+    } : null,
+  }));
 }

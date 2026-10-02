@@ -33,30 +33,29 @@ export async function registerMerchantFromInvite(
   const admin = createSupabaseAdminClient();
   const tokenHash = hashMerchantInviteToken(token);
 
-  const { data: invite, error: inviteError } = await admin
-    .from("merchant_invites")
-    .select("business_id, status, expires_at")
-    .eq("token_hash", tokenHash)
-    .maybeSingle();
+  const { data: inviteRows, error: inviteError } = await admin.rpc("get_merchant_invite_registration", {
+    p_token_hash: tokenHash,
+  });
+  const invite = (inviteRows?.[0] ?? null) as {
+    business_id: string;
+    status: "pending" | "used" | "expired" | "revoked";
+    expires_at: string;
+    merchant_status: string | null;
+    business_deleted: boolean;
+    has_account: boolean;
+  } | null;
 
   if (
     inviteError ||
     !invite ||
     invite.business_id !== businessId ||
     invite.status !== "pending" ||
-    new Date(invite.expires_at).getTime() <= Date.now()
+    new Date(invite.expires_at).getTime() <= Date.now() ||
+    invite.merchant_status !== "pending" ||
+    invite.business_deleted ||
+    invite.has_account
   ) {
     return { success: false, message: "This registration link is invalid, expired, used, or revoked." };
-  }
-
-  const { data: business, error: businessError } = await admin
-    .from("businesses")
-    .select("id, merchant_status, deleted_at")
-    .eq("id", businessId)
-    .maybeSingle();
-
-  if (businessError || !business || business.merchant_status !== "pending" || business.deleted_at) {
-    return { success: false, message: "This merchant registration is no longer available." };
   }
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
