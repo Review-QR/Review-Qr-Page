@@ -1,11 +1,13 @@
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import MyQrCode from "../my-qr-code";
 import QrTemplateGallery from "./qr-template-gallery";
+import { qrTemplates } from "./templates";
 
 export const dynamic = "force-dynamic";
 
 export default async function MerchantQrPage() {
   const merchant = await requireActiveMerchant();
+  const currentTemplate = qrTemplates.find((template) => template.id === merchant.qrTemplate) ?? qrTemplates[0];
   return (
     <div className="space-y-6">
       <header>
@@ -16,9 +18,13 @@ export default async function MerchantQrPage() {
       <MyQrCode
         businessId={merchant.businessId}
         businessName={merchant.businessName}
+        businessType={merchant.businessType}
+        plan={merchant.plan}
         qrStatus={merchant.qrStatus}
         expiry={merchant.expiry}
         reviewLink={merchant.reviewLink}
+        templateName={currentTemplate.name}
+        templateId={currentTemplate.id}
       />
       <QrTemplateGallery
         businessId={merchant.businessId}

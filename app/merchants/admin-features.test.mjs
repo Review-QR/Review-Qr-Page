@@ -4,6 +4,15 @@ import test from "node:test";
 
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
+test("merchant list authenticates admins before loading business rows through the privileged server client", async () => {
+  const page = await read("./page.tsx");
+  assert.ok(page.indexOf("await requireActiveAdmin()") < page.indexOf("createSupabaseAdminClient()"));
+  assert.match(page, /adminClient\s*\.from\("businesses"\)/);
+  assert.match(page, /adminClient\.from\("merchant_accounts"\)/);
+  assert.match(page, /function MerchantListError\(\)[\s\S]*?Merchant list unavailable[\s\S]*?Merchant data could not be loaded/);
+  assert.doesNotMatch(page, /createSupabaseServerClient/);
+});
+
 test("Trustit customer data route requires an active admin before privileged reads", async () => {
   const route = await read("./[businessId]/trustit-customer-data/page.tsx");
   assert.match(route, /await requireActiveAdmin\(\)/);

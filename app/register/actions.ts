@@ -20,6 +20,7 @@ import {
   verifyCashfreeMerchantOrderBySignedContext,
 } from "@/lib/cashfree";
 import { logTrustitCheckoutStage } from "@/lib/trustit-checkout-diagnostics";
+import { findBusinessType } from "@/lib/config/business-types";
 
 export type ActionResult = { success: true; value?: string } | { success: false; message: string; code?: "duplicate_mobile" };
 
@@ -385,8 +386,7 @@ export async function saveTrustitBusiness(input: {
   const name = input?.name?.trim();
   const address = input?.address?.trim();
   const reviewLink = safeReviewLink(input?.reviewLink);
-  const types = ["Shop", "Cafe/Restaurant", "Salon", "Clinic", "Library", "Hotel", "Other"];
-  if (!user || !name || name.length > 160 || !types.includes(input.type) || !address || address.length > 1000 || !reviewLink) {
+  if (!user || !name || name.length > 160 || (!findBusinessType(input?.type) && input?.type !== "Other") || !address || address.length > 1000 || !reviewLink) {
     return { success: false, message: "Please check the business details and HTTPS Google Review link." };
   }
   try {

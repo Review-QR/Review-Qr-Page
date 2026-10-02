@@ -96,13 +96,22 @@ test("QR card reuses the existing business scan identity and exposes view, downl
   const page = await read("./page.tsx");
   const qr = await read("./my-qr-code.tsx");
   const qrUtility = await read("../../../lib/trustit-qr.ts");
-  assert.match(page, /<MyQrCode[\s\S]*?businessId=\{merchant\.businessId\}/);
+  assert.match(page, /<MerchantDashboardQr[\s\S]*?businessId=\{merchant\.businessId\}/);
   assert.match(qr, /buildTrustitReviewUrl\(origin, businessId\)/);
   assert.match(qrUtility, /new URL\(`\/r\/\$\{encodeURIComponent\(businessId\)\}`/);
   assert.match(qrUtility, /api\.qrserver\.com\/v1\/create-qr-code/);
   assert.match(qr, /Download QR/);
   assert.match(qr, /Test Scan/);
   assert.match(page, /\/merchant\/dashboard\/qr/);
+  assert.match(page, /businessType=\{merchant\.businessType\}/);
+  const experience = await read("./merchant-dashboard-qr.tsx");
+  assert.match(page, /<MerchantDashboardQr[\s\S]*?initialTemplate=\{merchant\.qrTemplate\}/);
+  assert.match(experience, /onTemplateChange=\{setSelectedTemplate\}/);
+  assert.match(experience, /templateId=\{template\.id\}/);
+  assert.match(qr, /<QrPosterPreview[\s\S]*?templateId=\{selectedTemplate\}/);
+  assert.match(qr, /data-testid="selected-qr-preview"/);
+  assert.doesNotMatch(qr, /min-h-\[360px\]|h-\[\d+px\].*data-testid="selected-qr-preview"/);
+  assert.match(qr, /Preview &amp; change template/);
 });
 
 test("dashboard empty states avoid invalid numeric output and preserve existing product pages", async () => {
@@ -119,14 +128,16 @@ test("dashboard empty states avoid invalid numeric output and preserve existing 
 test("dashboard is responsive and navigation keeps existing merchant routes", async () => {
   const page = await read("./page.tsx");
   const layout = await read("./layout.tsx");
+  const navigation = await read("./merchant-navigation.tsx");
   assert.match(page, /sm:grid-cols-2/);
   assert.match(page, /xl:grid-cols/);
-  assert.match(page, /<MyQrCode[\s\S]*?templateName=\{currentTemplate\.name\}/);
-  assert.ok(page.indexOf("<MyQrCode") < page.indexOf("<ScanAnalytics"), "the merchant QR appears near the top of the dashboard");
+  assert.match(page, /<MerchantDashboardQr[\s\S]*?initialTemplate=\{merchant\.qrTemplate\}/);
+  assert.ok(page.indexOf("<MerchantDashboardQr") < page.indexOf("<ScanAnalytics"), "the merchant QR appears near the top of the dashboard");
   assert.match(await read("./my-qr-code.tsx"), /Preview &amp; change/);
   assert.doesNotMatch(page, /min-w-\[400px\]/, "dashboard tables must not force a phone-width overflow");
-  for (const path of ["business", "qr", "reviews", "subscription", "payments"]) assert.ok(layout.includes(`/merchant/dashboard/${path}`));
-  assert.match(layout, /label: "Analytics"/);
+  for (const path of ["business", "qr", "reviews", "subscription", "payments"]) assert.ok(navigation.includes(`/merchant/dashboard/${path}`));
+  assert.match(navigation, /label: "Analytics"/);
+  assert.match(layout, /<MerchantNavigation mobile \/>/);
 });
 
 test("My QR page uses the authenticated merchant identity and loads the saved template preference", async () => {
@@ -173,8 +184,9 @@ test("five Trustit print designs use the required dimensions and one merchant QR
   for (const component of ["RestaurantPoster", "HotelPoster", "LaundryPoster", "RetailPoster", "SalonPoster"]) {
     assert.match(gallery, new RegExp(`function ${component}\\(`));
   }
-  assert.match(gallery, /<CategoryArt kind=\{category\.artKind\}/);
-  for (const kind of ["food", "hotel", "laundry", "retail", "salon", "universal"]) assert.match(gallery, new RegExp(`artKind: "${kind}"`), `${kind} business art`);
+  assert.equal((gallery.match(/<BusinessIndicators icons=\{category\.primaryIcons\}/g) ?? []).length, 5);
+  assert.match(gallery, /findBusinessType\(businessType\)/);
+  assert.doesNotMatch(gallery, /CategoryArt|artKind/);
   assert.equal((gallery.match(/<TrustitMark templateId=/g) ?? []).length, 5);
   assert.equal((gallery.match(/<GoogleMessage/g) ?? []).length, 5);
   assert.match(gallery, /SCAN TO REVIEW/);

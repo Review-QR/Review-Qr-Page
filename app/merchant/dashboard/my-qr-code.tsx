@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl } from "@/lib/trustit-qr";
+import { QrPosterPreview } from "./qr/qr-template-gallery";
+import { isQrTemplateId, type QrTemplateId } from "./qr/templates";
 
 type MyQrCodeProps = {
   businessId: string;
@@ -13,6 +15,9 @@ type MyQrCodeProps = {
   reviewLink: string | null;
   totalScans?: number;
   templateName?: string;
+  templateId?: string | null;
+  businessType?: string | null;
+  plan?: string | null;
 };
 
 function isQrUsable(qrStatus: string | null, expiry: string | null) {
@@ -49,6 +54,9 @@ export default function MyQrCode({
   reviewLink,
   totalScans,
   templateName,
+  templateId = "template_1",
+  businessType = null,
+  plan = null,
 }: MyQrCodeProps) {
   const [origin, setOrigin] = useState("");
   const [message, setMessage] = useState("");
@@ -57,6 +65,7 @@ export default function MyQrCode({
   const safeLink = safeReviewLink(reviewLink);
   const scanUrl = buildTrustitReviewUrl(origin, businessId);
   const imageUrl = buildTrustitQrImageUrl(scanUrl);
+  const selectedTemplate = (isQrTemplateId(templateId ?? "") ? templateId : "template_1") as QrTemplateId;
   const statusLabel = usable
     ? "Active"
     : expiry && expiry < new Date().toISOString().slice(0, 10)
@@ -166,29 +175,20 @@ export default function MyQrCode({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 p-5 sm:p-7">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
-          MY QR CODE
-        </p>
-        <h2 className="mt-1 text-lg font-bold text-slate-900">My QR Code</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Share this code so customers can scan to review your business.
-        </p>
+    <section className="rounded-[28px] border border-amber-100 bg-gradient-to-br from-white via-amber-50/30 to-white shadow-[0_16px_48px_rgba(120,73,23,0.09)]" aria-labelledby="merchant-my-qr-heading">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-amber-100/80 p-5 sm:p-7">
+        <div><p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-800">MY QR CODE · CUSTOMER SHARING</p>
+          <h2 id="merchant-my-qr-heading" className="mt-1 text-xl font-bold tracking-tight text-slate-950 sm:text-2xl">My QR Code</h2>
+          <p className="mt-1 text-sm text-slate-600">Share this complete poster so customers can scan to review your business.</p></div>
+        <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${usable ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}><span aria-hidden="true" className={`h-2 w-2 rounded-full ${usable ? "bg-emerald-500" : "bg-rose-500"}`} />{statusLabel}</span>
       </div>
 
-      <div className="grid min-w-0 gap-6 p-5 sm:p-7 md:grid-cols-[minmax(0,400px)_minmax(0,1fr)] md:items-center">
-        <div className="flex min-w-0 min-h-[260px] items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:min-h-[360px] sm:p-5">
-          {usable && imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={`QR code for ${businessName}`}
-              width={400}
-              height={400}
-              className="h-auto min-w-0 w-full max-w-[min(100%,360px)] rounded-xl bg-white p-2"
-            />
+      <div className="grid min-w-0 items-start gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-9">
+        <div className="min-w-0 rounded-2xl border border-white bg-white p-3 shadow-[0_8px_28px_rgba(15,23,42,0.10)] sm:p-4" data-testid="selected-qr-preview" data-template-id={selectedTemplate}>
+          {usable && scanUrl ? (
+            <QrPosterPreview businessId={businessId} businessName={businessName} businessType={businessType} qrStatus={qrStatus} expiry={expiry} templateId={selectedTemplate} qrUrl={imageUrl} />
           ) : (
-            <div className="max-w-xs text-center">
+            <div className="flex min-h-64 items-center justify-center rounded-xl bg-slate-50 p-6 text-center">
               <p className="font-semibold text-slate-800">QR code unavailable</p>
               <p className="mt-2 text-sm text-slate-600">
                 This QR is {statusLabel.toLowerCase()} and cannot be scanned right now.
@@ -198,7 +198,7 @@ export default function MyQrCode({
         </div>
 
         <div className="space-y-5">
-          <dl className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
+          <dl className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-slate-200 p-4">
               <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Business Name</dt>
               <dd className="mt-1 break-words font-semibold text-slate-900">{businessName}</dd>
@@ -215,13 +215,17 @@ export default function MyQrCode({
                 </span>
               </dd>
             </div>
+            <div className="rounded-xl border border-slate-200 p-4">
+              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Plan</dt>
+              <dd className="mt-1 font-semibold text-slate-900">{plan?.trim() || "No plan"} plan</dd>
+            </div>
             {totalScans !== undefined && <div className="rounded-xl border border-slate-200 p-4 sm:col-span-2 md:col-span-1">
               <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Total Scans</dt>
               <dd className="mt-1 font-semibold text-slate-900">{Number.isFinite(totalScans) ? totalScans.toLocaleString("en-IN") : "0"}</dd>
             </div>}
           </dl>
 
-          {templateName && <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-blue-800">Current QR design</p><p className="mt-1 truncate text-sm font-semibold text-slate-900">{templateName}</p></div><Link href="/merchant/dashboard/qr" className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">Preview &amp; change</Link></div>}
+          {templateName && <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4"><div className="min-w-0"><p className="text-xs font-semibold uppercase tracking-wide text-amber-900">Selected QR design</p><p className="mt-1 truncate text-sm font-bold text-slate-900">{templateName}</p></div><Link href="/merchant/dashboard/qr" className="rounded-lg border border-amber-300 bg-white px-3 py-2 text-sm font-semibold text-amber-900 hover:bg-amber-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-700">Preview &amp; change template</Link></div>}
 
           <div className="flex flex-wrap gap-2">
             {scanUrl && usable && <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Test Scan</a>}

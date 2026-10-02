@@ -2,9 +2,8 @@ import Link from "next/link";
 import { appConfig } from "@/lib/config";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
-import MyQrCode from "./my-qr-code";
+import MerchantDashboardQr from "./merchant-dashboard-qr";
 import ScanAnalytics from "./scan-analytics";
-import { qrTemplates } from "./qr/templates";
 
 export const dynamic = "force-dynamic";
 
@@ -61,8 +60,9 @@ function infoField(label: string, value: string | null | undefined) {
   return <div key={label} className="rounded-xl border border-slate-200 px-4 py-3"><dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt><dd className="mt-1 break-words text-sm font-semibold text-slate-900">{value?.trim() || "—"}</dd></div>;
 }
 
-function StatCard({ label, value, detail }: { label: string; value: string; detail?: string }) {
-  return <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_2px_10px_rgba(15,23,42,0.035)] transition-shadow hover:shadow-md"><p className="text-sm font-medium text-slate-500">{label}</p><p className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">{value}</p>{detail && <p className="mt-1 text-sm text-slate-500">{detail}</p>}</div>;
+function StatCard({ label, value, detail, tone, icon }: { label: string; value: string; detail?: string; tone: "green" | "amber" | "rose" | "violet"; icon: string }) {
+  const palette = { green: "border-emerald-100 bg-gradient-to-br from-emerald-50 to-green-100 text-emerald-900", amber: "border-amber-100 bg-gradient-to-br from-amber-50 to-amber-100 text-amber-950", rose: "border-rose-100 bg-gradient-to-br from-rose-50 to-rose-100 text-rose-950", violet: "border-violet-100 bg-gradient-to-br from-violet-50 to-violet-100 text-violet-950" }[tone];
+  return <div className={`flex min-w-0 items-center gap-4 rounded-[22px] border p-5 shadow-[0_8px_24px_rgba(74,61,41,0.06)] transition-shadow hover:shadow-lg ${palette}`}><span aria-hidden="true" className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white/80 text-xl shadow-sm">{icon}</span><div className="min-w-0"><p className="text-sm font-semibold opacity-75">{label}</p><p className="mt-1 text-3xl font-extrabold tracking-tight">{value}</p>{detail && <p className="mt-0.5 text-xs opacity-70">{detail}</p>}</div></div>;
 }
 
 const actions = [
@@ -100,28 +100,27 @@ export default async function MerchantDashboardPage() {
   }));
   const totalReviews = count(stats?.total_reviews);
   const average = stats?.average_rating == null ? null : Number(stats.average_rating);
-  const currentTemplate = qrTemplates.find((template) => template.id === merchant.qrTemplate) ?? qrTemplates[0];
 
   return (
     <div className="min-w-0 space-y-6 sm:space-y-8">
-      <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_4px_20px_rgba(15,23,42,0.045)] sm:p-8">
-        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-blue-50/80 to-transparent" />
-        <div className="relative flex min-w-0 flex-wrap items-start justify-between gap-5">
-          <div className="min-w-0"><p className="text-sm font-semibold text-blue-700">{greeting()},</p><h1 className="mt-1 break-words text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">{merchant.businessName}</h1><p className="mt-2 text-sm text-slate-600">Here’s how your business is performing.</p><div className="mt-4 flex flex-wrap items-center gap-2"><span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-800"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{merchant.merchantStatus}</span><span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">{merchant.businessType || "Business"}</span><span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">{merchant.plan || "No plan"} plan</span></div></div>
-          <div className="relative min-w-[190px] rounded-2xl border border-slate-200 bg-white/90 px-5 py-4"><p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Subscription</p><div className="mt-2 flex items-center gap-2"><span className={`h-2 w-2 rounded-full ${String(subscriptionStatus).toLowerCase() === "active" ? "bg-emerald-500" : "bg-amber-500"}`} /><p className="text-sm font-semibold capitalize text-slate-900">{subscriptionStatus}</p></div><p className="mt-2 text-xs text-slate-500">Renews / expires {dateLabel(subscription?.expires_at ?? merchant.expiry)}</p></div>
+      <section className="relative overflow-hidden rounded-[28px] border border-[#f1e4d3] bg-gradient-to-r from-[#fff9ef] via-[#fff5e6] to-[#ffe9cb] p-6 shadow-[0_10px_30px_rgba(101,72,32,0.07)] sm:p-8">
+        <div aria-hidden="true" className="pointer-events-none absolute -right-12 -top-16 h-64 w-64 rounded-full border-[28px] border-white/35" />
+        <div className="relative flex min-w-0 flex-wrap items-center justify-between gap-5">
+          <div className="min-w-0"><p className="text-sm font-bold text-amber-900">{greeting()} · MERCHANT OVERVIEW</p><h1 className="mt-2 break-words text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">{merchant.businessName}</h1><p className="mt-2 text-sm text-slate-600">Here’s how your business is performing.</p><div className="mt-4 flex flex-wrap items-center gap-2"><span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold capitalize text-emerald-900"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{merchant.merchantStatus}</span><span className="rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold text-slate-700">{merchant.businessType || "Business"}</span><span className="rounded-full bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-900">{merchant.plan || "No plan"} plan</span></div></div>
+          <div className="relative min-w-[210px] rounded-2xl border border-white/80 bg-white/90 px-5 py-4 shadow-[0_6px_18px_rgba(92,61,27,0.08)]"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Subscription</p><div className="mt-2 flex items-center gap-2"><span className={`h-2.5 w-2.5 rounded-full ${String(subscriptionStatus).toLowerCase() === "active" ? "bg-emerald-500" : "bg-amber-500"}`} /><p className="text-sm font-bold capitalize text-slate-900">{subscriptionStatus}</p></div><p className="mt-2 text-xs text-slate-500">Renews / expires {dateLabel(subscription?.expires_at ?? merchant.expiry)}</p></div>
         </div>
       </section>
 
       <section aria-label="Merchant statistics" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <StatCard label="Total Scans" value={stats ? count(stats.total_scans).toLocaleString("en-IN") : "—"} />
-        <StatCard label="This Month's Scans" value={stats ? count(stats.this_month_scans).toLocaleString("en-IN") : "—"} />
-        <StatCard label="Total Reviews" value={stats ? totalReviews.toLocaleString("en-IN") : "—"} detail={stats && totalReviews === 0 ? "No reviews yet" : undefined} />
-        <StatCard label="Average Rating" value={average !== null && Number.isFinite(average) ? `${average.toFixed(1)} / 5` : "— / 5"} detail={stats && totalReviews === 0 ? "No reviews yet" : undefined} />
+        <StatCard tone="green" icon="▦" label="Total Scans" value={stats ? count(stats.total_scans).toLocaleString("en-IN") : "—"} detail="All-time QR scans" />
+        <StatCard tone="amber" icon="↗" label="This Month's Scans" value={stats ? count(stats.this_month_scans).toLocaleString("en-IN") : "—"} detail="Current month activity" />
+        <StatCard tone="rose" icon="★" label="Total Reviews" value={stats ? totalReviews.toLocaleString("en-IN") : "—"} detail={stats && totalReviews === 0 ? "No reviews yet" : "Customer feedback"} />
+        <StatCard tone="violet" icon="✦" label="Average Rating" value={average !== null && Number.isFinite(average) ? `${average.toFixed(1)} / 5` : "— / 5"} detail="Customer satisfaction" />
       </section>
 
       {!statsResult.error && !stats ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800" role="status">Dashboard analytics are not available for this merchant account.</p> : null}
 
-      <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} />
+      <MerchantDashboardQr businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} plan={merchant.plan} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} initialTemplate={merchant.qrTemplate} />
 
       <section className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
         <ScanAnalytics activity={activity ?? []} />

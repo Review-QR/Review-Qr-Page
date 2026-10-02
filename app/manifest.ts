@@ -5,10 +5,13 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Trustit",
     short_name: "Trustit",
     description: "Manage your business review QR with Trustit.",
-    start_url: "/trustit",
+    start_url: "/merchant/dashboard",
     display: "standalone",
-    background_color: "#f8fafc",
-    theme_color: "#1d4ed8",
-    icons: [{ src: "/trustit-icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" }],
+    background_color: "#fffdf8",
+    theme_color: "#173b48",
+    icons: [
+      { src: "/trustit-icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/trustit-icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+    ],
   };
 }

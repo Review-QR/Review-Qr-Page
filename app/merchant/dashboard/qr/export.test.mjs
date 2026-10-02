@@ -89,7 +89,9 @@ test("all five QR designs consume one merchant business category instead of temp
   assert.match(gallerySource, /businessType: string \| null/);
   assert.match(gallerySource, /const category = getBusinessCategoryProfile\(businessType\)/);
   assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category \}/);
-  assert.match(gallerySource, /<CategoryArt kind=\{category\.artKind\}/);
+  assert.match(gallerySource, /<BusinessIndicators icons=\{category\.primaryIcons\}/);
+  assert.match(gallerySource, /import \{ findBusinessType, getBusinessIconGlyph, type BusinessIcon \} from "@\/lib\/config\/business-types"/);
+  assert.doesNotMatch(gallerySource, /CategoryArt|artKind/);
   assert.match(gallerySource, /\{category\.label\}/);
   assert.match(gallerySource, /\{category\.message\}/);
   for (const hardCodedCategory of [
@@ -101,7 +103,5 @@ test("all five QR designs consume one merchant business category instead of temp
   ]) {
     assert.equal(gallerySource.includes(hardCodedCategory), false, `Hard-coded category remains: ${hardCodedCategory}`);
   }
-  assert.match(gallerySource, /Sweet Shop · Sweets & Treats/);
-  assert.match(gallerySource, /Hotel · Stay · Hospitality/);
-  assert.match(gallerySource, /Laundry · Fresh Care/);
+  assert.equal((gallerySource.match(/<BusinessIndicators icons=\{category\.primaryIcons\}/g) ?? []).length, 5);
 });

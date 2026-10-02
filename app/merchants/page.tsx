@@ -1,9 +1,6 @@
 import type { Business } from "@/lib/types";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import {
-  createSupabaseServerClient,
-  requireActiveAdmin,
-} from "@/lib/supabase-server";
+import { requireActiveAdmin } from "@/lib/supabase-server";
 import MerchantManagement from "./merchant-management";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +8,6 @@ export const dynamic = "force-dynamic";
 export default async function MerchantsPage() {
   await requireActiveAdmin();
 
-  const supabase = await createSupabaseServerClient();
   let businessResult: {
     data: Business[] | null;
     error: { message: string } | null;
@@ -24,7 +20,7 @@ export default async function MerchantsPage() {
   try {
     const adminClient = createSupabaseAdminClient();
     [businessResult, mappingResult] = await Promise.all([
-      supabase
+      adminClient
         .from("businesses")
         .select(
           "id, name, owner, phone, type, plan, expiry, status, qr_status, registration_date, merchant_status, address, review_link, deleted_at, deleted_by"
