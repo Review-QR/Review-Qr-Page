@@ -12,3 +12,6 @@ pnpm-debug.log*
 .vercel
 .env*.local
 .next-preproduction-audit/
+
+supabase/.temp/
+tsconfig.tsbuildinfo
