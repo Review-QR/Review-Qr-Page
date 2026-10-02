@@ -54,6 +54,7 @@ export default function MyQrCode({
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
   const usable = isQrUsable(qrStatus, expiry);
+  const templateCards = ["Sweets", "Classic", "Minimal", "Modern", "Premium"];
   const safeLink = safeReviewLink(reviewLink);
   const scanUrl = buildTrustitReviewUrl(origin, businessId);
   const imageUrl = buildTrustitQrImageUrl(scanUrl);
@@ -166,26 +167,26 @@ export default function MyQrCode({
   }
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <div className="border-b border-slate-100 p-5 sm:p-7">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">
+    <section className="overflow-hidden rounded-[28px] border border-amber-100 bg-white shadow-[0_14px_40px_rgba(120,78,20,0.08)]">
+      <div className="border-b border-amber-100 bg-[linear-gradient(135deg,#fffaf0_0%,#fff7e8_55%,#f5fbf6_100%)] p-5 sm:p-7">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
           MY QR CODE
         </p>
-        <h2 className="mt-1 text-lg font-bold text-slate-900">My QR Code</h2>
+        <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">My QR Code</h2>
         <p className="mt-1 text-sm text-slate-500">
           Share this code so customers can scan to review your business.
         </p>
       </div>
 
-      <div className="grid min-w-0 gap-6 p-5 sm:p-7 md:grid-cols-[minmax(0,400px)_minmax(0,1fr)] md:items-center">
-        <div className="flex min-w-0 min-h-[260px] items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:min-h-[360px] sm:p-5">
+      <div className="grid min-w-0 gap-5 p-5 sm:p-7 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
+        <div className="rounded-[24px] border border-orange-100 bg-[linear-gradient(145deg,#fff8ec,#fffdf8)] p-4 sm:p-5">
           {usable && imageUrl ? (
             <img
               src={imageUrl}
               alt={`QR code for ${businessName}`}
               width={400}
               height={400}
-              className="h-auto min-w-0 w-full max-w-[min(100%,360px)] rounded-xl bg-white p-2"
+              className="mx-auto h-auto min-w-0 w-full max-w-[360px] rounded-xl bg-white p-2 shadow-sm"
             />
           ) : (
             <div className="max-w-xs text-center">
@@ -197,9 +198,9 @@ export default function MyQrCode({
           )}
         </div>
 
-        <div className="space-y-5">
+        <div className="min-w-0 space-y-4">
           <dl className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
-            <div className="rounded-xl border border-slate-200 p-4">
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Business Name</dt>
               <dd className="mt-1 break-words font-semibold text-slate-900">{businessName}</dd>
             </div>
@@ -221,23 +222,34 @@ export default function MyQrCode({
             </div>}
           </dl>
 
-          {templateName && <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-blue-800">Current QR design</p><p className="mt-1 truncate text-sm font-semibold text-slate-900">{templateName}</p></div><Link href="/merchant/dashboard/qr" className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">Preview &amp; change</Link></div>}
+          {templateName && <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[22px] border border-amber-100 bg-amber-50/70 p-4"><div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-blue-800">Current QR design</p><p className="mt-1 truncate text-sm font-semibold text-slate-900">{templateName}</p></div><Link href="/merchant/dashboard/qr" className="rounded-xl bg-amber-600 px-3 py-2 text-sm font-bold text-white hover:bg-amber-700">Preview &amp; change</Link></div>}
 
-          <div className="flex flex-wrap gap-2">
-            {scanUrl && usable && <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Test Scan</a>}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+            {templateCards.map((template) => (
+              <Link key={template} href="/merchant/dashboard/qr" className={`group rounded-2xl border p-3 text-center transition hover:-translate-y-0.5 hover:shadow-md ${template === templateName ? "border-amber-400 bg-amber-50 ring-2 ring-amber-300" : template === "Modern" ? "border-violet-200 bg-violet-50" : template === "Classic" ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}>
+                <div className="mx-auto flex h-20 w-full items-center justify-center rounded-xl border border-white bg-white p-2 shadow-sm">
+                  {imageUrl && usable ? <img src={imageUrl} alt="" className="h-full w-full object-contain" /> : <span className="text-2xl">▦</span>}
+                </div>
+                <p className="mt-2 text-xs font-bold text-slate-800">{template}</p>
+              </Link>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {scanUrl && usable && <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-xl bg-emerald-600 px-3 py-3 text-center text-xs font-bold text-white hover:bg-emerald-700">Test Scan</a>}
             <button
               type="button"
               onClick={() => void downloadQr()}
               disabled={!usable || !imageUrl}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl bg-amber-600 px-3 py-3 text-center text-xs font-bold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Download QR
+              Download PNG
             </button>
             <button
               type="button"
               onClick={printQr}
               disabled={!usable || !imageUrl}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl bg-slate-900 px-3 py-3 text-center text-xs font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Print QR
             </button>
@@ -245,9 +257,9 @@ export default function MyQrCode({
               type="button"
               onClick={() => void shareQr()}
               disabled={!usable || !scanUrl}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-xl bg-violet-600 px-3 py-3 text-center text-xs font-bold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Share QR
+              Share Link
             </button>
             <button
               type="button"
@@ -264,7 +276,7 @@ export default function MyQrCode({
               href={safeLink}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+              className="flex items-center justify-center rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-100"
             >
               Open Google Review
             </a>
