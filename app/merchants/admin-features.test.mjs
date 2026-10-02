@@ -45,14 +45,17 @@ test("merchant profile exposes the Trustit Customer Data route", async () => {
 
 test("merchant Trustit reviews use the scoped summary RPC rather than direct PII table access", async () => {
   const page = await read("../merchant/dashboard/reviews/page.tsx");
+  const reviewCard = await read("../merchant/dashboard/review-card.tsx");
   assert.match(page, /await requireActiveMerchant\(\)/);
   assert.match(page, /rpc\("get_merchant_trustit_reviews", \{ p_business_id: merchant\.businessId \}\)/);
   assert.doesNotMatch(page, /\.from\("trustit_reviews"\)/);
   assert.doesNotMatch(page, /customer_mobile|family_members|occasion/i);
-  assert.match(page, /Customer: \{review\.customer_name/);
-  assert.match(page, /Review:<\/span> \{review\.review_text\}/);
-  assert.match(page, /selected_experiences\.map\(\(point\) => `• \$\{point\}`\)\.join\(" "\)/);
-  assert.match(page, /<strong className="ml-2 text-slate-900">/);
+  assert.match(page, /<ReviewCard[\s\S]*?review=\{review\}/);
+  assert.match(reviewCard, /Customer review/);
+  assert.match(reviewCard, /Customer highlighted points/);
+  assert.match(reviewCard, /review\.selected_experiences\.map/);
+  assert.match(reviewCard, /review\.review_text/);
+  assert.doesNotMatch(reviewCard, /customer_mobile|family_members|occasion/i);
   assert.doesNotMatch(page, /What stood out|Selected experiences:|\[.*selected_experiences/i);
 });
 

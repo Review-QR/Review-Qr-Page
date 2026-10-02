@@ -27,7 +27,7 @@ test("merchant dashboard scopes all RPCs and database reads to the authorized bu
 test("dashboard presents exactly the requested four primary statistics and no today metric", async () => {
   const page = await read("./page.tsx");
   const primary = page.slice(page.indexOf("aria-label=\"Merchant statistics\""), page.indexOf("!statsResult.error"));
-  for (const label of ["Total Scans", "This Month's Scans", "Total Reviews", "Average Rating"]) assert.ok(primary.includes(label));
+  for (const label of ["Total Scans", "This Month’s Scans", "Total Reviews", "Average Rating"]) assert.ok(primary.includes(label));
   assert.doesNotMatch(primary, /Today's Scans|Today’s Scans/i);
   assert.match(primary, /— \/ 5/);
 });
@@ -53,13 +53,17 @@ test("experience metrics use the stored selected labels and order counts descend
 
 test("recent dashboard reviews use the existing secure RPC and show only a small preview", async () => {
   const page = await read("./page.tsx");
+  const reviewCard = await read("./review-card.tsx");
   assert.match(page, /rpc\("get_merchant_trustit_reviews"/);
   assert.match(page, /\.limit\(5\)/);
   assert.doesNotMatch(page, /\.from\("trustit_reviews"\)/);
-  assert.match(page, /Customer: \{review\.customer_name/);
-  assert.match(page, /selected_experiences\.map\(\(point\) => `• \$\{point\}`\)\.join\(" "\)/);
+  assert.match(page, /<ReviewCard[\s\S]*?review=\{review\}/);
+  assert.match(reviewCard, /Customer review/);
+  assert.match(reviewCard, /Customer highlighted points/);
+  assert.match(reviewCard, /review\.selected_experiences\.map/);
+  assert.match(reviewCard, /const tone = review\.rating <= 2 \? "negative" : review\.rating === 3 \? "mixed" : "positive"/);
   assert.match(page, /View All Reviews/);
-  assert.doesNotMatch(page, /customer_mobile|family_members|special_occasions/i);
+  assert.doesNotMatch(reviewCard, /customer_mobile|family_members|special_occasions/i);
 });
 
 test("scan analytics uses real timestamped scan events and supports the required ranges", async () => {
@@ -89,7 +93,7 @@ test("subscription and payment summary use existing records scoped to the authen
   assert.match(page, /from\("subscriptions"\)[\s\S]*?\.eq\("business_id", merchant\.businessId\)/);
   assert.match(page, /from\("payment_records"\)[\s\S]*?\.eq\("business_id", merchant\.businessId\)[\s\S]*?\.limit\(5\)/);
   assert.match(page, /Renew Plan/);
-  assert.match(page, /View All Payments/);
+  assert.match(page, /View all →/);
 });
 
 test("QR card reuses the existing business scan identity and exposes view, download, and test actions", async () => {
@@ -119,14 +123,16 @@ test("dashboard empty states avoid invalid numeric output and preserve existing 
 test("dashboard is responsive and navigation keeps existing merchant routes", async () => {
   const page = await read("./page.tsx");
   const layout = await read("./layout.tsx");
+  const dashboardCss = await read("./dashboard.css");
+  const navigation = await read("./merchant-navigation.tsx");
   assert.match(page, /sm:grid-cols-2/);
-  assert.match(page, /xl:grid-cols/);
+  assert.match(dashboardCss, /merchant-analytics-grid\s*\{\s*display:\s*grid/);
   assert.match(page, /<MyQrCode[\s\S]*?templateName=\{currentTemplate\.name\}/);
   assert.ok(page.indexOf("<MyQrCode") < page.indexOf("<ScanAnalytics"), "the merchant QR appears near the top of the dashboard");
-  assert.match(await read("./my-qr-code.tsx"), /Preview &amp; change/);
+  assert.match(await read("./my-qr-code.tsx"), /Change Template/);
   assert.doesNotMatch(page, /min-w-\[400px\]/, "dashboard tables must not force a phone-width overflow");
-  for (const path of ["business", "qr", "reviews", "subscription", "payments"]) assert.ok(layout.includes(`/merchant/dashboard/${path}`));
-  assert.match(layout, /label: "Analytics"/);
+  for (const path of ["business", "qr", "reviews", "subscription", "payments"]) assert.ok(navigation.includes(`/merchant/dashboard/${path}`));
+  assert.match(navigation, /label: "Analytics"/);
 });
 
 test("My QR page uses the authenticated merchant identity and loads the saved template preference", async () => {
