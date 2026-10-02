@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { safeReviewLink } from "@/lib/safe-review-link";
-import { buildTrustitQrImageUrl, buildTrustitReviewUrl } from "@/lib/trustit-qr";
+import { buildTrustitQrImageUrl, buildTrustitReviewUrl, trustitAppOrigin } from "@/lib/trustit-qr";
 import { QrPosterPreview } from "./qr/qr-template-gallery";
 
 type MyQrCodeProps = {
@@ -59,7 +59,7 @@ export default function MyQrCode({
   plan = null,
   layout = "dashboard",
 }: MyQrCodeProps) {
-  const [origin, setOrigin] = useState("");
+  const origin = trustitAppOrigin;
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
   const usable = isQrUsable(qrStatus, expiry);
@@ -71,8 +71,6 @@ export default function MyQrCode({
     : expiry && expiry < new Date().toISOString().slice(0, 10)
       ? "Expired"
       : qrStatus?.trim() || "Status unavailable";
-
-  useEffect(() => setOrigin(window.location.origin), []);
 
   async function copyScanLink(successMessage = "Trustit QR link copied.") {
     setMessage("");
