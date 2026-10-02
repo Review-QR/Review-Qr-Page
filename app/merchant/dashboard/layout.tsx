@@ -22,8 +22,8 @@ function NavigationLinks({ mobile = false }: { mobile?: boolean }) {
           key={item.href}
           href={item.href}
           className={mobile
-            ? "shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-blue-200 hover:text-blue-700"
-            : "block rounded-lg px-3 py-2.5 text-sm font-medium text-slate-600 hover:bg-blue-50 hover:text-blue-700"}
+            ? "shrink-0 rounded-xl border border-orange-100 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:border-orange-200 hover:text-orange-700"
+            : `block rounded-xl px-3 py-3 text-sm font-medium ${item.href.includes("/qr") ? "bg-[#ffe7b8] text-orange-900" : "text-slate-700 hover:bg-orange-50 hover:text-orange-800"}`}
         >
           {item.label}
         </Link>
@@ -36,25 +36,25 @@ export default async function MerchantDashboardLayout({ children }: { children: 
   const merchant = await requireActiveMerchant();
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 lg:flex">
-      <aside className="hidden w-72 shrink-0 border-r border-slate-200 bg-white p-6 lg:flex lg:flex-col">
-        <Link href="/merchant/dashboard" className="text-xl font-bold tracking-tight text-blue-700">Trustit</Link>
+    <div className="min-h-screen bg-[#fff8ed] text-slate-900 lg:flex">
+      <aside className="hidden w-64 shrink-0 border-r border-orange-100 bg-[#fffdf8] p-5 lg:flex lg:flex-col">
+        <Link href="/merchant/dashboard" className="flex items-center gap-2 text-2xl font-extrabold tracking-tight text-slate-950"><span className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-100 text-xl text-emerald-700">◈</span>Trustit</Link>
         <p className="mt-1 text-sm text-slate-500">Merchant Portal</p>
 
-        <div className="mt-8 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+        <div className="mt-7 rounded-2xl border border-orange-100 bg-[#fff7e8] p-4 shadow-sm">
           <p className="truncate font-semibold text-slate-900">{merchant.businessName}</p>
           <p className="mt-1 break-all font-mono text-xs text-slate-500">{merchant.businessId}</p>
           <span className="mt-3 inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">Active Merchant</span>
         </div>
 
-        <div className="mt-8"><NavigationLinks /></div>
+        <div className="mt-7"><NavigationLinks /></div>
         <form action={merchantSignOutAction} className="mt-auto pt-8">
-          <button type="submit" className="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">Log out</button>
+          <button type="submit" className="w-full rounded-xl border border-orange-100 bg-white px-3 py-2.5 text-left text-sm font-semibold text-slate-600 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700">Log out</button>
         </form>
       </aside>
 
       <div className="min-w-0 flex-1">
-        <header className="border-b border-slate-200 bg-white px-4 py-4 sm:px-6 lg:px-8">
+        <header className="border-b border-orange-100 bg-[#fffdf8] px-4 py-4 sm:px-6 lg:px-8 lg:border-b-0">
           <div className="flex items-center justify-between gap-4">
             <div className="min-w-0">
               <Link href="/merchant/dashboard" className="text-lg font-bold text-blue-700 lg:hidden">Trustit</Link>
@@ -70,7 +70,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
           </div>
           <div className="mt-3 lg:hidden"><NavigationLinks mobile /></div>
         </header>
-        <main className="mx-auto w-full max-w-7xl p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="mx-auto w-full max-w-[1500px] p-4 sm:p-6 lg:p-7">{children}</main>
       </div>
     </div>
   );
