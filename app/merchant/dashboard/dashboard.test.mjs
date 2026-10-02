@@ -186,6 +186,7 @@ test("five Trustit print designs use the required dimensions and one merchant QR
   }
   assert.equal((gallery.match(/<BusinessIndicators icons=\{category\.primaryIcons\}/g) ?? []).length, 5);
   assert.match(gallery, /findBusinessType\(businessType\)/);
+  assert.match(gallery, /legacyClinic = \/\\bmedical\\b\/i.test[\s\S]*?findBusinessType\("clinic"\)/);
   assert.doesNotMatch(gallery, /CategoryArt|artKind/);
   assert.equal((gallery.match(/<TrustitMark templateId=/g) ?? []).length, 5);
   assert.equal((gallery.match(/<GoogleMessage/g) ?? []).length, 5);

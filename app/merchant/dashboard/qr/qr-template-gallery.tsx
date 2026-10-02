@@ -54,7 +54,10 @@ type BusinessCategoryProfile = {
 };
 
 function getBusinessCategoryProfile(businessType: string | null): BusinessCategoryProfile {
-  const business = findBusinessType(businessType) ?? findBusinessType("general store");
+  const legacyClinic = /\bmedical\b/i.test(String(businessType ?? ""))
+    ? findBusinessType("clinic")
+    : undefined;
+  const business = findBusinessType(businessType) ?? legacyClinic ?? findBusinessType("general store");
   return {
     label: business ? `${business.name} · ${business.group}` : "Customer Experience",
     message: "Thank you for visiting us. We’d love your feedback.",
