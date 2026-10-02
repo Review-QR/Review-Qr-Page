@@ -132,6 +132,13 @@
 .merchant-workspace { display: grid; grid-template-columns: minmax(0, 1.62fr) minmax(340px, 1fr); align-items: stretch; gap: 12px; margin-bottom: 14px; }
 .merchant-dashboard-qr, .merchant-template-panel, .merchant-lower-panel { min-width: 0; border: 1px solid rgb(238 226 209 / 88%); border-radius: 20px; background: rgb(255 255 255 / 86%); box-shadow: 0 8px 22px rgb(89 62 30 / 5%); }
 .merchant-dashboard-qr { overflow: hidden; }
+.merchant-qr-card__header { display: flex; min-width: 0; align-items: center; gap: 12px; padding: 15px 17px; border-bottom: 1px solid #f2ebe2; background: linear-gradient(120deg, #fffefa, #fff8ef); }
+.merchant-qr-card__header > div { min-width: 0; flex: 1; }
+.merchant-qr-card__header .merchant-template-panel__icon { width: 40px; height: 40px; color: white; background: #b45c06; font-size: 19px; }
+.merchant-qr-card__header h2 { margin: 0; color: #15182b; font-size: 20px; font-weight: 790; line-height: 1.15; letter-spacing: -.03em; }
+.merchant-qr-card__header p:last-child { margin: 4px 0 0; color: #73798b; font-size: 11px; line-height: 1.4; }
+.merchant-qr-card__header .merchant-page-heading__eyebrow { margin: 0 0 3px; color: #a95a0a; font-size: 9px; }
+.merchant-qr-card__header .merchant-page-heading__badge { padding: 6px 9px; font-size: 10px; }
 .merchant-template-panel { overflow: hidden; padding: 14px 13px; }
 .merchant-template-panel > header { display: flex; align-items: center; gap: 10px; margin: -2px -1px 12px; padding: 0 2px 11px; border-bottom: 1px solid #f2ebe2; }
 .merchant-template-panel__icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: #ac570c; font-size: 17px; }
@@ -320,10 +327,15 @@
   .merchant-qr-detail__list .merchant-qr-detail:nth-child(odd) { border-right: 1px solid #f2eee9; }
   .merchant-qr-detail__list .merchant-qr-detail:last-child { grid-column: span 2; }
   .merchant-template-panel { padding: 11px 9px; }
-  .merchant-template-grid, .merchant-template-panel--compact .merchant-template-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+  .merchant-template-grid, .merchant-template-panel--compact .merchant-template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
   .merchant-template-tile { padding: 4px; }
   .merchant-template-tile__name { font-size: 9px; }
   .merchant-template-tile__select { font-size: 8px; }
+  .merchant-qr-card__header { align-items: flex-start; gap: 8px; padding: 12px; }
+  .merchant-qr-card__header .merchant-template-panel__icon { width: 32px; height: 32px; border-radius: 11px; font-size: 15px; }
+  .merchant-qr-card__header h2 { font-size: 17px; }
+  .merchant-qr-card__header p:last-child { max-width: 55vw; font-size: 9px; }
+  .merchant-qr-card__header .merchant-page-heading__badge { padding: 5px 7px; font-size: 8px; }
   .merchant-quick-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .merchant-quick-link { min-height: 82px; }
   .merchant-quick-link strong { font-size: 11px; }
