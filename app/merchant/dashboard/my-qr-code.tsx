@@ -12,7 +12,8 @@ type MyQrCodeProps = {
   expiry: string | null;
   reviewLink: string | null;
   totalScans?: number;
-  templateName?: string;\n  plan?: string | null;
+  templateName?: string;
+  plan?: string | null;
 };
 
 function isQrUsable(qrStatus: string | null, expiry: string | null) {
