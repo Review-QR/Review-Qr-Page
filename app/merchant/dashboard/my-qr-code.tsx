@@ -49,6 +49,7 @@ export default function MyQrCode({
   reviewLink,
   totalScans,
   templateName,
+  plan,
 }: MyQrCodeProps) {
   const [origin, setOrigin] = useState("");
   const [message, setMessage] = useState("");
