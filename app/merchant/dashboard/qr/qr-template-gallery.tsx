@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
-import { buildTrustitQrImageUrl, buildTrustitReviewUrl } from "@/lib/trustit-qr";
+import { useRef, useState, useTransition } from "react";
+import { buildTrustitQrImageUrl, buildTrustitReviewUrl, trustitAppOrigin } from "@/lib/trustit-qr";
 import { saveQrTemplateAction } from "./actions";
 import { getQrTemplateFilename, getQrTemplatePrintCss, getQrTemplatePrintDimensions, qrTemplates, type QrTemplateId } from "./templates";
 
@@ -292,7 +292,7 @@ export function QrPosterPreview({ businessId, businessName, businessType, qrStat
   expiry: string | null;
   templateId: string | null;
 }) {
-  const [origin, setOrigin] = useState("");
+  const origin = trustitAppOrigin;
   const selectedId = qrTemplates.some((template) => template.id === templateId)
     ? templateId as QrTemplateId
     : qrTemplates[0].id;
@@ -300,8 +300,6 @@ export function QrPosterPreview({ businessId, businessName, businessType, qrStat
   const qrUrl = buildTrustitQrImageUrl(reviewRoute);
   const category = getBusinessCategoryProfile(businessType);
   const qrUsable = isQrUsable(qrStatus, expiry);
-
-  useEffect(() => setOrigin(window.location.origin), []);
 
   return <PosterByTemplate templateId={selectedId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} />;
 }
@@ -312,7 +310,7 @@ function isQrUsable(status: string | null, expiry: string | null) {
 }
 
 export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, display = "carousel" }: Props) {
-  const [origin, setOrigin] = useState("");
+  const origin = trustitAppOrigin;
   const [selectedTemplate, setSelectedTemplate] = useState<QrTemplateId>(qrTemplates.some((template) => template.id === initialTemplate) ? initialTemplate as QrTemplateId : "template_1");
   const [previewTemplate, setPreviewTemplate] = useState<QrTemplateId | null>(null);
   const [statusMessage, setStatusMessage] = useState("");
@@ -328,8 +326,6 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
   const exportTemplateId = previewTemplate ?? selectedTemplate;
   const exportTemplate = qrTemplates.find((template) => template.id === exportTemplateId)!;
   const exportDimensions = getQrTemplatePrintDimensions(exportTemplateId);
-
-  useEffect(() => setOrigin(window.location.origin), []);
 
   function chooseTemplate(templateId: QrTemplateId) {
     setStatusMessage("");

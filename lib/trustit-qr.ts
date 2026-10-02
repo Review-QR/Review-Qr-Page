@@ -1,3 +1,6 @@
+export const trustitAppOrigin = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "")
+  || "https://review-qr-page.vercel.app";
+
 export function buildTrustitReviewUrl(origin: string, businessId: string) {
   if (!origin || !businessId) return "";
   return new URL(`/r/${encodeURIComponent(businessId)}`, origin).toString();
