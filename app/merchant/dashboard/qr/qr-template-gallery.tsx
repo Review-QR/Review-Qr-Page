@@ -14,6 +14,7 @@ type Props = {
   qrStatus: string | null;
   expiry: string | null;
   initialTemplate: string;
+  display?: "carousel" | "dashboard";
 };
 
 function TrustitMark({ templateId, className = "", compact = false }: { templateId: QrTemplateId; className?: string; compact?: boolean }) {
@@ -283,12 +284,34 @@ function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsabl
   );
 }
 
+export function QrPosterPreview({ businessId, businessName, businessType, qrStatus, expiry, templateId }: {
+  businessId: string;
+  businessName: string;
+  businessType: string | null;
+  qrStatus: string | null;
+  expiry: string | null;
+  templateId: string | null;
+}) {
+  const [origin, setOrigin] = useState("");
+  const selectedId = qrTemplates.some((template) => template.id === templateId)
+    ? templateId as QrTemplateId
+    : qrTemplates[0].id;
+  const reviewRoute = buildTrustitReviewUrl(origin, businessId);
+  const qrUrl = buildTrustitQrImageUrl(reviewRoute);
+  const category = getBusinessCategoryProfile(businessType);
+  const qrUsable = isQrUsable(qrStatus, expiry);
+
+  useEffect(() => setOrigin(window.location.origin), []);
+
+  return <PosterByTemplate templateId={selectedId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} />;
+}
+
 function isQrUsable(status: string | null, expiry: string | null) {
   const today = new Date().toISOString().slice(0, 10);
   return status?.trim().toLowerCase() === "active" && (!expiry || expiry >= today);
 }
 
-export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate }: Props) {
+export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, display = "carousel" }: Props) {
   const [origin, setOrigin] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<QrTemplateId>(qrTemplates.some((template) => template.id === initialTemplate) ? initialTemplate as QrTemplateId : "template_1");
   const [previewTemplate, setPreviewTemplate] = useState<QrTemplateId | null>(null);
@@ -463,7 +486,7 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
 
   return (
     <section aria-labelledby="qr-template-heading" className="space-y-5">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className={display === "dashboard" ? "hidden" : "flex flex-wrap items-end justify-between gap-4"}>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">Make it yours</p>
           <h2 id="qr-template-heading" className="mt-1 text-xl font-bold text-slate-950 sm:text-2xl">Choose Your QR Template</h2>
@@ -475,29 +498,33 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
         </div>
       </div>
 
-      <div ref={galleryRef} className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-4 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]" aria-label="Trustit QR template gallery">
+      <div ref={galleryRef} className={display === "dashboard" ? "merchant-template-grid" : "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-4 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"} aria-label="Trustit QR template gallery">
         {qrTemplates.map((template) => {
           const isSelected = selectedTemplate === template.id;
           return (
-            <article key={template.id} className={`w-[min(84vw,360px)] shrink-0 snap-start overflow-hidden rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:w-[min(50vw,420px)] lg:w-[min(40vw,480px)] xl:w-[min(38vw,480px)] ${isSelected ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200"}`}>
-              <div className="relative">
+            <article key={template.id} className={display === "dashboard" ? `merchant-template-tile${isSelected ? " is-selected" : ""}` : `w-[min(84vw,360px)] shrink-0 snap-start overflow-hidden rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:w-[min(50vw,420px)] lg:w-[min(40vw,480px)] xl:w-[min(38vw,480px)] ${isSelected ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200"}`}>
+              <button type="button" onClick={() => setPreviewTemplate(template.id)} className={display === "dashboard" ? "merchant-template-tile__poster" : "relative block w-full text-left"} aria-label={`Preview ${template.name} QR design`}>
                 <PosterByTemplate templateId={template.id} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} compact />
-                {isSelected && <span className="absolute right-2 top-2 rounded-full bg-blue-700 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white shadow">Current</span>}
-              </div>
-              <div className="px-1 pb-1 pt-3">
-                <h3 className="font-semibold text-slate-900">{template.name}</h3>
-                <p className="mt-0.5 text-xs text-slate-500">{template.description}</p>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{template.printSize} · {template.orientation}</p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => setPreviewTemplate(template.id)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Preview</button>
-                  <button type="button" onClick={() => chooseTemplate(template.id)} disabled={isPending || isSelected} className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-default disabled:opacity-60">{isSelected ? "Selected" : isPending ? "Saving…" : "Select"}</button>
-                </div>
-                {isSelected && exportButtons(template.id, "mt-2")}
+                {isSelected && <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-sm font-black text-white shadow" aria-label="Currently selected">✓</span>}
+              </button>
+              <div className={display === "dashboard" ? "" : "px-1 pb-1 pt-3"}>
+                <h3 className={display === "dashboard" ? "merchant-template-tile__name" : "font-semibold text-slate-900"}>{template.name}</h3>
+                {display !== "dashboard" && <>
+                  <p className="mt-0.5 text-xs text-slate-500">{template.description}</p>
+                  <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{template.printSize} · {template.orientation}</p>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <button type="button" onClick={() => setPreviewTemplate(template.id)} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Preview</button>
+                    <button type="button" onClick={() => chooseTemplate(template.id)} disabled={isPending || isSelected} className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-default disabled:opacity-60">{isSelected ? "Selected" : isPending ? "Saving…" : "Select"}</button>
+                  </div>
+                  {isSelected && exportButtons(template.id, "mt-2")}
+                </>}
+                {display === "dashboard" && <button type="button" onClick={() => chooseTemplate(template.id)} disabled={isPending || isSelected} className="merchant-template-tile__select">{isSelected ? "Selected" : isPending ? "Saving…" : "Choose design"}</button>}
               </div>
             </article>
           );
         })}
       </div>
+      {display === "dashboard" && <div className="merchant-template-exports">{exportButtons(selectedTemplate)}</div>}
       <p role="status" aria-live="polite" className={`min-h-5 text-sm ${statusMessage.includes("could not") || statusMessage.startsWith("Sign in") || statusMessage.startsWith("Choose") ? "text-rose-700" : "text-emerald-700"}`}>{statusMessage}</p>
       <p role="status" aria-live="polite" className="min-h-5 text-sm text-slate-600">{exportStatus}</p>
 

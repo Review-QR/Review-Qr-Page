@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl } from "@/lib/trustit-qr";
+import { QrPosterPreview } from "./qr/qr-template-gallery";
 
 type MyQrCodeProps = {
   businessId: string;
@@ -13,7 +14,10 @@ type MyQrCodeProps = {
   reviewLink: string | null;
   totalScans?: number;
   templateName?: string;
+  templateId?: string | null;
+  businessType?: string | null;
   plan?: string | null;
+  layout?: "dashboard" | "standalone";
 };
 
 function isQrUsable(qrStatus: string | null, expiry: string | null) {
@@ -50,13 +54,15 @@ export default function MyQrCode({
   reviewLink,
   totalScans,
   templateName,
-  plan,
+  templateId = "template_1",
+  businessType = null,
+  plan = null,
+  layout = "dashboard",
 }: MyQrCodeProps) {
   const [origin, setOrigin] = useState("");
   const [message, setMessage] = useState("");
   const [messageTone, setMessageTone] = useState<"success" | "error">("success");
   const usable = isQrUsable(qrStatus, expiry);
-  const templateCards = ["Sweets", "Classic", "Minimal", "Modern", "Premium"];
   const safeLink = safeReviewLink(reviewLink);
   const scanUrl = buildTrustitReviewUrl(origin, businessId);
   const imageUrl = buildTrustitQrImageUrl(scanUrl);
@@ -82,6 +88,23 @@ export default function MyQrCode({
     } catch {
       setMessageTone("error");
       setMessage("Could not copy the Trustit QR link. Check your browser permissions and try again.");
+    }
+  }
+
+  async function copyGoogleReviewLink() {
+    setMessage("");
+    if (!safeLink) {
+      setMessageTone("error");
+      setMessage("The Google Review link is unavailable.");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(safeLink);
+      setMessageTone("success");
+      setMessage("Google Review link copied.");
+    } catch {
+      setMessageTone("error");
+      setMessage("Could not copy the Google Review link.");
     }
   }
 
@@ -168,124 +191,49 @@ export default function MyQrCode({
     else if (image) image.onload = startPrint;
   }
 
+  const standalone = layout === "standalone";
   return (
-    <section className="overflow-hidden rounded-[28px] border border-orange-100 bg-white shadow-[0_16px_42px_rgba(120,78,20,0.10)]">
-      <div className="border-b border-amber-100 bg-[linear-gradient(135deg,#fffaf0_0%,#fff7e8_55%,#f5fbf6_100%)] p-5 sm:p-7">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
-          MY QR CODE
-        </p>
-        <h2 className="mt-1 text-2xl font-extrabold tracking-tight text-slate-950">My QR Code</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Share this code so customers can scan to review your business.
-        </p>
-      </div>
+    <section className={`merchant-dashboard-qr${standalone ? " merchant-qr-card--standalone" : ""}`} aria-labelledby="merchant-my-qr-heading">
+      <header className="merchant-qr-card__header">
+        <span className="merchant-template-panel__icon" aria-hidden="true">▦</span>
+        <div>
+          <p className="merchant-page-heading__eyebrow">{standalone ? "Your customer sharing kit" : "MY QR CODE"}</p>
+          <h2 id="merchant-my-qr-heading">My QR Code</h2>
+          <p>Share this code so customers can scan to review your business.</p>
+        </div>
+        <span className="merchant-page-heading__badge">● {statusLabel}</span>
+      </header>
 
-      <div className="grid min-w-0 gap-5 p-5 sm:p-7 xl:grid-cols-[minmax(0,1.05fr)_minmax(390px,0.95fr)]">
-        <div className="rounded-[24px] border border-orange-100 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.20),transparent_32%),linear-gradient(145deg,#fff0d2,#fffaf1)] p-4 sm:p-5">
-          {usable && imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={`QR code for ${businessName}`}
-              width={400}
-              height={400}
-              className="mx-auto h-auto min-w-0 w-full max-w-[390px] rounded-[18px] bg-white p-3 shadow-[0_12px_30px_rgba(120,78,20,0.10)]"
-            />
-          ) : (
-            <div className="max-w-xs text-center">
-              <p className="font-semibold text-slate-800">QR code unavailable</p>
-              <p className="mt-2 text-sm text-slate-600">
-                This QR is {statusLabel.toLowerCase()} and cannot be scanned right now.
-              </p>
+      <div className={`merchant-qr-layout${standalone ? " merchant-qr-layout--standalone" : ""}`}>
+        <div className="merchant-qr-poster-frame">
+          {usable ? (
+            <div className="merchant-qr-poster">
+              <QrPosterPreview businessId={businessId} businessName={businessName} businessType={businessType} qrStatus={qrStatus} expiry={expiry} templateId={templateId} />
             </div>
+          ) : (
+            <div className="merchant-qr-poster"><div className="merchant-qr-unavailable"><strong>QR code unavailable</strong><span>This QR is {statusLabel.toLowerCase()} and cannot be scanned right now.</span></div></div>
           )}
         </div>
 
-        <div className="min-w-0 space-y-4">
-          <dl className="grid gap-3 sm:grid-cols-2 md:grid-cols-1">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Business Name</dt>
-              <dd className="mt-1 break-words font-semibold text-slate-900">{businessName}</dd>
-            </div>
-            <div className="rounded-xl border border-slate-200 p-4">
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Business ID</dt>
-              <dd className="mt-1 break-all font-mono font-semibold text-slate-900">{businessId}</dd>
-            </div>
-            <div className="rounded-xl border border-slate-200 p-4 sm:col-span-2 md:col-span-1">
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">QR Status</dt>
-              <dd className="mt-2">
-                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${usable ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"}`}>
-                  {statusLabel}
-                </span>
-              </dd>
-            </div>
-            {totalScans !== undefined && <div className="rounded-xl border border-slate-200 p-4 sm:col-span-2 md:col-span-1">
-              <dt className="text-xs font-medium uppercase tracking-wide text-slate-500">Total Scans</dt>
-              <dd className="mt-1 font-semibold text-slate-900">{Number.isFinite(totalScans) ? totalScans.toLocaleString("en-IN") : "0"}</dd>
-            </div>}
+        <div className="merchant-qr-details">
+          <dl className="merchant-qr-details__list">
+            <div className="merchant-qr-detail"><span className="merchant-qr-detail__icon" aria-hidden="true">♙</span><div className="merchant-qr-detail__copy"><small>Business Name</small><strong>{businessName}</strong></div></div>
+            <div className="merchant-qr-detail"><span className="merchant-qr-detail__icon" aria-hidden="true">▣</span><div className="merchant-qr-detail__copy"><small>Business ID</small><strong>{businessId}</strong><button type="button" onClick={() => void copyScanLink("Business QR link copied.")}>Copy QR link</button></div></div>
+            <div className="merchant-qr-detail"><span className="merchant-qr-detail__icon" aria-hidden="true">↗</span><div className="merchant-qr-detail__copy"><small>Google Review Link</small>{safeLink ? <a href={safeLink} target="_blank" rel="noreferrer">{safeLink}</a> : <strong>Unavailable</strong>}<button type="button" onClick={() => void copyGoogleReviewLink()} disabled={!safeLink}>Copy review link</button></div></div>
+            <div className="merchant-qr-detail"><span className="merchant-qr-detail__icon" aria-hidden="true">●</span><div className="merchant-qr-detail__copy"><small>QR Status</small><strong>{statusLabel}</strong></div></div>
+            <div className="merchant-qr-detail"><span className="merchant-qr-detail__icon" aria-hidden="true">♢</span><div className="merchant-qr-detail__copy"><small>Plan</small><strong>{plan?.trim() || "No plan"} plan</strong></div></div>
+            <div className="merchant-qr-detail"><span className="merchant-qr-detail__icon" aria-hidden="true">▤</span><div className="merchant-qr-detail__copy"><small>Expiry Date</small><strong>{expiry || "—"}</strong></div></div>
           </dl>
-
-          {templateName && <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[22px] border border-amber-100 bg-amber-50/70 p-4"><div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-blue-800">Current QR design</p><p className="mt-1 truncate text-sm font-semibold text-slate-900">{templateName}</p></div><Link href="/merchant/dashboard/qr" className="rounded-xl bg-amber-600 px-3 py-2 text-sm font-bold text-white hover:bg-amber-700">Preview &amp; change</Link></div>}
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {templateCards.map((template) => (
-              <Link key={template} href="/merchant/dashboard/qr" className={`group rounded-2xl border p-3 text-center transition hover:-translate-y-0.5 hover:shadow-md ${template === templateName ? "border-amber-400 bg-amber-50 ring-2 ring-amber-300" : template === "Modern" ? "border-violet-200 bg-violet-50" : template === "Classic" ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}>
-                <div className="mx-auto flex h-20 w-full items-center justify-center rounded-xl border border-white bg-white p-2 shadow-sm">
-                  {imageUrl && usable ? <img src={imageUrl} alt="" className="h-full w-full object-contain" /> : <span className="text-2xl">▦</span>}
-                </div>
-                <p className="mt-2 text-xs font-bold text-slate-800">{template}</p>
-              </Link>
-            ))}
+          <div className="merchant-qr-actions">
+            <button type="button" onClick={() => void downloadQr()} disabled={!usable || !imageUrl}>⇩ Download QR</button>
+            <button type="button" onClick={printQr} disabled={!usable || !imageUrl}>▤ Print QR</button>
+            <button type="button" onClick={() => void shareQr()} disabled={!usable || !scanUrl}>↗ Share Link</button>
           </div>
-
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {scanUrl && usable && <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-xl bg-emerald-600 px-3 py-3 text-center text-xs font-bold text-white hover:bg-emerald-700">Test Scan</a>}
-            <button
-              type="button"
-              onClick={() => void downloadQr()}
-              disabled={!usable || !imageUrl}
-              className="rounded-xl bg-amber-600 px-3 py-3 text-center text-xs font-bold text-white hover:bg-amber-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Download PNG
-            </button>
-            <button
-              type="button"
-              onClick={printQr}
-              disabled={!usable || !imageUrl}
-              className="rounded-xl bg-slate-900 px-3 py-3 text-center text-xs font-bold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Print QR
-            </button>
-            <button
-              type="button"
-              onClick={() => void shareQr()}
-              disabled={!usable || !scanUrl}
-              className="rounded-xl bg-violet-600 px-3 py-3 text-center text-xs font-bold text-white hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Share Link
-            </button>
-            <button
-              type="button"
-              onClick={() => void copyScanLink()}
-              disabled={!usable || !scanUrl}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Copy QR Link
-            </button>
+          <div className="merchant-qr-actions merchant-qr-actions--secondary">
+            <a href={scanUrl || "#"} target="_blank" rel="noreferrer" aria-disabled={!scanUrl} className={!scanUrl ? "is-disabled" : ""}>⌕ Test Scan</a>
+            <Link href={standalone ? "#template-gallery" : "/merchant/dashboard/qr"}>✦ Change Template</Link>
           </div>
-
-          {safeLink ? (
-            <a
-              href={safeLink}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center rounded-xl border-2 border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800 hover:bg-emerald-100"
-            >
-              Open Google Review
-            </a>
-          ) : (
-            <p className="text-sm text-slate-500">Google Review link is unavailable.</p>
-          )}
-          {message && <p role="status" aria-live="polite" className={`text-sm ${messageTone === "error" ? "text-rose-700" : "text-emerald-700"}`}>{message}</p>}
+          <p className="merchant-qr-message" role="status" aria-live="polite">{message}</p>
         </div>
       </div>
     </section>
