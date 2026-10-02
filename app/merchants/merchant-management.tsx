@@ -443,6 +443,12 @@ export default function MerchantManagement({
             Businesses
           </Link>
           <Link
+            href="/merchants/invite"
+            className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-100"
+          >
+            + Invite Merchant
+          </Link>
+          <Link
             href="/merchants/deleted"
             className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-100"
           >
