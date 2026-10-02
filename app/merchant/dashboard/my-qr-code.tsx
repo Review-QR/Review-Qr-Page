@@ -12,7 +12,7 @@ type MyQrCodeProps = {
   expiry: string | null;
   reviewLink: string | null;
   totalScans?: number;
-  templateName?: string;
+  templateName?: string;\n  plan?: string | null;
 };
 
 function isQrUsable(qrStatus: string | null, expiry: string | null) {
@@ -167,7 +167,7 @@ export default function MyQrCode({
   }
 
   return (
-    <section className="overflow-hidden rounded-[28px] border border-amber-100 bg-white shadow-[0_14px_40px_rgba(120,78,20,0.08)]">
+    <section className="overflow-hidden rounded-[28px] border border-orange-100 bg-white shadow-[0_16px_42px_rgba(120,78,20,0.10)]">
       <div className="border-b border-amber-100 bg-[linear-gradient(135deg,#fffaf0_0%,#fff7e8_55%,#f5fbf6_100%)] p-5 sm:p-7">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-amber-700">
           MY QR CODE
@@ -178,15 +178,15 @@ export default function MyQrCode({
         </p>
       </div>
 
-      <div className="grid min-w-0 gap-5 p-5 sm:p-7 xl:grid-cols-[minmax(0,1.08fr)_minmax(360px,0.92fr)]">
-        <div className="rounded-[24px] border border-orange-100 bg-[linear-gradient(145deg,#fff8ec,#fffdf8)] p-4 sm:p-5">
+      <div className="grid min-w-0 gap-5 p-5 sm:p-7 xl:grid-cols-[minmax(0,1.05fr)_minmax(390px,0.95fr)]">
+        <div className="rounded-[24px] border border-orange-100 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.20),transparent_32%),linear-gradient(145deg,#fff0d2,#fffaf1)] p-4 sm:p-5">
           {usable && imageUrl ? (
             <img
               src={imageUrl}
               alt={`QR code for ${businessName}`}
               width={400}
               height={400}
-              className="mx-auto h-auto min-w-0 w-full max-w-[360px] rounded-xl bg-white p-2 shadow-sm"
+              className="mx-auto h-auto min-w-0 w-full max-w-[390px] rounded-[18px] bg-white p-3 shadow-[0_12px_30px_rgba(120,78,20,0.10)]"
             />
           ) : (
             <div className="max-w-xs text-center">
@@ -224,7 +224,7 @@ export default function MyQrCode({
 
           {templateName && <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-[22px] border border-amber-100 bg-amber-50/70 p-4"><div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-blue-800">Current QR design</p><p className="mt-1 truncate text-sm font-semibold text-slate-900">{templateName}</p></div><Link href="/merchant/dashboard/qr" className="rounded-xl bg-amber-600 px-3 py-2 text-sm font-bold text-white hover:bg-amber-700">Preview &amp; change</Link></div>}
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {templateCards.map((template) => (
               <Link key={template} href="/merchant/dashboard/qr" className={`group rounded-2xl border p-3 text-center transition hover:-translate-y-0.5 hover:shadow-md ${template === templateName ? "border-amber-400 bg-amber-50 ring-2 ring-amber-300" : template === "Modern" ? "border-violet-200 bg-violet-50" : template === "Classic" ? "border-emerald-200 bg-emerald-50" : "border-slate-200 bg-white"}`}>
                 <div className="mx-auto flex h-20 w-full items-center justify-center rounded-xl border border-white bg-white p-2 shadow-sm">
