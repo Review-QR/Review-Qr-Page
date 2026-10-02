@@ -139,7 +139,7 @@
 .merchant-qr-card__header p:last-child { margin: 4px 0 0; color: #73798b; font-size: 11px; line-height: 1.4; }
 .merchant-qr-card__header .merchant-page-heading__eyebrow { margin: 0 0 3px; color: #a95a0a; font-size: 9px; }
 .merchant-qr-card__header .merchant-page-heading__badge { padding: 6px 9px; font-size: 10px; }
-.merchant-template-panel { overflow: hidden; padding: 14px 13px; }
+.merchant-template-panel { overflow: hidden; padding: 14px 13px; container: merchant-template-panel / inline-size; }
 .merchant-template-panel > header { display: flex; align-items: center; gap: 10px; margin: -2px -1px 12px; padding: 0 2px 11px; border-bottom: 1px solid #f2ebe2; }
 .merchant-template-panel__icon { display: grid; width: 34px; height: 34px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #fff; background: #ac570c; font-size: 17px; }
 .merchant-template-panel h2 { margin: 0; color: #1c1b2a; font-size: 16px; font-weight: 750; letter-spacing: -.02em; }
@@ -185,6 +185,10 @@
 .merchant-template-tile.is-selected .merchant-template-tile__select { border-color: #c5ecd7; color: #08774a; background: #eaf9f0; }
 .merchant-template-link { display: inline-flex; align-items: center; gap: 5px; margin-top: 10px; color: #a64c05; font-size: 11px; font-weight: 750; }
 .merchant-template-panel--compact .merchant-template-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+@container merchant-template-panel (max-width: 440px) {
+  .merchant-template-grid, .merchant-template-panel--compact .merchant-template-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 .merchant-lower-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(300px, .9fr); gap: 12px; margin-bottom: 14px; }
 .merchant-lower-panel { padding: 16px; }
