@@ -70,7 +70,7 @@ test("scan analytics uses real timestamped scan events and supports the required
   assert.match(migration, /event\.scanned_at/);
   assert.match(migration, /merchant\.user_id = \(select auth\.uid\(\)\)/);
   assert.match(component, /\[7, 30, 90\]/);
-  assert.match(component, /No scan data yet/);
+  assert.match(component, /Not enough scan history yet/);
   assert.match(component, /range === 90/);
   assert.match(component, /Array\.from\(\{ length: 13 \}, \(_, week\)/);
 });
@@ -121,6 +121,10 @@ test("dashboard is responsive and navigation keeps existing merchant routes", as
   const layout = await read("./layout.tsx");
   assert.match(page, /sm:grid-cols-2/);
   assert.match(page, /xl:grid-cols/);
+  assert.match(page, /<MyQrCode[\s\S]*?templateName=\{currentTemplate\.name\}/);
+  assert.ok(page.indexOf("<MyQrCode") < page.indexOf("<ScanAnalytics"), "the merchant QR appears near the top of the dashboard");
+  assert.match(await read("./my-qr-code.tsx"), /Preview &amp; change/);
+  assert.doesNotMatch(page, /min-w-\[400px\]/, "dashboard tables must not force a phone-width overflow");
   for (const path of ["business", "qr", "reviews", "subscription", "payments"]) assert.ok(layout.includes(`/merchant/dashboard/${path}`));
   assert.match(layout, /label: "Analytics"/);
 });

@@ -54,7 +54,7 @@ export default function ScanAnalytics({ activity }: { activity: ScanDay[] }) {
           {([7, 30, 90] as const).map((days) => <button key={days} type="button" aria-pressed={range === days} onClick={() => setRange(days)} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${range === days ? "bg-white text-blue-700 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}>{days === 90 ? "3 Months" : `${days} Days`}</button>)}
         </div>
       </div>
-      {total === 0 ? <p className="mt-8 rounded-xl bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">No scan data yet.</p> : <div className="mt-8 flex h-56 items-end gap-1 border-b border-l border-slate-200 px-2 pb-2 sm:gap-2" role="img" aria-label={`${range} day scan chart, ${total} scans`}>
+      {total === 0 ? <div className="mt-8 rounded-xl bg-slate-50 px-4 py-8 text-center"><p className="text-sm font-semibold text-slate-700">Not enough scan history yet</p><p className="mt-1 text-sm text-slate-500">New scans will appear here as dated activity is collected.</p></div> : <div className="mt-8 flex h-56 min-w-0 items-end gap-1 overflow-hidden border-b border-l border-slate-200 px-2 pb-2 sm:gap-2" role="img" aria-label={`${range} day scan chart, ${total} scans`}>
         {points.map((point, index) => <div key={`${point.label}-${index}`} className="group relative flex h-full min-w-0 flex-1 flex-col justify-end" title={`${point.label}: ${point.value}`}>
           <span className="mb-1 text-center text-[10px] text-slate-500">{range === 90 && index % 2 ? "" : point.value || ""}</span>
           <div className="min-h-0 rounded-t bg-blue-500 transition-colors group-hover:bg-blue-700" style={{ height: `${Math.max(point.value ? 4 : 0, (point.value / max) * 72)}%` }} />
