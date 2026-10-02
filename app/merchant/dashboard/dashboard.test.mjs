@@ -70,7 +70,7 @@ test("scan analytics uses real timestamped scan events and supports the required
   assert.match(migration, /event\.scanned_at/);
   assert.match(migration, /merchant\.user_id = \(select auth\.uid\(\)\)/);
   assert.match(component, /\[7, 30, 90\]/);
-  assert.match(component, /No scan data yet/);
+  assert.match(component, /Not enough scan history yet/);
   assert.match(component, /range === 90/);
   assert.match(component, /Array\.from\(\{ length: 13 \}, \(_, week\)/);
 });
@@ -121,6 +121,10 @@ test("dashboard is responsive and navigation keeps existing merchant routes", as
   const layout = await read("./layout.tsx");
   assert.match(page, /sm:grid-cols-2/);
   assert.match(page, /xl:grid-cols/);
+  assert.match(page, /<MyQrCode[\s\S]*?templateName=\{currentTemplate\.name\}/);
+  assert.ok(page.indexOf("<MyQrCode") < page.indexOf("<ScanAnalytics"), "the merchant QR appears near the top of the dashboard");
+  assert.match(await read("./my-qr-code.tsx"), /Preview &amp; change/);
+  assert.doesNotMatch(page, /min-w-\[400px\]/, "dashboard tables must not force a phone-width overflow");
   for (const path of ["business", "qr", "reviews", "subscription", "payments"]) assert.ok(layout.includes(`/merchant/dashboard/${path}`));
   assert.match(layout, /label: "Analytics"/);
 });
@@ -136,17 +140,17 @@ test("My QR page uses the authenticated merchant identity and loads the saved te
   assert.match(auth, /qrTemplate: business\.qr_template \|\| "template_1"/);
 });
 
-test("five category-specific Trustit print designs use the required dimensions and one merchant QR", async () => {
+test("five Trustit print designs use the required dimensions and one merchant QR", async () => {
   const gallery = await read("./qr/qr-template-gallery.tsx");
   const definitions = await read("./qr/templates.ts");
   const qrUtility = await read("../../../lib/trustit-qr.ts");
   assert.equal((definitions.match(/id: "template_[1-5]"/g) ?? []).length, 5);
   for (const [name, size, orientation, ratio] of [
-    ["Restaurant", "4 × 6 in", "Portrait", "2 / 3"],
-    ["Hotel / Stay", "4 × 6 in", "Portrait", "2 / 3"],
-    ["Laundry", "4 × 6 in", "Portrait", "2 / 3"],
-    ["Retail Shop", "6 × 4 in", "Landscape", "3 / 2"],
-    ["Salon / Beauty", "6 × 4 in", "Landscape", "3 / 2"],
+    ["Classic Portrait", "4 × 6 in", "Portrait", "2 / 3"],
+    ["Elegant Portrait", "4 × 6 in", "Portrait", "2 / 3"],
+    ["Fresh Portrait", "4 × 6 in", "Portrait", "2 / 3"],
+    ["Local Landscape", "6 × 4 in", "Landscape", "3 / 2"],
+    ["Modern Landscape", "6 × 4 in", "Landscape", "3 / 2"],
   ]) {
     const row = definitions.slice(definitions.indexOf(`name: "${name}"`)).split("\n", 1)[0];
     assert.ok(row.includes(`printSize: "${size}"`), `${name} print size`);
@@ -169,7 +173,8 @@ test("five category-specific Trustit print designs use the required dimensions a
   for (const component of ["RestaurantPoster", "HotelPoster", "LaundryPoster", "RetailPoster", "SalonPoster"]) {
     assert.match(gallery, new RegExp(`function ${component}\\(`));
   }
-  for (const kind of ["restaurant", "hotel", "laundry", "retail", "salon"]) assert.ok(gallery.includes(`kind="${kind}"`), `${kind} illustration`);
+  assert.match(gallery, /<CategoryArt kind=\{category\.artKind\}/);
+  for (const kind of ["food", "hotel", "laundry", "retail", "salon", "universal"]) assert.match(gallery, new RegExp(`artKind: "${kind}"`), `${kind} business art`);
   assert.equal((gallery.match(/<TrustitMark templateId=/g) ?? []).length, 5);
   assert.equal((gallery.match(/<GoogleMessage/g) ?? []).length, 5);
   assert.match(gallery, /SCAN TO REVIEW/);

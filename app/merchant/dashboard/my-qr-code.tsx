@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl } from "@/lib/trustit-qr";
 
@@ -11,6 +12,7 @@ type MyQrCodeProps = {
   expiry: string | null;
   reviewLink: string | null;
   totalScans?: number;
+  templateName?: string;
 };
 
 function isQrUsable(qrStatus: string | null, expiry: string | null) {
@@ -46,6 +48,7 @@ export default function MyQrCode({
   expiry,
   reviewLink,
   totalScans,
+  templateName,
 }: MyQrCodeProps) {
   const [origin, setOrigin] = useState("");
   const [message, setMessage] = useState("");
@@ -150,7 +153,7 @@ export default function MyQrCode({
         <h1>${escapeHtml(businessName || "Business")}</h1>
         <img src="${escapeHtml(imageUrl)}" alt="QR code for ${escapeHtml(businessName)}">
         <p>${escapeHtml(businessId)}</p>
-        <p class="prompt">Scan to leave us a review</p>
+        <p class="prompt">Scan to Review</p>
       </main></body></html>`);
     printWindow.document.close();
     const image = printWindow.document.querySelector("img");
@@ -170,19 +173,19 @@ export default function MyQrCode({
         </p>
         <h2 className="mt-1 text-lg font-bold text-slate-900">My QR Code</h2>
         <p className="mt-1 text-sm text-slate-500">
-          Your QR opens the public Review-QR page for this business.
+          Share this code so customers can scan to review your business.
         </p>
       </div>
 
-      <div className="grid gap-6 p-5 sm:p-7 md:grid-cols-[minmax(280px,400px)_1fr] md:items-center">
-        <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-5 sm:min-h-[420px]">
+      <div className="grid min-w-0 gap-6 p-5 sm:p-7 md:grid-cols-[minmax(0,400px)_minmax(0,1fr)] md:items-center">
+        <div className="flex min-w-0 min-h-[260px] items-center justify-center rounded-2xl border border-slate-100 bg-slate-50 p-4 sm:min-h-[360px] sm:p-5">
           {usable && imageUrl ? (
             <img
               src={imageUrl}
               alt={`QR code for ${businessName}`}
               width={400}
               height={400}
-              className="h-auto w-full max-w-[360px] rounded-xl bg-white p-2"
+              className="h-auto min-w-0 w-full max-w-[min(100%,360px)] rounded-xl bg-white p-2"
             />
           ) : (
             <div className="max-w-xs text-center">
@@ -217,6 +220,8 @@ export default function MyQrCode({
               <dd className="mt-1 font-semibold text-slate-900">{Number.isFinite(totalScans) ? totalScans.toLocaleString("en-IN") : "0"}</dd>
             </div>}
           </dl>
+
+          {templateName && <div className="flex min-w-0 flex-wrap items-center justify-between gap-3 rounded-xl border border-blue-100 bg-blue-50/60 p-4"><div className="min-w-0"><p className="text-xs font-medium uppercase tracking-wide text-blue-800">Current QR design</p><p className="mt-1 truncate text-sm font-semibold text-slate-900">{templateName}</p></div><Link href="/merchant/dashboard/qr" className="rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">Preview &amp; change</Link></div>}
 
           <div className="flex flex-wrap gap-2">
             {scanUrl && usable && <a href={scanUrl} target="_blank" rel="noreferrer" className="rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Test Scan</a>}
