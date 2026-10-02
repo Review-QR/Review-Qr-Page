@@ -191,7 +191,6 @@ export default function ReviewExperience({
           <span className="mx-auto mb-3 grid size-16 place-items-center rounded-full border-4 border-white bg-gradient-to-br from-amber-100 to-orange-200 text-2xl font-extrabold text-orange-800 shadow-md shadow-orange-100">{businessName.trim().slice(0, 1).toUpperCase()}</span>
           <p className="text-xs font-semibold text-slate-500">Your feedback helps us serve you better</p>
           <h1 className="mt-1 break-words text-[22px] font-extrabold leading-tight tracking-[-.035em] text-[#10153f] sm:text-3xl">{businessName}</h1>
-          {step !== "submitted" && step !== "failed" && <p className="mt-2 text-sm text-slate-600">{heading}</p>}
         </div>
 
         {step !== "submitted" && step !== "failed" && <nav aria-label="Review progress" className="border-y border-slate-100 px-4 py-4 sm:px-8">
@@ -209,7 +208,7 @@ export default function ReviewExperience({
           <h2 className="mt-4 text-xl font-extrabold tracking-tight text-[#10153f] sm:text-2xl">How was your experience?</h2>
           <p className="mt-1 text-sm text-slate-500">Tap a star to rate your visit</p>
           <div className="mt-5 flex justify-center gap-1 sm:gap-2" role="group" aria-label="Choose a rating from 1 to 5 stars">
-            {[1, 2, 3, 4, 5].map((rating) => <button key={rating} type="button" aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} aria-pressed={selectedRating === rating} disabled={isPending || selectedRating !== null} onClick={() => selectRating(rating)} className={`grid size-12 place-items-center rounded-2xl text-[38px] leading-none transition hover:-translate-y-0.5 hover:bg-amber-50 disabled:cursor-default sm:size-14 sm:text-5xl ${selectedRating && rating <= selectedRating ? "text-amber-400 drop-shadow-sm" : "text-slate-200"}`}><span aria-hidden="true">★</span></button>)}
+            {[1, 2, 3, 4, 5].map((rating) => <button key={rating} type="button" aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} aria-pressed={selectedRating === rating} disabled={isPending || selectedRating !== null} onClick={() => selectRating(rating)} className={`grid size-14 place-items-center rounded-2xl transition hover:-translate-y-0.5 hover:bg-amber-50 disabled:cursor-default sm:size-16 ${selectedRating && rating <= selectedRating ? "text-amber-400 drop-shadow-sm" : "text-amber-300"}`}><svg aria-hidden="true" viewBox="0 0 24 24" className="size-10 fill-current sm:size-12"><path d="M12 2.25 14.92 8.18l6.54.95-4.73 4.61 1.12 6.52L12 17.18l-5.85 3.08 1.12-6.52L2.54 9.13l6.54-.95L12 2.25Z" /></svg></button>)}
           </div>
           <p className="mt-2 min-h-6 text-sm font-medium text-slate-600" aria-live="polite">{selectedRating ? `${selectedRating} out of 5 stars · ${ratingCopy(selectedRating)}` : ratingCopy(null)}</p>
           {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
