@@ -155,7 +155,7 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact, responsive, c
 
 function RetailPoster({ name, businessId, qrUrl, usable, compact, responsive, category }: PosterContentProps) {
   return (
-    <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-visible bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : responsive ? "gap-2 p-2 origin-top-left w-[133.333%] h-[133.333%] scale-75 sm:gap-4 sm:p-6 sm:w-[111.111%] sm:h-[111.111%] sm:scale-90 lg:gap-8 lg:p-9 lg:w-full lg:h-full lg:scale-100" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
+    <div className={`relative grid ${responsive && !compact ? "" : "h-full w-full"} grid-cols-[1fr_auto] items-center overflow-visible bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : responsive ? "gap-2 p-2 origin-top-left w-[133.333%] h-[133.333%] scale-75 sm:gap-4 sm:p-6 sm:w-[111.111%] sm:h-[111.111%] sm:scale-90 lg:gap-8 lg:p-9 lg:w-full lg:h-full lg:scale-100" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 w-2 bg-[#cf963e]" />
       <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
         <TrustitMark templateId="template_4" className="text-[#846021]" compact={compact} />
@@ -179,7 +179,7 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, responsive, ca
 
 function SalonPoster({ name, businessId, qrUrl, usable, compact, responsive, category }: PosterContentProps) {
   return (
-    <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-visible bg-[#fff3f1] text-[#432b35] ${compact ? "gap-2 p-3" : responsive ? "gap-2 p-2 origin-top-left w-[133.333%] h-[133.333%] scale-75 sm:gap-4 sm:p-6 sm:w-[111.111%] sm:h-[111.111%] sm:scale-90 lg:gap-8 lg:p-9 lg:w-full lg:h-full lg:scale-100" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
+    <div className={`relative grid ${responsive && !compact ? "" : "h-full w-full"} grid-cols-[1fr_auto] items-center overflow-visible bg-[#fff3f1] text-[#432b35] ${compact ? "gap-2 p-3" : responsive ? "gap-2 p-2 origin-top-left w-[133.333%] h-[133.333%] scale-75 sm:gap-4 sm:p-6 sm:w-[111.111%] sm:h-[111.111%] sm:scale-90 lg:gap-8 lg:p-9 lg:w-full lg:h-full lg:scale-100" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 w-2 bg-[#bb7189]" />
       <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
         <TrustitMark templateId="template_5" className="text-[#99586f]" compact={compact} />
