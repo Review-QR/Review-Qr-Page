@@ -16,6 +16,7 @@ import type {
 
 type ReviewExperienceProps = {
   businessName: string;
+  googleReviewUrl: string;
   experienceCategories: ReviewExperienceCategory[];
   initialSession: RestoredReviewSession;
   createReviewSession: CreateReviewSessionAction;
@@ -27,62 +28,46 @@ type ReviewExperienceProps = {
 };
 
 type Occasion = { enabled: boolean; month: string; day: string };
-type FamilyMember = {
-  name: string;
-  relation: string;
-  mobile: string;
-  birthday: Occasion;
-  anniversary: Occasion;
-};
+type FamilyMember = { name: string; relation: string; mobile: string; birthday: Occasion; anniversary: Occasion };
+type Step = "rating" | "experience" | "review" | "details" | "submitted" | "failed";
 const emptyOccasion = (): Occasion => ({ enabled: false, month: "", day: "" });
-const emptyFamilyMember = (): FamilyMember => ({
-  name: "", relation: "", mobile: "", birthday: emptyOccasion(), anniversary: emptyOccasion(),
-});
+const emptyFamilyMember = (): FamilyMember => ({ name: "", relation: "", mobile: "", birthday: emptyOccasion(), anniversary: emptyOccasion() });
 const relations = TRUSTIT_RELATIONS;
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const stages: { id: Exclude<Step, "submitted" | "failed">; label: string }[] = [
+  { id: "rating", label: "Rating" }, { id: "experience", label: "Experience" }, { id: "review", label: "Review" }, { id: "details", label: "Details" },
+];
+function monthDays(month: string) { return validDaysForMonth(months.indexOf(month)); }
+function ratingCopy(rating: number | null) {
+  if (!rating) return "Tap a star to rate your visit";
+  return ["We appreciate your honest feedback.", "Thanks for letting us know.", "Tell us what could be better.", "We’re glad your visit went well.", "We’re delighted you enjoyed your visit."][rating - 1];
+}
+function toneFor(rating: number | null) { return rating && rating <= 2 ? "negative" : rating === 3 ? "mixed" : "positive"; }
 
-function monthDays(month: string) {
-  const index = months.indexOf(month);
-  return validDaysForMonth(index);
+function OccasionRow({ label, value, onChange }: { label: string; value: Occasion; onChange: (next: Occasion) => void }) {
+  const inputId = useId();
+  return <div className="flex min-h-12 flex-nowrap items-center gap-2 border-t border-slate-100 py-2">
+    <label className="flex shrink-0 items-center gap-2 text-sm font-medium text-slate-700"><input type="checkbox" checked={value.enabled} onChange={(e) => onChange({ enabled: e.target.checked, month: e.target.checked ? value.month : "", day: e.target.checked ? value.day : "" })} />{label}</label>
+    {value.enabled && <div className="flex min-w-0 flex-1 gap-2"><label htmlFor={`${inputId}-month`} className="sr-only">{label} month</label><select id={`${inputId}-month`} value={value.month} onChange={(e) => onChange({ ...value, month: e.target.value, day: "" })} className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-sm"><option value="">Month *</option>{months.map((month) => <option key={month}>{month}</option>)}</select><label htmlFor={`${inputId}-day`} className="sr-only">{label} date</label><select id={`${inputId}-day`} disabled={!value.month} value={value.day} onChange={(e) => onChange({ ...value, day: e.target.value })} className="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-2 py-2.5 text-sm"><option value="">Date *</option>{monthDays(value.month).map((day) => <option key={day} value={day}>{day}</option>)}</select></div>}
+  </div>;
 }
 
-function OccasionRow({ label, value, onChange }: {
-  label: string; value: Occasion; onChange: (next: Occasion) => void;
-}) {
-  const inputId = useId();
-  const validDays = monthDays(value.month);
-  return (
-    <div className="flex min-h-12 flex-nowrap items-center gap-2 border-t border-slate-100 py-2">
-      <label className="flex shrink-0 items-center gap-1.5 text-xs font-medium text-slate-800 sm:gap-2 sm:text-sm">
-        <input type="checkbox" checked={value.enabled} onChange={(e) => onChange({ enabled: e.target.checked, month: e.target.checked ? value.month : "", day: e.target.checked ? value.day : "" })} />
-        {label}
-      </label>
-      {value.enabled ? <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1">
-        <label htmlFor={`${inputId}-month`} className="sr-only">{label} month</label>
-        <select id={`${inputId}-month`} value={value.month} onChange={(e) => onChange({ ...value, month: e.target.value, day: "" })} className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-1 py-2 text-xs sm:px-2 sm:text-sm">
-          <option value="">Month *</option>{months.map((month) => <option key={month}>{month}</option>)}
-        </select>
-        <label htmlFor={`${inputId}-date`} className="sr-only">{label} date</label>
-        <select id={`${inputId}-date`} disabled={!value.month} value={value.day} onChange={(e) => onChange({ ...value, day: e.target.value })} className="min-w-0 flex-1 rounded-md border border-slate-300 bg-white px-1 py-2 text-xs sm:px-2 sm:text-sm">
-          <option value="">Date *</option>{validDays.map((day) => <option key={day} value={day}>{day}</option>)}
-        </select>
-      </div> : null}
-    </div>
-  );
+function PrimaryButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  return <button {...props} className={`inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-[0_9px_20px_rgba(93,56,255,.2)] transition hover:brightness-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-200 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:bg-none disabled:text-slate-500 disabled:shadow-none ${props.className ?? ""}`}>{children}</button>;
 }
 
 export default function ReviewExperience({
-  businessName, experienceCategories, initialSession, createReviewSession, saveExperiences,
+  businessName, googleReviewUrl, experienceCategories, initialSession, createReviewSession, saveExperiences,
   generateReviewDraft, googleReviewHandoff, saveReviewDraft, submitTrustitReview,
 }: ReviewExperienceProps) {
   const [isPending, startTransition] = useTransition();
   const [selectedRating, setSelectedRating] = useState<number | null>(initialSession?.rating ?? null);
   const [hasSession, setHasSession] = useState(Boolean(initialSession));
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSession?.selectedExperiences.map((experience) => experience.key) ?? []);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialSession?.selectedExperiences.map((item) => item.key) ?? []);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [draft, setDraft] = useState(initialSession?.draft ?? "");
-  const [step, setStep] = useState<"feedback" | "draft" | "trustit" | "submitted">(initialSession?.submitted ? "submitted" : initialSession?.draft ? "draft" : "feedback");
+  const [step, setStep] = useState<Step>(initialSession?.submitted ? "submitted" : initialSession?.draft ? "review" : initialSession ? "experience" : "rating");
   const [shareDetails, setShareDetails] = useState(false);
   const [customerName, setCustomerName] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
@@ -92,14 +77,14 @@ export default function ReviewExperience({
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [isOpeningGoogle, setIsOpeningGoogle] = useState(false);
   const requestInProgress = useRef(false);
+  const selectedLabels = experienceCategories.filter((item) => selectedCategories.includes(item.key)).map((item) => item.label);
+  const tone = toneFor(selectedRating);
 
   function runAction(work: () => Promise<void>) {
     if (requestInProgress.current) return;
-    requestInProgress.current = true;
-    setError(null);
+    requestInProgress.current = true; setError(null);
     startTransition(async () => {
-      try { await work(); }
-      catch { setError("We couldn't complete that step. Please try again."); }
+      try { await work(); } catch { setError("We couldn’t complete that step. Please try again."); }
       finally { requestInProgress.current = false; }
     });
   }
@@ -108,73 +93,62 @@ export default function ReviewExperience({
     if (requestInProgress.current || hasSession || selectedRating !== null) return;
     runAction(async () => {
       const result = await createReviewSession(rating);
-      if (!result.ok) { setError(result.message); return; }
-      setSelectedRating(result.rating);
-      setHasSession(true);
+      if (!result.ok) { setError("We couldn’t save your rating. Please try again."); return; }
+      setSelectedRating(result.rating); setHasSession(true); setError(null);
     });
   }
 
   function toggleExperience(categoryKey: string) {
     if (isPending) return;
-    setSelectedCategories((current) => current.includes(categoryKey)
-      ? current.filter((key) => key !== categoryKey)
-      : current.length >= 10 ? current : [...current, categoryKey]);
+    setSelectedCategories((current) => current.includes(categoryKey) ? current.filter((key) => key !== categoryKey) : current.length >= 10 ? current : [...current, categoryKey]);
   }
 
   function makeDraft(regenerate = false) {
     if (!hasSession || !selectedRating || selectedCategories.length < 1) return;
-    const returnStep = step;
     runAction(async () => {
       if (!regenerate) {
         const saved = await saveExperiences(selectedCategories);
-        if (!saved.ok) { setError(saved.message); return; }
+        if (!saved.ok) { setError("Those choices could not be saved. Please try again."); return; }
         setSelectedCategories(saved.categoryKeys);
       } else {
-        // Keep the current manual edit as the persisted fallback if the next
-        // generation fails.
         const savedDraft = await saveReviewDraft(draft);
-        if (!savedDraft.ok) { setError(savedDraft.message); return; }
+        if (!savedDraft.ok) { setError("Your current draft could not be saved. Please try again."); return; }
       }
       const result = await generateReviewDraft();
-      if (!result.ok) { setError(result.message); return; }
-      setDraft(result.draft);
-      setCopied(false);
-      const nextStep = regenerate && returnStep === "trustit" ? "trustit" : "draft";
-      setStep(nextStep);
-      setTimeout(() => document.getElementById(nextStep === "trustit" ? "trustit-review-form" : "review-draft-section")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+      if (!result.ok) { setError("We couldn’t prepare a review suggestion. Please try again."); return; }
+      setDraft(result.draft); setCopied(false); setStep("review");
+      setTimeout(() => document.getElementById("review-draft-section")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
     });
   }
 
   async function copyAndGoogle() {
     if (!draft.trim() || !hasSession || requestInProgress.current) return;
-    requestInProgress.current = true;
-    setIsOpeningGoogle(true);
-    setError(null);
+    requestInProgress.current = true; setIsOpeningGoogle(true); setError(null);
     try {
-      // Clipboard must be invoked directly from the user's click to preserve
-      // browser user activation. The server persists the exact same value.
-      await navigator.clipboard.writeText(draft);
-      setCopied(true);
+      await navigator.clipboard.writeText(draft); setCopied(true);
       const result = await googleReviewHandoff(draft);
-      if (!result.ok) { setError(result.message); return; }
+      if (!result.ok) { setError("We couldn’t open this business’s Google review page. You can continue here instead."); return; }
       window.location.assign(result.reviewUrl);
-    } catch { setError("Copy or review-page opening is unavailable. Please try again."); }
+    } catch { setError("Copy or review-page opening isn’t available. Please try again."); }
     finally { requestInProgress.current = false; setIsOpeningGoogle(false); }
   }
 
-  function continueOnTrustit() {
+  function openGoogleAfterSubmit() {
+    void navigator.clipboard?.writeText(draft).catch(() => undefined);
+    window.open(googleReviewUrl, "_blank", "noopener,noreferrer");
+  }
+
+  function continueToDetails() {
     if (!hasSession || !draft.trim()) return;
     runAction(async () => {
       const result = await saveReviewDraft(draft);
-      if (!result.ok) { setError(result.message); return; }
-      setStep("trustit");
+      if (!result.ok) { setError("Your draft could not be saved. Please try again."); return; }
+      setStep("details"); setError(null);
       setTimeout(() => document.getElementById("trustit-review-form")?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
     });
   }
 
-  function updateFamily(index: number, updater: (member: FamilyMember) => FamilyMember) {
-    setFamily((current) => current.map((member, i) => i === index ? updater(member) : member));
-  }
+  function updateFamily(index: number, updater: (member: FamilyMember) => FamilyMember) { setFamily((current) => current.map((member, i) => i === index ? updater(member) : member)); }
 
   function submitReview(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -186,103 +160,122 @@ export default function ReviewExperience({
       addOccasion("customer", birthday, "birthday"); addOccasion("customer", anniversary, "anniversary");
       family.forEach((member, index) => { addOccasion("family", member.birthday, "birthday", index); addOccasion("family", member.anniversary, "anniversary", index); });
     }
-    const payload: TrustitReviewSubmission = {
-      reviewText: draft, customerName: customerName.trim(), customerMobile: shareDetails ? customerMobile.trim() : "",
-      shareDetails, occasions, familyMembers: shareDetails ? family.map(({ name, relation, mobile }) => ({ name: name.trim(), relation, mobile: mobile.trim() })) : [],
-    };
+    const payload: TrustitReviewSubmission = { reviewText: draft, customerName: customerName.trim(), customerMobile: shareDetails ? customerMobile.trim() : "", shareDetails, occasions, familyMembers: shareDetails ? family.map(({ name, relation, mobile }) => ({ name: name.trim(), relation, mobile: mobile.trim() })) : [] };
     const issues = validateTrustitReviewInput(payload);
-    const validateOccasion = (item: Occasion, label: string) => {
-      if (item.enabled && (!item.month || !item.day || !isValidMonthDay(months.indexOf(item.month), Number(item.day)))) issues.push(`Choose a valid month and date for ${label}.`);
-    };
+    const validateOccasion = (item: Occasion, label: string) => { if (item.enabled && (!item.month || !item.day || !isValidMonthDay(months.indexOf(item.month), Number(item.day)))) issues.push(`Choose a valid month and date for ${label}.`); };
     if (shareDetails) {
-      validateOccasion(birthday, "your birthday");
-      validateOccasion(anniversary, "your anniversary");
-      family.forEach((member, index) => {
-        validateOccasion(member.birthday, `family member ${index + 1} birthday`);
-        validateOccasion(member.anniversary, `family member ${index + 1} anniversary`);
-      });
+      validateOccasion(birthday, "your birthday"); validateOccasion(anniversary, "your anniversary");
+      family.forEach((member, index) => { validateOccasion(member.birthday, `family member ${index + 1} birthday`); validateOccasion(member.anniversary, `family member ${index + 1} anniversary`); });
     }
     setFormErrors(issues);
     if (issues.length || !hasSession || !selectedRating || !draft.trim()) return;
     runAction(async () => {
       const result = await submitTrustitReview(payload);
-      if (!result.ok) { setError(result.message); return; }
-      setStep("submitted");
-      setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+      if (!result.ok) { setStep("failed"); setError("We couldn’t submit your review. Please check your connection and try again."); return; }
+      setError(null); setStep("submitted"); setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
     });
   }
 
-  return (
-    <main className="min-h-screen bg-slate-50 px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto w-full max-w-2xl">
-        <header className="mb-5 flex items-center justify-center gap-2" aria-label="Trustit">
-          <span className="grid size-8 place-items-center rounded-lg bg-indigo-600 text-sm font-extrabold text-white">T</span>
-          <span className="text-lg font-bold text-slate-900">Trustit</span>
-        </header>
-        <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
-          <div className="text-center">
-            <p className="text-xs font-bold uppercase text-indigo-600">Your feedback matters</p>
-            <h1 className="mt-2 break-words text-2xl font-bold text-slate-950">{businessName}</h1>
-            {step !== "submitted" && <><p className="mt-3 text-lg font-semibold text-slate-800">How was your experience?</p><p className="mt-1 text-sm text-slate-500">Rate your experience</p></>}
-            {selectedRating && <p className="mt-2 text-sm text-slate-600">{selectedRating} of 5 stars · saved for this session</p>}
-          </div>
+  const heading = step === "rating" ? "How was your experience?" : step === "experience" ? "What stood out in your experience?" : step === "review" ? "Write your review" : "Share a few details";
+  const stageIndex = step === "rating" ? 0 : step === "experience" ? 1 : step === "review" ? 2 : 3;
 
-          {step === "submitted" ? <div className="py-10 text-center" role="status"><p className="text-2xl font-bold text-emerald-800">Thank you for sharing your review.</p><p className="mt-2 text-sm text-slate-600">Your feedback has been shared on Trustit.</p></div> : <>
-            <div className="mt-5 flex justify-center gap-1" role="group" aria-label="Choose a rating from 1 to 5 stars">
-              {[1, 2, 3, 4, 5].map((rating) => <button key={rating} type="button" aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} aria-pressed={selectedRating === rating} disabled={isPending || selectedRating !== null} onClick={() => selectRating(rating)} className={`grid size-12 place-items-center rounded-lg text-4xl disabled:cursor-default ${selectedRating && rating <= selectedRating ? "text-amber-400" : "text-slate-300 hover:bg-slate-50"}`}><span aria-hidden="true">★</span></button>)}
-            </div>
-            {isPending && !hasSession ? <p className="mt-2 text-center text-sm text-indigo-700">Saving your rating…</p> : null}
-            {hasSession && step === "feedback" && <section className="mt-6 border-t border-slate-100 pt-5" aria-live="polite">
-              <h2 className="text-lg font-bold text-slate-900">What stood out in your experience?</h2>
-              <p className="mt-1 text-sm text-slate-500">Choose up to 10 that reflect your visit.</p>
-              <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">{experienceCategories.map((category) => {
-                const active = selectedCategories.includes(category.key);
-                return <button key={category.key} type="button" aria-pressed={active} disabled={isPending} onClick={() => toggleExperience(category.key)} className={`min-h-12 rounded-lg border px-3 py-2 text-left text-sm font-medium ${active ? "border-indigo-600 bg-indigo-600 text-white" : "border-slate-200 bg-white text-slate-800 hover:border-indigo-300"}`}><span className="flex justify-between gap-2"><span>{category.label}</span><span>{active ? "✓" : "+"}</span></span></button>;
-              })}</div>
-              {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
-              <button type="button" disabled={isPending || selectedCategories.length === 0} onClick={() => makeDraft()} className="mt-5 min-h-12 w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white disabled:bg-slate-300">{isPending ? "Preparing your draft…" : "Continue"}</button>
-            </section>}
-            {step === "draft" && <section id="review-draft-section" className="mt-6 border-t border-slate-100 pt-5">
-              <h2 className="text-lg font-bold text-slate-900">Your Review Draft</h2>
-              <p className="mt-1 text-sm text-slate-500">Edit this in your own words before sharing.</p>
-              <p className="mt-2 text-xs leading-5 text-slate-500">This is only a draft based on the details you selected. Please make sure it reflects your real experience. Trustit does not post reviews to Google; the Google option opens the business’s official review page for you to review and submit yourself.</p>
-              <textarea aria-label="Your editable review draft" value={draft} maxLength={10000} rows={5} onChange={(e) => { setDraft(e.target.value); setCopied(false); }} className="mt-3 w-full rounded-lg border border-slate-300 p-3 text-sm leading-6 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-100" />
-              {error && <p role="alert" className="mt-2 text-sm text-rose-700">{error}</p>}{copied && <p role="status" className="mt-2 text-sm text-emerald-700">Review copied. Paste it on Google to submit.</p>}
-              <button type="button" disabled={isPending} onClick={() => makeDraft(true)} className="mt-3 min-h-11 rounded-lg border border-slate-300 px-4 text-sm font-semibold text-slate-800 disabled:opacity-50">{isPending ? "Regenerating…" : "Regenerate Review"}</button>
-              <div className="mt-4 grid gap-2 sm:grid-cols-2">
-                <button type="button" disabled={isPending || isOpeningGoogle || !draft.trim()} onClick={copyAndGoogle} className="min-h-12 rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white disabled:bg-slate-300">{isOpeningGoogle ? "Opening Google Review…" : "Copy Draft & Review on Google Business"}</button>
-                <button type="button" disabled={isPending || isOpeningGoogle || !draft.trim()} onClick={continueOnTrustit} className="min-h-12 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-semibold text-indigo-900">Review on Trustit Platform</button>
-              </div>
-            </section>}
-            {step === "trustit" && <form id="trustit-review-form" onSubmit={submitReview} className="mt-6 border-t border-slate-100 pt-5">
-              <h2 className="text-lg font-bold text-slate-900">Your Review</h2>
-              <p className="mt-1 text-sm text-slate-600">Your {selectedRating}-star rating is retained.</p>
-              <textarea aria-label="Review text" value={draft} maxLength={10000} rows={4} onChange={(e) => setDraft(e.target.value)} className="mt-3 w-full rounded-lg border border-slate-300 p-3 text-sm leading-6" />
-              <button type="button" disabled={isPending} onClick={() => makeDraft(true)} className="mt-2 min-h-10 rounded-lg border border-slate-300 px-3 text-sm font-semibold">{isPending ? "Regenerating…" : "Regenerate Review"}</button>
-              <label htmlFor="trustit-customer-name" className="mt-5 block text-sm font-semibold text-slate-800">Your Name *</label>
-              <input id="trustit-customer-name" maxLength={160} value={customerName} onChange={(e) => setCustomerName(e.target.value)} autoComplete="name" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" placeholder="Enter your name" />
-              <p className="mt-1 text-xs leading-5 text-slate-500">Your name is stored with this Trustit review and visible to the business. Mobile, family, and occasion details are shared only if you opt in below.</p>
-              <label className="mt-4 flex min-h-11 items-center gap-2 text-sm text-slate-800"><input type="checkbox" checked={shareDetails} onChange={(e) => { setShareDetails(e.target.checked); if (!e.target.checked) { setCustomerMobile(""); setBirthday(emptyOccasion()); setAnniversary(emptyOccasion()); setFamily([]); } }} />Want to share some personal details?</label>
-              {shareDetails && <div className="mt-2 border-l-2 border-indigo-100 pl-3">
-                <label htmlFor="trustit-customer-mobile" className="block text-sm font-semibold text-slate-800">Mobile Number *</label>
-                <input id="trustit-customer-mobile" type="tel" maxLength={32} value={customerMobile} onChange={(e) => setCustomerMobile(e.target.value)} autoComplete="tel" className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" placeholder="Mobile number" />
-                <div className="mt-3 rounded-lg border border-slate-200 px-3"><OccasionRow label="Birthday" value={birthday} onChange={setBirthday} /><OccasionRow label="Anniversary" value={anniversary} onChange={setAnniversary} /></div>
-                <div className="mt-4 space-y-3">{family.map((member, index) => <fieldset key={index} className="rounded-lg border border-slate-200 p-3"><legend className="px-1 text-sm font-semibold">Family member {index + 1}</legend>
-                  <div className="grid gap-2 sm:grid-cols-3"><input maxLength={160} aria-label="Family member name" placeholder="Name *" value={member.name} onChange={(e) => updateFamily(index, (m) => ({ ...m, name: e.target.value }))} className="min-h-10 rounded-md border border-slate-300 px-2 text-sm" /><select aria-label="Family member relation" value={member.relation} onChange={(e) => updateFamily(index, (m) => ({ ...m, relation: e.target.value }))} className="min-h-10 rounded-md border border-slate-300 px-2 text-sm"><option value="">Relation *</option>{relations.map((relation) => <option key={relation} value={relation}>{relation[0].toUpperCase() + relation.slice(1)}</option>)}</select><input type="tel" maxLength={32} aria-label="Family member mobile optional" placeholder="Mobile (optional)" value={member.mobile} onChange={(e) => updateFamily(index, (m) => ({ ...m, mobile: e.target.value }))} className="min-h-10 rounded-md border border-slate-300 px-2 text-sm" /></div>
-                  <div className="mt-2 rounded-md border border-slate-100 px-2"><OccasionRow label="Birthday" value={member.birthday} onChange={(v) => updateFamily(index, (m) => ({ ...m, birthday: v }))} /><OccasionRow label="Anniversary" value={member.anniversary} onChange={(v) => updateFamily(index, (m) => ({ ...m, anniversary: v }))} /></div>
-                  <button type="button" onClick={() => setFamily((current) => current.filter((_, i) => i !== index))} className="mt-2 text-xs font-semibold text-rose-700">Remove</button>
-                </fieldset>)}</div>
-                <button type="button" disabled={family.length >= 8} onClick={() => setFamily((current) => [...current, emptyFamilyMember()])} className="mt-3 min-h-10 text-sm font-semibold text-indigo-700">+ Add Family Member</button>
-              </div>}
-              {formErrors.length > 0 && <ul className="mt-3 list-inside list-disc text-sm text-rose-700" role="alert">{formErrors.map((item) => <li key={item}>{item}</li>)}</ul>}
-              {error && <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p>}
-              <button type="submit" disabled={isPending || !draft.trim()} className="mt-4 min-h-12 w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white disabled:bg-slate-300">{isPending ? "Sharing your review…" : "Share Your Review on Trustit"}</button>
-            </form>}
-          </>}
-          {error && step !== "feedback" && step !== "draft" && step !== "trustit" ? <p role="alert" className="mt-3 text-sm text-rose-700">{error}</p> : null}
-        </section>
-        <p className="mt-4 text-center text-xs text-slate-500">Your feedback helps {businessName} understand how it can serve you better.</p>
-      </div>
-    </main>
-  );
+  return <main className="min-h-screen overflow-x-hidden bg-[#fffaf4] px-3 py-5 text-slate-900 sm:px-6 sm:py-9">
+    <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 -z-0 h-64 bg-[radial-gradient(ellipse_at_top,_#ffe9c9_0%,_#fffaf4_70%)]" />
+    <div className="relative mx-auto w-full max-w-xl">
+      <header className="mb-5 flex items-center justify-center gap-2.5 sm:mb-7">
+        <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-700 text-lg font-black text-white shadow-md shadow-violet-200">T</span>
+        <span><strong className="block text-lg font-extrabold tracking-tight">Trustit</strong><small className="block text-[11px] leading-4 text-slate-500">Your Feedback Matters</small></span>
+      </header>
+      <section className="overflow-hidden rounded-[28px] border border-orange-100 bg-white/95 shadow-[0_18px_60px_rgba(112,81,40,.10)] sm:rounded-[32px]">
+        <div className="px-5 pb-5 pt-6 text-center sm:px-9 sm:pb-6 sm:pt-8">
+          <span className="mx-auto mb-3 grid size-16 place-items-center rounded-full border-4 border-white bg-gradient-to-br from-amber-100 to-orange-200 text-2xl font-extrabold text-orange-800 shadow-md shadow-orange-100">{businessName.trim().slice(0, 1).toUpperCase()}</span>
+          <p className="text-xs font-semibold text-slate-500">Your feedback helps us serve you better</p>
+          <h1 className="mt-1 break-words text-[22px] font-extrabold leading-tight tracking-[-.035em] text-[#10153f] sm:text-3xl">{businessName}</h1>
+          {step !== "submitted" && step !== "failed" && <p className="mt-2 text-sm text-slate-600">{heading}</p>}
+        </div>
+
+        {step !== "submitted" && step !== "failed" && <nav aria-label="Review progress" className="border-y border-slate-100 px-4 py-4 sm:px-8">
+          <ol className="grid grid-cols-4">
+            {stages.map((stage, index) => <li key={stage.id} className="relative flex flex-col items-center text-center">
+              {index < stages.length - 1 && <span aria-hidden="true" className={`absolute left-1/2 top-3.5 h-0.5 w-full ${index < stageIndex ? "bg-violet-500" : "bg-slate-200"}`} />}
+              <span aria-current={index === stageIndex ? "step" : undefined} className={`relative z-10 grid size-7 place-items-center rounded-full text-xs font-bold ${index <= stageIndex ? "bg-violet-600 text-white shadow-sm shadow-violet-200" : "bg-slate-200 text-slate-500"}`}>{index < stageIndex ? "✓" : index + 1}</span>
+              <span className={`mt-1.5 text-[10px] font-semibold sm:text-xs ${index === stageIndex ? "text-violet-700" : index < stageIndex ? "text-slate-700" : "text-slate-400"}`}>{stage.label}</span>
+            </li>)}
+          </ol>
+        </nav>}
+
+        {step === "rating" && <section className="px-5 py-7 text-center sm:px-9 sm:py-9">
+          <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-orange-50 text-2xl text-orange-500">✦</span>
+          <h2 className="mt-4 text-xl font-extrabold tracking-tight text-[#10153f] sm:text-2xl">How was your experience?</h2>
+          <p className="mt-1 text-sm text-slate-500">Tap a star to rate your visit</p>
+          <div className="mt-5 flex justify-center gap-1 sm:gap-2" role="group" aria-label="Choose a rating from 1 to 5 stars">
+            {[1, 2, 3, 4, 5].map((rating) => <button key={rating} type="button" aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} aria-pressed={selectedRating === rating} disabled={isPending || selectedRating !== null} onClick={() => selectRating(rating)} className={`grid size-12 place-items-center rounded-2xl text-[38px] leading-none transition hover:-translate-y-0.5 hover:bg-amber-50 disabled:cursor-default sm:size-14 sm:text-5xl ${selectedRating && rating <= selectedRating ? "text-amber-400 drop-shadow-sm" : "text-slate-200"}`}><span aria-hidden="true">★</span></button>)}
+          </div>
+          <p className="mt-2 min-h-6 text-sm font-medium text-slate-600" aria-live="polite">{selectedRating ? `${selectedRating} out of 5 stars · ${ratingCopy(selectedRating)}` : ratingCopy(null)}</p>
+          {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+          {isPending && <p className="mt-2 text-sm text-violet-700">Saving your rating…</p>}
+          <PrimaryButton type="button" disabled={!selectedRating || !hasSession || isPending} onClick={() => { setError(null); setStep("experience"); }} className="mt-6 w-full">Next <span aria-hidden="true">→</span></PrimaryButton>
+        </section>}
+
+        {step === "experience" && <section className="px-5 py-6 sm:px-8 sm:py-8" aria-live="polite">
+          <p className="text-center text-sm text-slate-500">Choose up to 10 things that best match your visit.</p>
+          <p className="mt-1 text-center text-xs font-medium text-slate-400">{selectedCategories.length} of 10 selected</p>
+          <div className="mt-5 grid grid-cols-1 gap-2.5 sm:grid-cols-2">{experienceCategories.map((category, index) => {
+            const active = selectedCategories.includes(category.key);
+            return <button key={category.key} type="button" aria-pressed={active} disabled={isPending || (!active && selectedCategories.length >= 10)} onClick={() => toggleExperience(category.key)} className={`flex min-h-[52px] items-center gap-3 rounded-2xl border px-3.5 py-3 text-left text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-violet-100 ${active ? "border-violet-500 bg-violet-50 text-violet-800 shadow-[0_3px_12px_rgba(93,56,255,.08)]" : "border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:bg-violet-50/40"}`}>
+              <span className={`grid size-8 shrink-0 place-items-center rounded-xl text-sm ${active ? "bg-violet-600 text-white" : ["bg-orange-50 text-orange-600", "bg-emerald-50 text-emerald-600", "bg-sky-50 text-sky-600", "bg-pink-50 text-pink-600"][index % 4]}`}>{active ? "✓" : "✦"}</span><span className="min-w-0 flex-1">{category.label}</span><span aria-hidden="true" className={`grid size-5 place-items-center rounded-md border text-xs ${active ? "border-violet-600 bg-violet-600 text-white" : "border-slate-300 text-transparent"}`}>✓</span>
+            </button>;
+          })}</div>
+          {error && <p role="alert" className="mt-4 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+          <div className="mt-6 grid grid-cols-2 gap-3"><button type="button" disabled={isPending} onClick={() => setStep("rating")} className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-[#10153f]">← Back</button><PrimaryButton type="button" disabled={isPending || !selectedCategories.length} onClick={() => makeDraft()}>{isPending ? "Preparing…" : "Next →"}</PrimaryButton></div>
+        </section>}
+
+        {step === "review" && <section id="review-draft-section" className="px-5 py-6 sm:px-8 sm:py-8">
+          <div className={`rounded-2xl border p-3.5 ${tone === "positive" ? "border-emerald-100 bg-emerald-50/70" : tone === "mixed" ? "border-amber-200 bg-amber-50/70" : "border-rose-200 bg-rose-50/70"}`}><p className={`text-sm font-bold ${tone === "positive" ? "text-emerald-900" : tone === "mixed" ? "text-amber-900" : "text-rose-900"}`}>{tone === "positive" ? "Your visit highlights" : tone === "mixed" ? "Your balanced feedback" : "Your honest feedback"}</p><div className="mt-2 flex flex-wrap gap-1.5">{selectedLabels.map((label) => <span key={label} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${tone === "positive" ? "bg-emerald-100 text-emerald-800" : tone === "mixed" ? "bg-amber-100 text-amber-800" : "bg-rose-100 text-rose-800"}`}><span aria-hidden="true">✓</span>{label}</span>)}</div></div>
+          <h2 className="mt-5 text-xl font-extrabold tracking-tight text-[#10153f]">Write your review</h2>
+          <p className="mt-1 text-sm leading-5 text-slate-500">Here’s a starting point based on your choices. Edit it so it sounds like you.</p>
+          <textarea aria-label="Your editable review draft" value={draft} maxLength={10000} rows={6} onChange={(e) => { setDraft(e.target.value); setCopied(false); }} className="mt-4 w-full resize-y rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 shadow-inner shadow-slate-50 focus:border-violet-400 focus:outline-none focus:ring-4 focus:ring-violet-100" />
+          <p className="mt-2 text-xs leading-5 text-slate-500">This suggestion reflects the rating and points you chose. Please make sure the final review matches your actual experience. Trustit never posts to Google for you.</p>
+          {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}{copied && <p role="status" className="mt-2 text-sm text-emerald-700">Review copied. Paste it on Google to submit.</p>}
+          <button type="button" disabled={isPending} onClick={() => makeDraft(true)} className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-4 text-sm font-bold text-violet-800 hover:bg-violet-100 disabled:opacity-50">✧ {isPending ? "Regenerating…" : "Regenerate Suggestion"}</button>
+          <div className="mt-6 grid grid-cols-2 gap-3"><button type="button" disabled={isPending || isOpeningGoogle} onClick={() => setStep("experience")} className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-[#10153f]">← Back</button><PrimaryButton type="button" disabled={isPending || !draft.trim()} onClick={continueToDetails}>{isPending ? "Saving…" : "Next →"}</PrimaryButton></div>
+          <button type="button" disabled={isPending || isOpeningGoogle || !draft.trim()} onClick={copyAndGoogle} className="mt-3 min-h-11 w-full rounded-2xl border border-violet-100 bg-violet-50 px-4 text-sm font-semibold text-violet-800 disabled:opacity-50">{isOpeningGoogle ? "Opening Google Review…" : "Copy Draft & Review on Google"}</button>
+        </section>}
+
+        {step === "details" && <form id="trustit-review-form" onSubmit={submitReview} className="px-5 py-6 sm:px-8 sm:py-8">
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5"><p className="text-xs font-bold uppercase tracking-wide text-slate-500">Your rating</p><p className="mt-1 text-lg font-bold text-amber-500" aria-label={`${selectedRating} out of 5 stars`}>{"★".repeat(selectedRating ?? 0)}{"☆".repeat(5 - (selectedRating ?? 0))} <span className="text-sm text-slate-700">{selectedRating}/5</span></p></div>
+          <label htmlFor="trustit-customer-name" className="mt-5 block text-sm font-bold text-slate-800">Your Name <span className="text-rose-600">*</span></label>
+          <input id="trustit-customer-name" maxLength={160} value={customerName} onChange={(e) => setCustomerName(e.target.value)} autoComplete="name" className="mt-2 min-h-12 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" placeholder="Enter your name" />
+          <p className="mt-2 text-xs leading-5 text-slate-500">Your name appears with this review. Mobile, family and occasion details are shared only if you opt in.</p>
+          <label className="mt-5 flex min-h-12 items-center gap-3 rounded-xl bg-slate-50 px-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={shareDetails} onChange={(e) => { setShareDetails(e.target.checked); if (!e.target.checked) { setCustomerMobile(""); setBirthday(emptyOccasion()); setAnniversary(emptyOccasion()); setFamily([]); } }} />Want to share some personal details?</label>
+          {shareDetails && <div className="mt-3 space-y-4 rounded-2xl border border-slate-200 p-3.5 sm:p-4">
+            <div><label htmlFor="trustit-customer-mobile" className="block text-sm font-bold text-slate-800">Mobile Number <span className="text-rose-600">*</span></label><input id="trustit-customer-mobile" type="tel" maxLength={32} value={customerMobile} onChange={(e) => setCustomerMobile(e.target.value)} autoComplete="tel" className="mt-2 min-h-12 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-violet-400 focus:ring-4 focus:ring-violet-100" placeholder="Mobile number" /></div>
+            <div className="rounded-xl border border-slate-100 px-3"><OccasionRow label="Birthday" value={birthday} onChange={setBirthday} /><OccasionRow label="Anniversary" value={anniversary} onChange={setAnniversary} /></div>
+            <details className="rounded-xl border border-slate-100 p-3" open={family.length > 0}><summary className="cursor-pointer list-none text-sm font-bold text-violet-800">＋ Add family members <span className="ml-1 text-xs font-normal text-slate-500">(optional · up to 8)</span></summary>
+              <div className="mt-3 space-y-3">{family.map((member, index) => <fieldset key={index} className="rounded-xl border border-slate-200 p-3"><legend className="px-1 text-sm font-semibold text-slate-700">Family member {index + 1}</legend>
+                <div className="grid gap-2"><input maxLength={160} aria-label="Family member name" placeholder="Name *" value={member.name} onChange={(e) => updateFamily(index, (m) => ({ ...m, name: e.target.value }))} className="min-h-11 rounded-xl border border-slate-200 px-3 text-sm" /><select aria-label="Family member relation" value={member.relation} onChange={(e) => updateFamily(index, (m) => ({ ...m, relation: e.target.value }))} className="min-h-11 rounded-xl border border-slate-200 px-3 text-sm"><option value="">Relation *</option>{relations.map((relation) => <option key={relation} value={relation}>{relation[0].toUpperCase() + relation.slice(1)}</option>)}</select><input type="tel" maxLength={32} aria-label="Family member mobile optional" placeholder="Mobile (optional)" value={member.mobile} onChange={(e) => updateFamily(index, (m) => ({ ...m, mobile: e.target.value }))} className="min-h-11 rounded-xl border border-slate-200 px-3 text-sm" /></div>
+                <div className="mt-2 rounded-xl border border-slate-100 px-2"><OccasionRow label="Birthday" value={member.birthday} onChange={(v) => updateFamily(index, (m) => ({ ...m, birthday: v }))} /><OccasionRow label="Anniversary" value={member.anniversary} onChange={(v) => updateFamily(index, (m) => ({ ...m, anniversary: v }))} /></div><button type="button" onClick={() => setFamily((current) => current.filter((_, i) => i !== index))} className="mt-2 min-h-10 text-sm font-semibold text-rose-700">Remove member</button>
+              </fieldset>)}<button type="button" disabled={family.length >= 8} onClick={() => setFamily((current) => [...current, emptyFamilyMember()])} className="min-h-11 rounded-xl px-2 text-sm font-bold text-violet-700 disabled:opacity-50">＋ Add Family Member</button></div>
+            </details>
+          </div>}
+          {formErrors.length > 0 && <ul className="mt-3 list-inside list-disc rounded-xl bg-rose-50 p-3 text-sm leading-6 text-rose-700" role="alert">{formErrors.map((item) => <li key={item}>{item}</li>)}</ul>}
+          {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+          {isPending ? <div className="mt-5 rounded-2xl border border-violet-100 bg-violet-50 p-5 text-center" role="status"><span className="mx-auto grid size-10 animate-pulse place-items-center rounded-full bg-violet-600 text-lg text-white">✓</span><p className="mt-3 font-bold text-violet-900">Submitting your review…</p><p className="mt-1 text-sm text-violet-700">Please wait while we share your feedback securely.</p><div className="mx-auto mt-4 h-2 max-w-xs overflow-hidden rounded-full bg-violet-100"><div className="h-full w-2/3 animate-pulse rounded-full bg-violet-600" /></div></div> : <div className="mt-6 grid grid-cols-2 gap-3"><button type="button" onClick={() => { setError(null); setStep("review"); }} className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-[#10153f]">← Back</button><PrimaryButton type="submit">✓ Submit Review</PrimaryButton></div>}
+        </form>}
+
+        {step === "submitted" && <section className={`px-5 py-9 text-center sm:px-9 sm:py-12 ${tone === "negative" ? "bg-rose-50/50" : tone === "mixed" ? "bg-amber-50/40" : "bg-emerald-50/40"}`} role="status">
+          <span className={`mx-auto grid size-[72px] place-items-center rounded-full text-4xl text-white shadow-lg ${tone === "negative" ? "bg-rose-500 shadow-rose-100" : tone === "mixed" ? "bg-amber-500 shadow-amber-100" : "bg-emerald-500 shadow-emerald-100"}`}>✓</span>
+          <h2 className={`mt-5 text-2xl font-extrabold tracking-tight ${tone === "negative" ? "text-rose-900" : tone === "mixed" ? "text-amber-900" : "text-emerald-900"}`}>{tone === "negative" ? "Thanks for your honest feedback!" : "Thank you for sharing your review!"}</h2>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-600">{tone === "negative" ? "Your feedback helps us understand what we can improve." : "Your feedback has been shared successfully and will help other customers."}</p>
+          <div className={`mt-6 rounded-2xl border p-4 text-left ${tone === "negative" ? "border-rose-200 bg-white/80" : tone === "mixed" ? "border-amber-200 bg-white/80" : "border-emerald-200 bg-white/80"}`}><p className="text-sm font-bold text-slate-900">Your Review Summary</p><p className="mt-1 text-sm font-medium text-amber-600">{"★".repeat(selectedRating ?? 0)}{"☆".repeat(5 - (selectedRating ?? 0))} <span className="text-slate-700">{selectedRating}/5</span></p><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{draft}</p><p className="mt-4 text-xs font-bold text-slate-600">Customer Highlighted Points</p><div className="mt-2 flex flex-wrap gap-1.5">{selectedLabels.map((label) => <span key={label} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${tone === "negative" ? "bg-rose-100 text-rose-800" : tone === "mixed" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>✓ {label}</span>)}</div></div>
+          <button type="button" onClick={openGoogleAfterSubmit} className="mt-4 min-h-12 w-full rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 text-sm font-bold text-white shadow-md shadow-violet-100">↗ Review on Google</button>
+          <button type="button" onClick={() => window.location.assign("/")} className="mt-5 min-h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800">⌂ Back to Home</button>
+        </section>}
+
+        {step === "failed" && <section className="px-5 py-10 text-center sm:px-9 sm:py-12" role="alert"><span className="mx-auto grid size-16 place-items-center rounded-full bg-rose-100 text-3xl text-rose-600">!</span><h2 className="mt-5 text-2xl font-extrabold text-slate-900">We couldn’t submit your review</h2><p className="mt-2 text-sm leading-6 text-slate-600">Please check your connection and try again. Your details are still here.</p><div className="mt-6 grid grid-cols-2 gap-3"><button type="button" onClick={() => { setError(null); setStep("review"); }} className="min-h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold">← Back</button><PrimaryButton type="button" onClick={() => { setError(null); setStep("details"); }}>Try Again</PrimaryButton></div></section>}
+      </section>
+      <p className="mt-5 px-3 text-center text-xs leading-5 text-slate-500">Your feedback helps {businessName} understand how it can serve you better. Thank you for sharing honestly.</p>
+      <p className="mt-3 text-center text-[10px] font-semibold tracking-wide text-slate-400">SECURE CUSTOMER FEEDBACK · TRUSTIT</p>
+    </div>
+  </main>;
 }

@@ -130,6 +130,7 @@ export default async function ScanPage({ params }: ScanPageProps) {
   return (
     <ReviewExperience
       businessName={business.name}
+      googleReviewUrl={reviewLink}
       experienceCategories={customerCategories}
       initialSession={restoredSession}
       createReviewSession={createSessionAction}

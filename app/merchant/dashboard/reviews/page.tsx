@@ -1,5 +1,6 @@
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
+import ReviewCard from "../review-card";
 
 export const dynamic = "force-dynamic";
 
@@ -53,17 +54,7 @@ export default async function MerchantReviewsPage() {
       ) : (
         <section aria-label="Submitted reviews" className="space-y-3">
           {reviews.map((review) => (
-            <article key={review.review_id} className="rounded-2xl border border-slate-200 bg-white p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="font-semibold text-slate-900">Customer: {review.customer_name || "Name not shared"}</p>
-                <time className="text-xs text-slate-500" dateTime={review.submitted_at}>{new Date(review.submitted_at).toLocaleDateString("en-IN", { dateStyle: "medium", timeZone: "UTC" })}</time>
-              </div>
-              <p className="mt-2 font-semibold text-slate-900" aria-label={`${review.rating} out of 5 stars`}>{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)} <span className="text-sm">{review.rating}/5</span></p>
-              <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                <span className="font-semibold">Review:</span> {review.review_text}
-                {review.selected_experiences?.length > 0 && <strong className="ml-2 text-slate-900">{review.selected_experiences.map((point) => `• ${point}`).join(" ")}</strong>}
-              </p>
-            </article>
+            <ReviewCard key={review.review_id} review={review} dateLabel={new Date(review.submitted_at).toLocaleDateString("en-IN", { dateStyle: "medium", timeZone: "UTC" })} />
           ))}
         </section>
       )}
