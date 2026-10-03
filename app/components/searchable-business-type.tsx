@@ -75,7 +75,9 @@ export default function SearchableBusinessType({
       return;
     }
 
-    onChange(next);
+    const exactMatch = BUSINESS_TYPES.find((type) => normalize(type) === q);
+    if (exactMatch) choose(exactMatch);
+    else onChange("");
   }
 
   function handleBlur() {
