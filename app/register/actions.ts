@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
+import { BUSINESS_TYPES } from "@/lib/business-types";
 import { appConfig, type PlanId } from "@/lib/config";
 import {
   getTrustitUser,
@@ -384,10 +385,9 @@ export async function saveTrustitBusiness(input: {
   const user = await currentUser();
   const name = input?.name?.trim();
   const address = input?.address?.trim();
-  const reviewLink = safeReviewLink(input?.reviewLink);
-  const types = ["Shop", "Cafe/Restaurant", "Salon", "Clinic", "Library", "Hotel", "Other"];
-  if (!user || !name || name.length > 160 || !types.includes(input.type) || !address || address.length > 1000 || !reviewLink) {
-    return { success: false, message: "Please check the business details and HTTPS Google Review link." };
+  const reviewLink = input?.reviewLink?.trim() ? safeReviewLink(input.reviewLink) : null;
+  if (!user || !name || name.length > 160 || !BUSINESS_TYPES.includes(input.type as (typeof BUSINESS_TYPES)[number]) || !address || address.length > 1000 || (input?.reviewLink?.trim() && !reviewLink)) {
+    return { success: false, message: "Please check the business details and Google Review link if provided." };
   }
   try {
     const { data, error } = await createSupabaseAdminClient().rpc("create_trustit_business_for_onboarding", {
