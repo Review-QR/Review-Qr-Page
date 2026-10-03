@@ -139,7 +139,15 @@ function CategoryArt({ kind, className = "" }: { kind: CategoryArtKind; classNam
 }
 
 function BusinessName({ name, dark = false, landscape = false, compact = false }: { name: string; dark?: boolean; landscape?: boolean; compact?: boolean }) {
-  return <h3 className={`line-clamp-2 max-w-full break-words font-bold leading-tight ${dark ? "text-white" : "text-slate-950"} ${compact ? landscape ? "text-sm" : "text-lg" : landscape ? "text-3xl sm:text-4xl" : "text-2xl sm:text-3xl"}`}>{name}</h3>;
+  const length = name.trim().length;
+  const fontSize = compact
+    ? landscape ? (length > 34 ? "clamp(0.68rem, 1.8vw, 0.85rem)" : "clamp(0.8rem, 2vw, 1rem)") : (length > 30 ? "clamp(0.92rem, 3.8vw, 1.18rem)" : "clamp(1rem, 4.4vw, 1.45rem)")
+    : landscape ? (length > 34 ? "clamp(1.35rem, 3vw, 2.15rem)" : "clamp(1.7rem, 4vw, 2.7rem)") : (length > 30 ? "clamp(1.35rem, 4.2vw, 2.1rem)" : "clamp(1.7rem, 5vw, 2.7rem)");
+  return <h3
+    className={`max-w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold leading-[1.05] ${dark ? "text-white" : "text-slate-950"}`}
+    style={{ fontSize }}
+    title={name}
+  >{name}</h3>;
 }
 
 function ReviewQr({ url, usable, businessName, compact = false, landscape = false }: { url: string; usable: boolean; businessName: string; compact?: boolean; landscape?: boolean }) {
