@@ -24,7 +24,7 @@ type BusinessResult =
   | { success: true; business?: Business }
   | { success: false; message: string };
 
-const BUSINESS_TYPES_SET = new Set(BUSINESS_TYPES);
+const BUSINESS_TYPES_SET = new Set<string>(BUSINESS_TYPES);
 
 const PLANS = new Set(["Basic", "Standard", "Premium"]);
 const STATUSES = new Set(["active", "expiring soon", "expired", "suspended"]);
