@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createMerchantActionClient } from "@/lib/supabase-merchant-server";
 import { merchantAuthEmail } from "@/lib/merchant-identity";
-import { isTrustitPhoneOtpBypassEnabled } from "@/lib/trustit-onboarding";
+import { isTrustitPhoneOtpBypassEnabled, normalizeTrustitPhone } from "@/lib/trustit-onboarding";
 
 export type MerchantSignInState = { message: string };
 
@@ -19,16 +19,17 @@ export async function merchantSignInAction(
 
   const supabase = await createMerchantActionClient();
   try {
-    const isMobileLogin = /^\+[1-9][0-9]{7,14}$/.test(businessId);
+    const normalizedMobile = normalizeTrustitPhone(businessId);
+  const isMobileLogin = Boolean(normalizedMobile);
     let { data, error } = isMobileLogin
-      ? await supabase.auth.signInWithPassword({ phone: businessId, password })
+      ? await supabase.auth.signInWithPassword({ phone: normalizedMobile!, password })
       : await supabase.auth.signInWithPassword({ email: merchantAuthEmail(businessId), password });
     if (isMobileLogin && error?.code === "phone_provider_disabled" && isTrustitPhoneOtpBypassEnabled()) {
       ({ data, error } = await supabase.auth.signInWithPassword({
-        email: merchantAuthEmail(businessId),
+        email: merchantAuthEmail(normalizedMobile!),
         password,
       }));
-      if (!error && data.user?.phone !== businessId) {
+      if (!error && normalizeTrustitPhone(data.user?.phone) !== normalizedMobile) {
         await supabase.auth.signOut();
         return { message: "Business ID or password is incorrect." };
       }

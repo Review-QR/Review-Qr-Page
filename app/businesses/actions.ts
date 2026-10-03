@@ -4,6 +4,7 @@ import { randomInt } from "node:crypto";
 import { requireActiveAdmin } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
+import { BUSINESS_TYPES } from "@/lib/business-types";
 import type { Business } from "@/lib/types";
 
 type BusinessInput = {
@@ -23,17 +24,8 @@ type BusinessResult =
   | { success: true; business?: Business }
   | { success: false; message: string };
 
-const BUSINESS_TYPES = new Set([
-  "Salon",
-  "Medical",
-  "Garage",
-  "Library",
-  "Restaurant",
-  "Pan Shop",
-  "Cafe",
-  "Retail",
-  "Other",
-]);
+const BUSINESS_TYPES_SET = new Set<string>(BUSINESS_TYPES);
+
 const PLANS = new Set(["Basic", "Standard", "Premium"]);
 const STATUSES = new Set(["active", "expiring soon", "expired", "suspended"]);
 const QR_STATUSES = new Set(["active", "disabled"]);
@@ -80,7 +72,7 @@ function parseBusiness(input: unknown): Omit<Business, "id"> | null {
     address === undefined ||
     expiry === undefined ||
     !reviewLink ||
-    typeof input.type !== "string" || !BUSINESS_TYPES.has(input.type) ||
+    typeof input.type !== "string" || !BUSINESS_TYPES_SET.has(input.type) ||
     typeof input.plan !== "string" || !PLANS.has(input.plan) ||
     typeof input.status !== "string" || !STATUSES.has(input.status) ||
     typeof input.qr_status !== "string" || !QR_STATUSES.has(input.qr_status)

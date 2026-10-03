@@ -4,28 +4,13 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getBusinesses } from "@/lib/data";
 import type { Business } from "@/lib/types";
 import { safeReviewLink } from "@/lib/safe-review-link";
+import { BUSINESS_TYPES } from "@/lib/business-types";
 import MerchantAccessForm from "./merchant-access-form";
 import {
   createAdminBusiness,
   deleteAdminBusiness,
   updateAdminBusiness,
 } from "./actions";
-
-const BUSINESS_TYPES = [
-  "Salon",
-  "Medical",
-  "Garage",
-  "Library",
-  "Restaurant",
-  "Sweet Shop",
-  "Bakery",
-  "Cafe",
-  "Hotel / Stay",
-  "Laundry",
-  "Pan Shop",
-  "Retail",
-  "Other",
-];
 
 const PLANS = [
   { name: "Basic", price: 29 },
