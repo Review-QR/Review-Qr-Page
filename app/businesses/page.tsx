@@ -4,7 +4,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getBusinesses } from "@/lib/data";
 import type { Business } from "@/lib/types";
 import { safeReviewLink } from "@/lib/safe-review-link";
-import { BUSINESS_TYPES } from "@/lib/business-types";
+import SearchableBusinessType from "@/app/components/searchable-business-type";
 import MerchantAccessForm from "./merchant-access-form";
 import {
   createAdminBusiness,
@@ -323,17 +323,10 @@ export default function BusinessesPage() {
                   Business Type
                 </label>
 
-                <select
+                <SearchableBusinessType
                   value={form.type}
-                  onChange={(e) => handleChange("type", e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                >
-                  {BUSINESS_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => handleChange("type", value)}
+                />
               </div>
 
               <div>
@@ -715,22 +708,15 @@ export default function BusinessesPage() {
                     Business Type
                   </label>
 
-                  <select
+                  <SearchableBusinessType
                     value={editingBusiness.type || "Other"}
-                    onChange={(e) =>
+                    onChange={(value) =>
                       setEditingBusiness({
                         ...editingBusiness,
-                        type: e.target.value,
+                        type: value,
                       })
                     }
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  >
-                    {BUSINESS_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
                 <div>
