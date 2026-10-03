@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { BUSINESS_TYPES } from "@/lib/business-types";
 
 type Props = {
   value: string;
@@ -47,11 +48,7 @@ export default function SearchableBusinessType({
   const options = useMemo(() => {
     const q = normalize(query);
     if (!q) return [];
-    return [
-      ...new Set([
-        ...Object.values(aliases),
-      ]),
-    ].filter((type) => normalize(type).includes(q)).slice(0, 8);
+    return BUSINESS_TYPES.filter((type) => normalize(type).includes(q)).slice(0, 8);
   }, [query]);
 
   function choose(type: string) {
