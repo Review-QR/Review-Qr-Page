@@ -8,7 +8,8 @@ import SearchableBusinessType from "@/app/components/searchable-business-type";
 const cls = "mt-1 w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
 export default function BusinessForm({ initialBusinessName = "" }: { initialBusinessName?: string }) {
   const router = useRouter();
-  const [businessName, setBusinessName] = useState(initialBusinessName);\n  const [businessType, setBusinessType] = useState("");
+  const [businessName, setBusinessName] = useState(initialBusinessName);
+  const [businessType, setBusinessType] = useState("");
   const [busy,setBusy] = useState(false); const [message,setMessage] = useState("");
   useEffect(() => {
     if (initialBusinessName) return;
