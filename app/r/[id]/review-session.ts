@@ -28,6 +28,7 @@ import type {
 } from "./review-session-types";
 import { validateGoogleReviewHandoff } from "@/lib/google-review-handoff";
 import { isValidOptionalMobile } from "@/lib/trustit-review-validation";
+import { reviewExperienceGroup } from "@/lib/business-types";
 
 const GENERIC_FAILURE =
   "We couldn't save your rating right now. Please try again.";
@@ -120,9 +121,8 @@ export async function getReviewExperienceCategoriesForBusiness(
 
     if (!business || typeof business.type !== "string") return [];
 
-    // The registration flow stores clinics as "Clinic"; the configured
-    // customer experience taxonomy names that category family "Medical".
-    const businessType = business.type === "Clinic" ? "Medical" : business.type;
+    const businessType = reviewExperienceGroup(business.type);
+    if (!businessType) return [];
     const { data: categories, error: categoriesError } = await admin
       .from("review_experience_categories")
       .select("category_key, display_label")
@@ -673,7 +673,8 @@ export async function submitTrustitReviewForBusiness(
       .select("review_session_id, business_id, category_key, category_label_snapshot")
       .eq("review_session_id", sessionId)
       .eq("business_id", businessId);
-    const businessType = business.type === "Clinic" ? "Medical" : business.type;
+    const businessType = reviewExperienceGroup(business.type);
+    if (!businessType) return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
     const { data: enabledCategories, error: categoriesError } = await admin
       .from("review_experience_categories")
       .select("category_key")

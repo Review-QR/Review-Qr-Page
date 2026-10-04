@@ -407,7 +407,7 @@ export async function selectTrustitPlan(planId: string): Promise<ActionResult> {
   } catch { return safeActionError(); }
 }
 
-export async function createTrustitOneTimeCheckout(): Promise<ActionResult & { orderId?: string; paymentSessionId?: string }> {
+export async function createTrustitOneTimeCheckout(): Promise<ActionResult & { orderId?: string; paymentSessionId?: string; checkoutMode?: "sandbox" | "production" }> {
   const context = await getTrustitUser();
   if (!context) return { success: false, message: "Please sign in to continue." };
   try {
@@ -454,7 +454,7 @@ export async function createTrustitOneTimeCheckout(): Promise<ActionResult & { o
       return { success: false, message: "Payment setup could not be saved. Please try again." };
     }
     logTrustitCheckoutStage("payment_session_recording_success");
-    return { success: true, orderId: order.orderId, paymentSessionId: order.paymentSessionId };
+    return { success: true, orderId: order.orderId, paymentSessionId: order.paymentSessionId, checkoutMode: order.environment };
   } catch { return safeActionError(); }
 }
 

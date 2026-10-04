@@ -1,6 +1,5 @@
 type ReviewCardData = {
   review_id: string;
-  customer_name: string | null;
   rating: number;
   review_text: string;
   selected_experiences: string[];
@@ -17,7 +16,7 @@ export default function ReviewCard({ review, dateLabel }: { review: ReviewCardDa
 
   return <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_16px_rgba(15,23,42,.035)] sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <p className="font-semibold text-slate-900">{review.customer_name || "Name not shared"}</p>
+      <p className="font-semibold text-slate-900">Customer review</p>
       <time className="text-xs text-slate-500" dateTime={review.submitted_at}>{dateLabel}</time>
     </div>
     <p className="mt-1 text-sm font-bold text-amber-500" aria-label={`${review.rating} out of 5 stars`}>

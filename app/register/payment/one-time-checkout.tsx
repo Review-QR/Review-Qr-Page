@@ -9,7 +9,7 @@ type CashfreeCheckoutResult = {
   redirect?: unknown;
   paymentDetails?: unknown;
 };
-type CashfreeSdk = (options: { mode: "sandbox" }) => {
+type CashfreeSdk = (options: { mode: "sandbox" | "production" }) => {
   checkout(options: { paymentSessionId: string; redirectTarget: "_modal" }): Promise<CashfreeCheckoutResult>;
 };
 type VerificationState = "idle" | "checking" | "pending" | "failed" | "error";
@@ -179,11 +179,12 @@ export default function OneTimeCheckout({
         setMessage("An existing payment is saved. Use Recover & Check to verify it, or finish its checkout if you already opened it.");
         return;
       }
+      if (!result.checkoutMode) throw new Error("Cashfree checkout mode is unavailable.");
 
       await loadSdk();
       if (!window.Cashfree) throw new Error("Cashfree checkout is unavailable.");
       checkoutStarted = true;
-      await window.Cashfree({ mode: "sandbox" }).checkout({
+      await window.Cashfree({ mode: result.checkoutMode }).checkout({
         paymentSessionId: result.paymentSessionId,
         redirectTarget: "_modal",
       });

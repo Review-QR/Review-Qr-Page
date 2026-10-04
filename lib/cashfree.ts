@@ -8,10 +8,9 @@ import {
 import { isIP } from "node:net";
 import { appConfig, type PlanId } from "@/lib/config";
 import { logTrustitCheckoutStage, type TrustitCheckoutDiagnosticStage } from "@/lib/trustit-checkout-diagnostics";
+import { resolveCashfreeApiBaseUrl, type CashfreeEnvironment } from "@/lib/cashfree-config";
 
 const CASHFREE_API_VERSION = "2026-01-01";
-const CASHFREE_SANDBOX_ORIGIN = "https://sandbox.cashfree.com";
-const CASHFREE_SANDBOX_PATH = "/pg";
 
 function logTrustitCashfreeHttpCategory(operation: "lookup" | "create", status: number): void {
   const category = status >= 200 && status < 300
@@ -62,6 +61,7 @@ type CashfreeOrderResult =
       orderId: string;
       orderStatus: string;
       paymentSessionId: string;
+      environment: CashfreeEnvironment;
       verificationToken?: string;
     }
   | {
@@ -73,6 +73,7 @@ type CashfreeOrderResult =
 export interface CashfreeClient {
   readonly apiBaseUrl: string;
   readonly apiVersion: string;
+  readonly environment: CashfreeEnvironment;
   createRequestInit(init?: RequestInit): RequestInit;
 }
 
@@ -368,33 +369,13 @@ export function createCashfreeClient(): CashfreeClient {
     "CASHFREE_API_BASE_URL",
   );
 
-  if (environment !== "sandbox") {
-    throw new Error("Only the Cashfree Sandbox environment is configured");
-  }
-
-  let apiBaseUrl: URL;
-  try {
-    apiBaseUrl = new URL(configuredBaseUrl);
-  } catch {
-    throw new Error("Cashfree Sandbox API base URL is invalid");
-  }
-
-  if (
-    apiBaseUrl.origin !== CASHFREE_SANDBOX_ORIGIN ||
-    ![CASHFREE_SANDBOX_PATH, `${CASHFREE_SANDBOX_PATH}/`].includes(
-      apiBaseUrl.pathname,
-    ) ||
-    apiBaseUrl.username ||
-    apiBaseUrl.password ||
-    apiBaseUrl.search ||
-    apiBaseUrl.hash
-  ) {
-    throw new Error("Cashfree Sandbox API base URL is invalid");
-  }
+  const apiConfiguration = resolveCashfreeApiBaseUrl(environment, configuredBaseUrl);
+  if (!apiConfiguration) throw new Error("Cashfree API environment or base URL is invalid");
 
   return {
-    apiBaseUrl: `${apiBaseUrl.origin}${CASHFREE_SANDBOX_PATH}`,
+    apiBaseUrl: apiConfiguration.apiBaseUrl,
     apiVersion: CASHFREE_API_VERSION,
+    environment: apiConfiguration.environment,
     createRequestInit(init = {}) {
       const headers = new Headers(init.headers);
       headers.set("x-client-id", clientId);
@@ -460,8 +441,8 @@ async function createOrder(input: {
           order_currency: "INR",
           customer_details: {
             customer_id: input.customerId,
-            customer_name: input.customerName ?? "Review QR Sandbox Test",
-            customer_email: "sandbox-test@example.com",
+          customer_name: input.customerName ?? "Review QR Customer",
+          customer_email: "payments@example.invalid",
             customer_phone: input.customerPhone ?? "9999999999",
           },
           order_note: input.orderNote,
@@ -538,6 +519,7 @@ async function createOrder(input: {
     orderId,
     orderStatus: result.order_status,
     paymentSessionId: result.payment_session_id,
+    environment: client.environment,
   };
 }
 
@@ -678,7 +660,7 @@ async function fetchExistingMerchantOrder(input: {
     return { status: "ERROR", httpStatus: response.status };
   }
   if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_lookup_response_validation_success");
-  return { status: "FOUND", order: { success: true, httpStatus: response.status, orderId: input.orderId, orderStatus: "ACTIVE", paymentSessionId: order.payment_session_id } };
+  return { status: "FOUND", order: { success: true, httpStatus: response.status, orderId: input.orderId, orderStatus: "ACTIVE", paymentSessionId: order.payment_session_id, environment: client.environment } };
 }
 
 export type CashfreeWebhookOrderVerification =
@@ -1066,6 +1048,14 @@ export async function verifyCashfreeMerchantOrderBySignedContext(input: {
 
 /** Explicitly creates one test-only ₹29 Sandbox order for connectivity checks. */
 export async function createCashfreeSandboxTestOrder(): Promise<CashfreeSandboxTestOrderResult> {
+  try {
+    if (createCashfreeClient().environment !== "sandbox") {
+      return { success: false, httpStatus: null, error: "Sandbox connectivity checks are unavailable in production." };
+    }
+  } catch {
+    return { success: false, httpStatus: null, error: "Payment service is temporarily unavailable. Please try again." };
+  }
+
   const result = await createOrder({
     amount: 29,
     customerId: "reviewqr_sandbox_test",

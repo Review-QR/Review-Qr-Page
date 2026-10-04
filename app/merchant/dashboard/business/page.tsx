@@ -1,5 +1,6 @@
 import { requireActiveMerchant } from "@/lib/merchant-auth";
-import { safeReviewLink } from "@/lib/safe-review-link";
+import { safeGoogleReviewLink } from "@/lib/safe-review-link";
+import GoogleReviewLinkForm from "./google-review-link-form";
 
 export const dynamic = "force-dynamic";
 
@@ -22,14 +23,14 @@ function formattedDate(value: string | null) {
 
 export default async function MerchantBusinessPage() {
   const merchant = await requireActiveMerchant();
-  const reviewLink = safeReviewLink(merchant.reviewLink);
+  const reviewLink = safeGoogleReviewLink(merchant.reviewLink);
 
   return (
     <div className="space-y-6">
       <header>
         <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">Business profile</p>
         <h1 className="mt-1 text-2xl font-bold text-slate-950">My Business</h1>
-        <p className="mt-2 text-sm text-slate-500">Your registered business details. This page is read-only.</p>
+        <p className="mt-2 text-sm text-slate-500">Your registered business details. Update your Google Review link below.</p>
       </header>
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -53,6 +54,7 @@ export default async function MerchantBusinessPage() {
         ) : (
           <p className="mt-5 text-sm text-slate-500">Google Review link is unavailable.</p>
         )}
+        <GoogleReviewLinkForm initialLink={reviewLink ?? ""} />
       </section>
     </div>
   );

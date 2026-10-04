@@ -4,8 +4,9 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getBusinesses } from "@/lib/data";
 import type { Business } from "@/lib/types";
 import { safeReviewLink } from "@/lib/safe-review-link";
-import { BUSINESS_TYPES } from "@/lib/business-types";
 import MerchantAccessForm from "./merchant-access-form";
+import BusinessTypePicker from "./business-type-picker";
+import { normalizeBusinessType } from "@/lib/business-types";
 import {
   createAdminBusiness,
   deleteAdminBusiness,
@@ -318,23 +319,10 @@ export default function BusinessesPage() {
                 />
               </div>
 
-              <div>
-                <label className="mb-1 block text-sm font-medium">
-                  Business Type
-                </label>
-
-                <select
-                  value={form.type}
-                  onChange={(e) => handleChange("type", e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                >
-                  {BUSINESS_TYPES.map((type) => (
-                    <option key={type} value={type}>
-                      {type}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <BusinessTypePicker
+                value={form.type}
+                onChange={(type) => handleChange("type", type)}
+              />
 
               <div>
                 <label className="mb-1 block text-sm font-medium">
@@ -710,28 +698,10 @@ export default function BusinessesPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="mb-1 block text-sm font-medium">
-                    Business Type
-                  </label>
-
-                  <select
-                    value={editingBusiness.type || "Other"}
-                    onChange={(e) =>
-                      setEditingBusiness({
-                        ...editingBusiness,
-                        type: e.target.value,
-                      })
-                    }
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2"
-                  >
-                    {BUSINESS_TYPES.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <BusinessTypePicker
+                  value={normalizeBusinessType(editingBusiness.type) ?? "Other"}
+                  onChange={(type) => setEditingBusiness({ ...editingBusiness, type })}
+                />
 
                 <div>
                   <label className="mb-1 block text-sm font-medium">

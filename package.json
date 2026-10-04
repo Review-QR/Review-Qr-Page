@@ -2,10 +2,13 @@
   "name": "review-qr",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@11.25.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test": "node --test --test-concurrency=1"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
