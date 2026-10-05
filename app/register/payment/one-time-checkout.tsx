@@ -210,10 +210,10 @@ export default function OneTimeCheckout({
     <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-5">
       <h3 className="font-bold text-slate-900">Pay Once</h3>
       <p className="mt-1 text-sm text-slate-600">Pay for 30 days of service. Your business and QR activate after the payment is verified.</p>
-      {orderId && <label className="mt-4 block text-sm font-medium">Payment reference<input className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2" value={orderId} readOnly /></label>}
+      {orderId && <label className="mt-4 block text-sm font-medium">Payment reference<input className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm shadow-sm" value={orderId} readOnly /></label>}
       <div className="mt-4 flex flex-wrap gap-3">
-        <button type="button" disabled={busy} onClick={() => void start()} className="rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white disabled:opacity-50">{busy ? "Please wait…" : "Continue to Cashfree"}</button>
-        {orderId && <button type="button" disabled={busy} onClick={() => void recover()} className="rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-700 disabled:opacity-50">Recover &amp; Check</button>}
+        <button type="button" disabled={busy} onClick={() => void start()} className="rounded-2xl bg-gradient-to-r from-blue-700 to-blue-600 px-5 py-3 font-bold text-white shadow-[0_12px_24px_-14px_rgba(37,99,235,0.9)] disabled:opacity-50">{busy ? "Please wait…" : "Continue to Cashfree"}</button>
+        {orderId && <button type="button" disabled={busy} onClick={() => void recover()} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 font-bold text-slate-700 shadow-sm disabled:opacity-50">Recover &amp; Check</button>}
       </div>
       {verificationState === "checking" && (
         <div role="status" aria-live="polite" className="mt-5 flex gap-3 rounded-xl border border-blue-200 bg-white p-4 text-sm text-slate-700">
