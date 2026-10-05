@@ -141,11 +141,15 @@ function CategoryArt({ kind, className = "" }: { kind: CategoryArtKind; classNam
 function BusinessName({ name, dark = false, landscape = false, compact = false }: { name: string; dark?: boolean; landscape?: boolean; compact?: boolean }) {
   const length = name.trim().length;
   const fontSize = compact
-    ? landscape ? (length > 34 ? "clamp(0.68rem, 1.8vw, 0.85rem)" : "clamp(0.8rem, 2vw, 1rem)") : (length > 30 ? "clamp(0.92rem, 3.8vw, 1.18rem)" : "clamp(1rem, 4.4vw, 1.45rem)")
-    : landscape ? (length > 34 ? "clamp(1.35rem, 3vw, 2.15rem)" : "clamp(1.7rem, 4vw, 2.7rem)") : (length > 30 ? "clamp(1.35rem, 4.2vw, 2.1rem)" : "clamp(1.7rem, 5vw, 2.7rem)");
+    ? landscape
+      ? (length > 30 ? "clamp(0.62rem, 1.6vw, 0.78rem)" : "clamp(0.76rem, 1.9vw, 0.95rem)")
+      : (length > 30 ? "clamp(0.82rem, 3.2vw, 1.05rem)" : "clamp(0.95rem, 4vw, 1.3rem)")
+    : landscape
+      ? (length > 30 ? "clamp(1rem, 2.6vw, 1.65rem)" : "clamp(1.2rem, 3.2vw, 2.05rem)")
+      : (length > 30 ? "clamp(1.2rem, 3.8vw, 1.9rem)" : "clamp(1.5rem, 4.6vw, 2.45rem)");
   return <h3
-    className={`max-w-full whitespace-normal break-words [overflow-wrap:anywhere] font-bold leading-[1.05] ${dark ? "text-white" : "text-slate-950"}`}
-    style={{ fontSize }}
+    className={`max-w-full whitespace-normal break-words [overflow-wrap:break-word] [word-break:normal] font-bold leading-[1.05] ${dark ? "text-white" : "text-slate-950"}`}
+    style={{ fontSize, textWrap: "balance" }}
     title={name}
   >{name}</h3>;
 }
@@ -153,7 +157,7 @@ function BusinessName({ name, dark = false, landscape = false, compact = false }
 function ReviewQr({ url, usable, businessName, compact = false, landscape = false }: { url: string; usable: boolean; businessName: string; compact?: boolean; landscape?: boolean }) {
   const size = compact
     ? landscape ? "h-20 w-20 sm:h-24 sm:w-24" : "h-28 w-28"
-    : landscape ? "h-48 w-48 sm:h-56 sm:w-56" : "h-52 w-52 sm:h-56 sm:w-56";
+    : landscape ? "h-36 w-36 sm:h-44 sm:w-44" : "h-52 w-52 sm:h-56 sm:w-56";
   return (
     <div className={`inline-flex items-center justify-center rounded-2xl bg-white p-2.5 shadow-md ring-1 ring-slate-900/10 ${compact ? "p-2" : "p-3"}`}>
       {usable && url ? <img src={url} alt={`Trustit review QR for ${businessName}`} className={`${size} max-w-full object-contain`} /> : <div className={`${size} flex items-center justify-center bg-slate-50 p-3 text-center text-xs font-medium text-slate-600`}>QR unavailable while the business is inactive or expired</div>}
