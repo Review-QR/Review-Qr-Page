@@ -3,6 +3,38 @@ import Link from "next/link";
 
 const steps = ["Account", "Business", "Plan", "Payment"] as const;
 
+function GrowthIllustration() {
+  return (
+    <div className="relative mx-auto mt-2 w-full max-w-[330px]">
+      <div className="absolute -right-2 top-5 h-20 w-20 rounded-full bg-orange-100 blur-xl" />
+      <div className="absolute -left-3 bottom-6 h-24 w-24 rounded-full bg-emerald-100 blur-xl" />
+      <div className="relative rounded-[2rem] border border-orange-100 bg-gradient-to-br from-orange-50 via-white to-emerald-50 p-6 shadow-[0_20px_45px_-30px_rgba(15,23,42,.35)]">
+        <div className="mx-auto h-36 w-52 rounded-[1.5rem] bg-gradient-to-b from-orange-400 to-orange-600 shadow-lg">
+          <div className="flex h-10 items-center justify-center gap-2 rounded-t-[1.5rem] bg-orange-300/70">
+            <span className="h-2.5 w-12 rounded-full bg-white/80" />
+            <span className="h-2.5 w-7 rounded-full bg-white/60" />
+          </div>
+          <div className="grid grid-cols-3 gap-3 px-5 pt-7">
+            <span className="h-10 rounded-lg bg-white/85 shadow-sm" />
+            <span className="h-10 rounded-lg bg-emerald-100 shadow-sm" />
+            <span className="h-10 rounded-lg bg-white/85 shadow-sm" />
+          </div>
+        </div>
+        <div className="absolute bottom-12 left-5 grid h-20 w-20 rotate-[-8deg] place-items-center rounded-2xl border-4 border-white bg-white shadow-xl">
+          <div className="grid h-14 w-14 grid-cols-5 gap-1 rounded-lg bg-slate-950 p-2">
+            {Array.from({ length: 25 }).map((_, i) => <span key={i} className={`rounded-[1px] ${[0,2,4,6,8,12,14,16,18,20,22,24].includes(i) ? "bg-white" : "bg-slate-700"}`} />)}
+          </div>
+        </div>
+        <div className="absolute -right-3 top-8 grid h-14 w-14 place-items-center rounded-2xl bg-white text-2xl shadow-xl ring-1 ring-slate-100">⭐</div>
+        <div className="mt-8 flex items-center justify-between rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm">
+          <span className="text-xs font-bold text-slate-600">Google Reviews</span>
+          <span className="text-sm font-black text-orange-500">★★★★★</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function RegisterShell({
   currentStep,
   title,
@@ -15,84 +47,61 @@ export default function RegisterShell({
   children: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen bg-[#fff8ed] font-sans text-slate-950">
-      <div className="mx-auto min-h-screen max-w-[1500px] p-3 sm:p-5 lg:p-7">
-        <div className="grid min-h-[calc(100vh-1.5rem)] overflow-hidden rounded-[2rem] bg-white shadow-[0_30px_90px_-35px_rgba(67,43,20,0.32)] ring-1 ring-orange-100 lg:grid-cols-[43%_57%]">
-          <aside className="relative hidden overflow-hidden bg-[#24180f] text-white lg:flex lg:flex-col lg:justify-between">
-            <div className="absolute -left-28 -top-28 h-80 w-80 rounded-full bg-orange-500/25 blur-2xl" />
-            <div className="absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-emerald-500/20 blur-2xl" />
-            <div className="relative p-10 xl:p-12">
-              <Link href="/trustit" className="inline-flex items-center gap-3">
-                <Image src="/trustit-icon.svg" alt="" width={46} height={46} priority className="rounded-2xl bg-white p-1" />
-                <span className="text-2xl font-black tracking-tight">Trustit</span>
-              </Link>
-              <div className="mt-20 max-w-lg">
-                <span className="inline-flex rounded-full border border-orange-300/30 bg-orange-400/10 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.18em] text-orange-200">Merchant Registration</span>
-                <h2 className="mt-6 text-5xl font-black leading-[1.05] tracking-tight xl:text-6xl">Turn every happy customer into a <span className="text-orange-400">Google Review.</span></h2>
-                <p className="mt-6 max-w-md text-base leading-7 text-white/65">Create your business profile, choose your plan and get your Trustit QR ready for customers.</p>
-              </div>
-              <div className="mt-10 grid grid-cols-3 gap-3">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"><div className="text-2xl font-black text-orange-400">01</div><div className="mt-1 text-xs font-semibold text-white/60">Easy setup</div></div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"><div className="text-2xl font-black text-emerald-400">02</div><div className="mt-1 text-xs font-semibold text-white/60">Secure QR</div></div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"><div className="text-2xl font-black text-violet-400">03</div><div className="mt-1 text-xs font-semibold text-white/60">Live dashboard</div></div>
-              </div>
-            </div>
-            <div className="relative p-10 pt-0 xl:p-12 xl:pt-0">
-              <div className="rounded-3xl border border-orange-300/20 bg-gradient-to-r from-orange-500/15 to-emerald-500/10 p-5">
-                <p className="text-sm font-bold">Built for local businesses</p>
-                <p className="mt-1 text-xs leading-5 text-white/55">Restaurants, salons, shops, clinics, hotels and more.</p>
-              </div>
-            </div>
-          </aside>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eef4ff_0%,transparent_35%),radial-gradient(circle_at_92%_12%,#fff2d8_0%,transparent_30%),#f8fafc] font-sans text-slate-950">
+      <div className="mx-auto max-w-[1450px] px-3 py-4 sm:px-6 sm:py-6">
+        <header className="flex items-center justify-between px-1 sm:px-2">
+          <Link href="/trustit" className="inline-flex items-center gap-2.5">
+            <Image src="/trustit-icon.svg" alt="" width={42} height={42} priority className="rounded-xl shadow-sm" />
+            <span>
+              <span className="block text-xl font-black tracking-tight">Trustit</span>
+              <span className="block text-[9px] font-semibold text-slate-500">Get More Google Reviews</span>
+            </span>
+          </Link>
+          <Link href="/merchant/login" className="rounded-full bg-white px-4 py-2.5 text-xs font-extrabold text-blue-700 shadow-sm ring-1 ring-slate-200 transition hover:ring-blue-200 sm:px-5 sm:text-sm">Business Login <span aria-hidden="true">→</span></Link>
+        </header>
 
-          <section className="flex min-w-0 flex-col bg-[#fffdf9]">
-            <header className="flex items-center justify-between border-b border-orange-100 px-5 py-4 sm:px-8 lg:px-10">
-              <Link href="/trustit" className="inline-flex items-center gap-2 lg:hidden">
-                <Image src="/trustit-icon.svg" alt="" width={38} height={38} priority className="rounded-xl" />
-                <span className="text-xl font-black">Trustit</span>
-              </Link>
-              <div className="hidden lg:block">
-                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-orange-600">Get started</p>
-                <p className="mt-0.5 text-sm font-semibold text-slate-500">Your business journey starts here</p>
-              </div>
-              <Link href="/merchant/login" className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-slate-800 shadow-sm transition hover:border-orange-300 hover:text-orange-700">Business Login <span aria-hidden="true">→</span></Link>
-            </header>
+        <section className="mt-4 overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_30px_80px_-42px_rgba(15,23,42,.35)] sm:mt-6">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-white via-blue-50/50 to-white px-5 py-5 sm:px-8">
+            <ol className="grid grid-cols-4 gap-2 sm:gap-4" aria-label="Registration progress">
+              {steps.map((step, index) => {
+                const n=index+1, active=n===currentStep, complete=n<currentStep;
+                return <li key={step} className="min-w-0">
+                  <div className={`flex items-center gap-2 text-[10px] font-extrabold sm:text-xs ${active?"text-blue-700":complete?"text-emerald-600":"text-slate-400"}`}>
+                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] ${active?"bg-blue-600 text-white shadow-md shadow-blue-200":complete?"bg-emerald-100 text-emerald-700":"bg-slate-100 text-slate-500"}`}>{complete?"✓":n}</span>
+                    <span className="truncate">{step}</span>
+                  </div>
+                  <div className={`mt-2 h-1.5 rounded-full ${active?"bg-blue-600":complete?"bg-emerald-500":"bg-slate-100"}`} />
+                </li>
+              })}
+            </ol>
+          </div>
 
-            <div className="border-b border-orange-100 bg-white px-5 py-4 sm:px-8 lg:px-10">
-              <nav aria-label="Registration progress">
-                <ol className="grid grid-cols-4 gap-2 sm:gap-4">
-                  {steps.map((step, index) => {
-                    const number = index + 1;
-                    const active = number === currentStep;
-                    const complete = number < currentStep;
-                    return (
-                      <li key={step} aria-current={active ? "step" : undefined} className="min-w-0">
-                        <div className={`flex items-center gap-2 text-[10px] font-extrabold uppercase tracking-wide sm:text-xs ${active ? "text-orange-700" : complete ? "text-emerald-700" : "text-slate-400"}`}>
-                          <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-[10px] ${active ? "bg-orange-500 text-white shadow-md shadow-orange-200" : complete ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>{complete ? "✓" : number}</span>
-                          <span className="truncate">{step}</span>
-                        </div>
-                        <div className={`mt-2 h-1.5 rounded-full ${active ? "bg-orange-500" : complete ? "bg-emerald-500" : "bg-slate-100"}`} />
-                      </li>
-                    );
-                  })}
-                </ol>
-              </nav>
+          <div className="grid md:grid-cols-[minmax(0,1.55fr)_minmax(280px,.8fr)]">
+            <div className="min-w-0 p-5 sm:p-8 lg:p-10">
+              <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-700">Step {currentStep} of 4</p>
+              <h1 className="mt-2 text-3xl font-black leading-tight tracking-tight sm:text-4xl">{title}</h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">{description}</p>
+              {children}
             </div>
-
-            <div className="flex-1 overflow-y-auto">
-              <div className="mx-auto w-full max-w-2xl p-5 sm:p-8 lg:p-10 xl:p-12">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-600">Step {currentStep} of 4</p>
-                  <h1 className="mt-3 text-3xl font-black leading-tight tracking-tight sm:text-4xl">{title}</h1>
-                  <p className="mt-3 max-w-xl text-sm leading-6 text-slate-500 sm:text-base">{description}</p>
+            <aside className="border-t border-slate-100 bg-gradient-to-br from-blue-50/80 via-white to-orange-50/70 p-5 sm:p-7 md:border-l md:border-t-0">
+              <GrowthIllustration />
+              <div className="mt-6 text-center md:text-left">
+                <h2 className="text-xl font-black leading-tight">Turn Customer Feedback<br className="hidden lg:block" /> Into Business Growth</h2>
+                <div className="mt-4 space-y-2.5 text-sm font-semibold text-slate-600">
+                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> More Google Reviews</p>
+                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Build Customer Trust</p>
+                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Grow Your Business</p>
                 </div>
-                {children}
               </div>
-            </div>
-          </section>
-        </div>
+              <div className="mt-5 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-xs leading-5 text-rose-900">
+                <strong>“Trusted by local businesses across India”</strong>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <p className="mx-auto mt-4 max-w-3xl px-4 text-center text-[11px] leading-5 text-slate-500">Your business and QR are activated only after payment verification. Payments are one-time; AutoPay is not enabled.</p>
       </div>
-      <p className="mx-auto max-w-3xl px-5 pb-4 pt-2 text-center text-[11px] leading-5 text-slate-500">Your business and QR are activated only after payment verification. Payments are one-time; AutoPay is not enabled.</p>
     </main>
   );
 }
