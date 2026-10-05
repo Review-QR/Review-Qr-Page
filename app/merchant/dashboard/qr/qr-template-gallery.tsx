@@ -145,10 +145,10 @@ function BusinessName({ name, dark = false, landscape = false, compact = false }
       ? (length > 30 ? "clamp(0.62rem, 1.6vw, 0.78rem)" : "clamp(0.76rem, 1.9vw, 0.95rem)")
       : (length > 30 ? "clamp(0.82rem, 3.2vw, 1.05rem)" : "clamp(0.95rem, 4vw, 1.3rem)")
     : landscape
-      ? (length > 30 ? "clamp(1rem, 2.6vw, 1.65rem)" : "clamp(1.2rem, 3.2vw, 2.05rem)")
-      : (length > 30 ? "clamp(1.2rem, 3.8vw, 1.9rem)" : "clamp(1.5rem, 4.6vw, 2.45rem)");
+      ? (length > 30 ? "clamp(0.95rem, 2.4vw, 1.55rem)" : "clamp(1.15rem, 3vw, 1.95rem)")
+      : (length > 24 ? "clamp(1.05rem, 3.2vw, 1.65rem)" : length > 18 ? "clamp(1.2rem, 3.7vw, 1.9rem)" : "clamp(1.45rem, 4.4vw, 2.35rem)");
   return <h3
-    className={`max-w-full whitespace-normal break-words [overflow-wrap:break-word] [word-break:normal] font-bold leading-[1.05] ${dark ? "text-white" : "text-slate-950"}`}
+    className={`max-w-full whitespace-normal break-words [overflow-wrap:normal] [word-break:normal] [hyphens:none] font-bold leading-[1.05] ${dark ? "text-white" : "text-slate-950"}`}
     style={{ fontSize, textWrap: "balance" }}
     title={name}
   >{name}</h3>;

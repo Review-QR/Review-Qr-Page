@@ -276,12 +276,14 @@
   .merchant-stat__icon { width: 52px; height: 52px; }
 }
 
-@media (max-width: 1080px) {
+@media (max-width: 1280px) {
   .merchant-sidebar { width: 205px; flex-basis: 205px; }
   .merchant-content { padding-right: 12px; padding-left: 12px; }
   .merchant-workspace { grid-template-columns: minmax(0, 1fr); }
-  .merchant-qr-layout--standalone { grid-template-columns: minmax(280px, .95fr) minmax(0, 1.05fr); }
-  .merchant-qr-layout--standalone .merchant-qr-poster { width: min(100%, 360px); }
+  .merchant-qr-layout--standalone { grid-template-columns: minmax(0, 1fr); }
+  .merchant-qr-layout--standalone .merchant-qr-poster-frame { min-height: 0; }
+  .merchant-qr-layout--standalone .merchant-qr-poster { width: min(100%, 390px); }
+  .merchant-qr-layout--standalone .merchant-qr-details { width: 100%; }
   .merchant-template-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
   .merchant-lower-grid, .merchant-analytics-grid { grid-template-columns: minmax(0, 1fr); }
   .merchant-quick-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); }
