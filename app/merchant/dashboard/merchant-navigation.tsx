@@ -50,7 +50,13 @@ export default function MerchantNavigation({ mobile = false }: { mobile?: boolea
             ? pathname === item.href && hash !== "#scan-analytics"
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
-          <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`merchant-nav__link${active ? " is-active" : ""}`}>
+          <Link
+            key={item.href}
+            href={item.href}
+            onClick={() => setHash(item.href.endsWith("#scan-analytics") ? "#scan-analytics" : "")}
+            aria-current={active ? "page" : undefined}
+            className={`merchant-nav__link${active ? " is-active" : ""}`}
+          >
             <NavigationIcon name={item.icon} />
             <span>{item.label}</span>
           </Link>
