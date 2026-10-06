@@ -3,7 +3,54 @@ export type ReviewDraftInput = {
   rating: number;
   experienceLabels: string[];
   variation?: number;
+  customerInput?: string;
+  businessType?: string;
 };
+
+export type ReviewWritingSignals = { language: "English" | "Hindi" | "Hinglish" | "Roman Hindi"; style: "casual" | "normal" | "formal" | "short" | "detailed"; script: "Latin" | "Devanagari" | "mixed" };
+
+export function detectReviewWritingSignals(value: string): ReviewWritingSignals {
+  const input = value.trim();
+  const devanagari = /[\u0900-\u097f]/.test(input);
+  const hindiWords = /\b(tha|thi|hai|acha|accha|mast|bahut|thoda|seva|khana|acha|bhai|karna|wala)\b/i.test(input);
+  const englishWords = /\b(the|and|was|were|good|service|food|staff|price|visit|overall|but)\b/i.test(input);
+  const language = devanagari ? (englishWords ? "Hinglish" : "Hindi") : hindiWords ? (englishWords ? "Hinglish" : "Roman Hindi") : "English";
+  const wordCount = input.split(/\s+/).filter(Boolean).length;
+  const style = /\b(bhai|yaar|mast|:)\b/i.test(input) ? "casual" : wordCount <= 7 ? "short" : /\b(esteemed|therefore|nevertheless|experience was|would recommend)\b/i.test(input) ? "formal" : wordCount >= 24 ? "detailed" : "normal";
+  return { language, style, script: devanagari && /[A-Za-z]/.test(input) ? "mixed" : devanagari ? "Devanagari" : "Latin" };
+}
+
+const piiPattern = /\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b|(?:\+?\d[\d(). -]{7,}\d)/g;
+export function removeCustomerPii(value: string) { return value.replace(piiPattern, "").replace(/\s{2,}/g, " ").trim().slice(0, 600); }
+
+function naturalInputDraft(input: ReviewDraftInput): string {
+  const raw = (input.customerInput ?? "").trim();
+  if (!raw) return "";
+  const cleaned = raw.replace(/[\r\n]+/g, " ").replace(/\s{2,}/g, " ").slice(0, 600);
+  detectReviewWritingSignals(cleaned);
+  // Preserve customer vocabulary and language. The rating governs whether any
+  // framing is added; the customer's facts are never replaced with claims.
+  const punctuated = cleaned.replace(/\s+(?=(?:but|par|lekin|though|service bhi|staff bhi|and)\b)/gi, ", ");
+  const sentence = punctuated.charAt(0).toLocaleUpperCase() + punctuated.slice(1).replace(/[.!?\s]*$/, ".");
+  return sentence;
+}
+
+export function validateReviewDraftQuality(input: ReviewDraftInput, draft: string): boolean {
+  if (!Number.isInteger(input.rating) || input.rating < 1 || input.rating > 5 || !draft.trim() || draft.length > 10000) return false;
+  const customerText = (input.customerInput ?? "").trim();
+  const normalize = (value: string) => value.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean);
+  if (!customerText) {
+    const generated = draft.toLocaleLowerCase();
+    const toneIsConsistent = input.rating <= 2
+      ? /could have been better|disappointed|did not go as well/.test(generated)
+      : input.rating === 3 ? /mixed experience|mixed thoughts|okay overall|somewhere in the middle/.test(generated)
+        : /good experience|enjoyed my visit|went well/.test(generated);
+    return toneIsConsistent && input.experienceLabels.every((label) => normalize(draft).join(" ").includes(normalize(label).join(" ")));
+  }
+  const expected = normalize(customerText);
+  const actual = normalize(draft);
+  return expected.length > 0 && expected.every((word, index) => actual[index] === word);
+}
 
 export interface ReviewDraftProvider {
   generate(input: ReviewDraftInput): Promise<string>;
@@ -140,8 +187,13 @@ export function buildReviewDraft(input: ReviewDraftInput): string {
   }
 
   const tone = toneFor(input.rating);
+  const grounded = naturalInputDraft(input);
+  if (grounded) {
+    if (!validateReviewDraftQuality(input, grounded)) throw new Error("Review draft quality validation failed");
+    return grounded;
+  }
   const seed = Math.max(1, Math.floor(input.variation ?? 1));
-  const clauses = labels.map((label, index) => choose(copy[topicFor(label)][tone], seed * 7 + index * 11));
+  const clauses = labels.map((label) => `I considered ${label.toLowerCase()} as part of my experience`);
   if (clauses.length > 1) {
     const rotateBy = seed % clauses.length;
     clauses.push(...clauses.splice(0, rotateBy));
@@ -153,14 +205,16 @@ export function buildReviewDraft(input: ReviewDraftInput): string {
     negative: [`My experience at ${businessName} could have been better.`, `I was disappointed with my visit to ${businessName}.`, `My visit to ${businessName} did not go as well as I hoped.`],
   };
   const endings = {
-    positive: ["Overall, I was happy with my experience.", "All in all, I left satisfied.", "I would be glad to visit again."],
-    mixed: ["A few improvements would make a difference.", "That is why I would describe the visit as mixed.", "There were some positives, along with room to improve."],
-    negative: ["I hope these areas can be improved.", "I hope my feedback is helpful.", "There is room to make the experience better."],
+    positive: ["That reflects my positive overall rating.", "This matches how I felt about the visit overall.", "That is why I gave a positive overall rating."],
+    mixed: ["That reflects my mixed overall rating.", "This is how I felt about the visit overall.", "My overall rating reflects a mixed experience."],
+    negative: ["That reflects my negative overall rating.", "This is why my overall rating was low.", "My overall rating reflects this experience."],
   };
   const body = clauses.map((clause, index) => `${index === 0 || seed % 3 === 0 ? "" : "Also, "}${clause}`).join(". ");
-  const opening = choose(openings[tone], seed * 3);
-  const ending = labels.length > 2 ? ` ${choose(endings[tone], seed * 5)}` : "";
-  return `${opening} ${body.replace(/\.$/, "")}.${ending}`;
+  const opening = `${choose(openings[tone], seed)} I rated it ${input.rating} out of 5.`;
+  const ending = labels.length > 1 ? ` ${choose(endings[tone], seed * 5)}` : "";
+  const draft = `${opening} ${body.replace(/\.$/, "")}.${ending}`;
+  if (!validateReviewDraftQuality(input, draft)) throw new Error("Review draft quality validation failed");
+  return draft;
 }
 
 export const localReviewDraftProvider: ReviewDraftProvider = {

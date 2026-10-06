@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import NotificationPanel from "./notifications/notification-panel";
 
 const items = [
   { href: "/merchant/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/merchant/dashboard/business", label: "My Business", icon: "business" },
   { href: "/merchant/dashboard/qr", label: "My QR Code", icon: "qr" },
   { href: "/merchant/dashboard/reviews", label: "Customer Reviews", icon: "reviews" },
+  { href: "/merchant/dashboard/messages", label: "Message Designer", icon: "business" },
   { href: "/merchant/dashboard#scan-analytics", label: "Analytics", icon: "analytics" },
   { href: "/merchant/dashboard/subscription", label: "Subscription", icon: "subscription" },
   { href: "/merchant/dashboard/payments", label: "Payments", icon: "payments" },
@@ -30,7 +32,7 @@ function NavigationIcon({ name }: { name: string }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="merchant-nav__icon" {...common}>{paths[name]}</svg>;
 }
 
-export default function MerchantNavigation({ mobile = false }: { mobile?: boolean }) {
+export default function MerchantNavigation({ mobile = false, hasUnreadNotifications = false }: { mobile?: boolean; hasUnreadNotifications?: boolean }) {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
 
@@ -49,18 +51,16 @@ export default function MerchantNavigation({ mobile = false }: { mobile?: boolea
           : item.href === "/merchant/dashboard"
             ? pathname === item.href && hash !== "#scan-analytics"
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            onClick={() => setHash(item.href.endsWith("#scan-analytics") ? "#scan-analytics" : "")}
-            aria-current={active ? "page" : undefined}
-            className={`merchant-nav__link${active ? " is-active" : ""}`}
-          >
-            <NavigationIcon name={item.icon} />
-            <span>{item.label}</span>
-          </Link>
-        );
+        const link = <Link
+          href={item.href}
+          onClick={() => setHash(item.href.endsWith("#scan-analytics") ? "#scan-analytics" : "")}
+          aria-current={active ? "page" : undefined}
+          className={`merchant-nav__link${active ? " is-active" : ""}`}
+        >
+          <span className="relative inline-flex"><NavigationIcon name={item.icon} /></span>
+          <span>{item.label}</span>
+        </Link>;
+        return item.icon === "reviews" ? <div key={item.href} className="merchant-nav-item relative flex items-center">{link}<NotificationPanel unread={hasUnreadNotifications} /></div> : <div key={item.href} className="merchant-nav-item">{link}</div>;
       })}
     </nav>
   );

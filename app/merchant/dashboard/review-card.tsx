@@ -15,7 +15,7 @@ export default function ReviewCard({ review, dateLabel }: { review: ReviewCardDa
       ? "border-amber-100 bg-amber-50 text-amber-800"
       : "border-rose-100 bg-rose-50 text-rose-800";
 
-  return <article className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_16px_rgba(15,23,42,.035)] sm:p-5">
+  return <article id={`review-${review.review_id}`} className="scroll-mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_16px_rgba(15,23,42,.035)] sm:p-5">
     <div className="flex flex-wrap items-center justify-between gap-2">
       <p className="font-semibold text-slate-900">{review.customer_name || "Name not shared"}</p>
       <time className="text-xs text-slate-500" dateTime={review.submitted_at}>{dateLabel}</time>
