@@ -86,6 +86,12 @@ test("location capture requests real device coordinates and keeps typed address 
   assert.match(capture, /No reverse-geocoding service is configured/);
 });
 
+test("Permissions-Policy allows geolocation only for the app's own origin", async () => {
+  const config = await read("../../../../next.config.ts");
+  assert.match(config, /key: "Permissions-Policy"[\s\S]*?value: "camera=\(\), microphone=\(\), geolocation=\(self\)"/);
+  assert.doesNotMatch(config, /geolocation=\(\)|geolocation=\*/);
+});
+
 test("Google Review Link is optional and does not enter the completion denominator", async () => {
   const profilePage = await read("./page.tsx");
   const completion = await read("../../../../lib/merchant-profile-completion.ts");
