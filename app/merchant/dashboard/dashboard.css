@@ -66,6 +66,7 @@
 .merchant-active-pill i { width: 6px; height: 6px; border-radius: 50%; background: #0eae63; }
 
 .merchant-nav { display: grid; gap: 5px; }
+.merchant-nav-item { position: relative; min-width: 0; }
 .merchant-nav__link { display: flex; min-height: 44px; align-items: center; gap: 13px; padding: 0 13px; border-radius: 12px; color: #342c2b; font-size: 14px; font-weight: 520; transition: background .16s ease, color .16s ease, transform .16s ease; }
 .merchant-nav__link:hover { color: #974800; background: #fff0d9; transform: translateX(2px); }
 .merchant-nav__link.is-active { color: #853700; background: linear-gradient(100deg, #ffedd1, #ffe0ae); font-weight: 700; box-shadow: inset 3px 0 #f08a00; }
@@ -309,6 +310,7 @@
   .merchant-mobile-header form { width: auto; }
   .merchant-mobile-header form button { width: auto; }
   .merchant-mobile-nav { display: flex; gap: 5px; overflow-x: auto; padding: 8px 12px 10px; border-bottom: 1px solid #f0e5d6; background: #fffaf3; scrollbar-width: thin; }
+  .merchant-mobile-nav .merchant-nav-item { flex: 0 0 auto; }
   .merchant-mobile-nav .merchant-nav__link { min-height: 44px; gap: 7px; padding: 0 12px; border: 1px solid #f0e5d6; background: white; font-size: 11px; white-space: nowrap; }
   .merchant-mobile-nav .merchant-nav__icon { width: 16px; height: 16px; }
   .merchant-mobile-nav .merchant-nav__link.is-active { border-color: #f5c98c; background: #ffedcf; box-shadow: none; }
