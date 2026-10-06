@@ -1,6 +1,9 @@
 alter table public.review_generations
   add column customer_input text check (customer_input is null or length(customer_input) <= 600);
 
+alter table public.trustit_reviews
+  add constraint trustit_reviews_id_business_key unique (id, business_id);
+
 create table public.merchant_notifications (
   id uuid primary key default gen_random_uuid(),
   business_id text not null references public.businesses(id) on delete cascade,
@@ -8,10 +11,12 @@ create table public.merchant_notifications (
   title text not null check (length(title) <= 100),
   preview text not null check (length(preview) <= 180),
   rating smallint not null check (rating between 1 and 5),
-  review_id uuid not null unique references public.trustit_reviews(id) on delete cascade,
+  review_id uuid not null unique,
   is_read boolean not null default false,
   created_at timestamptz not null default now(),
-  constraint merchant_notifications_review_business_key unique (review_id, business_id)
+  constraint merchant_notifications_review_business_key unique (review_id, business_id),
+  constraint merchant_notifications_review_business_fkey
+    foreign key (review_id, business_id) references public.trustit_reviews(id, business_id) on delete cascade
 );
 create index merchant_notifications_business_unread_idx
   on public.merchant_notifications (business_id, is_read, created_at desc);

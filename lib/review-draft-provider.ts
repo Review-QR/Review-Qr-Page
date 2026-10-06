@@ -7,7 +7,7 @@ export type ReviewDraftInput = {
   businessType?: string;
 };
 
-export type ReviewWritingSignals = { language: "English" | "Hindi" | "Hinglish" | "Roman Hindi"; style: "casual" | "normal" | "formal" | "short" | "detailed"; script: "Latin" | "Devanagari" | "mixed" };
+export type ReviewWritingSignals = { language: "English" | "Hindi" | "Hinglish" | "Roman Hindi"; style: "casual" | "normal" | "formal" | "short" | "detailed"; script: "Latin" | "Devanagari" | "mixed"; punctuation: "none" | "light" | "expressive"; emojiTendency: boolean; fragmented: boolean };
 
 export function detectReviewWritingSignals(value: string): ReviewWritingSignals {
   const input = value.trim();
@@ -17,7 +17,15 @@ export function detectReviewWritingSignals(value: string): ReviewWritingSignals 
   const language = devanagari ? (englishWords ? "Hinglish" : "Hindi") : hindiWords ? (englishWords ? "Hinglish" : "Roman Hindi") : "English";
   const wordCount = input.split(/\s+/).filter(Boolean).length;
   const style = /\b(bhai|yaar|mast|:)\b/i.test(input) ? "casual" : wordCount <= 7 ? "short" : /\b(esteemed|therefore|nevertheless|experience was|would recommend)\b/i.test(input) ? "formal" : wordCount >= 24 ? "detailed" : "normal";
-  return { language, style, script: devanagari && /[A-Za-z]/.test(input) ? "mixed" : devanagari ? "Devanagari" : "Latin" };
+  const punctuationMarks = (input.match(/[.!?,;:]/g) ?? []).length;
+  const expressivePunctuation = (input.match(/[!?]{2,}|\.\.\./g) ?? []).length > 0;
+  return {
+    language, style,
+    script: devanagari && /[A-Za-z]/.test(input) ? "mixed" : devanagari ? "Devanagari" : "Latin",
+    punctuation: expressivePunctuation ? "expressive" : punctuationMarks ? "light" : "none",
+    emojiTendency: /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(input),
+    fragmented: !/[.!?]$/.test(input) && wordCount <= 9,
+  };
 }
 
 const piiPattern = /\b[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}\b|(?:\+?\d[\d(). -]{7,}\d)/g;
@@ -31,7 +39,8 @@ function naturalInputDraft(input: ReviewDraftInput): string {
   // Preserve customer vocabulary and language. The rating governs whether any
   // framing is added; the customer's facts are never replaced with claims.
   const punctuated = cleaned.replace(/\s+(?=(?:but|par|lekin|though|service bhi|staff bhi|and)\b)/gi, ", ");
-  const sentence = punctuated.charAt(0).toLocaleUpperCase() + punctuated.slice(1).replace(/[.!?\s]*$/, ".");
+  const sentenceText = punctuated.charAt(0).toLocaleUpperCase() + punctuated.slice(1).trim();
+  const sentence = /[.!?]$/.test(sentenceText) ? sentenceText : `${sentenceText}.`;
   return sentence;
 }
 
