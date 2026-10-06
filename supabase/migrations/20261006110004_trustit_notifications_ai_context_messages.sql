@@ -16,6 +16,7 @@ create table public.merchant_notifications (
 create index merchant_notifications_business_unread_idx
   on public.merchant_notifications (business_id, is_read, created_at desc);
 alter table public.merchant_notifications enable row level security;
+revoke all on public.merchant_notifications from public, anon, authenticated;
 grant select, update (is_read) on public.merchant_notifications to authenticated;
 grant select, insert, update, delete on public.merchant_notifications to service_role;
 create policy merchant_notifications_select_own on public.merchant_notifications
@@ -72,7 +73,9 @@ create table public.merchant_messages (
 );
 create index merchant_messages_business_updated_idx on public.merchant_messages (business_id, updated_at desc);
 alter table public.merchant_messages enable row level security;
+revoke all on public.merchant_messages from public, anon, authenticated;
 grant select, insert, update, delete on public.merchant_messages to authenticated;
+grant select, insert, update, delete on public.merchant_messages to service_role;
 create policy merchant_messages_select_own on public.merchant_messages for select to authenticated
   using (exists (select 1 from public.merchant_accounts ma join public.businesses b on b.id=ma.business_id
     where ma.business_id=merchant_messages.business_id and ma.user_id=(select auth.uid()) and b.merchant_status='active'));
