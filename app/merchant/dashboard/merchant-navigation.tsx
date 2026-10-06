@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const items = [
   { href: "/merchant/dashboard", label: "Dashboard", icon: "dashboard" },
@@ -31,13 +32,22 @@ function NavigationIcon({ name }: { name: string }) {
 
 export default function MerchantNavigation({ mobile = false }: { mobile?: boolean }) {
   const pathname = usePathname();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    const updateHash = () => setHash(window.location.hash);
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+    return () => window.removeEventListener("hashchange", updateHash);
+  }, []);
+
   return (
     <nav aria-label="Merchant navigation" className={mobile ? "merchant-mobile-nav" : "merchant-nav"}>
       {items.map((item) => {
         const active = item.href.endsWith("#scan-analytics")
-          ? pathname === "/merchant/dashboard"
+          ? pathname === "/merchant/dashboard" && hash === "#scan-analytics"
           : item.href === "/merchant/dashboard"
-            ? pathname === item.href
+            ? pathname === item.href && hash !== "#scan-analytics"
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
         return (
           <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`merchant-nav__link${active ? " is-active" : ""}`}>

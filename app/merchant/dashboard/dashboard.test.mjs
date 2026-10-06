@@ -133,6 +133,8 @@ test("dashboard is responsive and navigation keeps existing merchant routes", as
   assert.doesNotMatch(page, /min-w-\[400px\]/, "dashboard tables must not force a phone-width overflow");
   for (const path of ["business", "qr", "reviews", "subscription", "payments", "profile"]) assert.ok(navigation.includes(`/merchant/dashboard/${path}`));
   assert.match(navigation, /label: "Analytics"/);
+  assert.match(navigation, /pathname === "\/merchant\/dashboard" && hash === "#scan-analytics"/);
+  assert.match(navigation, /pathname === item\.href && hash !== "#scan-analytics"/);
 });
 
 test("My QR page uses the authenticated merchant identity and loads the saved template preference", async () => {
