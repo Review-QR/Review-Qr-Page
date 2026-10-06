@@ -5,6 +5,7 @@ import Link from "next/link";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl, trustitAppOrigin } from "@/lib/trustit-qr";
 import { QrPosterPreview } from "./qr/qr-template-gallery";
+import type { QrDesignAssets } from "@/lib/trustit-ai/provider-contracts";
 
 type MyQrCodeProps = {
   businessId: string;
@@ -18,6 +19,7 @@ type MyQrCodeProps = {
   businessType?: string | null;
   plan?: string | null;
   layout?: "dashboard" | "standalone";
+  designAssets?: QrDesignAssets;
 };
 
 function isQrUsable(qrStatus: string | null, expiry: string | null) {
@@ -58,6 +60,7 @@ export default function MyQrCode({
   businessType = null,
   plan = null,
   layout = "dashboard",
+  designAssets,
 }: MyQrCodeProps) {
   const origin = trustitAppOrigin;
   const [message, setMessage] = useState("");
@@ -206,7 +209,7 @@ export default function MyQrCode({
         <div className="merchant-qr-poster-frame">
           {usable ? (
             <div className="merchant-qr-poster">
-              <QrPosterPreview businessId={businessId} businessName={businessName} businessType={businessType} qrStatus={qrStatus} expiry={expiry} templateId={templateId} screenPreview />
+              <QrPosterPreview businessId={businessId} businessName={businessName} businessType={businessType} qrStatus={qrStatus} expiry={expiry} templateId={templateId} designAssets={designAssets} screenPreview />
             </div>
           ) : (
             <div className="merchant-qr-poster"><div className="merchant-qr-unavailable"><strong>QR code unavailable</strong><span>This QR is {statusLabel.toLowerCase()} and cannot be scanned right now.</span></div></div>

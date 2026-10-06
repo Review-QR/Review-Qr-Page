@@ -152,6 +152,7 @@ test("My QR page uses the authenticated merchant identity and loads the saved te
 test("five Trustit print designs use the required dimensions and one merchant QR", async () => {
   const gallery = await read("./qr/qr-template-gallery.tsx");
   const definitions = await read("./qr/templates.ts");
+  const themes = await read("../../../lib/trustit-ai/qr-design-theme.ts");
   const qrUtility = await read("../../../lib/trustit-qr.ts");
   assert.equal((definitions.match(/id: "template_[1-5]"/g) ?? []).length, 5);
   for (const [name, size, orientation, ratio] of [
@@ -183,7 +184,7 @@ test("five Trustit print designs use the required dimensions and one merchant QR
     assert.match(gallery, new RegExp(`function ${component}\\(`));
   }
   assert.match(gallery, /<CategoryArt kind=\{category\.artKind\}/);
-  for (const kind of ["food", "hotel", "laundry", "retail", "salon", "universal"]) assert.match(gallery, new RegExp(`artKind: "${kind}"`), `${kind} business art`);
+  for (const kind of ["food", "hotel", "laundry", "retail", "salon", "universal"]) assert.match(themes, new RegExp(`artKind: "${kind}"`), `${kind} business art`);
   assert.equal((gallery.match(/<TrustitMark templateId=/g) ?? []).length, 5);
   assert.equal((gallery.match(/<GoogleMessage/g) ?? []).length, 5);
   assert.match(gallery, /SCAN TO REVIEW/);

@@ -2,11 +2,13 @@ import { requireActiveMerchant } from "@/lib/merchant-auth";
 import MyQrCode from "../my-qr-code";
 import QrTemplateGallery from "./qr-template-gallery";
 import { qrTemplates } from "./templates";
+import { getBusinessQrDesignAssets } from "@/lib/trustit-ai/qr-design-assets.server";
 
 export const dynamic = "force-dynamic";
 
 export default async function MerchantQrPage() {
   const merchant = await requireActiveMerchant();
+  const designAssets = await getBusinessQrDesignAssets(merchant.businessId, merchant.businessType);
   const currentTemplate = qrTemplates.find((template) => template.id === merchant.qrTemplate) ?? qrTemplates[0];
   return (
     <div className="merchant-qr-page">
@@ -20,10 +22,10 @@ export default async function MerchantQrPage() {
       </header>
 
       <div className="merchant-workspace">
-        <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} layout="standalone" />
+        <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} layout="standalone" designAssets={designAssets} />
         <section className="merchant-template-panel merchant-template-panel--compact" id="template-gallery" aria-labelledby="merchant-template-title">
           <header><span className="merchant-template-panel__icon" aria-hidden="true">✿</span><div><h2 id="merchant-template-title">Choose a QR Template</h2><p>Pick a design that matches your business style.</p></div></header>
-          <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" />
+          <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" initialDesignAssets={designAssets} />
         </section>
       </div>
 
