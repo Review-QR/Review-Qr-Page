@@ -34,7 +34,7 @@ test("profile and location updates require the active signed-in merchant and ser
   const [page, actions, migration] = await Promise.all([
     read("./page.tsx"),
     read("./actions.ts"),
-    read("../../../../supabase/migrations/20261006130000_merchant_profile_location.sql"),
+    read("../../../../supabase/migrations/20261006081614_merchant_profile_location.sql"),
   ]);
   assert.match(page, /requireActiveMerchant\(\)/);
   assert.match(actions, /getActiveMerchant\(\)/);
@@ -55,7 +55,7 @@ test("My Business edits only supported fields through the authenticated merchant
   const [businessAction, form, migration] = await Promise.all([
     read("../business/actions.ts"),
     read("../business/business-profile-form.tsx"),
-    read("../../../../supabase/migrations/20261006130000_merchant_profile_location.sql"),
+    read("../../../../supabase/migrations/20261006081614_merchant_profile_location.sql"),
   ]);
   assert.match(businessAction, /getActiveMerchant\(\)/);
   assert.match(businessAction, /rpc\("update_merchant_business_profile"/);
