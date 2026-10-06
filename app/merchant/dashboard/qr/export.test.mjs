@@ -11,6 +11,7 @@ import {
 } from "./templates.ts";
 
 const gallerySource = await readFile(new URL("./qr-template-gallery.tsx", import.meta.url), "utf8");
+const themeSource = await readFile(new URL("../../../../lib/trustit-ai/qr-design-theme.ts", import.meta.url), "utf8");
 const qrUtilitySource = await readFile(new URL("../../../../lib/trustit-qr.ts", import.meta.url), "utf8");
 const dashboardCssSource = await readFile(new URL("../dashboard.css", import.meta.url), "utf8");
 
@@ -90,7 +91,7 @@ test("selected template and preview expose PNG, PDF, and print controls", () => 
 test("all five QR designs consume one merchant business category instead of template categories", () => {
   assert.match(gallerySource, /businessType: string \| null/);
   assert.match(gallerySource, /const category = getBusinessCategoryProfile\(businessType\)/);
-  assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category \}/);
+  assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category, designAsset: designAssets\?\.\[templateId\] \}/);
   assert.match(gallerySource, /<CategoryArt kind=\{category\.artKind\}/);
   assert.match(gallerySource, /\{category\.label\}/);
   assert.match(gallerySource, /\{category\.message\}/);
@@ -103,9 +104,9 @@ test("all five QR designs consume one merchant business category instead of temp
   ]) {
     assert.equal(gallerySource.includes(hardCodedCategory), false, `Hard-coded category remains: ${hardCodedCategory}`);
   }
-  assert.match(gallerySource, /Sweet Shop · Sweets & Treats/);
-  assert.match(gallerySource, /Hotel · Stay · Hospitality/);
-  assert.match(gallerySource, /Laundry · Fresh Care/);
+  assert.match(themeSource, /posterLabel: "Sweet Shop · Sweets & Treats"/);
+  assert.match(themeSource, /posterLabel: "Hotel · Stay · Hospitality"/);
+  assert.match(themeSource, /posterLabel: "Laundry · Fresh Care"/);
 });
 
 test("QR tiles use a fixed quiet zone, remain above poster artwork, and long business names can wrap and scale down", async () => {
@@ -125,7 +126,7 @@ test("QR tiles use a fixed quiet zone, remain above poster artwork, and long bus
 test("phone QR previews keep landscape posters readable inside their frame", () => {
   assert.match(gallerySource, /template\.ratio === "3 \/ 2" \? " merchant-template-tile--landscape"/);
   assert.match(dashboardCssSource, /merchant-template-tile--landscape\s*\{\s*grid-column:\s*span 2/);
-  assert.match(gallerySource, /qrUsable=\{qrUsable\} category=\{category\} compact \/>/);
+  assert.match(gallerySource, /qrUsable=\{qrUsable\} category=\{category\} designAssets=\{designAssets\} compact \/>/);
   assert.match(gallerySource, /screenPreview\?: boolean/);
   assert.match(dashboardCssSource, /data-template-id="template_1"/);
   assert.match(dashboardCssSource, /data-template-id="template_3"/);
