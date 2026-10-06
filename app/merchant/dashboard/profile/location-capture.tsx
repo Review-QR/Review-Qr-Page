@@ -39,7 +39,7 @@ export default function LocationCapture({
       return;
     }
     setBusy(true);
-    navigator.geolocation.getCurrentPosition(async (position) => {
+    const savePosition = async (position: GeolocationPosition) => {
       try {
         const result = await saveMerchantLocationAction(position.coords.latitude, position.coords.longitude);
         if (!result.ok) {
@@ -56,10 +56,25 @@ export default function LocationCapture({
       } finally {
         setBusy(false);
       }
-    }, (error) => {
+    };
+    const handleError = (error: GeolocationPositionError) => {
       setBusy(false);
       setFailed(true);
       setMessage(deviceLocationError(error));
+    };
+
+    navigator.geolocation.getCurrentPosition(savePosition, (error) => {
+      if (error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
+        // Some desktops and tablets cannot produce a high-accuracy fix promptly.
+        // Retry through the browser's approximate provider without accepting cached coordinates.
+        navigator.geolocation.getCurrentPosition(savePosition, handleError, {
+          enableHighAccuracy: false,
+          timeout: 60_000,
+          maximumAge: 0,
+        });
+        return;
+      }
+      handleError(error);
     }, { enableHighAccuracy: true, timeout: 20_000, maximumAge: 0 });
   }
 
