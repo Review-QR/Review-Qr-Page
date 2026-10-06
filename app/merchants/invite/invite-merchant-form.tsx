@@ -22,7 +22,7 @@ export default function InviteMerchantForm({ businesses }: { businesses: Busines
     <div className="max-w-3xl">
       <form action={formAction} className="grid gap-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
         <label className="block text-sm font-semibold text-slate-800">
-          Select merchant business
+          Select pending merchant for invite
           <select name="businessId" required disabled={pending || businesses.length === 0} className="mt-1.5 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100">
             <option value="">Choose a pending merchant…</option>
             {businesses.map((business) => (
@@ -33,10 +33,20 @@ export default function InviteMerchantForm({ businesses }: { businesses: Busines
           </select>
           {businesses.length === 0 && <p className="mt-2 text-xs text-slate-500">No eligible pending merchants without an active registration invitation.</p>}
         </label>
-        <button type="submit" disabled={pending || businesses.length === 0} className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800 disabled:cursor-wait disabled:opacity-50">
-          {pending ? "Creating…" : "Create Registration Link"}
-        </button>
+        <div className="flex flex-col gap-2 md:flex-row">
+          <button type="submit" disabled={pending || businesses.length === 0} className="rounded-xl bg-blue-700 px-5 py-3 font-semibold text-white hover:bg-blue-800 disabled:cursor-wait disabled:opacity-50">
+            {pending ? "Creating…" : "Create Registration Link"}
+          </button>
+          <button
+            type="button"
+            onClick={() => window.open("/register", "_blank", "noopener,noreferrer")}
+            className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-semibold text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+          >
+            Open Merchant Registration ↗
+          </button>
+        </div>
       </form>
+      <p className="mt-2 text-xs text-slate-500">Need the public signup page? Open Merchant Registration in a new tab.</p>
 
       {state.message && <p role={state.success ? "status" : "alert"} className={`mt-5 rounded-xl border px-4 py-3 text-sm ${state.success ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-rose-200 bg-rose-50 text-rose-800"}`}>{state.message}</p>}
 
