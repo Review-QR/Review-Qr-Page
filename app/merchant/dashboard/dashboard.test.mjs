@@ -135,6 +135,7 @@ test("dashboard is responsive and navigation keeps existing merchant routes", as
   assert.match(navigation, /label: "Analytics"/);
   assert.match(navigation, /pathname === "\/merchant\/dashboard" && hash === "#scan-analytics"/);
   assert.match(navigation, /pathname === item\.href && hash !== "#scan-analytics"/);
+  assert.match(navigation, /onClick=\{\(\) => setHash\(item\.href\.endsWith\("#scan-analytics"\)/);
 });
 
 test("My QR page uses the authenticated merchant identity and loads the saved template preference", async () => {
