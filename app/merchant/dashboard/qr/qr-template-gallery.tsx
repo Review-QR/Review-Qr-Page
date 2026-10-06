@@ -143,7 +143,7 @@ function BusinessName({ name, dark = false, landscape = false, compact = false }
 
 function ReviewQr({ url, usable, businessName, compact = false, landscape = false }: { url: string; usable: boolean; businessName: string; compact?: boolean; landscape?: boolean }) {
   const size = compact
-    ? landscape ? "h-20 w-20 sm:h-24 sm:w-24" : "h-24 w-24"
+    ? "h-16 w-16"
     : landscape ? "h-36 w-36 sm:h-44 sm:w-44" : "h-52 w-52 sm:h-56 sm:w-56";
   return (
     <div className={`relative z-30 isolate inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-md ring-1 ring-slate-900/10 ${compact ? "p-1.5" : "p-3"}`}>
@@ -161,15 +161,15 @@ function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, 
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -right-10 top-28 z-0 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
       <TrustitMark templateId="template_1" className="relative z-10 text-emerald-800" compact={compact} />
-      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-12" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-12 w-28 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-8" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
+      {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>}
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
-      <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
-      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
+      {!compact && <p className="mt-1 max-w-xs text-sm">{category.message}</p>}
+      <div className={`my-auto ${compact ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-emerald-800 font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
-      <div className="mt-3"><GoogleMessage compact={compact} /></div>
-      <p className="mt-2 font-mono text-[9px] text-[#74593c]">{businessId}</p>
+      {!compact && <div className="mt-3"><GoogleMessage /></div>}
+      {!compact && <p className="mt-2 font-mono text-[9px] text-[#74593c]">{businessId}</p>}
     </div>
   );
 }
@@ -179,15 +179,15 @@ function HotelPoster({ name, businessId, qrUrl, usable, compact, category, desig
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -left-16 top-20 z-0 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
       <TrustitMark templateId="template_2" className="relative z-10 text-[#d9c28e]" compact={compact} />
-      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-12" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-12 w-32 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-8" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
+      {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>}
       <BusinessName name={name} dark compact={compact} />
       <FiveStars dark compact={compact} />
-      <p className={`mt-1 max-w-xs text-slate-100 ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
-      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
+      {!compact && <p className="mt-1 max-w-xs text-sm text-slate-100">{category.message}</p>}
+      <div className={`my-auto ${compact ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-[#e5ce98] font-bold text-[#183a45] ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
-      <div className="mt-3"><GoogleMessage dark compact={compact} /></div>
-      <p className="mt-2 font-mono text-[9px] text-slate-300">{businessId}</p>
+      {!compact && <div className="mt-3"><GoogleMessage dark /></div>}
+      {!compact && <p className="mt-2 font-mono text-[9px] text-slate-300">{businessId}</p>}
     </div>
   );
 }
@@ -197,15 +197,15 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, des
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eef8fb] text-center text-[#183e55] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute inset-x-0 bottom-24 z-0 h-20 bg-[radial-gradient(ellipse_at_center,#cae8f1_0%,transparent_70%)]" />
       <TrustitMark templateId="template_3" className="relative z-10 text-[#237c9d]" compact={compact} />
-      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-12" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-12 w-28 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-8" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
+      {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>}
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
-      <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
-      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
+      {!compact && <p className="mt-1 max-w-xs text-sm">{category.message}</p>}
+      <div className={`my-auto ${compact ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-[#247f9e] font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
-      <div className="mt-3"><GoogleMessage compact={compact} /></div>
-      <p className="mt-2 font-mono text-[9px] text-[#4b7180]">{businessId}</p>
+      {!compact && <div className="mt-3"><GoogleMessage /></div>}
+      {!compact && <p className="mt-2 font-mono text-[9px] text-[#4b7180]">{businessId}</p>}
     </div>
   );
 }
@@ -216,14 +216,14 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category, desi
       <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#cf963e]" />
       <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
         <TrustitMark templateId="template_4" className="text-[#846021]" compact={compact} />
-        <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a07127] ${compact ? "text-[9px]" : "text-xs"}`}>{category.label}</p>
+        {!compact && <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-[#a07127]">{category.label}</p>}
         <BusinessName name={name} landscape compact={compact} />
         <FiveStars compact={compact} />
-        <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>{category.message}</p>
-        <CategoryArt kind={category.artKind} designAsset={designAsset} className={`mt-2 text-[#9d742f] ${compact ? "h-9 w-20" : "h-24 w-40"}`} />
+        {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
+        <CategoryArt kind={category.artKind} designAsset={designAsset} className={`text-[#9d742f] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#895d1d] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
-        <div className="mt-2"><GoogleMessage compact={compact} /></div>
-        {!compact && <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
+        {compact ? null : <div className="mt-2"><GoogleMessage /></div>}
+        {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
       </div>
       <div className="relative z-10 flex flex-col items-center gap-2">
         <ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} landscape />
@@ -240,14 +240,14 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category, desig
       <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#bb7189]" />
       <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
         <TrustitMark templateId="template_5" className="text-[#99586f]" compact={compact} />
-        <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a35070] ${compact ? "text-[9px]" : "text-xs"}`}>{category.label}</p>
+        {!compact && <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-[#a35070]">{category.label}</p>}
         <BusinessName name={name} landscape compact={compact} />
         <FiveStars compact={compact} />
-        <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>{category.message}</p>
-        <CategoryArt kind={category.artKind} designAsset={designAsset} className={`mt-2 text-[#a65c79] ${compact ? "h-9 w-20" : "h-24 w-40"}`} />
+        {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
+        <CategoryArt kind={category.artKind} designAsset={designAsset} className={`text-[#a65c79] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#a45170] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
-        <div className="mt-2"><GoogleMessage compact={compact} /></div>
-        {!compact && <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
+        {compact ? null : <div className="mt-2"><GoogleMessage /></div>}
+        {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
       </div>
       <div className="relative z-10 flex flex-col items-center gap-2">
         <ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} landscape />
