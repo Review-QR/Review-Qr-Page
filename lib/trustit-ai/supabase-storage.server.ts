@@ -2,16 +2,18 @@ import "server-only";
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { AssetStorageProvider, QrDesignAsset } from "./provider-contracts";
+import { createScopedQrDesignPath, isScopedQrDesignPath, isSafeDesignBusinessId } from "./supabase-storage-path";
 
-/** Future adapter. It does not create a bucket; supply a private bucket and server-side client explicitly. */
+/** Future adapter. It does not create a bucket; pass the authenticated merchant's business ID and a private server-side bucket explicitly. */
 export class SupabaseStorageAssetProvider implements AssetStorageProvider {
-  constructor(private readonly client: SupabaseClient, private readonly bucket: string) {
+  constructor(private readonly client: SupabaseClient, private readonly bucket: string, private readonly businessId: string) {
     if (!bucket.trim()) throw new Error("A private Supabase Storage bucket name is required.");
+    if (!isSafeDesignBusinessId(businessId)) throw new Error("An authenticated merchant business scope is required.");
   }
 
-  pathFor({ businessId, themeId, templateId, revision, promptVersion }: Parameters<AssetStorageProvider["pathFor"]>[0]) {
-    const safeBusinessId = businessId.replace(/[^a-zA-Z0-9_-]/g, "-");
-    return `businesses/${safeBusinessId}/qr-designs/${themeId}/${templateId}/${promptVersion}-r${revision}.svg`;
+  pathFor(input: Parameters<AssetStorageProvider["pathFor"]>[0]) {
+    if (input.businessId !== this.businessId) throw new Error("QR design assets are restricted to the authenticated merchant business.");
+    return createScopedQrDesignPath(input);
   }
 
   async save(input: Parameters<AssetStorageProvider["save"]>[0]): Promise<QrDesignAsset> {
@@ -37,13 +39,13 @@ export class SupabaseStorageAssetProvider implements AssetStorageProvider {
   }
 
   async get(storagePath: string): Promise<{ storagePath: string; url: string } | null> {
-    if (!storagePath.startsWith("businesses/") || storagePath.includes("..")) return null;
+    if (!isScopedQrDesignPath(storagePath, this.businessId)) return null;
     const { data, error } = await this.client.storage.from(this.bucket).createSignedUrl(storagePath, 60 * 60);
     return error || !data?.signedUrl ? null : { storagePath, url: data.signedUrl };
   }
 
   async delete(storagePath: string) {
-    if (!storagePath.startsWith("businesses/") || storagePath.includes("..")) throw new Error("Invalid asset storage path.");
+    if (!isScopedQrDesignPath(storagePath, this.businessId)) throw new Error("Invalid or out-of-scope QR design storage path.");
     const { error } = await this.client.storage.from(this.bucket).remove([storagePath]);
     if (error) throw new Error("Could not delete the QR design asset.");
   }

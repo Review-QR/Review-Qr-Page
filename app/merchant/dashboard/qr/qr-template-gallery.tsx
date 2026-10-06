@@ -118,8 +118,9 @@ function CategoryIcon({ kind, className = "" }: { kind: CategoryArtKind; classNa
 function CategoryArt({ kind, designAsset, className = "" }: { kind: CategoryArtKind; designAsset?: QrDesignAsset; className?: string }) {
   return (
     <span className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg ${className}`}>
-      {designAsset?.url && <img src={designAsset.url} alt="" aria-hidden="true" data-qr-design-background="true" className="absolute inset-0 h-full w-full object-cover opacity-70" />}
-      <CategoryIcon kind={kind} className="relative z-10 h-full w-full drop-shadow-sm" />
+      {designAsset?.url
+        ? <img src={designAsset.url} alt="" aria-hidden="true" data-qr-design-background="true" className="absolute inset-0 h-full w-full object-cover" />
+        : <CategoryIcon kind={kind} className="relative z-10 h-full w-full drop-shadow-sm" />}
     </span>
   );
 }
@@ -142,10 +143,10 @@ function BusinessName({ name, dark = false, landscape = false, compact = false }
 
 function ReviewQr({ url, usable, businessName, compact = false, landscape = false }: { url: string; usable: boolean; businessName: string; compact?: boolean; landscape?: boolean }) {
   const size = compact
-    ? landscape ? "h-20 w-20 sm:h-24 sm:w-24" : "h-28 w-28"
+    ? landscape ? "h-20 w-20 sm:h-24 sm:w-24" : "h-24 w-24"
     : landscape ? "h-36 w-36 sm:h-44 sm:w-44" : "h-52 w-52 sm:h-56 sm:w-56";
   return (
-    <div className={`relative z-30 isolate inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-md ring-1 ring-slate-900/10 ${compact ? "p-2" : "p-3"}`}>
+    <div className={`relative z-30 isolate inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-md ring-1 ring-slate-900/10 ${compact ? "p-1.5" : "p-3"}`}>
       {usable && url ? <img src={url} alt={`Trustit review QR for ${businessName}`} className={`${size} block max-w-full object-contain`} /> : <div className={`${size} flex items-center justify-center bg-slate-50 p-3 text-center text-xs font-medium text-slate-600`}>QR unavailable while the business is inactive or expired</div>}
     </div>
   );
@@ -160,7 +161,7 @@ function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, 
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -right-10 top-28 z-0 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
       <TrustitMark templateId="template_1" className="relative z-10 text-emerald-800" compact={compact} />
-      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-16" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-14 w-28 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-12" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-12 w-28 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
@@ -178,7 +179,7 @@ function HotelPoster({ name, businessId, qrUrl, usable, compact, category, desig
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -left-16 top-20 z-0 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
       <TrustitMark templateId="template_2" className="relative z-10 text-[#d9c28e]" compact={compact} />
-      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-16" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-14 w-32 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-12" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-12 w-32 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>
       <BusinessName name={name} dark compact={compact} />
       <FiveStars dark compact={compact} />
@@ -196,7 +197,7 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, des
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eef8fb] text-center text-[#183e55] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute inset-x-0 bottom-24 z-0 h-20 bg-[radial-gradient(ellipse_at_center,#cae8f1_0%,transparent_70%)]" />
       <TrustitMark templateId="template_3" className="relative z-10 text-[#237c9d]" compact={compact} />
-      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-16" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-14 w-28 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-12" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-12 w-28 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
