@@ -76,6 +76,8 @@ test("location capture requests real device coordinates and keeps typed address 
     read("../business/business-profile-form.tsx"),
   ]);
   assert.match(capture, /navigator\.geolocation\.getCurrentPosition/);
+  assert.match(capture, /error\.code === error\.TIMEOUT \|\| error\.code === error\.POSITION_UNAVAILABLE/);
+  assert.match(capture, /enableHighAccuracy: false,[\s\S]*?timeout: 60_000,[\s\S]*?maximumAge: 0/);
   assert.match(capture, /position\.coords\.latitude/);
   assert.match(capture, /position\.coords\.longitude/);
   assert.match(capture, /PERMISSION_DENIED/);
