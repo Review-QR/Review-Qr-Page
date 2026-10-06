@@ -11,6 +11,8 @@ import {
 } from "./templates.ts";
 
 const gallerySource = await readFile(new URL("./qr-template-gallery.tsx", import.meta.url), "utf8");
+const qrUtilitySource = await readFile(new URL("../../../../lib/trustit-qr.ts", import.meta.url), "utf8");
+const dashboardCssSource = await readFile(new URL("../dashboard.css", import.meta.url), "utf8");
 
 test("all five QR poster exports retain their exact print page dimensions and orientation", () => {
   const expected = [
@@ -104,4 +106,27 @@ test("all five QR designs consume one merchant business category instead of temp
   assert.match(gallerySource, /Sweet Shop · Sweets & Treats/);
   assert.match(gallerySource, /Hotel · Stay · Hospitality/);
   assert.match(gallerySource, /Laundry · Fresh Care/);
+});
+
+test("QR tiles use a fixed quiet zone, remain above poster artwork, and long business names can wrap and scale down", async () => {
+  assert.match(gallerySource, /relative z-30 isolate inline-flex shrink-0[^`]*bg-white/);
+  assert.match(qrUtilitySource, /margin=12/);
+  assert.match(gallerySource, /overflowWrap: "break-word"/);
+  assert.match(gallerySource, /length > 60/);
+  assert.match(gallerySource, /length > 42/);
+  assert.match(gallerySource, /textWrap: "balance"/);
+  assert.match(gallerySource, /title=\{name\}/);
+  const sample = "Deepak Sweets Bahraich";
+  const longSample = "Deepak Sweets Bahraich Traditional Family Confectioners and Celebrations Since 1984";
+  assert.ok(sample.length < 42);
+  assert.ok(longSample.length > 60);
+});
+
+test("phone QR previews keep landscape posters readable inside their frame", () => {
+  assert.match(gallerySource, /template\.ratio === "3 \/ 2" \? " merchant-template-tile--landscape"/);
+  assert.match(dashboardCssSource, /merchant-template-tile--landscape\s*\{\s*grid-column:\s*span 2/);
+  assert.match(gallerySource, /qrUsable=\{qrUsable\} category=\{category\} compact \/>/);
+  assert.match(gallerySource, /screenPreview\?: boolean/);
+  assert.match(dashboardCssSource, /data-template-id="template_1"/);
+  assert.match(dashboardCssSource, /data-template-id="template_3"/);
 });

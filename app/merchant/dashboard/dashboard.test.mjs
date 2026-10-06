@@ -131,7 +131,7 @@ test("dashboard is responsive and navigation keeps existing merchant routes", as
   assert.ok(page.indexOf("<MyQrCode") < page.indexOf("<ScanAnalytics"), "the merchant QR appears near the top of the dashboard");
   assert.match(await read("./my-qr-code.tsx"), /Change Template/);
   assert.doesNotMatch(page, /min-w-\[400px\]/, "dashboard tables must not force a phone-width overflow");
-  for (const path of ["business", "qr", "reviews", "subscription", "payments"]) assert.ok(navigation.includes(`/merchant/dashboard/${path}`));
+  for (const path of ["business", "qr", "reviews", "subscription", "payments", "profile"]) assert.ok(navigation.includes(`/merchant/dashboard/${path}`));
   assert.match(navigation, /label: "Analytics"/);
 });
 
@@ -188,7 +188,7 @@ test("five Trustit print designs use the required dimensions and one merchant QR
   assert.doesNotMatch(gallery, /merchantInitials|logo placeholder|Add Logo|Merchant Logo|merchant_logo|logo_url/i);
   assert.match(qrUtility, /api\.qrserver\.com\/v1\/create-qr-code/);
   assert.match(gallery, /object-contain/);
-  assert.match(gallery, /rounded-2xl bg-white p-2\.5/);
+  assert.match(gallery, /relative z-30 isolate inline-flex shrink-0[^`]*bg-white/);
   assert.match(gallery, /qrStatus, expiry/);
   assert.match(gallery, /status\?\.trim\(\)\.toLowerCase\(\) === "active"/);
 });
