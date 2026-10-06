@@ -10,8 +10,13 @@ export async function getMerchantNotifications() {
     .select("id,title,preview,rating,review_id,is_read,created_at")
     .eq("business_id", merchant.businessId).order("created_at", { ascending: false }).limit(20);
   if (error) throw new Error("Notifications are temporarily unavailable");
-  const { error: readError } = await supabase.from("merchant_notifications").update({ is_read: true })
-    .eq("business_id", merchant.businessId).eq("is_read", false);
-  if (readError) throw new Error("Notifications are temporarily unavailable");
-  return data ?? [];
+  const notifications = data ?? [];
+  if (notifications.length > 0) {
+    const { error: readError } = await supabase.from("merchant_notifications").update({ is_read: true })
+      .eq("business_id", merchant.businessId)
+      .eq("is_read", false)
+      .in("id", notifications.map((notification) => notification.id));
+    if (readError) throw new Error("Notifications are temporarily unavailable");
+  }
+  return notifications.map((notification) => ({ ...notification, is_read: true }));
 }
