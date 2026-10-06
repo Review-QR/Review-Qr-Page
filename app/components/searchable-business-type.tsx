@@ -8,6 +8,7 @@ type Props = {
   onChange: (value: string) => void;
   name?: string;
   required?: boolean;
+  inputClassName?: string;
 };
 
 function normalize(value: string) {
@@ -30,6 +31,7 @@ export default function SearchableBusinessType({
   onChange,
   name = "type",
   required = true,
+  inputClassName,
 }: Props) {
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
@@ -98,7 +100,7 @@ export default function SearchableBusinessType({
         placeholder="Type: Lib, Rest, Sal..."
         autoComplete="off"
         required={required}
-        className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500"
+        className={inputClassName ?? "w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500"}
       />
 
       {open && options.length > 0 && (

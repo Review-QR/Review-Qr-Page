@@ -52,8 +52,15 @@ export default function BusinessForm({ initialBusinessName = "" }: { initialBusi
       </label>
       <label className="block text-sm font-semibold text-slate-800">
         Business Type
-        <SearchableBusinessType name="type" value={businessType} onChange={setBusinessType} />
+        <SearchableBusinessType name="type" value={businessType} onChange={setBusinessType} inputClassName={cls} />
       </label>
+      <div className="-mt-3 flex flex-wrap gap-2" aria-label="Popular business types">
+        {["Restaurant", "Salon", "Cafe", "Hotel", "Shop"].map((type) => (
+          <button key={type} type="button" onClick={() => setBusinessType(type)} className="rounded-full bg-blue-50 px-3 py-1 text-[11px] font-bold text-blue-700 transition hover:bg-blue-100">
+            {type}
+          </button>
+        ))}
+      </div>
       <label className="block text-sm font-semibold text-slate-800">
         Address
         <input className={cls} name="address" autoComplete="street-address" maxLength={1000} required />
