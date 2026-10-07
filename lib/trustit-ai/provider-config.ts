@@ -1,5 +1,6 @@
 import type { AIImageProvider } from "./provider-contracts";
 import { MockAIImageProvider } from "./mock-image-provider.ts";
+import { OpenAIImageProvider } from "./openai-image-provider.ts";
 
 export type AIImageProviderMode = "mock" | "openai";
 
@@ -13,5 +14,5 @@ export function createAIImageProvider(value: string | undefined, openAIProvider?
   const mode = resolveAIImageProviderMode(value);
   if (mode === "mock") return new MockAIImageProvider();
   if (openAIProvider?.provider === "openai") return openAIProvider;
-  throw new Error("The OpenAI image adapter is not installed. Mock mode remains the only available provider.");
+  return new OpenAIImageProvider();
 }
