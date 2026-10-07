@@ -356,7 +356,7 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
       }
       setDesignAssets(result.assets);
       setDesignRevision(result.revision);
-      setStatusMessage("Mock design variations refreshed. Your selected QR template is unchanged.");
+      setStatusMessage(result.provider === "AI" ? "AI design variations refreshed. Your selected QR template is unchanged." : "Mock design variations refreshed. Your selected QR template is unchanged.");
     });
   }
 
@@ -514,9 +514,9 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
       </div>
 
       <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
-        <p className="text-xs leading-5 text-slate-600">Five business-matched design variations share one QR identity. Mock mode performs no paid external AI calls.</p>
+        <p className="text-xs leading-5 text-slate-600">Five business-matched design variations share one QR identity. AI mode creates and securely stores business-matched artwork; mock mode makes no paid external AI calls.</p>
         <button type="button" onClick={regenerateDesign} disabled={isPending} className="min-h-10 shrink-0 rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-50 disabled:opacity-60">
-          {isPending ? "Preparing mock designs…" : "Regenerate Design"}
+          {isPending ? "Preparing designs…" : "Regenerate Design"}
         </button>
       </div>
 
