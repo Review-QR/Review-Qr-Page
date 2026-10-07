@@ -5,15 +5,18 @@ import { QR_DESIGN_PROMPT_VERSION, resolveBusinessTheme } from "./qr-design-them
 import { createAIImageProvider, resolveAIImageProviderMode } from "./provider-config";
 import { MockAssetStorageProvider } from "./mock-storage";
 import { SupabaseQrDesignStorageProvider } from "./supabase-storage";
+import { OpenAIImageProvider } from "./openai-image-provider";
 import { qrThemeGenerator } from "./theme-generator";
+import { isPrivateQrDesignAssetPath } from "./supabase-storage-path";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import type { AssetStorageProvider, QrDesignAsset, QrDesignAssets, TrustitAI } from "./provider-contracts";
 
 const mockStorage = new MockAssetStorageProvider();
 const cachedAssets = new Map<string, Promise<QrDesignAssets>>();
 
-function createTrustitAI(): TrustitAI {
-  return { text: {}, image: createAIImageProvider(process.env.TRUSTIT_AI_IMAGE_PROVIDER) };
+function createTrustitAI(mode: "mock" | "openai"): TrustitAI {
+  const image = mode === "openai" ? new OpenAIImageProvider() : createAIImageProvider("mock");
+  return { text: {}, image };
 }
 
 function storageFor(mode: "mock" | "openai"): AssetStorageProvider {
@@ -41,6 +44,7 @@ async function loadPersistedAssets(
   if (error) throw new Error("Unable to load saved QR design assets: " + error.message);
 
   const entries = await Promise.all((data ?? []).map(async (row) => {
+    if (!isPrivateQrDesignAssetPath(row.storage_path, businessId)) return null;
     const signed = await storage.get(row.storage_path);
     if (!signed) return null;
     const templateId = row.template_id as (typeof qrTemplateIds)[number];
@@ -78,7 +82,7 @@ export async function getBusinessQrDesignAssets(businessId: string, businessType
       if (qrTemplateIds.every((templateId) => persisted[templateId])) return persisted;
     }
 
-    const engine = createTrustitAI();
+    const engine = createTrustitAI(mode);
     const prompts = qrThemeGenerator.promptsFor(businessType);
     const entries = await Promise.all(prompts.map(async (prompt) => {
       const image = await engine.image.generateImage({ prompt, width: 1200, height: 620, revision: safeRevision });

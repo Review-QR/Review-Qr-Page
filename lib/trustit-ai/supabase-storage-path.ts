@@ -30,3 +30,24 @@ export function isScopedQrDesignPath(storagePath: string, businessId: string) {
   const match = new RegExp(`^businesses/${escapedBusinessId}/qr-designs/([a-z0-9-]+)/template_[1-5]/[a-z0-9]+(?:-[a-z0-9]+)*-r[0-4]\\.svg$`).exec(storagePath);
   return Boolean(match && businessThemes.some((theme) => theme.id === match[1]));
 }
+
+export function createPrivateQrDesignAssetPath(input: {
+  businessId: string;
+  themeId: BusinessThemeId;
+  templateId: QrTemplateId;
+  revision: number;
+  promptVersion: string;
+}) {
+  if (!isSafeDesignBusinessId(input.businessId)) throw new Error("Invalid QR design business scope.");
+  if (!businessThemes.some((theme) => theme.id === input.themeId)) throw new Error("Invalid QR design theme.");
+  if (!isQrTemplateId(input.templateId)) throw new Error("Invalid QR design template.");
+  if (!Number.isInteger(input.revision) || input.revision < 0 || input.revision > 4) throw new Error("Invalid QR design revision.");
+  if (!promptVersionPattern.test(input.promptVersion)) throw new Error("Invalid QR design prompt version.");
+  return `businesses/${input.businessId}/${input.themeId}/${input.templateId}/${input.promptVersion}-r${input.revision}.png`;
+}
+
+export function isPrivateQrDesignAssetPath(storagePath: string, businessId: string) {
+  if (!isSafeDesignBusinessId(businessId)) return false;
+  const match = new RegExp(`^businesses/${businessId}/([a-z0-9-]+)/template_[1-5]/[a-z0-9]+(?:-[a-z0-9]+)*-r[0-4]\\.png$`).exec(storagePath);
+  return Boolean(match && businessThemes.some((theme) => theme.id === match[1]));
+}

@@ -1,6 +1,5 @@
 import type { AIImageProvider } from "./provider-contracts";
 import { MockAIImageProvider } from "./mock-image-provider.ts";
-import { OpenAIImageProvider } from "./openai-image-provider.ts";
 
 export type AIImageProviderMode = "mock" | "openai";
 
@@ -14,5 +13,5 @@ export function createAIImageProvider(value: string | undefined, openAIProvider?
   const mode = resolveAIImageProviderMode(value);
   if (mode === "mock") return new MockAIImageProvider();
   if (openAIProvider?.provider === "openai") return openAIProvider;
-  return new OpenAIImageProvider();
+  throw new Error("The OpenAI provider must be supplied by the server runtime.");
 }

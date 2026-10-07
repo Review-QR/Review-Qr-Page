@@ -1,21 +1,16 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { createPrivateQrDesignAssetPath, isPrivateQrDesignAssetPath } from "./supabase-storage-path";
 import type { AssetStorageProvider, QrDesignAsset } from "./provider-contracts";
 
 const BUCKET = "trustit-qr-designs";
-
-function safeSegment(value: string) {
-  const normalized = value.normalize("NFKC").replace(/[^a-zA-Z0-9_-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
-  if (!normalized || normalized === "." || normalized === "..") throw new Error("Invalid asset path segment.");
-  return normalized;
-}
 
 export class SupabaseQrDesignStorageProvider implements AssetStorageProvider {
   private readonly supabase = createSupabaseAdminClient();
 
   pathFor({ businessId, themeId, templateId, revision, promptVersion }: Parameters<AssetStorageProvider["pathFor"]>[0]) {
-    return `businesses/${safeSegment(businessId)}/${safeSegment(themeId)}/${templateId}/${safeSegment(promptVersion)}-r${revision}.png`;
+    return createPrivateQrDesignAssetPath({ businessId, themeId, templateId, revision, promptVersion });
   }
 
   async save(input: Parameters<AssetStorageProvider["save"]>[0]): Promise<QrDesignAsset> {
@@ -44,6 +39,7 @@ export class SupabaseQrDesignStorageProvider implements AssetStorageProvider {
   }
 
   async get(storagePath: string) {
+    if (!isPrivateQrDesignAssetPath(storagePath, storagePath.split("/")[1] ?? "")) return null;
     const { data, error } = await this.supabase.storage.from(BUCKET).createSignedUrl(storagePath, 3600);
     if (error || !data?.signedUrl) return null;
     return { storagePath, url: data.signedUrl };
