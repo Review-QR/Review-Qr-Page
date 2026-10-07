@@ -59,7 +59,7 @@ async function loadPersistedAssets(
     return [templateId, asset] as const;
   }));
 
-  return Object.fromEntries(entries.filter((entry): entry is readonly [string, QrDesignAsset] => Boolean(entry))) as QrDesignAssets;
+  return Object.fromEntries(entries.filter((entry): entry is readonly [(typeof qrTemplateIds)[number], QrDesignAsset] => Boolean(entry))) as QrDesignAssets;
 }
 
 export async function getBusinessQrDesignAssets(businessId: string, businessType: string | null, revision = 0): Promise<QrDesignAssets> {
