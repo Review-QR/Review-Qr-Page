@@ -23,6 +23,4 @@ insert into storage.buckets (id, name, public)
 values ('trustit-qr-designs', 'trustit-qr-designs', false)
 on conflict (id) do update set public = false;
 
-revoke all on storage.objects from anon, authenticated;
-
 comment on table public.trustit_qr_design_assets is 'Server-managed Trustit QR artwork metadata. Assets are stored privately and served through short-lived signed URLs.';
