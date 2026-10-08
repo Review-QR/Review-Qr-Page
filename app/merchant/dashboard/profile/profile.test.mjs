@@ -31,10 +31,11 @@ test("location validation rejects non-finite and out-of-range coordinates", () =
 });
 
 test("profile and location updates require the active signed-in merchant and server-owned business mapping", async () => {
-  const [page, actions, migration] = await Promise.all([
+  const [page, actions, migration, auth] = await Promise.all([
     read("./page.tsx"),
     read("./actions.ts"),
     read("../../../../supabase/migrations/20261006081614_merchant_profile_location.sql"),
+    read("../../../../lib/merchant-auth.ts"),
   ]);
   assert.match(page, /requireActiveMerchant\(\)/);
   assert.match(actions, /getActiveMerchant\(\)/);
@@ -47,15 +48,17 @@ test("profile and location updates require the active signed-in merchant and ser
   assert.match(migration, /grant execute on function public\.set_merchant_business_location\(double precision, double precision\)\s+to authenticated/i);
   assert.match(migration, /location_latitude between -90 and 90/);
   assert.match(migration, /location_longitude between -180 and 180/);
-  assert.match(page, /\.eq\("id", merchant\.businessId\)[\s\S]*?\.eq\("merchant_status", "active"\)[\s\S]*?\.is\("deleted_at", null\)/);
-  assert.doesNotMatch(await read("../../../../lib/merchant-auth.ts"), /location_latitude/);
+  assert.match(auth, /\.eq\("id", mapping\.business_id\)[\s\S]*?\.eq\("merchant_status", "active"\)[\s\S]*?\.is\("deleted_at", null\)/);
+  assert.match(auth, /location_latitude/);
 });
 
 test("My Business edits only supported fields through the authenticated merchant profile RPC", async () => {
-  const [businessAction, form, migration] = await Promise.all([
+  const [businessAction, form, migration, businessPage, locationForm] = await Promise.all([
     read("../business/actions.ts"),
     read("../business/business-profile-form.tsx"),
     read("../../../../supabase/migrations/20261006081614_merchant_profile_location.sql"),
+    read("../business/page.tsx"),
+    read("../business/public-location-form.tsx"),
   ]);
   assert.match(businessAction, /getActiveMerchant\(\)/);
   assert.match(businessAction, /rpc\("update_merchant_business_profile"/);
@@ -67,6 +70,15 @@ test("My Business edits only supported fields through the authenticated merchant
   assert.match(migration, /set name = btrim\(p_name\)[\s\S]*?type = btrim\(p_type\)[\s\S]*?owner = btrim\(p_owner\)[\s\S]*?address = btrim\(p_address\)/);
   assert.doesNotMatch(migration, /set[\s\S]*?phone\s*=/i);
   assert.match(migration, /grant execute on function public\.update_merchant_business_profile\(text, text, text, text, text\)\s+to authenticated/i);
+  assert.doesNotMatch(form, /name="(?:locality|city|district|state|pincode)"/);
+  const locationAction = await read("../business/location-actions.ts");
+  for (const field of ["locality", "city", "district", "state", "pincode"]) assert.match(locationForm, new RegExp(`name="${field}"`));
+  assert.match(locationAction, /rpc\("save_merchant_discovery_location"/);
+  assert.match(locationAction, /p_city: location\.city/);
+  assert.match(businessPage, /<BusinessProfileForm/);
+  assert.match(businessPage, /<PublicLocationForm/);
+  assert.match(businessPage, /capturedAt=\{merchant\.locationCapturedAt\}/);
+  assert.match(locationForm, /<LocationCapture/);
 });
 
 test("location capture requests real device coordinates and keeps typed address separate", async () => {

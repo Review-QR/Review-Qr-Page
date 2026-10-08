@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { appConfig } from "@/lib/config";
+import { isPublicDiscoveryLocationComplete } from "@/lib/business-location";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import MyQrCode from "./my-qr-code";
@@ -116,6 +117,11 @@ export default async function MerchantDashboardPage() {
   const ownerName = merchant.ownerName?.trim() || "Merchant";
   const ownerInitials = ownerName.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "M";
   const categoryIcon = /(sweet|mithai|bakery|cake|dessert|food|restaurant|cafe)/i.test(businessType) ? "✿" : /(medical|clinic|doctor|health)/i.test(businessType) ? "+" : "✦";
+  const publicLocationComplete = isPublicDiscoveryLocationComplete({
+    type: merchant.businessType, locality: merchant.locality, city: merchant.city,
+    district: merchant.district, state: merchant.state, pincode: merchant.pincode,
+    verifiedAt: merchant.discoveryLocationVerifiedAt,
+  });
 
   return (
     <div className="merchant-dashboard-page">
@@ -126,6 +132,8 @@ export default async function MerchantDashboardPage() {
           <div className="merchant-profile"><span className="merchant-profile__bell" aria-hidden="true">♧<i /></span><span className="merchant-profile__avatar">{ownerInitials}</span><span className="merchant-profile__copy"><strong>{ownerName}</strong><small>Merchant</small></span></div>
         </div>
       </section>
+
+      {!publicLocationComplete ? <section aria-labelledby="complete-public-location-title" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-5"><div><p className="text-xs font-bold uppercase tracking-wider text-orange-800">Get discovered locally</p><h2 id="complete-public-location-title" className="mt-1 text-lg font-bold text-slate-950">Complete Public Profile</h2><p className="mt-1 text-sm text-slate-700">Complete your public location to appear in Trustit local search. This does not affect your QR or review features.</p></div><Link href="/merchant/dashboard/business#public-discovery-location" className="inline-flex min-h-11 items-center rounded-xl bg-[#a64c05] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#873d03]">Complete Location</Link></section> : null}
 
       <section aria-label="Merchant statistics" className="merchant-stats">
         <StatCard tone="green" icon="qr" label="Total Scans" value={stats ? count(stats.total_scans).toLocaleString("en-IN") : "—"} detail="All-time QR scans" />

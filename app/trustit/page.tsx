@@ -1,11 +1,26 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { publicUrl } from "@/lib/public-discovery-seo";
+
+const trustitTitle = "Trustit | QR reviews for your business";
+const trustitDescription =
+  "Create a simple Trustit QR for your business, help customers reach your Google Review page, and manage scans from one business dashboard.";
+const trustitCanonical = publicUrl("/trustit");
 
 export const metadata: Metadata = {
-  title: "Trustit | QR reviews for your business",
-  description:
-    "Create a simple Trustit QR for your business, help customers reach your Google Review page, and manage scans from one business dashboard.",
+  title: trustitTitle,
+  description: trustitDescription,
+  alternates: { canonical: trustitCanonical },
+  openGraph: {
+    type: "website",
+    url: trustitCanonical,
+    title: trustitTitle,
+    description: trustitDescription,
+    siteName: "Trustit",
+  },
+  twitter: { card: "summary", title: trustitTitle, description: trustitDescription },
+  robots: { index: true, follow: true },
 };
 
 const navigation = [
