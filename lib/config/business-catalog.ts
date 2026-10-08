@@ -274,7 +274,8 @@ const familyIcons = {
   entertainment: "Clapperboard", travel: "Plane", events: "PartyPopper",
   agriculture: "Wheat", community: "UsersRound", manufacturing: "Factory", general: "Store",
 } as const;
-type Family = keyof typeof familyIcons;
+export type DesignFamily = keyof typeof familyIcons;
+type Family = DesignFamily;
 const paletteByFamily: Record<Family, readonly [string,string,string]> = {
   food:["#7d2946","#ed9b4c","#f7d987"], retail:["#284f52","#5b9c8b","#e4c47d"],
   healthcare:["#24616b","#58aaa6","#d9f0e9"], education:["#574338","#ad8052","#f0dfb9"],
