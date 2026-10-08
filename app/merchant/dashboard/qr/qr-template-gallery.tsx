@@ -18,6 +18,8 @@ type Props = {
   expiry: string | null;
   initialTemplate: string;
   initialDesignAssets?: QrDesignAssets;
+  initialDesignRevision?: number;
+  initialDesignError?: string;
   display?: "carousel" | "dashboard";
 };
 
@@ -312,13 +314,13 @@ function isQrUsable(status: string | null, expiry: string | null) {
   return status?.trim().toLowerCase() === "active" && (!expiry || expiry >= today);
 }
 
-export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, initialDesignAssets = {}, display = "carousel" }: Props) {
+export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, initialDesignAssets = {}, initialDesignRevision = 0, initialDesignError, display = "carousel" }: Props) {
   const origin = trustitAppOrigin;
   const [selectedTemplate, setSelectedTemplate] = useState<QrTemplateId>(qrTemplates.some((template) => template.id === initialTemplate) ? initialTemplate as QrTemplateId : "template_1");
   const [designAssets, setDesignAssets] = useState<QrDesignAssets>(initialDesignAssets);
-  const [designRevision, setDesignRevision] = useState(0);
+  const [designRevision, setDesignRevision] = useState(initialDesignRevision);
   const [previewTemplate, setPreviewTemplate] = useState<QrTemplateId | null>(null);
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState(initialDesignError ?? "");
   const [exportStatus, setExportStatus] = useState("");
   const [exportAction, setExportAction] = useState<ExportAction | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -356,7 +358,8 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
       }
       setDesignAssets(result.assets);
       setDesignRevision(result.revision);
-      setStatusMessage(result.provider === "AI" ? "AI design variations refreshed. Your selected QR template is unchanged." : "Mock design variations refreshed. Your selected QR template is unchanged.");
+      const refreshed = result.provider === "AI" ? "AI design variations refreshed." : "Mock design variations refreshed.";
+      setStatusMessage(`${refreshed} Your selected QR template is unchanged.${result.revision >= 4 ? " All five design versions are now used." : ""}`);
     });
   }
 
@@ -515,8 +518,8 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
 
       <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
         <p className="text-xs leading-5 text-slate-600">Five business-matched design variations share one QR identity. AI mode creates and securely stores business-matched artwork; mock mode makes no paid external AI calls.</p>
-        <button type="button" onClick={regenerateDesign} disabled={isPending} className="min-h-10 shrink-0 rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-50 disabled:opacity-60">
-          {isPending ? "Preparing designs…" : "Regenerate Design"}
+        <button type="button" onClick={regenerateDesign} disabled={isPending || designRevision >= 4} className="min-h-10 shrink-0 rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-50 disabled:opacity-60">
+          {isPending ? "Preparing designs…" : designRevision >= 4 ? "All versions used" : "Regenerate Design"}
         </button>
       </div>
 

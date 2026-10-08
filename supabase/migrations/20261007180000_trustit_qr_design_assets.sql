@@ -10,7 +10,7 @@ create table if not exists public.trustit_qr_design_assets (
   status text not null check (status in ('ready')),
   storage_path text not null,
   created_at timestamptz not null default now(),
-  unique (business_id, template_id, prompt_version, revision, provider)
+  unique (business_id, theme_id, template_id, prompt_version, revision, provider)
 );
 
 create index if not exists trustit_qr_design_assets_business_revision_idx

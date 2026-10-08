@@ -26,8 +26,9 @@ export function createScopedQrDesignPath(input: {
 
 export function isScopedQrDesignPath(storagePath: string, businessId: string) {
   if (!isSafeDesignBusinessId(businessId)) return false;
-  const escapedBusinessId = businessId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const match = new RegExp(`^businesses/${escapedBusinessId}/qr-designs/([a-z0-9-]+)/template_[1-5]/[a-z0-9]+(?:-[a-z0-9]+)*-r[0-4]\\.svg$`).exec(storagePath);
+  const prefix = `businesses/${businessId}/qr-designs/`;
+  if (!storagePath.startsWith(prefix)) return false;
+  const match = /^([a-z0-9-]+)\/template_[1-5]\/([a-z0-9]+(?:-[a-z0-9]+)*)-r[0-4]\.svg$/.exec(storagePath.slice(prefix.length));
   return Boolean(match && businessThemes.some((theme) => theme.id === match[1]));
 }
 
@@ -48,6 +49,8 @@ export function createPrivateQrDesignAssetPath(input: {
 
 export function isPrivateQrDesignAssetPath(storagePath: string, businessId: string) {
   if (!isSafeDesignBusinessId(businessId)) return false;
-  const match = new RegExp(`^businesses/${businessId}/([a-z0-9-]+)/template_[1-5]/[a-z0-9]+(?:-[a-z0-9]+)*-r[0-4]\\.png$`).exec(storagePath);
+  const prefix = `businesses/${businessId}/`;
+  if (!storagePath.startsWith(prefix)) return false;
+  const match = /^([a-z0-9-]+)\/template_[1-5]\/([a-z0-9]+(?:-[a-z0-9]+)*)-r[0-4]\.png$/.exec(storagePath.slice(prefix.length));
   return Boolean(match && businessThemes.some((theme) => theme.id === match[1]));
 }

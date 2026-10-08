@@ -27,6 +27,7 @@ async function loadPersistedAssets(
   businessId: string,
   revision: number,
   provider: "mock" | "openai",
+  themeId: string,
   businessType: string | null,
   storage: AssetStorageProvider,
 ): Promise<QrDesignAssets> {
@@ -37,14 +38,16 @@ async function loadPersistedAssets(
     .from("trustit_qr_design_assets")
     .select("business_type,theme_id,template_id,prompt_version,provider,status,storage_path,created_at")
     .eq("business_id", businessId)
+    .eq("theme_id", themeId)
     .eq("revision", revision)
     .eq("provider", provider)
+    .eq("status", "ready")
     .eq("prompt_version", QR_DESIGN_PROMPT_VERSION);
 
-  if (error) throw new Error("Unable to load saved QR design assets: " + error.message);
+  if (error) throw new Error("Unable to load saved QR design assets.");
 
   const entries = await Promise.all((data ?? []).map(async (row) => {
-    if (!isPrivateQrDesignAssetPath(row.storage_path, businessId)) return null;
+    if (row.theme_id !== themeId || !isPrivateQrDesignAssetPath(row.storage_path, businessId)) return null;
     const signed = await storage.get(row.storage_path);
     if (!signed) return null;
     const templateId = row.template_id as (typeof qrTemplateIds)[number];
@@ -78,7 +81,7 @@ export async function getBusinessQrDesignAssets(businessId: string, businessType
   const generation = (async () => {
     const storage = storageFor(mode);
     if (mode === "openai") {
-      const persisted = await loadPersistedAssets(businessId, safeRevision, "openai", businessType, storage);
+      const persisted = await loadPersistedAssets(businessId, safeRevision, "openai", theme.id, businessType, storage);
       if (qrTemplateIds.every((templateId) => persisted[templateId])) return persisted;
     }
 
@@ -108,8 +111,8 @@ export async function getBusinessQrDesignAssets(businessId: string, businessType
           provider: "openai",
           status: "ready",
           storage_path: asset.storagePath,
-        }, { onConflict: "business_id,template_id,prompt_version,revision,provider" });
-        if (error) throw new Error("Unable to persist QR design metadata: " + error.message);
+        }, { onConflict: "business_id,theme_id,template_id,prompt_version,revision,provider" });
+        if (error) throw new Error("Unable to persist QR design metadata.");
       }
 
       return [prompt.templateId, asset] as const;
@@ -120,11 +123,46 @@ export async function getBusinessQrDesignAssets(businessId: string, businessType
   cachedAssets.set(cacheKey, generation);
   if (cachedAssets.size > 64) cachedAssets.delete(cachedAssets.keys().next().value!);
   try {
-    return await generation;
+    const assets = await generation;
+    // Signed URLs expire after one hour. Keep only in-flight OpenAI work cached;
+    // persisted assets are re-signed on each later request.
+    if (mode === "openai") cachedAssets.delete(cacheKey);
+    return assets;
   } catch (error) {
     cachedAssets.delete(cacheKey);
     throw error;
   }
+}
+
+export async function getLatestBusinessQrDesignRevision(businessId: string, businessType: string | null): Promise<number> {
+  if (!/^[a-zA-Z0-9_-]{1,120}$/.test(businessId)) throw new Error("Invalid business for QR design assets.");
+  if (resolveAIImageProviderMode(process.env.TRUSTIT_AI_IMAGE_PROVIDER) === "mock") return 0;
+
+  const theme = resolveBusinessTheme(businessType);
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("trustit_qr_design_assets")
+    .select("revision,template_id,storage_path")
+    .eq("business_id", businessId)
+    .eq("theme_id", theme.id)
+    .eq("prompt_version", QR_DESIGN_PROMPT_VERSION)
+    .eq("provider", "openai")
+    .eq("status", "ready");
+
+  if (error) throw new Error("Unable to load saved QR design revision.");
+
+  const completeRevisions = new Set<number>();
+  for (const revision of [4, 3, 2, 1, 0]) {
+    const assets = (data ?? []).filter((row) => row.revision === revision);
+    const complete = qrTemplateIds.every((templateId) => assets.some((row) =>
+      row.template_id === templateId
+      && row.storage_path === `businesses/${businessId}/${theme.id}/${templateId}/${QR_DESIGN_PROMPT_VERSION}-r${revision}.png`
+      && isPrivateQrDesignAssetPath(row.storage_path, businessId),
+    ));
+    if (complete) completeRevisions.add(revision);
+  }
+
+  return Math.max(0, ...completeRevisions);
 }
 
 export { qrTemplateIds };
