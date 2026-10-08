@@ -644,7 +644,7 @@ const aliasesByName: Record<string,string[]> = {
   "Library":["librery","reading library","public library"],
   "Study Centre":["study center","reading room","self study centre","study room"],
   "Tea Point":["tea shop","chai point","chai shop","tapri","tea corner"],
-  "Tea Stall / Tapri":["chai stall","chai tapri"],
+  "Tea Stall / Tapri":["tea stall","chai stall","chai tapri"],
   "Petrol Pump":["fuel station","filling station","petrol station","fuel pump","petrol bunk"],
   "Shopping Mall":["mall","shopping centre","shopping center"],
   "Sweet Shop":["mithai shop","mithai store"],
@@ -721,9 +721,18 @@ export const BUSINESS_CATALOG = BUSINESS_TYPES.map((name) => {
     palette:paletteByFamily[family],
     experiences:categoryExperiences.slice(index*3,index*3+3),
     backgroundArtDirection:`${paletteDirections[theme.name]}; ${themeArt[family]}. Keep the QR quiet zone, business-name panel, and CTA clear.`,
+    safeAreas:{
+      qr:"Keep the lower-right QR panel clear, high contrast, and surrounded by its full white quiet zone.",
+      businessName:"Keep the upper-center business-name area uncluttered with enough contrast for two lines of text.",
+      cta:"Keep the lower-center call-to-action area clear, high contrast, and free of decorative details.",
+    },
   }));
   return {id:slugify(name),name,slug:slugify(name),aliases,searchTerms:[...new Set([name,...aliases,name.replace(/\bcentre\b/gi,"center"),name.replace(/\bshop\b/gi,"store")])],primaryIcon:iconOverrides[name]??familyIcons[family],designFamily:family,experiences:categoryExperiences,themes};
 });
+const canonicalNames = new Set(BUSINESS_CATALOG.map((category) => normalize(category.name)));
+const conflictingSearchAliases = new Set(BUSINESS_CATALOG
+  .flatMap((category) => category.aliases.map(normalize).filter((alias) => alias !== normalize(category.name)))
+  .filter((alias) => canonicalNames.has(alias)));
 export function getBusinessCategory(value: string|null|undefined) {
   const query=normalize(String(value??""));
   return BUSINESS_CATALOG.find((category)=>normalize(category.name)===query)
@@ -740,8 +749,10 @@ export function searchBusinessCategories(value:string,limit=10) {
   if(!query)return BUSINESS_CATALOG.slice(0,Math.min(12,Math.max(1,limit)));
   return BUSINESS_CATALOG.map((category)=>{
     const canonical=normalize(category.name), names=[...category.aliases,...category.searchTerms].map(normalize);
+    const exactAlias=category.aliases.some((alias)=>normalize(alias)===query);
     let rank=99;
-    if(canonical===query)rank=0;
+    if(canonical===query)rank=conflictingSearchAliases.has(query)?1:0;
+    else if(exactAlias)rank=0.5;
     else if(category.aliases.some((alias)=>normalize(alias)===query))rank=1;
     else if([canonical,...names].some((item)=>item.startsWith(query)))rank=2;
     else if([canonical,...names].some((item)=>item.includes(query)))rank=3;
@@ -756,6 +767,6 @@ export function validateBusinessCatalog() {
   return BUSINESS_CATALOG.every((category)=>{
     if(idSet.has(category.id)||nameSet.has(normalize(category.name))||slugSet.has(category.slug)||!category.aliases.length||!category.primaryIcon||category.themes.length!==5||category.experiences.length!==15)return false;
     idSet.add(category.id);nameSet.add(normalize(category.name));slugSet.add(category.slug);
-    return category.experiences.every((experience)=>Boolean(experience.label&&experience.icon))&&category.themes.every((theme)=>theme.experiences.length===3&&theme.experiences.every((experience)=>Boolean(experience.icon))&&theme.palette.length===3&&theme.backgroundArtDirection.length>0);
+    return category.experiences.every((experience)=>Boolean(experience.label&&experience.icon))&&category.themes.every((theme)=>theme.experiences.length===3&&theme.experiences.every((experience)=>Boolean(experience.icon))&&theme.palette.length===3&&theme.backgroundArtDirection.length>0&&Boolean(theme.safeAreas.qr&&theme.safeAreas.businessName&&theme.safeAreas.cta));
   });
 }

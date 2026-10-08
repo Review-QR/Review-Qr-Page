@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl, trustitAppOrigin } from "@/lib/trustit-qr";
 import { resolveBusinessTheme } from "@/lib/trustit-ai/qr-design-theme";
-import { getBusinessCategory } from "@/lib/config/business-catalog";
+import { getBusinessCategory, QR_DESIGN_THEMES } from "@/lib/config/business-catalog";
 import BusinessCategoryIcon from "@/app/components/business-category-icon";
 import type { QrDesignAsset, QrDesignAssets } from "@/lib/trustit-ai/provider-contracts";
 import { saveQrTemplateAction } from "./actions";
@@ -115,7 +115,11 @@ function GoogleMessage({ dark = false, compact = false }: { dark?: boolean; comp
   return <div className={`flex flex-wrap items-center justify-center gap-x-2 gap-y-1 ${compact ? "text-[9px]" : "text-xs"}`}><GoogleReviewMark dark={dark} compact={compact} /><span className={dark ? "text-slate-300" : "text-slate-600"}>Also share your feedback on Google</span></div>;
 }
 
-function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function FooterMessage({ message, dark = false }: { message: string; dark?: boolean }) {
+  return <p className={`mt-2 max-w-full text-[8px] font-semibold uppercase tracking-[0.12em] ${dark ? "text-slate-300" : "text-slate-600"}`}>{message}</p>;
+}
+
+function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -right-10 top-28 z-0 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
@@ -128,12 +132,13 @@ function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, 
       <div className={`my-auto ${compact ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-emerald-800 font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       {!compact && <div className="mt-3"><GoogleMessage /></div>}
+      {!compact && <FooterMessage message={footer} />}
       {!compact && <p className="mt-2 font-mono text-[9px] text-[#74593c]">{businessId}</p>}
     </div>
   );
 }
 
-function HotelPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function HotelPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -left-16 top-20 z-0 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
@@ -146,12 +151,13 @@ function HotelPoster({ name, businessId, qrUrl, usable, compact, category, desig
       <div className={`my-auto ${compact ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-[#e5ce98] font-bold text-[#183a45] ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       {!compact && <div className="mt-3"><GoogleMessage dark /></div>}
+      {!compact && <FooterMessage message={footer} dark />}
       {!compact && <p className="mt-2 font-mono text-[9px] text-slate-300">{businessId}</p>}
     </div>
   );
 }
 
-function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eef8fb] text-center text-[#183e55] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute inset-x-0 bottom-24 z-0 h-20 bg-[radial-gradient(ellipse_at_center,#cae8f1_0%,transparent_70%)]" />
@@ -164,12 +170,13 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, des
       <div className={`my-auto ${compact ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-[#247f9e] font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       {!compact && <div className="mt-3"><GoogleMessage /></div>}
+      {!compact && <FooterMessage message={footer} />}
       {!compact && <p className="mt-2 font-mono text-[9px] text-[#4b7180]">{businessId}</p>}
     </div>
   );
 }
 
-function RetailPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function RetailPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-hidden bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#cf963e]" />
@@ -182,6 +189,7 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category, desi
         <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={`text-[#9d742f] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#895d1d] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
         {compact ? null : <div className="mt-2"><GoogleMessage /></div>}
+        {!compact && <FooterMessage message={footer} />}
         {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
       </div>
       <div className="relative z-10 flex flex-col items-center gap-2">
@@ -193,7 +201,7 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category, desi
   );
 }
 
-function SalonPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function SalonPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-hidden bg-[#fff3f1] text-[#432b35] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#bb7189]" />
@@ -206,6 +214,7 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category, desig
         <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={`text-[#a65c79] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#a45170] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
         {compact ? null : <div className="mt-2"><GoogleMessage /></div>}
+        {!compact && <FooterMessage message={footer} />}
         {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
       </div>
       <div className="relative z-10 flex flex-col items-center gap-2">
@@ -217,7 +226,7 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category, desig
   );
 }
 
-type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean; category: BusinessCategoryProfile; designAsset?: QrDesignAsset };
+type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean; category: BusinessCategoryProfile; designAsset?: QrDesignAsset; footer: string };
 
 function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsable, category, designAssets, compact = false, screenPreview = false }: {
   templateId: QrTemplateId;
@@ -230,8 +239,9 @@ function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsabl
   compact?: boolean;
   screenPreview?: boolean;
 }) {
-  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact, category, designAsset: designAssets?.[templateId] };
   const template = qrTemplates.find((item) => item.id === templateId)!;
+  const footer = QR_DESIGN_THEMES.find((theme) => theme.name === template.designTheme)?.footer ?? QR_DESIGN_THEMES[4].footer;
+  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact, category, designAsset: designAssets?.[templateId], footer };
   const aspect = template.ratio === "3 / 2" ? "aspect-[3/2]" : "aspect-[2/3]";
   return (
     <div className={`${aspect} w-full overflow-hidden rounded-xl shadow-inner`} data-template-id={templateId} data-screen-preview={screenPreview ? "true" : undefined} data-print-size={template.printSize} data-orientation={template.orientation} data-ratio={template.ratio}>

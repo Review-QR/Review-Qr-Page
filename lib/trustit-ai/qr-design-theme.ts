@@ -181,11 +181,15 @@ export type QrVisualPrompt = {
 export function getThemeVisualPrompts(value: string | null | undefined): QrVisualPrompt[] {
   const theme = resolveBusinessTheme(value);
   const category = getBusinessCategory(value);
-  return qrTemplateIds.map((templateId, index) => ({
-    themeId: theme.id,
-    templateId,
-    experience: experienceNames[templateId],
-    promptVersion: QR_DESIGN_PROMPT_VERSION,
-    prompt: `${theme.label} visual direction: ${theme.scenes[index]}. Variation ${index + 1} of five: ${experienceNames[templateId]}. \${category?.themes[index]?.backgroundArtDirection ?? ""} Experience details: \${category?.themes[index]?.experiences.map((item) => item.label).join(", ") ?? ""}. Footer direction: \${category?.themes[index]?.footer ?? ""}. Use a distinct composition while staying within this theme's palette (${theme.palette.join(", ")}). ${compositionSafety}`,
-  }));
+  return qrTemplateIds.map((templateId, index) => {
+    const categoryTheme = category?.themes[index];
+    const safeAreas = categoryTheme?.safeAreas;
+    return {
+      themeId: theme.id,
+      templateId,
+      experience: experienceNames[templateId],
+      promptVersion: QR_DESIGN_PROMPT_VERSION,
+      prompt: `${theme.label} visual direction: ${theme.scenes[index]}. Variation ${index + 1} of five: ${experienceNames[templateId]}. ${categoryTheme?.backgroundArtDirection ?? ""} Experience details: ${categoryTheme?.experiences.map((item) => item.label).join(", ") ?? ""}. Footer direction: ${categoryTheme?.footer ?? ""}. Reserve clear areas for the QR: ${safeAreas?.qr ?? "lower-right"}; the business name: ${safeAreas?.businessName ?? "upper-center"}; and the call to action: ${safeAreas?.cta ?? "lower-center"}. Use a distinct composition while staying within this theme's palette (${theme.palette.join(", ")}). ${compositionSafety}`,
+    };
+  });
 }

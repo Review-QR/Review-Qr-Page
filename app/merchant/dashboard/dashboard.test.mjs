@@ -195,7 +195,8 @@ test("five Trustit print designs use the required dimensions and one merchant QR
   for (const component of ["RestaurantPoster", "HotelPoster", "LaundryPoster", "RetailPoster", "SalonPoster"]) {
     assert.match(gallery, new RegExp(`function ${component}\\(`));
   }
-  assert.match(gallery, /<CategoryArt kind=\{category\.artKind\}/);
+  assert.equal((gallery.match(/<CategoryArt iconName=\{category\.iconName\} designFamily=\{category\.designFamily\} designAsset=\{designAsset\}/g) ?? []).length, 5);
+  assert.equal((gallery.match(/<FooterMessage message=\{footer\}/g) ?? []).length, 5);
   for (const kind of ["food", "hotel", "laundry", "retail", "salon", "universal"]) assert.match(themes, new RegExp(`artKind: "${kind}"`), `${kind} business art`);
   assert.equal((gallery.match(/<TrustitMark templateId=/g) ?? []).length, 5);
   assert.equal((gallery.match(/<GoogleMessage/g) ?? []).length, 5);
