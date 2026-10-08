@@ -85,7 +85,25 @@ const actions = [
 
 export default async function MerchantDashboardPage() {
   const merchant = await requireActiveMerchant();
-  const designAssets = await getBusinessQrDesignAssets(merchant.businessId, merchant.businessType);
+  let designAssets: Awaited<ReturnType<typeof getBusinessQrDesignAssets>> | undefined;
+  let designAssetError: string | undefined;
+  try {
+    designAssets = await getBusinessQrDesignAssets(merchant.businessId, merchant.businessType);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const openAiStatus = /^OpenAI image generation failed \((\d{3})\)\.$/.exec(message)?.[1];
+    const failureCategory = openAiStatus
+      ? `OpenAI HTTP ${openAiStatus}`
+      : /Unable to load saved QR design assets/.test(message)
+        ? "Supabase asset lookup"
+        : /Unable to persist QR design metadata/.test(message)
+          ? "Supabase asset metadata write"
+          : /Server-side Supabase Auth administration is not configured/.test(message)
+            ? "Supabase service secret missing"
+            : error instanceof Error ? error.name : "UnknownError";
+    console.error("Trustit QR artwork unavailable while rendering merchant dashboard", failureCategory);
+    designAssetError = "Custom artwork is temporarily unavailable. Your QR code and standard poster designs are still ready.";
+  }
   const supabase = await createMerchantServerClient();
   const [statsResult, activityResult, reviewsResult, subscriptionResult, paymentsResult] = await Promise.all([
     supabase.rpc("get_merchant_dashboard_stats", { p_business_id: merchant.businessId }),
@@ -148,7 +166,7 @@ export default async function MerchantDashboardPage() {
         <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} designAssets={designAssets} />
         <section className="merchant-template-panel merchant-template-panel--compact" id="template-gallery" aria-labelledby="merchant-template-title">
           <header><span className="merchant-template-panel__icon" aria-hidden="true">✿</span><div><h2 id="merchant-template-title">Choose a QR Template</h2><p>Pick a design that matches your business style.</p></div></header>
-          <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" initialDesignAssets={designAssets} />
+          <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" initialDesignAssets={designAssets} initialDesignError={designAssetError} />
         </section>
       </div>
 
