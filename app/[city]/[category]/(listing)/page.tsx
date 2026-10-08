@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TrustitPublicFooter from "@/app/components/trustit-public-footer";
 import { notFound, permanentRedirect } from "next/navigation";
 import { DiscoveryControls } from "../discovery-controls";
 import { getPublicDiscoveryBusinesses, publicDiscoveryCityExists } from "@/lib/public-discovery";
@@ -62,7 +63,7 @@ export default async function DiscoveryPage({ params, searchParams }: { params: 
     params.set("page", String(next));
     return `/${canonicalCity}/${canonicalCategory}?${params.toString()}`;
   }
-  return <main className="min-h-screen bg-slate-50 text-slate-900"><div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
+  return <><main className="min-h-screen bg-slate-50 text-slate-900"><div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:py-12">
     <header className="mb-7"><Link href="/" className="rounded-sm text-sm font-bold tracking-wide text-blue-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">TRUSTIT</Link><p className="mt-7 text-sm font-semibold text-blue-700">LOCAL DISCOVERY · {cityName}</p><h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">{categoryName} in {cityName}</h1><p className="mt-2 max-w-3xl text-slate-600">Compare local {categoryName.toLowerCase()} using public location details and Trustit submissions. When Recommended is selected, results combine rating confidence, review recency, profile completeness and search relevance; distance is considered only when coordinates are supplied.</p></header>
     <DiscoveryControls city={canonicalCity} category={canonicalCategory} search={value(query.q)} sort={value(query.sort) || "recommended"} minRating={value(query.minRating)} lat={coords ? String(latValue) : ""} lng={coords ? String(lngValue) : ""}/>
     <div className="my-6 flex items-center justify-between"><h2 className="font-semibold">{page.total} {page.total === 1 ? "business" : "businesses"}</h2><span className="text-sm text-slate-500">Page {page.currentPage} of {page.totalPages}</span></div>
@@ -77,5 +78,5 @@ export default async function DiscoveryPage({ params, searchParams }: { params: 
     })}</div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center"><h2 className="text-xl font-bold">No businesses are currently listed in this location.</h2><p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-600">There are no {categoryName.toLowerCase()} to show in {cityName}{value(query.q) || minimum ? " with these filters" : " yet"}. Try adjusting your search or check again later.</p></div>}
     {page.totalPages > 1 && <nav className="mt-8 flex justify-center gap-3" aria-label="Pagination">{page.currentPage > 1 && <Link className="rounded-lg border bg-white px-4 py-2" href={pageHref(page.currentPage - 1)}>Previous</Link>}{page.currentPage < page.totalPages && <Link className="rounded-lg border bg-white px-4 py-2" href={pageHref(page.currentPage + 1)}>Next</Link>}</nav>}
     <footer className="mt-12 border-t border-slate-200 pt-5 text-xs text-slate-500">Trustit displays submitted Trustit ratings only. Individual customer reviews are private.</footer>
-  </div></main>;
+  </div></main><TrustitPublicFooter /></>;
 }
