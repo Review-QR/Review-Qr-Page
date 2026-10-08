@@ -138,7 +138,7 @@ function HotelPoster({ name, businessId, qrUrl, usable, compact, category, desig
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -left-16 top-20 z-0 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
       <TrustitMark templateId="template_2" className="relative z-10 text-[#d9c28e]" compact={compact} />
-      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-8" : "h-24"}`}><CategoryArt designAsset={designAsset} className={compact ? "h-8 w-20 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-8" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
       {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>}
       <BusinessName name={name} dark compact={compact} />
       <FiveStars dark compact={compact} />
@@ -156,7 +156,7 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, des
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eef8fb] text-center text-[#183e55] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute inset-x-0 bottom-24 z-0 h-20 bg-[radial-gradient(ellipse_at_center,#cae8f1_0%,transparent_70%)]" />
       <TrustitMark templateId="template_3" className="relative z-10 text-[#237c9d]" compact={compact} />
-      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-8" : "h-24"}`}><CategoryArt designAsset={designAsset} className={compact ? "h-8 w-20 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-8" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
       {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>}
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
@@ -179,7 +179,7 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category, desi
         <BusinessName name={name} landscape compact={compact} />
         <FiveStars compact={compact} />
         {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
-        <CategoryArt designAsset={designAsset} className={`text-[#9d742f] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
+        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={`text-[#9d742f] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#895d1d] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
         {compact ? null : <div className="mt-2"><GoogleMessage /></div>}
         {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
@@ -203,7 +203,7 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category, desig
         <BusinessName name={name} landscape compact={compact} />
         <FiveStars compact={compact} />
         {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
-        <CategoryArt designAsset={designAsset} className={`text-[#a65c79] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
+        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={`text-[#a65c79] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#a45170] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
         {compact ? null : <div className="mt-2"><GoogleMessage /></div>}
         {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
