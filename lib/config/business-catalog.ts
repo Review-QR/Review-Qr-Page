@@ -406,7 +406,7 @@ const experienceLabels: Record<Family, readonly string[]> = {
     "Value",
     "Overall Experience"
   ],
-  "home-services": [
+  "home": [
     "Work Quality",
     "Timeliness",
     "Staff",
