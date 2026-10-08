@@ -7,7 +7,7 @@ import { mergeBusinessCategoryCatalog, searchUnifiedBusinessCategories } from ".
 const read = (path) => readFile(new URL(path, import.meta.url), "utf8");
 
 test("admin category storage is additive, private, and service-role-only", async () => {
-  const sql = await read("../../supabase/migrations/20261008150000_admin_business_categories.sql");
+  const sql = await read("../../supabase/migrations/20261008160101_admin_business_categories.sql");
   assert.match(sql, /create table if not exists public\.admin_business_categories/i);
   assert.match(sql, /enable row level security/i);
   assert.match(sql, /revoke all on table public\.admin_business_categories from public, anon, authenticated/i);
@@ -94,3 +94,4 @@ test("all selectable admin icon names are validated against Lucide exports", asy
   assert.match(manager, /iconNames\.map/);
   assert.match(manager, /Search Lucide icons/);
 });
+

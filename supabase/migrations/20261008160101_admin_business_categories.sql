@@ -46,3 +46,4 @@ drop trigger if exists admin_business_categories_updated_at on public.admin_busi
 create trigger admin_business_categories_updated_at
 before update on public.admin_business_categories
 for each row execute function public.admin_business_categories_set_updated_at();
+
