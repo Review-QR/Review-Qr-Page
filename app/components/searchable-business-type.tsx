@@ -121,7 +121,7 @@ export default function SearchableBusinessType({
               onClick={() => choose(category.name)}
               className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${activeIndex === index ? "bg-blue-50 text-blue-900" : "text-slate-800 hover:bg-slate-50"}`}
             >
-              <BusinessCategoryIcon name={category.primaryIcon} className="h-5 w-5 shrink-0 text-blue-700" />
+              <BusinessCategoryIcon name={category.primaryIcon} family={category.designFamily} className="h-5 w-5 shrink-0 text-blue-700" />
               <span className="font-medium">{category.name}</span>
             </button>
           )) : (
