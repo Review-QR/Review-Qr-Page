@@ -285,7 +285,7 @@ const paletteByFamily: Record<Family, readonly [string,string,string]> = {
   agriculture:["#416540","#86a84c","#f0ca72"], community:["#41566c","#7da2aa","#e7d6ad"],
   manufacturing:["#495466","#768a9c","#d6bd8c"], general:["#315b63","#64a59e","#ebd59b"],
 };
-const experiences: Record<Family, readonly string[]> = {
+const experienceLabels: Record<Family, readonly string[]> = {
   "food": [
     "Taste",
     "Food Quality",
@@ -599,7 +599,7 @@ const rules: Array<[Family, RegExp]> = [
   ["healthcare",/clinic|hospital|medical|pharmacy|diagnostic|dental|eye care|optical|physio|nursing|blood bank|health|veterinary|ambulance|dialysis|fertility|rehabilitation|hospice|hearing|nutrition|dietitian|skin care/],
   ["education",/library|book|study|school|college|university|education|coaching|training|tuition|academy|institute|class|daycare|childcare|learning|research|test preparation/],
   ["beauty",/salon|saloon|beauty|spa|barber|hair|nail|makeup|bridal|grooming|tattoo|massage/],
-  ["automotive",/car|bike|automobile|auto|vehicle|tyre|tractor|petrol pump|fuel station|ev charging|charging hub|driving school/],
+  ["automotive",/\\bcar\\b|\\bbike\\b|automobile|auto |vehicle|tyre|tractor|petrol pump|fuel station|ev charging|charging hub|driving school/],
   ["agriculture",/farm|agricultur|nursery|seed|fertilizer|pesticide|animal feed|cattle feed/],
   ["manufacturing",/manufactur|wholesale|trading|industrial supplier|steel supplier|cement distributor|import export|packaging supplier/],
   ["finance",/bank|atm|finance|insurance|loan|credit|money transfer|stock broker|mutual fund|microfinance|payment centre|ca office|accounting|tax consultant|chartered accountant|financial consultant/],
@@ -612,11 +612,32 @@ const rules: Array<[Family, RegExp]> = [
   ["community",/religious|temple|mosque|church|gurudwara|community|ngo|charity|senior care|orphanage|crematorium|funeral|public service|government office|trade association/],
 ];
 function familyFor(name: string): Family { for(const [family,pattern] of rules) if(pattern.test(name.toLowerCase())) return family; return "general"; }
+function experienceIconFor(label: string, family: Family): string {
+  const value = label.toLowerCase();
+  if (/taste|food|portion|breakfast/.test(value)) return "Utensils";
+  if (/fresh|nature|clean|hygiene/.test(value)) return "Sparkles";
+  if (/quality|reliability|authenticity|consistency|safety/.test(value)) return "BadgeCheck";
+  if (/staff|doctor|teaching/.test(value)) return family === "healthcare" ? "Stethoscope" : "UsersRound";
+  if (/service|support|care/.test(value)) return "HandHelping";
+  if (/time|speed|punctual|wait|response/.test(value)) return "Timer";
+  if (/price|value|billing|payment/.test(value)) return "BadgeIndianRupee";
+  if (/room|comfort|seating|stay/.test(value)) return "Armchair";
+  if (/book|learning|study|material/.test(value)) return "BookOpen";
+  if (/communication|clarity|guidance/.test(value)) return "MessagesSquare";
+  if (/facility|venue|location|convenience/.test(value)) return "MapPin";
+  if (/product|package|availability|variety/.test(value)) return "Package";
+  if (/ambience|atmosphere|decor/.test(value)) return "Lamp";
+  if (/internet|digital/.test(value)) return "Wifi";
+  if (/appointment|booking/.test(value)) return "CalendarCheck";
+  return familyIcons[family];
+}
 function normalize(value: string) { return value.normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9]+/g,"").trim(); }
 function slugify(value: string) { return value.normalize("NFKD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
 
 const aliasesByName: Record<string,string[]> = {
   "Salon":["saloon","hair salon","beauty salon","ladies salon","mens salon","unisex salon"],
+  "Coaching Centre":["study coaching","coaching center","tuition coaching"],
+  "Cafe":["tea cafe","tea and coffee"],
   "Restaurant":["restro","resto","dining","eatery","food restaurant"],
   "Library":["librery","reading library","public library"],
   "Study Centre":["study center","reading room","self study centre","study room"],
@@ -681,7 +702,7 @@ const themeArt: Record<Family,string> = {
 export const BUSINESS_CATALOG = BUSINESS_TYPES.map((name) => {
   const family = familyFor(name);
   const aliases = [...new Set([name,...(aliasesByName[name]??[])])];
-  const categoryExperiences = experiences[family];
+  const categoryExperiences = experienceLabels[family].map((label) => ({ label, icon: experienceIconFor(label, family) }));
   const themes = QR_DESIGN_THEMES.map((theme,index)=>({
     ...theme,
     palette:paletteByFamily[family],
@@ -722,6 +743,6 @@ export function validateBusinessCatalog() {
   return BUSINESS_CATALOG.every((category)=>{
     if(idSet.has(category.id)||nameSet.has(normalize(category.name))||slugSet.has(category.slug)||!category.aliases.length||!category.primaryIcon||category.themes.length!==5||category.experiences.length!==15)return false;
     idSet.add(category.id);nameSet.add(normalize(category.name));slugSet.add(category.slug);
-    return category.themes.every((theme)=>theme.experiences.length===3&&theme.palette.length===3&&theme.backgroundArtDirection.length>0);
+    return category.experiences.every((experience)=>Boolean(experience.label&&experience.icon))&&category.themes.every((theme)=>theme.experiences.length===3&&theme.experiences.every((experience)=>Boolean(experience.icon))&&theme.palette.length===3&&theme.backgroundArtDirection.length>0);
   });
 }
