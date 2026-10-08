@@ -178,18 +178,22 @@ export type QrVisualPrompt = {
   prompt: string;
 };
 
-export function getThemeVisualPrompts(value: string | null | undefined): QrVisualPrompt[] {
+export type CustomCategoryVisual = { name: string; themes: readonly { palette: readonly string[]; backgroundArtDirection: string; experiences: readonly { label: string; icon: string }[] }[] };
+
+export function getThemeVisualPrompts(value: string | null | undefined, categoryConfig?: CustomCategoryVisual | null): QrVisualPrompt[] {
   const theme = resolveBusinessTheme(value);
   const category = getBusinessCategory(value);
   return qrTemplateIds.map((templateId, index) => {
     const categoryTheme = category?.themes[index];
+    const customTheme = categoryConfig?.themes[index];
+    const promptPalette = customTheme?.palette ?? theme.palette;
     const safeAreas = categoryTheme?.safeAreas;
     return {
       themeId: theme.id,
       templateId,
       experience: experienceNames[templateId],
       promptVersion: QR_DESIGN_PROMPT_VERSION,
-      prompt: `${theme.label} visual direction: ${theme.scenes[index]}. Variation ${index + 1} of five: ${experienceNames[templateId]}. ${categoryTheme?.backgroundArtDirection ?? ""} Experience details: ${categoryTheme?.experiences.map((item) => item.label).join(", ") ?? ""}. Footer direction: ${categoryTheme?.footer ?? ""}. Reserve clear areas for the QR: ${safeAreas?.qr ?? "lower-right"}; the business name: ${safeAreas?.businessName ?? "upper-center"}; and the call to action: ${safeAreas?.cta ?? "lower-center"}. Use a distinct composition while staying within this theme's palette (${theme.palette.join(", ")}). ${compositionSafety}`,
+      prompt: `${theme.label} visual direction: ${customTheme?.backgroundArtDirection ?? theme.scenes[index]}. Business category: ${categoryConfig?.name ?? category?.name ?? theme.label}. Variation ${index + 1} of five: ${experienceNames[templateId]}. ${customTheme?.backgroundArtDirection ?? categoryTheme?.backgroundArtDirection ?? ""} Experience details: ${customTheme?.experiences.map((item) => item.label).join(", ") ?? categoryTheme?.experiences.map((item) => item.label).join(", ") ?? ""}. Footer direction: ${categoryTheme?.footer ?? ""}. Reserve clear areas for the QR: ${safeAreas?.qr ?? "lower-right"}; the business name: ${safeAreas?.businessName ?? "upper-center"}; and the call to action: ${safeAreas?.cta ?? "lower-center"}. Use a distinct composition staying within the category palette (${promptPalette.join(", ")}). ${compositionSafety}`,
     };
   });
 }

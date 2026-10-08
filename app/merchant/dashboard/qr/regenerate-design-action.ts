@@ -3,6 +3,7 @@
 import { getActiveMerchant } from "@/lib/merchant-auth";
 import { getBusinessQrDesignAssets, getLatestBusinessQrDesignRevision } from "@/lib/trustit-ai/qr-design-assets.server";
 import { resolveAIImageProviderMode } from "@/lib/trustit-ai/provider-config";
+import { getQrBusinessCategoryConfig } from "@/lib/business-category-admin.server";
 
 export async function regenerateQrDesignAction(currentRevision: number) {
   const merchant = await getActiveMerchant();
@@ -11,26 +12,30 @@ export async function regenerateQrDesignAction(currentRevision: number) {
     return { ok: false as const, error: "The requested design version is invalid." };
   }
 
-  try {
-    const mode = resolveAIImageProviderMode(process.env.TRUSTIT_AI_IMAGE_PROVIDER);
-    const latestRevision = mode === "openai"
-      ? await getLatestBusinessQrDesignRevision(merchant.businessId, merchant.businessType)
-      : currentRevision;
-    if (latestRevision >= 4) {
-      return { ok: false as const, error: "All five design versions have been used. Your existing QR artwork remains available." };
+  const mode = resolveAIImageProviderMode(process.env.TRUSTIT_AI_IMAGE_PROVIDER);
+  let latestRevision = currentRevision;
+  if (mode === "openai") {
+    try {
+      latestRevision = await getLatestBusinessQrDesignRevision(merchant.businessId, merchant.businessType);
+    } catch (error) {
+      console.error("Trustit QR design revision lookup failed", error instanceof Error ? error.name : "UnknownError");
     }
+  }
+  if (latestRevision >= 4) {
+    return { ok: false as const, error: "All five design versions have been used. Your existing QR artwork remains available." };
+  }
 
-    const nextRevision = latestRevision + 1;
-    const assets = await getBusinessQrDesignAssets(merchant.businessId, merchant.businessType, nextRevision);
+  const nextRevision = latestRevision + 1;
+  try {
+    const categoryConfig = await getQrBusinessCategoryConfig(merchant.businessType ?? "");
+    const assets = await getBusinessQrDesignAssets(merchant.businessId, merchant.businessType, nextRevision, categoryConfig);
     const provider = mode === "openai" ? "AI" : "mock";
     return { ok: true as const, revision: nextRevision, assets, provider };
   } catch (error) {
     console.error("Trustit QR design regeneration failed", error instanceof Error ? error.name : "UnknownError");
-    return {
-      ok: false as const,
-      error: process.env.TRUSTIT_AI_IMAGE_PROVIDER === "openai"
-        ? "AI design generation is temporarily unavailable. Please try again."
-        : "We could not prepare the mock designs. Please try again.",
-    };
+    if (mode === "openai") {
+      return { ok: true as const, revision: nextRevision, assets: {}, provider: "procedural" as const, fallback: true as const };
+    }
+    return { ok: false as const, error: "We could not prepare the mock designs. Please try again." };
   }
 }

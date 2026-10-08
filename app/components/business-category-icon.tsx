@@ -75,6 +75,7 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
+import { DynamicIcon, iconNames } from "lucide-react/dynamic";
 
 const icons: Record<string, LucideIcon> = {
   Armchair,
@@ -181,6 +182,9 @@ export default function BusinessCategoryIcon({
   family?: string;
   className?: string;
 }) {
-  const Icon = icons[name] ?? familyIcons[family] ?? Store;
-  return <Icon aria-hidden="true" focusable="false" strokeWidth={1.8} className={className} />;
+  const Icon = icons[name] ?? familyIcons[family];
+  if (Icon) return <Icon aria-hidden="true" focusable="false" strokeWidth={1.8} className={className} />;
+  const kebab = name.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLocaleLowerCase();
+  if (iconNames.includes(kebab as (typeof iconNames)[number])) return <DynamicIcon name={kebab as (typeof iconNames)[number]} aria-hidden="true" focusable="false" strokeWidth={1.8} className={className} />;
+  return <Store aria-hidden="true" focusable="false" strokeWidth={1.8} className={className} />;
 }

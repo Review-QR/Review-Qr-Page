@@ -6,7 +6,7 @@ import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import MyQrCode from "./my-qr-code";
 import ScanAnalytics from "./scan-analytics";
 import QrTemplateGallery from "./qr/qr-template-gallery";
-import { getBusinessQrDesignAssets } from "@/lib/trustit-ai/qr-design-assets.server";
+import { getPersistedBusinessQrDesignAssets } from "@/lib/trustit-ai/qr-design-assets.server";
 import { qrTemplates } from "./qr/templates";
 import ReviewCard from "./review-card";
 
@@ -85,10 +85,10 @@ const actions = [
 
 export default async function MerchantDashboardPage() {
   const merchant = await requireActiveMerchant();
-  let designAssets: Awaited<ReturnType<typeof getBusinessQrDesignAssets>> | undefined;
+  let designAssets: Awaited<ReturnType<typeof getPersistedBusinessQrDesignAssets>> | undefined;
   let designAssetError: string | undefined;
   try {
-    designAssets = await getBusinessQrDesignAssets(merchant.businessId, merchant.businessType);
+    designAssets = await getPersistedBusinessQrDesignAssets(merchant.businessId, merchant.businessType);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     const openAiStatus = /^OpenAI image generation failed \((\d{3})\)\.$/.exec(message)?.[1];
@@ -166,7 +166,7 @@ export default async function MerchantDashboardPage() {
         <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} designAssets={designAssets} />
         <section className="merchant-template-panel merchant-template-panel--compact" id="template-gallery" aria-labelledby="merchant-template-title">
           <header><span className="merchant-template-panel__icon" aria-hidden="true">✿</span><div><h2 id="merchant-template-title">Choose a QR Template</h2><p>Pick a design that matches your business style.</p></div></header>
-          <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" initialDesignAssets={designAssets} initialDesignError={designAssetError} />
+          <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" initialDesignAssets={designAssets} initialDesignError={designAssetError} googleReviewLink={merchant.reviewLink} />
         </section>
       </div>
 

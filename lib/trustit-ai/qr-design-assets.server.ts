@@ -10,6 +10,7 @@ import { qrThemeGenerator } from "./theme-generator";
 import { isPrivateQrDesignAssetPath } from "./supabase-storage-path";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import type { AssetStorageProvider, QrDesignAsset, QrDesignAssets, TrustitAI } from "./provider-contracts";
+import type { CustomCategoryVisual } from "./qr-design-theme";
 
 const mockStorage = new MockAssetStorageProvider();
 const cachedAssets = new Map<string, Promise<QrDesignAssets>>();
@@ -69,12 +70,12 @@ async function loadPersistedAssets(
   return Object.fromEntries(entries.filter((entry): entry is readonly [(typeof qrTemplateIds)[number], QrDesignAsset] => Boolean(entry))) as QrDesignAssets;
 }
 
-export async function getBusinessQrDesignAssets(businessId: string, businessType: string | null, revision = 0): Promise<QrDesignAssets> {
+export async function getBusinessQrDesignAssets(businessId: string, businessType: string | null, revision = 0, categoryConfig?: CustomCategoryVisual | null): Promise<QrDesignAssets> {
   if (!/^[a-zA-Z0-9_-]{1,120}$/.test(businessId)) throw new Error("Invalid business for QR design assets.");
   const safeRevision = Number.isInteger(revision) && revision >= 0 && revision < 5 ? revision : 0;
   const mode = resolveAIImageProviderMode(process.env.TRUSTIT_AI_IMAGE_PROVIDER);
   const theme = resolveBusinessTheme(businessType);
-  const cacheKey = businessId + ":" + theme.id + ":" + safeRevision + ":" + QR_DESIGN_PROMPT_VERSION + ":" + mode;
+  const cacheKey = businessId + ":" + theme.id + ":" + safeRevision + ":" + QR_DESIGN_PROMPT_VERSION + ":" + mode + ":" + (categoryConfig ? JSON.stringify(categoryConfig) : "builtin");
   const existing = cachedAssets.get(cacheKey);
   if (existing) return existing;
 
@@ -86,7 +87,7 @@ export async function getBusinessQrDesignAssets(businessId: string, businessType
     }
 
     const engine = createTrustitAI(mode);
-    const prompts = qrThemeGenerator.promptsFor(businessType);
+    const prompts = qrThemeGenerator.promptsFor(businessType, categoryConfig);
     const entries = await Promise.all(prompts.map(async (prompt) => {
       const image = await engine.image.generateImage({ prompt, width: 1200, height: 620, revision: safeRevision });
       const asset = await storage.save({
@@ -132,6 +133,16 @@ export async function getBusinessQrDesignAssets(businessId: string, businessType
     cachedAssets.delete(cacheKey);
     throw error;
   }
+}
+
+/** Read existing private artwork without generating images or writing database rows. */
+export async function getPersistedBusinessQrDesignAssets(businessId: string, businessType: string | null, revision = 0): Promise<QrDesignAssets> {
+  if (!/^[a-zA-Z0-9_-]{1,120}$/.test(businessId)) throw new Error("Invalid business for QR design assets.");
+  const safeRevision = Number.isInteger(revision) && revision >= 0 && revision < 5 ? revision : 0;
+  const mode = resolveAIImageProviderMode(process.env.TRUSTIT_AI_IMAGE_PROVIDER);
+  if (mode === "mock") return {};
+  const theme = resolveBusinessTheme(businessType);
+  return loadPersistedAssets(businessId, safeRevision, "openai", theme.id, businessType, storageFor("openai"));
 }
 
 export async function getLatestBusinessQrDesignRevision(businessId: string, businessType: string | null): Promise<number> {
