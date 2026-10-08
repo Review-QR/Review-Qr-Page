@@ -1,3 +1,15 @@
+test("dashboard keeps rendering with standard QR designs when optional AI artwork loading fails", async () => {
+  const page = await read("./page.tsx");
+  assert.match(page, /let designAssets:[\\s\\S]*?try \\{[\\s\\S]*?getBusinessQrDesignAssets\\(merchant\\.businessId, merchant\\.businessType\\)[\\s\\S]*?catch \\(error\\)/);
+  assert.match(page, /Custom artwork is temporarily unavailable\\. Your QR code and standard poster designs are still ready\\./);
+  assert.match(page, /initialDesignError=\\{designAssetError\\}/);
+  assert.match(page, /designAssets=\\{designAssets\\}/);
+  assert.match(page, /requireActiveMerchant\\(\\)/);
+  assert.match(page, /buildTrustitReviewUrl|<MyQrCode/);
+  assert.match(page, /Trustit QR artwork unavailable while rendering merchant dashboard/);
+  assert.doesNotMatch(page, /console\\.error\\([^\\n]*error\\.message/);
+});
+
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
