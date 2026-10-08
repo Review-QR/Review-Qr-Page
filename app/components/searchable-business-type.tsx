@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useId } from "react";
-import { getBusinessCategory, searchBusinessCategories } from "@/lib/config/business-catalog";
+import { mergeBusinessCategoryCatalog, searchUnifiedBusinessCategories, type UnifiedBusinessCategory } from "@/lib/business-category-catalog";
+import { getAdminSelectableBusinessCategoriesAction } from "@/app/business-categories/actions";
 import BusinessCategoryIcon from "@/app/components/business-category-icon";
 
 type Props = {
@@ -10,6 +11,7 @@ type Props = {
   name?: string;
   required?: boolean;
   inputClassName?: string;
+  categories?: UnifiedBusinessCategory[];
 };
 
 export default function SearchableBusinessType({
@@ -18,6 +20,7 @@ export default function SearchableBusinessType({
   name = "type",
   required = true,
   inputClassName,
+  categories,
 }: Props) {
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
@@ -25,6 +28,15 @@ export default function SearchableBusinessType({
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId().replace(/:/g, "");
   const localEdit = useRef(false);
+  const [loadedCategories, setLoadedCategories] = useState<UnifiedBusinessCategory[] | null>(null);
+  const categoryCatalog = categories ?? loadedCategories ?? mergeBusinessCategoryCatalog();
+
+  useEffect(() => {
+    if (categories) return;
+    let active = true;
+    void getAdminSelectableBusinessCategoriesAction().then((result) => { if (active) setLoadedCategories(result); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [categories]);
 
   useEffect(() => {
     if (localEdit.current) {
@@ -42,8 +54,8 @@ export default function SearchableBusinessType({
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const options = useMemo(() => searchBusinessCategories(query, 12), [query]);
-  const selected = getBusinessCategory(value);
+  const options = useMemo(() => searchUnifiedBusinessCategories(query, categoryCatalog, 12), [query, categoryCatalog]);
+  const selected = categoryCatalog.find((category) => category.name.toLocaleLowerCase() === value.toLocaleLowerCase() || category.aliases.some((alias) => alias.toLocaleLowerCase() === value.toLocaleLowerCase()));
 
   function choose(type: string) {
     localEdit.current = false;
@@ -56,7 +68,7 @@ export default function SearchableBusinessType({
     setQuery(next);
     setActiveIndex(0);
     setOpen(true);
-    const exactCanonical = getBusinessCategory(next);
+    const exactCanonical = categoryCatalog.find((category) => category.name.toLocaleLowerCase() === next.trim().toLocaleLowerCase() || category.aliases.some((alias) => alias.toLocaleLowerCase() === next.trim().toLocaleLowerCase()));
     if (exactCanonical?.name.toLocaleLowerCase() === next.trim().toLocaleLowerCase()) {
       choose(exactCanonical.name);
       return;

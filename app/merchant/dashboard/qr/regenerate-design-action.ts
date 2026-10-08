@@ -3,6 +3,7 @@
 import { getActiveMerchant } from "@/lib/merchant-auth";
 import { getBusinessQrDesignAssets, getLatestBusinessQrDesignRevision } from "@/lib/trustit-ai/qr-design-assets.server";
 import { resolveAIImageProviderMode } from "@/lib/trustit-ai/provider-config";
+import { getQrBusinessCategoryConfig } from "@/lib/business-category-admin.server";
 
 export async function regenerateQrDesignAction(currentRevision: number) {
   const merchant = await getActiveMerchant();
@@ -26,7 +27,8 @@ export async function regenerateQrDesignAction(currentRevision: number) {
 
   const nextRevision = latestRevision + 1;
   try {
-    const assets = await getBusinessQrDesignAssets(merchant.businessId, merchant.businessType, nextRevision);
+    const categoryConfig = await getQrBusinessCategoryConfig(merchant.businessType ?? "");
+    const assets = await getBusinessQrDesignAssets(merchant.businessId, merchant.businessType, nextRevision, categoryConfig);
     const provider = mode === "openai" ? "AI" : "mock";
     return { ok: true as const, revision: nextRevision, assets, provider };
   } catch (error) {

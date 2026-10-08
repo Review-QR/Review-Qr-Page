@@ -4,7 +4,7 @@ import { randomInt } from "node:crypto";
 import { requireActiveAdmin } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
-import { BUSINESS_TYPES } from "@/lib/business-types";
+import { isAvailableBusinessType } from "@/lib/business-category-admin.server";
 import type { Business } from "@/lib/types";
 
 type BusinessInput = {
@@ -24,7 +24,6 @@ type BusinessResult =
   | { success: true; business?: Business }
   | { success: false; message: string };
 
-const BUSINESS_TYPES_SET = new Set<string>(BUSINESS_TYPES);
 
 const PLANS = new Set(["Basic", "Standard", "Premium"]);
 const STATUSES = new Set(["active", "expiring soon", "expired", "suspended"]);
@@ -72,7 +71,7 @@ function parseBusiness(input: unknown): Omit<Business, "id"> | null {
     address === undefined ||
     expiry === undefined ||
     !reviewLink ||
-    typeof input.type !== "string" || !BUSINESS_TYPES_SET.has(input.type) ||
+    typeof input.type !== "string" || !input.type.trim() || input.type.length > 80 ||
     typeof input.plan !== "string" || !PLANS.has(input.plan) ||
     typeof input.status !== "string" || !STATUSES.has(input.status) ||
     typeof input.qr_status !== "string" || !QR_STATUSES.has(input.qr_status)
@@ -98,6 +97,7 @@ export async function createAdminBusiness(input: unknown): Promise<BusinessResul
   await requireActiveAdmin();
   const business = parseBusiness(input);
   if (!business) return { success: false, message: "Check the business details and try again." };
+  if (!(await isAvailableBusinessType(business.type ?? ""))) return { success: false, message: "Select an active business type from the catalog." };
 
   try {
     const supabase = createSupabaseAdminClient();
@@ -143,6 +143,7 @@ export async function updateAdminBusiness(
   }
   const business = parseBusiness(input);
   if (!business) return { success: false, message: "Check the business details and try again." };
+  if (!(await isAvailableBusinessType(business.type ?? "", true))) return { success: false, message: "This business type is no longer available. Choose a valid catalog category." };
 
   try {
     const { data, error } = await createSupabaseAdminClient()

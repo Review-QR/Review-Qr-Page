@@ -90,11 +90,11 @@ test("selected template and preview expose PNG, PDF, and print controls", () => 
 
 test("all five QR designs consume one merchant business category instead of template categories", () => {
   assert.match(gallerySource, /businessType: string \| null/);
-  assert.match(gallerySource, /const category = getBusinessCategoryProfile\(businessType\)/);
+  assert.match(gallerySource, /const category = getBusinessCategoryProfile\(businessType, categoryConfig\)/);
   assert.match(gallerySource, /const posterCategory = categoryTheme \? \{ \.\.\.category, experiences: categoryTheme\.experiences, palette: categoryTheme\.palette, backgroundArtDirection: categoryTheme\.backgroundArtDirection \}/);
   assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category: posterCategory, designAsset: designAssets\?\.\[templateId\], footer, digital, googleReviewLink, variation \}/);
   assert.match(gallerySource, /href=\{safeGoogleLink\} target="_blank" rel="noopener noreferrer"/);
-  assert.equal((gallerySource.match(/<CategoryArt iconName=\{category\.iconName\} designFamily=\{category\.designFamily\} designAsset=\{designAsset\} experiences=\{category\.experiences\} palette=\{category\.palette\} variation=\{variation\} compact=\{compact\}/g) ?? []).length, 5);
+  assert.equal((gallerySource.match(/<CategoryArt iconName=\{category\.iconName\} designFamily=\{category\.designFamily\} designAsset=\{designAsset\} experiences=\{category\.experiences\} qrIcons=\{category\.qrIcons\} palette=\{category\.palette\} variation=\{variation\} compact=\{compact\}/g) ?? []).length, 5);
   assert.match(gallerySource, /experiences\.slice\(0, 3\)/);
   assert.match(gallerySource, /data-background-direction=\{posterCategory\.backgroundArtDirection\}/);
   assert.match(gallerySource, /Digital · 1080×1350/);

@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import SearchableBusinessType from "@/app/components/searchable-business-type";
 import { saveTrustitBusiness } from "./actions";
+import type { UnifiedBusinessCategory } from "@/lib/business-category-catalog";
 
 const cls = "mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-base shadow-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100";
-export default function BusinessForm({ initialBusinessName = "" }: { initialBusinessName?: string }) {
+export default function BusinessForm({ initialBusinessName = "", categories = [] }: { initialBusinessName?: string; categories?: UnifiedBusinessCategory[] }) {
   const router = useRouter();
   const [businessName, setBusinessName] = useState(initialBusinessName);
   const [businessType, setBusinessType] = useState("");
@@ -52,7 +53,7 @@ export default function BusinessForm({ initialBusinessName = "" }: { initialBusi
       </label>
       <label className="block text-sm font-semibold text-slate-800">
         Business Type
-        <SearchableBusinessType name="type" value={businessType} onChange={setBusinessType} inputClassName={cls} />
+        <SearchableBusinessType name="type" value={businessType} onChange={setBusinessType} inputClassName={cls} categories={categories} />
       </label>
       <div className="-mt-3 flex flex-wrap gap-2" aria-label="Popular business types">
         {["Restaurant", "Salon", "Cafe", "Hotel", "Shop"].map((type) => (

@@ -6,6 +6,7 @@ import { resolveBusinessTheme } from "@/lib/trustit-ai/qr-design-theme";
 import { getBusinessCategory, QR_DESIGN_THEMES } from "@/lib/config/business-catalog";
 import BusinessCategoryIcon from "@/app/components/business-category-icon";
 import { safeReviewLink } from "@/lib/safe-review-link";
+import type { UnifiedBusinessCategory } from "@/lib/business-category-catalog";
 import type { QrDesignAsset, QrDesignAssets } from "@/lib/trustit-ai/provider-contracts";
 import { saveQrTemplateAction } from "./actions";
 import { regenerateQrDesignAction } from "./regenerate-design-action";
@@ -26,6 +27,7 @@ type Props = {
   initialDesignError?: string;
   display?: "carousel" | "dashboard";
   googleReviewLink?: string | null;
+  categoryConfig?: UnifiedBusinessCategory | null;
 };
 
 function TrustitMark({ templateId, className = "", compact = false }: { templateId: QrTemplateId; className?: string; compact?: boolean }) {
@@ -65,23 +67,25 @@ type BusinessCategoryProfile = {
   artKind: CategoryArtKind;
   iconName: string;
   designFamily: string;
+  qrIcons: string[];
   themeDetails: Array<{ palette: readonly string[]; backgroundArtDirection: string; experiences: Array<{ label: string; icon: string }> }>;
   experiences: Array<{ label: string; icon: string }>;
   palette: readonly string[];
   backgroundArtDirection: string;
 };
 
-function getBusinessCategoryProfile(businessType: string | null): BusinessCategoryProfile {
+function getBusinessCategoryProfile(businessType: string | null, categoryConfig?: UnifiedBusinessCategory | null): BusinessCategoryProfile {
   const theme = resolveBusinessTheme(businessType);
-  const category = getBusinessCategory(businessType);
+  const category = categoryConfig ?? getBusinessCategory(businessType);
   const selectedTheme = category?.themes[0];
-  return { label: theme.posterLabel, message: theme.posterMessage, artKind: theme.artKind, iconName: category?.primaryIcon ?? "Store", designFamily: category?.designFamily ?? "general", themeDetails: category?.themes ?? [], experiences: selectedTheme?.experiences ?? [], palette: selectedTheme?.palette ?? ["#f8fafc", "#dbeafe", "#1e3a8a"], backgroundArtDirection: selectedTheme?.backgroundArtDirection ?? "Clean local business details" };
+  const custom = Boolean(categoryConfig && !getBusinessCategory(businessType));
+  return { label: custom ? categoryConfig!.name : theme.posterLabel, message: custom ? `Your experience with ${categoryConfig!.name} matters to us. Please share your honest feedback.` : theme.posterMessage, artKind: theme.artKind, iconName: category?.primaryIcon ?? "Store", designFamily: category?.designFamily ?? "general", qrIcons: categoryConfig?.qrIcons ?? [category?.primaryIcon ?? "Store", category?.experiences[0]?.icon ?? "Star", category?.experiences[1]?.icon ?? "Sparkles"], themeDetails: category?.themes ?? [], experiences: selectedTheme?.experiences ?? [], palette: selectedTheme?.palette ?? ["#f8fafc", "#dbeafe", "#1e3a8a"], backgroundArtDirection: selectedTheme?.backgroundArtDirection ?? "Clean local business details" };
 }
 
 function CategoryIcon({ iconName, designFamily, className = "" }: { iconName: string; designFamily: string; className?: string }) {
   return <BusinessCategoryIcon name={iconName} family={designFamily} className={className} />;
 }
-function CategoryArt({ iconName, designFamily, designAsset, experiences = [], palette, variation = 0, compact = false, className = "" }: { iconName: string; designFamily: string; designAsset?: QrDesignAsset; experiences?: Array<{ label: string; icon: string }>; palette?: readonly string[]; variation?: number; compact?: boolean; className?: string }) {
+function CategoryArt({ iconName, designFamily, designAsset, experiences = [], qrIcons = [], palette, variation = 0, compact = false, className = "" }: { iconName: string; designFamily: string; designAsset?: QrDesignAsset; experiences?: Array<{ label: string; icon: string }>; qrIcons?: string[]; palette?: readonly string[]; variation?: number; compact?: boolean; className?: string }) {
   const colors = palette?.length ? palette : ["#f8fafc", "#dbeafe", "#1e3a8a"];
   const angle = 35 + ((variation % 4) * 25);
   return (
@@ -90,6 +94,7 @@ function CategoryArt({ iconName, designFamily, designAsset, experiences = [], pa
         ? <img src={designAsset.url} alt="" aria-hidden="true" data-qr-design-background="true" className="absolute inset-0 h-full w-full object-cover" />
         : <CategoryIcon iconName={iconName} designFamily={designFamily} className={`relative z-10 shrink-0 drop-shadow-sm ${compact ? "h-5 w-5" : "h-10 w-10"}`} />}
       {designAsset?.url && <span aria-hidden="true" className="absolute bottom-1 right-1 rounded-full bg-white/90 p-1 shadow-sm"><CategoryIcon iconName={iconName} designFamily={designFamily} className="h-4 w-4 text-slate-700" /></span>}
+      {qrIcons.slice(0, 3).map((icon, index) => <span key={`qr-${icon}-${index}`} title="Category QR icon" className={`relative z-10 grid shrink-0 place-items-center rounded-full bg-white/90 shadow-sm ${compact ? "h-4 w-4 p-0.5" : "h-7 w-7 p-1"}`}><CategoryIcon iconName={icon} designFamily={designFamily} className="h-full w-full" /></span>)}
       {experiences.slice(0, 3).map((experience) => <span key={experience.label} title={experience.label} className={`relative z-10 grid shrink-0 place-items-center rounded-full bg-white/85 shadow-sm ${compact ? "h-4 w-4 p-0.5" : "h-8 w-8 p-1"}`}><CategoryIcon iconName={experience.icon} designFamily={designFamily} className="h-full w-full" /></span>)}
     </span>
   );
@@ -145,7 +150,7 @@ function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, 
       <div className="pointer-events-none absolute -right-10 top-28 z-0 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-3 z-0 rounded-[1.25rem] border border-[#c9a65e]/70" />
       <TrustitMark templateId="template_1" className="relative z-10 text-emerald-800" compact={compact} />
-      <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#976a3c]" : digital ? "h-12 w-40 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
+      <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#976a3c]" : digital ? "h-12 w-40 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
       {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>}
       <BusinessName name={name} compact={compact} landscape={digital} />
       <FiveStars compact={compact} />
@@ -165,7 +170,7 @@ function HotelPoster({ name, businessId, qrUrl, usable, compact, category, desig
       <div className="pointer-events-none absolute -left-16 top-20 z-0 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-0 h-2 bg-gradient-to-r from-[#4b9db6] via-[#e5ce98] to-[#4b9db6]" />
       <TrustitMark templateId="template_2" className="relative z-10 text-[#d9c28e]" compact={compact} />
-      <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#e2c997]" : digital ? "h-12 w-40 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
+      <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#e2c997]" : digital ? "h-12 w-40 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
       {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>}
       <BusinessName name={name} dark compact={compact} landscape={digital} />
       <FiveStars dark compact={compact} />
@@ -185,7 +190,7 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, des
       <div className="pointer-events-none absolute inset-x-0 bottom-24 z-0 h-24 bg-[radial-gradient(ellipse_at_center,#cfe4c4_0%,transparent_72%)]" />
       <div aria-hidden="true" className="pointer-events-none absolute -right-14 top-12 z-0 h-32 w-32 rounded-full border-[12px] border-[#a7c996]/35" />
       <TrustitMark templateId="template_3" className="relative z-10 text-[#237c9d]" compact={compact} />
-      <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#4b9db6]" : digital ? "h-12 w-40 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
+      <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#4b9db6]" : digital ? "h-12 w-40 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
       {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>}
       <BusinessName name={name} compact={compact} landscape={digital} />
       <FiveStars compact={compact} />
@@ -210,7 +215,7 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category, desi
         <BusinessName name={name} landscape={!digital} compact={compact} />
         <FiveStars compact={compact} />
         {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
-        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} palette={category.palette} variation={variation} compact={compact} className={`text-[#9d742f] ${compact ? "h-7 w-20" : digital ? "my-1 h-12 w-40" : "mt-1 h-24 w-40"}`} />
+        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={`text-[#9d742f] ${compact ? "h-7 w-20" : digital ? "my-1 h-12 w-40" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto inline-flex items-center gap-2 rounded-full bg-[#895d1d] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
         {compact ? null : <div className="mt-2"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
         {!compact && <FooterMessage message={footer} />}
@@ -236,7 +241,7 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category, desig
         <BusinessName name={name} landscape={!digital} compact={compact} />
         <FiveStars compact={compact} />
         {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
-        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} palette={category.palette} variation={variation} compact={compact} className={`text-[#a65c79] ${compact ? "h-7 w-20" : digital ? "my-1 h-12 w-40" : "mt-1 h-24 w-40"}`} />
+        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={`text-[#a65c79] ${compact ? "h-7 w-20" : digital ? "my-1 h-12 w-40" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto inline-flex items-center gap-2 rounded-full bg-[#a45170] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
         {compact ? null : <div className="mt-2"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
         {!compact && <FooterMessage message={footer} />}
@@ -285,7 +290,7 @@ function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsabl
   );
 }
 
-export function QrPosterPreview({ businessId, businessName, businessType, qrStatus, expiry, templateId, designAssets, screenPreview = false, googleReviewLink }: {
+export function QrPosterPreview({ businessId, businessName, businessType, qrStatus, expiry, templateId, designAssets, screenPreview = false, googleReviewLink, categoryConfig }: {
   businessId: string;
   businessName: string;
   businessType: string | null;
@@ -295,6 +300,7 @@ export function QrPosterPreview({ businessId, businessName, businessType, qrStat
   designAssets?: QrDesignAssets;
   screenPreview?: boolean;
   googleReviewLink?: string | null;
+  categoryConfig?: UnifiedBusinessCategory | null;
 }) {
   const origin = trustitAppOrigin;
   const selectedId = qrTemplates.some((template) => template.id === templateId)
@@ -302,7 +308,7 @@ export function QrPosterPreview({ businessId, businessName, businessType, qrStat
     : qrTemplates[0].id;
   const reviewRoute = buildTrustitReviewUrl(origin, businessId);
   const qrUrl = buildTrustitQrImageUrl(reviewRoute);
-  const category = getBusinessCategoryProfile(businessType);
+  const category = getBusinessCategoryProfile(businessType, categoryConfig);
   const qrUsable = isQrUsable(qrStatus, expiry);
 
   return <PosterByTemplate templateId={selectedId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} designAssets={designAssets} googleReviewLink={googleReviewLink} compact={screenPreview} screenPreview={screenPreview} />;
@@ -313,7 +319,7 @@ function isQrUsable(status: string | null, expiry: string | null) {
   return status?.trim().toLowerCase() === "active" && (!expiry || expiry >= today);
 }
 
-export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, initialDesignAssets = {}, initialDesignRevision = 0, initialDesignError, display = "carousel", googleReviewLink }: Props) {
+export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, initialDesignAssets = {}, initialDesignRevision = 0, initialDesignError, display = "carousel", googleReviewLink, categoryConfig }: Props) {
   const origin = trustitAppOrigin;
   const [selectedTemplate, setSelectedTemplate] = useState<QrTemplateId>(qrTemplates.some((template) => template.id === initialTemplate) ? initialTemplate as QrTemplateId : "template_1");
   const [designAssets, setDesignAssets] = useState<QrDesignAssets>(initialDesignAssets);
@@ -329,7 +335,7 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
   const reviewRoute = buildTrustitReviewUrl(origin, businessId);
   const qrUrl = buildTrustitQrImageUrl(reviewRoute);
   const qrUsable = isQrUsable(qrStatus, expiry);
-  const category = getBusinessCategoryProfile(businessType);
+  const category = getBusinessCategoryProfile(businessType, categoryConfig);
   const exportTemplateId = previewTemplate ?? selectedTemplate;
   const exportTemplate = qrTemplates.find((template) => template.id === exportTemplateId)!;
   const exportDimensions = getQrTemplatePrintDimensions(exportTemplateId);

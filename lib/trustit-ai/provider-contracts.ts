@@ -1,5 +1,5 @@
 import type { QrTemplateId } from "../../app/merchant/dashboard/qr/templates";
-import type { BusinessThemeId, QrVisualPrompt } from "./qr-design-theme";
+import type { BusinessThemeId, CustomCategoryVisual, QrVisualPrompt } from "./qr-design-theme";
 
 export type AITextRequest = { task: "review" | "message"; prompt: string; language?: string };
 export type AITextProvider = { generateText(request: AITextRequest): Promise<string> };
@@ -53,7 +53,7 @@ export type AssetStorageProvider = {
 };
 
 export type ThemeGenerator = {
-  promptsFor(businessType: string | null | undefined): QrVisualPrompt[];
+  promptsFor(businessType: string | null | undefined, categoryConfig?: CustomCategoryVisual | null): QrVisualPrompt[];
 };
 
 export type TrustitAI = {
