@@ -61,24 +61,25 @@ type BusinessCategoryProfile = {
   message: string;
   artKind: CategoryArtKind;
   iconName: string;
+  designFamily: string;
 };
 
 function getBusinessCategoryProfile(businessType: string | null): BusinessCategoryProfile {
   const theme = resolveBusinessTheme(businessType);
   const category = getBusinessCategory(businessType);
-  return { label: theme.posterLabel, message: theme.posterMessage, artKind: theme.artKind, iconName: category?.primaryIcon ?? "Store" };
+  return { label: theme.posterLabel, message: theme.posterMessage, artKind: theme.artKind, iconName: category?.primaryIcon ?? "Store", designFamily: category?.designFamily ?? "general" };
 }
 
-function CategoryIcon({ iconName, className = "" }: { iconName: string; className?: string }) {
-  return <BusinessCategoryIcon name={iconName} className={className} />;
+function CategoryIcon({ iconName, designFamily, className = "" }: { iconName: string; designFamily: string; className?: string }) {
+  return <BusinessCategoryIcon name={iconName} family={designFamily} className={className} />;
 }
-function CategoryArt({ iconName, designAsset, className = "" }: { iconName: string; designAsset?: QrDesignAsset; className?: string }) {
+function CategoryArt({ iconName, designFamily, designAsset, className = "" }: { iconName: string; designFamily: string; designAsset?: QrDesignAsset; className?: string }) {
   return (
     <span className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg ${className}`}>
       {designAsset?.url
         ? <img src={designAsset.url} alt="" aria-hidden="true" data-qr-design-background="true" className="absolute inset-0 h-full w-full object-cover" />
-        : <CategoryIcon iconName={iconName} className="relative z-10 h-full w-full drop-shadow-sm" />}
-      {designAsset?.url && <span aria-hidden="true" className="absolute bottom-1 right-1 rounded-full bg-white/90 p-1 shadow-sm"><CategoryIcon iconName={iconName} className="h-4 w-4 text-slate-700" /></span>}
+        : <CategoryIcon iconName={iconName} designFamily={designFamily} className="relative z-10 h-full w-full drop-shadow-sm" />}
+      {designAsset?.url && <span aria-hidden="true" className="absolute bottom-1 right-1 rounded-full bg-white/90 p-1 shadow-sm"><CategoryIcon iconName={iconName} designFamily={designFamily} className="h-4 w-4 text-slate-700" /></span>}
     </span>
   );
 }
@@ -119,7 +120,7 @@ function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, 
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -right-10 top-28 z-0 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
       <TrustitMark templateId="template_1" className="relative z-10 text-emerald-800" compact={compact} />
-      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-8" : "h-24"}`}><CategoryArt iconName={category.iconName} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-8" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
       {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>}
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
