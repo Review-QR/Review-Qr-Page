@@ -92,7 +92,7 @@ export default function SearchableBusinessType({
         aria-autocomplete="list"
         aria-expanded={open}
         aria-controls={listId}
-        aria-activedescendant={open && options[activeIndex] ? `${listId.current}-${options[activeIndex].slug}` : undefined}
+        aria-activedescendant={open && options[activeIndex] ? `${listId}-${options[activeIndex].slug}` : undefined}
         value={query}
         onChange={(event) => handleChange(event.target.value)}
         onFocus={() => setOpen(true)}
@@ -108,10 +108,10 @@ export default function SearchableBusinessType({
       )}
 
       {open && (
-        <div id={listId.current} role="listbox" aria-label="Business types" className="absolute z-40 mt-1 max-h-64 w-full overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+        <div id={listId} role="listbox" aria-label="Business types" className="absolute z-40 mt-1 max-h-64 w-full overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
           {options.length ? options.map((category, index) => (
             <button
-              id={`${listId.current}-${category.slug}`}
+              id={`${listId}-${category.slug}`}
               key={category.id}
               type="button"
               role="option"
