@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { BUSINESS_TYPES } from "@/lib/business-types";
+import { useEffect, useMemo, useRef, useState, useId } from "react";
+import { getBusinessCategory, searchBusinessCategories } from "@/lib/config/business-catalog";
+import BusinessCategoryIcon from "@/app/components/business-category-icon";
 
 type Props = {
   value: string;
@@ -9,21 +10,6 @@ type Props = {
   name?: string;
   required?: boolean;
   inputClassName?: string;
-};
-
-function normalize(value: string) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
-}
-
-const aliases: Record<string, string> = {
-  lib: "Library",
-  libr: "Library",
-  rest: "Restaurant",
-  resta: "Restaurant",
-  restaur: "Restaurant",
-  sal: "Salon",
-  salo: "Salon",
-  salon: "Salon",
 };
 
 export default function SearchableBusinessType({
@@ -35,9 +21,18 @@ export default function SearchableBusinessType({
 }: Props) {
   const [query, setQuery] = useState(value);
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
+  const listId = useId().replace(/:/g, "");
+  const localEdit = useRef(false);
 
-  useEffect(() => setQuery(value), [value]);
+  useEffect(() => {
+    if (localEdit.current) {
+      localEdit.current = false;
+      return;
+    }
+    setQuery(value);
+  }, [value]);
 
   useEffect(() => {
     function close(event: MouseEvent) {
@@ -47,13 +42,11 @@ export default function SearchableBusinessType({
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const options = useMemo(() => {
-    const q = normalize(query);
-    if (!q) return [];
-    return BUSINESS_TYPES.filter((type) => normalize(type).includes(q)).slice(0, 8);
-  }, [query]);
+  const options = useMemo(() => searchBusinessCategories(query, 12), [query]);
+  const selected = getBusinessCategory(value);
 
   function choose(type: string) {
+    localEdit.current = false;
     onChange(type);
     setQuery(type);
     setOpen(false);
@@ -61,61 +54,79 @@ export default function SearchableBusinessType({
 
   function handleChange(next: string) {
     setQuery(next);
+    setActiveIndex(0);
     setOpen(true);
-
-    const q = normalize(next);
-    if (!q) {
+    const exactCanonical = getBusinessCategory(next);
+    if (exactCanonical?.name.toLocaleLowerCase() === next.trim().toLocaleLowerCase()) {
+      choose(exactCanonical.name);
+      return;
+    }
+    if (value) {
+      localEdit.current = true;
       onChange("");
-      return;
     }
-
-    const alias = aliases[q];
-    if (alias) {
-      onChange(alias);
-      setQuery(alias);
-      setOpen(false);
-      return;
-    }
-
-    const exactMatch = BUSINESS_TYPES.find((type) => normalize(type) === q);
-    if (exactMatch) choose(exactMatch);
-    else onChange("");
   }
 
-  function handleBlur() {
-    const q = normalize(query);
-    if (!q) return;
-    const alias = aliases[q];
-    if (alias) choose(alias);
+  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setOpen(true);
+      setActiveIndex((index) => Math.min(index + 1, Math.max(options.length - 1, 0)));
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setActiveIndex((index) => Math.max(index - 1, 0));
+    } else if (event.key === "Enter" && open && options[activeIndex]) {
+      event.preventDefault();
+      choose(options[activeIndex].name);
+    } else if (event.key === "Escape") {
+      setOpen(false);
+      setQuery(value);
+    }
   }
 
   return (
     <div ref={rootRef} className="relative">
       <input type="hidden" name={name} value={value} />
       <input
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-activedescendant={open && options[activeIndex] ? `${listId}-${options[activeIndex].slug}` : undefined}
         value={query}
         onChange={(event) => handleChange(event.target.value)}
         onFocus={() => setOpen(true)}
-        onBlur={handleBlur}
-        placeholder="Type: Lib, Rest, Sal..."
+        onKeyDown={handleKeyDown}
+        placeholder="Search business type — e.g. Lib, Rest, Sal"
         autoComplete="off"
         required={required}
         className={inputClassName ?? "w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-blue-500"}
       />
 
-      {open && options.length > 0 && (
-        <div className="absolute z-40 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-slate-200 bg-white p-1 shadow-xl">
-          {options.map((type) => (
+      {selected && value === selected.name && (
+        <p className="mt-1 text-xs text-emerald-700" aria-live="polite">Selected: {selected.name}</p>
+      )}
+
+      {open && (
+        <div id={listId} role="listbox" aria-label="Business types" className="absolute z-40 mt-1 max-h-64 w-full overflow-y-auto overscroll-contain rounded-xl border border-slate-200 bg-white p-1 shadow-xl">
+          {options.length ? options.map((category, index) => (
             <button
-              key={type}
+              id={`${listId}-${category.slug}`}
+              key={category.id}
               type="button"
+              role="option"
+              aria-selected={value === category.name || activeIndex === index}
+              onMouseEnter={() => setActiveIndex(index)}
               onMouseDown={(event) => event.preventDefault()}
-              onClick={() => choose(type)}
-              className="block w-full rounded-md px-3 py-2 text-left text-sm hover:bg-slate-100"
+              onClick={() => choose(category.name)}
+              className={`flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${activeIndex === index ? "bg-blue-50 text-blue-900" : "text-slate-800 hover:bg-slate-50"}`}
             >
-              {type}
+              <BusinessCategoryIcon name={category.primaryIcon} family={category.designFamily} className="h-5 w-5 shrink-0 text-blue-700" />
+              <span className="font-medium">{category.name}</span>
             </button>
-          ))}
+          )) : (
+            <p className="px-3 py-4 text-sm text-slate-500">No matching business types. Try another search.</p>
+          )}
         </div>
       )}
     </div>

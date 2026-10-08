@@ -91,8 +91,10 @@ test("selected template and preview expose PNG, PDF, and print controls", () => 
 test("all five QR designs consume one merchant business category instead of template categories", () => {
   assert.match(gallerySource, /businessType: string \| null/);
   assert.match(gallerySource, /const category = getBusinessCategoryProfile\(businessType\)/);
-  assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category, designAsset: designAssets\?\.\[templateId\] \}/);
-  assert.match(gallerySource, /<CategoryArt kind=\{category\.artKind\}/);
+  assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category, designAsset: designAssets\?\.\[templateId\], footer \}/);
+  assert.equal((gallerySource.match(/<CategoryArt iconName=\{category\.iconName\} designFamily=\{category\.designFamily\} designAsset=\{designAsset\}/g) ?? []).length, 5);
+  assert.equal((gallerySource.match(/<FooterMessage message=\{footer\}/g) ?? []).length, 5, "every full-size template renders its locked design-family footer");
+  assert.match(gallerySource, /QR_DESIGN_THEMES\.find\(\(theme\) => theme\.name === template\.designTheme\)/);
   assert.match(gallerySource, /\{category\.label\}/);
   assert.match(gallerySource, /\{category\.message\}/);
   for (const hardCodedCategory of [

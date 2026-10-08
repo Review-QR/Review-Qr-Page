@@ -6,12 +6,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "audit:public-indexability": "node scripts/verify-public-indexability.mjs"
+    "audit:public-indexability": "node scripts/verify-public-indexability.mjs",
+    "test": "node --test"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.1",
     "jspdf": "^4.2.1",
+    "lucide-react": "1.52.0",
     "modern-screenshot": "^4.7.0",
     "next": "16.3.6",
     "qrcode": "1.5.4",

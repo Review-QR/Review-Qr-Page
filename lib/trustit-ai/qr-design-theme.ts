@@ -1,4 +1,5 @@
 import { BUSINESS_TYPES, type BusinessType } from "../business-types.ts";
+import { getBusinessCategory, type DesignFamily } from "../config/business-catalog.ts";
 import { qrTemplateIds, type QrTemplateId } from "../../app/merchant/dashboard/qr/templates.ts";
 
 export const QR_DESIGN_PROMPT_VERSION = "qr-design-v1";
@@ -146,7 +147,17 @@ export function resolveBusinessTheme(value: string | null | undefined): Business
       .filter((keyword) => words.includes(` ${normalizeBusinessType(keyword)} `))
       .map((keyword) => ({ theme, specificity: normalizeBusinessType(keyword).length })))
     .sort((a, b) => b.specificity - a.specificity)[0];
-  return match?.theme ?? themes.find((theme) => theme.id === "universal")!;
+  if (match?.theme) return match.theme;
+  const category = getBusinessCategory(value);
+  const familyTheme: Record<DesignFamily, string> = {
+    food: "restaurant", retail: "retail", healthcare: "healthcare", education: "education",
+    beauty: "beauty", hospitality: "hospitality", automotive: "automotive", home: "professional-services",
+    professional: "professional-services", finance: "professional-services", technology: "professional-services",
+    entertainment: "events", travel: "travel", events: "events", agriculture: "grocery",
+    community: "universal", manufacturing: "retail", general: "universal",
+  };
+  return themes.find((theme) => theme.id === familyTheme[category?.designFamily ?? "general"])
+    ?? themes.find((theme) => theme.id === "universal")!;
 }
 
 const experienceNames: Record<QrTemplateId, string> = {
@@ -169,11 +180,16 @@ export type QrVisualPrompt = {
 
 export function getThemeVisualPrompts(value: string | null | undefined): QrVisualPrompt[] {
   const theme = resolveBusinessTheme(value);
-  return qrTemplateIds.map((templateId, index) => ({
-    themeId: theme.id,
-    templateId,
-    experience: experienceNames[templateId],
-    promptVersion: QR_DESIGN_PROMPT_VERSION,
-    prompt: `${theme.label} visual direction: ${theme.scenes[index]}. Variation ${index + 1} of five: ${experienceNames[templateId]}. Use a distinct composition while staying within this theme's palette (${theme.palette.join(", ")}). ${compositionSafety}`,
-  }));
+  const category = getBusinessCategory(value);
+  return qrTemplateIds.map((templateId, index) => {
+    const categoryTheme = category?.themes[index];
+    const safeAreas = categoryTheme?.safeAreas;
+    return {
+      themeId: theme.id,
+      templateId,
+      experience: experienceNames[templateId],
+      promptVersion: QR_DESIGN_PROMPT_VERSION,
+      prompt: `${theme.label} visual direction: ${theme.scenes[index]}. Variation ${index + 1} of five: ${experienceNames[templateId]}. ${categoryTheme?.backgroundArtDirection ?? ""} Experience details: ${categoryTheme?.experiences.map((item) => item.label).join(", ") ?? ""}. Footer direction: ${categoryTheme?.footer ?? ""}. Reserve clear areas for the QR: ${safeAreas?.qr ?? "lower-right"}; the business name: ${safeAreas?.businessName ?? "upper-center"}; and the call to action: ${safeAreas?.cta ?? "lower-center"}. Use a distinct composition while staying within this theme's palette (${theme.palette.join(", ")}). ${compositionSafety}`,
+    };
+  });
 }

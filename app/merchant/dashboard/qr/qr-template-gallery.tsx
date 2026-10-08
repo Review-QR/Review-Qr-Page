@@ -3,6 +3,8 @@
 import { useRef, useState, useTransition } from "react";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl, trustitAppOrigin } from "@/lib/trustit-qr";
 import { resolveBusinessTheme } from "@/lib/trustit-ai/qr-design-theme";
+import { getBusinessCategory, QR_DESIGN_THEMES } from "@/lib/config/business-catalog";
+import BusinessCategoryIcon from "@/app/components/business-category-icon";
 import type { QrDesignAsset, QrDesignAssets } from "@/lib/trustit-ai/provider-contracts";
 import { saveQrTemplateAction } from "./actions";
 import { regenerateQrDesignAction } from "./regenerate-design-action";
@@ -58,71 +60,26 @@ type BusinessCategoryProfile = {
   label: string;
   message: string;
   artKind: CategoryArtKind;
+  iconName: string;
+  designFamily: string;
 };
 
 function getBusinessCategoryProfile(businessType: string | null): BusinessCategoryProfile {
   const theme = resolveBusinessTheme(businessType);
-  return { label: theme.posterLabel, message: theme.posterMessage, artKind: theme.artKind };
+  const category = getBusinessCategory(businessType);
+  return { label: theme.posterLabel, message: theme.posterMessage, artKind: theme.artKind, iconName: category?.primaryIcon ?? "Store", designFamily: category?.designFamily ?? "general" };
 }
 
-function CategoryIcon({ kind, className = "" }: { kind: CategoryArtKind; className?: string }) {
-  const line = { fill: "none", stroke: "currentColor", strokeWidth: 3, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  if (kind === "food") return (
-    <svg aria-hidden="true" viewBox="0 0 170 100" className={className}>
-      <circle cx="92" cy="54" r="30" fill="#fffdf8" stroke="currentColor" strokeWidth="3" opacity=".95" />
-      <path d="M66 54h52M92 28c-10 10-15 20-15 30s5 20 15 26c10-6 15-16 15-26s-5-20-15-30Z" fill="none" stroke="currentColor" strokeWidth="2.5" opacity=".45" />
-      <path d="M72 49c10-11 29-11 40 0-10 12-30 12-40 0Z" fill="#d18b4a" opacity=".9" />
-      <path d="M25 18v63m-7-63v20c0 7 14 7 14 0V18m-7 20v43m74-63v19m0-19c8 7 12 15 12 24m0 0v39" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path d="M125 30c8-7 17-7 23 0v25h-23Zm0 25h23m-12-25v25" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-    </svg>
-  );
-  if (kind === "hotel") return (
-    <svg aria-hidden="true" viewBox="0 0 170 100" className={className}>
-      <path d="M17 77V35h13v25h109V44c0-8 6-14 14-14h2v47M30 57c0-10 7-17 17-17h17c8 0 14 6 14 14v6H30Zm51 0c0-10 7-17 17-17h24c6 0 10 5 10 11v9H81Z" fill="#fff8e9" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="M38 49h21c6 0 10 4 10 9H38Zm51 0h25c3 0 5 3 5 7H89Z" fill="#bad7d1" />
-      <path d="M25 79v10m132-10v10M126 29V12h22v17m-19-11h16" {...line} />
-      <path d="M12 94h148" {...line} opacity=".45" />
-    </svg>
-  );
-  if (kind === "laundry") return (
-    <svg aria-hidden="true" viewBox="0 0 160 110" className={className}>
-      <rect x="13" y="8" width="72" height="92" rx="10" fill="#f8fdff" stroke="currentColor" strokeWidth="3" />
-      <path d="M14 29h70" {...line} /><circle cx="30" cy="19" r="3" fill="currentColor" /><circle cx="42" cy="19" r="3" fill="currentColor" /><circle cx="49" cy="64" r="26" fill="#d7eff8" stroke="currentColor" strokeWidth="3" /><circle cx="49" cy="64" r="16" fill="#fff" stroke="currentColor" strokeWidth="2" /><path d="M32 68c6-7 11-7 17 0s11 7 17 0m-35-9c6-6 11-6 17 0s11 6 17 0" {...line} opacity=".55" />
-      <path d="M100 82h48v17h-48zm5-17h43v14h-43zm5-15h36v12h-36z" fill="#fff" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="m115 55 10 8 9-8" {...line} /><circle cx="114" cy="18" r="6" fill="#fff" stroke="currentColor" strokeWidth="2" /><circle cx="134" cy="27" r="4" fill="#fff" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-  if (kind === "retail") return (
-    <svg aria-hidden="true" viewBox="0 0 190 120" className={className}>
-      <path d="M25 46h115l-10 58H39Z" fill="#fff" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /><path d="M18 43h128l-10-24H29Z" fill="#f4c86c" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /><path d="M45 20v24m27-24v24m27-24v24m27-24v24" {...line} />
-      <path d="M52 57h17v19H52zm28-5h18v24H80zm29 6h17v18h-17z" fill="#a6ccbb" stroke="currentColor" strokeWidth="2" />
-      <path d="M43 104h77m-65 0a9 9 0 1 0 18 0m29 0a9 9 0 1 0 18 0m-2-55 15 6" {...line} />
-      <path d="m153 33 19 8v41l-19 9-19-9V41Z" fill="#fff1e2" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" /><path d="M145 42c0-13 16-13 16 0m-10 35 5 4 8-9" {...line} />
-    </svg>
-  );
-  if (kind === "salon") return (
-    <svg aria-hidden="true" viewBox="0 0 190 120" className={className}>
-      <path d="M38 108V28h75v80m-86 0h96" fill="#fff" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /><path d="M52 42h47v43H52z" fill="#fbe2df" stroke="currentColor" strokeWidth="3" /><path d="M62 52h27v25H62z" fill="#d5e7e1" stroke="currentColor" strokeWidth="2" />
-      <path d="m129 24 28 17-26 43-28-17Zm-11 52-22 34m16-9 11 7m-4-27 11 7" fill="#f8c7bf" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="m24 37 21 9m-3-16 4 29m0-29-4 29m-7-23 14 2m-15 8 16 2" {...line} /><path d="M139 91h28v17h-28z" fill="#e8c6a0" stroke="currentColor" strokeWidth="3" /><path d="M145 90c0-10 16-10 16 0" {...line} />
-    </svg>
-  );
-  return (
-    <svg aria-hidden="true" viewBox="0 0 190 120" className={className}>
-      <path d="M28 102V48h134v54M18 102h154M42 48V28h34v20m38 0V28h34v20" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
-      <path d="M51 68h26v24H51zm36 0h26v24H87zm36 0h16v24h-16z" fill="currentColor" opacity=".15" stroke="currentColor" strokeWidth="2" />
-      <circle cx="145" cy="31" r="9" fill="#fff" stroke="currentColor" strokeWidth="3" />
-      <path d="M141 31h8m-4-4v8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
-  );
+function CategoryIcon({ iconName, designFamily, className = "" }: { iconName: string; designFamily: string; className?: string }) {
+  return <BusinessCategoryIcon name={iconName} family={designFamily} className={className} />;
 }
-
-function CategoryArt({ kind, designAsset, className = "" }: { kind: CategoryArtKind; designAsset?: QrDesignAsset; className?: string }) {
+function CategoryArt({ iconName, designFamily, designAsset, className = "" }: { iconName: string; designFamily: string; designAsset?: QrDesignAsset; className?: string }) {
   return (
     <span className={`relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-lg ${className}`}>
       {designAsset?.url
         ? <img src={designAsset.url} alt="" aria-hidden="true" data-qr-design-background="true" className="absolute inset-0 h-full w-full object-cover" />
-        : <CategoryIcon kind={kind} className="relative z-10 h-full w-full drop-shadow-sm" />}
+        : <CategoryIcon iconName={iconName} designFamily={designFamily} className="relative z-10 h-full w-full drop-shadow-sm" />}
+      {designAsset?.url && <span aria-hidden="true" className="absolute bottom-1 right-1 rounded-full bg-white/90 p-1 shadow-sm"><CategoryIcon iconName={iconName} designFamily={designFamily} className="h-4 w-4 text-slate-700" /></span>}
     </span>
   );
 }
@@ -158,12 +115,16 @@ function GoogleMessage({ dark = false, compact = false }: { dark?: boolean; comp
   return <div className={`flex flex-wrap items-center justify-center gap-x-2 gap-y-1 ${compact ? "text-[9px]" : "text-xs"}`}><GoogleReviewMark dark={dark} compact={compact} /><span className={dark ? "text-slate-300" : "text-slate-600"}>Also share your feedback on Google</span></div>;
 }
 
-function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function FooterMessage({ message, dark = false }: { message: string; dark?: boolean }) {
+  return <p className={`mt-2 max-w-full text-[8px] font-semibold uppercase tracking-[0.12em] ${dark ? "text-slate-300" : "text-slate-600"}`}>{message}</p>;
+}
+
+function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -right-10 top-28 z-0 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
       <TrustitMark templateId="template_1" className="relative z-10 text-emerald-800" compact={compact} />
-      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-8" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-8" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
       {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>}
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
@@ -171,17 +132,18 @@ function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, 
       <div className={`my-auto ${compact ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-emerald-800 font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       {!compact && <div className="mt-3"><GoogleMessage /></div>}
+      {!compact && <FooterMessage message={footer} />}
       {!compact && <p className="mt-2 font-mono text-[9px] text-[#74593c]">{businessId}</p>}
     </div>
   );
 }
 
-function HotelPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function HotelPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -left-16 top-20 z-0 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
       <TrustitMark templateId="template_2" className="relative z-10 text-[#d9c28e]" compact={compact} />
-      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-8" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-8" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
       {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>}
       <BusinessName name={name} dark compact={compact} />
       <FiveStars dark compact={compact} />
@@ -189,17 +151,18 @@ function HotelPoster({ name, businessId, qrUrl, usable, compact, category, desig
       <div className={`my-auto ${compact ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-[#e5ce98] font-bold text-[#183a45] ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       {!compact && <div className="mt-3"><GoogleMessage dark /></div>}
+      {!compact && <FooterMessage message={footer} dark />}
       {!compact && <p className="mt-2 font-mono text-[9px] text-slate-300">{businessId}</p>}
     </div>
   );
 }
 
-function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eef8fb] text-center text-[#183e55] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute inset-x-0 bottom-24 z-0 h-20 bg-[radial-gradient(ellipse_at_center,#cae8f1_0%,transparent_70%)]" />
       <TrustitMark templateId="template_3" className="relative z-10 text-[#237c9d]" compact={compact} />
-      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-8" : "h-24"}`}><CategoryArt kind={category.artKind} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
+      <div className={`${compact ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-8" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={compact ? "h-8 w-20 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
       {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>}
       <BusinessName name={name} compact={compact} />
       <FiveStars compact={compact} />
@@ -207,12 +170,13 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, des
       <div className={`my-auto ${compact ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
       <p className={`rounded-full bg-[#247f9e] font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
       {!compact && <div className="mt-3"><GoogleMessage /></div>}
+      {!compact && <FooterMessage message={footer} />}
       {!compact && <p className="mt-2 font-mono text-[9px] text-[#4b7180]">{businessId}</p>}
     </div>
   );
 }
 
-function RetailPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function RetailPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-hidden bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#cf963e]" />
@@ -222,9 +186,10 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category, desi
         <BusinessName name={name} landscape compact={compact} />
         <FiveStars compact={compact} />
         {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
-        <CategoryArt kind={category.artKind} designAsset={designAsset} className={`text-[#9d742f] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
+        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={`text-[#9d742f] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#895d1d] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
         {compact ? null : <div className="mt-2"><GoogleMessage /></div>}
+        {!compact && <FooterMessage message={footer} />}
         {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
       </div>
       <div className="relative z-10 flex flex-col items-center gap-2">
@@ -236,7 +201,7 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category, desi
   );
 }
 
-function SalonPoster({ name, businessId, qrUrl, usable, compact, category, designAsset }: PosterContentProps) {
+function SalonPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer }: PosterContentProps) {
   return (
     <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-hidden bg-[#fff3f1] text-[#432b35] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#bb7189]" />
@@ -246,9 +211,10 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category, desig
         <BusinessName name={name} landscape compact={compact} />
         <FiveStars compact={compact} />
         {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
-        <CategoryArt kind={category.artKind} designAsset={designAsset} className={`text-[#a65c79] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
+        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} className={`text-[#a65c79] ${compact ? "h-7 w-20" : "mt-1 h-24 w-40"}`} />
         <p className={`mt-auto rounded-full bg-[#a45170] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
         {compact ? null : <div className="mt-2"><GoogleMessage /></div>}
+        {!compact && <FooterMessage message={footer} />}
         {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
       </div>
       <div className="relative z-10 flex flex-col items-center gap-2">
@@ -260,7 +226,7 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category, desig
   );
 }
 
-type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean; category: BusinessCategoryProfile; designAsset?: QrDesignAsset };
+type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean; category: BusinessCategoryProfile; designAsset?: QrDesignAsset; footer: string };
 
 function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsable, category, designAssets, compact = false, screenPreview = false }: {
   templateId: QrTemplateId;
@@ -273,8 +239,9 @@ function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsabl
   compact?: boolean;
   screenPreview?: boolean;
 }) {
-  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact, category, designAsset: designAssets?.[templateId] };
   const template = qrTemplates.find((item) => item.id === templateId)!;
+  const footer = QR_DESIGN_THEMES.find((theme) => theme.name === template.designTheme)?.footer ?? QR_DESIGN_THEMES[4].footer;
+  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact, category, designAsset: designAssets?.[templateId], footer };
   const aspect = template.ratio === "3 / 2" ? "aspect-[3/2]" : "aspect-[2/3]";
   return (
     <div className={`${aspect} w-full overflow-hidden rounded-xl shadow-inner`} data-template-id={templateId} data-screen-preview={screenPreview ? "true" : undefined} data-print-size={template.printSize} data-orientation={template.orientation} data-ratio={template.ratio}>
@@ -528,12 +495,12 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
           const isSelected = selectedTemplate === template.id;
           return (
             <article key={template.id} className={display === "dashboard" ? `merchant-template-tile${template.ratio === "3 / 2" ? " merchant-template-tile--landscape" : ""}${isSelected ? " is-selected" : ""}` : `w-[min(84vw,360px)] shrink-0 snap-start overflow-hidden rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:w-[min(50vw,420px)] lg:w-[min(40vw,480px)] xl:w-[min(38vw,480px)] ${isSelected ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200"}`}>
-              <button type="button" onClick={() => setPreviewTemplate(template.id)} className={display === "dashboard" ? "merchant-template-tile__poster" : "relative block w-full text-left"} aria-label={`Preview ${template.name} QR design`}>
+              <button type="button" onClick={() => setPreviewTemplate(template.id)} className={display === "dashboard" ? "merchant-template-tile__poster" : "relative block w-full text-left"} aria-label={`Preview ${template.designTheme} ${template.name} QR design`}>
                 <PosterByTemplate templateId={template.id} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} designAssets={designAssets} compact />
                 {isSelected && <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-sm font-black text-white shadow" aria-label="Currently selected">✓</span>}
               </button>
               <div className={display === "dashboard" ? "" : "px-1 pb-1 pt-3"}>
-                <h3 className={display === "dashboard" ? "merchant-template-tile__name" : "font-semibold text-slate-900"}>{template.name}</h3>
+                <h3 className={display === "dashboard" ? "merchant-template-tile__name" : "font-semibold text-slate-900"}>{template.designTheme}<span className="ml-1 text-xs font-normal text-slate-500">· {template.name}</span></h3>
                 {display !== "dashboard" && <>
                   <p className="mt-0.5 text-xs text-slate-500">{template.description}</p>
                   <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{template.printSize} · {template.orientation}</p>
