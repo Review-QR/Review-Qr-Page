@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useId } from "react";
 import { getBusinessCategory, searchBusinessCategories } from "@/lib/config/business-catalog";
 import BusinessCategoryIcon from "@/app/components/business-category-icon";
 
@@ -23,7 +23,7 @@ export default function SearchableBusinessType({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
-  const listId = useRef(`business-type-options-${Math.random().toString(36).slice(2)}`);
+  const listId = useId().replace(/:/g, "");
   const localEdit = useRef(false);
 
   useEffect(() => {
@@ -91,7 +91,7 @@ export default function SearchableBusinessType({
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={open}
-        aria-controls={listId.current}
+        aria-controls={listId}
         aria-activedescendant={open && options[activeIndex] ? `${listId.current}-${options[activeIndex].slug}` : undefined}
         value={query}
         onChange={(event) => handleChange(event.target.value)}
