@@ -698,7 +698,7 @@ const iconOverrides: Record<string,string> = {
   "Banquet Hall":"PartyPopper","Real Estate Agency":"House","Insurance Agency":"ShieldCheck",
   "Bank":"Landmark","ATM":"CreditCard","CA Office":"Calculator","Lawyer":"Scale",
   "Digital Marketing Agency":"Megaphone","IT Services":"Laptop","Veterinary Clinic":"PawPrint",
-  "Pet Shop":"PawPrint","Sports Store":"Trophy","Gym":"Dumbbell","Sports Academy":"Trophy","Dance Academy":"Music2",
+  "Pet Shop":"PawPrint","Sports Store":"Trophy","Sports Academy":"Trophy","Dance Academy":"Music2",
   "Music School":"Music2","Art Classes":"Palette","Gaming Zone":"Gamepad2","Cinema":"Clapperboard",
 };
 const themeArt: Record<Family,string> = {
