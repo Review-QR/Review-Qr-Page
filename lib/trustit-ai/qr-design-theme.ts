@@ -151,8 +151,8 @@ export function resolveBusinessTheme(value: string | null | undefined): Business
   const category = getBusinessCategory(value);
   const familyTheme: Record<DesignFamily, string> = {
     food: "restaurant", retail: "retail", healthcare: "healthcare", education: "education",
-    beauty: "beauty", hospitality: "hospitality", automotive: "automotive", home: "professional",
-    professional: "professional", finance: "professional", technology: "professional",
+    beauty: "beauty", hospitality: "hospitality", automotive: "automotive", home: "professional-services",
+    professional: "professional-services", finance: "professional-services", technology: "professional-services",
     entertainment: "events", travel: "travel", events: "events", agriculture: "grocery",
     community: "universal", manufacturing: "retail", general: "universal",
   };
