@@ -633,7 +633,7 @@ function experienceIconFor(label: string, family: Family): string {
   return familyIcons[family];
 }
 function normalize(value: string) { return value.normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9]+/g,"").trim(); }
-function slugify(value: string) { return value.normalize("NFKD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
+function slugify(value: string) { return value.toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
 
 const aliasesByName: Record<string,string[]> = {
   "Salon":["saloon","hair salon","beauty salon","ladies salon","mens salon","unisex salon"],
