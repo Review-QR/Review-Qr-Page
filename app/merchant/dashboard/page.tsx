@@ -91,7 +91,7 @@ export default async function MerchantDashboardPage() {
     designAssets = await getBusinessQrDesignAssets(merchant.businessId, merchant.businessType);
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    const openAiStatus = /^OpenAI image generation failed \\((\\d{3})\\)\\.$/.exec(message)?.[1];
+    const openAiStatus = /^OpenAI image generation failed \((\d{3})\)\.$/.exec(message)?.[1];
     const failureCategory = openAiStatus
       ? `OpenAI HTTP ${openAiStatus}`
       : /Unable to load saved QR design assets/.test(message)
