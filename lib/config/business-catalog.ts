@@ -652,6 +652,17 @@ const aliasesByName: Record<string,string[]> = {
   "Mobile Repair":["mobile repair shop","phone repair"],
   "Beauty Parlour":["beauty parlor","ladies beauty parlour"],
 };
+const experienceOverrides: Record<string, readonly string[]> = {
+  "Hotel":["Stay","Rooms","Food","Cleanliness","Service","Staff","Hospitality","Comfort","Location","Value","Facilities","Booking","Safety","Breakfast","Overall Experience"],
+  "Restaurant":["Taste","Food Quality","Service","Staff","Cleanliness","Ambience","Portion","Value","Variety","Freshness","Wait Time","Presentation","Packaging","Comfort","Overall Experience"],
+  "Sweet Shop":["Taste","Freshness","Quality","Variety","Presentation","Packaging","Service","Staff","Value","Cleanliness","Availability","Pricing","Gift Packing","Wait Time","Overall Experience"],
+  "Salon":["Hair Service","Styling","Staff","Hygiene","Products","Experience","Waiting Time","Value","Comfort","Consultation","Appointment","Cleanliness","Skill","Atmosphere","Overall Experience"],
+  "Library":["Book Collection","Cleanliness","Study Environment","Silence","Seating","Staff","Facilities","Availability","Book Variety","Lighting","Accessibility","Comfort","Organization","Value","Overall Experience"],
+  "Study Centre":["Study Environment","Seating","Silence","Facilities","Cleanliness","Staff","Internet","Power Backup","Study Experience","Lighting","Study Hours","Comfort","Safety","Value","Overall Experience"],
+  "Tea Point":["Taste","Tea Quality","Freshness","Service","Staff","Cleanliness","Variety","Value","Speed","Seating","Snacks","Pricing","Convenience","Ambience","Overall Experience"],
+  "Petrol Pump":["Fuel Quality","Service","Staff","Cleanliness","Speed","Payment","Facilities","Air","Convenience","Safety","Queue Time","Washroom","Digital Payment","Value","Overall Experience"],
+  "Shopping Mall":["Stores","Cleanliness","Parking","Food","Security","Facilities","Staff","Ambience","Accessibility","Seating","Washrooms","Navigation","Events","Convenience","Overall Experience"],
+};
 const paletteDirections: Record<string,string> = {
   Luxury:"jewel-toned accents, restrained metallic highlights, and refined premium materials",
   Modern:"crisp geometry, contemporary gradients, and clean graphic shapes",
@@ -703,7 +714,7 @@ const themeArt: Record<Family,string> = {
 export const BUSINESS_CATALOG = BUSINESS_TYPES.map((name) => {
   const family = familyFor(name);
   const aliases = [...new Set([name,...(aliasesByName[name]??[])])];
-  const categoryExperiences = experienceLabels[family].map((label) => ({ label, icon: experienceIconFor(label, family) }));
+  const categoryExperiences = (experienceOverrides[name] ?? experienceLabels[family]).map((label) => ({ label, icon: experienceIconFor(label, family) }));
   const themes = QR_DESIGN_THEMES.map((theme,index)=>({
     ...theme,
     palette:paletteByFamily[family],
