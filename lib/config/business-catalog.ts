@@ -253,7 +253,8 @@ export const BUSINESS_TYPES = [
   "Online Education Platform",
   "Research Institute",
   "Daycare Centre",
-  "Childcare Centre"
+  "Childcare Centre",
+  "Gym"
 ] as const;
 export type BusinessType = (typeof BUSINESS_TYPES)[number];
 export const BUSINESS_CATEGORY_COUNT = BUSINESS_TYPES.length;
@@ -607,7 +608,7 @@ const rules: Array<[Family, RegExp]> = [
   ["retail",/store|shop|mall|market|supermarket|department|boutique|showroom|outlet|retail|florist|stationery/],
   ["home",/plumber|electrician|carpenter|painter|mason|repair|cleaning|pest control|water purifier|solar installer|interior|architect|construction|contractor|renovation|packers|security service|gardening|landscaping|housekeeping|locksmith|cleaner|key maker/],
   ["events",/event|banquet|wedding|party|conference|exhibition|tent house|decorator|catering hall|sound and lighting/],
-  ["entertainment",/cinema|theatre|film|gaming|arcade|museum|gallery|amusement|water park|bowling|pool hall|sports|cricket|football|badminton|swimming|yoga|dance|music|art class|playground|adventure|escape room|concert/],
+  ["entertainment",/cinema|theatre|film|gaming|arcade|museum|gallery|amusement|water park|bowling|pool hall|sports|cricket|football|badminton|swimming|yoga|dance|music|art class|playground|adventure|escape room|concert|gym|fitness/],
   ["professional",/professional|agency|consult|lawyer|advocate|legal|notary|real estate|recruit|employment|marketing|public relations|graphic design|translation|coworking|shared office|business centre/],
   ["community",/religious|temple|mosque|church|gurudwara|community|ngo|charity|senior care|orphanage|crematorium|funeral|public service|government office|trade association/],
 ];
@@ -686,7 +687,7 @@ const iconOverrides: Record<string,string> = {
   "Banquet Hall":"PartyPopper","Real Estate Agency":"House","Insurance Agency":"ShieldCheck",
   "Bank":"Landmark","ATM":"CreditCard","CA Office":"Calculator","Lawyer":"Scale",
   "Digital Marketing Agency":"Megaphone","IT Services":"Laptop","Veterinary Clinic":"PawPrint",
-  "Pet Shop":"PawPrint","Sports Store":"Trophy","Sports Academy":"Trophy","Dance Academy":"Music2",
+  "Pet Shop":"PawPrint","Sports Store":"Trophy","Gym":"Dumbbell","Sports Academy":"Trophy","Dance Academy":"Music2",
   "Music School":"Music2","Art Classes":"Palette","Gaming Zone":"Gamepad2","Cinema":"Clapperboard",
 };
 const themeArt: Record<Family,string> = {
