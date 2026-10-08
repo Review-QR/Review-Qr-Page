@@ -209,7 +209,7 @@ export default function MyQrCode({
         <div className="merchant-qr-poster-frame">
           {usable ? (
             <div className="merchant-qr-poster">
-              <QrPosterPreview businessId={businessId} businessName={businessName} businessType={businessType} qrStatus={qrStatus} expiry={expiry} templateId={templateId} designAssets={designAssets} screenPreview />
+              <QrPosterPreview businessId={businessId} businessName={businessName} businessType={businessType} qrStatus={qrStatus} expiry={expiry} templateId={templateId} designAssets={designAssets} screenPreview googleReviewLink={reviewLink} />
             </div>
           ) : (
             <div className="merchant-qr-poster"><div className="merchant-qr-unavailable"><strong>QR code unavailable</strong><span>This QR is {statusLabel.toLowerCase()} and cannot be scanned right now.</span></div></div>

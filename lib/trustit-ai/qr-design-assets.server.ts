@@ -134,6 +134,16 @@ export async function getBusinessQrDesignAssets(businessId: string, businessType
   }
 }
 
+/** Read existing private artwork without generating images or writing database rows. */
+export async function getPersistedBusinessQrDesignAssets(businessId: string, businessType: string | null, revision = 0): Promise<QrDesignAssets> {
+  if (!/^[a-zA-Z0-9_-]{1,120}$/.test(businessId)) throw new Error("Invalid business for QR design assets.");
+  const safeRevision = Number.isInteger(revision) && revision >= 0 && revision < 5 ? revision : 0;
+  const mode = resolveAIImageProviderMode(process.env.TRUSTIT_AI_IMAGE_PROVIDER);
+  if (mode === "mock") return {};
+  const theme = resolveBusinessTheme(businessType);
+  return loadPersistedAssets(businessId, safeRevision, "openai", theme.id, businessType, storageFor("openai"));
+}
+
 export async function getLatestBusinessQrDesignRevision(businessId: string, businessType: string | null): Promise<number> {
   if (!/^[a-zA-Z0-9_-]{1,120}$/.test(businessId)) throw new Error("Invalid business for QR design assets.");
   if (resolveAIImageProviderMode(process.env.TRUSTIT_AI_IMAGE_PROVIDER) === "mock") return 0;
