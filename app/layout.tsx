@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import AdminNavigation from "@/app/admin-navigation";
+import { TRUSTIT_SITE_URL } from "@/lib/public-discovery-seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Review-QR",
   description: "QR Review Management Platform",
+  metadataBase: new URL(TRUSTIT_SITE_URL),
   manifest: "/manifest.webmanifest",
+  robots: { index: false, follow: false },
   verification: {
     google: [
       "3cr4sgr9Sb9KUXCZw-XkxgFRA4ogFDear6fbfMFsAGk",
