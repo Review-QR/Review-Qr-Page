@@ -484,12 +484,12 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
           const isSelected = selectedTemplate === template.id;
           return (
             <article key={template.id} className={display === "dashboard" ? `merchant-template-tile${template.ratio === "3 / 2" ? " merchant-template-tile--landscape" : ""}${isSelected ? " is-selected" : ""}` : `w-[min(84vw,360px)] shrink-0 snap-start overflow-hidden rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:w-[min(50vw,420px)] lg:w-[min(40vw,480px)] xl:w-[min(38vw,480px)] ${isSelected ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200"}`}>
-              <button type="button" onClick={() => setPreviewTemplate(template.id)} className={display === "dashboard" ? "merchant-template-tile__poster" : "relative block w-full text-left"} aria-label={`Preview ${template.name} QR design`}>
+              <button type="button" onClick={() => setPreviewTemplate(template.id)} className={display === "dashboard" ? "merchant-template-tile__poster" : "relative block w-full text-left"} aria-label={`Preview ${template.designTheme} ${template.name} QR design`}>
                 <PosterByTemplate templateId={template.id} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} designAssets={designAssets} compact />
                 {isSelected && <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-sm font-black text-white shadow" aria-label="Currently selected">✓</span>}
               </button>
               <div className={display === "dashboard" ? "" : "px-1 pb-1 pt-3"}>
-                <h3 className={display === "dashboard" ? "merchant-template-tile__name" : "font-semibold text-slate-900"}>{template.name}</h3>
+                <h3 className={display === "dashboard" ? "merchant-template-tile__name" : "font-semibold text-slate-900"}>{template.designTheme}<span className="ml-1 text-xs font-normal text-slate-500">· {template.name}</span></h3>
                 {display !== "dashboard" && <>
                   <p className="mt-0.5 text-xs text-slate-500">{template.description}</p>
                   <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{template.printSize} · {template.orientation}</p>
