@@ -613,7 +613,7 @@ const rules: Array<[Family, RegExp]> = [
 ];
 function familyFor(name: string): Family { for(const [family,pattern] of rules) if(pattern.test(name.toLowerCase())) return family; return "general"; }
 function normalize(value: string) { return value.normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9]+/g,"").trim(); }
-function slugify(value: string) { return normalize(value).replace(/and/g,"and").replace(/[^a-z0-9]+/g,"-"); }
+function slugify(value: string) { return value.normalize("NFKD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,""); }
 
 const aliasesByName: Record<string,string[]> = {
   "Salon":["saloon","hair salon","beauty salon","ladies salon","mens salon","unisex salon"],
