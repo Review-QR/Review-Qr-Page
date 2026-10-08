@@ -13,7 +13,7 @@ export type AIImageRequest = {
 
 export type GeneratedImage = {
   bytes: Uint8Array;
-  mimeType: "image/svg+xml";
+  mimeType: "image/svg+xml" | "image/png";
   width: number;
   height: number;
 };

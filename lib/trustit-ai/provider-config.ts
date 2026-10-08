@@ -13,5 +13,5 @@ export function createAIImageProvider(value: string | undefined, openAIProvider?
   const mode = resolveAIImageProviderMode(value);
   if (mode === "mock") return new MockAIImageProvider();
   if (openAIProvider?.provider === "openai") return openAIProvider;
-  throw new Error("The OpenAI image adapter is not installed. Mock mode remains the only available provider.");
+  throw new Error("The OpenAI provider must be supplied by the server runtime.");
 }
