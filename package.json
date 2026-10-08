@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "audit:public-indexability": "node scripts/verify-public-indexability.mjs"
+    "audit:public-indexability": "node scripts/verify-public-indexability.mjs",
+    "test": "node --test"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
