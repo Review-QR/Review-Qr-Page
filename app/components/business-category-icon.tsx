@@ -1,5 +1,6 @@
 "use client";
 
+const familyIcons: Record<string, string> = { food: "Utensils", retail: "Store", healthcare: "HeartPulse", education: "BookOpen", beauty: "Scissors", hospitality: "Hotel", automotive: "CarFront", home: "House", professional: "BriefcaseBusiness", finance: "WalletCards", technology: "Laptop", entertainment: "Clapperboard", travel: "Plane", events: "PartyPopper", agriculture: "Wheat", community: "UsersRound", manufacturing: "Factory", general: "Store" };
 const paths: Record<string, string[]> = {
   Store:["M3 9l1.5-5h15L21 9","M5 9v11h14V9","M3 9h18","M9 20v-6h6v6"],
   Utensils:["M3 2v7a4 4 0 0 0 4 4h0V2","M7 13v9","M21 2v20","M17 2v6a4 4 0 0 0 4 4"],
@@ -19,8 +20,9 @@ const paths: Record<string, string[]> = {
   UsersRound:["M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2","M10 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8","M20 21v-2a4 4 0 0 0-3-3.87","M16 3.13a4 4 0 0 1 0 7.75"],
   Factory:["M2 20V8l7 4V8l7 4V4h6v16Z","M18 8h.01","M18 12h.01"],
   Coffee:["M10 2v2","M14 2v2","M4 7h13v8a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V7Z","M17 9h2a2 2 0 1 1 0 4h-2"],
+  Dumbbell:["m6.5 6.5 11 11","m21 21-1-1","m3 3 1 1","M18 22l4-4","M2 6l4-4","m3 10 7-7","m4 20 7-7","m14 4 7 7","m3 17 4 4"],
 };
-export default function BusinessCategoryIcon({name,className=""}:{name:string;className?:string}) {
-  const iconPaths=paths[name]??paths.Store;
+export default function BusinessCategoryIcon({name,family="general",className=""}:{name:string;family?:string;className?:string}) {
+  const iconPaths=paths[name]??paths[familyIcons[family]??"Store"]??paths.Store;
   return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>{iconPaths.map((d,index)=><path key={index} d={d}/>)}</svg>;
 }
