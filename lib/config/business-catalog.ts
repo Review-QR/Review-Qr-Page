@@ -599,7 +599,7 @@ const rules: Array<[Family, RegExp]> = [
   ["healthcare",/clinic|hospital|medical|pharmacy|diagnostic|dental|eye care|optical|physio|nursing|blood bank|health|veterinary|ambulance|dialysis|fertility|rehabilitation|hospice|hearing|nutrition|dietitian|skin care/],
   ["education",/library|book|study|school|college|university|education|coaching|training|tuition|academy|institute|class|daycare|childcare|learning|research|test preparation/],
   ["beauty",/salon|saloon|beauty|spa|barber|hair|nail|makeup|bridal|grooming|tattoo|massage/],
-  ["automotive",/\\bcar\\b|\\bbike\\b|automobile|auto |vehicle|tyre|tractor|petrol pump|fuel station|ev charging|charging hub|driving school/],
+  ["automotive",/\bcar\b|\\bbike\b|automobile|auto |vehicle|tyre|tractor|petrol pump|fuel station|ev charging|charging hub|driving school/],
   ["agriculture",/farm|agricultur|nursery|seed|fertilizer|pesticide|animal feed|cattle feed/],
   ["manufacturing",/manufactur|wholesale|trading|industrial supplier|steel supplier|cement distributor|import export|packaging supplier/],
   ["finance",/bank|atm|finance|insurance|loan|credit|money transfer|stock broker|mutual fund|microfinance|payment centre|ca office|accounting|tax consultant|chartered accountant|financial consultant/],
