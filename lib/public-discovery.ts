@@ -21,7 +21,16 @@ const getBusinessesCached = cache(async (citySlug: string, typesKey: string): Pr
     p_city_slug: citySlug,
     p_business_types: types,
   });
-  if (error) throw new Error("Public business discovery is temporarily unavailable");
+  if (error) {
+    // Log only PostgREST diagnostics; never log request credentials or returned business data.
+    console.error("Public business discovery RPC failed", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+    throw new Error("Public business discovery is temporarily unavailable");
+  }
   const rows = (data ?? []) as Array<Record<string, unknown>>;
   const seen = new Set<string>();
   return rows.flatMap((row): DiscoveryBusiness[] => {
