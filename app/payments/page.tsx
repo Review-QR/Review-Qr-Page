@@ -150,7 +150,7 @@ export default async function PaymentsPage() {
           </div>
         </div>
         <div className="dashboard-header-actions">
-          <Link className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="/">
+          <Link className="rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50" href="/admin">
             Dashboard
           </Link>
           <div className="logout-control"><LogoutButton /></div>

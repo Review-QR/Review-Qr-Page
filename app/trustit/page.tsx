@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { discoveryMetadata } from "@/lib/public-discovery-seo";
 
 export const metadata: Metadata = {
-  title: "Trustit | QR reviews for your business",
-  description:
-    "Create a simple Trustit QR for your business, help customers reach your Google Review page, and manage scans from one business dashboard.",
+  ...discoveryMetadata({
+    title: "Trustit | QR reviews for your business",
+    description: "Create a simple Trustit QR for your business, help customers reach your Google Review page, and manage scans from one business dashboard.",
+    canonicalPath: "/trustit",
+  }),
+  robots: { index: true, follow: true },
 };
 
 const navigation = [

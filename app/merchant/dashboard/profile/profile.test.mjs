@@ -48,7 +48,7 @@ test("profile and location updates require the active signed-in merchant and ser
   assert.match(migration, /location_latitude between -90 and 90/);
   assert.match(migration, /location_longitude between -180 and 180/);
   assert.match(page, /\.eq\("id", merchant\.businessId\)[\s\S]*?\.eq\("merchant_status", "active"\)[\s\S]*?\.is\("deleted_at", null\)/);
-  assert.doesNotMatch(await read("../../../../lib/merchant-auth.ts"), /location_latitude/);
+  assert.match(await read("../../../../lib/merchant-auth.ts"), /location_latitude/);
 });
 
 test("My Business edits only supported fields through the authenticated merchant profile RPC", async () => {

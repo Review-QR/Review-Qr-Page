@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const ADMIN_LINKS = [
-  { label: "Dashboard", href: "/" },
+  { label: "Dashboard", href: "/admin" },
   { label: "Businesses", href: "/businesses" },
   { label: "QR Codes", href: "/qr-codes" },
   { label: "Payments", href: "/payments" },
@@ -13,11 +13,7 @@ const ADMIN_LINKS = [
 ] as const;
 
 function isAdminPath(pathname: string) {
-  return ADMIN_LINKS.some(({ href }) =>
-    href === "/"
-      ? pathname === href
-      : pathname === href || pathname.startsWith(`${href}/`),
-  );
+  return ADMIN_LINKS.some(({ href }) => pathname === href || pathname.startsWith(`${href}/`));
 }
 
 export default function AdminNavigation() {
@@ -29,7 +25,7 @@ export default function AdminNavigation() {
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur">
       <div className="mx-auto flex max-w-[1480px] flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
         <Link
-          href="/"
+          href="/admin"
           className="flex w-fit items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
           aria-label="Review-QR Admin Dashboard"
         >
@@ -51,10 +47,7 @@ export default function AdminNavigation() {
           className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-0.5 sm:-mx-6 sm:px-6 lg:mx-0 lg:max-w-[calc(100%-190px)] lg:justify-end lg:px-0"
         >
           {ADMIN_LINKS.map(({ label, href }) => {
-            const active =
-              href === "/"
-                ? pathname === href
-                : pathname === href || pathname.startsWith(`${href}/`);
+            const active = pathname === href || pathname.startsWith(`${href}/`);
 
             return (
               <Link

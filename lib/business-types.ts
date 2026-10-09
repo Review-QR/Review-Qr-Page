@@ -18,6 +18,8 @@ export const BUSINESS_TYPES = [
   "Clothing Store",
   "Footwear Store",
   "Electronics Store",
+  "Furniture Store",
+  "Jewelry Store",
   "Mobile & Accessories",
   "Hardware Store",
   "Pharmacy",

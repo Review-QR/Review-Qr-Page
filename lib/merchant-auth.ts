@@ -10,6 +10,17 @@ export type MerchantContext = {
   registeredMobile: string | null;
   businessType: string | null;
   address: string | null;
+  locality: string | null;
+  city: string | null;
+  district: string | null;
+  state: string | null;
+  pincode: string | null;
+  discoveryLocationVerifiedAt: string | null;
+  discoveryLocationVerifiedBy: string | null;
+  discoveryLocationVerificationSource: string | null;
+  locationLatitude: number | null;
+  locationLongitude: number | null;
+  locationCapturedAt: string | null;
   businessStatus: string | null;
   merchantStatus: string;
   plan: string | null;
@@ -37,7 +48,7 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
 
     const { data: business, error: businessError } = await supabase
       .from("businesses")
-      .select("id, name, owner, phone, type, address, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, deleted_at")
+      .select("id, name, owner, phone, type, address, locality, city, district, state, pincode, discovery_location_verified_at, discovery_location_verified_by, discovery_location_verification_source, location_latitude, location_longitude, location_captured_at, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, deleted_at")
       .eq("id", mapping.business_id)
       .eq("merchant_status", "active")
       .is("deleted_at", null)
@@ -51,6 +62,17 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
       registeredMobile: business.phone,
       businessType: business.type,
       address: business.address,
+      locality: business.locality,
+      city: business.city,
+      district: business.district,
+      state: business.state,
+      pincode: business.pincode,
+      discoveryLocationVerifiedAt: business.discovery_location_verified_at,
+      discoveryLocationVerifiedBy: business.discovery_location_verified_by,
+      discoveryLocationVerificationSource: business.discovery_location_verification_source,
+      locationLatitude: typeof business.location_latitude === "number" ? business.location_latitude : null,
+      locationLongitude: typeof business.location_longitude === "number" ? business.location_longitude : null,
+      locationCapturedAt: business.location_captured_at,
       businessStatus: business.status,
       merchantStatus: business.merchant_status,
       plan: business.plan,
