@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import type { DiscoveryBusiness } from "@/lib/public-discovery-domain";
 
-export const TRUSTIT_SITE_URL = "https://review-qr-page.vercel.app";
+export const TRUSTIT_SITE_URL = "https://trustitreview.com";
 export const discoveryTitle = (slug: string) => slug.split("-").filter(Boolean).map((part) => part[0]?.toUpperCase() + part.slice(1)).join(" ");
 export const publicUrl = (path: string) => new URL(path, TRUSTIT_SITE_URL).toString();
 

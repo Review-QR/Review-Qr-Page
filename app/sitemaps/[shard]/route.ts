@@ -10,10 +10,17 @@ export async function GET(_request: Request, context: { params: Promise<{ shard:
   const shardId = Number(match[1]);
   if (!Number.isSafeInteger(shardId)) return new Response("Not Found", { status: 404 });
 
-  const entryCount = await getPublicSitemapEntryCount();
-  if (shardId >= sitemapShardCount(entryCount)) return new Response("Not Found", { status: 404 });
-  const entries = await getPublicSitemapEntries(shardId * SITEMAP_PAGE_SIZE, SITEMAP_PAGE_SIZE);
-  return new Response(buildSitemapUrlsetXml(entries, shardId === 0), {
-    headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": PUBLIC_SITEMAP_CACHE_CONTROL },
-  });
+  try {
+    const entryCount = await getPublicSitemapEntryCount();
+    if (shardId >= sitemapShardCount(entryCount)) return new Response("Not Found", { status: 404 });
+    const entries = await getPublicSitemapEntries(shardId * SITEMAP_PAGE_SIZE, SITEMAP_PAGE_SIZE);
+    return new Response(buildSitemapUrlsetXml(entries, shardId === 0), {
+      headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": PUBLIC_SITEMAP_CACHE_CONTROL },
+    });
+  } catch {
+    return new Response("Sitemap temporarily unavailable", {
+      status: 503,
+      headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Retry-After": "60" },
+    });
+  }
 }

@@ -76,7 +76,7 @@ export default function DeletedMerchantManagement({ merchants }: { merchants: De
         <div className="dashboard-brand"><div className="brand-mark" aria-hidden="true">QR</div><div><p className="brand-kicker">Review-QR · ADMIN</p><h1>Deleted Merchants</h1><p className="dashboard-subtitle">Restore accounts or permanently remove them and their associated records.</p></div></div>
         <div className="dashboard-header-actions flex-wrap">
           <Link href="/merchants" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Active Merchants</Link>
-          <Link href="/" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Dashboard</Link>
+          <Link href="/admin" className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Dashboard</Link>
           <div className="logout-control"><LogoutButton /></div>
         </div>
       </header>

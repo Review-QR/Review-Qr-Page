@@ -7,8 +7,8 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       disallow: [
-        "/admin", "/businesses", "/business-categories", "/merchant", "/merchants", "/login", "/register",
-        "/payments", "/analytics", "/qr-codes", "/api/",
+        "/admin", "/businesses", "/business-categories", "/merchant", "/merchant-preview", "/merchants", "/login", "/register",
+        "/payments", "/analytics", "/qr-codes", "/api/", "/r/",
       ],
     }],
     sitemap: `${TRUSTIT_SITE_URL}/sitemap.xml`,

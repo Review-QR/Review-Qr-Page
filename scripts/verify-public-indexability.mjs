@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 
-const base = new URL(process.env.TRUSTIT_AUDIT_BASE_URL ?? "https://review-qr-page.vercel.app");
+const base = new URL(process.env.TRUSTIT_AUDIT_BASE_URL ?? "https://trustitreview.com");
 const privateMarkers = /customer_mobile|customer_name|birthday|anniversary|family_member|service_role|trustit_reviews|business_id|\b[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}\b/i;
 const xmlUnescape = (value) => value.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'");
 
@@ -72,7 +72,12 @@ function assertIndexablePage(page, path) {
 const checkedCanonicals = new Set();
 const root = await get("/");
 assert.equal(root.response.status, 200, "/: expected HTTP 200");
-assertNoindex(root, "/ (admin root)");
+assertIndexablePage(root, "/");
+assert.match(root.body, /Search local businesses/i, "/: public discovery homepage is missing");
+
+const admin = await get("/admin");
+assertNoindex(admin, "/admin");
+assert.ok(admin.response.status < 500, "/admin: protected route should render or redirect safely");
 
 for (const path of ["/login", "/merchant/login", "/merchant/dashboard"]) {
   const page = await get(path);
@@ -134,7 +139,7 @@ for (const path of [
 const robotsResponse = await get("/robots.txt");
 assert.equal(robotsResponse.response.status, 200, "/robots.txt: expected HTTP 200");
 assert.match(robotsResponse.response.headers.get("content-type") ?? "", /^text\/plain(?:;|$)/i, "/robots.txt: unexpected Content-Type");
-assert.match(robotsResponse.body, /Sitemap:\s*https:\/\/review-qr-page\.vercel\.app\/sitemap\.xml/i);
+assert.match(robotsResponse.body, /Sitemap:\s*https:\/\/trustitreview\.com\/sitemap\.xml/i);
 assert.equal([...robotsResponse.body.matchAll(/^Sitemap:\s*(.+)$/gim)].length, 1, "/robots.txt: expected one sitemap reference");
 assert.doesNotMatch(robotsResponse.body, /^Disallow:\s*\/(?:sitemap\.xml|sitemaps)(?:\/|\s|$)/im, "/robots.txt blocks the public sitemap");
 for (const privatePath of ["/admin", "/merchant", "/businesses", "/login", "/api/"]) {
@@ -192,7 +197,8 @@ for (let index = 0; index < sitemapLocations.length; index += 4) {
       assert.equal(url.protocol, "https:", "sitemap URL is not HTTPS");
       assert.equal(url.host, base.host, "sitemap URL uses a non-canonical host");
       const segments = url.pathname.split("/").filter(Boolean);
-      assert.ok(url.pathname === "/trustit" || segments.length === 2 || segments.length === 3, `private or invalid route in sitemap: ${url.pathname}`);
+      const publicStaticPaths = new Set(["/", "/trustit", "/about", "/contact", "/pricing", "/privacy-policy", "/refund-policy", "/terms"]);
+      assert.ok(publicStaticPaths.has(url.pathname) || segments.length === 2 || segments.length === 3, `private or invalid route in sitemap: ${url.pathname}`);
       assert.equal(url.search, "", `query URL in sitemap: ${url.pathname}`);
       assert.equal(url.hash, "", `fragment URL in sitemap: ${url.pathname}`);
       assert.equal(seenUrls.has(url.href), false, `duplicate URL in sitemap: ${url.pathname}`);
@@ -203,6 +209,7 @@ for (let index = 0; index < sitemapLocations.length; index += 4) {
 assert.ok(seenUrls.has(new URL(listingPath, base).href), "eligible listing missing from sitemap");
 assert.ok(seenUrls.has(new URL(profilePath, base).href), "eligible profile missing from sitemap");
 assert.ok(seenUrls.has(new URL(trustitPath, base).href), "public Trustit landing page missing from sitemap");
+assert.ok(seenUrls.has(new URL("/", base).href), "public homepage missing from sitemap");
 if (emptyCategoryHasNoResults) assert.equal(seenUrls.has(new URL(emptyPath, base).href), false, "empty noindex category was included in sitemap");
 
 console.log(`Production indexability audit passed: ${checkedCanonicals.size} indexable canonical pages, ${sitemapLocations.length} sitemap shards, ${seenUrls.size} unique public URLs.`);
