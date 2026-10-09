@@ -15,6 +15,7 @@ export type CheckoutOrderActionResult =
       orderId: string;
       paymentSessionId: string;
       verificationToken: string;
+      checkoutMode: "sandbox" | "production";
     }
   | { success: false; message: string };
 
@@ -61,6 +62,7 @@ export async function createMerchantCheckoutOrder(
       orderId: order.orderId,
       paymentSessionId: order.paymentSessionId,
       verificationToken: order.verificationToken,
+      checkoutMode: order.environment,
     };
   } catch {
     return {
