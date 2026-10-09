@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { appConfig } from "@/lib/config";
+import { isPublicDiscoveryLocationComplete } from "@/lib/business-location";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import MyQrCode from "./my-qr-code";
 import ScanAnalytics from "./scan-analytics";
 import QrTemplateGallery from "./qr/qr-template-gallery";
+import { getPersistedBusinessQrDesignAssets } from "@/lib/trustit-ai/qr-design-assets.server";
 import { qrTemplates } from "./qr/templates";
 import ReviewCard from "./review-card";
 
@@ -83,6 +85,25 @@ const actions = [
 
 export default async function MerchantDashboardPage() {
   const merchant = await requireActiveMerchant();
+  let designAssets: Awaited<ReturnType<typeof getPersistedBusinessQrDesignAssets>> | undefined;
+  let designAssetError: string | undefined;
+  try {
+    designAssets = await getPersistedBusinessQrDesignAssets(merchant.businessId, merchant.businessType);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    const openAiStatus = /^OpenAI image generation failed \((\d{3})\)\.$/.exec(message)?.[1];
+    const failureCategory = openAiStatus
+      ? `OpenAI HTTP ${openAiStatus}`
+      : /Unable to load saved QR design assets/.test(message)
+        ? "Supabase asset lookup"
+        : /Unable to persist QR design metadata/.test(message)
+          ? "Supabase asset metadata write"
+          : /Server-side Supabase Auth administration is not configured/.test(message)
+            ? "Supabase service secret missing"
+            : error instanceof Error ? error.name : "UnknownError";
+    console.error("Trustit QR artwork unavailable while rendering merchant dashboard", failureCategory);
+    designAssetError = "Custom artwork is temporarily unavailable. Your QR code and standard poster designs are still ready.";
+  }
   const supabase = await createMerchantServerClient();
   const [statsResult, activityResult, reviewsResult, subscriptionResult, paymentsResult] = await Promise.all([
     supabase.rpc("get_merchant_dashboard_stats", { p_business_id: merchant.businessId }),
@@ -114,6 +135,11 @@ export default async function MerchantDashboardPage() {
   const ownerName = merchant.ownerName?.trim() || "Merchant";
   const ownerInitials = ownerName.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "M";
   const categoryIcon = /(sweet|mithai|bakery|cake|dessert|food|restaurant|cafe)/i.test(businessType) ? "✿" : /(medical|clinic|doctor|health)/i.test(businessType) ? "+" : "✦";
+  const publicLocationComplete = isPublicDiscoveryLocationComplete({
+    type: merchant.businessType, locality: merchant.locality, city: merchant.city,
+    district: merchant.district, state: merchant.state, pincode: merchant.pincode,
+    verifiedAt: merchant.discoveryLocationVerifiedAt,
+  });
 
   return (
     <div className="merchant-dashboard-page">
@@ -125,6 +151,8 @@ export default async function MerchantDashboardPage() {
         </div>
       </section>
 
+      {!publicLocationComplete ? <section aria-labelledby="complete-public-location-title" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-5"><div><p className="text-xs font-bold uppercase tracking-wider text-orange-800">Get discovered locally</p><h2 id="complete-public-location-title" className="mt-1 text-lg font-bold text-slate-950">Complete Public Profile</h2><p className="mt-1 text-sm text-slate-700">Complete your public location to appear in Trustit local search. This does not affect your QR or review features.</p></div><Link href="/merchant/dashboard/business#public-discovery-location" className="inline-flex min-h-11 items-center rounded-xl bg-[#a64c05] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#873d03]">Complete Location</Link></section> : null}
+
       <section aria-label="Merchant statistics" className="merchant-stats">
         <StatCard tone="green" icon="qr" label="Total Scans" value={stats ? count(stats.total_scans).toLocaleString("en-IN") : "—"} detail="All-time QR scans" />
         <StatCard tone="amber" icon="bars" label="This Month’s Scans" value={stats ? count(stats.this_month_scans).toLocaleString("en-IN") : "—"} detail="Current month activity" />
@@ -135,10 +163,10 @@ export default async function MerchantDashboardPage() {
       {!statsResult.error && !stats ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800" role="status">Dashboard analytics are not available for this merchant account.</p> : null}
 
       <div className="merchant-workspace">
-        <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} />
+        <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} designAssets={designAssets} />
         <section className="merchant-template-panel merchant-template-panel--compact" id="template-gallery" aria-labelledby="merchant-template-title">
           <header><span className="merchant-template-panel__icon" aria-hidden="true">✿</span><div><h2 id="merchant-template-title">Choose a QR Template</h2><p>Pick a design that matches your business style.</p></div></header>
-          <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" />
+          <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" initialDesignAssets={designAssets} initialDesignError={designAssetError} googleReviewLink={merchant.reviewLink} />
         </section>
       </div>
 

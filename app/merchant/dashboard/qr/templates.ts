@@ -15,16 +15,17 @@ export function isQrTemplateId(value: string): value is QrTemplateId {
 export const qrTemplates: Array<{
   id: QrTemplateId;
   name: string;
+  designTheme: "Luxury" | "Modern" | "Nature" | "Heritage" | "Minimal";
   description: string;
   printSize: "4 × 6 in" | "6 × 4 in";
   orientation: "Portrait" | "Landscape";
   ratio: "2 / 3" | "3 / 2";
 }> = [
-  { id: "template_1", name: "Classic Portrait", description: "Warm portrait layout with a centered QR", printSize: "4 × 6 in", orientation: "Portrait", ratio: "2 / 3" },
-  { id: "template_2", name: "Elegant Portrait", description: "Premium dark portrait layout", printSize: "4 × 6 in", orientation: "Portrait", ratio: "2 / 3" },
-  { id: "template_3", name: "Fresh Portrait", description: "Clean, light portrait layout", printSize: "4 × 6 in", orientation: "Portrait", ratio: "2 / 3" },
-  { id: "template_4", name: "Local Landscape", description: "Compact landscape layout with side QR", printSize: "6 × 4 in", orientation: "Landscape", ratio: "3 / 2" },
-  { id: "template_5", name: "Modern Landscape", description: "Polished landscape layout with side QR", printSize: "6 × 4 in", orientation: "Landscape", ratio: "3 / 2" },
+  { id: "template_1", name: "Classic Portrait", designTheme: "Luxury", description: "Warm portrait layout with a centered QR", printSize: "4 × 6 in", orientation: "Portrait", ratio: "2 / 3" },
+  { id: "template_2", name: "Elegant Portrait", designTheme: "Modern", description: "Premium dark portrait layout", printSize: "4 × 6 in", orientation: "Portrait", ratio: "2 / 3" },
+  { id: "template_3", name: "Fresh Portrait", designTheme: "Nature", description: "Clean, light portrait layout", printSize: "4 × 6 in", orientation: "Portrait", ratio: "2 / 3" },
+  { id: "template_4", name: "Local Landscape", designTheme: "Heritage", description: "Compact landscape layout with side QR", printSize: "6 × 4 in", orientation: "Landscape", ratio: "3 / 2" },
+  { id: "template_5", name: "Modern Landscape", designTheme: "Minimal", description: "Polished landscape layout with side QR", printSize: "6 × 4 in", orientation: "Landscape", ratio: "3 / 2" },
 ];
 
 export function getQrTemplatePrintDimensions(templateId: QrTemplateId) {

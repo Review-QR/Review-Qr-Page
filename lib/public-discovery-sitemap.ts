@@ -3,6 +3,7 @@ import type { PublicSitemapEntry } from "./public-discovery.ts";
 
 export const SITEMAP_PAGE_SIZE = 20000;
 export const PUBLIC_SITEMAP_CACHE_CONTROL = "public, max-age=0, s-maxage=300, stale-while-revalidate=600";
+export const TRUSTIT_STATIC_PUBLIC_PATHS = ["/", "/trustit", "/pricing", "/privacy-policy", "/terms", "/refund-policy", "/contact", "/about"] as const;
 
 const escapeXml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;").replace(/'/g, "&apos;");
 const segment = (value: string) => encodeURIComponent(value);
@@ -19,8 +20,9 @@ export function buildSitemapIndexXml(entryCount: number) {
 
 export function buildSitemapUrlsetXml(entries: PublicSitemapEntry[], includeTrustitLandingPage = false) {
   const urls = new Set<string>();
-  if (includeTrustitLandingPage) urls.add(`${TRUSTIT_SITE_URL}/`);
-  if (includeTrustitLandingPage) urls.add(`${TRUSTIT_SITE_URL}/trustit`);
+  if (includeTrustitLandingPage) {
+    for (const path of TRUSTIT_STATIC_PUBLIC_PATHS) urls.add(`${TRUSTIT_SITE_URL}${path}`);
+  }
   for (const entry of entries) {
     const categoryPath = `/${segment(entry.citySlug)}/${segment(entry.categorySlug)}`;
     if (entry.categoryFirst) urls.add(`${TRUSTIT_SITE_URL}${categoryPath}`);

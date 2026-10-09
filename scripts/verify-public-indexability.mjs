@@ -197,7 +197,8 @@ for (let index = 0; index < sitemapLocations.length; index += 4) {
       assert.equal(url.protocol, "https:", "sitemap URL is not HTTPS");
       assert.equal(url.host, base.host, "sitemap URL uses a non-canonical host");
       const segments = url.pathname.split("/").filter(Boolean);
-      assert.ok(url.pathname === "/" || url.pathname === "/trustit" || segments.length === 2 || segments.length === 3, `private or invalid route in sitemap: ${url.pathname}`);
+      const publicStaticPaths = new Set(["/", "/trustit", "/about", "/contact", "/pricing", "/privacy-policy", "/refund-policy", "/terms"]);
+      assert.ok(publicStaticPaths.has(url.pathname) || segments.length === 2 || segments.length === 3, `private or invalid route in sitemap: ${url.pathname}`);
       assert.equal(url.search, "", `query URL in sitemap: ${url.pathname}`);
       assert.equal(url.hash, "", `fragment URL in sitemap: ${url.pathname}`);
       assert.equal(seenUrls.has(url.href), false, `duplicate URL in sitemap: ${url.pathname}`);

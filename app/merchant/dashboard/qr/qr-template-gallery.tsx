@@ -2,10 +2,18 @@
 
 import { useRef, useState, useTransition } from "react";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl, trustitAppOrigin } from "@/lib/trustit-qr";
+import { resolveBusinessTheme } from "@/lib/trustit-ai/qr-design-theme";
+import { getBusinessCategory, QR_DESIGN_THEMES } from "@/lib/config/business-catalog";
+import BusinessCategoryIcon from "@/app/components/business-category-icon";
+import { safeReviewLink } from "@/lib/safe-review-link";
+import type { UnifiedBusinessCategory } from "@/lib/business-category-catalog";
+import type { QrDesignAsset, QrDesignAssets } from "@/lib/trustit-ai/provider-contracts";
 import { saveQrTemplateAction } from "./actions";
+import { regenerateQrDesignAction } from "./regenerate-design-action";
 import { getQrTemplateFilename, getQrTemplatePrintCss, getQrTemplatePrintDimensions, qrTemplates, type QrTemplateId } from "./templates";
 
 type ExportAction = "png" | "pdf" | "print";
+type OutputFormat = "print" | "digital";
 
 type Props = {
   businessId: string;
@@ -14,7 +22,12 @@ type Props = {
   qrStatus: string | null;
   expiry: string | null;
   initialTemplate: string;
+  initialDesignAssets?: QrDesignAssets;
+  initialDesignRevision?: number;
+  initialDesignError?: string;
   display?: "carousel" | "dashboard";
+  googleReviewLink?: string | null;
+  categoryConfig?: UnifiedBusinessCategory | null;
 };
 
 function TrustitMark({ templateId, className = "", compact = false }: { templateId: QrTemplateId; className?: string; compact?: boolean }) {
@@ -46,95 +59,44 @@ function FiveStars({ dark = false, compact = false }: { dark?: boolean; compact?
   return <span className={`font-bold tracking-[0.12em] text-amber-500 ${dark ? "text-amber-300" : ""} ${compact ? "text-sm" : "text-xl"}`} aria-label="Five stars">★★★★★</span>;
 }
 
-type CategoryArtKind = "food" | "hotel" | "laundry" | "retail" | "salon" | "universal";
+type CategoryArtKind = import("@/lib/trustit-ai/qr-design-theme").QrArtworkKind;
 
 type BusinessCategoryProfile = {
   label: string;
   message: string;
   artKind: CategoryArtKind;
+  iconName: string;
+  designFamily: string;
+  qrIcons: string[];
+  themeDetails: Array<{ palette: readonly string[]; backgroundArtDirection: string; experiences: Array<{ label: string; icon: string }> }>;
+  experiences: Array<{ label: string; icon: string }>;
+  palette: readonly string[];
+  backgroundArtDirection: string;
 };
 
-function getBusinessCategoryProfile(businessType: string | null): BusinessCategoryProfile {
-  const value = String(businessType ?? "").trim().toLowerCase();
-
-  if (/(sweet|mithai|bakery|cake|dessert|restaurant|food|cafe|cafeteria|dhaba|bistro|fast food)/.test(value)) {
-    if (/(sweet|mithai|bakery|cake|dessert)/.test(value)) {
-      return { label: "Sweet Shop · Sweets & Treats", message: "Loved our sweets? Tell us about your experience.", artKind: "food" };
-    }
-    if (/(cafe|cafeteria|dhaba|bistro|fast food)/.test(value)) {
-      return { label: "Cafe · Food & Dining", message: "Loved your visit? Tell us how we did.", artKind: "food" };
-    }
-    return { label: "Restaurant · Dining", message: "Loved your meal? Tell us how we did.", artKind: "food" };
-  }
-
-  if (/(hotel|stay|resort|lodge|guest house|homestay|hospitality)/.test(value)) {
-    return { label: "Hotel · Stay · Hospitality", message: "Thank you for staying with us. How was your visit?", artKind: "hotel" };
-  }
-
-  if (/(laundry|dry clean|dry-clean|cleaning|wash)/.test(value)) {
-    return { label: "Laundry · Fresh Care", message: "Fresh clothes, fresh feedback. Share your experience.", artKind: "laundry" };
-  }
-
-  if (/(salon|beauty|spa|parlour|parlor|barber|hair)/.test(value)) {
-    return { label: "Salon · Beauty · Care", message: "Loved your new look? We’d love your honest feedback.", artKind: "salon" };
-  }
-
-  if (/(retail|shop|store|grocery|market|supermarket|pan shop|stationery|boutique)/.test(value)) {
-    return { label: "Retail · Shop Local", message: "Thanks for shopping with us. Tell us about your experience.", artKind: "retail" };
-  }
-
-  return { label: "Customer Experience", message: "Thank you for visiting us. We’d love your feedback.", artKind: "universal" };
+function getBusinessCategoryProfile(businessType: string | null, categoryConfig?: UnifiedBusinessCategory | null): BusinessCategoryProfile {
+  const theme = resolveBusinessTheme(businessType);
+  const category = categoryConfig ?? getBusinessCategory(businessType);
+  const selectedTheme = category?.themes[0];
+  const custom = Boolean(categoryConfig && !getBusinessCategory(businessType));
+  return { label: custom ? categoryConfig!.name : theme.posterLabel, message: custom ? `Your experience with ${categoryConfig!.name} matters to us. Please share your honest feedback.` : theme.posterMessage, artKind: theme.artKind, iconName: category?.primaryIcon ?? "Store", designFamily: category?.designFamily ?? "general", qrIcons: categoryConfig?.qrIcons ?? [category?.primaryIcon ?? "Store", category?.experiences[0]?.icon ?? "Star", category?.experiences[1]?.icon ?? "Sparkles"], themeDetails: category?.themes ?? [], experiences: selectedTheme?.experiences ?? [], palette: selectedTheme?.palette ?? ["#f8fafc", "#dbeafe", "#1e3a8a"], backgroundArtDirection: selectedTheme?.backgroundArtDirection ?? "Clean local business details" };
 }
 
-function CategoryArt({ kind, className = "" }: { kind: CategoryArtKind; className?: string }) {
-  const line = { fill: "none", stroke: "currentColor", strokeWidth: 3, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-  if (kind === "food") return (
-    <svg aria-hidden="true" viewBox="0 0 170 100" className={className}>
-      <circle cx="92" cy="54" r="30" fill="#fffdf8" stroke="currentColor" strokeWidth="3" opacity=".95" />
-      <path d="M66 54h52M92 28c-10 10-15 20-15 30s5 20 15 26c10-6 15-16 15-26s-5-20-15-30Z" fill="none" stroke="currentColor" strokeWidth="2.5" opacity=".45" />
-      <path d="M72 49c10-11 29-11 40 0-10 12-30 12-40 0Z" fill="#d18b4a" opacity=".9" />
-      <path d="M25 18v63m-7-63v20c0 7 14 7 14 0V18m-7 20v43m74-63v19m0-19c8 7 12 15 12 24m0 0v39" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      <path d="M125 30c8-7 17-7 23 0v25h-23Zm0 25h23m-12-25v25" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-    </svg>
-  );
-  if (kind === "hotel") return (
-    <svg aria-hidden="true" viewBox="0 0 170 100" className={className}>
-      <path d="M17 77V35h13v25h109V44c0-8 6-14 14-14h2v47M30 57c0-10 7-17 17-17h17c8 0 14 6 14 14v6H30Zm51 0c0-10 7-17 17-17h24c6 0 10 5 10 11v9H81Z" fill="#fff8e9" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="M38 49h21c6 0 10 4 10 9H38Zm51 0h25c3 0 5 3 5 7H89Z" fill="#bad7d1" />
-      <path d="M25 79v10m132-10v10M126 29V12h22v17m-19-11h16" {...line} />
-      <path d="M12 94h148" {...line} opacity=".45" />
-    </svg>
-  );
-  if (kind === "laundry") return (
-    <svg aria-hidden="true" viewBox="0 0 160 110" className={className}>
-      <rect x="13" y="8" width="72" height="92" rx="10" fill="#f8fdff" stroke="currentColor" strokeWidth="3" />
-      <path d="M14 29h70" {...line} /><circle cx="30" cy="19" r="3" fill="currentColor" /><circle cx="42" cy="19" r="3" fill="currentColor" /><circle cx="49" cy="64" r="26" fill="#d7eff8" stroke="currentColor" strokeWidth="3" /><circle cx="49" cy="64" r="16" fill="#fff" stroke="currentColor" strokeWidth="2" /><path d="M32 68c6-7 11-7 17 0s11 7 17 0m-35-9c6-6 11-6 17 0s11 6 17 0" {...line} opacity=".55" />
-      <path d="M100 82h48v17h-48zm5-17h43v14h-43zm5-15h36v12h-36z" fill="#fff" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="m115 55 10 8 9-8" {...line} /><circle cx="114" cy="18" r="6" fill="#fff" stroke="currentColor" strokeWidth="2" /><circle cx="134" cy="27" r="4" fill="#fff" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-  if (kind === "retail") return (
-    <svg aria-hidden="true" viewBox="0 0 190 120" className={className}>
-      <path d="M25 46h115l-10 58H39Z" fill="#fff" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /><path d="M18 43h128l-10-24H29Z" fill="#f4c86c" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /><path d="M45 20v24m27-24v24m27-24v24m27-24v24" {...line} />
-      <path d="M52 57h17v19H52zm28-5h18v24H80zm29 6h17v18h-17z" fill="#a6ccbb" stroke="currentColor" strokeWidth="2" />
-      <path d="M43 104h77m-65 0a9 9 0 1 0 18 0m29 0a9 9 0 1 0 18 0m-2-55 15 6" {...line} />
-      <path d="m153 33 19 8v41l-19 9-19-9V41Z" fill="#fff1e2" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" /><path d="M145 42c0-13 16-13 16 0m-10 35 5 4 8-9" {...line} />
-    </svg>
-  );
-  if (kind === "salon") return (
-    <svg aria-hidden="true" viewBox="0 0 190 120" className={className}>
-      <path d="M38 108V28h75v80m-86 0h96" fill="#fff" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" /><path d="M52 42h47v43H52z" fill="#fbe2df" stroke="currentColor" strokeWidth="3" /><path d="M62 52h27v25H62z" fill="#d5e7e1" stroke="currentColor" strokeWidth="2" />
-      <path d="m129 24 28 17-26 43-28-17Zm-11 52-22 34m16-9 11 7m-4-27 11 7" fill="#f8c7bf" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
-      <path d="m24 37 21 9m-3-16 4 29m0-29-4 29m-7-23 14 2m-15 8 16 2" {...line} /><path d="M139 91h28v17h-28z" fill="#e8c6a0" stroke="currentColor" strokeWidth="3" /><path d="M145 90c0-10 16-10 16 0" {...line} />
-    </svg>
-  );
+function CategoryIcon({ iconName, designFamily, className = "" }: { iconName: string; designFamily: string; className?: string }) {
+  return <BusinessCategoryIcon name={iconName} family={designFamily} className={className} />;
+}
+function CategoryArt({ iconName, designFamily, designAsset, experiences = [], qrIcons = [], palette, variation = 0, compact = false, className = "" }: { iconName: string; designFamily: string; designAsset?: QrDesignAsset; experiences?: Array<{ label: string; icon: string }>; qrIcons?: string[]; palette?: readonly string[]; variation?: number; compact?: boolean; className?: string }) {
+  const colors = palette?.length ? palette : ["#f8fafc", "#dbeafe", "#1e3a8a"];
+  const angle = 35 + ((variation % 4) * 25);
   return (
-    <svg aria-hidden="true" viewBox="0 0 190 120" className={className}>
-      <path d="M28 102V48h134v54M18 102h154M42 48V28h34v20m38 0V28h34v20" fill="none" stroke="currentColor" strokeWidth="4" strokeLinejoin="round" />
-      <path d="M51 68h26v24H51zm36 0h26v24H87zm36 0h16v24h-16z" fill="currentColor" opacity=".15" stroke="currentColor" strokeWidth="2" />
-      <circle cx="145" cy="31" r="9" fill="#fff" stroke="currentColor" strokeWidth="3" />
-      <path d="M141 31h8m-4-4v8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-    </svg>
+    <span title={designAsset ? undefined : `Procedural category artwork: ${designFamily}`} style={designAsset ? undefined : { background: `linear-gradient(${angle}deg, ${colors.join(", ")})` }} className={`relative inline-flex shrink-0 items-center justify-center gap-1 overflow-hidden rounded-lg ${className}`}>
+      {designAsset?.url
+        ? <img src={designAsset.url} alt="" aria-hidden="true" data-qr-design-background="true" className="absolute inset-0 h-full w-full object-cover" />
+        : <CategoryIcon iconName={iconName} designFamily={designFamily} className={`relative z-10 shrink-0 drop-shadow-sm ${compact ? "h-5 w-5" : "h-10 w-10"}`} />}
+      {designAsset?.url && <span aria-hidden="true" className="absolute bottom-1 right-1 rounded-full bg-white/90 p-1 shadow-sm"><CategoryIcon iconName={iconName} designFamily={designFamily} className="h-4 w-4 text-slate-700" /></span>}
+      {qrIcons.slice(0, 3).map((icon, index) => <span key={`qr-${icon}-${index}`} title="Category QR icon" className={`relative z-10 grid shrink-0 place-items-center rounded-full bg-white/90 shadow-sm ${compact ? "h-4 w-4 p-0.5" : "h-7 w-7 p-1"}`}><CategoryIcon iconName={icon} designFamily={designFamily} className="h-full w-full" /></span>)}
+      {experiences.slice(0, 3).map((experience) => <span key={experience.label} title={experience.label} className={`relative z-10 grid shrink-0 place-items-center rounded-full bg-white/85 shadow-sm ${compact ? "h-4 w-4 p-0.5" : "h-8 w-8 p-1"}`}><CategoryIcon iconName={experience.icon} designFamily={designFamily} className="h-full w-full" /></span>)}
+    </span>
   );
 }
 
@@ -154,92 +116,113 @@ function BusinessName({ name, dark = false, landscape = false, compact = false }
   >{name}</h3>;
 }
 
-function ReviewQr({ url, usable, businessName, compact = false, landscape = false }: { url: string; usable: boolean; businessName: string; compact?: boolean; landscape?: boolean }) {
+function ReviewQr({ url, usable, businessName, templateId, compact = false, landscape = false, digital = false }: { url: string; usable: boolean; businessName: string; templateId: QrTemplateId; compact?: boolean; landscape?: boolean; digital?: boolean }) {
   const size = compact
-    ? landscape ? "h-20 w-20 sm:h-24 sm:w-24" : "h-28 w-28"
+    ? "h-16 w-16"
+    : digital ? "h-36 w-36"
     : landscape ? "h-36 w-36 sm:h-44 sm:w-44" : "h-52 w-52 sm:h-56 sm:w-56";
+  const frameStyle = {
+    template_1: "border-[#c9a65e] ring-2 ring-[#ead9ad]",
+    template_2: "border-slate-300 rounded-lg",
+    template_3: "border-emerald-200 rounded-[1.35rem]",
+    template_4: "border-[#b57936] ring-1 ring-[#e7c58e]",
+    template_5: "border-slate-200 rounded-md",
+  }[templateId];
   return (
-    <div className={`relative z-30 isolate inline-flex shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white shadow-md ring-1 ring-slate-900/10 ${compact ? "p-2" : "p-3"}`}>
+    <div className={`relative z-30 isolate inline-flex shrink-0 items-center justify-center border bg-white shadow-md ring-1 ring-slate-900/10 ${frameStyle} ${compact ? "p-1.5" : "p-3"}`}>
       {usable && url ? <img src={url} alt={`Trustit review QR for ${businessName}`} className={`${size} block max-w-full object-contain`} /> : <div className={`${size} flex items-center justify-center bg-slate-50 p-3 text-center text-xs font-medium text-slate-600`}>QR unavailable while the business is inactive or expired</div>}
     </div>
   );
 }
 
-function GoogleMessage({ dark = false, compact = false }: { dark?: boolean; compact?: boolean }) {
-  return <div className={`flex flex-wrap items-center justify-center gap-x-2 gap-y-1 ${compact ? "text-[9px]" : "text-xs"}`}><GoogleReviewMark dark={dark} compact={compact} /><span className={dark ? "text-slate-300" : "text-slate-600"}>Also share your feedback on Google</span></div>;
+function GoogleMessage({ dark = false, compact = false, googleReviewLink }: { dark?: boolean; compact?: boolean; googleReviewLink?: string | null }) {
+  const safeGoogleLink = safeReviewLink(googleReviewLink);
+  return <div className={`flex flex-wrap items-center justify-center gap-x-2 gap-y-1 ${compact ? "text-[9px]" : "text-xs"}`}><GoogleReviewMark dark={dark} compact={compact} />{safeGoogleLink ? <a href={safeGoogleLink} target="_blank" rel="noopener noreferrer" className={dark ? "text-slate-200 underline underline-offset-2" : "text-slate-700 underline underline-offset-2"}>Scan to Review · Share on Google</a> : <span className={dark ? "text-slate-300" : "text-slate-600"}>Scan to Review · Google review link not set</span>}</div>;
 }
 
-function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function FooterMessage({ message, dark = false }: { message: string; dark?: boolean }) {
+  return <p className={`mt-2 max-w-full text-[8px] font-semibold uppercase tracking-[0.12em] ${dark ? "text-slate-300" : "text-slate-600"}`}>{message}</p>;
+}
+
+function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, googleReviewLink, variation, digital }: PosterContentProps) {
   return (
-    <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
+    <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : digital ? "p-4" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -right-10 top-28 z-0 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-3 z-0 rounded-[1.25rem] border border-[#c9a65e]/70" />
       <TrustitMark templateId="template_1" className="relative z-10 text-emerald-800" compact={compact} />
-      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-16" : "h-24"}`}><CategoryArt kind={category.artKind} className={compact ? "h-14 w-28 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>
-      <BusinessName name={name} compact={compact} />
+      <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#976a3c]" : digital ? "h-12 w-40 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
+      {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>}
+      <BusinessName name={name} compact={compact} landscape={digital} />
       <FiveStars compact={compact} />
-      <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
-      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
-      <p className={`rounded-full bg-emerald-800 font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
-      <div className="mt-3"><GoogleMessage compact={compact} /></div>
-      <p className="mt-2 font-mono text-[9px] text-[#74593c]">{businessId}</p>
+      {!compact && <p className="mt-1 max-w-xs text-sm">{category.message}</p>}
+      <div className={`my-auto ${compact || digital ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} templateId="template_1" compact={compact} digital={digital} /></div>
+      <p className={`inline-flex items-center gap-2 rounded-full bg-emerald-800 font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+      {!compact && <div className="mt-3"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
+      {!compact && <FooterMessage message={footer} />}
+      {!compact && <p className="mt-2 font-mono text-[9px] text-[#74593c]">{businessId}</p>}
     </div>
   );
 }
 
-function HotelPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function HotelPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, googleReviewLink, variation, digital }: PosterContentProps) {
   return (
-    <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : "p-6 sm:p-8"}`}>
+    <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : digital ? "p-4" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -left-16 top-20 z-0 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-0 h-2 bg-gradient-to-r from-[#4b9db6] via-[#e5ce98] to-[#4b9db6]" />
       <TrustitMark templateId="template_2" className="relative z-10 text-[#d9c28e]" compact={compact} />
-      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-16" : "h-24"}`}><CategoryArt kind={category.artKind} className={compact ? "h-14 w-32 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>
-      <BusinessName name={name} dark compact={compact} />
+      <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#e2c997]" : digital ? "h-12 w-40 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
+      {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>}
+      <BusinessName name={name} dark compact={compact} landscape={digital} />
       <FiveStars dark compact={compact} />
-      <p className={`mt-1 max-w-xs text-slate-100 ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
-      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
-      <p className={`rounded-full bg-[#e5ce98] font-bold text-[#183a45] ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
-      <div className="mt-3"><GoogleMessage dark compact={compact} /></div>
-      <p className="mt-2 font-mono text-[9px] text-slate-300">{businessId}</p>
+      {!compact && <p className="mt-1 max-w-xs text-sm text-slate-100">{category.message}</p>}
+      <div className={`my-auto ${compact || digital ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} templateId="template_2" compact={compact} digital={digital} /></div>
+      <p className={`inline-flex items-center gap-2 rounded-full bg-[#e5ce98] font-bold text-[#183a45] ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+      {!compact && <div className="mt-3"><GoogleMessage dark googleReviewLink={googleReviewLink} /></div>}
+      {!compact && <FooterMessage message={footer} dark />}
+      {!compact && <p className="mt-2 font-mono text-[9px] text-slate-300">{businessId}</p>}
     </div>
   );
 }
 
-function LaundryPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, googleReviewLink, variation, digital }: PosterContentProps) {
   return (
-    <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eef8fb] text-center text-[#183e55] ${compact ? "p-3" : "p-6 sm:p-8"}`}>
-      <div className="pointer-events-none absolute inset-x-0 bottom-24 z-0 h-20 bg-[radial-gradient(ellipse_at_center,#cae8f1_0%,transparent_70%)]" />
+    <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eff7ed] text-center text-[#24452e] ${compact ? "p-3" : digital ? "p-4" : "p-6 sm:p-8"}`}>
+      <div className="pointer-events-none absolute inset-x-0 bottom-24 z-0 h-24 bg-[radial-gradient(ellipse_at_center,#cfe4c4_0%,transparent_72%)]" />
+      <div aria-hidden="true" className="pointer-events-none absolute -right-14 top-12 z-0 h-32 w-32 rounded-full border-[12px] border-[#a7c996]/35" />
       <TrustitMark templateId="template_3" className="relative z-10 text-[#237c9d]" compact={compact} />
-      <div className={`my-2 flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-16" : "h-24"}`}><CategoryArt kind={category.artKind} className={compact ? "h-14 w-28 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>
-      <BusinessName name={name} compact={compact} />
+      <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#4b9db6]" : digital ? "h-12 w-40 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
+      {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>}
+      <BusinessName name={name} compact={compact} landscape={digital} />
       <FiveStars compact={compact} />
-      <p className={`mt-1 max-w-xs ${compact ? "text-[11px]" : "text-sm"}`}>{category.message}</p>
-      <div className="my-auto py-3"><ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} /></div>
-      <p className={`rounded-full bg-[#247f9e] font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}>SCAN TO REVIEW</p>
-      <div className="mt-3"><GoogleMessage compact={compact} /></div>
-      <p className="mt-2 font-mono text-[9px] text-[#4b7180]">{businessId}</p>
+      {!compact && <p className="mt-1 max-w-xs text-sm">{category.message}</p>}
+      <div className={`my-auto ${compact || digital ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} templateId="template_3" compact={compact} digital={digital} /></div>
+      <p className={`inline-flex items-center gap-2 rounded-full bg-[#247f9e] font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+      {!compact && <div className="mt-3"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
+      {!compact && <FooterMessage message={footer} />}
+      {!compact && <p className="mt-2 font-mono text-[9px] text-[#4b7180]">{businessId}</p>}
     </div>
   );
 }
 
-function RetailPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function RetailPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, digital, googleReviewLink, variation }: PosterContentProps) {
   return (
-    <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-hidden bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
+    <div className={`relative ${digital ? "flex flex-col items-center text-center" : "grid grid-cols-[1fr_auto] items-center"} h-full w-full overflow-hidden bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : digital ? "gap-2 p-4" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#cf963e]" />
-      <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-3 z-0 rounded-xl border border-[#cf963e]/40" />
+      <div className={`relative z-10 flex ${digital ? "h-auto" : "h-full"} flex-col justify-center pl-2 ${digital ? "w-full items-center text-center" : "items-start text-left"}`}>
         <TrustitMark templateId="template_4" className="text-[#846021]" compact={compact} />
-        <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a07127] ${compact ? "text-[9px]" : "text-xs"}`}>{category.label}</p>
-        <BusinessName name={name} landscape compact={compact} />
+        {!compact && <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-[#a07127]">{category.label}</p>}
+        <BusinessName name={name} landscape={!digital} compact={compact} />
         <FiveStars compact={compact} />
-        <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>{category.message}</p>
-        <CategoryArt kind={category.artKind} className={`mt-2 text-[#9d742f] ${compact ? "h-9 w-20" : "h-24 w-40"}`} />
-        <p className={`mt-auto rounded-full bg-[#895d1d] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
-        <div className="mt-2"><GoogleMessage compact={compact} /></div>
-        {!compact && <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
+        {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
+        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={`text-[#9d742f] ${compact ? "h-7 w-20" : digital ? "my-1 h-12 w-40" : "mt-1 h-24 w-40"}`} />
+        <p className={`mt-auto inline-flex items-center gap-2 rounded-full bg-[#895d1d] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+        {compact ? null : <div className="mt-2"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
+        {!compact && <FooterMessage message={footer} />}
+        {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
       </div>
-      <div className="relative z-10 flex flex-col items-center gap-2">
-        <ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} landscape />
+      <div className={`relative z-10 flex flex-col items-center gap-2 ${digital ? "mt-3" : ""}`}>
+        <ReviewQr url={qrUrl} usable={usable} businessName={name} templateId="template_4" compact={compact} landscape={!digital} digital={digital} />
         <span className="text-center text-[9px] font-semibold uppercase tracking-wider text-[#6a512b]">Honest reviews welcome</span>
       </div>
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-16 right-28 z-0 h-36 w-36 rounded-full border-[14px] border-[#f0dcba]" />
@@ -247,23 +230,25 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category }: Po
   );
 }
 
-function SalonPoster({ name, businessId, qrUrl, usable, compact, category }: PosterContentProps) {
+function SalonPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, digital, googleReviewLink, variation }: PosterContentProps) {
   return (
-    <div className={`relative grid h-full w-full grid-cols-[1fr_auto] items-center overflow-hidden bg-[#fff3f1] text-[#432b35] ${compact ? "gap-2 p-3" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
+    <div className={`relative ${digital ? "flex flex-col items-center text-center" : "grid grid-cols-[1fr_auto] items-center"} h-full w-full overflow-hidden bg-white text-[#432b35] ${compact ? "gap-2 p-3" : digital ? "gap-2 p-4" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
       <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#bb7189]" />
-      <div className="relative z-10 flex h-full flex-col items-start justify-center pl-2 text-left">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-3 z-0 rounded-xl border border-[#bb7189]/30" />
+      <div className={`relative z-10 flex ${digital ? "h-auto" : "h-full"} flex-col justify-center pl-2 ${digital ? "w-full items-center text-center" : "items-start text-left"}`}>
         <TrustitMark templateId="template_5" className="text-[#99586f]" compact={compact} />
-        <p className={`mt-3 font-bold uppercase tracking-[0.18em] text-[#a35070] ${compact ? "text-[9px]" : "text-xs"}`}>{category.label}</p>
-        <BusinessName name={name} landscape compact={compact} />
+        {!compact && <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-[#a35070]">{category.label}</p>}
+        <BusinessName name={name} landscape={!digital} compact={compact} />
         <FiveStars compact={compact} />
-        <p className={`mt-2 max-w-sm ${compact ? "text-[10px]" : "text-sm"}`}>{category.message}</p>
-        <CategoryArt kind={category.artKind} className={`mt-2 text-[#a65c79] ${compact ? "h-9 w-20" : "h-24 w-40"}`} />
-        <p className={`mt-auto rounded-full bg-[#a45170] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}>SCAN TO REVIEW</p>
-        <div className="mt-2"><GoogleMessage compact={compact} /></div>
-        {!compact && <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
+        {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
+        <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={`text-[#a65c79] ${compact ? "h-7 w-20" : digital ? "my-1 h-12 w-40" : "mt-1 h-24 w-40"}`} />
+        <p className={`mt-auto inline-flex items-center gap-2 rounded-full bg-[#a45170] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+        {compact ? null : <div className="mt-2"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
+        {!compact && <FooterMessage message={footer} />}
+        {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
       </div>
-      <div className="relative z-10 flex flex-col items-center gap-2">
-        <ReviewQr url={qrUrl} usable={usable} businessName={name} compact={compact} landscape />
+      <div className={`relative z-10 flex flex-col items-center gap-2 ${digital ? "mt-3" : ""}`}>
+        <ReviewQr url={qrUrl} usable={usable} businessName={name} templateId="template_5" compact={compact} landscape={!digital} digital={digital} />
         <span className="text-center text-[9px] font-semibold uppercase tracking-wider text-[#805767]">Your feedback matters</span>
       </div>
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-16 right-28 z-0 h-36 w-36 rounded-full border-[14px] border-[#f3d9df]" />
@@ -271,23 +256,31 @@ function SalonPoster({ name, businessId, qrUrl, usable, compact, category }: Pos
   );
 }
 
-type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean; category: BusinessCategoryProfile };
+type PosterContentProps = { name: string; businessId: string; qrUrl: string; usable: boolean; compact: boolean; category: BusinessCategoryProfile; designAsset?: QrDesignAsset; footer: string; digital: boolean; googleReviewLink?: string | null; variation: number };
 
-function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsable, category, compact = false, screenPreview = false }: {
+function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsable, category, designAssets, compact = false, screenPreview = false, digital = false, googleReviewLink, variation = 0 }: {
   templateId: QrTemplateId;
   businessName: string;
   businessId: string;
   qrUrl: string;
   qrUsable: boolean;
   category: BusinessCategoryProfile;
+  designAssets?: QrDesignAssets;
   compact?: boolean;
   screenPreview?: boolean;
+  digital?: boolean;
+  googleReviewLink?: string | null;
+  variation?: number;
 }) {
-  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact, category };
   const template = qrTemplates.find((item) => item.id === templateId)!;
-  const aspect = template.ratio === "3 / 2" ? "aspect-[3/2]" : "aspect-[2/3]";
+  const footer = QR_DESIGN_THEMES.find((theme) => theme.name === template.designTheme)?.footer ?? QR_DESIGN_THEMES[4].footer;
+  const themeIndex = QR_DESIGN_THEMES.findIndex((theme) => theme.name === template.designTheme);
+  const categoryTheme = category.themeDetails[themeIndex] ?? category.themeDetails[0];
+  const posterCategory = categoryTheme ? { ...category, experiences: categoryTheme.experiences, palette: categoryTheme.palette, backgroundArtDirection: categoryTheme.backgroundArtDirection } : category;
+  const content = { name: businessName, businessId, qrUrl, usable: qrUsable, compact, category: posterCategory, designAsset: designAssets?.[templateId], footer, digital, googleReviewLink, variation };
+  const aspect = digital ? "aspect-[4/5]" : template.ratio === "3 / 2" ? "aspect-[3/2]" : "aspect-[2/3]";
   return (
-    <div className={`${aspect} w-full overflow-hidden rounded-xl shadow-inner`} data-template-id={templateId} data-screen-preview={screenPreview ? "true" : undefined} data-print-size={template.printSize} data-orientation={template.orientation} data-ratio={template.ratio}>
+    <div className={`${aspect} w-full overflow-hidden rounded-xl shadow-inner`} data-template-id={templateId} data-design-theme={template.designTheme} data-background-direction={posterCategory.backgroundArtDirection} data-palette={posterCategory.palette.join(",")} data-screen-preview={screenPreview ? "true" : undefined} data-print-size={template.printSize} data-orientation={template.orientation} data-ratio={template.ratio}>
       {templateId === "template_1" && <RestaurantPoster {...content} />}
       {templateId === "template_2" && <HotelPoster {...content} />}
       {templateId === "template_3" && <LaundryPoster {...content} />}
@@ -297,14 +290,17 @@ function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsabl
   );
 }
 
-export function QrPosterPreview({ businessId, businessName, businessType, qrStatus, expiry, templateId, screenPreview = false }: {
+export function QrPosterPreview({ businessId, businessName, businessType, qrStatus, expiry, templateId, designAssets, screenPreview = false, googleReviewLink, categoryConfig }: {
   businessId: string;
   businessName: string;
   businessType: string | null;
   qrStatus: string | null;
   expiry: string | null;
   templateId: string | null;
+  designAssets?: QrDesignAssets;
   screenPreview?: boolean;
+  googleReviewLink?: string | null;
+  categoryConfig?: UnifiedBusinessCategory | null;
 }) {
   const origin = trustitAppOrigin;
   const selectedId = qrTemplates.some((template) => template.id === templateId)
@@ -312,10 +308,10 @@ export function QrPosterPreview({ businessId, businessName, businessType, qrStat
     : qrTemplates[0].id;
   const reviewRoute = buildTrustitReviewUrl(origin, businessId);
   const qrUrl = buildTrustitQrImageUrl(reviewRoute);
-  const category = getBusinessCategoryProfile(businessType);
+  const category = getBusinessCategoryProfile(businessType, categoryConfig);
   const qrUsable = isQrUsable(qrStatus, expiry);
 
-  return <PosterByTemplate templateId={selectedId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} compact={screenPreview} screenPreview={screenPreview} />;
+  return <PosterByTemplate templateId={selectedId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} designAssets={designAssets} googleReviewLink={googleReviewLink} compact={screenPreview} screenPreview={screenPreview} />;
 }
 
 function isQrUsable(status: string | null, expiry: string | null) {
@@ -323,20 +319,23 @@ function isQrUsable(status: string | null, expiry: string | null) {
   return status?.trim().toLowerCase() === "active" && (!expiry || expiry >= today);
 }
 
-export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, display = "carousel" }: Props) {
+export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, initialDesignAssets = {}, initialDesignRevision = 0, initialDesignError, display = "carousel", googleReviewLink, categoryConfig }: Props) {
   const origin = trustitAppOrigin;
   const [selectedTemplate, setSelectedTemplate] = useState<QrTemplateId>(qrTemplates.some((template) => template.id === initialTemplate) ? initialTemplate as QrTemplateId : "template_1");
+  const [designAssets, setDesignAssets] = useState<QrDesignAssets>(initialDesignAssets);
+  const [designRevision, setDesignRevision] = useState(initialDesignRevision);
   const [previewTemplate, setPreviewTemplate] = useState<QrTemplateId | null>(null);
-  const [statusMessage, setStatusMessage] = useState("");
+  const [statusMessage, setStatusMessage] = useState(initialDesignError ?? "");
   const [exportStatus, setExportStatus] = useState("");
   const [exportAction, setExportAction] = useState<ExportAction | null>(null);
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>("print");
   const [isPending, startTransition] = useTransition();
   const galleryRef = useRef<HTMLDivElement>(null);
   const exportStageRef = useRef<HTMLDivElement>(null);
   const reviewRoute = buildTrustitReviewUrl(origin, businessId);
   const qrUrl = buildTrustitQrImageUrl(reviewRoute);
   const qrUsable = isQrUsable(qrStatus, expiry);
-  const category = getBusinessCategoryProfile(businessType);
+  const category = getBusinessCategoryProfile(businessType, categoryConfig);
   const exportTemplateId = previewTemplate ?? selectedTemplate;
   const exportTemplate = qrTemplates.find((template) => template.id === exportTemplateId)!;
   const exportDimensions = getQrTemplatePrintDimensions(exportTemplateId);
@@ -352,6 +351,21 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
       }
       setSelectedTemplate(templateId);
       setStatusMessage("QR design saved for this business.");
+    });
+  }
+
+  function regenerateDesign() {
+    setStatusMessage("");
+    startTransition(async () => {
+      const result = await regenerateQrDesignAction(designRevision);
+      if (!result.ok) {
+        setStatusMessage(result.error);
+        return;
+      }
+      setDesignAssets(result.assets);
+      setDesignRevision(result.revision);
+      const refreshed = result.provider === "AI" ? "AI design variations refreshed." : result.provider === "procedural" ? "Premium built-in design variations refreshed." : "Mock design variations refreshed.";
+      setStatusMessage(`${refreshed} Your selected QR template is unchanged.${result.revision >= 4 ? " All five design versions are now used." : ""}`);
     });
   }
 
@@ -388,7 +402,7 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
     try {
       const { domToPng } = await import("modern-screenshot");
       const png = await domToPng(poster, {
-        scale: 4,
+        scale: outputFormat === "digital" ? 2.5 : 4,
         backgroundColor: "#ffffff",
         style: { borderRadius: "0px", boxShadow: "none" },
       });
@@ -396,11 +410,11 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
       image.src = png;
       await image.decode();
 
-      const expectedRatio = exportDimensions.widthIn / exportDimensions.heightIn;
+      const expectedRatio = outputFormat === "digital" ? 4 / 5 : exportDimensions.widthIn / exportDimensions.heightIn;
       if (Math.abs(image.width / image.height - expectedRatio) > 0.002) {
         throw new Error("The exported poster dimensions do not match the selected print size.");
       }
-      if (image.width < exportDimensions.widthIn * 300 || image.height < exportDimensions.heightIn * 300) {
+      if (outputFormat === "digital" ? image.width !== 1080 || image.height !== 1350 : image.width < exportDimensions.widthIn * 300 || image.height < exportDimensions.heightIn * 300) {
         throw new Error("The exported poster resolution is below 300 DPI.");
       }
       return png;
@@ -410,6 +424,10 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
   }
 
   async function downloadPoster(templateId: QrTemplateId, format: "png" | "pdf") {
+    if (outputFormat === "digital" && format === "pdf") {
+      setExportStatus("Digital posters are exported as PNG at 1080 × 1350 pixels.");
+      return;
+    }
     if (!qrUsable) {
       setExportStatus("Downloads are available when this business QR is active and unexpired.");
       return;
@@ -419,8 +437,9 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
     setExportStatus("");
     try {
       const png = await makePosterPng();
-      const filename = getQrTemplateFilename(templateId, businessName, businessId, format);
-      if (format === "pdf") {
+      const baseFilename = getQrTemplateFilename(templateId, businessName, businessId, format);
+      const filename = outputFormat === "digital" ? baseFilename.replace(/\.png$/i, "-Digital-1080x1350.png") : baseFilename;
+      if (format === "pdf" && outputFormat === "print") {
         const { jsPDF } = await import("jspdf");
         const { widthIn, heightIn, orientation } = getQrTemplatePrintDimensions(templateId);
         const pdf = new jsPDF({ orientation, unit: "in", format: [widthIn, heightIn], compress: true });
@@ -486,10 +505,12 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
     const disabled = !qrUsable || Boolean(exportAction);
     const buttonClass = "rounded-lg border border-slate-300 bg-white px-2 py-2 text-center text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50";
     return (
-      <div className={`grid grid-cols-3 gap-2 ${className}`} aria-label="Download and print QR poster">
+      <div className={`grid ${outputFormat === "digital" ? "grid-cols-1" : "grid-cols-3"} gap-2 ${className}`} aria-label="Download and print QR poster">
         <button type="button" className={buttonClass} disabled={disabled} onClick={() => void downloadPoster(templateId, "png")}>{exportAction === "png" ? "Preparing PNG…" : "Download PNG"}</button>
-        <button type="button" className={buttonClass} disabled={disabled} onClick={() => void downloadPoster(templateId, "pdf")}>{exportAction === "pdf" ? "Preparing PDF…" : "Download PDF"}</button>
-        <button type="button" className={buttonClass} disabled={disabled} onClick={() => void printPoster()}>{exportAction === "print" ? "Preparing print…" : "Print"}</button>
+        {outputFormat === "print" && <>
+          <button type="button" className={buttonClass} disabled={disabled} onClick={() => void downloadPoster(templateId, "pdf")}>{exportAction === "pdf" ? "Preparing PDF…" : "Download PDF"}</button>
+          <button type="button" className={buttonClass} disabled={disabled} onClick={() => void printPoster()}>{exportAction === "print" ? "Preparing print…" : "Print"}</button>
+        </>}
       </div>
     );
   }
@@ -508,17 +529,24 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
         </div>
       </div>
 
+      <div className="flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50/60 p-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+        <div><p className="text-xs leading-5 text-slate-600">Five business-matched design variations share one QR identity. Built-in category artwork is ready immediately; optional AI artwork is generated only when requested.</p><p className="mt-1 text-xs text-slate-700"><strong>Business:</strong> {businessName} <span className="px-1 text-slate-400">·</span> <strong>QR Identity:</strong> <span className="font-mono">{businessId}</span></p><div className="mt-2 inline-flex rounded-lg border border-blue-200 bg-white p-1" role="group" aria-label="Poster output format"><button type="button" aria-pressed={outputFormat === "print"} onClick={() => setOutputFormat("print")} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${outputFormat === "print" ? "bg-blue-700 text-white" : "text-slate-600"}`}>Print · 4×6 / 6×4</button><button type="button" aria-pressed={outputFormat === "digital"} onClick={() => setOutputFormat("digital")} className={`rounded-md px-3 py-1.5 text-xs font-semibold ${outputFormat === "digital" ? "bg-blue-700 text-white" : "text-slate-600"}`}>Digital · 1080×1350</button></div></div>
+        <button type="button" onClick={regenerateDesign} disabled={isPending || designRevision >= 4} className="min-h-10 shrink-0 rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm font-semibold text-blue-800 hover:bg-blue-50 disabled:opacity-60">
+          {isPending ? "Preparing designs…" : designRevision >= 4 ? "All versions used" : "Regenerate Design"}
+        </button>
+      </div>
+
       <div ref={galleryRef} className={display === "dashboard" ? "merchant-template-grid" : "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-4 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"} aria-label="Trustit QR template gallery">
         {qrTemplates.map((template) => {
           const isSelected = selectedTemplate === template.id;
           return (
             <article key={template.id} className={display === "dashboard" ? `merchant-template-tile${template.ratio === "3 / 2" ? " merchant-template-tile--landscape" : ""}${isSelected ? " is-selected" : ""}` : `w-[min(84vw,360px)] shrink-0 snap-start overflow-hidden rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:w-[min(50vw,420px)] lg:w-[min(40vw,480px)] xl:w-[min(38vw,480px)] ${isSelected ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200"}`}>
-              <button type="button" onClick={() => setPreviewTemplate(template.id)} className={display === "dashboard" ? "merchant-template-tile__poster" : "relative block w-full text-left"} aria-label={`Preview ${template.name} QR design`}>
-                <PosterByTemplate templateId={template.id} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} compact />
+              <button type="button" onClick={() => setPreviewTemplate(template.id)} className={display === "dashboard" ? "merchant-template-tile__poster" : "relative block w-full text-left"} aria-label={`Preview ${template.designTheme} ${template.name} QR design`}>
+                <PosterByTemplate templateId={template.id} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} designAssets={designAssets} googleReviewLink={googleReviewLink} variation={designRevision} compact digital={outputFormat === "digital"} />
                 {isSelected && <span className="absolute right-2 top-2 grid h-6 w-6 place-items-center rounded-full bg-emerald-500 text-sm font-black text-white shadow" aria-label="Currently selected">✓</span>}
               </button>
               <div className={display === "dashboard" ? "" : "px-1 pb-1 pt-3"}>
-                <h3 className={display === "dashboard" ? "merchant-template-tile__name" : "font-semibold text-slate-900"}>{template.name}</h3>
+                <h3 className={display === "dashboard" ? "merchant-template-tile__name" : "font-semibold text-slate-900"}>{template.designTheme}<span className="ml-1 text-xs font-normal text-slate-500">· {template.name}</span></h3>
                 {display !== "dashboard" && <>
                   <p className="mt-0.5 text-xs text-slate-500">{template.description}</p>
                   <p className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{template.printSize} · {template.orientation}</p>
@@ -542,20 +570,20 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
         ref={exportStageRef}
         aria-hidden="true"
         className="pointer-events-none fixed -left-[20000px] top-0 -z-10 overflow-hidden"
-        style={{ width: exportTemplate.ratio === "3 / 2" ? "660px" : "440px" }}
+        style={{ width: outputFormat === "digital" ? "432px" : exportTemplate.ratio === "3 / 2" ? "660px" : "440px" }}
       >
-        <PosterByTemplate templateId={exportTemplateId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} />
+        <PosterByTemplate templateId={exportTemplateId} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} designAssets={designAssets} googleReviewLink={googleReviewLink} variation={designRevision} digital={outputFormat === "digital"} />
       </div>
 
       {previewTemplate && (
         <div role="presentation" onClick={() => setPreviewTemplate(null)} className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-950/70 p-3 backdrop-blur-sm sm:p-6">
           <section role="dialog" aria-modal="true" aria-labelledby="qr-preview-title" onClick={(event) => event.stopPropagation()} onKeyDown={(event) => { if (event.key === "Escape") setPreviewTemplate(null); }} tabIndex={-1} className="my-auto w-full max-w-5xl rounded-3xl bg-white p-4 shadow-2xl sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-4">
-              <div><p className="text-xs font-semibold uppercase tracking-widest text-blue-700">Merchant-specific print preview</p><h2 id="qr-preview-title" className="mt-1 text-lg font-bold text-slate-950">{qrTemplates.find((template) => template.id === previewTemplate)?.name} · {qrTemplates.find((template) => template.id === previewTemplate)?.printSize} {qrTemplates.find((template) => template.id === previewTemplate)?.orientation}</h2></div>
+              <div><p className="text-xs font-semibold uppercase tracking-widest text-blue-700">Merchant-specific {outputFormat} preview</p><h2 id="qr-preview-title" className="mt-1 text-lg font-bold text-slate-950">{qrTemplates.find((template) => template.id === previewTemplate)?.name} · {outputFormat === "digital" ? "1080 × 1350 px" : `${qrTemplates.find((template) => template.id === previewTemplate)?.printSize} ${qrTemplates.find((template) => template.id === previewTemplate)?.orientation}`}</h2></div>
               <button type="button" onClick={() => setPreviewTemplate(null)} className="rounded-full border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50" aria-label="Close template preview">Close</button>
             </div>
             <div data-qr-preview="true" className={`mx-auto w-full ${previewTemplate === "template_4" || previewTemplate === "template_5" ? "max-w-5xl" : "max-w-[440px]"}`}>
-              <PosterByTemplate templateId={previewTemplate} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} compact />
+              <PosterByTemplate templateId={previewTemplate} businessName={businessName} businessId={businessId} qrUrl={qrUrl} qrUsable={qrUsable} category={category} designAssets={designAssets} googleReviewLink={googleReviewLink} variation={designRevision} compact digital={outputFormat === "digital"} />
             </div>
             {exportButtons(previewTemplate, "mt-4")}
             <button type="button" onClick={() => { chooseTemplate(previewTemplate); setPreviewTemplate(null); }} disabled={isPending || selectedTemplate === previewTemplate} className="mt-2 w-full rounded-xl bg-blue-700 px-4 py-3 font-semibold text-white hover:bg-blue-800 disabled:opacity-60">{selectedTemplate === previewTemplate ? "This is your selected design" : isPending ? "Saving…" : "Select this design"}</button>

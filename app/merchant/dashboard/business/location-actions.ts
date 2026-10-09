@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { BUSINESS_TYPES } from "@/lib/business-types";
+import { isAvailableBusinessType } from "@/lib/business-category-admin.server";
 import { parsePublicDiscoveryLocation } from "@/lib/business-location";
 import { getActiveMerchant } from "@/lib/merchant-auth";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
@@ -23,7 +23,7 @@ export async function saveMerchantDiscoveryLocationAction(
 
   const merchant = await getActiveMerchant();
   if (!merchant) return { ok: false, message: "Sign in to an active merchant account to save your location." };
-  if (!merchant.businessType || !BUSINESS_TYPES.includes(merchant.businessType as (typeof BUSINESS_TYPES)[number])) {
+  if (!merchant.businessType || !(await isAvailableBusinessType(merchant.businessType, true))) {
     return { ok: false, message: "Ask an administrator to correct the business category before completing its public location." };
   }
 

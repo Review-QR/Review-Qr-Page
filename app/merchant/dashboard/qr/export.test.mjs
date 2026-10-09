@@ -11,6 +11,7 @@ import {
 } from "./templates.ts";
 
 const gallerySource = await readFile(new URL("./qr-template-gallery.tsx", import.meta.url), "utf8");
+const themeSource = await readFile(new URL("../../../../lib/trustit-ai/qr-design-theme.ts", import.meta.url), "utf8");
 const qrUtilitySource = await readFile(new URL("../../../../lib/trustit-qr.ts", import.meta.url), "utf8");
 const dashboardCssSource = await readFile(new URL("../dashboard.css", import.meta.url), "utf8");
 
@@ -89,9 +90,17 @@ test("selected template and preview expose PNG, PDF, and print controls", () => 
 
 test("all five QR designs consume one merchant business category instead of template categories", () => {
   assert.match(gallerySource, /businessType: string \| null/);
-  assert.match(gallerySource, /const category = getBusinessCategoryProfile\(businessType\)/);
-  assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category \}/);
-  assert.match(gallerySource, /<CategoryArt kind=\{category\.artKind\}/);
+  assert.match(gallerySource, /const category = getBusinessCategoryProfile\(businessType, categoryConfig\)/);
+  assert.match(gallerySource, /const posterCategory = categoryTheme \? \{ \.\.\.category, experiences: categoryTheme\.experiences, palette: categoryTheme\.palette, backgroundArtDirection: categoryTheme\.backgroundArtDirection \}/);
+  assert.match(gallerySource, /const content = \{ name: businessName, businessId, qrUrl, usable: qrUsable, compact, category: posterCategory, designAsset: designAssets\?\.\[templateId\], footer, digital, googleReviewLink, variation \}/);
+  assert.match(gallerySource, /href=\{safeGoogleLink\} target="_blank" rel="noopener noreferrer"/);
+  assert.equal((gallerySource.match(/<CategoryArt iconName=\{category\.iconName\} designFamily=\{category\.designFamily\} designAsset=\{designAsset\} experiences=\{category\.experiences\} qrIcons=\{category\.qrIcons\} palette=\{category\.palette\} variation=\{variation\} compact=\{compact\}/g) ?? []).length, 5);
+  assert.match(gallerySource, /experiences\.slice\(0, 3\)/);
+  assert.match(gallerySource, /data-background-direction=\{posterCategory\.backgroundArtDirection\}/);
+  assert.match(gallerySource, /Digital · 1080×1350/);
+  assert.match(gallerySource, /image\.width !== 1080 \|\| image\.height !== 1350/);
+  assert.equal((gallerySource.match(/<FooterMessage message=\{footer\}/g) ?? []).length, 5, "every full-size template renders its locked design-family footer");
+  assert.match(gallerySource, /QR_DESIGN_THEMES\.find\(\(theme\) => theme\.name === template\.designTheme\)/);
   assert.match(gallerySource, /\{category\.label\}/);
   assert.match(gallerySource, /\{category\.message\}/);
   for (const hardCodedCategory of [
@@ -103,9 +112,28 @@ test("all five QR designs consume one merchant business category instead of temp
   ]) {
     assert.equal(gallerySource.includes(hardCodedCategory), false, `Hard-coded category remains: ${hardCodedCategory}`);
   }
-  assert.match(gallerySource, /Sweet Shop · Sweets & Treats/);
-  assert.match(gallerySource, /Hotel · Stay · Hospitality/);
-  assert.match(gallerySource, /Laundry · Fresh Care/);
+  assert.match(themeSource, /posterLabel: "Sweet Shop · Sweets & Treats"/);
+  assert.match(themeSource, /posterLabel: "Hotel · Stay · Hospitality"/);
+  assert.match(themeSource, /posterLabel: "Laundry · Fresh Care"/);
+});
+
+test("normal merchant page rendering reads saved artwork only and never starts paid generation", async () => {
+  const qrPage = await readFile(new URL("./page.tsx", import.meta.url), "utf8");
+  const dashboardPage = await readFile(new URL("../page.tsx", import.meta.url), "utf8");
+  assert.match(qrPage, /getPersistedBusinessQrDesignAssets/);
+  assert.match(dashboardPage, /getPersistedBusinessQrDesignAssets/);
+  assert.doesNotMatch(qrPage, /getBusinessQrDesignAssets\(/);
+  assert.doesNotMatch(dashboardPage, /getBusinessQrDesignAssets\(/);
+  const assetService = await readFile(new URL("../../../../lib/trustit-ai/qr-design-assets.server.ts", import.meta.url), "utf8");
+  assert.match(assetService, /export async function getPersistedBusinessQrDesignAssets/);
+  assert.match(assetService, /return loadPersistedAssets\(/);
+});
+
+test("QR regeneration falls back to built-in designs when optional AI generation fails", async () => {
+  const source = await readFile(new URL("./regenerate-design-action.ts", import.meta.url), "utf8");
+  assert.match(source, /provider: "procedural"/);
+  assert.match(source, /fallback: true/);
+  assert.match(gallerySource, /result\.provider === "procedural"/);
 });
 
 test("QR tiles use a fixed quiet zone, remain above poster artwork, and long business names can wrap and scale down", async () => {
@@ -122,10 +150,22 @@ test("QR tiles use a fixed quiet zone, remain above poster artwork, and long bus
   assert.ok(longSample.length > 60);
 });
 
+test("all five template frames keep a single business QR payload and separate the quiet zone from decoration", () => {
+  const payload = buildTrustitReviewUrl("https://trustit.example", "biz-identity-123");
+  assert.equal(payload, "https://trustit.example/r/biz-identity-123");
+  assert.equal((gallerySource.match(/<ReviewQr url=\{qrUrl\}/g) ?? []).length, 5);
+  assert.match(gallerySource, /qrCodeModule\.default\.toDataURL\(reviewRoute,\s*\{\s*errorCorrectionLevel: "H",\s*margin: 4,/);
+  assert.match(gallerySource, /background: `linear-gradient\(/);
+  assert.match(gallerySource, /data-qr-design-background="true"/);
+  for (const id of [1, 2, 3, 4, 5]) assert.match(gallerySource, new RegExp(`template_${id}: "border`), `template_${id} should get a frame outside the QR quiet zone`);
+  assert.doesNotMatch(gallerySource, /toDataURL\([^\n]*templateId/);
+  assert.doesNotMatch(gallerySource, /toDataURL\([^\n]*variation/);
+});
+
 test("phone QR previews keep landscape posters readable inside their frame", () => {
   assert.match(gallerySource, /template\.ratio === "3 \/ 2" \? " merchant-template-tile--landscape"/);
   assert.match(dashboardCssSource, /merchant-template-tile--landscape\s*\{\s*grid-column:\s*span 2/);
-  assert.match(gallerySource, /qrUsable=\{qrUsable\} category=\{category\} compact \/>/);
+  assert.match(gallerySource, /qrUsable=\{qrUsable\} category=\{category\} designAssets=\{designAssets\} googleReviewLink=\{googleReviewLink\} compact=/);
   assert.match(gallerySource, /screenPreview\?: boolean/);
   assert.match(dashboardCssSource, /data-template-id="template_1"/);
   assert.match(dashboardCssSource, /data-template-id="template_3"/);

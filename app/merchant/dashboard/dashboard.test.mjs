@@ -1,3 +1,16 @@
+test("dashboard keeps rendering with built-in QR designs and only reads optional saved artwork", async () => {
+  const page = await read("./page.tsx");
+  assert.match(page, /let designAssets:[\s\S]*?try \{[\s\S]*?getPersistedBusinessQrDesignAssets\(merchant\.businessId, merchant\.businessType\)[\s\S]*?catch \(error\)/);
+  assert.doesNotMatch(page, /getBusinessQrDesignAssets\(/);
+  assert.match(page, /Custom artwork is temporarily unavailable\. Your QR code and standard poster designs are still ready\./);
+  assert.match(page, /initialDesignError=\{designAssetError\}/);
+  assert.match(page, /designAssets=\{designAssets\}/);
+  assert.match(page, /requireActiveMerchant\(\)/);
+  assert.match(page, /<MyQrCode/);
+  assert.match(page, /Trustit QR artwork unavailable while rendering merchant dashboard/);
+  assert.doesNotMatch(page, /console\.error\([^\n]*error\.message/);
+});
+
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
@@ -152,6 +165,7 @@ test("My QR page uses the authenticated merchant identity and loads the saved te
 test("five Trustit print designs use the required dimensions and one merchant QR", async () => {
   const gallery = await read("./qr/qr-template-gallery.tsx");
   const definitions = await read("./qr/templates.ts");
+  const themes = await read("../../../lib/trustit-ai/qr-design-theme.ts");
   const qrUtility = await read("../../../lib/trustit-qr.ts");
   assert.equal((definitions.match(/id: "template_[1-5]"/g) ?? []).length, 5);
   for (const [name, size, orientation, ratio] of [
@@ -173,7 +187,7 @@ test("five Trustit print designs use the required dimensions and one merchant QR
   assert.match(gallery, /onTouch|overflow-x-auto/);
   assert.match(gallery, /Preview/);
   assert.match(gallery, /Choose Your QR Template/);
-  assert.match(gallery, /Merchant-specific print preview/);
+  assert.match(gallery, /Merchant-specific \{outputFormat\} preview/);
   assert.match(gallery, /data-print-size=\{template\.printSize\}/);
   assert.match(gallery, /data-orientation=\{template\.orientation\}/);
   assert.match(gallery, /data-ratio=\{template\.ratio\}/);
@@ -182,8 +196,11 @@ test("five Trustit print designs use the required dimensions and one merchant QR
   for (const component of ["RestaurantPoster", "HotelPoster", "LaundryPoster", "RetailPoster", "SalonPoster"]) {
     assert.match(gallery, new RegExp(`function ${component}\\(`));
   }
-  assert.match(gallery, /<CategoryArt kind=\{category\.artKind\}/);
-  for (const kind of ["food", "hotel", "laundry", "retail", "salon", "universal"]) assert.match(gallery, new RegExp(`artKind: "${kind}"`), `${kind} business art`);
+  assert.equal((gallery.match(/<CategoryArt iconName=\{category\.iconName\} designFamily=\{category\.designFamily\} designAsset=\{designAsset\} experiences=\{category\.experiences\}/g) ?? []).length, 5);
+  assert.match(gallery, /experiences\.slice\(0, 3\)/);
+  assert.match(gallery, /Digital · 1080×1350/);
+  assert.equal((gallery.match(/<FooterMessage message=\{footer\}/g) ?? []).length, 5);
+  for (const kind of ["food", "hotel", "laundry", "retail", "salon", "universal"]) assert.match(themes, new RegExp(`artKind: "${kind}"`), `${kind} business art`);
   assert.equal((gallery.match(/<TrustitMark templateId=/g) ?? []).length, 5);
   assert.equal((gallery.match(/<GoogleMessage/g) ?? []).length, 5);
   assert.match(gallery, /SCAN TO REVIEW/);

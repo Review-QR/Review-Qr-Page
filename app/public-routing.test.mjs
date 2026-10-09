@@ -61,7 +61,7 @@ test("custom sitemap route is the only sitemap implementation and includes publi
     read("./sitemap.xml/route.ts"), read("../lib/public-discovery-sitemap.ts"), read("./robots.ts"),
   ]);
   assert.match(route, /buildSitemapIndexXml/);
-  assert.match(builder, /TRUSTIT_SITE_URL\}\/`\)/);
+  assert.match(builder, /TRUSTIT_STATIC_PUBLIC_PATHS[\s\S]*?TRUSTIT_SITE_URL/);
   assert.match(builder, /sitemaps\/\$\{id\}\.xml/);
   assert.match(robots, /\$\{TRUSTIT_SITE_URL\}\/sitemap\.xml/);
 });
