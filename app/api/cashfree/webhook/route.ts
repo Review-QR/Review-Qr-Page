@@ -4,6 +4,7 @@ import {
   verifyCashfreeWebhookSignature,
 } from "@/lib/cashfree";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { isVerifiedCashfreeSuccess } from "@/lib/cashfree-payment-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -114,8 +115,13 @@ export async function POST(request: Request): Promise<Response> {
     return jsonResponse(200, "ignored_unmapped");
   }
   if (
-    order.order_amount !== verified.amount ||
-    payment.payment_amount !== verified.amount
+    !isVerifiedCashfreeSuccess({
+      eventType,
+      paymentStatus,
+      orderAmount: order.order_amount,
+      paymentAmount: payment.payment_amount,
+      verifiedAmount: verified.amount,
+    })
   ) {
     return jsonResponse(400, "rejected");
   }

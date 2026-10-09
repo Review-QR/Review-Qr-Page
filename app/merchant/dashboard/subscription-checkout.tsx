@@ -20,7 +20,7 @@ type CashfreeCheckoutResult = {
   paymentDetails?: unknown;
 };
 
-type CashfreeCheckoutSdk = (options: { mode: "sandbox" }) => {
+type CashfreeCheckoutSdk = (options: { mode: "sandbox" | "production" }) => {
   checkout(options: {
     paymentSessionId: string;
     redirectTarget: "_modal";
@@ -102,7 +102,7 @@ export default function SubscriptionCheckout({
       await loadCashfreeSdk();
       if (!window.Cashfree) throw new Error("Cashfree checkout is unavailable.");
 
-      const checkoutResult = await window.Cashfree({ mode: "sandbox" }).checkout({
+      const checkoutResult = await window.Cashfree({ mode: result.checkoutMode }).checkout({
         paymentSessionId: result.paymentSessionId,
         redirectTarget: "_modal",
       });
