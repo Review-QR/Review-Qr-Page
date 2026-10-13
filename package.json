@@ -2,11 +2,14 @@
   "name": "review-qr",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@12.6.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "test": "node --test",
+    "test:cashfree": "node --test lib/cashfree-production-readiness.test.mjs lib/cashfree-webhook-handler.test.mjs",
+    "typecheck": "tsc --noEmit",
     "audit:public-indexability": "node scripts/verify-public-indexability.mjs"
   },
   "dependencies": {
