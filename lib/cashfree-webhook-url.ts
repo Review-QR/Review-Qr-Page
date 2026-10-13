@@ -75,8 +75,9 @@ export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | 
   if (deploymentEnvironment === "preview") {
     // A project-wide production webhook URL must never receive Sandbox events.
     if (explicitUrl && originOf(explicitUrl) !== productionOrigin) configured = explicitUrl;
-    configured ||= deploymentUrl(env.VERCEL_URL)
-      ? `${deploymentUrl(env.VERCEL_URL)}/api/cashfree/webhook`
+    const previewHost = env.VERCEL_BRANCH_URL?.trim() || env.VERCEL_URL;
+    configured ||= deploymentUrl(previewHost)
+      ? `${deploymentUrl(previewHost)}/api/cashfree/webhook`
       : null;
   } else if (deploymentEnvironment === "production") {
     configured = explicitUrl || (deploymentUrl(env.VERCEL_PROJECT_PRODUCTION_URL)
@@ -107,6 +108,13 @@ export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | 
       (deploymentEnvironment === "preview" && webhookOrigin === productionOrigin)
     ) {
       return null;
+    }
+    if (deploymentEnvironment === "preview") {
+      const protectionBypass = env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
+      if (protectionBypass) {
+        // Cashfree sends webhook requests by URL and cannot attach Vercel's bypass header.
+        url.searchParams.set("x-vercel-protection-bypass", protectionBypass);
+      }
     }
     return url.toString();
   } catch {
