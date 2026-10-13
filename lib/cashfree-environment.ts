@@ -24,6 +24,14 @@ export function resolveCashfreeServerConfiguration(
     throw new Error("Cashfree environment must be sandbox or production");
   }
 
+  const deploymentEnvironment = env.VERCEL_ENV?.trim();
+  if (
+    (deploymentEnvironment === "production" && environment !== "production") ||
+    (deploymentEnvironment === "preview" && environment !== "sandbox")
+  ) {
+    throw new Error("Cashfree environment does not match the Vercel deployment target");
+  }
+
   const required = (name: string) => {
     const value = env[name]?.trim();
     if (!value) throw new Error("Cashfree server configuration is incomplete");
