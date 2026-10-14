@@ -76,19 +76,10 @@ export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | 
     if (
       env.VERCEL_GIT_COMMIT_REF?.trim() !== "codex/cashfree-sandbox-preview" ||
       env.CASHFREE_ENVIRONMENT?.trim() !== "sandbox" ||
-      env.CASHFREE_PREVIEW_WEBHOOK_INGRESS_ENABLED?.trim() !== "true"
+      !cashfreePreviewWebhookIngressEnabled(env.CASHFREE_PREVIEW_WEBHOOK_INGRESS_ENABLED)
     ) return null;
-    try {
-      const supabase = new URL(env.NEXT_PUBLIC_SUPABASE_URL ?? "");
-      if (
-        supabase.protocol !== "https:" ||
-        supabase.hostname !== "piqwsyzktzjhafkcstjl.supabase.co" ||
-        supabase.username || supabase.password || supabase.port || supabase.search || supabase.hash
-      ) return null;
-      return "https://piqwsyzktzjhafkcstjl.supabase.co/functions/v1/trustit-cashfree-preview-webhook";
-    } catch {
-      return null;
-    }
+    if (!isPinnedPreviewSupabaseUrl(env.NEXT_PUBLIC_SUPABASE_URL)) return null;
+    return "https://piqwsyzktzjhafkcstjl.supabase.co/functions/v1/trustit-cashfree-preview-webhook";
   }
 
   const productionOrigin = originOf(env.VERCEL_PROJECT_PRODUCTION_URL);
@@ -127,6 +118,25 @@ export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | 
     return url.toString();
   } catch {
     return null;
+  }
+}
+
+/** The application treats surrounding whitespace like the existing route resolver does. */
+export function cashfreePreviewWebhookIngressEnabled(value: string | undefined): boolean {
+  return value?.trim() === "true";
+}
+
+/** Shared target predicate for webhook routing and the temporary diagnostic. */
+export function isPinnedPreviewSupabaseUrl(value: string | undefined): boolean {
+  try {
+    const supabase = new URL(value ?? "");
+    return (
+      supabase.protocol === "https:" &&
+      supabase.hostname === "piqwsyzktzjhafkcstjl.supabase.co" &&
+      !supabase.username && !supabase.password && !supabase.port && !supabase.search && !supabase.hash
+    );
+  } catch {
+    return false;
   }
 }
 
