@@ -22,3 +22,7 @@ The Preview Supabase project must include that exact URL in its allowed redirect
 The branch URL is used instead of `VERCEL_URL`, which identifies a unique deployment URL and would not match the stable branch callback configured in Supabase. Vercel's `VERCEL_BRANCH_URL` system variable must be exposed to the Preview runtime. The recovery link should be opened in the same browser that requested it so the SSR PKCE verifier cookie is available to the callback.
 
 Supabase Auth settings must be changed only in `Review-QR-Preview` (`piqwsyzktzjhafkcstjl`). Do not change Production Auth settings. This document records configuration requirements; it does not apply them or send a recovery email.
+
+## Manual Preview verification
+
+On 2026-10-14, the user reported completing the Preview recovery flow end to end: they received the recovery email, opened its link, set a new password, and reached the Preview Admin Dashboard. This was a manual user-reported verification. No email address, password, recovery link, token, or other credential is recorded here. This verification applies only to Preview and does not establish a Production password change.

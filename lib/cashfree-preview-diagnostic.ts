@@ -139,6 +139,8 @@ export function createCashfreePreviewDiagnosticHandler(deps: DiagnosticDependenc
         {
           method: "GET",
           cache: "no-store",
+          // Never forward Cashfree credentials if the endpoint redirects.
+          redirect: "manual",
           signal: AbortSignal.timeout(8_000),
           headers: {
             accept: "application/json",
