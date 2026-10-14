@@ -68,18 +68,20 @@ function isLocalOrPrivateWebhookHost(hostname: string): boolean {
 
 export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | null {
   const deploymentEnvironment = env.VERCEL_ENV?.trim();
+  if (deploymentEnvironment === "preview") {
+    // Cashfree's Create Order API accepts a callback URL, not custom request
+    // headers. Do not place Vercel's project-wide protection bypass secret in
+    // that URL. Until Preview has a separately approved callback transport,
+    // fail closed instead of sending callbacks that cannot reach protected
+    // deployments or leaking a bypass credential to Cashfree.
+    return null;
+  }
+
   const productionOrigin = originOf(env.VERCEL_PROJECT_PRODUCTION_URL);
   const explicitUrl = env.CASHFREE_WEBHOOK_URL?.trim();
 
   let configured: string | null = null;
-  if (deploymentEnvironment === "preview") {
-    // A project-wide production webhook URL must never receive Sandbox events.
-    if (explicitUrl && originOf(explicitUrl) !== productionOrigin) configured = explicitUrl;
-    const previewHost = env.VERCEL_BRANCH_URL?.trim() || env.VERCEL_URL;
-    configured ||= deploymentUrl(previewHost)
-      ? `${deploymentUrl(previewHost)}/api/cashfree/webhook`
-      : null;
-  } else if (deploymentEnvironment === "production") {
+  if (deploymentEnvironment === "production") {
     configured = explicitUrl || (deploymentUrl(env.VERCEL_PROJECT_PRODUCTION_URL)
       ? `${deploymentUrl(env.VERCEL_PROJECT_PRODUCTION_URL)}/api/cashfree/webhook`
       : null);
@@ -104,17 +106,9 @@ export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | 
       url.hash ||
       url.pathname !== "/api/cashfree/webhook" ||
       isLocalOrPrivateWebhookHost(hostname) ||
-      (env.CASHFREE_ENVIRONMENT?.trim() === "sandbox" && webhookOrigin === productionOrigin) ||
-      (deploymentEnvironment === "preview" && webhookOrigin === productionOrigin)
+      (env.CASHFREE_ENVIRONMENT?.trim() === "sandbox" && webhookOrigin === productionOrigin)
     ) {
       return null;
-    }
-    if (deploymentEnvironment === "preview") {
-      const protectionBypass = env.VERCEL_AUTOMATION_BYPASS_SECRET?.trim();
-      if (protectionBypass) {
-        // Cashfree sends webhook requests by URL and cannot attach Vercel's bypass header.
-        url.searchParams.set("x-vercel-protection-bypass", protectionBypass);
-      }
     }
     return url.toString();
   } catch {

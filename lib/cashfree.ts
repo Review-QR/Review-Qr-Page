@@ -9,6 +9,7 @@ import { appConfig, type PlanId } from "@/lib/config";
 import { cashfreeLivePaymentsEnabled, resolveCashfreeServerConfiguration, type CashfreeEnvironment } from "@/lib/cashfree-environment";
 import { verifyCashfreeSignature } from "@/lib/cashfree-signature";
 import { resolveCashfreeWebhookUrl } from "@/lib/cashfree-webhook-url";
+import { createCashfreeRequestInit } from "@/lib/cashfree-request-init";
 import { logTrustitCheckoutStage, type TrustitCheckoutDiagnosticStage } from "@/lib/trustit-checkout-diagnostics";
 
 const CASHFREE_API_VERSION = "2026-01-01";
@@ -299,12 +300,11 @@ export function createCashfreeClient(): CashfreeClient {
     apiVersion: CASHFREE_API_VERSION,
     environment: configuration.environment,
     createRequestInit(init = {}) {
-      const headers = new Headers(init.headers);
-      headers.set("x-client-id", configuration.clientId);
-      headers.set("x-client-secret", configuration.clientSecret);
-      headers.set("x-api-version", CASHFREE_API_VERSION);
-
-      return { ...init, headers };
+      return createCashfreeRequestInit(init, {
+        clientId: configuration.clientId,
+        clientSecret: configuration.clientSecret,
+        apiVersion: CASHFREE_API_VERSION,
+      });
     },
   };
 }
