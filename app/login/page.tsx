@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useState } from "react";
+import Link from "next/link";
 import { signInAction } from "./actions";
 
 export default function LoginPage() {
@@ -82,6 +83,13 @@ export default function LoginPage() {
             {pending ? "Signing in..." : "Sign In"}
           </button>
         </form>
+
+        <Link
+          href="/login/forgot-password"
+          className="mt-4 inline-block text-sm text-blue-700 underline"
+        >
+          Forgot your password?
+        </Link>
 
         <p className="mt-6 text-center text-xs text-slate-400">
           Authorized Review-QR administrators only.
