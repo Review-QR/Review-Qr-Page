@@ -77,6 +77,16 @@ export function authorizedPreviewOrigin(
   }
 }
 
+/** Whether the recovery entry point is enabled for this request host. */
+export function isAdminRecoveryAvailable(
+  env: RecoveryEnvironment,
+  requestHost: string | null | undefined
+): boolean {
+  return Boolean(
+    authorizedPreviewOrigin(env, requestHost ? `https://${requestHost}` : null)
+  );
+}
+
 export function recoveryCallbackUrl(origin: string): string {
   return new URL(ADMIN_RECOVERY_CALLBACK_PATH, origin).toString();
 }
