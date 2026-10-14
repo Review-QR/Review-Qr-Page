@@ -1,9 +1,14 @@
-import { type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSupabaseSession } from "@/lib/supabase-proxy";
 import { merchantSessionCookieName } from "@/lib/supabase-config";
+import { shouldSkipSupabaseSessionRefresh } from "@/lib/supabase-proxy-routing";
 
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+  if (shouldSkipSupabaseSessionRefresh(pathname)) {
+    return NextResponse.next();
+  }
+
   const isMerchantRequest =
     pathname === "/merchant" || pathname.startsWith("/merchant/") ||
     pathname === "/register" || pathname.startsWith("/register/");

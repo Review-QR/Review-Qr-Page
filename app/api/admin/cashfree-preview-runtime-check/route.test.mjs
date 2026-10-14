@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { handlePreviewCashfreeRuntimeDiagnostic } from "../../../../lib/cashfree-preview-runtime-diagnostic.ts";
+import { shouldSkipSupabaseSessionRefresh } from "../../../../lib/supabase-proxy-routing.ts";
 
 const origin = "https://review-qr-page-git-codex-cashfree-sandbox-preview-review-qr.vercel.app";
 const baseEnvironment = {
@@ -28,6 +29,29 @@ function request({ url = `${origin}/api/admin/cashfree-preview-runtime-check`, h
     body,
   });
 }
+
+test("global Supabase session refresh skips only the exact diagnostic path", () => {
+  assert.equal(shouldSkipSupabaseSessionRefresh("/api/admin/cashfree-preview-runtime-check"), true);
+  for (const pathname of [
+    "/api/admin/cashfree-preview-runtime-check/extra",
+    "/api/admin/cashfree-preview-runtime-check-extra",
+    "/api/admin/other",
+    "/admin",
+    "/",
+  ]) {
+    assert.equal(shouldSkipSupabaseSessionRefresh(pathname), false, pathname);
+  }
+});
+
+test("proxy returns NextResponse.next for the exact diagnostic path before session refresh", async () => {
+  const proxy = await readFile(new URL("../../../../proxy.ts", import.meta.url), "utf8");
+  const earlyReturn = proxy.indexOf("if (shouldSkipSupabaseSessionRefresh(pathname))");
+  const nextResponse = proxy.indexOf("return NextResponse.next();", earlyReturn);
+  const refreshCall = proxy.indexOf("return updateSupabaseSession(", earlyReturn);
+  assert.ok(earlyReturn >= 0);
+  assert.ok(nextResponse > earlyReturn);
+  assert.ok(refreshCall > nextResponse);
+});
 
 async function run(env = baseEnvironment, authorized = true, req = request()) {
   let authorizationCalls = 0;
