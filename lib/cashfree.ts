@@ -8,7 +8,7 @@ import {
 import { appConfig, type PlanId } from "@/lib/config";
 import { cashfreeLivePaymentsEnabled, resolveCashfreeServerConfiguration, type CashfreeEnvironment } from "@/lib/cashfree-environment";
 import { verifyCashfreeSignature } from "@/lib/cashfree-signature";
-import { resolveCashfreeWebhookUrl } from "@/lib/cashfree-webhook-url";
+import { resolveCashfreeReturnUrl, resolveCashfreeWebhookUrl } from "@/lib/cashfree-webhook-url";
 import { createCashfreeRequestInit } from "@/lib/cashfree-request-init";
 import { logTrustitCheckoutStage, type TrustitCheckoutDiagnosticStage } from "@/lib/trustit-checkout-diagnostics";
 
@@ -195,15 +195,7 @@ function configuredWebhookUrl(): string | null {
 }
 
 export function configuredTrustitPaymentReturnUrl(): string | null {
-  const webhookUrl = configuredWebhookUrl();
-  if (!webhookUrl) return null;
-
-  try {
-    const origin = new URL(webhookUrl).origin;
-    return `${origin}/register/payment?order_id={order_id}`;
-  } catch {
-    return null;
-  }
+  return resolveCashfreeReturnUrl(process.env);
 }
 
 function signClaims(encodedClaims: string): string {

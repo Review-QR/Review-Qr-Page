@@ -1,0 +1,4 @@
+[functions.trustit-cashfree-preview-webhook]
+# Cashfree cannot supply a Supabase JWT. The function authenticates every
+# request with Cashfree's raw-body signature and verifies payment server-side.
+verify_jwt = false

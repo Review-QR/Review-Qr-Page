@@ -69,12 +69,26 @@ function isLocalOrPrivateWebhookHost(hostname: string): boolean {
 export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | null {
   const deploymentEnvironment = env.VERCEL_ENV?.trim();
   if (deploymentEnvironment === "preview") {
-    // Cashfree's Create Order API accepts a callback URL, not custom request
-    // headers. Do not place Vercel's project-wide protection bypass secret in
-    // that URL. Until Preview has a separately approved callback transport,
-    // fail closed instead of sending callbacks that cannot reach protected
-    // deployments or leaking a bypass credential to Cashfree.
-    return null;
+    // Cashfree cannot attach Vercel's Trusted Sources OIDC header. Route the
+    // callback to the isolated Preview Supabase ingress only after it has been
+    // deployed and explicitly enabled. Never place a Vercel bypass secret in
+    // the callback URL.
+    if (
+      env.VERCEL_GIT_COMMIT_REF?.trim() !== "codex/cashfree-sandbox-preview" ||
+      env.CASHFREE_ENVIRONMENT?.trim() !== "sandbox" ||
+      env.CASHFREE_PREVIEW_WEBHOOK_INGRESS_ENABLED?.trim() !== "true"
+    ) return null;
+    try {
+      const supabase = new URL(env.NEXT_PUBLIC_SUPABASE_URL ?? "");
+      if (
+        supabase.protocol !== "https:" ||
+        supabase.hostname !== "piqwsyzktzjhafkcstjl.supabase.co" ||
+        supabase.username || supabase.password || supabase.port || supabase.search || supabase.hash
+      ) return null;
+      return "https://piqwsyzktzjhafkcstjl.supabase.co/functions/v1/trustit-cashfree-preview-webhook";
+    } catch {
+      return null;
+    }
   }
 
   const productionOrigin = originOf(env.VERCEL_PROJECT_PRODUCTION_URL);
@@ -111,6 +125,30 @@ export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | 
       return null;
     }
     return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+/** Build the browser return target independently from the webhook ingress. */
+export function resolveCashfreeReturnUrl(env: WebhookUrlEnvironment): string | null {
+  const deploymentEnvironment = env.VERCEL_ENV?.trim();
+  let candidate: string | null = null;
+  if (deploymentEnvironment === "preview") {
+    if (env.VERCEL_GIT_COMMIT_REF?.trim() !== "codex/cashfree-sandbox-preview") return null;
+    candidate = deploymentUrl(env.VERCEL_BRANCH_URL) || deploymentUrl(env.VERCEL_URL);
+  } else {
+    // Keep the pre-existing webhook host validation contract for Production
+    // and development; only Preview needs a separate browser return origin.
+    candidate = resolveCashfreeWebhookUrl(env);
+  }
+  if (!candidate) return null;
+  try {
+    const url = new URL(candidate);
+    const hostname = url.hostname.toLowerCase().replace(/\.$/, "");
+    if (url.protocol !== "https:" || url.username || url.password || url.port || url.search || url.hash ||
+        (deploymentEnvironment === "preview" && (!hostname.endsWith(".vercel.app") || hostname === "trustitreview.com"))) return null;
+    return `${url.origin}/register/payment?order_id={order_id}`;
   } catch {
     return null;
   }
