@@ -13,6 +13,7 @@ const EXPECTED_BRANCH_HOST =
   "review-qr-page-git-codex-cashfree-sandbox-preview-review-qr.vercel.app";
 const EXPECTED_PREVIEW_ORIGIN = `https://${EXPECTED_BRANCH_HOST}`;
 const DIAGNOSTIC_PATH = "/api/admin/cashfree-preview-runtime-check";
+const EMPTY_BODY_READ_TIMEOUT_MS = 3_000;
 
 export type DiagnosticStatus = "PASS" | "FAIL" | "NOT VERIFIED";
 
@@ -54,7 +55,67 @@ function emptyResponse(status: number): Response {
   return new Response(null, { status, headers: commonHeaders() });
 }
 
-function getRequestGuardResults(request: Request): RequestGuardResults {
+function cancelRequestBodyReader(reader: ReadableStreamDefaultReader<Uint8Array>): void {
+  try {
+    void reader.cancel().catch(() => undefined).finally(() => {
+      try {
+        reader.releaseLock();
+      } catch {
+        // A pending source read can keep the lock until the source settles.
+      }
+    });
+  } catch {
+    // Cancellation is best-effort; the caller still fails closed.
+  }
+}
+
+async function isRequestBodyAbsent(request: Request): Promise<boolean> {
+  if (request.body === null) return true;
+
+  // Some Fetch-compatible runtimes expose a stream even when it carries no
+  // bytes. Consume only enough to distinguish an empty stream from a body;
+  // this route never uses the body for anything else.
+  let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    reader = request.body.getReader();
+    const deadline = new Promise<{ kind: "timeout" }>((resolve) => {
+      timeout = setTimeout(() => {
+        resolve({ kind: "timeout" });
+      }, EMPTY_BODY_READ_TIMEOUT_MS);
+    });
+
+    while (true) {
+      const read = reader.read().then(
+        (result) => ({ kind: "read" as const, result }),
+        () => ({ kind: "error" as const }),
+      );
+      const outcome = await Promise.race([read, deadline]);
+      if (outcome.kind === "timeout") {
+        // Do not await cancellation: a stream source may not settle cancel().
+        cancelRequestBodyReader(reader);
+        return false;
+      }
+      if (outcome.kind === "error") return false;
+      if (outcome.result.done) return true;
+      if (outcome.result.value?.byteLength) {
+        cancelRequestBodyReader(reader);
+        return false;
+      }
+    }
+  } catch {
+    return false;
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+    try {
+      reader?.releaseLock();
+    } catch {
+      // Preserve fail-closed handling if the stream cannot be unlocked.
+    }
+  }
+}
+
+async function getRequestGuardResults(request: Request): Promise<RequestGuardResults> {
   let urlPathValid = false;
   let queryHashAbsent = false;
   try {
@@ -72,7 +133,7 @@ function getRequestGuardResults(request: Request): RequestGuardResults {
     queryHashAbsent,
     originMatches: request.headers.get("origin") === EXPECTED_PREVIEW_ORIGIN,
     secFetchSiteSameOrigin: request.headers.get("sec-fetch-site") === "same-origin",
-    bodyAbsent: request.body === null,
+    bodyAbsent: await isRequestBodyAbsent(request),
   };
 }
 
@@ -139,7 +200,7 @@ export async function handlePreviewCashfreeRuntimeDiagnostic(
   authorizeActiveAdmin: AuthorizeActiveAdmin,
 ): Promise<Response> {
   if (request.method !== "POST") return emptyResponse(405);
-  const requestGuards = getRequestGuardResults(request);
+  const requestGuards = await getRequestGuardResults(request);
   if (!requestPassesSameOriginGuards(requestGuards)) {
     logRejectedRequestGuardsInExpectedPreview(env, requestGuards);
     return emptyResponse(403);

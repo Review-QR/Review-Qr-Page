@@ -30,6 +30,49 @@ function request({ url = `${origin}/api/admin/cashfree-preview-runtime-check`, h
   });
 }
 
+function streamedRequest(chunks) {
+  return requestWithStream(new ReadableStream({
+    start(controller) {
+      for (const chunk of chunks) controller.enqueue(new TextEncoder().encode(chunk));
+      controller.close();
+    },
+  }));
+}
+
+function requestWithStream(body) {
+  return new Request(`${origin}/api/admin/cashfree-preview-runtime-check`, {
+    method: "POST",
+    headers: {
+      origin,
+      "sec-fetch-site": "same-origin",
+    },
+    body,
+    duplex: "half",
+  });
+}
+
+async function withDeadlineTimerTracking(operation) {
+  const scheduled = [];
+  const cleared = [];
+  const originalSetTimeout = globalThis.setTimeout;
+  const originalClearTimeout = globalThis.clearTimeout;
+  globalThis.setTimeout = (callback, delay, ...args) => {
+    const handle = originalSetTimeout(callback, delay, ...args);
+    if (delay === 3000) scheduled.push(handle);
+    return handle;
+  };
+  globalThis.clearTimeout = (handle) => {
+    if (scheduled.includes(handle)) cleared.push(handle);
+    return originalClearTimeout(handle);
+  };
+  try {
+    return { result: await operation(), scheduled, cleared };
+  } finally {
+    globalThis.setTimeout = originalSetTimeout;
+    globalThis.clearTimeout = originalClearTimeout;
+  }
+}
+
 test("global Supabase session refresh skips only the exact diagnostic path", () => {
   assert.equal(shouldSkipSupabaseSessionRefresh("/api/admin/cashfree-preview-runtime-check"), true);
   for (const pathname of [
@@ -195,7 +238,14 @@ test("each failed setting reports FAIL without disclosing configuration", async 
 });
 
 test("same-origin, body-free requests are required and responses are never cacheable", async () => {
+  const malformedUrlRequest = {
+    method: "POST",
+    url: "not a URL",
+    headers: new Headers({ origin, "sec-fetch-site": "same-origin" }),
+    body: null,
+  };
   const cases = [
+    malformedUrlRequest,
     request({ headers: { origin: "https://attacker.example" } }),
     request({ headers: { "sec-fetch-site": "cross-site" } }),
     request({ headers: { origin: undefined } }),
@@ -217,6 +267,59 @@ test("same-origin, body-free requests are required and responses are never cache
   assert.equal(response.headers.get("access-control-allow-origin"), null);
 });
 
+test("empty Fetch body streams pass while non-empty streams fail closed", async () => {
+  const { result: emptyStream, scheduled, cleared } = await withDeadlineTimerTracking(
+    () => run(baseEnvironment, true, streamedRequest([])),
+  );
+  assert.equal(emptyStream.response.status, 200);
+  assert.equal(emptyStream.authorizationCalls, 1);
+  assert.equal(scheduled.length, 1);
+  assert.deepEqual(cleared, scheduled);
+
+  const nonEmptyStream = await run(baseEnvironment, true, streamedRequest(["body-canary"]));
+  assert.equal(nonEmptyStream.response.status, 403);
+  assert.equal(nonEmptyStream.authorizationCalls, 0);
+  assert.equal(await nonEmptyStream.response.text(), "");
+});
+
+test("body stream read errors fail closed without admin authorization", async () => {
+  const readError = new ReadableStream({
+    start(controller) {
+      controller.error(new Error("test-only body stream failure"));
+    },
+  });
+  const { result, scheduled, cleared } = await withDeadlineTimerTracking(
+    () => run(baseEnvironment, true, requestWithStream(readError)),
+  );
+  assert.equal(result.response.status, 403);
+  assert.equal(result.authorizationCalls, 0);
+  assert.equal(await result.response.text(), "");
+  assert.equal(scheduled.length, 1);
+  assert.deepEqual(cleared, scheduled);
+});
+
+test("body stream that never reaches EOF times out, cancels, and fails closed", async () => {
+  let cancellationCalled = false;
+  const neverEnding = new ReadableStream({
+    pull() {},
+    cancel() {
+      cancellationCalled = true;
+    },
+  });
+  const req = requestWithStream(neverEnding);
+  const { result, scheduled, cleared } = await withDeadlineTimerTracking(
+    () => run(baseEnvironment, true, req),
+  );
+  assert.equal(result.response.status, 403);
+  assert.equal(result.authorizationCalls, 0);
+  assert.equal(await result.response.text(), "");
+  assert.equal(cancellationCalled, true);
+  assert.equal(scheduled.length, 1);
+  assert.deepEqual(cleared, scheduled);
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(req.body.locked, false);
+});
+
 test("each failed request guard logs only its fixed boolean result and preserves the empty 403", async (t) => {
   const cases = [
     ["URL/path", request({ url: `${origin}/wrong-path-canary` }), "urlPathValid"],
@@ -224,6 +327,7 @@ test("each failed request guard logs only its fixed boolean result and preserves
     ["Origin", request({ headers: { origin: "https://origin-canary.example" } }), "originMatches"],
     ["Sec-Fetch-Site", request({ headers: { "sec-fetch-site": "cross-site" } }), "secFetchSiteSameOrigin"],
     ["body", request({ body: "body-canary" }), "bodyAbsent"],
+    ["stream body", streamedRequest(["body-canary"]), "bodyAbsent"],
   ];
   const expectedFields = [
     "urlPathValid",
@@ -259,6 +363,7 @@ test("each failed request guard logs only its fixed boolean result and preserves
 test("valid requests, auth denials, and wrong deployment or Supabase targets never emit guard logs", async (t) => {
   const scenarios = [
     ["valid request", baseEnvironment, true, request(), 200],
+    ["valid request with empty body stream", baseEnvironment, true, streamedRequest([]), 200],
     ["active-admin denial", baseEnvironment, false, request(), 401],
     ["wrong deployment with failed guard", { ...baseEnvironment, VERCEL_ENV: "production" }, true, request({ headers: { origin: "https://origin-canary.example" } }), 403],
     ["wrong Supabase target with failed guard", { ...baseEnvironment, NEXT_PUBLIC_SUPABASE_URL: "https://czzeyhpelwafmoiufhvu.supabase.co" }, true, request({ headers: { origin: "https://origin-canary.example" } }), 403],
