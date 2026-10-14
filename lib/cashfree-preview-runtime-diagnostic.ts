@@ -31,6 +31,16 @@ export type PreviewCashfreeDiagnosticChecks = {
 
 type AuthorizeActiveAdmin = () => Promise<boolean>;
 
+type RequestGuardResults = {
+  urlPathValid: boolean;
+  queryHashAbsent: boolean;
+  originMatches: boolean;
+  secFetchSiteSameOrigin: boolean;
+  bodyAbsent: boolean;
+};
+
+const REQUEST_GUARD_LOG_EVENT = "cashfree_preview_runtime_guard_rejected";
+
 function commonHeaders(): HeadersInit {
   return {
     "Cache-Control": "private, no-store",
@@ -44,20 +54,46 @@ function emptyResponse(status: number): Response {
   return new Response(null, { status, headers: commonHeaders() });
 }
 
-function hasSameOriginRequest(request: Request): boolean {
+function getRequestGuardResults(request: Request): RequestGuardResults {
+  let urlPathValid = false;
+  let queryHashAbsent = false;
   try {
     const requestUrl = new URL(request.url);
-    return (
+    urlPathValid =
       requestUrl.origin === EXPECTED_PREVIEW_ORIGIN &&
-      requestUrl.pathname === DIAGNOSTIC_PATH &&
-      requestUrl.search === "" &&
-      requestUrl.hash === "" &&
-      request.headers.get("origin") === EXPECTED_PREVIEW_ORIGIN &&
-      request.headers.get("sec-fetch-site") === "same-origin"
-    );
+      requestUrl.pathname === DIAGNOSTIC_PATH;
+    queryHashAbsent = requestUrl.search === "" && requestUrl.hash === "";
   } catch {
-    return false;
+    // Keep malformed request URLs fail-closed without recording their contents.
   }
+
+  return {
+    urlPathValid,
+    queryHashAbsent,
+    originMatches: request.headers.get("origin") === EXPECTED_PREVIEW_ORIGIN,
+    secFetchSiteSameOrigin: request.headers.get("sec-fetch-site") === "same-origin",
+    bodyAbsent: request.body === null,
+  };
+}
+
+function requestPassesSameOriginGuards(guards: RequestGuardResults): boolean {
+  return Object.values(guards).every((passed) => passed);
+}
+
+function logRejectedRequestGuardsInExpectedPreview(
+  env: PreviewCashfreeDiagnosticEnvironment,
+  guards: RequestGuardResults,
+): void {
+  if (!isExpectedPreviewRuntime(env) || !hasRequiredSupabaseTarget(env)) return;
+
+  // Deliberately log only fixed labels and booleans; never include request data.
+  console.warn(REQUEST_GUARD_LOG_EVENT, {
+    urlPathValid: guards.urlPathValid,
+    queryHashAbsent: guards.queryHashAbsent,
+    originMatches: guards.originMatches,
+    secFetchSiteSameOrigin: guards.secFetchSiteSameOrigin,
+    bodyAbsent: guards.bodyAbsent,
+  });
 }
 
 function isExpectedPreviewRuntime(env: PreviewCashfreeDiagnosticEnvironment): boolean {
@@ -103,7 +139,11 @@ export async function handlePreviewCashfreeRuntimeDiagnostic(
   authorizeActiveAdmin: AuthorizeActiveAdmin,
 ): Promise<Response> {
   if (request.method !== "POST") return emptyResponse(405);
-  if (!hasSameOriginRequest(request) || request.body !== null) return emptyResponse(403);
+  const requestGuards = getRequestGuardResults(request);
+  if (!requestPassesSameOriginGuards(requestGuards)) {
+    logRejectedRequestGuardsInExpectedPreview(env, requestGuards);
+    return emptyResponse(403);
+  }
 
   // These checks must precede admin-client creation so a wrong URL can never
   // cause an auth request to Production or another Supabase project.

@@ -62,6 +62,17 @@ async function run(env = baseEnvironment, authorized = true, req = request()) {
   return { response, authorizationCalls };
 }
 
+async function runWithCapturedWarnings(env = baseEnvironment, authorized = true, req = request()) {
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(args);
+  try {
+    return { ...(await run(env, authorized, req)), warnings };
+  } finally {
+    console.warn = originalWarn;
+  }
+}
+
 test("wrong project, deployment environment, branch, or branch host fails before Supabase authorization", async (t) => {
   const cases = [
     ["missing project ID", { VERCEL_PROJECT_ID: undefined }],
@@ -204,6 +215,63 @@ test("same-origin, body-free requests are required and responses are never cache
   assert.equal(response.headers.get("cache-control"), "private, no-store");
   assert.equal(response.headers.get("vary"), "Cookie");
   assert.equal(response.headers.get("access-control-allow-origin"), null);
+});
+
+test("each failed request guard logs only its fixed boolean result and preserves the empty 403", async (t) => {
+  const cases = [
+    ["URL/path", request({ url: `${origin}/wrong-path-canary` }), "urlPathValid"],
+    ["query/hash", request({ url: `${origin}/api/admin/cashfree-preview-runtime-check?query-canary` }), "queryHashAbsent"],
+    ["Origin", request({ headers: { origin: "https://origin-canary.example" } }), "originMatches"],
+    ["Sec-Fetch-Site", request({ headers: { "sec-fetch-site": "cross-site" } }), "secFetchSiteSameOrigin"],
+    ["body", request({ body: "body-canary" }), "bodyAbsent"],
+  ];
+  const expectedFields = [
+    "urlPathValid",
+    "queryHashAbsent",
+    "originMatches",
+    "secFetchSiteSameOrigin",
+    "bodyAbsent",
+  ];
+
+  for (const [name, req, failedField] of cases) {
+    await t.test(name, async () => {
+      const { response, authorizationCalls, warnings } = await runWithCapturedWarnings(baseEnvironment, true, req);
+      assert.equal(response.status, 403);
+      assert.equal(response.body, null);
+      assert.equal(response.headers.get("cache-control"), "private, no-store");
+      assert.equal(response.headers.get("vary"), "Cookie");
+      assert.equal(authorizationCalls, 0);
+      assert.equal(warnings.length, 1);
+      assert.equal(warnings[0][0], "cashfree_preview_runtime_guard_rejected");
+      assert.deepEqual(Object.keys(warnings[0][1]), expectedFields);
+      for (const value of Object.values(warnings[0][1])) assert.equal(typeof value, "boolean");
+      assert.equal(warnings[0][1][failedField], false);
+      assert.equal(Object.values(warnings[0][1]).filter((value) => !value).length, 1);
+      const captured = JSON.stringify(warnings);
+      for (const canary of ["wrong-path-canary", "query-canary", "origin-canary", "body-canary"]) {
+        assert.equal(captured.includes(canary), false);
+      }
+      assert.equal((await response.text()).length, 0);
+    });
+  }
+});
+
+test("valid requests, auth denials, and wrong deployment or Supabase targets never emit guard logs", async (t) => {
+  const scenarios = [
+    ["valid request", baseEnvironment, true, request(), 200],
+    ["active-admin denial", baseEnvironment, false, request(), 401],
+    ["wrong deployment with failed guard", { ...baseEnvironment, VERCEL_ENV: "production" }, true, request({ headers: { origin: "https://origin-canary.example" } }), 403],
+    ["wrong Supabase target with failed guard", { ...baseEnvironment, NEXT_PUBLIC_SUPABASE_URL: "https://czzeyhpelwafmoiufhvu.supabase.co" }, true, request({ headers: { origin: "https://origin-canary.example" } }), 403],
+    ["wrong deployment target", { ...baseEnvironment, VERCEL_GIT_COMMIT_REF: "main" }, true, request(), 404],
+    ["wrong Supabase target", { ...baseEnvironment, NEXT_PUBLIC_SUPABASE_URL: "https://czzeyhpelwafmoiufhvu.supabase.co" }, true, request(), 404],
+  ];
+  for (const [name, env, authorized, req, expectedStatus] of scenarios) {
+    await t.test(name, async () => {
+      const { response, warnings } = await runWithCapturedWarnings(env, authorized, req);
+      assert.equal(response.status, expectedStatus);
+      assert.deepEqual(warnings, []);
+    });
+  }
 });
 
 test("secret canaries never appear in response bodies or captured logs; no Cashfree fetch runs", async () => {
