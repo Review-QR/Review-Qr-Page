@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
 import { signInAction } from "./actions";
+import { adminRecoveryLoginMessage } from "@/lib/admin-recovery-login-message";
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(signInAction, {
@@ -11,13 +12,18 @@ export default function LoginPage() {
   const [queryMessage, setQueryMessage] = useState("");
 
   useEffect(() => {
-    const error = new URLSearchParams(window.location.search).get("error");
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    const recovery = params.get("recovery");
 
     if (error === "not_admin") {
       setQueryMessage(
         "Your account does not have active administrator access. Contact an administrator."
       );
+      return;
     }
+
+    setQueryMessage(adminRecoveryLoginMessage(recovery) ?? "");
   }, []);
   const message = state.message || queryMessage;
 
