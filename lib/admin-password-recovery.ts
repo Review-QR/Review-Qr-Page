@@ -1,4 +1,6 @@
 export const ADMIN_RECOVERY_BRANCH = "codex/cashfree-sandbox-preview";
+export const ADMIN_RECOVERY_PREVIEW_HOST =
+  "review-qr-page-git-codex-cashfree-sandbox-preview-review-qr.vercel.app";
 export const ADMIN_RECOVERY_MESSAGE =
   "If an eligible account exists, password recovery instructions will be sent.";
 export const ADMIN_RECOVERY_CALLBACK_PATH = "/auth/callback";
@@ -6,7 +8,7 @@ export const ADMIN_RECOVERY_CALLBACK_PATH = "/auth/callback";
 type RecoveryEnvironment = {
   VERCEL_ENV?: string;
   VERCEL_GIT_COMMIT_REF?: string;
-  VERCEL_URL?: string;
+  VERCEL_BRANCH_URL?: string;
 };
 
 type AuthResult = { error: unknown | null };
@@ -41,9 +43,9 @@ export type RecoveryClient = {
 };
 
 /**
- * Trust only the current Vercel deployment host, and only on the named Preview
- * branch. The host comes from Vercel's deployment environment, never a query
- * parameter or caller-supplied redirect target.
+ * Trust only the stable Vercel branch URL, and only on the named Preview
+ * branch. The host must match the explicitly authorized Preview domain; it is
+ * never taken from a query parameter or caller-supplied redirect target.
  */
 export function authorizedPreviewOrigin(
   env: RecoveryEnvironment,
@@ -52,18 +54,13 @@ export function authorizedPreviewOrigin(
   if (
     env.VERCEL_ENV !== "preview" ||
     env.VERCEL_GIT_COMMIT_REF !== ADMIN_RECOVERY_BRANCH ||
-    !env.VERCEL_URL
+    env.VERCEL_BRANCH_URL !== ADMIN_RECOVERY_PREVIEW_HOST
   ) {
     return null;
   }
 
-  const host = env.VERCEL_URL.toLowerCase();
-  if (!/^review-qr-page-[a-z0-9-]+-review-qr\.vercel\.app$/.test(host)) {
-    return null;
-  }
-
   try {
-    const allowedOrigin = `https://${host}`;
+    const allowedOrigin = `https://${ADMIN_RECOVERY_PREVIEW_HOST}`;
     const candidate = new URL(requestOrigin ?? "");
     if (
       candidate.protocol !== "https:" ||
