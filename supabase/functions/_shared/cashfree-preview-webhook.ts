@@ -1,4 +1,5 @@
 const MAX_WEBHOOK_BYTES = 1_000_000;
+const CASHFREE_WEBHOOK_MAX_AGE_MS = 5 * 60 * 1000;
 const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32}$/;
 const CASHFREE_SANDBOX_API_BASE_URL = "https://sandbox.cashfree.com/pg";
 const SUPABASE_PREVIEW_PROJECT_REF = "piqwsyzktzjhafkcstjl";
@@ -56,6 +57,14 @@ function safeConstantTimeEqual(expected: string, received: string): boolean {
     difference |= expected.charCodeAt(index) ^ received.charCodeAt(index);
   }
   return difference === 0;
+}
+
+/** Cashfree recommends rejecting Payment Gateway webhook timestamps older than five minutes. */
+export function isFreshCashfreeWebhookTimestamp(timestamp: string | null, now = Date.now()): boolean {
+  if (!timestamp || !/^\d{13}$/.test(timestamp)) return false;
+  const timestampMs = Number(timestamp);
+  return Number.isSafeInteger(timestampMs) && timestampMs >= 0 && timestampMs <= now &&
+    now - timestampMs <= CASHFREE_WEBHOOK_MAX_AGE_MS;
 }
 
 function decodeBase64Url(value: string): Uint8Array | null {
@@ -153,7 +162,9 @@ export function createCashfreePreviewWebhookHandler(deps: PreviewWebhookDependen
     }
     if (new TextEncoder().encode(rawBody).byteLength > MAX_WEBHOOK_BYTES) return response(413, "rejected");
 
-    if (!await deps.verifySignature(rawBody, request.headers.get("x-webhook-timestamp"), request.headers.get("x-webhook-signature"))) {
+    const timestamp = request.headers.get("x-webhook-timestamp");
+    if (!isFreshCashfreeWebhookTimestamp(timestamp)) return response(401, "unauthorized");
+    if (!await deps.verifySignature(rawBody, timestamp, request.headers.get("x-webhook-signature"))) {
       return response(401, "unauthorized");
     }
 

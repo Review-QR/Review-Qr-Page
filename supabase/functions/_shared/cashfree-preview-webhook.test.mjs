@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { createHmac } from "node:crypto";
 import {
   createCashfreePreviewWebhookHandler,
+  isFreshCashfreeWebhookTimestamp,
   readSignedOrderContext,
   verifyCashfreeSandboxOrder,
 } from "./cashfree-preview-webhook.ts";
@@ -29,7 +30,7 @@ const success = () => ({
   },
 });
 
-function signedRequest(body, timestamp = "1791849600") {
+function signedRequest(body, timestamp = Date.now().toString()) {
   const signature = createHmac("sha256", secret).update(`${timestamp}${body}`).digest("base64");
   return new Request("https://piqwsyzktzjhafkcstjl.supabase.co/functions/v1/trustit-cashfree-preview-webhook", {
     method: "POST",
@@ -39,10 +40,11 @@ function signedRequest(body, timestamp = "1791849600") {
 }
 
 function harness({ env = environment, apply } = {}) {
-  const calls = { order: 0, onboarding: 0, apply: 0, finalize: 0 };
+  const calls = { signature: 0, order: 0, onboarding: 0, apply: 0, finalize: 0 };
   const handler = createCashfreePreviewWebhookHandler({
     environment: env,
     verifySignature: (body, timestamp, signature) => {
+      calls.signature += 1;
       const expected = createHmac("sha256", secret).update(`${timestamp}${body}`).digest("base64");
       return signature === expected;
     },
@@ -64,18 +66,62 @@ test("valid signed success verifies server-side and applies one payment", async 
   const response = await handler(signedRequest(JSON.stringify(success())));
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { result: "applied" });
-  assert.deepEqual(calls, { order: 1, onboarding: 1, apply: 1, finalize: 0 });
+  assert.deepEqual(calls, { signature: 1, order: 1, onboarding: 1, apply: 1, finalize: 0 });
 });
 
 test("invalid signatures and malformed signed payloads never reach payment verification", async () => {
   const { handler, calls } = harness();
   const invalid = new Request("https://edge.test", { method: "POST", headers: {
-    "x-webhook-timestamp": "1791849600", "x-webhook-signature": "invalid",
+    "x-webhook-timestamp": Date.now().toString(), "x-webhook-signature": "invalid",
   }, body: JSON.stringify(success()) });
   assert.equal((await handler(invalid)).status, 401);
   assert.equal((await handler(signedRequest("{"))).status, 400);
   assert.equal(calls.order, 0);
   assert.equal(calls.apply, 0);
+});
+
+test("Cashfree webhook timestamps enforce the documented five-minute replay window", async () => {
+  const now = 1_791_849_600_000;
+  assert.equal(isFreshCashfreeWebhookTimestamp(String(now - 5 * 60 * 1000), now), true);
+  assert.equal(isFreshCashfreeWebhookTimestamp(String(now - 5 * 60 * 1000 - 1), now), false);
+  assert.equal(isFreshCashfreeWebhookTimestamp(String(now), now), true);
+  assert.equal(isFreshCashfreeWebhookTimestamp(String(now + 1), now), false);
+  assert.equal(isFreshCashfreeWebhookTimestamp(String(now + 60_000), now), false);
+  assert.equal(isFreshCashfreeWebhookTimestamp("1791849600", now), false);
+  assert.equal(isFreshCashfreeWebhookTimestamp("not-a-timestamp", now), false);
+
+  const { handler, calls } = harness();
+  const body = JSON.stringify(success());
+  const staleTimestamp = String(Date.now() - 5 * 60 * 1000 - 1);
+  const response = await handler(signedRequest(body, staleTimestamp));
+  assert.equal(response.status, 401);
+  assert.equal(calls.signature, 0);
+  assert.equal(calls.order, 0);
+  assert.equal(calls.onboarding, 0);
+  assert.equal(calls.apply, 0);
+  assert.equal(calls.finalize, 0);
+});
+
+test("missing, empty, malformed, seconds-based, and future timestamp headers stop before all downstream work", async () => {
+  const body = JSON.stringify(success());
+  const invalidTimestamps = [null, "", "1791849600", "not-a-timestamp", "2026-10-14T12:00:00Z"];
+
+  for (const timestamp of invalidTimestamps) {
+    const { handler, calls } = harness();
+    const headers = new Headers({ "x-webhook-signature": "unused" });
+    if (timestamp !== null) headers.set("x-webhook-timestamp", timestamp);
+    const request = new Request("https://piqwsyzktzjhafkcstjl.supabase.co/functions/v1/trustit-cashfree-preview-webhook", {
+      method: "POST", headers, body,
+    });
+
+    assert.equal((await handler(request)).status, 401, `timestamp case ${String(timestamp)}`);
+    assert.deepEqual(calls, { signature: 0, order: 0, onboarding: 0, apply: 0, finalize: 0 });
+  }
+
+  const { handler, calls } = harness();
+  const futureRequest = signedRequest(body, String(Date.now() + 60_000));
+  assert.equal((await handler(futureRequest)).status, 401);
+  assert.deepEqual(calls, { signature: 0, order: 0, onboarding: 0, apply: 0, finalize: 0 });
 });
 
 test("amount, currency, order and payment context mismatches cannot activate", async () => {
