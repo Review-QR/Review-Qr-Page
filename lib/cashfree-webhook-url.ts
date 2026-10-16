@@ -69,16 +69,24 @@ function isLocalOrPrivateWebhookHost(hostname: string): boolean {
 export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | null {
   const deploymentEnvironment = env.VERCEL_ENV?.trim();
   if (deploymentEnvironment === "preview") {
-    // Cashfree cannot attach Vercel's Trusted Sources OIDC header. Route the
-    // callback to the isolated Preview Supabase ingress only after it has been
-    // deployed and explicitly enabled. Never place a Vercel bypass secret in
-    // the callback URL.
+    // Keep Preview callbacks on the isolated Supabase ingress by default.
+    // Only the dedicated Sandbox branch may opt into its explicitly configured
+    // custom Vercel host, which proxy.ts limits to the signed webhook route.
     if (
       env.VERCEL_GIT_COMMIT_REF?.trim() !== "codex/cashfree-sandbox-preview" ||
       env.CASHFREE_ENVIRONMENT?.trim() !== "sandbox" ||
       !cashfreePreviewWebhookIngressEnabled(env.CASHFREE_PREVIEW_WEBHOOK_INGRESS_ENABLED)
     ) return null;
     if (!isPinnedPreviewSupabaseUrl(env.NEXT_PUBLIC_SUPABASE_URL)) return null;
+
+    const explicitPreviewUrl = env.CASHFREE_WEBHOOK_URL?.trim();
+    if (explicitPreviewUrl) {
+      return resolveExplicitPreviewVercelWebhookUrl(
+        explicitPreviewUrl,
+        env.VERCEL_PROJECT_PRODUCTION_URL,
+      );
+    }
+
     return "https://piqwsyzktzjhafkcstjl.supabase.co/functions/v1/trustit-cashfree-preview-webhook";
   }
 
@@ -112,6 +120,39 @@ export function resolveCashfreeWebhookUrl(env: WebhookUrlEnvironment): string | 
       url.pathname !== "/api/cashfree/webhook" ||
       isLocalOrPrivateWebhookHost(hostname) ||
       (env.CASHFREE_ENVIRONMENT?.trim() === "sandbox" && webhookOrigin === productionOrigin)
+    ) {
+      return null;
+    }
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+/** Validate an explicit public custom-domain callback for the guarded Vercel route. */
+function resolveExplicitPreviewVercelWebhookUrl(
+  configured: string,
+  productionUrl: string | undefined,
+): string | null {
+  try {
+    const url = new URL(configured);
+    const hostname = url.hostname.toLowerCase().replace(/^\[|\]$/g, "").replace(/\.$/, "");
+    const origin = originOf(url.toString());
+    const productionOrigin = originOf(productionUrl);
+    if (
+      url.protocol !== "https:" ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash ||
+      url.pathname !== "/api/cashfree/webhook" ||
+      hostname === "vercel.app" ||
+      hostname.endsWith(".vercel.app") ||
+      hostname === "supabase.co" ||
+      hostname.endsWith(".supabase.co") ||
+      isLocalOrPrivateWebhookHost(hostname) ||
+      !origin ||
+      origin === productionOrigin
     ) {
       return null;
     }
