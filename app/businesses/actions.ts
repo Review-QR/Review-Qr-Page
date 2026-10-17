@@ -5,6 +5,7 @@ import { requireActiveAdmin } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import { isAvailableBusinessType } from "@/lib/business-category-admin.server";
+import { logAdminBusinessActionFailure } from "@/lib/admin-business-action-diagnostic";
 import type { Business } from "@/lib/types";
 
 type BusinessInput = {
@@ -94,10 +95,22 @@ function parseBusiness(input: unknown): Omit<Business, "id"> | null {
 }
 
 export async function createAdminBusiness(input: unknown): Promise<BusinessResult> {
-  await requireActiveAdmin();
+  try {
+    await requireActiveAdmin();
+  } catch (error) {
+    logAdminBusinessActionFailure("authorization", error);
+    throw error;
+  }
   const business = parseBusiness(input);
   if (!business) return { success: false, message: "Check the business details and try again." };
-  if (!(await isAvailableBusinessType(business.type ?? ""))) return { success: false, message: "Select an active business type from the catalog." };
+  let availableBusinessType: boolean;
+  try {
+    availableBusinessType = await isAvailableBusinessType(business.type ?? "");
+  } catch (error) {
+    logAdminBusinessActionFailure("business_type_catalog", error);
+    throw error;
+  }
+  if (!availableBusinessType) return { success: false, message: "Select an active business type from the catalog." };
 
   try {
     const supabase = createSupabaseAdminClient();
@@ -127,7 +140,8 @@ export async function createAdminBusiness(input: unknown): Promise<BusinessResul
       if (!error && data) return { success: true, business: data as Business };
       if (error?.code !== "23505") break;
     }
-  } catch {
+  } catch (error) {
+    logAdminBusinessActionFailure("database", error);
     // Keep database and server configuration details out of the client response.
   }
   return { success: false, message: "Business could not be created. Please try again." };
