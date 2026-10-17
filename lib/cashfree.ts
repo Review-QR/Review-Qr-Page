@@ -312,6 +312,7 @@ async function createOrder(input: {
   customerName?: string;
   customerPhone?: string;
   diagnosticScope?: "trustit_registration";
+  idempotencyKey?: string;
 }): Promise<CashfreeOrderResult> {
   if (!Number.isFinite(input.amount) || input.amount < 1 || !input.customerId) {
     return {
@@ -339,7 +340,7 @@ async function createOrder(input: {
   if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_client_configuration_success");
 
   const orderId = input.orderId ?? `rqr_${randomUUID().replaceAll("-", "")}`;
-  const idempotencyKey = randomUUID();
+  const idempotencyKey = input.idempotencyKey ?? randomUUID();
   let response: Response;
 
   try {
@@ -446,6 +447,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
   customerName?: string;
   customerPhone?: string;
   orderId?: string;
+  idempotencyKey?: string;
   returnUrl?: string;
   diagnosticScope?: "trustit_registration";
 }): Promise<CashfreeOrderResult> {
@@ -489,6 +491,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
       orderId,
       customerName: input.customerName,
       customerPhone: input.customerPhone,
+      idempotencyKey: input.idempotencyKey,
       diagnosticScope: input.diagnosticScope,
       orderTags: {
         review_qr_context: signOrderContext({ orderId, businessId: input.businessId, planId: input.planId }),
@@ -507,6 +510,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
     orderId,
     customerName: input.customerName,
     customerPhone: input.customerPhone,
+    idempotencyKey: input.idempotencyKey,
     diagnosticScope: input.diagnosticScope,
     orderTags: {
       review_qr_context: signOrderContext({
