@@ -12,6 +12,17 @@ export type Business = {
   qr_type?: string | null;
   review_link?: string | null;
   address?: string | null;
+  locality?: string | null;
+  city?: string | null;
+  district?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  location_latitude?: number | null;
+  location_longitude?: number | null;
+  location_captured_at?: string | null;
+  discovery_location_verified_at?: string | null;
+  discovery_location_verified_by?: string | null;
+  discovery_location_verification_source?: string | null;
   created?: string | null;
   created_at?: string | null;
   registration_date?: string | null;

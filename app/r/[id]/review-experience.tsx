@@ -68,6 +68,7 @@ export default function ReviewExperience({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [draft, setDraft] = useState(initialSession?.draft ?? "");
+  const [customerInput, setCustomerInput] = useState("");
   const [step, setStep] = useState<Step>(initialSession?.submitted ? "submitted" : initialSession?.draft ? "review" : initialSession ? "experience" : "rating");
   const [unlockedStage, setUnlockedStage] = useState(initialSession?.submitted ? 4 : initialSession?.draft ? 3 : initialSession ? 1 : 0);
   const [shareDetails, setShareDetails] = useState(false);
@@ -143,7 +144,7 @@ export default function ReviewExperience({
         const savedDraft = await saveReviewDraft(draft);
         if (!savedDraft.ok) { setError("Your current draft could not be saved. Please try again."); return; }
       }
-      const result = await generateReviewDraft();
+      const result = await generateReviewDraft(customerInput);
       if (!result.ok) { setError("We couldn’t prepare a review suggestion. Please try again."); return; }
       setDraft(result.draft); setCopied(false); setUnlockedStage((current) => Math.max(current, 2)); setStep("review");
       setTimeout(() => document.getElementById("review-stage-review")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40);
@@ -249,6 +250,9 @@ export default function ReviewExperience({
           <h2 className="text-center text-xl font-extrabold tracking-tight text-[#10153f] sm:text-2xl">What did you like the most?</h2>
           <p className="mt-1 text-center text-sm text-slate-500">Choose one or more options that match your visit.</p>
           <p className="mt-1 text-center text-xs font-medium text-slate-400">{selectedCategories.length} of 10 selected</p>
+          <label htmlFor="trustit-experience-note" className="mt-5 block text-sm font-semibold text-slate-800">Anything else about your experience? <span className="font-normal text-slate-500">(optional)</span></label>
+          <textarea id="trustit-experience-note" value={customerInput} maxLength={600} onChange={(event) => setCustomerInput(event.target.value)} rows={2} placeholder="For example: food mast tha, service thodi slow thi" className="mt-2 w-full resize-y rounded-xl border border-slate-200 bg-white p-3 text-sm leading-5 text-slate-800 focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-100" />
+          <p className="mt-1 text-xs text-slate-500">Use your own words. This helps shape a draft you can edit.</p>
           <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-2">{experienceCategories.map((category, index) => {
             const active = selectedCategories.includes(category.key);
             return <button key={category.key} type="button" aria-pressed={active} disabled={isPending || (!active && selectedCategories.length >= 10)} onClick={() => toggleExperience(category.key)} className={`flex min-h-[60px] min-w-0 items-center gap-2 rounded-2xl border px-2.5 py-3 text-left text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-100 sm:min-h-[72px] sm:gap-3 sm:px-3.5 sm:text-sm ${active ? "border-amber-500 bg-amber-50 text-amber-900 shadow-[0_3px_12px_rgba(185,108,18,.10)]" : "border-amber-100 bg-white text-slate-700 hover:border-amber-300 hover:bg-amber-50/50"}`}>

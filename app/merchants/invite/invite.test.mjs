@@ -15,8 +15,9 @@ test("invite tokens are cryptographically random and only their SHA-256 hashes a
 });
 
 test("invite data remains private behind active-admin and capability-token RPC checks", async () => {
-  const migration = await read("../../../supabase/migrations/20261001175208_merchant_invites.sql");
+  const inviteMigration = await read("../../../supabase/migrations/20261001175208_merchant_invites.sql");
   const readers = await read("../../../supabase/migrations/20261002004552_merchant_invite_rpc_readers.sql");
+  const migration = `${inviteMigration}\n${readers}`;
   const actions = await read("./actions.ts");
   assert.match(migration, /alter table public\.merchant_invites enable row level security/);
   assert.match(migration, /revoke all on table public\.merchant_invites\s+from public, anon, authenticated, service_role/);

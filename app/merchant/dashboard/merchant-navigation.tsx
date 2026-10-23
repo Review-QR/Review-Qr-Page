@@ -2,15 +2,19 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import NotificationPanel from "./notifications/notification-panel";
 
 const items = [
   { href: "/merchant/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/merchant/dashboard/business", label: "My Business", icon: "business" },
   { href: "/merchant/dashboard/qr", label: "My QR Code", icon: "qr" },
   { href: "/merchant/dashboard/reviews", label: "Customer Reviews", icon: "reviews" },
+  { href: "/merchant/dashboard/messages", label: "Message Designer", icon: "business" },
   { href: "/merchant/dashboard#scan-analytics", label: "Analytics", icon: "analytics" },
   { href: "/merchant/dashboard/subscription", label: "Subscription", icon: "subscription" },
   { href: "/merchant/dashboard/payments", label: "Payments", icon: "payments" },
+  { href: "/merchant/dashboard/profile", label: "Merchant Profile", icon: "profile" },
 ];
 
 function NavigationIcon({ name }: { name: string }) {
@@ -23,26 +27,40 @@ function NavigationIcon({ name }: { name: string }) {
     analytics: <><path d="M4 20V11M10 20V5M16 20v-8M22 20V3" /></>,
     subscription: <><rect x="3" y="5" width="18" height="16" rx="2.5" /><path d="M7 3v4M17 3v4M3 10h18M8 14h3M8 17h7" /></>,
     payments: <><rect x="2.5" y="5" width="19" height="15" rx="2.5" /><path d="M3 10h18M7 15h4" /></>,
+    profile: <><circle cx="12" cy="8" r="3.5" /><path d="M5 21v-1.5a7 7 0 0 1 14 0V21z" /></>,
   };
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="merchant-nav__icon" {...common}>{paths[name]}</svg>;
 }
 
-export default function MerchantNavigation({ mobile = false }: { mobile?: boolean }) {
+export default function MerchantNavigation({ mobile = false, hasUnreadNotifications = false }: { mobile?: boolean; hasUnreadNotifications?: boolean }) {
   const pathname = usePathname();
+  const [hash, setHash] = useState("");
+
+  useEffect(() => {
+    const updateHash = () => setHash(window.location.hash);
+    updateHash();
+    window.addEventListener("hashchange", updateHash);
+    return () => window.removeEventListener("hashchange", updateHash);
+  }, []);
+
   return (
     <nav aria-label="Merchant navigation" className={mobile ? "merchant-mobile-nav" : "merchant-nav"}>
       {items.map((item) => {
         const active = item.href.endsWith("#scan-analytics")
-          ? pathname === "/merchant/dashboard"
+          ? pathname === "/merchant/dashboard" && hash === "#scan-analytics"
           : item.href === "/merchant/dashboard"
-            ? pathname === item.href
+            ? pathname === item.href && hash !== "#scan-analytics"
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
-        return (
-          <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={`merchant-nav__link${active ? " is-active" : ""}`}>
-            <NavigationIcon name={item.icon} />
-            <span>{item.label}</span>
-          </Link>
-        );
+        const link = <Link
+          href={item.href}
+          onClick={() => setHash(item.href.endsWith("#scan-analytics") ? "#scan-analytics" : "")}
+          aria-current={active ? "page" : undefined}
+          className={`merchant-nav__link${active ? " is-active" : ""}`}
+        >
+          <span className="relative inline-flex"><NavigationIcon name={item.icon} /></span>
+          <span>{item.label}</span>
+        </Link>;
+        return item.icon === "reviews" ? <div key={item.href} className="merchant-nav-item relative flex items-center">{link}<NotificationPanel unread={hasUnreadNotifications} /></div> : <div key={item.href} className="merchant-nav-item">{link}</div>;
       })}
     </nav>
   );

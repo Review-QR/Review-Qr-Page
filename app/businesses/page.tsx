@@ -4,9 +4,8 @@ import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { getBusinesses } from "@/lib/data";
 import type { Business } from "@/lib/types";
 import { safeReviewLink } from "@/lib/safe-review-link";
+import SearchableBusinessType from "@/app/components/searchable-business-type";
 import MerchantAccessForm from "./merchant-access-form";
-import BusinessTypePicker from "./business-type-picker";
-import { normalizeBusinessType } from "@/lib/business-types";
 import {
   createAdminBusiness,
   deleteAdminBusiness,
@@ -319,10 +318,16 @@ export default function BusinessesPage() {
                 />
               </div>
 
-              <BusinessTypePicker
-                value={form.type}
-                onChange={(type) => handleChange("type", type)}
-              />
+              <div>
+                <label className="mb-1 block text-sm font-medium">
+                  Business Type
+                </label>
+
+                <SearchableBusinessType
+                  value={form.type}
+                  onChange={(value) => handleChange("type", value)}
+                />
+              </div>
 
               <div>
                 <label className="mb-1 block text-sm font-medium">
@@ -698,10 +703,21 @@ export default function BusinessesPage() {
                   />
                 </div>
 
-                <BusinessTypePicker
-                  value={normalizeBusinessType(editingBusiness.type) ?? "Other"}
-                  onChange={(type) => setEditingBusiness({ ...editingBusiness, type })}
-                />
+                <div>
+                  <label className="mb-1 block text-sm font-medium">
+                    Business Type
+                  </label>
+
+                  <SearchableBusinessType
+                    value={editingBusiness.type || "Other"}
+                    onChange={(value) =>
+                      setEditingBusiness({
+                        ...editingBusiness,
+                        type: value,
+                      })
+                    }
+                  />
+                </div>
 
                 <div>
                   <label className="mb-1 block text-sm font-medium">

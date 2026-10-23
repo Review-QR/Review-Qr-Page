@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import {
   localReviewDraftProvider,
+  removeCustomerPii,
   requestReviewDraft,
 } from "@/lib/review-draft-provider";
 import {
@@ -404,8 +405,9 @@ export async function saveReviewSessionExperiencesForBusiness(
 export async function generateReviewDraftForBusiness(
   businessId: string,
   sessionId: string,
+  customerInput = "",
 ): Promise<GenerateReviewDraftResult> {
-  if (!isValidBusinessId(businessId) || !isValidSessionId(sessionId)) {
+  if (!isValidBusinessId(businessId) || !isValidSessionId(sessionId) || typeof customerInput !== "string" || customerInput.length > 600) {
     return { ok: false, message: DRAFT_FAILURE };
   }
 
@@ -501,6 +503,13 @@ export async function generateReviewDraftForBusiness(
       | null;
     if (claimError || !claim) return { ok: false, message: DRAFT_FAILURE };
 
+    const safeCustomerInput = removeCustomerPii(customerInput);
+    const { error: inputSaveError } = await admin.from("review_generations")
+      .update({ customer_input: safeCustomerInput || null })
+      .eq("review_session_id", sessionId).eq("business_id", businessId)
+      .eq("generation_number", generationNumber);
+    if (inputSaveError) return { ok: false, message: DRAFT_FAILURE };
+
     const execution = await executeClaimedReviewGeneration(
       claim,
       async () => {
@@ -511,6 +520,8 @@ export async function generateReviewDraftForBusiness(
           experienceLabels: experiences.map(
             (experience) => experience.category_label_snapshot,
           ),
+          customerInput: safeCustomerInput,
+          businessType,
         });
         if (!generated.ok) throw new Error("Review draft generation failed");
         return generated.draft;

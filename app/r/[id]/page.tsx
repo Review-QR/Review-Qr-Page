@@ -110,9 +110,9 @@ export default async function ScanPage({ params }: ScanPageProps) {
       categoryKeys,
     );
   }
-  async function generateReviewDraftAction() {
+  async function generateReviewDraftAction(customerInput?: string) {
     "use server";
-    return generateReviewDraftForBusiness(qrBusinessId, reviewSessionId);
+    return generateReviewDraftForBusiness(qrBusinessId, reviewSessionId, customerInput);
   }
   async function googleReviewHandoffAction(editedText: string) {
     "use server";

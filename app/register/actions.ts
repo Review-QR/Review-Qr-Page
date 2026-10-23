@@ -3,7 +3,7 @@
 import { randomUUID } from "node:crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
-import { BUSINESS_TYPES } from "@/lib/business-types";
+import { isAvailableBusinessType } from "@/lib/business-category-admin.server";
 import { appConfig, type PlanId } from "@/lib/config";
 import {
   getTrustitUser,
@@ -386,7 +386,7 @@ export async function saveTrustitBusiness(input: {
   const name = input?.name?.trim();
   const address = input?.address?.trim();
   const reviewLink = input?.reviewLink?.trim() ? safeReviewLink(input.reviewLink) : null;
-  if (!user || !name || name.length > 160 || !BUSINESS_TYPES.includes(input.type as (typeof BUSINESS_TYPES)[number]) || !address || address.length > 1000 || (input?.reviewLink?.trim() && !reviewLink)) {
+  if (!user || !name || name.length > 160 || typeof input?.type !== "string" || !address || address.length > 1000 || (input?.reviewLink?.trim() && !reviewLink) || !(await isAvailableBusinessType(input.type))) {
     return { success: false, message: "Please check the business details and Google Review link if provided." };
   }
   try {

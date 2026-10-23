@@ -23,7 +23,7 @@ export type GenerateReviewDraftResult =
   | { ok: true; draft: string }
   | { ok: false; message: string };
 
-export type GenerateReviewDraftAction = () => Promise<GenerateReviewDraftResult>;
+export type GenerateReviewDraftAction = (customerInput?: string) => Promise<GenerateReviewDraftResult>;
 
 export type RestoredReviewSession = {
   rating: number;

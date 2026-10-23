@@ -7,8 +7,9 @@ import {
 } from "node:crypto";
 import { isIP } from "node:net";
 import { appConfig, type PlanId } from "@/lib/config";
+import { cashfreeLivePaymentsEnabled, resolveCashfreeServerConfiguration, type CashfreeEnvironment } from "@/lib/cashfree-environment";
+import { verifyCashfreeSignature } from "@/lib/cashfree-signature";
 import { logTrustitCheckoutStage, type TrustitCheckoutDiagnosticStage } from "@/lib/trustit-checkout-diagnostics";
-import { resolveCashfreeApiBaseUrl, type CashfreeEnvironment } from "@/lib/cashfree-config";
 
 const CASHFREE_API_VERSION = "2026-01-01";
 
@@ -362,24 +363,16 @@ function requiredEnvironmentVariable(name: string): string {
 }
 
 export function createCashfreeClient(): CashfreeClient {
-  const clientId = requiredEnvironmentVariable("CASHFREE_CLIENT_ID");
-  const clientSecret = requiredEnvironmentVariable("CASHFREE_CLIENT_SECRET");
-  const environment = requiredEnvironmentVariable("CASHFREE_ENVIRONMENT");
-  const configuredBaseUrl = requiredEnvironmentVariable(
-    "CASHFREE_API_BASE_URL",
-  );
-
-  const apiConfiguration = resolveCashfreeApiBaseUrl(environment, configuredBaseUrl);
-  if (!apiConfiguration) throw new Error("Cashfree API environment or base URL is invalid");
+  const configuration = resolveCashfreeServerConfiguration(process.env);
 
   return {
-    apiBaseUrl: apiConfiguration.apiBaseUrl,
+    apiBaseUrl: configuration.apiBaseUrl,
     apiVersion: CASHFREE_API_VERSION,
-    environment: apiConfiguration.environment,
+    environment: configuration.environment,
     createRequestInit(init = {}) {
       const headers = new Headers(init.headers);
-      headers.set("x-client-id", clientId);
-      headers.set("x-client-secret", clientSecret);
+      headers.set("x-client-id", configuration.clientId);
+      headers.set("x-client-secret", configuration.clientSecret);
       headers.set("x-api-version", CASHFREE_API_VERSION);
 
       return { ...init, headers };
@@ -418,6 +411,9 @@ async function createOrder(input: {
       httpStatus: null,
       error: "Payment service is temporarily unavailable. Please try again.",
     };
+  }
+  if (client.environment === "production" && !cashfreeLivePaymentsEnabled(process.env)) {
+    return { success: false, httpStatus: null, error: "Cashfree live payments are disabled until explicitly enabled." };
   }
   if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_client_configuration_success");
 
@@ -532,6 +528,9 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
   returnUrl?: string;
   diagnosticScope?: "trustit_registration";
 }): Promise<CashfreeOrderResult> {
+  if (process.env.CASHFREE_ENVIRONMENT?.trim() === "production" && !cashfreeLivePaymentsEnabled(process.env)) {
+    return { success: false, httpStatus: null, error: "Cashfree live payments are disabled until explicitly enabled." };
+  }
   const diagnoseTrustitRegistration = input.diagnosticScope === "trustit_registration";
   const plan = appConfig.plans[input.planId];
   if (diagnoseTrustitRegistration) logTrustitCheckoutStage("cashfree_webhook_configuration_start");
@@ -565,7 +564,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
     } else result = await createOrder({
       amount: plan.price,
       customerId: input.businessId,
-      orderNote: `Review-QR ${plan.name} Sandbox checkout`,
+      orderNote: `Trustit ${plan.name} checkout`,
       orderId,
       customerName: input.customerName,
       customerPhone: input.customerPhone,
@@ -583,7 +582,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
   } else result = await createOrder({
     amount: plan.price,
     customerId: input.businessId,
-    orderNote: `Review-QR ${plan.name} Sandbox checkout`,
+    orderNote: `Trustit ${plan.name} checkout`,
     orderId,
     customerName: input.customerName,
     customerPhone: input.customerPhone,
@@ -901,25 +900,9 @@ export function verifyCashfreeWebhookSignature(input: {
   timestamp: string | null;
   signature: string | null;
 }): boolean {
-  if (
-    !input.timestamp ||
-    !/^\d{10,16}$/.test(input.timestamp) ||
-    !input.signature ||
-    !/^[A-Za-z0-9+/]+={0,2}$/.test(input.signature)
-  ) {
-    return false;
-  }
-
   try {
     const secret = requiredEnvironmentVariable("CASHFREE_CLIENT_SECRET");
-    const expected = createHmac("sha256", secret)
-      .update(`${input.timestamp}${input.rawBody}`)
-      .digest();
-    const supplied = Buffer.from(input.signature, "base64");
-    return (
-      expected.length === supplied.length &&
-      timingSafeEqual(expected, supplied)
-    );
+    return verifyCashfreeSignature({ ...input, secret });
   } catch {
     return false;
   }
@@ -1048,14 +1031,9 @@ export async function verifyCashfreeMerchantOrderBySignedContext(input: {
 
 /** Explicitly creates one test-only ₹29 Sandbox order for connectivity checks. */
 export async function createCashfreeSandboxTestOrder(): Promise<CashfreeSandboxTestOrderResult> {
-  try {
-    if (createCashfreeClient().environment !== "sandbox") {
-      return { success: false, httpStatus: null, error: "Sandbox connectivity checks are unavailable in production." };
-    }
-  } catch {
-    return { success: false, httpStatus: null, error: "Payment service is temporarily unavailable. Please try again." };
+  if (process.env.CASHFREE_ENVIRONMENT?.trim() !== "sandbox") {
+    return { success: false, httpStatus: null, error: "Sandbox test orders are only available in the Sandbox environment." };
   }
-
   const result = await createOrder({
     amount: 29,
     customerId: "reviewqr_sandbox_test",

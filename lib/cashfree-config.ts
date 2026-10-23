@@ -1,11 +1,6 @@
-export type CashfreeEnvironment = "sandbox" | "production";
+import { CASHFREE_ENDPOINTS, type CashfreeEnvironment } from "./cashfree-environment.ts";
 
-const API_PATH = "/pg";
-const API_ORIGINS: Record<CashfreeEnvironment, string> = {
-  sandbox: "https://sandbox.cashfree.com",
-  production: "https://api.cashfree.com",
-};
-
+/** Compatibility validator for callers that supply a mode and API URL directly. */
 export function resolveCashfreeApiBaseUrl(
   environment: string,
   configuredBaseUrl: string,
@@ -13,13 +8,12 @@ export function resolveCashfreeApiBaseUrl(
   if (environment !== "sandbox" && environment !== "production") return null;
   try {
     const url = new URL(configuredBaseUrl);
-    const expectedOrigin = API_ORIGINS[environment];
+    const expected = CASHFREE_ENDPOINTS[environment];
     if (
-      url.origin !== expectedOrigin ||
-      ![API_PATH, `${API_PATH}/`].includes(url.pathname) ||
+      url.origin + url.pathname.replace(/\/$/, "") !== expected ||
       url.username || url.password || url.search || url.hash
     ) return null;
-    return { environment, apiBaseUrl: `${expectedOrigin}${API_PATH}` };
+    return { environment, apiBaseUrl: expected };
   } catch {
     return null;
   }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { merchantSignOutAction } from "@/app/merchant/login/actions";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import MerchantNavigation from "./merchant-navigation";
+import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import "./dashboard.css";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,10 @@ function initials(value: string | null) {
 
 export default async function MerchantDashboardLayout({ children }: { children: React.ReactNode }) {
   const merchant = await requireActiveMerchant();
+  const supabase = await createMerchantServerClient();
+  const { count: unreadCount } = await supabase.from("merchant_notifications")
+    .select("id", { count: "exact", head: true }).eq("business_id", merchant.businessId).eq("is_read", false);
+  const hasUnreadNotifications = (unreadCount ?? 0) > 0;
 
   return (
     <div className="trustit-merchant-app">
@@ -44,7 +49,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
           </span>
         </div>
 
-        <MerchantNavigation />
+        <MerchantNavigation hasUnreadNotifications={hasUnreadNotifications} />
 
         <div className="merchant-sidebar__footer">
           <div className="merchant-help-icon" aria-hidden="true">?</div>
@@ -64,7 +69,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
           </Link>
           <form action={merchantSignOutAction}><button type="submit">Log out</button></form>
         </div>
-        <MerchantNavigation mobile />
+        <MerchantNavigation mobile hasUnreadNotifications={hasUnreadNotifications} />
         <main className="merchant-content">{children}</main>
       </div>
     </div>
