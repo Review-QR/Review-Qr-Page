@@ -51,7 +51,10 @@ test("invite registration checks token, expiry, pending status and existing mapp
   assert.match(action, /invite\.merchant_status !== "pending"/);
   assert.match(action, /invite\.has_account/);
   assert.match(action, /merchantAuthEmail\(businessId\)/);
+  assert.match(action, /reconcileMerchantInviteCompletion/);
+  assert.match(action, /\.from\("merchant_accounts"\)[\s\S]*?\.eq\("business_id", businessId\)[\s\S]*?\.maybeSingle\(\)/);
   assert.match(action, /deleteUser\(created\.user\.id\)/);
+  assert.doesNotMatch(action, /if\s*\(completeError[\s\S]*?deleteUser/);
   assert.match(action, /complete_merchant_invite/);
   assert.match(migration, /merchant_status = 'pending'/);
   assert.match(migration, /insert into public\.merchant_accounts \(business_id, user_id\)/);
