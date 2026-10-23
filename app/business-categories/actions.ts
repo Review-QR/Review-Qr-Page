@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { iconNames } from "lucide-react/dynamic";
 import { BUSINESS_CATALOG } from "@/lib/config/business-catalog";
 import { mergeBusinessCategoryCatalog, normalizeBusinessCategoryTerm, type ExperienceMapping } from "@/lib/business-category-catalog";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -11,7 +10,17 @@ import { getSelectableBusinessCategoryData } from "@/lib/business-category-admin
 import type { UnifiedBusinessCategory } from "@/lib/business-category-catalog";
 
 const FAMILY_SET = new Set(["food", "retail", "healthcare", "education", "beauty", "hospitality", "automotive", "home", "professional", "finance", "technology", "entertainment", "travel", "events", "agriculture", "community", "manufacturing", "general"]);
-const ICONS = new Set<string>(iconNames);
+// Keep this server action independent from the client-only lucide-react/dynamic module.
+const STATIC_ICONS = new Set<string>([
+  "Armchair", "BadgeCheck", "BadgeIndianRupee", "Bath", "Bike", "BookOpen", "BookOpenCheck", "BrickWall",
+  "BriefcaseBusiness", "CakeSlice", "Calculator", "CalendarCheck", "Camera", "CarFront", "CircleDot", "Clapperboard",
+  "Coffee", "Cog", "CreditCard", "Croissant", "Dumbbell", "Factory", "Flower2", "Fuel", "Gamepad2", "Gem", "Hammer",
+  "HandHelping", "HeartPulse", "Hospital", "Hotel", "House", "Lamp", "Landmark", "Laptop", "LibraryBig", "MapPin",
+  "Megaphone", "MessagesSquare", "Microscope", "Monitor", "Music2", "Package", "PackageCheck", "Palette", "PartyPopper",
+  "PawPrint", "Pencil", "Pill", "Plane", "PlugZap", "Printer", "Scale", "Scissors", "ShieldCheck", "Shirt",
+  "ShoppingBag", "Smartphone", "Sparkles", "Stethoscope", "Store", "Timer", "Trophy", "UsersRound", "Utensils",
+  "WalletCards", "WashingMachine", "Waves", "Wheat", "Wifi", "Wrench", "Zap",
+]);
 const DEFAULT_EXPERIENCES = ["Quality", "Service", "Staff", "Cleanliness", "Overall Experience"];
 
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value); }
@@ -19,9 +28,12 @@ function cleanText(value: unknown, max: number) { return typeof value === "strin
 function isSafeLabel(value: string) { return /^[\p{L}\p{N}\s&().'’'/-]+$/u.test(value); }
 function normalizeIcon(value: unknown): string | null {
   if (typeof value !== "string") return null;
-  if (ICONS.has(value)) return value;
-  const kebab = value.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLocaleLowerCase();
-  return ICONS.has(kebab) ? kebab : null;
+  const trimmed = value.trim();
+  if (!/^[A-Za-z][A-Za-z0-9-]*$/.test(trimmed)) return null;
+  if (STATIC_ICONS.has(trimmed)) return trimmed;
+  const kebab = trimmed.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLocaleLowerCase();
+  // Validate safe icon identifiers without importing the client-only dynamic icon registry.
+  return /^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/.test(kebab) ? kebab : null;
 }
 
 function parsePayload(value: unknown) {
