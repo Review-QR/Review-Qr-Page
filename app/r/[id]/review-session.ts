@@ -93,8 +93,7 @@ function isEligibleQrBusiness(business: Record<string, unknown> | null) {
     String(business.status ?? "").toLowerCase() === "active" &&
     String(business.merchant_status ?? "").toLowerCase() === "active" &&
     String(business.qr_status ?? "").toLowerCase() === "active" &&
-    (!business.expiry || String(business.expiry) >= today) &&
-    Boolean(safeReviewLink(business.review_link))
+    (!business.expiry || String(business.expiry) >= today)
   );
 }
 
