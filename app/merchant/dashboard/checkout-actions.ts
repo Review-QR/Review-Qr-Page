@@ -21,8 +21,10 @@ export type CheckoutOrderActionResult =
 
 export type CheckoutVerificationActionResult =
   | { status: "VERIFIED_SUCCESS"; applied: boolean }
-  | { status: "NOT_SUCCESS"; httpStatus: number }
-  | { status: "VERIFICATION_ERROR"; httpStatus: number | null };
+  | { status: "NOT_SUCCESS"; httpStatus: number; paymentState: "pending" | "failed" }
+  | { status: "ORDER_NOT_FOUND"; httpStatus: 404 }
+  | { status: "ORDER_EXPIRED" }
+  | { status: "VERIFICATION_ERROR"; httpStatus: number | null; reason?: "configuration" | "mapping" };
 
 function isPlanId(value: unknown): value is PlanId {
   return value === "basic" || value === "standard" || value === "premium";
@@ -96,7 +98,16 @@ export async function verifyMerchantCheckoutOrder(
           authenticatedBusinessId: merchant.businessId,
         });
 
-    if (verification.status !== "VERIFIED_SUCCESS") return verification;
+    if (verification.status !== "VERIFIED_SUCCESS") {
+      if (verification.status === "NOT_SUCCESS") {
+        return {
+          status: verification.status,
+          httpStatus: verification.httpStatus,
+          paymentState: verification.paymentState,
+        };
+      }
+      return verification;
+    }
 
     const admin = createSupabaseAdminClient();
     const { data, error } = await admin.rpc("apply_verified_cashfree_payment", {
