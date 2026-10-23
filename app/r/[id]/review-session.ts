@@ -3,7 +3,6 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { safeReviewLink } from "@/lib/safe-review-link";
 import {
   localReviewDraftProvider,
   removeCustomerPii,
