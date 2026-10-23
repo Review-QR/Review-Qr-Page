@@ -102,7 +102,7 @@ type CheckoutOrderClaims = {
 };
 
 const CHECKOUT_PROOF_TTL_MS = 24 * 60 * 60 * 1000;
-const ORDER_ID_PATTERN = /^rqr_(?:[a-f0-9]{32}|[a-f0-9]{34})$/;
+const ORDER_ID_PATTERN = /^rqr_(?:[a-f0-9]{32}|[a-f0-9]{33}|[a-f0-9]{34})$/;
 
 function proofSigningKey(): Buffer {
   const secret = requiredEnvironmentVariable("CASHFREE_CLIENT_SECRET");
