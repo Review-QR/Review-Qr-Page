@@ -27,7 +27,7 @@ type CashfreeCheckoutSdk = (options: { mode: "sandbox" | "production" }) => {
   }): Promise<CashfreeCheckoutResult>;
 };
 
-const ORDER_ID_PATTERN = /^rqr_(?:[a-f0-9]{32}|[a-f0-9]{34})$/;
+const ORDER_ID_PATTERN = /^rqr_(?:[a-f0-9]{32}|[a-f0-9]{33}|[a-f0-9]{34})$/;
 
 declare global {
   interface Window {
