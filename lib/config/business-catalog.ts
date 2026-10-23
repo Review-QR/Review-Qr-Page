@@ -712,9 +712,11 @@ const themeArt: Record<Family,string> = {
   agriculture:"fresh crops and plant detail",community:"inclusive community gathering place",
   manufacturing:"clean workshop and product detail",general:"welcoming local business atmosphere",
 };
+function uniqueStrings(values: readonly string[]): string[] { return values.filter((value, index) => values.indexOf(value) === index); }
+
 export const BUSINESS_CATALOG = BUSINESS_TYPES.map((name) => {
   const family = familyFor(name);
-  const aliases = [...new Set([name,...(aliasesByName[name]??[])])];
+  const aliases = uniqueStrings([name,...(aliasesByName[name]??[])]);
   const categoryExperiences = (experienceOverrides[name] ?? experienceLabels[family]).map((label) => ({ label, icon: experienceIconFor(label, family) }));
   const themes = QR_DESIGN_THEMES.map((theme,index)=>({
     ...theme,
@@ -727,12 +729,12 @@ export const BUSINESS_CATALOG = BUSINESS_TYPES.map((name) => {
       cta:"Keep the lower-center call-to-action area clear, high contrast, and free of decorative details.",
     },
   }));
-  return {id:slugify(name),name,slug:slugify(name),aliases,searchTerms:[...new Set([name,...aliases,name.replace(/\bcentre\b/gi,"center"),name.replace(/\bshop\b/gi,"store")])],primaryIcon:iconOverrides[name]??familyIcons[family],designFamily:family,experiences:categoryExperiences,themes};
+  return {id:slugify(name),name,slug:slugify(name),aliases,searchTerms:uniqueStrings([name,...aliases,name.replace(/\bcentre\b/gi,"center"),name.replace(/\bshop\b/gi,"store")]),primaryIcon:iconOverrides[name]??familyIcons[family],designFamily:family,experiences:categoryExperiences,themes};
 });
-const canonicalNames = new Set(BUSINESS_CATALOG.map((category) => normalize(category.name)));
-const conflictingSearchAliases = new Set(BUSINESS_CATALOG
+const canonicalNames = BUSINESS_CATALOG.map((category) => normalize(category.name));
+const conflictingSearchAliases = uniqueStrings(BUSINESS_CATALOG
   .flatMap((category) => category.aliases.map(normalize).filter((alias) => alias !== normalize(category.name)))
-  .filter((alias) => canonicalNames.has(alias)));
+  .filter((alias) => canonicalNames.includes(alias)));
 export function getBusinessCategory(value: string|null|undefined) {
   const query=normalize(String(value??""));
   return BUSINESS_CATALOG.find((category)=>normalize(category.name)===query)
@@ -751,7 +753,7 @@ export function searchBusinessCategories(value:string,limit=10) {
     const canonical=normalize(category.name), names=[...category.aliases,...category.searchTerms].map(normalize);
     const exactAlias=category.aliases.some((alias)=>normalize(alias)===query);
     let rank=99;
-    if(canonical===query)rank=conflictingSearchAliases.has(query)?1:0;
+    if(canonical===query)rank=conflictingSearchAliases.includes(query)?1:0;
     else if(exactAlias)rank=0.5;
     else if(category.aliases.some((alias)=>normalize(alias)===query))rank=1;
     else if([canonical,...names].some((item)=>item.startsWith(query)))rank=2;
