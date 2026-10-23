@@ -16,7 +16,7 @@ import type {
 
 type ReviewExperienceProps = {
   businessName: string;
-  googleReviewUrl: string;
+  googleReviewUrl: string | null;
   experienceCategories: ReviewExperienceCategory[];
   initialSession: RestoredReviewSession;
   createReviewSession: CreateReviewSessionAction;
@@ -165,7 +165,7 @@ export default function ReviewExperience({
 
   function openGoogleAfterSubmit() {
     void navigator.clipboard?.writeText(draft).catch(() => undefined);
-    window.open(googleReviewUrl, "_blank", "noopener,noreferrer");
+    if (googleReviewUrl) window.open(googleReviewUrl, "_blank", "noopener,noreferrer");
   }
 
   function continueToDetails() {
@@ -272,7 +272,7 @@ export default function ReviewExperience({
           {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}{copied && <p role="status" className="mt-2 text-sm text-emerald-700">Review copied. Paste it on Google to submit.</p>}
           <button type="button" disabled={isPending} onClick={() => makeDraft(true)} className="mt-4 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 text-sm font-bold text-amber-900 hover:bg-amber-100 disabled:opacity-50">✧ {isPending ? "Preparing…" : "Generate another suggestion (Optional)"}</button>
           <div className="mt-6 grid grid-cols-2 gap-3"><button type="button" disabled={isPending || isOpeningGoogle} onClick={() => navigateToStage(1)} className="min-h-12 rounded-2xl border border-amber-200 bg-white px-4 text-sm font-bold text-[#67401d]">← Back</button><PrimaryButton type="button" disabled={isPending || !draft.trim()} onClick={continueToDetails}>{isPending ? "Saving…" : "Next →"}</PrimaryButton></div>
-          <button type="button" disabled={isPending || isOpeningGoogle || !draft.trim()} onClick={copyAndGoogle} className="mt-3 min-h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 px-4 text-sm font-semibold text-blue-800 disabled:opacity-50">{isOpeningGoogle ? "Opening Google Review…" : "Copy Draft & Review on Google"}</button>
+          {googleReviewUrl && <button type="button" disabled={isPending || isOpeningGoogle || !draft.trim()} onClick={copyAndGoogle} className="mt-3 min-h-11 w-full rounded-2xl border border-blue-100 bg-blue-50 px-4 text-sm font-semibold text-blue-800 disabled:opacity-50">{isOpeningGoogle ? "Opening Google Review…" : "Copy Draft & Review on Google"}</button>}
         </section>}
 
         {unlockedStage >= 3 && step !== "submitted" && step !== "failed" && <form id="review-stage-details" onSubmit={submitReview} className="scroll-mt-24 px-5 py-8 sm:px-10 sm:py-10">
@@ -303,7 +303,7 @@ export default function ReviewExperience({
           <h2 className={`mt-5 text-2xl font-extrabold tracking-tight ${tone === "negative" ? "text-rose-900" : tone === "mixed" ? "text-amber-900" : "text-emerald-900"}`}>{tone === "negative" ? "Thanks for your honest feedback!" : "Thank you for sharing your review!"}</h2>
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-slate-600">{tone === "negative" ? "Your feedback helps us understand what we can improve." : "Your feedback has been shared successfully and will help other customers."}</p>
           <div className={`mt-6 rounded-2xl border p-4 text-left ${tone === "negative" ? "border-rose-200 bg-white/80" : tone === "mixed" ? "border-amber-200 bg-white/80" : "border-emerald-200 bg-white/80"}`}><p className="text-sm font-bold text-slate-900">Your Review Summary</p><p className="mt-1 text-sm font-medium text-amber-600">{"★".repeat(selectedRating ?? 0)}{"☆".repeat(5 - (selectedRating ?? 0))} <span className="text-slate-700">{selectedRating}/5</span></p><p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{draft}</p><p className="mt-4 text-xs font-bold text-slate-600">Customer Highlighted Points</p><div className="mt-2 flex flex-wrap gap-1.5">{selectedLabels.map((label) => <span key={label} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${tone === "negative" ? "bg-rose-100 text-rose-800" : tone === "mixed" ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800"}`}>✓ {label}</span>)}</div></div>
-          <button type="button" onClick={openGoogleAfterSubmit} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#1769e0] px-4 text-sm font-bold text-white shadow-md shadow-blue-100"><span className="grid size-7 place-items-center rounded-full bg-white text-lg font-black text-[#4285f4]">G</span>Review on Google</button>
+          {googleReviewUrl && <button type="button" onClick={openGoogleAfterSubmit} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#1769e0] px-4 text-sm font-bold text-white shadow-md shadow-blue-100"><span className="grid size-7 place-items-center rounded-full bg-white text-lg font-black text-[#4285f4]">G</span>Review on Google</button>}
           <button type="button" onClick={() => window.location.assign("/")} className="mt-5 min-h-12 w-full rounded-2xl border border-slate-200 bg-white px-4 text-sm font-bold text-slate-800">⌂ Back to Home</button>
         </section>}
 
