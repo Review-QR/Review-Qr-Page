@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "test": "node --test",
-    "test:cashfree": "node --test lib/cashfree-production-readiness.test.mjs lib/cashfree-webhook-handler.test.mjs",
+    "test:cashfree": "node --test lib/cashfree-production-readiness.test.mjs lib/cashfree-preview-order-only.test.mjs lib/cashfree-webhook-handler.test.mjs lib/cashfree-request-init.test.mjs supabase/functions/_shared/cashfree-preview-webhook.test.mjs",
     "typecheck": "tsc --noEmit",
     "audit:public-indexability": "node scripts/verify-public-indexability.mjs"
   },

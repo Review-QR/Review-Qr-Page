@@ -88,15 +88,22 @@ export default function BusinessesPage() {
     }));
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSubmit(formData: FormData) {
+    const name = String(formData.get("name") ?? "").trim();
+    const owner = String(formData.get("owner") ?? "").trim();
+    const phone = String(formData.get("phone") ?? "").trim();
+    const type = String(formData.get("type") ?? "");
+    const plan = String(formData.get("plan") ?? "");
+    const expiry = String(formData.get("expiry") ?? "");
+    const reviewLink = String(formData.get("review_link") ?? "").trim();
+    const address = String(formData.get("address") ?? "").trim();
 
-    if (!form.name.trim()) {
+    if (!name) {
       setMessage("Business name required hai.");
       return;
     }
 
-    if (!form.review_link.trim()) {
+    if (!reviewLink) {
       setMessage("Google Review link required hai.");
       return;
     }
@@ -105,18 +112,18 @@ export default function BusinessesPage() {
       setSaving(true);
       setMessage("");
 
-      const selectedPlan = PLANS.find((plan) => plan.name === form.plan);
+      const selectedPlan = PLANS.find((item) => item.name === plan);
       const result = await createAdminBusiness({
-        name: form.name.trim(),
-        owner: form.owner.trim() || null,
-        phone: form.phone.trim() || null,
-        type: form.type,
-        plan: form.plan,
+        name,
+        owner: owner || null,
+        phone: phone || null,
+        type,
+        plan,
         status: "active",
-        expiry: form.expiry || null,
+        expiry: expiry || null,
         qr_status: "active",
-        review_link: form.review_link.trim(),
-        address: form.address.trim() || null,
+        review_link: reviewLink,
+        address: address || null,
       });
       if (!result.success) {
         setMessage(result.message);
@@ -275,13 +282,15 @@ export default function BusinessesPage() {
               Add Business
             </h2>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form action={handleSubmit} className="space-y-4">
               <div>
-                <label className="mb-1 block text-sm font-medium">
+                <label htmlFor="add-business-name" className="mb-1 block text-sm font-medium">
                   Business Name *
                 </label>
 
                 <input
+                  id="add-business-name"
+                  name="name"
                   value={form.name}
                   onChange={(e) => handleChange("name", e.target.value)}
                   placeholder="Example: Prakasha Pan Shop"
@@ -290,11 +299,13 @@ export default function BusinessesPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
+                <label htmlFor="add-business-owner" className="mb-1 block text-sm font-medium">
                   Merchant / Owner Name
                 </label>
 
                 <input
+                  id="add-business-owner"
+                  name="owner"
                   value={form.owner}
                   onChange={(e) => handleChange("owner", e.target.value)}
                   placeholder="Owner name"
@@ -303,11 +314,13 @@ export default function BusinessesPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
+                <label htmlFor="add-business-phone" className="mb-1 block text-sm font-medium">
                   Merchant registered mobile number
                 </label>
 
                 <input
+                  id="add-business-phone"
+                  name="phone"
                   value={form.phone}
                   onChange={(e) => handleChange("phone", e.target.value)}
                   placeholder="9876543210"
@@ -319,22 +332,25 @@ export default function BusinessesPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
+                <label htmlFor="add-business-type" className="mb-1 block text-sm font-medium">
                   Business Type
                 </label>
 
                 <SearchableBusinessType
+                  id="add-business-type"
                   value={form.type}
                   onChange={(value) => handleChange("type", value)}
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
+                <label htmlFor="add-business-plan" className="mb-1 block text-sm font-medium">
                   Plan
                 </label>
 
                 <select
+                  id="add-business-plan"
+                  name="plan"
                   value={form.plan}
                   onChange={(e) => handleChange("plan", e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2"
@@ -348,11 +364,13 @@ export default function BusinessesPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
+                <label htmlFor="add-business-expiry" className="mb-1 block text-sm font-medium">
                   Expiry Date
                 </label>
 
                 <input
+                  id="add-business-expiry"
+                  name="expiry"
                   type="date"
                   value={form.expiry}
                   onChange={(e) => handleChange("expiry", e.target.value)}
@@ -361,11 +379,13 @@ export default function BusinessesPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
+                <label htmlFor="add-business-review-link" className="mb-1 block text-sm font-medium">
                   Google Review Link *
                 </label>
 
                 <textarea
+                  id="add-business-review-link"
+                  name="review_link"
                   value={form.review_link}
                   onChange={(e) =>
                     handleChange("review_link", e.target.value)
@@ -377,11 +397,13 @@ export default function BusinessesPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium">
+                <label htmlFor="add-business-address" className="mb-1 block text-sm font-medium">
                   Address
                 </label>
 
                 <textarea
+                  id="add-business-address"
+                  name="address"
                   value={form.address}
                   onChange={(e) => handleChange("address", e.target.value)}
                   placeholder="Business address"
