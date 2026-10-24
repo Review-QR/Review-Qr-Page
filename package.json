@@ -7,9 +7,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test",
+    "typecheck": "tsc --noEmit --incremental false",
+    "test": "node --test --test-concurrency=1",
     "test:cashfree": "node --test lib/cashfree-production-readiness.test.mjs lib/cashfree-webhook-handler.test.mjs",
-    "typecheck": "tsc --noEmit",
     "audit:public-indexability": "node scripts/verify-public-indexability.mjs"
   },
   "dependencies": {

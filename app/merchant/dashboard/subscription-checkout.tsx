@@ -27,7 +27,33 @@ type CashfreeCheckoutSdk = (options: { mode: "sandbox" | "production" }) => {
   }): Promise<CashfreeCheckoutResult>;
 };
 
-const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32}$/;
+const ORDER_ID_PATTERN = /^rqr_(?:[a-f0-9]{32}|[a-f0-9]{33}|[a-f0-9]{34})$/;
+
+function paymentVerificationMessage(result: {
+  status: string;
+  reason?: string;
+  paymentState?: "pending" | "failed";
+}): string {
+  if (result.status === "ORDER_NOT_FOUND") {
+    return "No order with this reference was found in the configured Cashfree environment. Check the reference and environment; your subscription remains unchanged.";
+  }
+  if (result.status === "ORDER_EXPIRED") {
+    return "This Cashfree order has expired. Your subscription remains unchanged; start a new checkout only after confirming no payment was completed.";
+  }
+  if (result.status === "NOT_SUCCESS" && result.paymentState === "failed") {
+    return "Cashfree reports that the payment attempts failed. Your subscription remains unchanged; check your bank statement before starting another checkout.";
+  }
+  if (result.status === "NOT_SUCCESS") {
+    return "Cashfree has not confirmed a successful payment yet. It may still be pending; wait and check again. Your subscription remains unchanged.";
+  }
+  if (result.status === "VERIFICATION_ERROR" && result.reason === "configuration") {
+    return "Payment verification is not configured in this environment. Your subscription remains unchanged; contact support before trying another payment.";
+  }
+  if (result.status === "VERIFICATION_ERROR" && result.reason === "mapping") {
+    return "This payment could not be safely matched to your merchant account. Your subscription remains unchanged; contact support.";
+  }
+  return "Payment status could not be verified. Please try again later; your subscription remains unchanged.";
+}
 
 declare global {
   interface Window {
@@ -157,11 +183,8 @@ export default function SubscriptionCheckout({
         );
         setMessageTone("info");
         router.refresh();
-      } else if (result.status === "NOT_SUCCESS") {
-        setMessage("Cashfree has not confirmed a successful payment. Your subscription remains unchanged.");
-        setMessageTone("error");
       } else {
-        setMessage("Payment status could not be verified. Please try again later; your subscription remains unchanged.");
+        setMessage(paymentVerificationMessage(result));
         setMessageTone("error");
       }
     } catch {
@@ -191,14 +214,8 @@ export default function SubscriptionCheckout({
             : "This verified payment was already applied. Your subscription was not renewed twice.",
         );
         router.refresh();
-      } else if (result.status === "NOT_SUCCESS") {
-        setRecoveryMessage(
-          "Cashfree has not confirmed a successful payment. Your subscription remains unchanged.",
-        );
       } else {
-        setRecoveryMessage(
-          "Payment status could not be verified. Please try again later; your subscription remains unchanged.",
-        );
+        setRecoveryMessage(paymentVerificationMessage(result));
       }
     } catch {
       setRecoveryMessage(

@@ -44,7 +44,6 @@ export default function BusinessForm({ initialBusinessName = "", categories = []
       setBusy(false);
     }
   }
-
   return (
     <form onSubmit={submit} className="mt-8 space-y-5">
       <label className="block text-sm font-semibold text-slate-800">

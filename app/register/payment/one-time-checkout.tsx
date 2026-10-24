@@ -42,7 +42,7 @@ function loadSdk() {
 
 const POLL_INTERVAL_MS = 2_500;
 const POLL_WINDOW_MS = 60_000;
-const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32}$/;
+const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32,34}$/;
 
 export default function OneTimeCheckout({
   initialOrderId,
@@ -179,6 +179,7 @@ export default function OneTimeCheckout({
         setMessage("An existing payment is saved. Use Recover & Check to verify it, or finish its checkout if you already opened it.");
         return;
       }
+      if (!result.checkoutMode) throw new Error("Cashfree checkout mode is unavailable.");
 
       await loadSdk();
       if (!window.Cashfree) throw new Error("Cashfree checkout is unavailable.");

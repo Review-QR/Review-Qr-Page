@@ -53,15 +53,8 @@ export default async function ScanPage({ params }: ScanPageProps) {
     );
   }
 
+  // Trustit's own review flow must work even when the optional Google link is missing.
   const reviewLink = safeReviewLink(business.review_link);
-  if (!reviewLink) {
-    return (
-      <ScanMessage icon="⚠️" title="Review Link Missing">
-        <p>The review link for this business has not been configured yet.</p>
-        <p className="mt-4 text-xs text-slate-400">Business: {business.name}</p>
-      </ScanMessage>
-    );
-  }
 
   // Keep the existing one-time-per-page-visit scan count behavior.
   await supabase.rpc("increment_business_scan", {

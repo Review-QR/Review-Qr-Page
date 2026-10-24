@@ -6,7 +6,6 @@ export const dynamic = "force-dynamic";
 
 type Review = {
   review_id: string;
-  customer_name: string | null;
   rating: number;
   review_text: string;
   selected_experiences: string[];

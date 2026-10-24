@@ -52,18 +52,24 @@ test("profile and location updates require the active signed-in merchant and ser
   assert.match(auth, /location_latitude/);
 });
 
-test("My Business edits only supported fields through the authenticated merchant profile RPC", async () => {
-  const [businessAction, form, migration, businessPage, locationForm] = await Promise.all([
+test("My Business profile and Google link edits retain their authenticated update paths", async () => {
+  const [businessAction, form, migration, businessPage, locationForm, googleLinkForm] = await Promise.all([
     read("../business/actions.ts"),
     read("../business/business-profile-form.tsx"),
     read("../../../../supabase/migrations/20261006081614_merchant_profile_location.sql"),
     read("../business/page.tsx"),
     read("../business/public-location-form.tsx"),
+    read("../business/google-review-link-form.tsx"),
   ]);
   assert.match(businessAction, /getActiveMerchant\(\)/);
   assert.match(businessAction, /rpc\("update_merchant_business_profile"/);
   assert.doesNotMatch(businessAction, /businessId\s*:/);
-  for (const name of ["name", "type", "owner", "address", "reviewLink"]) assert.match(form, new RegExp(`name="${name}"`));
+  for (const name of ["name", "type", "owner", "address"]) assert.match(form, new RegExp(`name="${name}"`));
+  assert.doesNotMatch(form, /name="reviewLink"/);
+  assert.match(businessAction, /p_review_link: reviewLink/);
+  assert.match(businessAction, /updateGoogleReviewLinkAction/);
+  assert.match(businessPage, /<GoogleReviewLinkForm/);
+  assert.match(googleLinkForm, /updateGoogleReviewLinkAction/);
   assert.match(form, /name="address"/);
   assert.match(form, /readOnly/);
   assert.match(migration, /account\.user_id = \(select auth\.uid\(\)\)/i);

@@ -1,7 +1,7 @@
 import { isVerifiedCashfreeSuccess } from "./cashfree-payment-guard.ts";
 
 const MAX_WEBHOOK_BYTES = 1_000_000;
-const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32}$/;
+const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32,34}$/;
 const SAFE_RESPONSE_HEADERS = { "cache-control": "no-store" };
 
 type WebhookPayload = {

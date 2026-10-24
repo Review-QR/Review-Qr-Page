@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - nextjs-migration
+      - codex/trustit-preview-feature-parity
+      - codex/trustit-production-hardening
 
   pull_request:
     branches:
