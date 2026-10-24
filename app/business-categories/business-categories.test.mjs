@@ -86,12 +86,13 @@ test("merchant registration and QR rendering consume the unified category resolv
   assert.match(gallery, /ReviewQr url=\{qrUrl\}/);
 });
 
-test("all selectable admin icon names are validated against Lucide exports", async () => {
+test("server category actions avoid the client-only dynamic icon registry", async () => {
   const actions = await read("./actions.ts");
   const manager = await read("./business-category-manager.tsx");
-  assert.match(actions, /import \{ iconNames \} from "lucide-react\/dynamic"/);
-  assert.match(actions, /ICONS\.has\(kebab\)/);
+  assert.doesNotMatch(actions, /import \{ iconNames \} from "lucide-react\/dynamic"/);
+  assert.match(actions, /const STATIC_ICONS = new Set<string>/);
+  assert.match(actions, /STATIC_ICONS\.has\(trimmed\)/);
+  assert.match(actions, /Accept only simple icon identifiers here/);
   assert.match(manager, /iconNames\.map/);
   assert.match(manager, /Search Lucide icons/);
 });
-
