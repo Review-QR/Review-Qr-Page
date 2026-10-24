@@ -20,10 +20,10 @@ export default async function RegisterPaymentPage({
   if (!data?.selected_plan) redirect("/register/plan");
   const selectedPlan = trustitPublicPlans.find((plan) => plan.name === data.selected_plan);
   if (!selectedPlan) redirect("/register/plan");
-  const savedOrderId = typeof data.payment_reference === "string" && /^rqr_[a-f0-9]{32}$/.test(data.payment_reference)
+  const savedOrderId = typeof data.payment_reference === "string" && /^rqr_[a-f0-9]{32,34}$/.test(data.payment_reference)
     ? data.payment_reference
     : null;
-  const returnedOrderId = typeof params.order_id === "string" && /^rqr_[a-f0-9]{32}$/.test(params.order_id)
+  const returnedOrderId = typeof params.order_id === "string" && /^rqr_[a-f0-9]{32,34}$/.test(params.order_id)
     ? params.order_id
     : null;
   const autoVerifyOrderId = returnedOrderId === savedOrderId ? returnedOrderId : null;

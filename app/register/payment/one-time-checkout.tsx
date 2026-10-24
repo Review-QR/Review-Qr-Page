@@ -42,7 +42,7 @@ function loadSdk() {
 
 const POLL_INTERVAL_MS = 2_500;
 const POLL_WINDOW_MS = 60_000;
-const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32}$/;
+const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32,34}$/;
 
 export default function OneTimeCheckout({
   initialOrderId,
