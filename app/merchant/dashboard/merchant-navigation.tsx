@@ -32,7 +32,15 @@ function NavigationIcon({ name }: { name: string }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="merchant-nav__icon" {...common}>{paths[name]}</svg>;
 }
 
-export default function MerchantNavigation({ mobile = false, hasUnreadNotifications = false }: { mobile?: boolean; hasUnreadNotifications?: boolean }) {
+export default function MerchantNavigation({
+  mobile = false,
+  hasUnreadNotifications = false,
+  isPremium = false,
+}: {
+  mobile?: boolean;
+  hasUnreadNotifications?: boolean;
+  isPremium?: boolean;
+}) {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
 
@@ -51,16 +59,33 @@ export default function MerchantNavigation({ mobile = false, hasUnreadNotificati
           : item.href === "/merchant/dashboard"
             ? pathname === item.href && hash !== "#scan-analytics"
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
-        const link = <Link
-          href={item.href}
-          onClick={() => setHash(item.href.endsWith("#scan-analytics") ? "#scan-analytics" : "")}
-          aria-current={active ? "page" : undefined}
-          className={`merchant-nav__link${active ? " is-active" : ""}`}
-        >
-          <span className="relative inline-flex"><NavigationIcon name={item.icon} /></span>
-          <span>{item.label}</span>
-        </Link>;
-        return item.icon === "reviews" ? <div key={item.href} className="merchant-nav-item relative flex items-center">{link}<NotificationPanel unread={hasUnreadNotifications} /></div> : <div key={item.href} className="merchant-nav-item">{link}</div>;
+        const isMessages = item.href === "/merchant/dashboard/messages";
+        const link = (
+          <Link
+            href={item.href}
+            onClick={() => setHash(item.href.endsWith("#scan-analytics") ? "#scan-analytics" : "")}
+            aria-current={active ? "page" : undefined}
+            className={`merchant-nav__link${active ? " is-active" : ""}`}
+          >
+            <span className="relative inline-flex"><NavigationIcon name={item.icon} /></span>
+            <span>{item.label}</span>
+            {isMessages && !isPremium && (
+              <span className="ml-auto inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800" title="Premium plan (₹99) only">
+                🔒
+              </span>
+            )}
+          </Link>
+        );
+        return item.icon === "reviews" ? (
+          <div key={item.href} className="merchant-nav-item relative flex items-center">
+            {link}
+            <NotificationPanel unread={hasUnreadNotifications} />
+          </div>
+        ) : (
+          <div key={item.href} className="merchant-nav-item">
+            {link}
+          </div>
+        );
       })}
     </nav>
   );
