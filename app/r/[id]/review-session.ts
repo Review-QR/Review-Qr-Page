@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   localReviewDraftProvider,
+  smartReviewDraftProvider,
   removeCustomerPii,
   requestReviewDraft,
 } from "@/lib/review-draft-provider";
@@ -535,7 +536,7 @@ export async function generateReviewDraftForBusiness(
     const execution = await executeClaimedReviewGeneration(
       claim,
       async () => {
-        const generated = await requestReviewDraft(localReviewDraftProvider, {
+        const generated = await requestReviewDraft(smartReviewDraftProvider, {
           businessName,
           rating: session.selected_rating,
           variation: generationNumber,

@@ -383,3 +383,19 @@ export const localReviewDraftProvider: ReviewDraftProvider = {
     return buildReviewDraft(input);
   },
 };
+
+export const smartReviewDraftProvider: ReviewDraftProvider = {
+  async generate(input) {
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+      try {
+        const { generateGeminiReviewDraft } = await import("./gemini-review-provider");
+        const geminiDraft = await generateGeminiReviewDraft(input, geminiKey);
+        if (geminiDraft) return geminiDraft;
+      } catch {
+        // Fall back to local humanoid builder
+      }
+    }
+    return buildReviewDraft(input);
+  },
+};
