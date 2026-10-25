@@ -116,6 +116,106 @@ function BusinessName({ name, dark = false, landscape = false, compact = false }
   >{name}</h3>;
 }
 
+function GoogleGLogo({ className = "h-5 w-5" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+    </svg>
+  );
+}
+
+function getCategoryVisualEmbellishments(label: string = "", businessName: string = ""): {
+  emojis: [string, string];
+  watermarkPattern: string;
+  badgeBg: string;
+  badgeText: string;
+  badgeBorder: string;
+} {
+  const text = `${label} ${businessName}`.toLowerCase();
+  if (/(sweet|mithai|bakery|cake|dessert|confection|pastry|laddu|halwa)/i.test(text)) {
+    return {
+      emojis: ["🍬", "🥮"],
+      watermarkPattern: "radial-gradient(circle at 50% 30%, rgba(245, 158, 11, 0.14) 0%, transparent 65%)",
+      badgeBg: "bg-amber-500/15",
+      badgeText: "text-amber-900",
+      badgeBorder: "border-amber-400/40",
+    };
+  }
+  if (/(restaurant|food|dining|dhaba|cafe|coffee|bistro|pizza|burger|snack|biryani|tea)/i.test(text)) {
+    return {
+      emojis: ["🍽️", "☕"],
+      watermarkPattern: "radial-gradient(circle at 50% 30%, rgba(239, 68, 68, 0.12) 0%, transparent 65%)",
+      badgeBg: "bg-rose-500/15",
+      badgeText: "text-rose-950",
+      badgeBorder: "border-rose-400/40",
+    };
+  }
+  if (/(medical|clinic|doctor|health|dental|eye|pharma|hospital|care|pathology)/i.test(text)) {
+    return {
+      emojis: ["🩺", "💊"],
+      watermarkPattern: "radial-gradient(circle at 50% 30%, rgba(14, 165, 233, 0.14) 0%, transparent 65%)",
+      badgeBg: "bg-sky-500/15",
+      badgeText: "text-sky-950",
+      badgeBorder: "border-sky-400/40",
+    };
+  }
+  if (/(salon|beauty|parlour|spa|barber|hair|makeup|nail)/i.test(text)) {
+    return {
+      emojis: ["✂️", "💅"],
+      watermarkPattern: "radial-gradient(circle at 50% 30%, rgba(236, 72, 153, 0.14) 0%, transparent 65%)",
+      badgeBg: "bg-pink-500/15",
+      badgeText: "text-pink-950",
+      badgeBorder: "border-pink-400/40",
+    };
+  }
+  if (/(hotel|stay|resort|lodge|guest|homestay)/i.test(text)) {
+    return {
+      emojis: ["🏨", "🌴"],
+      watermarkPattern: "radial-gradient(circle at 50% 30%, rgba(20, 184, 166, 0.14) 0%, transparent 65%)",
+      badgeBg: "bg-teal-500/15",
+      badgeText: "text-teal-950",
+      badgeBorder: "border-teal-400/40",
+    };
+  }
+  if (/(retail|shop|store|clothing|garment|footwear|jewel|grocery|kirana|market|mart)/i.test(text)) {
+    return {
+      emojis: ["🏬", "🛍️"],
+      watermarkPattern: "radial-gradient(circle at 50% 30%, rgba(249, 115, 22, 0.14) 0%, transparent 65%)",
+      badgeBg: "bg-orange-500/15",
+      badgeText: "text-orange-950",
+      badgeBorder: "border-orange-400/40",
+    };
+  }
+  if (/(gym|fitness|yoga|workout|sports)/i.test(text)) {
+    return {
+      emojis: ["🏋️", "⚡"],
+      watermarkPattern: "radial-gradient(circle at 50% 30%, rgba(34, 197, 94, 0.14) 0%, transparent 65%)",
+      badgeBg: "bg-emerald-500/15",
+      badgeText: "text-emerald-950",
+      badgeBorder: "border-emerald-400/40",
+    };
+  }
+  if (/(auto|car|bike|motor|garage|repair|service)/i.test(text)) {
+    return {
+      emojis: ["🚗", "🔧"],
+      watermarkPattern: "radial-gradient(circle at 50% 30%, rgba(100, 116, 139, 0.14) 0%, transparent 65%)",
+      badgeBg: "bg-slate-500/15",
+      badgeText: "text-slate-900",
+      badgeBorder: "border-slate-400/40",
+    };
+  }
+  return {
+    emojis: ["✦", "★"],
+    watermarkPattern: "radial-gradient(circle at 50% 30%, rgba(99, 102, 241, 0.12) 0%, transparent 65%)",
+    badgeBg: "bg-indigo-500/15",
+    badgeText: "text-indigo-950",
+    badgeBorder: "border-indigo-400/40",
+  };
+}
+
 function ReviewQr({ url, usable, businessName, templateId, compact = false, landscape = false, digital = false }: { url: string; usable: boolean; businessName: string; templateId: QrTemplateId; compact?: boolean; landscape?: boolean; digital?: boolean }) {
   const [localQr, setLocalQr] = useState<string>("");
 
@@ -128,10 +228,10 @@ function ReviewQr({ url, usable, businessName, templateId, compact = false, land
     import("qrcode")
       .then((mod) =>
         mod.default.toDataURL(target || url, {
-          errorCorrectionLevel: "M",
+          errorCorrectionLevel: "H",
           margin: 1,
-          width: compact ? 240 : 600,
-          color: { dark: "#000000", light: "#ffffff" },
+          width: compact ? 240 : 800,
+          color: { dark: "#0f172a", light: "#ffffff" },
         })
       )
       .then((dataUrl) => {
@@ -145,8 +245,8 @@ function ReviewQr({ url, usable, businessName, templateId, compact = false, land
 
   const size = compact
     ? "h-16 w-16"
-    : digital ? "h-36 w-36"
-    : landscape ? "h-36 w-36 sm:h-44 sm:w-44" : "h-52 w-52 sm:h-56 sm:w-56";
+    : digital ? "h-40 w-40 sm:h-44 sm:w-44"
+    : landscape ? "h-44 w-44 sm:h-52 sm:w-52" : "h-60 w-60 sm:h-64 sm:w-64";
   const frameStyle = {
     template_1: "border-[#c9a65e] ring-2 ring-[#ead9ad]",
     template_2: "border-slate-300 rounded-lg",
@@ -156,8 +256,21 @@ function ReviewQr({ url, usable, businessName, templateId, compact = false, land
   }[templateId];
   const qrDisplayUrl = localQr || url;
   return (
-    <div className={`relative z-30 isolate inline-flex shrink-0 items-center justify-center border bg-white shadow-md ring-1 ring-slate-900/10 ${frameStyle} ${compact ? "p-1.5" : "p-3"}`}>
-      {usable && qrDisplayUrl ? <img src={qrDisplayUrl} alt={`Trustit review QR for ${businessName}`} className={`${size} block max-w-full object-contain`} /> : <div className={`${size} flex items-center justify-center bg-slate-50 p-3 text-center text-xs font-medium text-slate-600`}>QR unavailable while the business is inactive or expired</div>}
+    <div className={`relative z-30 isolate inline-flex shrink-0 items-center justify-center border bg-white shadow-xl ring-1 ring-slate-900/10 ${frameStyle} ${compact ? "p-1.5" : "p-3 sm:p-3.5"}`}>
+      {usable && qrDisplayUrl ? (
+        <div className="relative inline-flex items-center justify-center">
+          <img src={qrDisplayUrl} alt={`Trustit review QR for ${businessName}`} className={`${size} block max-w-full object-contain`} />
+          {!compact && (
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <span className="flex h-9 w-9 sm:h-11 sm:w-11 items-center justify-center rounded-xl bg-white p-1.5 shadow-md ring-2 ring-slate-100">
+                <GoogleGLogo className="h-full w-full" />
+              </span>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className={`${size} flex items-center justify-center bg-slate-50 p-3 text-center text-xs font-medium text-slate-600`}>QR unavailable while the business is inactive or expired</div>
+      )}
     </div>
   );
 }
@@ -172,18 +285,25 @@ function FooterMessage({ message, dark = false }: { message: string; dark?: bool
 }
 
 function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, googleReviewLink, variation, digital }: PosterContentProps) {
+  const visual = getCategoryVisualEmbellishments(category.label, name);
   return (
-    <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : digital ? "p-4" : "p-6 sm:p-8"}`}>
+    <div style={{ backgroundImage: visual.watermarkPattern }} className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#fff8ed] text-center text-[#392a1d] ${compact ? "p-3" : digital ? "p-4" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -right-10 top-28 z-0 h-40 w-40 rounded-full border-[18px] border-[#efdfc5]/60" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-3 z-0 rounded-[1.25rem] border border-[#c9a65e]/70" />
       <TrustitMark templateId="template_1" className="relative z-10 text-emerald-800" compact={compact} />
       <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#f5ead8] ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#976a3c]" : digital ? "h-12 w-40 text-[#976a3c]" : "h-20 w-36 text-[#976a3c]"} /></div>
-      {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94642e]">{category.label}</p>}
+      {!compact && (
+        <p className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] ${visual.badgeBg} ${visual.badgeText} ${visual.badgeBorder}`}>
+          <span>{visual.emojis[0]}</span>
+          <span>{category.label}</span>
+          <span>{visual.emojis[1]}</span>
+        </p>
+      )}
       <BusinessName name={name} compact={compact} landscape={digital} />
       <FiveStars compact={compact} />
       {!compact && <p className="mt-1 max-w-xs text-sm">{category.message}</p>}
       <div className={`my-auto ${compact || digital ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} templateId="template_1" compact={compact} digital={digital} /></div>
-      <p className={`inline-flex items-center gap-2 rounded-full bg-emerald-800 font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+      <p className={`inline-flex items-center gap-2 rounded-full bg-emerald-800 font-bold text-white shadow-sm ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
       {!compact && <div className="mt-3"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
       {!compact && <FooterMessage message={footer} />}
       {!compact && <p className="mt-2 font-mono text-[9px] text-[#74593c]">{businessId}</p>}
@@ -192,18 +312,25 @@ function RestaurantPoster({ name, businessId, qrUrl, usable, compact, category, 
 }
 
 function HotelPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, googleReviewLink, variation, digital }: PosterContentProps) {
+  const visual = getCategoryVisualEmbellishments(category.label, name);
   return (
-    <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : digital ? "p-4" : "p-6 sm:p-8"}`}>
+    <div style={{ backgroundImage: visual.watermarkPattern }} className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#173b48] text-center text-white ${compact ? "p-3" : digital ? "p-4" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute -left-16 top-20 z-0 h-48 w-48 rounded-full bg-[#396b6c]/45 blur-2xl" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 z-0 h-2 bg-gradient-to-r from-[#4b9db6] via-[#e5ce98] to-[#4b9db6]" />
       <TrustitMark templateId="template_2" className="relative z-10 text-[#d9c28e]" compact={compact} />
       <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-[#285561] ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#e2c997]" : digital ? "h-12 w-40 text-[#e2c997]" : "h-20 w-44 text-[#e2c997]"} /></div>
-      {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#e5ce98]">{category.label}</p>}
+      {!compact && (
+        <p className="inline-flex items-center gap-1.5 rounded-full border border-[#e5ce98]/30 bg-[#e5ce98]/10 px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#e5ce98]">
+          <span>{visual.emojis[0]}</span>
+          <span>{category.label}</span>
+          <span>{visual.emojis[1]}</span>
+        </p>
+      )}
       <BusinessName name={name} dark compact={compact} landscape={digital} />
       <FiveStars dark compact={compact} />
       {!compact && <p className="mt-1 max-w-xs text-sm text-slate-100">{category.message}</p>}
       <div className={`my-auto ${compact || digital ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} templateId="template_2" compact={compact} digital={digital} /></div>
-      <p className={`inline-flex items-center gap-2 rounded-full bg-[#e5ce98] font-bold text-[#183a45] ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+      <p className={`inline-flex items-center gap-2 rounded-full bg-[#e5ce98] font-bold text-[#183a45] shadow-sm ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
       {!compact && <div className="mt-3"><GoogleMessage dark googleReviewLink={googleReviewLink} /></div>}
       {!compact && <FooterMessage message={footer} dark />}
       {!compact && <p className="mt-2 font-mono text-[9px] text-slate-300">{businessId}</p>}
@@ -212,18 +339,25 @@ function HotelPoster({ name, businessId, qrUrl, usable, compact, category, desig
 }
 
 function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, googleReviewLink, variation, digital }: PosterContentProps) {
+  const visual = getCategoryVisualEmbellishments(category.label, name);
   return (
-    <div className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eff7ed] text-center text-[#24452e] ${compact ? "p-3" : digital ? "p-4" : "p-6 sm:p-8"}`}>
+    <div style={{ backgroundImage: visual.watermarkPattern }} className={`relative flex h-full w-full flex-col items-center overflow-hidden bg-[#eff7ed] text-center text-[#24452e] ${compact ? "p-3" : digital ? "p-4" : "p-6 sm:p-8"}`}>
       <div className="pointer-events-none absolute inset-x-0 bottom-24 z-0 h-24 bg-[radial-gradient(ellipse_at_center,#cfe4c4_0%,transparent_72%)]" />
       <div aria-hidden="true" className="pointer-events-none absolute -right-14 top-12 z-0 h-32 w-32 rounded-full border-[12px] border-[#a7c996]/35" />
       <TrustitMark templateId="template_3" className="relative z-10 text-[#237c9d]" compact={compact} />
       <div className={`${compact || digital ? "my-1" : "my-2"} flex w-full items-center justify-center rounded-xl bg-white/80 ${compact ? "h-8" : digital ? "h-14" : "h-24"}`}><CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={compact ? "h-8 w-20 text-[#4b9db6]" : digital ? "h-12 w-40 text-[#4b9db6]" : "h-20 w-36 text-[#4b9db6]"} /></div>
-      {!compact && <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#31829c]">{category.label}</p>}
+      {!compact && (
+        <p className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] ${visual.badgeBg} ${visual.badgeText} ${visual.badgeBorder}`}>
+          <span>{visual.emojis[0]}</span>
+          <span>{category.label}</span>
+          <span>{visual.emojis[1]}</span>
+        </p>
+      )}
       <BusinessName name={name} compact={compact} landscape={digital} />
       <FiveStars compact={compact} />
       {!compact && <p className="mt-1 max-w-xs text-sm">{category.message}</p>}
       <div className={`my-auto ${compact || digital ? "py-1" : "py-3"}`}><ReviewQr url={qrUrl} usable={usable} businessName={name} templateId="template_3" compact={compact} digital={digital} /></div>
-      <p className={`inline-flex items-center gap-2 rounded-full bg-[#247f9e] font-bold text-white ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+      <p className={`inline-flex items-center gap-2 rounded-full bg-[#247f9e] font-bold text-white shadow-sm ${compact ? "px-4 py-2 text-[10px]" : "px-6 py-3 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
       {!compact && <div className="mt-3"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
       {!compact && <FooterMessage message={footer} />}
       {!compact && <p className="mt-2 font-mono text-[9px] text-[#4b7180]">{businessId}</p>}
@@ -232,18 +366,25 @@ function LaundryPoster({ name, businessId, qrUrl, usable, compact, category, des
 }
 
 function RetailPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, digital, googleReviewLink, variation }: PosterContentProps) {
+  const visual = getCategoryVisualEmbellishments(category.label, name);
   return (
-    <div className={`relative ${digital ? "flex flex-col items-center text-center" : "grid grid-cols-[1fr_auto] items-center"} h-full w-full overflow-hidden bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : digital ? "gap-2 p-4" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
-      <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#cf963e]" />
+    <div style={{ backgroundImage: visual.watermarkPattern }} className={`relative ${digital ? "flex flex-col items-center text-center" : "grid grid-cols-[1fr_auto] items-center"} h-full w-full overflow-hidden bg-[#fff7e7] text-[#382d1d] ${compact ? "gap-2 p-3" : digital ? "gap-2 p-4" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
+      <div className="absolute inset-y-0 left-0 z-0 w-2.5 bg-[#cf963e]" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-3 z-0 rounded-xl border border-[#cf963e]/40" />
       <div className={`relative z-10 flex ${digital ? "h-auto" : "h-full"} flex-col justify-center pl-2 ${digital ? "w-full items-center text-center" : "items-start text-left"}`}>
         <TrustitMark templateId="template_4" className="text-[#846021]" compact={compact} />
-        {!compact && <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-[#a07127]">{category.label}</p>}
+        {!compact && (
+          <p className={`mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-bold uppercase tracking-[0.18em] ${visual.badgeBg} ${visual.badgeText} ${visual.badgeBorder}`}>
+            <span>{visual.emojis[0]}</span>
+            <span>{category.label}</span>
+            <span>{visual.emojis[1]}</span>
+          </p>
+        )}
         <BusinessName name={name} landscape={!digital} compact={compact} />
         <FiveStars compact={compact} />
         {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
         <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={`text-[#9d742f] ${compact ? "h-7 w-20" : digital ? "my-1 h-12 w-40" : "mt-1 h-24 w-40"}`} />
-        <p className={`mt-auto inline-flex items-center gap-2 rounded-full bg-[#895d1d] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+        <p className={`mt-auto inline-flex items-center gap-2 rounded-full bg-[#895d1d] font-bold text-white shadow-sm ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
         {compact ? null : <div className="mt-2"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
         {!compact && <FooterMessage message={footer} />}
         {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#765b32]">{businessId}</p>}
@@ -258,18 +399,25 @@ function RetailPoster({ name, businessId, qrUrl, usable, compact, category, desi
 }
 
 function SalonPoster({ name, businessId, qrUrl, usable, compact, category, designAsset, footer, digital, googleReviewLink, variation }: PosterContentProps) {
+  const visual = getCategoryVisualEmbellishments(category.label, name);
   return (
-    <div className={`relative ${digital ? "flex flex-col items-center text-center" : "grid grid-cols-[1fr_auto] items-center"} h-full w-full overflow-hidden bg-white text-[#432b35] ${compact ? "gap-2 p-3" : digital ? "gap-2 p-4" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
-      <div className="absolute inset-y-0 left-0 z-0 w-2 bg-[#bb7189]" />
+    <div style={{ backgroundImage: visual.watermarkPattern }} className={`relative ${digital ? "flex flex-col items-center text-center" : "grid grid-cols-[1fr_auto] items-center"} h-full w-full overflow-hidden bg-white text-[#432b35] ${compact ? "gap-2 p-3" : digital ? "gap-2 p-4" : "gap-4 p-6 sm:gap-8 sm:p-9"}`}>
+      <div className="absolute inset-y-0 left-0 z-0 w-2.5 bg-[#bb7189]" />
       <div aria-hidden="true" className="pointer-events-none absolute inset-3 z-0 rounded-xl border border-[#bb7189]/30" />
       <div className={`relative z-10 flex ${digital ? "h-auto" : "h-full"} flex-col justify-center pl-2 ${digital ? "w-full items-center text-center" : "items-start text-left"}`}>
         <TrustitMark templateId="template_5" className="text-[#99586f]" compact={compact} />
-        {!compact && <p className="mt-3 text-xs font-bold uppercase tracking-[0.18em] text-[#a35070]">{category.label}</p>}
+        {!compact && (
+          <p className={`mt-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-0.5 text-xs font-bold uppercase tracking-[0.18em] ${visual.badgeBg} ${visual.badgeText} ${visual.badgeBorder}`}>
+            <span>{visual.emojis[0]}</span>
+            <span>{category.label}</span>
+            <span>{visual.emojis[1]}</span>
+          </p>
+        )}
         <BusinessName name={name} landscape={!digital} compact={compact} />
         <FiveStars compact={compact} />
         {!compact && <p className="mt-2 max-w-sm text-sm">{category.message}</p>}
         <CategoryArt iconName={category.iconName} designFamily={category.designFamily} designAsset={designAsset} experiences={category.experiences} qrIcons={category.qrIcons} palette={category.palette} variation={variation} compact={compact} className={`text-[#a65c79] ${compact ? "h-7 w-20" : digital ? "my-1 h-12 w-40" : "mt-1 h-24 w-40"}`} />
-        <p className={`mt-auto inline-flex items-center gap-2 rounded-full bg-[#a45170] font-bold text-white ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
+        <p className={`mt-auto inline-flex items-center gap-2 rounded-full bg-[#a45170] font-bold text-white shadow-sm ${compact ? "px-3 py-1.5 text-[9px]" : "px-5 py-2.5 text-sm"}`}><span aria-hidden="true" className="font-black text-[#4285f4]">G</span><span>SCAN TO REVIEW</span></p>
         {compact ? null : <div className="mt-2"><GoogleMessage googleReviewLink={googleReviewLink} /></div>}
         {!compact && <FooterMessage message={footer} />}
         {compact ? null : <p className="mt-1 font-mono text-[9px] text-[#745565]">{businessId}</p>}
