@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trustit Merchant Companion</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="extension-container">
+    <!-- Header -->
+    <header class="ext-header">
+      <div class="ext-brand">
+        <svg class="ext-logo" viewBox="0 0 100 100" fill="none">
+          <defs>
+            <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0284c7" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+          </defs>
+          <path d="M80 6 C81 12 83 14 89 15 C83 16 81 18 80 24 C79 18 77 16 71 15 C77 14 79 12 80 6 Z" fill="#0284c7" />
+          <path d="M50 14 C68 14 80 20 80 34 C80 62 58 84 50 90 C42 84 20 62 20 34 C20 20 32 14 50 14 Z" fill="url(#shieldGrad)" />
+          <path d="M34 47 L45 58 L66 35" stroke="#ffffff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M32 60 C40 68 56 68 68 54" stroke="#ffffff" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.8" />
+        </svg>
+        <div>
+          <h1 class="ext-title">Trustit</h1>
+          <span class="ext-subtitle">Merchant Companion</span>
+        </div>
+      </div>
+      <span class="ext-badge ext-badge--live">● Online</span>
+    </header>
+
+    <!-- Merchant Info Card -->
+    <div class="ext-card">
+      <div class="ext-card-header">
+        <div>
+          <h2 id="merchant-name" class="ext-business-name">Trustit Merchant</h2>
+          <p id="merchant-category" class="ext-category">Verified Business</p>
+        </div>
+        <div class="ext-rating-pill">
+          <span class="ext-star">★</span>
+          <span id="merchant-rating" class="ext-rating-val">5.0</span>
+        </div>
+      </div>
+      <div class="ext-card-stats">
+        <div class="ext-stat">
+          <span class="ext-stat-label">Standees</span>
+          <strong class="ext-stat-num">8 Ready</strong>
+        </div>
+        <div class="ext-stat">
+          <span class="ext-stat-label">Google Sync</span>
+          <strong class="ext-stat-num" style="color: #059669;">Active</strong>
+        </div>
+        <div class="ext-stat">
+          <span class="ext-stat-label">Plan</span>
+          <strong id="merchant-plan" class="ext-stat-num" style="color: #0284c7;">Active</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="ext-actions">
+      <button id="btn-open-dashboard" class="ext-btn ext-btn--primary">
+        <svg class="ext-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="9" />
+          <rect x="14" y="3" width="7" height="5" />
+          <rect x="14" y="12" width="7" height="9" />
+          <rect x="3" y="16" width="7" height="5" />
+        </svg>
+        Open Dashboard
+      </button>
+
+      <button id="btn-open-qr" class="ext-btn ext-btn--secondary">
+        <svg class="ext-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7" />
+          <rect x="14" y="3" width="7" height="7" />
+          <rect x="3" y="14" width="7" height="7" />
+          <rect x="14" y="14" width="7" height="7" />
+        </svg>
+        My 8 QR Standees
+      </button>
+
+      <button id="btn-copy-link" class="ext-btn ext-btn--outline">
+        <svg class="ext-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+        <span id="copy-btn-text">Copy Review Link</span>
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <footer class="ext-footer">
+      <span>Powered by <strong>Trustit</strong></span>
+      <a href="https://trustitreview.com" target="_blank" class="ext-link">trustitreview.com</a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

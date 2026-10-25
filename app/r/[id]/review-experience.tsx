@@ -238,7 +238,39 @@ export default function ReviewExperience({
           <h2 className="mt-4 text-xl font-extrabold tracking-tight text-[#10153f] sm:text-2xl">How was your experience?</h2>
           <p className="mt-1 text-sm text-slate-500">Tap a star to rate your visit</p>
           <div className="mt-5 flex justify-center gap-1 sm:gap-2" role="group" aria-label="Choose a rating from 1 to 5 stars">
-            {[1, 2, 3, 4, 5].map((rating) => <button key={rating} type="button" aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`} aria-pressed={selectedRating === rating} disabled={isPending || selectedRating !== null} onClick={() => selectRating(rating)} className={`grid size-14 place-items-center rounded-2xl transition hover:-translate-y-0.5 hover:bg-amber-50 disabled:cursor-default sm:size-16 ${selectedRating && rating <= selectedRating ? "text-amber-400 drop-shadow-sm" : "text-amber-300"}`}><svg aria-hidden="true" viewBox="0 0 24 24" className="size-10 fill-current sm:size-12"><path d="M12 2.25 14.92 8.18l6.54.95-4.73 4.61 1.12 6.52L12 17.18l-5.85 3.08 1.12-6.52L2.54 9.13l6.54-.95L12 2.25Z" /></svg></button>)}
+            {[1, 2, 3, 4, 5].map((rating) => {
+              const isFilled = selectedRating !== null && rating <= selectedRating;
+              return (
+                <button
+                  key={rating}
+                  type="button"
+                  aria-label={`${rating} ${rating === 1 ? "star" : "stars"}`}
+                  aria-pressed={selectedRating === rating}
+                  disabled={isPending || selectedRating !== null}
+                  onClick={() => selectRating(rating)}
+                  className="grid size-14 place-items-center rounded-2xl transition hover:-translate-y-0.5 hover:bg-amber-50 disabled:cursor-default sm:size-16"
+                >
+                  <svg
+                    aria-hidden="true"
+                    viewBox="0 0 24 24"
+                    className={`size-10 sm:size-12 transition-colors ${
+                      isFilled
+                        ? "text-amber-400 drop-shadow-sm"
+                        : "text-slate-300 hover:text-amber-300"
+                    }`}
+                  >
+                    <path
+                      fill={isFilled ? "currentColor" : "none"}
+                      stroke={isFilled ? "none" : "currentColor"}
+                      strokeWidth={isFilled ? undefined : "1.8"}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 2.25 14.92 8.18l6.54.95-4.73 4.61 1.12 6.52L12 17.18l-5.85 3.08 1.12-6.52L2.54 9.13l6.54-.95L12 2.25Z"
+                    />
+                  </svg>
+                </button>
+              );
+            })}
           </div>
           <p className="mt-2 min-h-6 text-sm font-medium text-slate-600" aria-live="polite">{selectedRating ? `${selectedRating} out of 5 stars · ${ratingCopy(selectedRating)}` : ratingCopy(null)}</p>
           {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}

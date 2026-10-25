@@ -352,9 +352,9 @@ export default function MyQrCode({
             body { margin: 0; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fff; font-family: sans-serif; text-align: center; }
             img { max-width: 100%; height: auto; max-height: 94vh; object-fit: contain; }
             @media print {
-              @page { size: auto; margin: 0; }
-              body { padding: 0; }
-              img { max-height: 100vh; width: 100%; }
+              @page { size: 4in 6in; margin: 0; }
+              body { padding: 0; margin: 0; }
+              img { width: 100%; height: 100%; object-fit: contain; }
             }
           </style></head><body>
             <img src="${png}" alt="Standee Poster for ${escapeHtml(businessName)}" />
@@ -419,7 +419,7 @@ export default function MyQrCode({
         <div>
           <p className="merchant-page-heading__eyebrow">{standalone ? "Your customer sharing kit" : "MY QR CODE & STANDEE"}</p>
           <h2 id="merchant-my-qr-heading">My QR Code & Standee Posters</h2>
-          <p>Slide left or right to preview all 5 templates. Select, download, or print your standee.</p>
+          <p>Slide left or right to preview all 8 standees. Select, download, or print your standee.</p>
         </div>
         <span className="merchant-page-heading__badge">● {statusLabel}</span>
       </header>

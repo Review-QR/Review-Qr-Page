@@ -132,6 +132,53 @@ function GoogleGIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
+function TrustitCenterShield({
+  color = "#0284c7",
+  className = "h-5 w-5",
+}: {
+  color?: string;
+  className?: string;
+}) {
+  const gradId = `ts-center-grad-${color.replace("#", "")}`;
+  return (
+    <svg className={className} viewBox="0 0 100 100" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id={gradId} x1="10%" y1="0%" x2="90%" y2="100%">
+          <stop offset="0%" stopColor={color} />
+          <stop offset="100%" stopColor="#0f172a" stopOpacity="0.85" />
+        </linearGradient>
+      </defs>
+      {/* 4-point sparkle on top-right */}
+      <path
+        d="M80 6 C81 12 83 14 89 15 C83 16 81 18 80 24 C79 18 77 16 71 15 C77 14 79 12 80 6 Z"
+        fill={color}
+      />
+      {/* 3D Shield */}
+      <path
+        d="M50 14 C68 14 80 20 80 34 C80 62 58 84 50 90 C42 84 20 62 20 34 C20 20 32 14 50 14 Z"
+        fill={`url(#${gradId})`}
+      />
+      {/* Bold White Checkmark */}
+      <path
+        d="M34 47 L45 58 L66 35"
+        stroke="#ffffff"
+        strokeWidth="9"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* Dynamic Swoosh */}
+      <path
+        d="M32 60 C40 68 56 68 68 54"
+        stroke="#ffffff"
+        strokeWidth="4"
+        strokeLinecap="round"
+        fill="none"
+        opacity="0.8"
+      />
+    </svg>
+  );
+}
+
 function TrustitShieldIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -309,7 +356,7 @@ export function ModernStandee({
       </div>
 
       {/* ── Content Container ── */}
-      <div className="relative z-10 flex h-full w-full flex-col justify-between px-3 pt-3 sm:px-5 sm:pt-4">
+      <div className="relative z-10 flex flex-1 min-h-0 w-full flex-col justify-between px-3 pt-2.5 sm:px-4 sm:pt-3 pb-0.5">
         {/* Header: Circle Icon + Business Name + Tagline */}
         <div className="flex flex-col items-center text-center">
           {/* Top Category Icon Circle */}
@@ -348,7 +395,7 @@ export function ModernStandee({
 
         {/* Center: QR Code with Rounded Corner Brackets */}
         <div className="my-auto flex flex-col items-center justify-center py-1">
-          <div className="relative inline-flex items-center justify-center p-3.5 sm:p-4 bg-white/95 rounded-2xl shadow-sm">
+          <div className="relative inline-flex items-center justify-center p-2.5 sm:p-3 bg-white/95 rounded-2xl shadow-sm">
             {/* 4 Corner Brackets ⌜ ⌝ ⌞ ⌟ */}
             <span
               className="pointer-events-none absolute left-0 top-0 h-5 w-5 sm:h-6 sm:w-6 border-l-[3.5px] border-t-[3.5px] rounded-tl-xl"
@@ -375,10 +422,10 @@ export function ModernStandee({
                   alt={`Trustit review QR for ${businessName}`}
                   className="h-32 w-32 sm:h-44 sm:w-44 block object-contain"
                 />
-                {/* Central Google 'G' Micro-Badge */}
+                {/* Central Trustit Micro-Shield Badge */}
                 <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <span className="flex h-7 w-7 sm:h-9 sm:w-9 items-center justify-center rounded-lg bg-white p-1 shadow-md ring-1 ring-slate-100">
-                    <GoogleGIcon className="h-full w-full" />
+                  <span className="flex h-6 w-6 sm:h-7.5 sm:w-7.5 items-center justify-center rounded-md bg-white p-0.5 shadow-sm ring-1 ring-slate-200/80">
+                    <TrustitCenterShield color={theme.primary} className="h-full w-full" />
                   </span>
                 </div>
               </div>
@@ -391,7 +438,7 @@ export function ModernStandee({
         </div>
 
         {/* Dual Social Proof Badges: Review on Trustit + Review on Google */}
-        <div className="flex flex-col items-center gap-1.5 py-1">
+        <div className="flex flex-col items-center gap-1 py-0.5 shrink-0">
           {/* Badge 1: Review on Trustit (Colored Pill with Shield Icon) */}
           <div
             className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-white shadow-sm"
@@ -419,7 +466,7 @@ export function ModernStandee({
         </div>
 
         {/* 3-Step Circular Customer Guidance */}
-        <div className="mx-auto grid w-full max-w-[270px] grid-cols-3 gap-2 px-1 py-1.5 text-center">
+        <div className="mx-auto grid w-full max-w-[270px] grid-cols-3 gap-1.5 px-1 py-1 text-center shrink-0">
           {/* Step 1: Open Camera */}
           <div className="flex flex-col items-center">
             <span
@@ -473,7 +520,7 @@ export function ModernStandee({
 
       {/* ── Solid Bottom Footer Bar ── */}
       <div
-        className="relative z-10 flex w-full items-center justify-center gap-1.5 py-2 text-white font-bold tracking-wider"
+        className="relative z-10 flex shrink-0 w-full items-center justify-center gap-1.5 py-1.5 text-white font-bold tracking-wider"
         style={{
           backgroundColor: theme.footerBg,
           fontSize: "clamp(0.62rem, 1.4vw, 0.75rem)",
