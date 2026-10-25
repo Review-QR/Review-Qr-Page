@@ -6,6 +6,7 @@ import {
   createMerchantCheckoutOrder,
   verifyMerchantCheckoutOrder,
 } from "./checkout-actions";
+import { TRUSTIT_PLAN_SPECIFICATIONS } from "@/lib/plan-specifications";
 
 type CheckoutPlan = {
   id: string;
@@ -100,6 +101,9 @@ export default function SubscriptionCheckout({
   const [verifying, setVerifying] = useState(false);
   const [recoveryOrderId, setRecoveryOrderId] = useState("");
   const [recoveryMessage, setRecoveryMessage] = useState("");
+
+  const activeSelectedPlan = plans.find((p) => p.id === selectedPlanId);
+  const isUpgrade = activeSelectedPlan && !activeSelectedPlan.isCurrent;
 
   async function beginCheckout() {
     if (pending || verifying) return;
@@ -229,46 +233,109 @@ export default function SubscriptionCheckout({
   return (
     <div className="mt-6 border-t border-slate-100 pt-5">
       <div>
-        <h3 className="text-base font-semibold text-slate-900">Renew / Upgrade</h3>
+        <h3 className="text-base font-semibold text-slate-900">Renew / Upgrade Plan</h3>
         <p className="mt-1 text-sm text-slate-500">
-          Choose an eligible plan to continue to Cashfree Sandbox Checkout.
+          Choose an eligible plan below to renew or upgrade your Trustit business subscription.
         </p>
       </div>
 
       {plans.length ? (
-        <fieldset className="mt-4 grid gap-3 sm:grid-cols-3">
+        <fieldset className="mt-5 grid gap-4 lg:grid-cols-3">
           <legend className="sr-only">Choose a subscription plan</legend>
-          {plans.map((plan) => (
-            <label
-              key={plan.id}
-              className={`flex cursor-pointer items-start gap-3 rounded-xl border p-4 transition ${
-                selectedPlanId === plan.id
-                  ? "border-blue-500 bg-blue-50 ring-1 ring-blue-200"
-                  : "border-slate-200 bg-white hover:border-blue-200"
-              }`}
-            >
-              <input
-                type="radio"
-                name="subscriptionPlan"
-                value={plan.id}
-                checked={selectedPlanId === plan.id}
-                onChange={() => setSelectedPlanId(plan.id)}
-                disabled={pending || verifying}
-                className="mt-1 accent-blue-600"
-              />
-              <span className="min-w-0">
-                <span className="block font-semibold text-slate-900">
-                  {plan.name}
-                  {plan.isCurrent && (
-                    <span className="ml-2 text-xs font-medium text-blue-700">Current plan</span>
-                  )}
-                </span>
-                <span className="mt-1 block text-sm text-slate-600">
-                  ₹{plan.price}/month
-                </span>
-              </span>
-            </label>
-          ))}
+          {plans.map((plan) => {
+            const spec = TRUSTIT_PLAN_SPECIFICATIONS[plan.id as keyof typeof TRUSTIT_PLAN_SPECIFICATIONS];
+            const isSelected = selectedPlanId === plan.id;
+            return (
+              <label
+                key={plan.id}
+                className={`relative flex cursor-pointer flex-col justify-between rounded-2xl border p-5 transition ${
+                  isSelected
+                    ? "border-blue-500 bg-blue-50/70 ring-2 ring-blue-200 shadow-sm"
+                    : "border-slate-200 bg-white hover:border-blue-200 hover:shadow-sm"
+                }`}
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className="block text-base font-bold text-slate-900">
+                        {plan.name}
+                      </span>
+                      <p className="mt-0.5 text-xs text-slate-500">{spec?.tagline}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1.5">
+                      <input
+                        type="radio"
+                        name="subscriptionPlan"
+                        value={plan.id}
+                        checked={isSelected}
+                        onChange={() => setSelectedPlanId(plan.id)}
+                        disabled={pending || verifying}
+                        className="mt-0.5 h-4 w-4 accent-blue-600"
+                      />
+                      {plan.isCurrent ? (
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                          Current Plan
+                        </span>
+                      ) : spec?.badge ? (
+                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">
+                          {spec.badge}
+                        </span>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex items-baseline">
+                    <span className="text-2xl font-extrabold text-slate-900">₹{plan.price}</span>
+                    <span className="ml-1 text-xs text-slate-500">/ 30 days</span>
+                  </div>
+
+                  <hr className="my-3 border-slate-100" />
+
+                  <ul className="space-y-1.5 text-xs">
+                    {spec?.features.map((feat, idx) => (
+                      <li
+                        key={idx}
+                        className={`flex items-start gap-1.5 ${
+                          feat.included ? "text-slate-700" : "text-slate-400 line-through opacity-70"
+                        }`}
+                      >
+                        {feat.included ? (
+                          <span className="mt-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-bold text-emerald-700">
+                            ✓
+                          </span>
+                        ) : (
+                          <span className="mt-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] font-bold text-slate-400">
+                            ✕
+                          </span>
+                        )}
+                        <span className={feat.highlight ? "font-semibold text-blue-900" : ""}>
+                          {feat.name}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="mt-4 pt-2">
+                  <div
+                    className={`rounded-xl py-1.5 text-center text-xs font-semibold transition ${
+                      isSelected
+                        ? "bg-blue-600 text-white"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                    }`}
+                  >
+                    {isSelected
+                      ? plan.isCurrent
+                        ? "Selected (Renew)"
+                        : "Selected (Upgrade)"
+                      : plan.isCurrent
+                        ? "Renew Current"
+                        : `Upgrade to ${plan.name}`}
+                  </div>
+                </div>
+              </label>
+            );
+          })}
         </fieldset>
       ) : (
         <p className="mt-4 rounded-lg bg-slate-50 p-3 text-sm text-slate-600">
@@ -280,9 +347,15 @@ export default function SubscriptionCheckout({
         type="button"
         onClick={() => void beginCheckout()}
         disabled={pending || verifying || plans.length === 0}
-        className="mt-4 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-5 rounded-xl bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {pending ? "Preparing checkout…" : "Continue to Checkout"}
+        {pending
+          ? "Preparing checkout…"
+          : isUpgrade
+            ? `Upgrade to ${activeSelectedPlan.name} (₹${activeSelectedPlan.price})`
+            : activeSelectedPlan
+              ? `Renew ${activeSelectedPlan.name} (₹${activeSelectedPlan.price})`
+              : "Continue to Checkout"}
       </button>
       <p className="mt-2 text-xs text-slate-500">
         Your subscription updates only after Cashfree confirms payment and Review-QR verifies and applies it.
