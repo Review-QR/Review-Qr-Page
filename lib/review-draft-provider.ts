@@ -202,7 +202,39 @@ export function buildReviewDraft(input: ReviewDraftInput): string {
     return grounded;
   }
   const seed = Math.max(1, Math.floor(input.variation ?? 1));
-  const clauses = labels.map((label) => `I considered ${label.toLowerCase()} as part of my experience`);
+
+  function naturalClauseForLabel(label: string, t: Tone, s: number): string {
+    const l = label.toLowerCase();
+    if (t === "positive") {
+      const templates = [
+        `Really happy with the ${l}`,
+        `The ${l} was definitely a highlight`,
+        `Great ${l} throughout my visit`,
+        `Truly satisfied with the ${l}`,
+        `The ${l} made a wonderful impression`,
+        `Loved the ${l} here`,
+      ];
+      return templates[Math.abs(s) % templates.length];
+    }
+    if (t === "mixed") {
+      const templates = [
+        `The ${l} was okay, though there is room to improve`,
+        `Had mixed thoughts about the ${l}`,
+        `The ${l} was average and could be slightly better`,
+        `The ${l} was decent but could use some attention`,
+      ];
+      return templates[Math.abs(s) % templates.length];
+    }
+    const templates = [
+      `The ${l} was disappointing and needs improvement`,
+      `Expected much better ${l}`,
+      `The ${l} did not meet expectations`,
+      `Not satisfied with the ${l}`,
+    ];
+    return templates[Math.abs(s) % templates.length];
+  }
+
+  const clauses = labels.map((label, index) => naturalClauseForLabel(label, tone, seed + index * 3));
   if (clauses.length > 1) {
     const rotateBy = seed % clauses.length;
     clauses.push(...clauses.splice(0, rotateBy));
@@ -214,14 +246,15 @@ export function buildReviewDraft(input: ReviewDraftInput): string {
     negative: [`My experience at ${businessName} could have been better.`, `I was disappointed with my visit to ${businessName}.`, `My visit to ${businessName} did not go as well as I hoped.`],
   };
   const endings = {
-    positive: ["That reflects my positive overall rating.", "This matches how I felt about the visit overall.", "That is why I gave a positive overall rating."],
-    mixed: ["That reflects my mixed overall rating.", "This is how I felt about the visit overall.", "My overall rating reflects a mixed experience."],
-    negative: ["That reflects my negative overall rating.", "This is why my overall rating was low.", "My overall rating reflects this experience."],
+    positive: ["Definitely worth visiting again!", "Would gladly recommend to others.", "Happy with the overall visit.", "Looking forward to coming back."],
+    mixed: ["Hope to see some improvements next time.", "A few tweaks would make it much better.", "Decent overall with potential to improve."],
+    negative: ["Hope management looks into this and improves.", "Needs serious attention to customer feedback.", "Overall not a satisfying experience."],
   };
-  const body = clauses.map((clause, index) => `${index === 0 || seed % 3 === 0 ? "" : "Also, "}${clause}`).join(". ");
-  const opening = `${choose(openings[tone], seed)} I rated it ${input.rating} out of 5.`;
-  const ending = labels.length > 1 ? ` ${choose(endings[tone], seed * 5)}` : "";
-  const draft = `${opening} ${body.replace(/\.$/, "")}.${ending}`;
+  const body = clauses.map((clause, index) => `${index === 0 ? "" : (index === clauses.length - 1 && seed % 2 === 0 ? "Also, " : "In addition, ")}${clause.charAt(0).toLowerCase()}${clause.slice(1)}`).join(". ");
+  const ratingSuffix = tone === "negative" ? ` I rated it ${input.rating} out of 5.` : "";
+  const opening = `${choose(openings[tone], seed)}${ratingSuffix}`;
+  const ending = `${choose(endings[tone], seed * 5)}`;
+  const draft = `${opening} ${body.replace(/\.$/, "")}. ${ending}`;
   if (!validateReviewDraftQuality(input, draft)) throw new Error("Review draft quality validation failed");
   return draft;
 }

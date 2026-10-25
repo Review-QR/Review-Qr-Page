@@ -359,10 +359,6 @@ export async function saveReviewSessionExperiencesForBusiness(
       ) {
         return { ok: true, categoryKeys: normalizedKeys };
       }
-      return {
-        ok: false,
-        message: "Experience details have already been saved for this session.",
-      };
     }
 
     const categories = await getReviewExperienceCategoriesForBusiness(businessId);
@@ -374,24 +370,51 @@ export async function saveReviewSessionExperiencesForBusiness(
       };
     }
 
-    // The database function serializes retries per session and snapshots the
-    // currently enabled labels, so concurrent requests cannot merge selections.
-    const { data: savedKeys, error: saveError } = await admin.rpc(
-      "save_review_session_experiences",
-      {
-        p_business_id: businessId,
-        p_review_session_id: sessionId,
-        p_category_keys: normalizedKeys,
-      },
-    );
+    let saved = false;
+    try {
+      const { data: savedKeys, error: saveError } = await admin.rpc(
+        "save_review_session_experiences",
+        {
+          p_business_id: businessId,
+          p_review_session_id: sessionId,
+          p_category_keys: normalizedKeys,
+        },
+      );
+      if (
+        !saveError &&
+        Array.isArray(savedKeys) &&
+        savedKeys.length === normalizedKeys.length &&
+        [...savedKeys].sort().every((key, index) => key === normalizedKeys[index])
+      ) {
+        saved = true;
+      }
+    } catch {
+      saved = false;
+    }
 
-    if (
-      saveError ||
-      !Array.isArray(savedKeys) ||
-      savedKeys.length !== normalizedKeys.length ||
-      [...savedKeys].sort().some((key, index) => key !== normalizedKeys[index])
-    ) {
-      return { ok: false, message: EXPERIENCE_SAVE_FAILURE };
+    if (!saved) {
+      if (existingExperiences?.length) {
+        await admin
+          .from("review_session_experiences")
+          .delete()
+          .eq("review_session_id", sessionId)
+          .eq("business_id", businessId);
+      }
+
+      const rowsToInsert = normalizedKeys.map((key) => ({
+        review_session_id: sessionId,
+        business_id: businessId,
+        category_key: key,
+        category_label_snapshot: categoryByKey.get(key)?.label || key,
+      }));
+
+      const { error: insertError } = await admin
+        .from("review_session_experiences")
+        .insert(rowsToInsert);
+
+      if (insertError) {
+        return { ok: false, message: EXPERIENCE_SAVE_FAILURE };
+      }
     }
 
     return { ok: true, categoryKeys: normalizedKeys };
@@ -457,7 +480,8 @@ export async function generateReviewDraftForBusiness(
     const businessName = businessRecord.name;
 
     const businessType =
-      businessRecord.type === "Clinic" ? "Medical" : businessRecord.type;
+      reviewExperienceGroup(businessRecord.type) ||
+      (businessRecord.type === "Clinic" ? "Medical" : businessRecord.type);
     const experienceKeys = experiences.map((experience) => experience.category_key);
     const { data: enabledCategories, error: categoriesError } = await admin
       .from("review_experience_categories")
