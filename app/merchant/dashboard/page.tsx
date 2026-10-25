@@ -5,7 +5,6 @@ import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import MyQrCode from "./my-qr-code";
 import ScanAnalytics from "./scan-analytics";
-import QrTemplateGallery from "./qr/qr-template-gallery";
 import { getPersistedBusinessQrDesignAssets } from "@/lib/trustit-ai/qr-design-assets.server";
 import { qrTemplates } from "./qr/templates";
 import ReviewCard from "./review-card";
@@ -192,16 +191,7 @@ export default async function MerchantDashboardPage() {
       {!statsResult.error && !stats ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 mb-4" role="status">Dashboard analytics are not available for this merchant account.</p> : null}
 
       <div className="merchant-workspace">
-        <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} designAssets={designAssets} />
-        <section className="merchant-template-panel merchant-template-panel--compact" id="template-gallery" aria-labelledby="merchant-template-title">
-          <header>
-            <span className="merchant-template-panel__icon" aria-hidden="true">
-              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            </span>
-            <div><h2 id="merchant-template-title">Choose a QR Template</h2><p>Pick a design that matches your business style.</p></div>
-          </header>
-          <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" initialDesignAssets={designAssets} initialDesignError={designAssetError} googleReviewLink={merchant.reviewLink} />
-        </section>
+        <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} designAssets={designAssets} initialDesignError={designAssetError} />
       </div>
 
       <section className="merchant-lower-grid">
