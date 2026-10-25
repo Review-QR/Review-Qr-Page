@@ -8,7 +8,8 @@ export async function generateGeminiReviewDraft(
   const trimmedKey = apiKey.trim();
   if (!trimmedKey) return null;
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(trimmedKey)}`;
+  const model = process.env.GEMINI_MODEL || "gemini-3.8-flash";
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(trimmedKey)}`;
 
   const prompt = [
     `You are writing an authentic, human-sounding customer review for Google Maps.`,
