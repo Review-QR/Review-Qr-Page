@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl, trustitAppOrigin } from "@/lib/trustit-qr";
 import { QrPosterPreview } from "./qr/qr-template-gallery";
+import { ModernStandee, STANDEE_THEMES } from "./qr/modern-standee";
 import { qrTemplates, type QrTemplateId, getQrTemplatePrintDimensions } from "./qr/templates";
 import { saveQrTemplateAction } from "./qr/actions";
 import type { QrDesignAssets } from "@/lib/trustit-ai/provider-contracts";
@@ -94,14 +95,34 @@ export default function MyQrCode({
   });
 
   const [currentIndex, setCurrentIndex] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("trustit_active_standee_index");
+      if (stored !== null) {
+        const val = parseInt(stored, 10);
+        if (!isNaN(val) && val >= 0 && val < STANDEE_THEMES.length) return val;
+      }
+    }
     const idx = qrTemplates.findIndex((t) => t.id === savedTemplate);
     return idx >= 0 ? idx : 0;
   });
 
-  const currentTemplate = qrTemplates[currentIndex] || qrTemplates[0];
+  const [savedStandeeIndex, setSavedStandeeIndex] = useState<number>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("trustit_active_standee_index");
+      if (stored !== null) {
+        const val = parseInt(stored, 10);
+        if (!isNaN(val) && val >= 0 && val < STANDEE_THEMES.length) return val;
+      }
+    }
+    const idx = qrTemplates.findIndex((t) => t.id === savedTemplate);
+    return idx >= 0 ? idx : 0;
+  });
+
+  const currentStandee = STANDEE_THEMES[currentIndex] || STANDEE_THEMES[0];
+  const currentTemplate = qrTemplates[currentIndex % qrTemplates.length] || qrTemplates[0];
   const currentTemplateId = currentTemplate.id;
 
-  // Plan gating logic: Basic plan has 2 templates unlocked; Standard & Premium unlock all 5
+  // Plan gating logic: Basic plan has 2 templates unlocked; Standard & Premium unlock all 8
   const normalizedPlan = String(plan || "").trim().toLowerCase();
   const isPlanStandardOrPremium =
     normalizedPlan.includes("premium") || normalizedPlan.includes("standard");
@@ -113,7 +134,7 @@ export default function MyQrCode({
   }
 
   const isCurrentUnlocked = isTemplateUnlocked(currentIndex);
-  const isCurrentSaved = currentTemplateId === savedTemplate;
+  const isCurrentSaved = currentIndex === savedStandeeIndex;
 
   const statusLabel = usable
     ? "Active"
@@ -122,27 +143,32 @@ export default function MyQrCode({
       : qrStatus?.trim() || "Status unavailable";
 
   function nextSlide() {
-    setCurrentIndex((prev) => (prev < qrTemplates.length - 1 ? prev + 1 : 0));
+    setCurrentIndex((prev) => (prev < STANDEE_THEMES.length - 1 ? prev + 1 : 0));
     setMessage("");
   }
 
   function prevSlide() {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : qrTemplates.length - 1));
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : STANDEE_THEMES.length - 1));
     setMessage("");
   }
 
-  function handleSelectTemplate(targetId: QrTemplateId) {
+  function handleSelectTemplate(targetIdx: number) {
     setMessage("");
     startTransition(async () => {
-      const result = await saveQrTemplateAction(targetId);
+      const dbTargetId = (qrTemplates[targetIdx % qrTemplates.length]?.id ?? "template_1") as QrTemplateId;
+      const result = await saveQrTemplateAction(dbTargetId);
       if (!result.ok) {
         setMessageTone("error");
         setMessage(result.error);
         return;
       }
-      setSavedTemplate(targetId);
+      setSavedTemplate(dbTargetId);
+      setSavedStandeeIndex(targetIdx);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("trustit_active_standee_index", String(targetIdx));
+      }
       setMessageTone("success");
-      setMessage(`${currentTemplate.name} is now your active standee template.`);
+      setMessage(`${currentStandee.name} is now your active standee template.`);
     });
   }
 
@@ -228,8 +254,8 @@ export default function MyQrCode({
         backgroundColor: "#ffffff",
         style: { borderRadius: "0px", boxShadow: "none" },
       });
-      const dimensions = getQrTemplatePrintDimensions(currentTemplateId);
-      const filename = `${safeFilename(businessName || businessId)}-${currentTemplate.name.replace(/\s+/g, "-")}-Standee.${format}`;
+      const dimensions = { widthIn: 4, heightIn: 6, orientation: "portrait" as const };
+      const filename = `Trustit-${safeFilename(currentStandee.name)}-${safeFilename(businessName || businessId)}-Standee.${format}`;
       if (format === "pdf") {
         const { jsPDF } = await import("jspdf");
         const pdf = new jsPDF({
@@ -249,7 +275,7 @@ export default function MyQrCode({
         link.remove();
       }
       setMessageTone("success");
-      setMessage(`Full standee poster (${format.toUpperCase()}) downloaded successfully.`);
+      setMessage(`Full ${currentStandee.name} standee poster (${format.toUpperCase()}) downloaded successfully.`);
     } catch (err) {
       setMessageTone("error");
       setMessage(err instanceof Error ? err.message : "Failed to export poster.");
@@ -401,13 +427,13 @@ export default function MyQrCode({
       {/* Template Selector Slider Strip */}
       <div className="merchant-template-slider-bar" role="tablist" aria-label="Standee templates slider">
         <div className="merchant-template-slider-track">
-          {qrTemplates.map((template, idx) => {
+          {STANDEE_THEMES.map((theme, idx) => {
             const unlocked = isTemplateUnlocked(idx);
             const isSelected = idx === currentIndex;
-            const isSaved = template.id === savedTemplate;
+            const isSaved = idx === savedStandeeIndex;
             return (
               <button
-                key={template.id}
+                key={theme.id}
                 type="button"
                 role="tab"
                 aria-selected={isSelected}
@@ -416,11 +442,11 @@ export default function MyQrCode({
                   setMessage("");
                 }}
                 className={`merchant-template-pill ${isSelected ? "is-active" : ""} ${!unlocked ? "is-locked" : ""}`}
-                title={`${template.name} (${template.printSize}) - ${unlocked ? (isSaved ? "Active Template" : "Unlocked") : "Locked (Upgrade required)"}`}
+                title={`${theme.name} (4×6 in) - ${unlocked ? (isSaved ? "Active Template" : "Unlocked") : "Locked (Upgrade required)"}`}
               >
                 <span className="merchant-template-pill__number">{idx + 1}</span>
-                <span className="merchant-template-pill__name">{template.name.split(" ")[0]}</span>
-                <span className="merchant-template-pill__size">{template.printSize.split(" ")[0]}</span>
+                <span className="merchant-template-pill__name">{theme.name.split(" ")[0]}</span>
+                <span className="merchant-template-pill__size">4×6</span>
                 {!unlocked ? (
                   <span className="merchant-template-pill__lock" aria-label="Locked">🔒</span>
                 ) : isSaved ? (
@@ -451,17 +477,14 @@ export default function MyQrCode({
             <div className="merchant-qr-poster-stage">
               {usable ? (
                 <div ref={posterRef} className={`merchant-qr-poster ${!isCurrentUnlocked ? "is-poster-locked" : ""}`}>
-                  <QrPosterPreview
-                    businessId={businessId}
+                  <ModernStandee
+                    standeeIndex={currentIndex}
                     businessName={businessName}
                     businessType={businessType}
-                    qrStatus={qrStatus}
-                    expiry={expiry}
-                    templateId={currentTemplateId}
-                    designAssets={designAssets}
+                    qrUrl={scanUrl}
+                    usable={usable}
                     categoryConfig={categoryConfig}
-                    screenPreview
-                    googleReviewLink={reviewLink}
+                    compact={!standalone}
                   />
 
                   {/* Plan Lock Overlay */}
@@ -503,8 +526,8 @@ export default function MyQrCode({
           {/* Template Info & Selection Status Bar */}
           <div className="merchant-slider-footer">
             <div className="merchant-slider-footer__meta">
-              <strong>{currentTemplate.name}</strong>
-              <small>· {currentTemplate.printSize} ({currentTemplate.orientation}) · Slide {currentIndex + 1} of {qrTemplates.length}</small>
+              <strong>{currentStandee.name}</strong>
+              <small>· 4 × 6 in (Portrait) · Slide {currentIndex + 1} of {STANDEE_THEMES.length}</small>
             </div>
             <div className="merchant-slider-footer__actions">
               {isCurrentUnlocked ? (
@@ -513,7 +536,7 @@ export default function MyQrCode({
                 ) : (
                   <button
                     type="button"
-                    onClick={() => handleSelectTemplate(currentTemplateId)}
+                    onClick={() => handleSelectTemplate(currentIndex)}
                     disabled={isSaving}
                     className="merchant-btn-set-active"
                   >
@@ -601,14 +624,14 @@ export default function MyQrCode({
                   disabled={!usable || isExporting}
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  <span>{isExporting ? "Exporting…" : `Download Standee (${currentTemplate.name.split(" ")[0]} PNG)`}</span>
+                  <span>{isExporting ? "Exporting…" : `Download Standee (${currentStandee.name.split(" ")[0]} PNG)`}</span>
                 </button>
                 <button
                   type="button"
                   className="merchant-btn-poster merchant-btn-poster--pdf"
                   onClick={() => void downloadFullPoster("pdf")}
                   disabled={!usable || isExporting}
-                  title={`Download printable PDF (${currentTemplate.printSize})`}
+                  title={`Download printable PDF (4 × 6 in)`}
                 >
                   PDF
                 </button>
@@ -618,7 +641,7 @@ export default function MyQrCode({
                 href="/merchant/dashboard/subscription"
                 className="merchant-btn-poster merchant-btn-poster--locked"
               >
-                <span>🔒 Upgrade Plan to Download ({currentTemplate.name.split(" ")[0]})</span>
+                <span>🔒 Upgrade Plan to Download ({currentStandee.name.split(" ")[0]})</span>
               </Link>
             )}
           </div>
