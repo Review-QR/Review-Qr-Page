@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { buildTrustitQrImageUrl, buildTrustitReviewUrl, trustitAppOrigin } from "@/lib/trustit-qr";
 import { resolveBusinessTheme } from "@/lib/trustit-ai/qr-design-theme";
 import { getBusinessCategory, QR_DESIGN_THEMES } from "@/lib/config/business-catalog";
@@ -117,6 +117,32 @@ function BusinessName({ name, dark = false, landscape = false, compact = false }
 }
 
 function ReviewQr({ url, usable, businessName, templateId, compact = false, landscape = false, digital = false }: { url: string; usable: boolean; businessName: string; templateId: QrTemplateId; compact?: boolean; landscape?: boolean; digital?: boolean }) {
+  const [localQr, setLocalQr] = useState<string>("");
+
+  useEffect(() => {
+    if (!usable || !url) return;
+    let active = true;
+    const target = url.includes("data=")
+      ? decodeURIComponent(url.split("data=")[1].split("&")[0] || "")
+      : url;
+    import("qrcode")
+      .then((mod) =>
+        mod.default.toDataURL(target || url, {
+          errorCorrectionLevel: "M",
+          margin: 1,
+          width: compact ? 240 : 600,
+          color: { dark: "#000000", light: "#ffffff" },
+        })
+      )
+      .then((dataUrl) => {
+        if (active) setLocalQr(dataUrl);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [url, usable, compact]);
+
   const size = compact
     ? "h-16 w-16"
     : digital ? "h-36 w-36"
@@ -128,9 +154,10 @@ function ReviewQr({ url, usable, businessName, templateId, compact = false, land
     template_4: "border-[#b57936] ring-1 ring-[#e7c58e]",
     template_5: "border-slate-200 rounded-md",
   }[templateId];
+  const qrDisplayUrl = localQr || url;
   return (
     <div className={`relative z-30 isolate inline-flex shrink-0 items-center justify-center border bg-white shadow-md ring-1 ring-slate-900/10 ${frameStyle} ${compact ? "p-1.5" : "p-3"}`}>
-      {usable && url ? <img src={url} alt={`Trustit review QR for ${businessName}`} className={`${size} block max-w-full object-contain`} /> : <div className={`${size} flex items-center justify-center bg-slate-50 p-3 text-center text-xs font-medium text-slate-600`}>QR unavailable while the business is inactive or expired</div>}
+      {usable && qrDisplayUrl ? <img src={qrDisplayUrl} alt={`Trustit review QR for ${businessName}`} className={`${size} block max-w-full object-contain`} /> : <div className={`${size} flex items-center justify-center bg-slate-50 p-3 text-center text-xs font-medium text-slate-600`}>QR unavailable while the business is inactive or expired</div>}
     </div>
   );
 }

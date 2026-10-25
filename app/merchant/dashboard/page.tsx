@@ -133,7 +133,7 @@ export default async function MerchantDashboardPage() {
   const sweetsBusiness = /(sweet|mithai|bakery|cake|dessert)/i.test(businessType);
   const ownerName = merchant.ownerName?.trim() || "Merchant";
   const ownerInitials = ownerName.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "M";
-  const categoryIcon = /(sweet|mithai|bakery|cake|dessert|food|restaurant|cafe)/i.test(businessType) ? "✿" : /(medical|clinic|doctor|health)/i.test(businessType) ? "+" : "✦";
+  const categoryEmoji = sweetsBusiness ? "🍬" : /(food|restaurant|cafe|dhaba|dining)/i.test(businessType) ? "🍽️" : /(medical|clinic|doctor|health|pharmacy)/i.test(businessType) ? "🩺" : /(salon|beauty|spa|barber)/i.test(businessType) ? "✂️" : /(hotel|stay|resort)/i.test(businessType) ? "🏨" : "🏬";
   const publicLocationComplete = isPublicDiscoveryLocationComplete({
     type: merchant.businessType, locality: merchant.locality, city: merchant.city,
     district: merchant.district, state: merchant.state, pincode: merchant.pincode,
@@ -145,12 +145,42 @@ export default async function MerchantDashboardPage() {
       <section className={`merchant-hero${sweetsBusiness ? " merchant-hero--sweets" : ""}`}>
         <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border-[40px] border-white/5" /><div aria-hidden="true" className="pointer-events-none absolute -bottom-28 left-1/2 h-72 w-72 rounded-full bg-blue-400/10 blur-3xl" />
         <div className="relative flex min-w-0 flex-wrap items-start justify-between gap-5">
-          <div className="min-w-0"><div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-blue-100 backdrop-blur"><span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />{greeting()} · Merchant overview</div><h1 className="mt-4 break-words text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">{merchant.businessName}</h1><p className="mt-2 text-sm text-slate-600">Here’s how your business is performing.</p><div className="mt-4 flex flex-wrap items-center gap-2"><span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-800"><span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{merchant.merchantStatus}</span><span className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">{merchant.businessType || "Business"}</span><span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800">{merchant.plan || "No plan"} plan</span></div></div>
-          <div className="merchant-profile"><span className="merchant-profile__bell" aria-hidden="true">♧<i /></span><span className="merchant-profile__avatar">{ownerInitials}</span><span className="merchant-profile__copy"><strong>{ownerName}</strong><small>Merchant</small></span></div>
+          <div className="min-w-0">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+              {greeting()} · Merchant Dashboard
+            </div>
+            <h1 className="mt-3 break-words text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">{merchant.businessName}</h1>
+            <p className="mt-2 text-sm text-slate-200">Here’s how your business and QR scans are performing.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-100">
+                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                {merchant.merchantStatus}
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/20 px-3 py-1.5 text-xs font-medium text-white">
+                <span>{categoryEmoji}</span>
+                <span>{merchant.businessType || "Business"}</span>
+              </span>
+              <span className="rounded-full bg-blue-500/25 border border-blue-400/30 px-3 py-1.5 text-xs font-semibold text-blue-100">
+                {merchant.plan || "Standard"} Plan
+              </span>
+            </div>
+          </div>
+          <div className="merchant-profile">
+            <span className="merchant-profile__bell" aria-hidden="true">
+              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <i />
+            </span>
+            <span className="merchant-profile__avatar">{ownerInitials}</span>
+            <span className="merchant-profile__copy">
+              <strong>{ownerName}</strong>
+              <small>Merchant</small>
+            </span>
+          </div>
         </div>
       </section>
 
-      {!publicLocationComplete ? <section aria-labelledby="complete-public-location-title" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-orange-200 bg-orange-50 p-5"><div><p className="text-xs font-bold uppercase tracking-wider text-orange-800">Get discovered locally</p><h2 id="complete-public-location-title" className="mt-1 text-lg font-bold text-slate-950">Complete Public Profile</h2><p className="mt-1 text-sm text-slate-700">Complete your public location to appear in Trustit local search. This does not affect your QR or review features.</p></div><Link href="/merchant/dashboard/business#public-discovery-location" className="inline-flex min-h-11 items-center rounded-xl bg-[#a64c05] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#873d03]">Complete Location</Link></section> : null}
+      {!publicLocationComplete ? <section aria-labelledby="complete-public-location-title" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 mb-4"><div><p className="text-xs font-bold uppercase tracking-wider text-blue-800">Get discovered locally</p><h2 id="complete-public-location-title" className="mt-1 text-lg font-bold text-slate-950">Complete Public Profile</h2><p className="mt-1 text-sm text-slate-700">Complete your public location to appear in Trustit local search. This does not affect your QR or review features.</p></div><Link href="/merchant/dashboard/business#public-discovery-location" className="inline-flex min-h-11 items-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800">Complete Location</Link></section> : null}
 
       <section aria-label="Merchant statistics" className="merchant-stats">
         <StatCard tone="green" icon="qr" label="Total Scans" value={stats ? count(stats.total_scans).toLocaleString("en-IN") : "—"} detail="All-time QR scans" />
@@ -159,25 +189,40 @@ export default async function MerchantDashboardPage() {
         <StatCard tone="violet" icon="star" label="Average Rating" value={average !== null && Number.isFinite(average) ? `${average.toFixed(1)} / 5` : "— / 5"} detail={totalReviews === 0 ? "Waiting for first review" : "Customer rating"} />
       </section>
 
-      {!statsResult.error && !stats ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800" role="status">Dashboard analytics are not available for this merchant account.</p> : null}
+      {!statsResult.error && !stats ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 mb-4" role="status">Dashboard analytics are not available for this merchant account.</p> : null}
 
       <div className="merchant-workspace">
         <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} designAssets={designAssets} />
         <section className="merchant-template-panel merchant-template-panel--compact" id="template-gallery" aria-labelledby="merchant-template-title">
-          <header><span className="merchant-template-panel__icon" aria-hidden="true">✿</span><div><h2 id="merchant-template-title">Choose a QR Template</h2><p>Pick a design that matches your business style.</p></div></header>
+          <header>
+            <span className="merchant-template-panel__icon" aria-hidden="true">
+              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </span>
+            <div><h2 id="merchant-template-title">Choose a QR Template</h2><p>Pick a design that matches your business style.</p></div>
+          </header>
           <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="dashboard" initialDesignAssets={designAssets} initialDesignError={designAssetError} googleReviewLink={merchant.reviewLink} />
         </section>
       </div>
 
       <section className="merchant-lower-grid">
         <div className="merchant-lower-panel">
-          <div className="merchant-section-heading"><span className="merchant-section-heading__icon" aria-hidden="true">ϟ</span><div><h2>Quick Actions</h2><p>Manage your QR code and get more reviews.</p></div></div>
+          <div className="merchant-section-heading">
+            <span className="merchant-section-heading__icon" aria-hidden="true">
+              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </span>
+            <div><h2>Quick Actions</h2><p>Manage your QR code and get more reviews.</p></div>
+          </div>
           <div className="merchant-quick-grid">{actions.map((action, index) => <Link key={action.href} href={action.href} className="merchant-quick-link"><span className="merchant-quick-link__icon" aria-hidden="true">{["⇩", "▤", "▣", "↗", "✦"][index]}</span><strong>{action.title}</strong><small>{action.description}</small></Link>)}</div>
         </div>
         <aside className="merchant-lower-panel merchant-tips">
-          <div className="merchant-section-heading"><span className="merchant-section-heading__icon" aria-hidden="true">♙</span><div><h2>Tips to Get More Reviews</h2><p>Simple ways to invite honest feedback.</p></div></div>
-          <ul className="merchant-tips__list"><li>Place your QR code at your shop counter.</li><li>Add a small “Review us on Google” message.</li><li>Use a table stand or sticker.</li><li>Offer great service to every customer.</li></ul>
-          <span className="merchant-tips__art" aria-hidden="true">{categoryIcon}</span>
+          <div className="merchant-section-heading">
+            <span className="merchant-section-heading__icon" aria-hidden="true">
+              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </span>
+            <div><h2>Tips to Get More Reviews</h2><p>Simple ways to invite honest feedback.</p></div>
+          </div>
+          <ul className="merchant-tips__list"><li>Place your QR code standee at your shop counter.</li><li>Add a small “Review us on Google” message on bills.</li><li>Use a counter stand or cash-drawer sticker.</li><li>Deliver great customer service to every visitor.</li></ul>
+          <span className="merchant-tips__art" aria-hidden="true">{categoryEmoji}</span>
         </aside>
       </section>
 
