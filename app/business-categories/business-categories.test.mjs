@@ -94,4 +94,3 @@ test("all selectable admin icon names are validated against Lucide exports", asy
   assert.match(manager, /iconNames\.map/);
   assert.match(manager, /Search Lucide icons/);
 });
-

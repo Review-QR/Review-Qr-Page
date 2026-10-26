@@ -5,7 +5,7 @@ import { PUBLIC_CATEGORIES, slugifyCity } from "@/lib/public-discovery-domain";
 import { discoveryMetadata } from "@/lib/public-discovery-seo";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
-const first = (value: string | string[] | undefined) => Array.isArray(value) ? value[0] ?? "" : value ?? "";
+const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] ?? "" : value ?? "");
 
 export const metadata: Metadata = {
   ...discoveryMetadata({
@@ -22,65 +22,310 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   const category = first(query.category);
   const selectedCategory = PUBLIC_CATEGORIES.some((item) => item.slug === category) ? category : "";
   const term = first(query.q).trim();
+
   if (city && category) {
     const params = new URLSearchParams();
     if (term) params.set("q", term.slice(0, 120));
     redirect(`/${encodeURIComponent(city)}/${encodeURIComponent(category)}${params.size ? `?${params}` : ""}`);
   }
 
-  const popular = ["restaurants", "sweet-shops", "cafes", "salons", "hotels", "clinics"]
-    .map((slug) => PUBLIC_CATEGORIES.find((categoryItem) => categoryItem.slug === slug))
-    .filter((categoryItem): categoryItem is (typeof PUBLIC_CATEGORIES)[number] => Boolean(categoryItem));
+  const popular = [
+    { slug: "sweet-shops", name: "Sweet Shops", emoji: "🍰", desc: "Mithai, Halwa, Laddoo & Bengali Sweets" },
+    { slug: "restaurants", name: "Restaurants & Dining", emoji: "🍽️", desc: "Family Dining, Thali & Fast Food" },
+    { slug: "salons", name: "Salons & Parlours", emoji: "✂️", desc: "Haircut, Grooming & Beauty Spa" },
+    { slug: "clinics", name: "Doctors & Clinics", emoji: "🩺", desc: "General Physicians, Dental & Care" },
+    { slug: "hotels", name: "Hotels & Stays", emoji: "🏨", desc: "Rooms, Guest Houses & Banquets" },
+    { slug: "cafes", name: "Cafes & Bakeries", emoji: "☕", desc: "Coffee, Pastries, Cakes & Snacks" },
+  ];
 
   return (
-    <main className="min-h-screen bg-white text-slate-950">
-      <header className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
-          <Link href="/" className="flex items-center gap-3 font-bold tracking-tight" aria-label="Trustit home">
-            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-blue-700 text-lg text-white">T</span>
-            <span className="text-xl">Trustit</span>
+    <main className="min-h-screen bg-white text-slate-950 font-sans">
+      {/* ── Top Header Navigation ── */}
+      <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3.5 sm:px-8">
+          <Link href="/" className="flex items-center gap-2.5 font-black tracking-tight" aria-label="Trustit home">
+            <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 text-lg font-black text-white shadow-md shadow-blue-500/20">
+              🛡️
+            </span>
+            <div className="leading-tight">
+              <span className="text-xl font-extrabold text-slate-900 tracking-tight">Trustit</span>
+              <span className="block text-[10px] font-bold uppercase tracking-wider text-blue-700">Verified Local</span>
+            </div>
           </Link>
-          <nav className="flex items-center gap-2 sm:gap-4" aria-label="Main navigation">
-            <Link href="/trustit" className="hidden rounded-lg px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 sm:inline-flex">For businesses</Link>
-            <Link href="/merchant/login" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 sm:px-4">Business login</Link>
-            <Link href="/register" className="rounded-lg bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 sm:px-4">List your business</Link>
+
+          <nav className="flex items-center gap-2 sm:gap-3" aria-label="Main navigation">
+            <Link
+              href="/trustit"
+              className="hidden rounded-xl px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 sm:inline-flex"
+            >
+              For Businesses
+            </Link>
+            <Link
+              href="/merchant/login"
+              className="rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 sm:px-4"
+            >
+              Merchant Login
+            </Link>
+            <Link
+              href="/register"
+              className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-3.5 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/30 transition hover:from-blue-700 hover:to-blue-800 sm:px-4"
+            >
+              List Your Business →
+            </Link>
           </nav>
         </div>
       </header>
 
-      <section className="relative overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-100 via-sky-50 to-white">
-        <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 sm:px-8 sm:py-24 lg:grid-cols-[1fr_0.85fr] lg:items-center lg:py-28">
-          <div>
-            <p className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/80 px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-blue-800"><span className="h-2 w-2 rounded-full bg-blue-600" />Local discovery, made clear</p>
-            <h1 className="mt-6 max-w-2xl text-4xl font-bold leading-tight tracking-tight sm:text-6xl">Find a local business that feels right.</h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">Explore local businesses by city and category, see public location details, and browse Trustit review summaries.</p>
+      {/* ── Hero Search Section (Zomato / Justdial Style, but Clean & Trust-First) ── */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-sky-50/70 via-blue-50/30 to-white px-4 py-12 sm:px-8 sm:py-20 lg:py-24">
+        {/* Decorative background glows */}
+        <div className="pointer-events-none absolute -left-20 -top-20 h-96 w-96 rounded-full bg-blue-200/40 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 top-20 h-96 w-96 rounded-full bg-amber-200/30 blur-3xl" />
 
-            <form action="/" method="get" className="mt-8 grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl shadow-blue-950/5 sm:grid-cols-[1fr_1fr_1fr_auto] sm:p-4" aria-label="Search local businesses">
-              <label className="min-w-0 px-2 py-1.5"><span className="block text-xs font-bold uppercase tracking-wide text-slate-500">City or town</span><input name="city" autoComplete="address-level2" required maxLength={100} placeholder="e.g. Bahraich" className="mt-1 w-full border-0 p-0 text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:ring-0" /></label>
-              <label className="min-w-0 border-t border-slate-100 px-2 py-2 sm:border-l sm:border-t-0 sm:py-1.5 sm:pl-4"><span className="block text-xs font-bold uppercase tracking-wide text-slate-500">Category</span><select name="category" required defaultValue={selectedCategory} className="mt-1 w-full border-0 bg-transparent p-0 text-sm font-semibold text-slate-700 outline-none focus:ring-0"><option value="" disabled>Choose a category</option>{PUBLIC_CATEGORIES.map((item) => <option key={item.slug} value={item.slug}>{item.name}</option>)}</select></label>
-              <label className="min-w-0 border-t border-slate-100 px-2 py-2 sm:border-l sm:border-t-0 sm:py-1.5 sm:pl-4"><span className="block text-xs font-bold uppercase tracking-wide text-slate-500">Business name (optional)</span><input name="q" maxLength={120} placeholder="Search by name" className="mt-1 w-full border-0 p-0 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:ring-0" /></label>
-              <button type="submit" className="min-h-12 rounded-xl bg-blue-700 px-6 text-sm font-bold text-white transition hover:bg-blue-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-700">Search businesses <span aria-hidden="true">→</span></button>
-            </form>
-            <p className="mt-3 text-xs text-slate-500">Only eligible businesses with merchant-confirmed public locations appear in local search.</p>
+        <div className="relative mx-auto max-w-5xl text-center">
+          {/* Trust Pill */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-white/90 px-4 py-1.5 text-xs font-extrabold uppercase tracking-wider text-blue-900 shadow-sm backdrop-blur">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            100% In-Store Verified Reviews · Zero Spam Calls
           </div>
 
-          <aside className="rounded-[2rem] border border-blue-100 bg-white/85 p-6 shadow-[0_30px_90px_-45px_rgba(30,64,175,0.35)] sm:p-8" aria-label="How Trustit discovery works">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Explore nearby</p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight">Start with a category</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Choose a city and category above to see currently listed businesses.</p>
-            <div className="mt-6 grid grid-cols-2 gap-3">{popular.map((item) => <Link key={item.slug} href={`/?category=${encodeURIComponent(item.slug)}#search`} className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700">{item.name}<span className="ml-2 text-blue-700" aria-hidden="true">↗</span></Link>)}</div>
-            <div className="mt-6 rounded-2xl bg-slate-50 p-4"><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-100 text-lg text-emerald-800" aria-hidden="true">✓</span><div><p className="text-sm font-bold">Public, useful details</p><p className="mt-1 text-xs leading-5 text-slate-600">Business location and submitted Trustit rating summaries.</p></div></div></div>
-          </aside>
+          <h1 className="mt-5 text-3xl font-black tracking-tight text-slate-900 sm:text-5xl lg:text-6xl leading-[1.15]">
+            Discover Trusted Local Businesses <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
+              in Your City
+            </span>
+          </h1>
+
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+            Search verified shops, restaurants, salons, and healthcare in your city. Compare genuine Trustit star ratings, view exact locations, and connect directly on WhatsApp or Call.
+          </p>
+
+          {/* ── Smart Multi-Field Search Form ── */}
+          <div className="mx-auto mt-8 max-w-4xl">
+            <form
+              action="/"
+              method="get"
+              className="grid gap-2 rounded-3xl border border-slate-200/90 bg-white p-2.5 shadow-[0_12px_40px_-10px_rgba(15,23,42,0.12)] sm:grid-cols-[1.1fr_1.1fr_1.2fr_auto] sm:p-3"
+              aria-label="Search local businesses"
+            >
+              {/* Field 1: City */}
+              <div className="flex items-center gap-2 rounded-2xl bg-slate-50/80 px-3.5 py-2.5 sm:bg-transparent">
+                <span className="text-lg">📍</span>
+                <label className="min-w-0 flex-1 text-left">
+                  <span className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                    City / Town
+                  </span>
+                  <input
+                    name="city"
+                    autoComplete="address-level2"
+                    required
+                    maxLength={100}
+                    defaultValue="Bahraich"
+                    placeholder="e.g. Bahraich"
+                    className="mt-0.5 w-full border-0 bg-transparent p-0 text-sm font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:ring-0"
+                  />
+                </label>
+              </div>
+
+              {/* Field 2: Category */}
+              <div className="flex items-center gap-2 rounded-2xl bg-slate-50/80 px-3.5 py-2.5 sm:border-l sm:border-slate-100 sm:bg-transparent">
+                <span className="text-lg">🏷️</span>
+                <label className="min-w-0 flex-1 text-left">
+                  <span className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                    Category
+                  </span>
+                  <select
+                    name="category"
+                    required
+                    defaultValue={selectedCategory || "sweet-shops"}
+                    className="mt-0.5 w-full border-0 bg-transparent p-0 text-sm font-bold text-slate-900 outline-none focus:ring-0"
+                  >
+                    <option value="" disabled>Choose category</option>
+                    {PUBLIC_CATEGORIES.map((item) => (
+                      <option key={item.slug} value={item.slug}>
+                        {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              {/* Field 3: Shop Name / Locality */}
+              <div className="flex items-center gap-2 rounded-2xl bg-slate-50/80 px-3.5 py-2.5 sm:border-l sm:border-slate-100 sm:bg-transparent">
+                <span className="text-lg">🔍</span>
+                <label className="min-w-0 flex-1 text-left">
+                  <span className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
+                    Shop / Locality (Optional)
+                  </span>
+                  <input
+                    name="q"
+                    maxLength={120}
+                    placeholder="e.g. Deepak Sweets or Chhavni"
+                    className="mt-0.5 w-full border-0 bg-transparent p-0 text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:ring-0"
+                  />
+                </label>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-700 px-6 text-sm font-bold text-white shadow-md shadow-blue-700/25 transition hover:from-blue-800 hover:to-indigo-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
+              >
+                <span>Search</span>
+                <span aria-hidden="true">→</span>
+              </button>
+            </form>
+
+            {/* Quick popular city tags */}
+            <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
+              <span className="font-semibold text-slate-400">Popular in UP:</span>
+              {["Bahraich", "Lucknow", "Ayodhya", "Kanpur", "Varanasi"].map((c) => (
+                <Link
+                  key={c}
+                  href={`/${slugifyCity(c)}/sweet-shops`}
+                  className="rounded-lg bg-white px-2.5 py-1 font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200/80 hover:bg-blue-50 hover:text-blue-700 transition"
+                >
+                  {c}
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section id="search" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 sm:py-20">
-        <div className="grid gap-8 md:grid-cols-3">
-          {[["01", "Choose a place", "Search a city or town to see its available local listings."], ["02", "Browse a category", "Compare public business profiles and location information."], ["03", "Explore with context", "Review Trustit rating summaries; private customer review details stay private."]].map(([number, title, text]) => <article key={number} className="rounded-2xl border border-slate-200 p-6"><span className="text-sm font-bold text-blue-700">{number}</span><h2 className="mt-4 text-lg font-bold">{title}</h2><p className="mt-2 text-sm leading-6 text-slate-600">{text}</p></article>)}
+      {/* ── Popular Categories Showcase ── */}
+      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-8 sm:py-16">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2 mb-8">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-blue-700">Explore Local</p>
+            <h2 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl tracking-tight">
+              Popular Business Categories
+            </h2>
+          </div>
+          <p className="text-xs text-slate-500">Compare verified local merchants with honest customer ratings</p>
         </div>
-        <div className="mt-12 flex flex-col justify-between gap-5 rounded-3xl bg-slate-950 px-6 py-8 text-white sm:flex-row sm:items-center sm:px-9"><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-300">For local businesses</p><h2 className="mt-2 text-2xl font-bold">Help customers find your business.</h2></div><div className="flex flex-wrap gap-3"><Link href="/trustit" className="rounded-xl border border-slate-600 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800">Explore Trustit for business</Link><Link href="/register" className="rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white hover:bg-blue-500">Register your business</Link></div></div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {popular.map((item) => (
+            <Link
+              key={item.slug}
+              href={`/bahraich/${encodeURIComponent(item.slug)}`}
+              className="group relative flex items-start gap-4 rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg hover:shadow-blue-950/5"
+            >
+              <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 text-2xl shadow-inner group-hover:scale-105 transition-transform">
+                {item.emoji}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-700 transition">
+                    {item.name}
+                  </h3>
+                  <span className="text-slate-400 group-hover:translate-x-1 group-hover:text-blue-700 transition" aria-hidden="true">
+                    →
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-500 leading-relaxed line-clamp-2">
+                  {item.desc}
+                </p>
+                <span className="mt-2.5 inline-block text-[11px] font-bold text-blue-700">
+                  Explore in Bahraich
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
       </section>
-      <footer className="border-t border-slate-200 px-5 py-7 text-center text-xs text-slate-500">Trustit · Local business discovery</footer>
+
+      {/* ── Why Trustit vs Old Directories (Justdial / IndiaMART) ── */}
+      <section className="border-y border-slate-100 bg-slate-50/60 px-4 py-16 sm:px-8 sm:py-20">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-800">
+              The Trustit Difference
+            </span>
+            <h2 className="mt-3 text-2xl font-black text-slate-900 sm:text-4xl tracking-tight">
+              Why Customers & Shop Owners Trust Us
+            </h2>
+            <p className="mt-2 text-sm text-slate-600">
+              Unlike traditional phone directories, Trustit is built for trust, privacy, and zero middleman interference.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {/* Feature 1 */}
+            <div className="rounded-3xl border border-slate-200/90 bg-white p-7 shadow-sm">
+              <span className="grid size-12 place-items-center rounded-2xl bg-emerald-100 text-2xl text-emerald-800">
+                🛡️
+              </span>
+              <h3 className="mt-5 text-lg font-bold text-slate-900">100% In-Store Verified Reviews</h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                Reviews cannot be faked or purchased. A customer must physically visit the merchant and scan their Trustit Standee QR code to submit a rating.
+              </p>
+            </div>
+
+            {/* Feature 2 */}
+            <div className="rounded-3xl border border-slate-200/90 bg-white p-7 shadow-sm">
+              <span className="grid size-12 place-items-center rounded-2xl bg-rose-100 text-2xl text-rose-800">
+                🚫
+              </span>
+              <h3 className="mt-5 text-lg font-bold text-slate-900">Zero Spam Calls Guarantee</h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                Old directories sell customer phone numbers to multiple competitors who spam with telemarketing calls. Trustit NEVER sells your personal data.
+              </p>
+            </div>
+
+            {/* Feature 3 */}
+            <div className="rounded-3xl border border-slate-200/90 bg-white p-7 shadow-sm">
+              <span className="grid size-12 place-items-center rounded-2xl bg-blue-100 text-2xl text-blue-800">
+                ⚡
+              </span>
+              <h3 className="mt-5 text-lg font-bold text-slate-900">Direct WhatsApp & Maps Connect</h3>
+              <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                Reach the shop owner directly on WhatsApp, get one-click Google Maps driving navigation, or write a real review in seconds.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Merchant Call to Action Banner ── */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-8 sm:py-20">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 p-8 text-white sm:p-12 lg:p-16">
+          <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-blue-600/20 blur-3xl" />
+          
+          <div className="relative z-10 max-w-2xl">
+            <span className="inline-block rounded-full bg-blue-500/20 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-300 ring-1 ring-blue-400/30">
+              For Shop & Business Owners
+            </span>
+            <h2 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+              Grow Your Business with Real Google Reviews
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300 sm:text-base">
+              Get an official Trustit QR Standee for your billing counter. Turn happy customers into 5-star Google reviews and get discovered by local customers in Bahraich.
+            </p>
+
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link
+                href="/register"
+                className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-blue-600 px-6 text-sm font-bold text-white shadow-lg shadow-blue-600/30 transition hover:bg-blue-500"
+              >
+                Register Your Shop in 2 Minutes →
+              </Link>
+              <Link
+                href="/trustit"
+                className="inline-flex min-h-12 items-center justify-center rounded-2xl border border-slate-700 bg-white/5 px-5 text-sm font-semibold text-slate-200 hover:bg-white/10 transition"
+              >
+                See How It Works
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Footer ── */}
+      <footer className="border-t border-slate-200 bg-white px-4 py-8 text-center text-xs text-slate-500 sm:px-8">
+        <p>© 2026 Trustit · Real Reviews. Real Trust. · Verified Local Discovery</p>
+      </footer>
     </main>
   );
 }

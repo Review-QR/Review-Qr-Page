@@ -6,6 +6,7 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 import { appConfig, type PlanId } from "@/lib/config";
+import { classifyCashfreePaymentAttempts } from "@/lib/cashfree-payment-attempts.mjs";
 import { cashfreeLivePaymentsEnabled, resolveCashfreeServerConfiguration, type CashfreeEnvironment } from "@/lib/cashfree-environment";
 import { verifyCashfreeSignature } from "@/lib/cashfree-signature";
 import { resolveCashfreeReturnUrl, resolveCashfreeWebhookUrl } from "@/lib/cashfree-webhook-url";
@@ -88,8 +89,15 @@ export type CashfreeVerificationResult =
       currency: "INR";
       paidAt: string;
     }
-  | { status: "NOT_SUCCESS"; httpStatus: number; terminalFailure: boolean }
-  | { status: "VERIFICATION_ERROR"; httpStatus: number | null };
+  | {
+      status: "NOT_SUCCESS";
+      httpStatus: number;
+      terminalFailure: boolean;
+      paymentState: "pending" | "failed";
+    }
+  | { status: "ORDER_NOT_FOUND"; httpStatus: 404 }
+  | { status: "ORDER_EXPIRED" }
+  | { status: "VERIFICATION_ERROR"; httpStatus: number | null; reason?: "configuration" | "mapping" };
 
 type CheckoutOrderClaims = {
   version: 1;
@@ -103,7 +111,7 @@ type CheckoutOrderClaims = {
 };
 
 const CHECKOUT_PROOF_TTL_MS = 24 * 60 * 60 * 1000;
-const ORDER_ID_PATTERN = /^rqr_[a-f0-9]{32}$/;
+const ORDER_ID_PATTERN = /^rqr_(?:[a-f0-9]{32}|[a-f0-9]{33}|[a-f0-9]{34})$/;
 
 function proofSigningKey(): Buffer {
   const secret = requiredEnvironmentVariable("CASHFREE_CLIENT_SECRET");
@@ -359,8 +367,8 @@ async function createOrder(input: {
           order_currency: "INR",
           customer_details: {
             customer_id: input.customerId,
-            customer_name: input.customerName ?? "Review QR Sandbox Test",
-            customer_email: "sandbox-test@example.com",
+          customer_name: input.customerName ?? "Review QR Customer",
+          customer_email: "payments@example.invalid",
             customer_phone: input.customerPhone ?? "9999999999",
           },
           order_note: input.orderNote,
@@ -597,6 +605,7 @@ type SignedCashfreeOrderContext = {
   businessId: string;
   planId: PlanId;
   amount: number;
+  orderStatus?: string;
 };
 
 type CashfreeOrderContextResult =
@@ -605,6 +614,7 @@ type CashfreeOrderContextResult =
       httpStatus: number;
       context: SignedCashfreeOrderContext;
     }
+  | { status: "NOT_FOUND"; httpStatus: 404 }
   | { status: "UNMAPPED" }
   | { status: "VERIFICATION_ERROR"; httpStatus: number | null };
 
@@ -616,7 +626,8 @@ type CashfreePaymentVerification =
       currency: "INR";
       paidAt: string;
     }
-  | { status: "NOT_SUCCESS"; httpStatus: number; terminalFailure: boolean }
+  | { status: "NOT_SUCCESS"; httpStatus: number; terminalFailure: boolean; paymentState: "pending" | "failed" }
+  | { status: "ORDER_EXPIRED" }
   | { status: "VERIFICATION_ERROR"; httpStatus: number | null };
 
 /** Reads the order only to confirm its ID and verify its signed merchant context. */
@@ -640,6 +651,7 @@ async function fetchSignedCashfreeOrderContext(input: {
 
   if (!response.ok) {
     await response.body?.cancel();
+    if (response.status === 404) return { status: "NOT_FOUND", httpStatus: 404 };
     return { status: "VERIFICATION_ERROR", httpStatus: response.status };
   }
 
@@ -659,6 +671,7 @@ async function fetchSignedCashfreeOrderContext(input: {
 
   const order = payload as {
     order_id?: unknown;
+    order_status?: unknown;
     order_amount?: unknown;
     order_currency?: unknown;
     order_tags?: unknown;
@@ -691,7 +704,14 @@ async function fetchSignedCashfreeOrderContext(input: {
     return { status: "VERIFICATION_ERROR", httpStatus: response.status };
   }
 
-  return { status: "FOUND", httpStatus: response.status, context };
+  return {
+    status: "FOUND",
+    httpStatus: response.status,
+    context: {
+      ...context,
+      orderStatus: typeof order.order_status === "string" ? order.order_status : undefined,
+    },
+  };
 }
 
 /** Uses Cashfree payment attempts, not order_status, as the payment authority. */
@@ -741,10 +761,18 @@ async function verifyCashfreePaymentForContext(input: {
     (payment) => payment.payment_status === "SUCCESS",
   );
   if (successfulPayments.length === 0) {
-    const terminalFailure = payments.length > 0 && payments.every((payment) =>
-      payment.payment_status === "FAILED" || payment.payment_status === "USER_DROPPED",
-    );
-    return { status: "NOT_SUCCESS", httpStatus: response.status, terminalFailure };
+    const paymentState = classifyCashfreePaymentAttempts(payments, input.context.orderStatus);
+    if (paymentState === "unverified" || paymentState === "success") {
+      return { status: "VERIFICATION_ERROR", httpStatus: response.status };
+    }
+    if (paymentState === "expired") return { status: "ORDER_EXPIRED" };
+    const terminalFailure = paymentState === "failed";
+    return {
+      status: "NOT_SUCCESS",
+      httpStatus: response.status,
+      terminalFailure,
+      paymentState: terminalFailure ? "failed" : "pending",
+    };
   }
 
   const payment = successfulPayments.find(
@@ -806,6 +834,7 @@ export async function verifyCashfreeWebhookOrder(
   });
   if (payment.status !== "VERIFIED_SUCCESS") {
     if (payment.status === "NOT_SUCCESS") return { status: "NOT_SUCCESS" };
+    if (payment.status === "ORDER_EXPIRED") return { status: "NOT_SUCCESS" };
     return { status: "VERIFICATION_ERROR" };
   }
 
@@ -844,12 +873,17 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
   }
 
   let claims: CheckoutOrderClaims | null;
-  let client: CashfreeClient;
   try {
     claims = readCheckoutVerificationToken(input.verificationToken);
+  } catch {
+    return { status: "VERIFICATION_ERROR", httpStatus: null, reason: "configuration" };
+  }
+
+  let client: CashfreeClient;
+  try {
     client = createCashfreeClient();
   } catch {
-    return { status: "VERIFICATION_ERROR", httpStatus: null };
+    return { status: "VERIFICATION_ERROR", httpStatus: null, reason: "configuration" };
   }
 
   if (
@@ -864,6 +898,7 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
     orderId: input.orderId,
     client,
   });
+  if (orderContext.status === "NOT_FOUND") return { status: "ORDER_NOT_FOUND", httpStatus: 404 };
   if (orderContext.status !== "FOUND") {
     return {
       status: "VERIFICATION_ERROR",
@@ -871,6 +906,7 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
         orderContext.status === "VERIFICATION_ERROR"
           ? orderContext.httpStatus
           : null,
+      ...(orderContext.status === "UNMAPPED" ? { reason: "mapping" as const } : {}),
     };
   }
 
@@ -881,7 +917,7 @@ export async function verifyCashfreeMerchantCheckoutOrder(input: {
     context.planId !== claims.planId ||
     context.amount !== claims.amount
   ) {
-    return { status: "VERIFICATION_ERROR", httpStatus: orderContext.httpStatus };
+    return { status: "VERIFICATION_ERROR", httpStatus: orderContext.httpStatus, reason: "mapping" };
   }
 
   const payment = await verifyCashfreePaymentForContext({
@@ -914,13 +950,14 @@ export async function verifyCashfreeMerchantOrderBySignedContext(input: {
   try {
     client = createCashfreeClient();
   } catch {
-    return { status: "VERIFICATION_ERROR", httpStatus: null };
+    return { status: "VERIFICATION_ERROR", httpStatus: null, reason: "configuration" };
   }
 
   const orderContext = await fetchSignedCashfreeOrderContext({
     orderId: input.orderId,
     client,
   });
+  if (orderContext.status === "NOT_FOUND") return { status: "ORDER_NOT_FOUND", httpStatus: 404 };
   if (orderContext.status !== "FOUND") {
     return {
       status: "VERIFICATION_ERROR",
@@ -928,12 +965,14 @@ export async function verifyCashfreeMerchantOrderBySignedContext(input: {
         orderContext.status === "VERIFICATION_ERROR"
           ? orderContext.httpStatus
           : null,
+      ...(orderContext.status === "UNMAPPED" ? { reason: "mapping" as const } : {}),
     };
   }
   if (orderContext.context.businessId !== input.authenticatedBusinessId) {
     return {
       status: "VERIFICATION_ERROR",
       httpStatus: orderContext.httpStatus,
+      reason: "mapping",
     };
   }
 

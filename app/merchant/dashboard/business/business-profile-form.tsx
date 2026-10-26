@@ -12,14 +12,12 @@ export default function BusinessProfileForm({
   owner,
   address,
   phone,
-  reviewLink,
 }: {
   name: string;
   type: string | null;
   owner: string | null;
   address: string | null;
   phone: string | null;
-  reviewLink: string | null;
 }) {
   const [state, action, pending] = useActionState(saveBusinessProfileAction, initialState);
   return (
@@ -39,9 +37,6 @@ export default function BusinessProfileForm({
       </label>
       <label className="text-sm font-semibold text-slate-800 sm:col-span-2">Business Address
         <textarea className={`${inputClass} min-h-24 resize-y`} name="address" defaultValue={address ?? ""} maxLength={1000} required autoComplete="street-address" />
-      </label>
-      <label className="text-sm font-semibold text-slate-800 sm:col-span-2">Google Review Link <span className="font-normal text-slate-500">(Optional)</span>
-        <input className={inputClass} name="reviewLink" type="url" inputMode="url" defaultValue={reviewLink ?? ""} maxLength={2048} placeholder="https://…" />
       </label>
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
         <button type="submit" disabled={pending} className="min-h-11 rounded-xl bg-[#a64c05] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#873d03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:opacity-60">

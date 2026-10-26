@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { merchantAuthEmail } from "@/lib/merchant-identity";
 import { hashMerchantInviteToken, isValidMerchantInviteToken } from "@/app/merchants/invite/invite-utils";
+import { reconcileMerchantInviteCompletion } from "@/lib/merchant-invite-completion.mjs";
 
 export type MerchantRegistrationState = { success: boolean; message: string };
 
@@ -68,16 +69,28 @@ export async function registerMerchantFromInvite(
     return { success: false, message: "This merchant account could not be created. The invitation may already have been used." };
   }
 
-  const { data: completedBusinessId, error: completeError } = await admin.rpc("complete_merchant_invite", {
-    p_token_hash: tokenHash,
-    p_user_id: created.user.id,
+  const completion = await reconcileMerchantInviteCompletion({
+    complete: async () => {
+      const { data, error, status } = await admin.rpc("complete_merchant_invite", {
+        p_token_hash: tokenHash,
+        p_user_id: created.user.id,
+      });
+      return { data, error, status, expectedUserId: created.user.id };
+    },
+    readMapping: () => admin
+      .from("merchant_accounts")
+      .select("user_id")
+      .eq("business_id", businessId)
+      .maybeSingle(),
+    cleanup: () => admin.auth.admin.deleteUser(created.user.id),
   });
 
-  if (completeError || completedBusinessId !== businessId) {
-    try {
-      await admin.auth.admin.deleteUser(created.user.id);
-    } catch {
-      // Preserve the failure response; the Auth identity must not be reused by this flow.
+  if (completion.status !== "success") {
+    if (completion.status === "unconfirmed") {
+      return {
+        success: false,
+        message: "Registration status could not be confirmed. Please try signing in or contact support before retrying.",
+      };
     }
     return { success: false, message: "Registration could not be completed. Please request a new invitation." };
   }

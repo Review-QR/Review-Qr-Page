@@ -464,7 +464,7 @@ export type TrustitPaymentVerificationResult =
 
 export async function verifyTrustitOneTimePayment(orderId: string): Promise<TrustitPaymentVerificationResult> {
   const context = await getTrustitUser();
-  if (!context || typeof orderId !== "string" || !/^rqr_[a-f0-9]{32}$/.test(orderId)) return { success: false, status: "error", message: "We could not verify this payment. Please return to your registration and try again." };
+  if (!context || typeof orderId !== "string" || !/^rqr_[a-f0-9]{32,34}$/.test(orderId)) return { success: false, status: "error", message: "We could not verify this payment. Please return to your registration and try again." };
   try {
     // Registration orders are bound to a pending business rather than an active merchant.
     // Resolve the server-owned onboarding link before applying the verified payment.

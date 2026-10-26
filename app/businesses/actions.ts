@@ -61,6 +61,7 @@ function parseBusiness(input: unknown): Omit<Business, "id"> | null {
   const address = optionalText(input.address, 1000);
   const expiry = validExpiry(input.expiry);
   const reviewLink = safeReviewLink(input.review_link);
+  const type = typeof input.type === "string" ? input.type.trim() : "";
   if (
     !name ||
     name.length > 160 ||
@@ -72,7 +73,7 @@ function parseBusiness(input: unknown): Omit<Business, "id"> | null {
     address === undefined ||
     expiry === undefined ||
     !reviewLink ||
-    typeof input.type !== "string" || !input.type.trim() || input.type.length > 80 ||
+    !type || type.length > 120 ||
     typeof input.plan !== "string" || !PLANS.has(input.plan) ||
     typeof input.status !== "string" || !STATUSES.has(input.status) ||
     typeof input.qr_status !== "string" || !QR_STATUSES.has(input.qr_status)
@@ -85,7 +86,7 @@ function parseBusiness(input: unknown): Omit<Business, "id"> | null {
     owner,
     phone,
     address,
-    type: input.type,
+    type,
     plan: input.plan,
     status: input.status,
     expiry,

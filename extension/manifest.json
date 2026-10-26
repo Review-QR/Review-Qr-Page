@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Trustit Merchant Companion",
+  "version": "1.0.0",
+  "description": "Instant 1-click access to your Trustit merchant dashboard, QR standees, review link, and live customer feedback.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    },
+    "default_title": "Trustit Merchant Dashboard"
+  },
+  "permissions": [
+    "storage",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://trustitreview.com/*"
+  ]
+}

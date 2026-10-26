@@ -44,6 +44,125 @@ function naturalInputDraft(input: ReviewDraftInput): string {
   return sentence;
 }
 
+function buildGroundedReviewDraft(input: ReviewDraftInput): string {
+  const baseSentence = naturalInputDraft(input);
+  if (!baseSentence) return "";
+
+  const labels = (input.experienceLabels ?? []).map((l) => l.trim()).filter(Boolean);
+  const tone = toneFor(input.rating);
+  const seed = Math.max(1, Math.floor(input.variation ?? 1));
+  const signals = detectReviewWritingSignals(baseSentence);
+  const wordCount = baseSentence.split(/\s+/).filter(Boolean).length;
+
+  if (signals.script === "Devanagari") {
+    const devanagariClosings = {
+      positive: [
+        "यहाँ का अनुभव बहुत अच्छा रहा। ज़रूर दोबारा आएँगे!",
+        "कुल मिलाकर बहुत बढ़िया अनुभव रहा। धन्यवाद!",
+        "सब कुछ बहुत अच्छा था, ज़रूर सिफ़ारिश करेंगे।",
+      ],
+      mixed: [
+        "कुल मिलाकर अनुभव ठीक-ठाक रहा, कुछ चीज़ों में सुधार की उम्मीद है।",
+        "अनुभव सामान्य रहा, थोड़ी और बेहतरी की जा सकती है।",
+      ],
+      negative: [
+        "अनुभव निराशाजनक रहा, सुधार की बहुत ज़रूरत है।",
+        "उम्मीद के मुताबिक नहीं रहा, प्रबंधन को इस पर ध्यान देना चाहिए।",
+      ],
+    };
+    const followUp = choose(devanagariClosings[tone], seed);
+    return `${baseSentence} ${followUp}`.trim();
+  }
+
+  const closings = {
+    positive: [
+      "Definitely worth visiting again!",
+      "Would gladly recommend to others.",
+      "Looking forward to coming back!",
+      "Happy with the overall visit.",
+    ],
+    mixed: [
+      "Hope to see some improvements next time.",
+      "Decent overall with potential to improve.",
+      "A few tweaks would make it much better.",
+    ],
+    negative: [
+      "Hope management looks into this and improves.",
+      "Needs serious attention to customer feedback.",
+      "Overall not a satisfying experience.",
+    ],
+  };
+  const closing = choose(closings[tone], seed * 3);
+
+  if (labels.length === 0 || wordCount >= 15) {
+    return `${baseSentence} ${closing}`.trim();
+  }
+
+  const l1 = labels[0].toLowerCase();
+  const l2 = labels[1] ? labels[1].toLowerCase() : null;
+  const l3 = labels[2] ? labels[2].toLowerCase() : null;
+
+  let expSentence = "";
+  if (tone === "positive") {
+    if (l1 && l2 && l3) {
+      const templates = [
+        `Loved the ${l1}, pleasant ${l2} and great ${l3}.`,
+        `Really happy with the ${l1}, ${l2} and ${l3} here.`,
+        `Great ${l1}, wonderful ${l2} as well as ${l3}.`,
+      ];
+      expSentence = choose(templates, seed);
+    } else if (l1 && l2) {
+      const templates = [
+        `Loved the ${l1} and great ${l2} here.`,
+        `Really happy with the ${l1} and pleasant ${l2}.`,
+        `Great ${l1} as well as ${l2}.`,
+      ];
+      expSentence = choose(templates, seed);
+    } else if (l1) {
+      const templates = [
+        `Really liked the ${l1} here.`,
+        `Loved the ${l1} throughout.`,
+        `Great ${l1} and overall pleasant experience.`,
+      ];
+      expSentence = choose(templates, seed);
+    }
+  } else if (tone === "mixed") {
+    if (l1 && l2) {
+      const templates = [
+        `The ${l1} and ${l2} were average with room to improve.`,
+        `Mixed experience regarding ${l1} and ${l2}.`,
+        `The ${l1} was okay, though ${l2} could be better.`,
+      ];
+      expSentence = choose(templates, seed);
+    } else if (l1) {
+      const templates = [
+        `The ${l1} was okay, though there is room for improvement.`,
+        `Had mixed feelings about the ${l1}.`,
+        `The ${l1} was average and could be slightly better.`,
+      ];
+      expSentence = choose(templates, seed);
+    }
+  } else {
+    if (l1 && l2) {
+      const templates = [
+        `Disappointed with both ${l1} and ${l2}.`,
+        `The ${l1} and ${l2} did not meet expectations.`,
+        `Both the ${l1} and ${l2} need serious improvement.`,
+      ];
+      expSentence = choose(templates, seed);
+    } else if (l1) {
+      const templates = [
+        `The ${l1} was disappointing and needs improvement.`,
+        `Not satisfied with the ${l1}.`,
+        `Expected much better ${l1}.`,
+      ];
+      expSentence = choose(templates, seed);
+    }
+  }
+
+  return `${baseSentence} ${expSentence} ${closing}`.replace(/\s{2,}/g, " ").trim();
+}
+
 export function validateReviewDraftQuality(input: ReviewDraftInput, draft: string): boolean {
   if (!Number.isInteger(input.rating) || input.rating < 1 || input.rating > 5 || !draft.trim() || draft.length > 10000) return false;
   const customerText = (input.customerInput ?? "").trim();
@@ -196,13 +315,45 @@ export function buildReviewDraft(input: ReviewDraftInput): string {
   }
 
   const tone = toneFor(input.rating);
-  const grounded = naturalInputDraft(input);
+  const grounded = buildGroundedReviewDraft(input);
   if (grounded) {
     if (!validateReviewDraftQuality(input, grounded)) throw new Error("Review draft quality validation failed");
     return grounded;
   }
   const seed = Math.max(1, Math.floor(input.variation ?? 1));
-  const clauses = labels.map((label) => `I considered ${label.toLowerCase()} as part of my experience`);
+
+  function naturalClauseForLabel(label: string, t: Tone, s: number): string {
+    const l = label.toLowerCase();
+    if (t === "positive") {
+      const templates = [
+        `Really happy with the ${l}`,
+        `The ${l} was definitely a highlight`,
+        `Great ${l} throughout my visit`,
+        `Truly satisfied with the ${l}`,
+        `The ${l} made a wonderful impression`,
+        `Loved the ${l} here`,
+      ];
+      return templates[Math.abs(s) % templates.length];
+    }
+    if (t === "mixed") {
+      const templates = [
+        `The ${l} was okay, though there is room to improve`,
+        `Had mixed thoughts about the ${l}`,
+        `The ${l} was average and could be slightly better`,
+        `The ${l} was decent but could use some attention`,
+      ];
+      return templates[Math.abs(s) % templates.length];
+    }
+    const templates = [
+      `The ${l} was disappointing and needs improvement`,
+      `Expected much better ${l}`,
+      `The ${l} did not meet expectations`,
+      `Not satisfied with the ${l}`,
+    ];
+    return templates[Math.abs(s) % templates.length];
+  }
+
+  const clauses = labels.map((label, index) => naturalClauseForLabel(label, tone, seed + index * 3));
   if (clauses.length > 1) {
     const rotateBy = seed % clauses.length;
     clauses.push(...clauses.splice(0, rotateBy));
@@ -214,20 +365,37 @@ export function buildReviewDraft(input: ReviewDraftInput): string {
     negative: [`My experience at ${businessName} could have been better.`, `I was disappointed with my visit to ${businessName}.`, `My visit to ${businessName} did not go as well as I hoped.`],
   };
   const endings = {
-    positive: ["That reflects my positive overall rating.", "This matches how I felt about the visit overall.", "That is why I gave a positive overall rating."],
-    mixed: ["That reflects my mixed overall rating.", "This is how I felt about the visit overall.", "My overall rating reflects a mixed experience."],
-    negative: ["That reflects my negative overall rating.", "This is why my overall rating was low.", "My overall rating reflects this experience."],
+    positive: ["Definitely worth visiting again!", "Would gladly recommend to others.", "Happy with the overall visit.", "Looking forward to coming back."],
+    mixed: ["Hope to see some improvements next time.", "A few tweaks would make it much better.", "Decent overall with potential to improve."],
+    negative: ["Hope management looks into this and improves.", "Needs serious attention to customer feedback.", "Overall not a satisfying experience."],
   };
-  const body = clauses.map((clause, index) => `${index === 0 || seed % 3 === 0 ? "" : "Also, "}${clause}`).join(". ");
-  const opening = `${choose(openings[tone], seed)} I rated it ${input.rating} out of 5.`;
-  const ending = labels.length > 1 ? ` ${choose(endings[tone], seed * 5)}` : "";
-  const draft = `${opening} ${body.replace(/\.$/, "")}.${ending}`;
+  const body = clauses.map((clause, index) => `${index === 0 ? "" : (index === clauses.length - 1 && seed % 2 === 0 ? "Also, " : "In addition, ")}${clause.charAt(0).toLowerCase()}${clause.slice(1)}`).join(". ");
+  const ratingSuffix = tone === "negative" ? ` I rated it ${input.rating} out of 5.` : "";
+  const opening = `${choose(openings[tone], seed)}${ratingSuffix}`;
+  const ending = `${choose(endings[tone], seed * 5)}`;
+  const draft = `${opening} ${body.replace(/\.$/, "")}. ${ending}`;
   if (!validateReviewDraftQuality(input, draft)) throw new Error("Review draft quality validation failed");
   return draft;
 }
 
 export const localReviewDraftProvider: ReviewDraftProvider = {
   async generate(input) {
+    return buildReviewDraft(input);
+  },
+};
+
+export const smartReviewDraftProvider: ReviewDraftProvider = {
+  async generate(input) {
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+      try {
+        const { generateGeminiReviewDraft } = await import("./gemini-review-provider");
+        const geminiDraft = await generateGeminiReviewDraft(input, geminiKey);
+        if (geminiDraft) return geminiDraft;
+      } catch {
+        // Fall back to local humanoid builder
+      }
+    }
     return buildReviewDraft(input);
   },
 };

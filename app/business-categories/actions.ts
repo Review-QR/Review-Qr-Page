@@ -11,7 +11,7 @@ import { getSelectableBusinessCategoryData } from "@/lib/business-category-admin
 import type { UnifiedBusinessCategory } from "@/lib/business-category-catalog";
 
 const FAMILY_SET = new Set(["food", "retail", "healthcare", "education", "beauty", "hospitality", "automotive", "home", "professional", "finance", "technology", "entertainment", "travel", "events", "agriculture", "community", "manufacturing", "general"]);
-const ICONS = new Set<string>(iconNames);
+const ICONS = new Set<string>(Array.isArray(iconNames) ? iconNames : []);
 const DEFAULT_EXPERIENCES = ["Quality", "Service", "Staff", "Cleanliness", "Overall Experience"];
 
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null && !Array.isArray(value); }

@@ -3,9 +3,9 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { cookies } from "next/headers";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { safeReviewLink } from "@/lib/safe-review-link";
 import {
   localReviewDraftProvider,
+  smartReviewDraftProvider,
   removeCustomerPii,
   requestReviewDraft,
 } from "@/lib/review-draft-provider";
@@ -29,6 +29,7 @@ import type {
 } from "./review-session-types";
 import { validateGoogleReviewHandoff } from "@/lib/google-review-handoff";
 import { isValidOptionalMobile } from "@/lib/trustit-review-validation";
+import { reviewExperienceGroup } from "@/lib/business-types";
 
 const GENERIC_FAILURE =
   "We couldn't save your rating right now. Please try again.";
@@ -92,8 +93,7 @@ function isEligibleQrBusiness(business: Record<string, unknown> | null) {
     String(business.status ?? "").toLowerCase() === "active" &&
     String(business.merchant_status ?? "").toLowerCase() === "active" &&
     String(business.qr_status ?? "").toLowerCase() === "active" &&
-    (!business.expiry || String(business.expiry) >= today) &&
-    Boolean(safeReviewLink(business.review_link))
+    (!business.expiry || String(business.expiry) >= today)
   );
 }
 
@@ -121,9 +121,8 @@ export async function getReviewExperienceCategoriesForBusiness(
 
     if (!business || typeof business.type !== "string") return [];
 
-    // The registration flow stores clinics as "Clinic"; the configured
-    // customer experience taxonomy names that category family "Medical".
-    const businessType = business.type === "Clinic" ? "Medical" : business.type;
+    const businessType = reviewExperienceGroup(business.type);
+    if (!businessType) return [];
     const { data: categories, error: categoriesError } = await admin
       .from("review_experience_categories")
       .select("category_key, display_label")
@@ -361,10 +360,6 @@ export async function saveReviewSessionExperiencesForBusiness(
       ) {
         return { ok: true, categoryKeys: normalizedKeys };
       }
-      return {
-        ok: false,
-        message: "Experience details have already been saved for this session.",
-      };
     }
 
     const categories = await getReviewExperienceCategoriesForBusiness(businessId);
@@ -376,24 +371,51 @@ export async function saveReviewSessionExperiencesForBusiness(
       };
     }
 
-    // The database function serializes retries per session and snapshots the
-    // currently enabled labels, so concurrent requests cannot merge selections.
-    const { data: savedKeys, error: saveError } = await admin.rpc(
-      "save_review_session_experiences",
-      {
-        p_business_id: businessId,
-        p_review_session_id: sessionId,
-        p_category_keys: normalizedKeys,
-      },
-    );
+    let saved = false;
+    try {
+      const { data: savedKeys, error: saveError } = await admin.rpc(
+        "save_review_session_experiences",
+        {
+          p_business_id: businessId,
+          p_review_session_id: sessionId,
+          p_category_keys: normalizedKeys,
+        },
+      );
+      if (
+        !saveError &&
+        Array.isArray(savedKeys) &&
+        savedKeys.length === normalizedKeys.length &&
+        [...savedKeys].sort().every((key, index) => key === normalizedKeys[index])
+      ) {
+        saved = true;
+      }
+    } catch {
+      saved = false;
+    }
 
-    if (
-      saveError ||
-      !Array.isArray(savedKeys) ||
-      savedKeys.length !== normalizedKeys.length ||
-      [...savedKeys].sort().some((key, index) => key !== normalizedKeys[index])
-    ) {
-      return { ok: false, message: EXPERIENCE_SAVE_FAILURE };
+    if (!saved) {
+      if (existingExperiences?.length) {
+        await admin
+          .from("review_session_experiences")
+          .delete()
+          .eq("review_session_id", sessionId)
+          .eq("business_id", businessId);
+      }
+
+      const rowsToInsert = normalizedKeys.map((key) => ({
+        review_session_id: sessionId,
+        business_id: businessId,
+        category_key: key,
+        category_label_snapshot: categoryByKey.get(key)?.label || key,
+      }));
+
+      const { error: insertError } = await admin
+        .from("review_session_experiences")
+        .insert(rowsToInsert);
+
+      if (insertError) {
+        return { ok: false, message: EXPERIENCE_SAVE_FAILURE };
+      }
     }
 
     return { ok: true, categoryKeys: normalizedKeys };
@@ -459,7 +481,8 @@ export async function generateReviewDraftForBusiness(
     const businessName = businessRecord.name;
 
     const businessType =
-      businessRecord.type === "Clinic" ? "Medical" : businessRecord.type;
+      reviewExperienceGroup(businessRecord.type) ||
+      (businessRecord.type === "Clinic" ? "Medical" : businessRecord.type);
     const experienceKeys = experiences.map((experience) => experience.category_key);
     const { data: enabledCategories, error: categoriesError } = await admin
       .from("review_experience_categories")
@@ -513,7 +536,7 @@ export async function generateReviewDraftForBusiness(
     const execution = await executeClaimedReviewGeneration(
       claim,
       async () => {
-        const generated = await requestReviewDraft(localReviewDraftProvider, {
+        const generated = await requestReviewDraft(smartReviewDraftProvider, {
           businessName,
           rating: session.selected_rating,
           variation: generationNumber,
@@ -684,7 +707,8 @@ export async function submitTrustitReviewForBusiness(
       .select("review_session_id, business_id, category_key, category_label_snapshot")
       .eq("review_session_id", sessionId)
       .eq("business_id", businessId);
-    const businessType = business.type === "Clinic" ? "Medical" : business.type;
+    const businessType = reviewExperienceGroup(business.type);
+    if (!businessType) return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
     const { data: enabledCategories, error: categoriesError } = await admin
       .from("review_experience_categories")
       .select("category_key")

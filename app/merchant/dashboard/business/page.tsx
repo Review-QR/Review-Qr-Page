@@ -4,6 +4,7 @@ import Link from "next/link";
 import BusinessProfileForm from "./business-profile-form";
 import PublicLocationForm from "./public-location-form";
 import { isPublicDiscoveryLocationComplete } from "@/lib/business-location";
+import GoogleReviewLinkForm from "./google-review-link-form";
 
 export const dynamic = "force-dynamic";
 
@@ -56,8 +57,12 @@ export default async function MerchantBusinessPage() {
           owner={merchant.ownerName}
           address={merchant.address}
           phone={merchant.registeredMobile}
-          reviewLink={reviewLink}
         />
+      </section>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+        <h2 className="mb-2 text-lg font-bold text-slate-950">Google Review Link</h2>
+        <p className="mb-4 text-sm text-slate-600">The customer review QR uses this link after customers complete their review selections.</p>
+        <GoogleReviewLinkForm initialLink={reviewLink ?? ""} />
       </section>
       <PublicLocationForm
         name={merchant.businessName}

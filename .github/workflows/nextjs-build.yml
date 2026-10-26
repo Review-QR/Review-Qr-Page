@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - nextjs-migration
+      - codex/trustit-preview-feature-parity
+      - codex/trustit-production-hardening
 
   pull_request:
     branches:
@@ -34,8 +36,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: |
-          pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile
 
       - name: Run Cashfree tests
         run: pnpm run test:cashfree
