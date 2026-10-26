@@ -6,6 +6,7 @@ export type DiscoveryBusiness = {
   pincode: string | null; latitude: number | null; longitude: number | null;
   googleReviewUrl: string | null; reviewCount: number; ratingAverage: number | null;
   latestReviewAt: string | null; publicCitySlug: string;
+  phone?: string | null;
 };
 export type RankedBusiness = DiscoveryBusiness & { adjustedRating: number; distanceKm: number | null; score: number };
 

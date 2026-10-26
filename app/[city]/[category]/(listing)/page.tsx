@@ -213,6 +213,12 @@ export default async function DiscoveryPage({
                   business.latitude !== null && business.longitude !== null
                     ? `https://www.google.com/maps/dir/?api=1&destination=${business.latitude},${business.longitude}`
                     : null;
+                const cleanPhone = (business.phone ?? "").replace(/\D/g, "");
+                const waPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
+                const waLink = waPhone
+                  ? `https://wa.me/${waPhone}?text=${encodeURIComponent(`Namaste ${business.name}, I found your business on Trustit.`)}`
+                  : null;
+                const telLink = business.phone ? `tel:${business.phone}` : null;
 
                 return (
                   <article
@@ -283,6 +289,32 @@ export default async function DiscoveryPage({
                           </p>
                         )}
                       </div>
+
+                      {/* Direct Contact Bar */}
+                      {(waLink || telLink) && (
+                        <div className="mt-3.5 flex flex-wrap items-center gap-2">
+                          {waLink && (
+                            <a
+                              href={waLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
+                            >
+                              <span>💬</span>
+                              <span>WhatsApp</span>
+                            </a>
+                          )}
+                          {telLink && (
+                            <a
+                              href={telLink}
+                              className="inline-flex min-h-8 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-800 hover:bg-slate-100 transition"
+                            >
+                              <span>📞</span>
+                              <span>Call Now</span>
+                            </a>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     {/* Action CTAs */}
