@@ -32,6 +32,18 @@ const getBusinessesCached = cache(async (citySlug: string, typesKey: string): Pr
     throw new Error("Public business discovery is temporarily unavailable");
   }
   const rows = (data ?? []) as Array<Record<string, unknown>>;
+  const ids = rows.map((r) => typeof r.business_id === "string" ? r.business_id : "").filter(Boolean);
+  const contactMap = new Map<string, string>();
+  if (ids.length) {
+    const { data: contacts } = await client.from("businesses").select("id, phone").in("id", ids);
+    if (contacts) {
+      for (const item of contacts) {
+        if (item.id && typeof item.phone === "string" && item.phone.trim()) {
+          contactMap.set(item.id, item.phone.trim());
+        }
+      }
+    }
+  }
   const seen = new Set<string>();
   return rows.flatMap((row): DiscoveryBusiness[] => {
     const id = typeof row.business_id === "string" ? row.business_id : "";
@@ -43,6 +55,7 @@ const getBusinessesCached = cache(async (citySlug: string, typesKey: string): Pr
       businessId: id, name: String(row.name ?? ""), type: String(row.type ?? ""), slug: String(row.slug ?? ""),
       address: nullable("address"), locality: nullable("locality"), city: nullable("city"), district: nullable("district"),
       state: nullable("state"), pincode: nullable("pincode"), latitude: numeric("location_latitude"), longitude: numeric("location_longitude"),
+      phone: contactMap.get(id) ?? null,
       googleReviewUrl: publicGoogleLink(row.review_link), reviewCount: Number(row.review_count) || 0,
       ratingAverage: numeric("rating_average"), latestReviewAt: nullable("latest_submitted_at"),
       publicCitySlug: nullable("public_city_slug") ?? "",
