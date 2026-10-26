@@ -2,7 +2,7 @@ import Link from "next/link";
 import TrustitPublicFooter from "@/app/components/trustit-public-footer";
 import { notFound, permanentRedirect } from "next/navigation";
 import { DiscoveryControls } from "../discovery-controls";
-import { getPublicDiscoveryBusinesses, publicDiscoveryCityExists } from "@/lib/public-discovery";
+import { getPublicDiscoveryBusinesses } from "@/lib/public-discovery";
 import {
   canonicalCategorySlug,
   categoryNameForSlug,
@@ -53,7 +53,6 @@ export async function generateMetadata({
   const canonicalCategory = canonicalCategorySlug(category);
   if (!types.length || !canonicalCategory || !citySlug) notFound();
   const businesses = await getPublicDiscoveryBusinesses(citySlug, types);
-  if (!businesses.length && !(await publicDiscoveryCityExists(citySlug))) notFound();
   const canonicalCity = businesses[0]?.publicCitySlug ?? citySlug;
   if (city !== canonicalCity || category !== canonicalCategory)
     permanentRedirect(`/${canonicalCity}/${canonicalCategory}`);
@@ -92,7 +91,6 @@ export default async function DiscoveryPage({
   const citySlug = slugifyCity(city);
   if (!types.length || !canonicalCategory || !citySlug) notFound();
   const businesses = await getPublicDiscoveryBusinesses(citySlug, types);
-  if (!businesses.length && !(await publicDiscoveryCityExists(citySlug))) notFound();
   const canonicalCity = businesses[0]?.publicCitySlug ?? citySlug;
   if (city !== canonicalCity || category !== canonicalCategory)
     permanentRedirect(`/${canonicalCity}/${canonicalCategory}`);
