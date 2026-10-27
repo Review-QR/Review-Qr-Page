@@ -5,11 +5,12 @@ import {
 } from "@/lib/cashfree";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createCashfreeWebhookHandler } from "@/lib/cashfree-webhook-handler";
+import { handleProductOrderWebhook } from "@/lib/product-orders/webhook-handler";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const POST = createCashfreeWebhookHandler({
+const subscriptionWebhookHandler = createCashfreeWebhookHandler({
   verifySignature: verifyCashfreeWebhookSignature,
   verifyOrder: verifyCashfreeWebhookOrder,
   getPlanName: (planId) => appConfig.plans[planId as PlanId]?.name,
@@ -41,3 +42,25 @@ export const POST = createCashfreeWebhookHandler({
     };
   },
 });
+
+export async function POST(request: Request): Promise<Response> {
+  const cloned = request.clone();
+  try {
+    const text = await cloned.text();
+    const payload = JSON.parse(text);
+    const orderId = payload?.data?.order?.order_id;
+    if (typeof orderId === "string" && orderId.startsWith("tord_")) {
+      // Verify webhook signature for product order
+      const timestamp = request.headers.get("x-webhook-timestamp");
+      const signature = request.headers.get("x-webhook-signature");
+      if (!verifyCashfreeWebhookSignature({ rawBody: text, timestamp, signature })) {
+        return Response.json({ result: "unauthorized" }, { status: 401 });
+      }
+      return await handleProductOrderWebhook(payload);
+    }
+  } catch {
+    // If JSON parsing fails, fall through to subscriptionWebhookHandler which rejects safely
+  }
+
+  return subscriptionWebhookHandler(request);
+}

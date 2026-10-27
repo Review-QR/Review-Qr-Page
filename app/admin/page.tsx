@@ -176,6 +176,13 @@ export default async function HomePage() {
       icon: "⌗",
     },
     {
+      href: "/admin/orders",
+      title: "Physical QR Orders",
+      description: "Manage standees, printing, QC, and shipments",
+      tone: "purple",
+      icon: "📦",
+    },
+    {
       href: "/merchants",
       title: "Merchants",
       description: "Manage merchant accounts and access",
