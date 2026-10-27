@@ -1,5 +1,18 @@
 import { BUSINESS_TYPES } from "./business-types.ts";
 
+export type CatalogItem = {
+  id: string;
+  businessId: string;
+  name: string;
+  category: string;
+  price: number;
+  unit: string | null;
+  itemType: "veg" | "non_veg" | "egg" | "service" | "product";
+  imageUrl: string | null;
+  description: string | null;
+  isAvailable: boolean;
+};
+
 export type DiscoveryBusiness = {
   businessId: string; name: string; type: string; slug: string; address: string | null;
   locality: string | null; city: string | null; district: string | null; state: string | null;
@@ -7,6 +20,7 @@ export type DiscoveryBusiness = {
   googleReviewUrl: string | null; reviewCount: number; ratingAverage: number | null;
   latestReviewAt: string | null; publicCitySlug: string;
   phone?: string | null;
+  catalogItems?: CatalogItem[];
 };
 export type RankedBusiness = DiscoveryBusiness & { adjustedRating: number; distanceKm: number | null; score: number };
 
@@ -132,7 +146,17 @@ export function haversineKm(aLat: number, aLng: number, bLat: number, bLng: numb
 export function rankBusinesses(items: DiscoveryBusiness[], options: { sort?: string; q?: string; minRating?: number; lat?: number; lng?: number; now?: number } = {}): RankedBusiness[] {
   const now = options.now ?? Date.now();
   const query = options.q?.trim().toLocaleLowerCase() ?? "";
-  const ranked = items.filter((b) => (!options.minRating || (b.ratingAverage ?? 0) >= options.minRating) && (!query || `${b.name} ${b.address ?? ""} ${b.locality ?? ""} ${b.city ?? ""}`.toLocaleLowerCase().includes(query))).map((b) => {
+  const ranked = items.filter((b) => {
+    if (options.minRating && (b.ratingAverage ?? 0) < options.minRating) return false;
+    if (!query) return true;
+    const baseMatch = `${b.name} ${b.address ?? ""} ${b.locality ?? ""} ${b.city ?? ""}`.toLocaleLowerCase().includes(query);
+    const catalogMatch = b.catalogItems?.some((item) =>
+      item.name.toLocaleLowerCase().includes(query) ||
+      item.category.toLocaleLowerCase().includes(query) ||
+      (item.description && item.description.toLocaleLowerCase().includes(query))
+    );
+    return baseMatch || Boolean(catalogMatch);
+  }).map((b) => {
     const count = b.reviewCount;
     const adjustedRating = count ? ((b.ratingAverage ?? 0) * count + 4 * 5) / (count + 5) : 0;
     const confidence = count / (count + 5);
@@ -142,7 +166,13 @@ export function rankBusinesses(items: DiscoveryBusiness[], options: { sort?: str
     const complete = [b.name, b.address, b.locality, b.city, b.district, b.state, b.pincode].filter((x) => x !== null && x !== "").length / 7;
     const distanceKm = options.lat !== undefined && options.lng !== undefined && b.latitude !== null && b.longitude !== null ? haversineKm(options.lat, options.lng, b.latitude, b.longitude) : null;
     const name = b.name.toLocaleLowerCase();
-    const queryRelevance = !query ? 0 : name === query ? 1 : name.startsWith(query) ? .8 : name.includes(query) ? .6 : .3;
+    let queryRelevance = !query ? 0 : name === query ? 1 : name.startsWith(query) ? .8 : name.includes(query) ? .6 : .3;
+    if (query && b.catalogItems?.length) {
+      const exactItem = b.catalogItems.some((item) => item.name.toLocaleLowerCase() === query);
+      const partialItem = b.catalogItems.some((item) => item.name.toLocaleLowerCase().includes(query) || item.category.toLocaleLowerCase().includes(query));
+      if (exactItem) queryRelevance = Math.max(queryRelevance, 0.9);
+      else if (partialItem) queryRelevance = Math.max(queryRelevance, 0.7);
+    }
     const proximity = distanceKm === null ? 0 : Math.exp(-distanceKm / 10);
     // Recommendation score uses Trustit Bayesian rating (62%), sample confidence (20%),
     // review recency (5%), public profile completeness (5%), optional supplied distance (3%),

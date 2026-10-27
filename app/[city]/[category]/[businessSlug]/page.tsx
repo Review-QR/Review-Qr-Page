@@ -367,6 +367,117 @@ export default async function PublicBusinessPage({ params }: { params: Params })
               </div>
             </div>
 
+            {/* ── Digital Menu & Catalog Section ── */}
+            {business.catalogItems && business.catalogItems.length > 0 && (
+              <section className="border-t border-slate-200/80 p-6 sm:p-10 bg-slate-50/40">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 pb-4 mb-6">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="grid size-8 place-items-center rounded-xl bg-blue-700 text-white text-base">
+                        📋
+                      </span>
+                      <h2 className="text-xl font-extrabold text-slate-950">
+                        Menu & Services Catalog
+                      </h2>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-600">
+                      Explore popular dishes, products, and verified rates offered by {business.name}.
+                    </p>
+                  </div>
+
+                  <span className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-full bg-blue-50 border border-blue-200 px-3 py-1 text-xs font-bold text-blue-800">
+                    <span>{business.catalogItems.length} Items Listed</span>
+                  </span>
+                </div>
+
+                {/* Items grouped by category */}
+                <div className="space-y-8">
+                  {Object.entries(
+                    business.catalogItems.reduce((acc, item) => {
+                      const cat = item.category || "General";
+                      if (!acc[cat]) acc[cat] = [];
+                      acc[cat].push(item);
+                      return acc;
+                    }, {} as Record<string, typeof business.catalogItems>)
+                  ).map(([catTitle, items]) => (
+                    <div key={catTitle}>
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-700 border-l-4 border-blue-600 pl-2.5 mb-3">
+                        {catTitle}
+                      </h3>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {items.map((item) => {
+                          const itemWaLink = waPhone
+                            ? `https://wa.me/${waPhone}?text=${encodeURIComponent(
+                                `Namaste ${business.name}, I want to enquire/order: ${item.name} (₹${item.price}${item.unit ? ` ${item.unit}` : ""}).`
+                              )}`
+                            : null;
+
+                          return (
+                            <div
+                              key={item.id}
+                              className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xs transition hover:border-blue-300 hover:shadow-xs"
+                            >
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  {item.itemType === "veg" && (
+                                    <span className="grid size-3.5 place-items-center rounded border border-emerald-600 p-0.5" title="Pure Veg">
+                                      <span className="size-1.5 rounded-full bg-emerald-600" />
+                                    </span>
+                                  )}
+                                  {item.itemType === "non_veg" && (
+                                    <span className="grid size-3.5 place-items-center rounded border border-rose-600 p-0.5" title="Non Veg">
+                                      <span className="size-1.5 rounded-full bg-rose-600" />
+                                    </span>
+                                  )}
+                                  {item.itemType === "service" && (
+                                    <span className="text-xs">✂️</span>
+                                  )}
+                                  <h4 className="font-bold text-sm text-slate-900 leading-snug">
+                                    {item.name}
+                                  </h4>
+                                </div>
+
+                                {item.description && (
+                                  <p className="mt-1 text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                                    {item.description}
+                                  </p>
+                                )}
+
+                                <div className="mt-2.5 flex items-baseline gap-1.5">
+                                  <span className="text-base font-extrabold text-slate-950">
+                                    ₹{item.price}
+                                  </span>
+                                  {item.unit && (
+                                    <span className="text-xs font-medium text-slate-500">
+                                      {item.unit}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {itemWaLink && (
+                                <a
+                                  href={itemWaLink}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex shrink-0 items-center gap-1 rounded-xl bg-emerald-600 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-2xs hover:bg-emerald-700 transition"
+                                  title="Enquire on WhatsApp"
+                                >
+                                  <span>💬</span>
+                                  <span className="hidden sm:inline">Order</span>
+                                </a>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
             {/* Disclaimer Footer (Required by test assertion) */}
             <div className="border-t border-slate-100 px-6 py-4 text-xs text-slate-500 sm:px-10 bg-slate-50/40">
               Trustit ratings summarize submitted customer feedback. Individual review text is not shown publicly.
