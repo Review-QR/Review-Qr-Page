@@ -26,6 +26,36 @@ export type SuperAppCatalogItem = {
   description: string | null;
 };
 
+export interface DishCustomization {
+  portion: "half" | "full";
+  portionLabel: string;
+  portionPrice: number;
+  addons: Array<{ id: string; name: string; price: number }>;
+  cookingNotes: string;
+}
+
+export interface CartLineItem {
+  cartKey: string;
+  item: SuperAppCatalogItem;
+  quantity: number;
+  customization?: DishCustomization;
+  itemUnitPrice: number;
+}
+
+export const AVAILABLE_ADDONS = [
+  { id: "butter", name: "Extra Butter / Desi Ghee", price: 25 },
+  { id: "salad", name: "Fresh Salad & Mint Chutney", price: 15 },
+  { id: "roti_pav", name: "Butter Roti / Extra Pav (2 pcs)", price: 20 },
+  { id: "raita", name: "Boondi Raita Cup", price: 30 },
+];
+
+export const QUICK_COOKING_NOTES = [
+  "🌶️ Less Spicy / Kam Teekha",
+  "🥘 Extra Gravy",
+  "🚫 No Onion / Garlic (Jain style)",
+  "🔥 Extra Crispy / Well Done",
+];
+
 export type ActiveHyperlocalOrder = {
   id: string;
   business_id: string;
@@ -39,7 +69,7 @@ export type ActiveHyperlocalOrder = {
   delivery_fee: number;
   delivery_otp: string;
   created_at: string;
-  businesses?: { name: string; city: string; address: string | null };
+  businesses?: { name: string; city: string; address: string | null; phone?: string | null };
   delivery_riders?: { id: string; full_name: string; phone: string; vehicle_number?: string } | null;
 };
 
@@ -55,7 +85,7 @@ export type ActiveServiceToken = {
   estimated_wait_minutes: number;
   chair_or_bay_number?: string;
   created_at: string;
-  businesses?: { name: string; city: string; address: string | null };
+  businesses?: { name: string; city: string; address: string | null; phone?: string | null };
 };
 
 type ActiveParchaOrder = {
@@ -94,10 +124,17 @@ export default function CustomerSuperAppClient({
   const [isDetectingGps, setIsDetectingGps] = useState(false);
 
   // Cart for Food & Sweets
-  const [cart, setCart] = useState<{ [itemId: string]: { item: SuperAppCatalogItem; quantity: number } }>({});
+  const [cart, setCart] = useState<{ [cartKey: string]: CartLineItem }>({});
   const [activeStoreModal, setActiveStoreModal] = useState<SuperAppBusiness | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [paymentMode, setPaymentMode] = useState<"cod" | "counter_cash">("cod");
+
+  // Customization Bottom Sheet State (Half/Full, Addons, Cooking Notes)
+  const [customizingItem, setCustomizingItem] = useState<SuperAppCatalogItem | null>(null);
+  const [selectedPortion, setSelectedPortion] = useState<"half" | "full">("half");
+  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
+  const [cookingInstruction, setCookingInstruction] = useState<string>("");
+  const [riderTip, setRiderTip] = useState<number>(0);
 
   // Salon Token Booking Modal
   const [salonModal, setSalonModal] = useState<SuperAppBusiness | null>(null);
@@ -263,27 +300,74 @@ export default function CustomerSuperAppClient({
     return catalogItems.filter((i) => i.business_id === activeStoreModal.id);
   }, [catalogItems, activeStoreModal]);
 
-  // Cart calculations
+  // Cart calculations (Swiggy / Zomato Transparent Breakdown)
   const cartItemsList = useMemo(() => Object.values(cart), [cart]);
   const cartSubtotal = useMemo(() => {
-    return cartItemsList.reduce((sum, item) => sum + item.item.price * item.quantity, 0);
+    return cartItemsList.reduce((sum, line) => sum + line.itemUnitPrice * line.quantity, 0);
   }, [cartItemsList]);
-  const cartDeliveryFee = cartSubtotal >= 499 ? 0 : cartSubtotal > 0 ? 35 : 0;
-  const cartPlatformFee = cartSubtotal > 0 ? 5 : 0;
-  const cartGrandTotal = cartSubtotal + cartDeliveryFee + cartPlatformFee;
+  const cartPackagingCharge = cartSubtotal > 0 ? 15 : 0;
+  const cartGstTax = cartSubtotal > 0 ? Math.round(cartSubtotal * 0.05) : 0;
+  const cartDeliveryFee = cartSubtotal >= 499 ? 0 : cartSubtotal > 0 ? 25 : 0;
+  const cartPlatformFee = cartSubtotal > 0 ? 3 : 0;
+  const cartGrandTotal = cartSubtotal + cartPackagingCharge + cartGstTax + cartDeliveryFee + cartPlatformFee + riderTip;
 
-  const updateCartQty = (item: SuperAppCatalogItem, delta: number) => {
+  const openCustomizer = (item: SuperAppCatalogItem) => {
+    setCustomizingItem(item);
+    setSelectedPortion("half");
+    setSelectedAddons([]);
+    setCookingInstruction("");
+  };
+
+  const handleConfirmCustomization = () => {
+    if (!customizingItem) return;
+    const isHalf = selectedPortion === "half";
+    const portionPrice = isHalf
+      ? Math.max(20, Math.round((customizingItem.price * 0.6) / 5) * 5)
+      : customizingItem.price;
+
+    const chosenAddons = AVAILABLE_ADDONS.filter((a) => selectedAddons.includes(a.id));
+    const addonsTotal = chosenAddons.reduce((s, a) => s + a.price, 0);
+    const unitPrice = portionPrice + addonsTotal;
+
+    const cartKey = `${customizingItem.id}_${selectedPortion}_${selectedAddons.sort().join("-")}_${cookingInstruction.trim().slice(0, 10)}`;
+
     setCart((prev) => {
-      const existing = prev[item.id];
-      const newQty = (existing?.quantity || 0) + delta;
-      if (newQty <= 0) {
+      const existing = prev[cartKey];
+      const nextQty = (existing?.quantity || 0) + 1;
+      return {
+        ...prev,
+        [cartKey]: {
+          cartKey,
+          item: customizingItem,
+          quantity: nextQty,
+          itemUnitPrice: unitPrice,
+          customization: {
+            portion: selectedPortion,
+            portionLabel: isHalf ? "Half Plate (Serves 1)" : "Full Plate (Serves 2-3)",
+            portionPrice,
+            addons: chosenAddons,
+            cookingNotes: cookingInstruction.trim(),
+          },
+        },
+      };
+    });
+
+    setCustomizingItem(null);
+  };
+
+  const updateCartLineQty = (cartKey: string, delta: number) => {
+    setCart((prev) => {
+      const existing = prev[cartKey];
+      if (!existing) return prev;
+      const nextQty = existing.quantity + delta;
+      if (nextQty <= 0) {
         const copy = { ...prev };
-        delete copy[item.id];
+        delete copy[cartKey];
         return copy;
       }
       return {
         ...prev,
-        [item.id]: { item, quantity: newQty },
+        [cartKey]: { ...existing, quantity: nextQty },
       };
     });
   };
@@ -313,11 +397,27 @@ export default function CustomerSuperAppClient({
             customerPhone,
             customerAddress: { street: customerAddress, city: selectedCity },
             paymentMode,
+            customerNotes: [
+              customerAddress ? `Drop: ${customerAddress}` : "",
+              riderTip > 0 ? `Rider Tip: ₹${riderTip}` : "",
+            ].filter(Boolean).join(" | "),
             items: cartItemsList.map((c) => ({
-              item_name: c.item.name,
+              item_name: c.customization
+                ? `${c.item.name} (${c.customization.portion === "half" ? "Half" : "Full"})`
+                : c.item.name,
               quantity: c.quantity,
-              unit_price: c.item.price,
+              unit_price: c.itemUnitPrice,
               is_veg: c.item.item_type === "veg",
+              notes: [
+                c.customization?.addons?.length
+                  ? `Addons: ${c.customization.addons.map((a) => a.name).join(", ")}`
+                  : "",
+                c.customization?.cookingNotes
+                  ? `Chef: ${c.customization.cookingNotes}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" | "),
             })),
           }),
         });
@@ -325,6 +425,7 @@ export default function CustomerSuperAppClient({
         const data = await res.json();
         if (data.success) {
           setCart({});
+          setRiderTip(0);
           setIsCheckoutOpen(false);
           setActiveStoreModal(null);
           setBookingSuccessNotice(
@@ -920,7 +1021,9 @@ export default function CustomerSuperAppClient({
                 </div>
               ) : (
                 activeStoreItems.map((item) => {
-                  const inCartQty = cart[item.id]?.quantity || 0;
+                  const lineItemsForThisItem = cartItemsList.filter((c) => c.item.id === item.id);
+                  const inCartQty = lineItemsForThisItem.reduce((s, c) => s + c.quantity, 0);
+
                   return (
                     <div
                       key={item.id}
@@ -938,27 +1041,36 @@ export default function CustomerSuperAppClient({
                         </span>
                         <div>
                           <h4 className="text-sm font-black text-slate-900">{item.name}</h4>
-                          <span className="text-xs font-extrabold text-slate-700">₹{item.price}</span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-xs font-extrabold text-slate-800">₹{item.price}</span>
+                            <span className="text-[10px] text-slate-400">· Full / Half available</span>
+                          </div>
                           {item.description && (
-                            <p className="text-[11px] text-slate-500 line-clamp-1">
+                            <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
                               {item.description}
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-col items-end gap-1">
                         {inCartQty > 0 ? (
                           <div className="flex items-center gap-2 rounded-xl bg-orange-600 px-2 py-1 text-white font-black text-xs shadow-sm">
                             <button
-                              onClick={() => updateCartQty(item, -1)}
+                              type="button"
+                              onClick={() => {
+                                if (lineItemsForThisItem.length > 0) {
+                                  updateCartLineQty(lineItemsForThisItem[0].cartKey, -1);
+                                }
+                              }}
                               className="px-1.5 hover:scale-125 transition"
                             >
                               -
                             </button>
                             <span>{inCartQty}</span>
                             <button
-                              onClick={() => updateCartQty(item, 1)}
+                              type="button"
+                              onClick={() => openCustomizer(item)}
                               className="px-1.5 hover:scale-125 transition"
                             >
                               +
@@ -966,12 +1078,14 @@ export default function CustomerSuperAppClient({
                           </div>
                         ) : (
                           <button
-                            onClick={() => updateCartQty(item, 1)}
-                            className="rounded-xl border border-orange-500 bg-orange-50 px-3.5 py-1.5 text-xs font-black text-orange-700 hover:bg-orange-500 hover:text-white transition"
+                            type="button"
+                            onClick={() => openCustomizer(item)}
+                            className="rounded-xl border border-orange-500 bg-orange-50 px-3.5 py-1.5 text-xs font-black text-orange-700 hover:bg-orange-500 hover:text-white transition shadow-2xs"
                           >
                             + ADD
                           </button>
                         )}
+                        <span className="text-[9px] text-slate-400 font-medium">customisable</span>
                       </div>
                     </div>
                   );
@@ -1001,21 +1115,237 @@ export default function CustomerSuperAppClient({
         </div>
       )}
 
-      {/* ── Checkout Modal for Food Order ── */}
-      {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-black text-slate-900">🛵 Delivery Checkout</h3>
+      {/* ── Dish Customization Modal (Half/Full Plate, Addons, Cooking Notes) ── */}
+      {customizingItem && (
+        <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center bg-slate-950/70 p-0 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl max-h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
+            {/* Header */}
+            <div className="p-4 border-b border-slate-100 flex items-start justify-between">
+              <div>
+                <span
+                  className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
+                    customizingItem.item_type === "veg"
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-rose-100 text-rose-800"
+                  }`}
+                >
+                  {customizingItem.item_type === "veg" ? "● Pure Veg" : "● Non-Veg"}
+                </span>
+                <h3 className="text-base font-black text-slate-900 mt-1">{customizingItem.name}</h3>
+                <p className="text-[11px] text-slate-500">Base full price: ₹{customizingItem.price}</p>
+              </div>
               <button
-                onClick={() => setIsCheckoutOpen(false)}
-                className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600"
+                type="button"
+                onClick={() => setCustomizingItem(null)}
+                className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
               >
                 ✕
               </button>
             </div>
 
-            <div className="mt-4 space-y-4">
+            {/* Scrollable Options */}
+            <div className="p-4 space-y-4 overflow-y-auto flex-1 text-xs">
+              {/* 1. Portion / Quantity Size */}
+              <div>
+                <span className="block font-black text-slate-900 mb-2 uppercase text-[10px] tracking-wider">
+                  1. Choose Portion Size (Required)
+                </span>
+                <div className="space-y-2">
+                  <label
+                    onClick={() => setSelectedPortion("half")}
+                    className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition ${
+                      selectedPortion === "half"
+                        ? "border-orange-500 bg-orange-50/60 ring-1 ring-orange-500"
+                        : "border-slate-200 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <input
+                        type="radio"
+                        checked={selectedPortion === "half"}
+                        onChange={() => setSelectedPortion("half")}
+                        className="text-orange-600 focus:ring-orange-500"
+                      />
+                      <div>
+                        <span className="font-black text-slate-900 block text-xs">Half Plate</span>
+                        <span className="text-[10px] text-slate-500">Serves 1 person</span>
+                      </div>
+                    </div>
+                    <span className="font-black text-slate-900">
+                      ₹{Math.max(20, Math.round((customizingItem.price * 0.6) / 5) * 5)}
+                    </span>
+                  </label>
+
+                  <label
+                    onClick={() => setSelectedPortion("full")}
+                    className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition ${
+                      selectedPortion === "full"
+                        ? "border-orange-500 bg-orange-50/60 ring-1 ring-orange-500"
+                        : "border-slate-200 bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <input
+                        type="radio"
+                        checked={selectedPortion === "full"}
+                        onChange={() => setSelectedPortion("full")}
+                        className="text-orange-600 focus:ring-orange-500"
+                      />
+                      <div>
+                        <span className="font-black text-slate-900 block text-xs">Full Plate</span>
+                        <span className="text-[10px] text-slate-500">Serves 2-3 persons</span>
+                      </div>
+                    </div>
+                    <span className="font-black text-slate-900">₹{customizingItem.price}</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* 2. Add-ons & Extras */}
+              <div>
+                <span className="block font-black text-slate-900 mb-2 uppercase text-[10px] tracking-wider">
+                  2. Add-ons & Extras (Optional)
+                </span>
+                <div className="space-y-1.5">
+                  {AVAILABLE_ADDONS.map((addon) => {
+                    const isChecked = selectedAddons.includes(addon.id);
+                    return (
+                      <label
+                        key={addon.id}
+                        onClick={() => {
+                          setSelectedAddons((prev) =>
+                            isChecked ? prev.filter((id) => id !== addon.id) : [...prev, addon.id],
+                          );
+                        }}
+                        className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${
+                          isChecked ? "border-orange-400 bg-orange-50/40" : "border-slate-200 bg-white"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => {}}
+                            className="rounded text-orange-600 focus:ring-orange-500"
+                          />
+                          <span className="text-slate-800 font-bold text-[11px]">{addon.name}</span>
+                        </div>
+                        <span className="font-black text-slate-900 text-xs">+₹{addon.price}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 3. Cooking Instructions */}
+              <div>
+                <span className="block font-black text-slate-900 mb-1.5 uppercase text-[10px] tracking-wider">
+                  3. Cooking Instructions (Chef Note)
+                </span>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {QUICK_COOKING_NOTES.map((note) => (
+                    <button
+                      key={note}
+                      type="button"
+                      onClick={() =>
+                        setCookingInstruction((prev) =>
+                          prev.includes(note) ? prev : `${prev} ${note}`.trim(),
+                        )
+                      }
+                      className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-orange-100 hover:text-orange-800 text-slate-700 text-[10px] font-bold transition"
+                    >
+                      + {note}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="e.g. Kam mirch rakhna, extra salad packet"
+                  value={cookingInstruction}
+                  onChange={(e) => setCookingInstruction(e.target.value)}
+                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+              </div>
+            </div>
+
+            {/* Bottom Add CTA */}
+            <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] text-slate-400 block font-medium">Item Total</span>
+                <span className="text-base font-black text-slate-900">
+                  ₹
+                  {(selectedPortion === "half"
+                    ? Math.max(20, Math.round((customizingItem.price * 0.6) / 5) * 5)
+                    : customizingItem.price) +
+                    AVAILABLE_ADDONS.filter((a) => selectedAddons.includes(a.id)).reduce(
+                      (s, a) => s + a.price,
+                      0,
+                    )}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={handleConfirmCustomization}
+                className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl text-xs font-black shadow-md hover:from-orange-600 hover:to-amber-700 transition"
+              >
+                Add Item to Cart →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Checkout Modal for Food Order ── */}
+      {isCheckoutOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-3xl bg-white p-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-base font-black text-slate-900">🛵 Order Checkout</h3>
+              <button
+                onClick={() => setIsCheckoutOpen(false)}
+                className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3.5">
+              {/* Order Items Preview */}
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 space-y-2 text-xs">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                  Items in Cart ({cartItemsList.length})
+                </span>
+                {cartItemsList.map((entry) => (
+                  <div key={entry.cartKey} className="flex justify-between items-start gap-2 border-b border-slate-200/60 pb-1.5 last:border-0 last:pb-0">
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-bold text-slate-900">{entry.item.name}</span>
+                        {entry.customization && (
+                          <span className="rounded bg-orange-100 px-1.5 py-0.2 text-[9px] font-bold text-orange-800">
+                            {entry.customization.portion === "half" ? "Half" : "Full"}
+                          </span>
+                        )}
+                      </div>
+                      {entry.customization?.addons && entry.customization.addons.length > 0 && (
+                        <p className="text-[10px] text-slate-500">
+                          + {entry.customization.addons.map((a) => a.name).join(", ")}
+                        </p>
+                      )}
+                      {entry.customization?.cookingNotes && (
+                        <p className="text-[10px] text-amber-700 italic">
+                          Note: {entry.customization.cookingNotes}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <span className="text-[11px] font-bold text-slate-800">
+                        {entry.quantity} x ₹{entry.itemUnitPrice} = ₹{entry.quantity * entry.itemUnitPrice}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               <div>
                 <label className="block text-xs font-bold text-slate-700">Full Name</label>
                 <input
@@ -1058,22 +1388,59 @@ export default function CustomerSuperAppClient({
                 />
               </div>
 
-              {/* Bill Details */}
-              <div className="rounded-2xl bg-slate-50 p-4 text-xs space-y-2 border border-slate-100">
+              {/* Delivery Partner Tip (Swiggy / Zomato Feature) */}
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  🛵 Delivery Partner Tip (Optional)
+                </label>
+                <div className="flex items-center gap-2">
+                  {[0, 10, 20, 30, 50].map((tip) => (
+                    <button
+                      key={tip}
+                      type="button"
+                      onClick={() => setRiderTip(tip)}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition ${
+                        riderTip === tip
+                          ? "bg-amber-500 text-slate-950 shadow-xs"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                    >
+                      {tip === 0 ? "No Tip" : `₹${tip}`}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Swiggy / Zomato Transparent Bill Breakdown */}
+              <div className="rounded-2xl bg-slate-50 p-3.5 text-xs space-y-1.5 border border-slate-100">
                 <div className="flex justify-between text-slate-600">
                   <span>Items Total:</span>
                   <span className="font-bold text-slate-900">₹{cartSubtotal}</span>
                 </div>
                 <div className="flex justify-between text-slate-600">
-                  <span>Delivery Fee:</span>
+                  <span>Restaurant Packaging Charges:</span>
+                  <span className="font-bold text-slate-900">₹{cartPackagingCharge}</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>Govt. Taxes & GST (5%):</span>
+                  <span className="font-bold text-slate-900">₹{cartGstTax}</span>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <span>Delivery Partner Fee:</span>
                   <span className="font-bold text-slate-900">
                     {cartDeliveryFee === 0 ? "FREE" : `₹${cartDeliveryFee}`}
                   </span>
                 </div>
                 <div className="flex justify-between text-slate-600">
-                  <span>Platform Fee:</span>
+                  <span>Platform Convenience Fee:</span>
                   <span className="font-bold text-slate-900">₹{cartPlatformFee}</span>
                 </div>
+                {riderTip > 0 && (
+                  <div className="flex justify-between text-emerald-700 font-medium">
+                    <span>Delivery Tip:</span>
+                    <span className="font-bold">₹{riderTip}</span>
+                  </div>
+                )}
                 <div className="flex justify-between border-t border-slate-200 pt-2 text-sm font-black text-slate-900">
                   <span>Total Amount Payable:</span>
                   <span className="text-orange-600">₹{cartGrandTotal}</span>
@@ -1463,55 +1830,135 @@ export default function CustomerSuperAppClient({
                     🍔 Food & Mithai Orders
                   </h4>
                   <div className="space-y-3">
-                    {activeOrders.map((ord) => (
-                      <div
-                        key={ord.id}
-                        className="rounded-2xl border border-slate-200 bg-slate-50 p-4 space-y-2.5"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-mono font-bold text-slate-500">
-                            #{ord.id.slice(-8)}
-                          </span>
-                          <span
-                            className={`rounded-md px-2 py-0.5 text-[10px] font-black uppercase ${
-                              ord.status === "delivered"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : ord.status === "out_for_delivery"
-                                  ? "bg-blue-100 text-blue-800 animate-pulse"
-                                  : "bg-amber-100 text-amber-800"
-                            }`}
-                          >
-                            {ord.status.replace(/_/g, " ")}
-                          </span>
-                        </div>
+                    {activeOrders.map((ord) => {
+                      // 6-stage Swiggy / Zomato order stepper logic
+                      let stepIndex = 0;
+                      if (ord.status === "placed") stepIndex = 0;
+                      else if (ord.status === "accepted_by_merchant" || ord.status === "preparing") stepIndex = 1;
+                      else if (ord.status === "ready_for_pickup") stepIndex = 2;
+                      else if (ord.status === "rider_assigned") stepIndex = 3;
+                      else if (ord.status === "picked_up" || ord.status === "out_for_delivery" || ord.status === "arrived_at_doorstep") stepIndex = 4;
+                      else if (ord.status === "delivered" || ord.status === "completed") stepIndex = 5;
 
-                        <div className="text-sm font-black text-slate-900">
-                          {ord.businesses?.name || "Restaurant Partner"}
-                        </div>
+                      const STEPS = [
+                        { label: "Placed", icon: "📝" },
+                        { label: "Kitchen", icon: "👨‍🍳" },
+                        { label: "Packed", icon: "📦" },
+                        { label: "Rider", icon: "🛵" },
+                        { label: "On Way", icon: "🚀" },
+                        { label: "Delivered", icon: "✅" },
+                      ];
 
-                        {/* Delivery Handover OTP */}
-                        <div className="rounded-xl border border-amber-300 bg-amber-50 p-2.5 flex items-center justify-between">
-                          <span className="text-xs font-bold text-amber-900">
-                            Rider Delivery OTP:
-                          </span>
-                          <span className="font-mono text-base font-black tracking-widest text-amber-950 bg-amber-200/80 px-2.5 py-0.5 rounded-lg">
-                            {ord.delivery_otp}
-                          </span>
-                        </div>
-
-                        {ord.delivery_riders && (
-                          <div className="text-xs text-slate-600 flex items-center justify-between border-t border-slate-200 pt-2">
-                            <span>🛵 Rider: {ord.delivery_riders.full_name}</span>
-                            <a
-                              href={`tel:${ord.delivery_riders.phone}`}
-                              className="font-bold text-blue-600"
+                      return (
+                        <div
+                          key={ord.id}
+                          className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-3 shadow-xs"
+                        >
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                            <div>
+                              <span className="text-[10px] font-mono font-bold text-slate-400">
+                                #{ord.id.slice(-8)}
+                              </span>
+                              <h5 className="text-sm font-black text-slate-900 leading-tight">
+                                {ord.businesses?.name || "Restaurant Partner"}
+                              </h5>
+                            </div>
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${
+                                ord.status === "delivered"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : ord.status === "out_for_delivery" || ord.status === "picked_up"
+                                    ? "bg-blue-100 text-blue-800 animate-pulse"
+                                    : "bg-amber-100 text-amber-800"
+                              }`}
                             >
-                              📞 Call Rider
-                            </a>
+                              {ord.status.replace(/_/g, " ")}
+                            </span>
                           </div>
-                        )}
-                      </div>
-                    ))}
+
+                          {/* 6-Stage Visual Stepper */}
+                          <div className="rounded-xl bg-slate-50 p-2.5">
+                            <div className="grid grid-cols-6 gap-1 text-center">
+                              {STEPS.map((step, idx) => {
+                                const isDone = idx < stepIndex;
+                                const isCurrent = idx === stepIndex;
+                                return (
+                                  <div key={step.label} className="flex flex-col items-center">
+                                    <span
+                                      className={`grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold transition ${
+                                        isDone
+                                          ? "bg-emerald-500 text-white"
+                                          : isCurrent
+                                            ? "bg-orange-500 text-white animate-bounce ring-2 ring-orange-300"
+                                            : "bg-slate-200 text-slate-500"
+                                      }`}
+                                    >
+                                      {isDone ? "✓" : step.icon}
+                                    </span>
+                                    <span
+                                      className={`text-[9px] mt-1 font-semibold leading-tight ${
+                                        isCurrent
+                                          ? "text-orange-600 font-black"
+                                          : isDone
+                                            ? "text-emerald-700"
+                                            : "text-slate-400"
+                                      }`}
+                                    >
+                                      {step.label}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* Stepper Status Note */}
+                            <p className="mt-2 text-center text-[10px] text-slate-500 font-medium">
+                              {stepIndex === 0 && "Waiting for restaurant to accept your order."}
+                              {stepIndex === 1 && "Kitchen is preparing your dishes fresh."}
+                              {stepIndex === 2 && "Food is packed & waiting for delivery partner pickup."}
+                              {stepIndex === 3 && `Rider assigned: ${ord.delivery_riders?.full_name || "Arriving at store"}.`}
+                              {stepIndex === 4 && "Delivery partner is on the way to your doorstep!"}
+                              {stepIndex === 5 && "Order delivered successfully. Enjoy your food!"}
+                            </p>
+                          </div>
+
+                          {/* Delivery Handover OTP Card */}
+                          <div className="rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-2.5 flex items-center justify-between shadow-2xs">
+                            <div>
+                              <span className="text-[9px] font-black uppercase text-amber-800 tracking-wider block">
+                                Delivery Handover OTP
+                              </span>
+                              <span className="text-[10px] text-amber-900 font-medium">
+                                Share only when rider arrives at your door
+                              </span>
+                            </div>
+                            <span className="font-mono text-base font-black tracking-widest text-slate-950 bg-amber-400 px-3 py-1 rounded-lg shadow-2xs">
+                              {ord.delivery_otp}
+                            </span>
+                          </div>
+
+                          {/* Direct Contact Buttons */}
+                          <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
+                            {ord.businesses?.phone && (
+                              <a
+                                href={`tel:${ord.businesses.phone}`}
+                                className="flex-1 text-center py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-700 hover:bg-slate-100 transition"
+                              >
+                                📞 Call Restaurant
+                              </a>
+                            )}
+                            {ord.delivery_riders?.phone && (
+                              <a
+                                href={`tel:${ord.delivery_riders.phone}`}
+                                className="flex-1 text-center py-1.5 rounded-lg bg-purple-600 text-[10px] font-bold text-white hover:bg-purple-700 transition shadow-2xs"
+                              >
+                                🛵 Call Rider ({ord.delivery_riders.full_name})
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

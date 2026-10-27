@@ -19,6 +19,11 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
 
+  // Siren alert & KOT state
+  const [isSirenMuted, setIsSirenMuted] = useState(false);
+  const [kotOrderModal, setKotOrderModal] = useState<HyperlocalOrder | null>(null);
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
   // Walk-in token state (Salon / Car Wash)
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -28,7 +33,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
   const isSalon = businessType.includes("salon") || businessType.includes("barber") || businessType.includes("beauty");
   const isCarWash = businessType.includes("wash") || businessType.includes("auto") || businessType.includes("mechanic") || businessType.includes("garage");
 
-  // Audio Ringer for incoming restaurant orders
+  // Web Audio Continuous Siren for incoming restaurant orders (Swiggy / Zomato Kitchen Standard)
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   function playOrderRing() {
@@ -42,22 +47,47 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.1); // A5
+      osc.type = "sawtooth";
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.3); // E5
+      osc.frequency.setValueAtTime(1046.5, ctx.currentTime + 0.45); // C6
 
-      gain.gain.setValueAtTime(0.2, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.28, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.65);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start();
-      osc.stop(ctx.currentTime + 0.3);
+      osc.stop(ctx.currentTime + 0.65);
     } catch {
       // Audio autoplay handled safely
     }
   }
+
+  // Timer loop for 180s countdown ticks and siren re-trigger
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Continuous Siren loop when placed unaccepted orders exist
+  useEffect(() => {
+    if (isSalon || isCarWash || isSirenMuted) return;
+    const hasUnaccepted = orders.some((o) => o.status === "placed");
+    if (!hasUnaccepted) return;
+
+    // Immediately play once, then repeat every 2.5 seconds
+    playOrderRing();
+    const sirenInterval = setInterval(() => {
+      playOrderRing();
+    }, 2500);
+
+    return () => clearInterval(sirenInterval);
+  }, [orders, isSirenMuted, isSalon, isCarWash]);
 
   async function refreshData() {
     try {
@@ -69,13 +99,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
         const res = await fetch(`/api/hyperlocal/orders?businessId=${encodeURIComponent(business.id)}`);
         const data = await res.json();
         if (data.orders) {
-          const newOrders = data.orders as HyperlocalOrder[];
-          // Check for newly placed orders to sound alert
-          const hasNewPlaced = newOrders.some((o) => o.status === "placed");
-          if (hasNewPlaced && orders.length > 0 && orders[0]?.status !== "placed") {
-            playOrderRing();
-          }
-          setOrders(newOrders);
+          setOrders(data.orders as HyperlocalOrder[]);
         }
       }
     } catch {
@@ -186,6 +210,30 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
         </div>
       )}
 
+      {/* Sticky Siren Alert Banner when unaccepted food orders exist */}
+      {!isSalon && !isCarWash && orders.some((o) => o.status === "placed") && (
+        <div className="sticky top-4 z-30 p-3.5 bg-gradient-to-r from-rose-600 via-amber-600 to-orange-600 text-white rounded-2xl shadow-xl flex items-center justify-between animate-pulse">
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">🚨</span>
+            <div>
+              <span className="text-xs font-black uppercase tracking-wider block">
+                {orders.filter((o) => o.status === "placed").length} New Order Received!
+              </span>
+              <p className="text-[10px] text-amber-100 font-medium">
+                Continuous Kitchen Siren Active. Accept within 3 minutes.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsSirenMuted(!isSirenMuted)}
+            className="px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl text-xs font-bold transition flex items-center gap-1"
+          >
+            <span>{isSirenMuted ? "🔔 Unmute Siren" : "🔕 Mute Buzzer"}</span>
+          </button>
+        </div>
+      )}
+
       {/* ADAPTIVE VIEW 1: RESTAURANT & FOOD MODE */}
       {!isSalon && !isCarWash && (
         <div className="space-y-4">
@@ -201,6 +249,12 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
             orders.map((order) => {
               const isNewPlaced = order.status === "placed";
               const isAccepted = order.status === "accepted_by_merchant" || order.status === "preparing";
+
+              // 180s countdown timer calculation
+              const elapsedSec = Math.floor((currentTime - new Date(order.created_at).getTime()) / 1000);
+              const remainingSec = Math.max(0, 180 - elapsedSec);
+              const timerMins = Math.floor(remainingSec / 60);
+              const timerSecs = remainingSec % 60;
 
               return (
                 <div
@@ -227,8 +281,28 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                     </div>
                   </div>
 
+                  {/* 180s Auto-Reject Countdown Bar */}
+                  {isNewPlaced && (
+                    <div className="my-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-300 flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">⏳</span>
+                        <span className="font-bold text-amber-950">
+                          Auto-rejects in {timerMins}:{String(timerSecs).padStart(2, "0")}
+                        </span>
+                      </div>
+                      <div className="w-28 bg-amber-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className={`h-full transition-all ${
+                            remainingSec < 45 ? "bg-rose-500" : remainingSec < 90 ? "bg-amber-500" : "bg-emerald-500"
+                          }`}
+                          style={{ width: `${(remainingSec / 180) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* Customer Info */}
-                  <div className="py-3 text-xs space-y-1">
+                  <div className="py-2.5 text-xs space-y-1">
                     <p className="font-bold text-slate-800">
                       Customer: {order.customer_name} ({order.customer_phone})
                     </p>
@@ -236,86 +310,176 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                       Delivery Address: {order.customer_address?.street}, {order.customer_address?.city}
                     </p>
                     <p className="text-indigo-600 font-semibold">
-                      Payment Mode: {order.payment_mode === "cod" ? "Cash on Delivery" : "Paid Online via UPI/Cashfree"}
+                      Payment Mode: {order.payment_mode === "cod" ? "💵 Cash on Delivery" : "⚡ Paid Online via UPI/Cashfree"}
                     </p>
+                    {order.customer_notes && (
+                      <p className="text-amber-800 bg-amber-50 p-1.5 rounded-lg font-medium border border-amber-200">
+                        📝 Customer Note: {order.customer_notes}
+                      </p>
+                    )}
                   </div>
 
-                  {/* Order Items */}
-                  <div className="p-3 bg-slate-50 rounded-2xl space-y-1.5 text-xs">
+                  {/* Order Items with Variants & Cooking Notes */}
+                  <div className="p-3 bg-slate-50 rounded-2xl space-y-2 text-xs">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Items Ordered</span>
                     {order.hyperlocal_order_items?.map((item, idx) => (
-                      <div key={idx} className="flex justify-between font-medium">
-                        <span className="text-slate-800">
-                          {item.quantity}x {item.item_name}
-                        </span>
-                        <span className="text-slate-600">₹{item.total_price}</span>
+                      <div key={idx} className="border-b border-slate-200/50 pb-1.5 last:border-0 last:pb-0">
+                        <div className="flex justify-between font-bold text-slate-800">
+                          <span>{item.quantity}x {item.item_name}</span>
+                          <span className="text-slate-600">₹{item.total_price}</span>
+                        </div>
+                        {item.notes && (
+                          <p className="text-[10px] text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded mt-0.5 font-bold inline-block">
+                            ⚠️ {item.notes}
+                          </p>
+                        )}
                       </div>
                     ))}
                   </div>
 
                   {/* Assigned Rider Info (if assigned) */}
                   {order.delivery_riders && (
-                    <div className="mt-3 p-3 bg-purple-50 rounded-2xl text-xs flex items-center justify-between">
+                    <div className="mt-3 p-3 bg-purple-50 rounded-2xl text-xs flex items-center justify-between border border-purple-200">
                       <div>
                         <span className="text-[10px] font-bold text-purple-700 uppercase block">Assigned Rider</span>
                         <p className="font-bold text-slate-800">
                           {order.delivery_riders.full_name} ({order.delivery_riders.vehicle_number})
                         </p>
                       </div>
-                      <a href={`tel:${order.delivery_riders.phone}`} className="text-xs font-bold text-purple-700 underline">
-                        Call Rider
+                      <a href={`tel:${order.delivery_riders.phone}`} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-700 transition shadow-2xs">
+                        📞 Call Rider
                       </a>
                     </div>
                   )}
 
                   {/* Action Buttons */}
-                  <div className="pt-4 flex flex-wrap items-center gap-3">
-                    {isNewPlaced && (
-                      <>
-                        <div className="flex items-center gap-1.5 text-xs">
-                          <span className="text-slate-500 font-medium">Kitchen Time:</span>
-                          {[15, 25, 35].map((mins) => (
-                            <button
-                              key={mins}
-                              type="button"
-                              onClick={() => setPrepTimeMinutes(mins)}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition ${
-                                prepTimeMinutes === mins
-                                  ? "bg-slate-900 text-white"
-                                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                              }`}
-                            >
-                              {mins}m
-                            </button>
-                          ))}
-                        </div>
+                  <div className="pt-4 flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setKotOrderModal(order)}
+                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
+                      >
+                        📄 Print / View KOT Slip
+                      </button>
+                    </div>
 
+                    <div className="flex items-center gap-2">
+                      {isNewPlaced && (
+                        <>
+                          <div className="flex items-center gap-1 text-xs">
+                            <span className="text-slate-500 font-medium">Prep:</span>
+                            {[15, 25, 35, 45].map((mins) => (
+                              <button
+                                key={mins}
+                                type="button"
+                                onClick={() => setPrepTimeMinutes(mins)}
+                                className={`px-2 py-1 rounded-lg text-xs font-bold transition ${
+                                  prepTimeMinutes === mins
+                                    ? "bg-slate-900 text-white"
+                                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                }`}
+                              >
+                                {mins}m
+                              </button>
+                            ))}
+                          </div>
+
+                          <button
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={() => handleAcceptOrder(order.id)}
+                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow transition"
+                          >
+                            Accept Order & Start Kitchen →
+                          </button>
+                        </>
+                      )}
+
+                      {isAccepted && (
                         <button
                           type="button"
                           disabled={isSubmitting}
-                          onClick={() => handleAcceptOrder(order.id)}
-                          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow transition"
+                          onClick={() => handleMarkFoodReady(order.id)}
+                          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow transition"
                         >
-                          Accept Order & Start Kitchen
+                          📦 Mark Food Prepared & Ready (Summon Rider) →
                         </button>
-                      </>
-                    )}
-
-                    {isAccepted && (
-                      <button
-                        type="button"
-                        disabled={isSubmitting}
-                        onClick={() => handleMarkFoodReady(order.id)}
-                        className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow transition"
-                      >
-                        Food Prepared & Ready for Rider Handover
-                      </button>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               );
             })
           )}
+        </div>
+      )}
+
+      {/* ── Kitchen Order Ticket (KOT) Thermal Slip Modal ── */}
+      {kotOrderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl space-y-4 font-mono text-xs">
+            <div className="text-center border-b-2 border-dashed border-slate-300 pb-3">
+              <h3 className="text-base font-black text-slate-900 tracking-tight">{business.name}</h3>
+              <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">KITCHEN ORDER TICKET (KOT)</p>
+              <div className="mt-2 flex justify-between text-[10px] text-slate-600">
+                <span>Token: #{kotOrderModal.id.slice(-6)}</span>
+                <span>{new Date(kotOrderModal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+              </div>
+            </div>
+
+            {/* Items with Variants & Notes */}
+            <div className="space-y-2.5 border-b-2 border-dashed border-slate-300 pb-3">
+              <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
+                <span>Qty · Item</span>
+                <span>Price</span>
+              </div>
+              {kotOrderModal.hyperlocal_order_items?.map((item, idx) => (
+                <div key={idx} className="space-y-0.5">
+                  <div className="flex justify-between font-bold text-slate-900 text-xs">
+                    <span>{item.quantity}x {item.item_name}</span>
+                    <span>₹{item.total_price}</span>
+                  </div>
+                  {item.notes && (
+                    <div className="bg-amber-100 text-amber-950 text-[10px] px-2 py-0.5 rounded font-bold">
+                      ⚠️ {item.notes}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Customer Special Notes */}
+            {kotOrderModal.customer_notes && (
+              <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-xl text-[10px] text-amber-900">
+                <span className="font-bold block uppercase">Customer Note:</span>
+                <p>{kotOrderModal.customer_notes}</p>
+              </div>
+            )}
+
+            {/* Bill Summary */}
+            <div className="flex justify-between items-center text-xs font-bold pt-1">
+              <span>Customer: {kotOrderModal.customer_name}</span>
+              <span className="text-slate-900">Total: ₹{kotOrderModal.total_amount}</span>
+            </div>
+
+            <div className="pt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
+              >
+                🖨️ Print KOT Slip
+              </button>
+              <button
+                type="button"
+                onClick={() => setKotOrderModal(null)}
+                className="py-2.5 px-4 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

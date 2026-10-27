@@ -1,4 +1,8 @@
-import { createHyperlocalOrder } from "@/lib/hyperlocal/hyperlocal-service";
+import {
+  createHyperlocalOrder,
+  merchantAcceptOrder,
+  merchantMarkFoodReady,
+} from "@/lib/hyperlocal/hyperlocal-service";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +24,50 @@ export async function POST(request: Request) {
   } catch (err) {
     return Response.json(
       { success: false, error: err instanceof Error ? err.message : "Order creation failed" },
+      { status: 400 },
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const { action, orderId, prepTimeMinutes, reason } = body;
+
+    if (!orderId) {
+      return Response.json({ success: false, error: "Order ID is required" }, { status: 400 });
+    }
+
+    if (action === "accept") {
+      const result = await merchantAcceptOrder(orderId, prepTimeMinutes || 20);
+      return Response.json(result);
+    }
+
+    if (action === "ready") {
+      const result = await merchantMarkFoodReady(orderId);
+      return Response.json(result);
+    }
+
+    if (action === "reject" || action === "cancel") {
+      const admin = createSupabaseAdminClient();
+      const now = new Date().toISOString();
+      const { error } = await admin
+        .from("hyperlocal_orders")
+        .update({
+          status: "rejected",
+          cancellation_reason: reason || "Declined by restaurant",
+          updated_at: now,
+        })
+        .eq("id", orderId);
+
+      if (error) throw new Error(error.message);
+      return Response.json({ success: true, status: "rejected" });
+    }
+
+    return Response.json({ success: false, error: "Invalid action" }, { status: 400 });
+  } catch (err) {
+    return Response.json(
+      { success: false, error: err instanceof Error ? err.message : "Failed to update order" },
       { status: 400 },
     );
   }
