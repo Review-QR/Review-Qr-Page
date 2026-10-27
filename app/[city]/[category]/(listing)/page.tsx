@@ -1,13 +1,15 @@
 import Link from "next/link";
 import TrustitPublicFooter from "@/app/components/trustit-public-footer";
-import { notFound, permanentRedirect } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { DiscoveryControls } from "../discovery-controls";
 import { getPublicDiscoveryBusinesses } from "@/lib/public-discovery";
 import {
   canonicalCategorySlug,
   categoryNameForSlug,
+  categorySlugForBusinessType,
   isIndexablePublicCategory,
   paginate,
+  PUBLIC_CATEGORIES,
   rankBusinesses,
   resolveCategory,
   slugifyCity,
@@ -165,6 +167,38 @@ export default async function DiscoveryPage({
     lat: coords ? latValue : undefined,
     lng: coords ? lngValue : undefined,
   });
+
+  // Smart Cross-Category Intent Detection:
+  // If user searched for something with 0 results in the current category (e.g. "hair cutting" or "dental" in sweet-shops),
+  // check if another category in this city matches their query, and seamlessly redirect them to that category!
+  if (searchQuery && ranked.length === 0) {
+    const otherCategories = PUBLIC_CATEGORIES.filter((c) => c.slug !== canonicalCategory);
+    const otherTypes = otherCategories.flatMap((c) => c.businessTypes);
+    const otherBusinesses = await getPublicDiscoveryBusinesses(citySlug, otherTypes);
+    const crossMatches = rankBusinesses(otherBusinesses, {
+      sort: value(query.sort),
+      q: searchQuery,
+      minRating: [3, 4, 4.5].includes(minimum) ? minimum : undefined,
+      lat: coords ? latValue : undefined,
+      lng: coords ? lngValue : undefined,
+    });
+
+    if (crossMatches.length > 0) {
+      const targetCategorySlug = categorySlugForBusinessType(crossMatches[0].type);
+      if (targetCategorySlug && targetCategorySlug !== canonicalCategory) {
+        const p = new URLSearchParams();
+        for (const [k, v] of Object.entries(query)) {
+          if (v !== undefined) {
+            if (Array.isArray(v)) for (const item of v) p.append(k, item);
+            else p.set(k, v);
+          }
+        }
+        const s = p.toString();
+        redirect(`/${canonicalCity}/${targetCategorySlug}${s ? `?${s}` : ""}`);
+      }
+    }
+  }
+
   const page = paginate(ranked, Number(value(query.page)) || 1);
   const cityName = businesses[0]?.city ?? discoveryTitle(citySlug);
   const categoryName = categoryNameForSlug(canonicalCategory) || discoveryTitle(canonicalCategory);
@@ -241,6 +275,37 @@ export default async function DiscoveryPage({
               <span className="h-2 w-2 rounded-full bg-emerald-600" />
               <span>{page.total} Verified {page.total === 1 ? "Shop" : "Shops"}</span>
             </div>
+          </div>
+
+          {/* ── City Category Switcher Pills ── */}
+          <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0 mr-1">
+              Explore {cityName}:
+            </span>
+            {[
+              { slug: "sweet-shops", name: "Sweet Shops", icon: "🍰" },
+              { slug: "restaurants", name: "Restaurants", icon: "🍽️" },
+              { slug: "salons", name: "Salons & Parlours", icon: "✂️" },
+              { slug: "clinics", name: "Clinics & Doctors", icon: "🩺" },
+              { slug: "hotels", name: "Hotels & Stays", icon: "🏨" },
+              { slug: "grocery-stores", name: "Grocery & Mart", icon: "🛒" },
+            ].map((cat) => {
+              const isActive = cat.slug === canonicalCategory;
+              return (
+                <Link
+                  key={cat.slug}
+                  href={`/${canonicalCity}/${cat.slug}`}
+                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
+                    isActive
+                      ? "bg-slate-900 text-white shadow-sm ring-2 ring-slate-900/20"
+                      : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.name}</span>
+                </Link>
+              );
+            })}
           </div>
 
           {/* ── Discovery Search & Filter Controls ── */}
@@ -540,6 +605,31 @@ export default async function DiscoveryPage({
                 >
                   Register a Shop Here →
                 </Link>
+              </div>
+
+              <div className="mt-8 border-t border-slate-100 pt-6">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">
+                  Or explore popular categories in {cityName}:
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {[
+                    { slug: "sweet-shops", name: "Sweet Shops", icon: "🍰" },
+                    { slug: "restaurants", name: "Restaurants", icon: "🍽️" },
+                    { slug: "salons", name: "Salons & Parlours", icon: "✂️" },
+                    { slug: "clinics", name: "Clinics & Doctors", icon: "🩺" },
+                    { slug: "hotels", name: "Hotels & Stays", icon: "🏨" },
+                    { slug: "grocery-stores", name: "Grocery & Mart", icon: "🛒" },
+                  ].map((cat) => (
+                    <Link
+                      key={cat.slug}
+                      href={`/${canonicalCity}/${cat.slug}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 transition"
+                    >
+                      <span>{cat.icon}</span>
+                      <span>{cat.name}</span>
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           )}
