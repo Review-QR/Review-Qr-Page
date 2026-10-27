@@ -13,8 +13,6 @@ export default function RiderAppPage() {
 
   // Login & Registration State
   const [loginPhone, setLoginPhone] = useState("");
-  const [loginOtp, setLoginOtp] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [isLoginPending, setIsLoginPending] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -25,7 +23,7 @@ export default function RiderAppPage() {
   const [regVehicleType, setRegVehicleType] = useState<"bike" | "scooter">("bike");
   const [regVehicleNo, setRegVehicleNo] = useState("");
 
-  // Incoming Order Modal Simulation (Display Over Other Apps)
+  // Incoming Order Modal Simulation
   const [incomingOrder, setIncomingOrder] = useState<HyperlocalOrder | null>(null);
   const [countdown, setCountdown] = useState(30);
 
@@ -54,17 +52,15 @@ export default function RiderAppPage() {
       osc.frequency.setValueAtTime(440, ctx.currentTime + 0.15);
       osc.frequency.setValueAtTime(880, ctx.currentTime + 0.3);
 
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+      gain.gain.setValueAtTime(0.25, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start();
-      osc.stop(ctx.currentTime + 0.5);
-    } catch {
-      // Audio autoplay requires user interaction
-    }
+      osc.stop(ctx.currentTime + 0.45);
+    } catch {}
   }
 
   // Load saved rider on mount
@@ -89,9 +85,7 @@ export default function RiderAppPage() {
         localStorage.removeItem("trustit_rider_id");
         setRider(null);
       }
-    } catch {
-      // Ignore
-    }
+    } catch {}
   }
 
   // Fetch Rider Profile & Orders
@@ -116,9 +110,7 @@ export default function RiderAppPage() {
         }
       }
       setAvailableOrders(data.availableOrders || []);
-    } catch {
-      // Ignore network error
-    }
+    } catch {}
   }
 
   // Periodic GPS & Data Sync
@@ -134,7 +126,7 @@ export default function RiderAppPage() {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
           setCurrentCoords({ lat, lon });
-          setLocationStatus(`Live GPS: ${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+          setLocationStatus(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
 
           fetch("/api/hyperlocal/rider", {
             method: "POST",
@@ -148,7 +140,7 @@ export default function RiderAppPage() {
           }).catch(() => {});
         },
         () => {
-          setLocationStatus("GPS Bahraich Fleet Active");
+          setLocationStatus("27.5745, 81.5965");
           setCurrentCoords({ lat: 27.5745, lon: 81.5965 });
         },
         { enableHighAccuracy: true },
@@ -180,7 +172,7 @@ export default function RiderAppPage() {
     const phoneToUse = targetPhone || loginPhone;
     const clean = phoneToUse.replace(/\D/g, "").slice(-10);
     if (clean.length < 10) {
-      setLoginError("Please enter a valid 10-digit mobile number.");
+      setLoginError("Please enter valid 10-digit mobile number.");
       return;
     }
     setIsLoginPending(true);
@@ -212,7 +204,7 @@ export default function RiderAppPage() {
   async function handleRiderRegister() {
     const clean = regPhone.replace(/\D/g, "").slice(-10);
     if (!regName.trim() || clean.length < 10) {
-      setLoginError("Please fill in your Full Name and 10-digit phone number.");
+      setLoginError("Please enter Name and 10-digit phone number.");
       return;
     }
     setIsLoginPending(true);
@@ -315,7 +307,7 @@ export default function RiderAppPage() {
   async function handleCompleteWithOtp() {
     if (!activeOrder || !rider) return;
     if (enteredOtp.length !== 4) {
-      setOtpError("Please enter valid 4-digit customer delivery OTP.");
+      setOtpError("Enter 4-digit OTP.");
       return;
     }
     setIsSubmitting(true);
@@ -335,7 +327,7 @@ export default function RiderAppPage() {
       if (data.success) {
         setEnteredOtp("");
         setActiveOrder(null);
-        setSuccessToast(`Delivery Completed! Earned ₹${data.earnedPayout}`);
+        setSuccessToast(`Delivered! Earned ₹${data.earnedPayout}`);
         fetchRiderData();
       } else {
         setOtpError(data.error || "Invalid OTP code.");
@@ -345,91 +337,82 @@ export default function RiderAppPage() {
     }
   }
 
-  // ── RIDER LOGIN SCREEN (If not logged in) ──
+  // ── RIDER LOGIN SCREEN (Clean, native 11-13px scale) ──
   if (!rider) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 p-4 max-w-md mx-auto flex flex-col justify-center font-sans">
-        <div className="rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+      <div className="min-h-screen bg-slate-950 text-slate-100 px-4 py-8 max-w-sm mx-auto flex flex-col justify-center font-sans">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
           <div className="text-center">
-            <span className="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-tr from-amber-500 to-orange-600 text-3xl mx-auto shadow-lg shadow-orange-500/25">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-2xl mx-auto shadow-md">
               🛵
             </span>
-            <h1 className="mt-4 text-2xl font-black tracking-tight text-white">Trustit Rider Partner</h1>
-            <p className="mt-1 text-xs text-slate-400">
-              Bahraich Hyperlocal Delivery Fleet Console
-            </p>
+            <h1 className="mt-3 text-base font-bold text-white tracking-tight">Trustit Rider Partner</h1>
+            <p className="text-[11px] text-slate-400">Bahraich Hyperlocal Delivery Fleet</p>
           </div>
 
-          <div className="mt-6 flex rounded-2xl bg-slate-800/80 p-1 text-xs font-bold">
+          <div className="mt-4 flex rounded-xl bg-slate-800 p-0.5 text-[11px] font-semibold">
             <button
               onClick={() => {
                 setIsRegisterMode(false);
                 setLoginError(null);
               }}
-              className={`flex-1 rounded-xl py-2 text-center transition ${
-                !isRegisterMode ? "bg-amber-500 text-slate-950 shadow-sm" : "text-slate-400 hover:text-white"
+              className={`flex-1 rounded-lg py-1.5 text-center transition ${
+                !isRegisterMode ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400"
               }`}
             >
-              Sign In (Existing Rider)
+              Sign In
             </button>
             <button
               onClick={() => {
                 setIsRegisterMode(true);
                 setLoginError(null);
               }}
-              className={`flex-1 rounded-xl py-2 text-center transition ${
-                isRegisterMode ? "bg-amber-500 text-slate-950 shadow-sm" : "text-slate-400 hover:text-white"
+              className={`flex-1 rounded-lg py-1.5 text-center transition ${
+                isRegisterMode ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400"
               }`}
             >
-              Join New Partner
+              New Partner
             </button>
           </div>
 
           {loginError && (
-            <div className="mt-4 rounded-xl border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-300">
+            <div className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2 text-[11px] text-rose-300">
               {loginError}
             </div>
           )}
 
           {!isRegisterMode ? (
-            <div className="mt-5 space-y-4">
+            <div className="mt-4 space-y-3">
               <div>
-                <label className="block text-xs font-bold text-slate-300 mb-1">
-                  Registered Mobile Number
-                </label>
-                <div className="flex rounded-xl border border-slate-700 bg-slate-800/80 overflow-hidden focus-within:border-amber-500">
-                  <span className="px-3 py-2.5 text-xs font-bold text-slate-400 bg-slate-800 border-r border-slate-700">
-                    +91
-                  </span>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Mobile Number</label>
+                <div className="flex rounded-xl border border-slate-700 bg-slate-800/90 overflow-hidden text-xs">
+                  <span className="px-2.5 py-2 text-slate-400 bg-slate-850 font-mono">+91</span>
                   <input
                     type="tel"
                     placeholder="e.g. 9415011111"
                     value={loginPhone}
                     onChange={(e) => setLoginPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    className="w-full bg-transparent px-3 py-2.5 text-xs text-white focus:outline-none font-mono"
+                    className="w-full bg-transparent px-2.5 py-2 text-xs text-white focus:outline-none font-mono"
                   />
                 </div>
               </div>
 
               {/* Quick Select Buttons for Test Fleet */}
               <div>
-                <span className="block text-[11px] font-semibold text-slate-400 mb-1.5">
-                  ⚡ Quick 1-Tap Fleet Logins (Bahraich Fleet):
+                <span className="block text-[10px] font-medium text-slate-400 mb-1">
+                  Quick 1-Tap Login (Bahraich Fleet):
                 </span>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="space-y-1.5">
                   <button
                     type="button"
                     onClick={() => {
                       setLoginPhone("9415011111");
                       handleRiderLogin("9415011111");
                     }}
-                    className="flex items-center justify-between rounded-xl border border-slate-700/80 bg-slate-800/60 p-2.5 text-xs hover:border-amber-400 hover:bg-slate-800 transition text-left"
+                    className="w-full flex items-center justify-between rounded-xl border border-slate-750 bg-slate-800/70 px-2.5 py-1.5 text-[11px] hover:border-amber-400 transition"
                   >
-                    <div>
-                      <div className="font-bold text-white">Rahul Verma</div>
-                      <div className="text-[10px] text-slate-400">Bike UP-40-AB-1234 · +91 94150 11111</div>
-                    </div>
-                    <span className="text-amber-400 font-bold text-xs">Tap to Login →</span>
+                    <span className="font-semibold text-white">Rahul Verma</span>
+                    <span className="text-[10px] text-amber-400">UP-40-AB-1234 · Login →</span>
                   </button>
 
                   <button
@@ -438,28 +421,10 @@ export default function RiderAppPage() {
                       setLoginPhone("9415022222");
                       handleRiderLogin("9415022222");
                     }}
-                    className="flex items-center justify-between rounded-xl border border-slate-700/80 bg-slate-800/60 p-2.5 text-xs hover:border-amber-400 hover:bg-slate-800 transition text-left"
+                    className="w-full flex items-center justify-between rounded-xl border border-slate-750 bg-slate-800/70 px-2.5 py-1.5 text-[11px] hover:border-amber-400 transition"
                   >
-                    <div>
-                      <div className="font-bold text-white">Amit Shukla</div>
-                      <div className="text-[10px] text-slate-400">Bike UP-40-XY-5678 · +91 94150 22222</div>
-                    </div>
-                    <span className="text-amber-400 font-bold text-xs">Tap to Login →</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginPhone("9415033333");
-                      handleRiderLogin("9415033333");
-                    }}
-                    className="flex items-center justify-between rounded-xl border border-slate-700/80 bg-slate-800/60 p-2.5 text-xs hover:border-amber-400 hover:bg-slate-800 transition text-left"
-                  >
-                    <div>
-                      <div className="font-bold text-white">Sonu Qureshi</div>
-                      <div className="text-[10px] text-slate-400">Scooter UP-40-CD-9012 · +91 94150 33333</div>
-                    </div>
-                    <span className="text-amber-400 font-bold text-xs">Tap to Login →</span>
+                    <span className="font-semibold text-white">Amit Shukla</span>
+                    <span className="text-[10px] text-amber-400">UP-40-XY-5678 · Login →</span>
                   </button>
                 </div>
               </div>
@@ -468,55 +433,55 @@ export default function RiderAppPage() {
                 type="button"
                 disabled={isLoginPending || loginPhone.length < 10}
                 onClick={() => handleRiderLogin()}
-                className="w-full rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 py-3 text-xs font-black text-slate-950 shadow-lg shadow-orange-500/25 hover:from-amber-400 hover:to-orange-500 disabled:opacity-50 transition"
+                className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-2.5 text-xs font-bold text-slate-950 shadow-md hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 transition"
               >
-                {isLoginPending ? "Authenticating Rider..." : "Sign In & Go Online →"}
+                {isLoginPending ? "Signing in..." : "Sign In & Go Online"}
               </button>
             </div>
           ) : (
-            <div className="mt-5 space-y-3.5">
+            <div className="mt-3.5 space-y-2.5">
               <div>
-                <label className="block text-xs font-bold text-slate-300">Rider Full Name</label>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Full Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Mohd Rashid"
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-300">Mobile Number (10 digits)</label>
+                <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Mobile Number</label>
                 <input
                   type="tel"
                   placeholder="e.g. 9876543210"
                   value={regPhone}
                   onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white"
+                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-white"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-bold text-slate-300">Vehicle Type</label>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Vehicle</label>
                   <select
                     value={regVehicleType}
                     onChange={(e) => setRegVehicleType(e.target.value as "bike" | "scooter")}
-                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-white"
                   >
-                    <option value="bike">Motorcycle (Bike)</option>
-                    <option value="scooter">Scooter / Scooty</option>
+                    <option value="bike">Bike</option>
+                    <option value="scooter">Scooter</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-300">Vehicle Number</label>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Vehicle No.</label>
                   <input
                     type="text"
                     placeholder="UP-40-XX-0000"
                     value={regVehicleNo}
                     onChange={(e) => setRegVehicleNo(e.target.value.toUpperCase())}
-                    className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-white font-mono"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-white font-mono"
                   />
                 </div>
               </div>
@@ -525,9 +490,9 @@ export default function RiderAppPage() {
                 type="button"
                 disabled={isLoginPending}
                 onClick={handleRiderRegister}
-                className="w-full rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 py-3 text-xs font-black text-slate-950 shadow-md hover:from-emerald-400 hover:to-teal-500 transition"
+                className="w-full mt-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2.5 text-xs font-bold text-slate-950 shadow-md transition"
               >
-                {isLoginPending ? "Registering..." : "Register As Delivery Partner →"}
+                {isLoginPending ? "Registering..." : "Register As Partner"}
               </button>
             </div>
           )}
@@ -536,224 +501,237 @@ export default function RiderAppPage() {
     );
   }
 
-  // ── RIDER DASHBOARD (When logged in) ──
+  // ── RIDER DASHBOARD (Refined Native Scale: 11-13px fonts, slim controls) ──
   return (
-    <div className="min-h-screen bg-slate-900 text-slate-100 p-4 max-w-md mx-auto flex flex-col justify-between font-sans">
-      {/* Top Rider Header */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-extrabold text-white">Trustit Rider Partner</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-400 text-slate-950">
-                ★ {rider.rating.toFixed(1)}
-              </span>
+    <div className="min-h-screen bg-slate-950 text-slate-100 px-3.5 py-3 max-w-sm mx-auto flex flex-col justify-between font-sans">
+      <div className="space-y-3">
+        {/* Top Header: Slim 44px with compact iOS-style toggle */}
+        <div className="flex items-center justify-between pb-2.5 border-b border-slate-800/90">
+          <div className="flex items-center gap-2">
+            <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-800 text-sm">
+              🛵
+            </span>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-bold text-white">{rider.full_name}</span>
+                <span className="rounded-full bg-amber-400 px-1.5 py-0.2 text-[9px] font-bold text-slate-950">
+                  ★ {rider.rating.toFixed(1)}
+                </span>
+              </div>
+              <p className="text-[10px] text-slate-400 font-mono leading-none mt-0.5">{rider.vehicle_number}</p>
             </div>
-            <p className="text-xs text-slate-400 mt-0.5">
-              {rider.full_name} · {rider.vehicle_number}
-            </p>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Slim iOS-style Duty Toggle (Height 26px, Width 54px) */}
             <button
               type="button"
               onClick={handleToggleOnline}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all shadow-md ${
-                isOnline
-                  ? "bg-emerald-500 text-slate-950 hover:bg-emerald-400 ring-2 ring-emerald-400/50"
-                  : "bg-red-500 text-white hover:bg-red-600"
+              className={`relative inline-flex h-6 w-14 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                isOnline ? "bg-emerald-500" : "bg-slate-750"
               }`}
+              aria-label="Toggle Online Duty"
             >
-              {isOnline ? "🟢 ON DUTY" : "🔴 OFF DUTY"}
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  isOnline ? "translate-x-8" : "translate-x-0"
+                }`}
+              />
+              <span
+                className={`absolute inset-0 flex items-center text-[9px] font-black uppercase px-1.5 pointer-events-none ${
+                  isOnline ? "text-slate-950 justify-start" : "text-slate-400 justify-end"
+                }`}
+              >
+                {isOnline ? "ON" : "OFF"}
+              </span>
             </button>
+
             <button
               type="button"
               onClick={handleRiderLogout}
               title="Logout"
-              className="grid h-8 w-8 place-items-center rounded-xl bg-slate-800 text-slate-400 hover:text-white"
+              className="grid h-6 w-6 place-items-center rounded-lg bg-slate-800 text-[10px] text-slate-400 hover:text-white"
             >
-              🚪
+              ✕
             </button>
           </div>
         </div>
 
-        {/* GPS Location Tracker Strip */}
-        <div className="p-3 bg-slate-800/80 rounded-2xl border border-slate-700/60 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
+        {/* GPS Live Status Bar (Slim 26px) */}
+        <div className="flex items-center justify-between rounded-xl bg-slate-900 px-2.5 py-1.5 border border-slate-800 text-[10px]">
+          <div className="flex items-center gap-1.5">
+            <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="text-slate-300 font-mono">{locationStatus}</span>
+            <span className="text-slate-300 font-mono">GPS: {locationStatus}</span>
           </div>
-          <span className="text-[10px] bg-slate-700 px-2 py-0.5 rounded-md font-bold text-amber-300">
+          <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
             Bahraich Fleet
           </span>
         </div>
 
-        {/* Rider Wallet & Cash in Hand Quick Cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="p-3 bg-slate-800 rounded-2xl border border-slate-700/60">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-              Today's Earnings
-            </span>
-            <span className="text-lg font-black text-emerald-400">₹{rider.wallet_balance}</span>
-            <span className="text-[10px] text-slate-500 block">Payout (₹35 / delivery)</span>
+        {/* Compact 3-Column Metrics Row (Height 42px) */}
+        <div className="grid grid-cols-3 divide-x divide-slate-800 rounded-xl bg-slate-900 border border-slate-800/80 py-2 text-center">
+          <div>
+            <span className="text-[9px] uppercase font-bold text-slate-400 block leading-tight">Orders</span>
+            <span className="text-xs font-black text-white">{availableOrders.length}</span>
           </div>
-          <div className="p-3 bg-slate-800 rounded-2xl border border-slate-700/60">
-            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">
-              COD Cash in Hand
-            </span>
-            <span className="text-lg font-black text-amber-400">₹{rider.cash_in_hand}</span>
-            <span className="text-[10px] text-slate-500 block">Weekly deposit balance</span>
+          <div>
+            <span className="text-[9px] uppercase font-bold text-slate-400 block leading-tight">Earned</span>
+            <span className="text-xs font-black text-emerald-400">₹{rider.wallet_balance}</span>
+          </div>
+          <div>
+            <span className="text-[9px] uppercase font-bold text-slate-400 block leading-tight">COD Cash</span>
+            <span className="text-xs font-black text-amber-400">₹{rider.cash_in_hand}</span>
           </div>
         </div>
 
-        {/* Active In-Progress Delivery */}
+        {/* Active Order Card or Clean Radar Waiting */}
         {activeOrder ? (
-          <div className="p-4 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900 rounded-3xl border-2 border-indigo-500/40 shadow-xl space-y-3">
+          <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-slate-900 to-indigo-950/60 p-3.5 space-y-2.5 shadow-lg">
             <div className="flex items-center justify-between">
-              <span className="px-2.5 py-1 rounded-full text-xs font-black bg-indigo-500 text-white">
-                CURRENT ORDER #{activeOrder.id.slice(-6)}
+              <span className="rounded-md bg-indigo-600 px-2 py-0.5 text-[10px] font-black text-white">
+                ACTIVE #{activeOrder.id.slice(-6)}
               </span>
-              <span className="text-xs font-bold text-indigo-300 uppercase">
+              <span className="text-[10px] font-bold uppercase text-indigo-300">
                 {activeOrder.status.replace(/_/g, " ")}
               </span>
             </div>
 
-            {/* Restaurant / Store Info */}
-            <div className="p-3 bg-slate-800/80 rounded-2xl text-xs space-y-1">
+            {/* Shop Info */}
+            <div className="rounded-xl bg-slate-850 p-2.5 text-xs space-y-0.5">
               <div className="flex justify-between font-bold text-white">
                 <span>🍽️ {activeOrder.business?.name || "Restaurant"}</span>
-                <a
-                  href={`tel:${activeOrder.business?.phone}`}
-                  className="text-amber-400 underline font-bold"
-                >
-                  Call Store
+                <a href={`tel:${activeOrder.business?.phone}`} className="text-amber-400 text-[11px] underline">
+                  Call Shop
                 </a>
               </div>
-              <p className="text-slate-400 line-clamp-1">{activeOrder.business?.address}</p>
+              <p className="text-[10px] text-slate-400 line-clamp-1">{activeOrder.business?.address}</p>
             </div>
 
-            {/* Customer Delivery Info */}
-            <div className="p-3 bg-slate-800/80 rounded-2xl text-xs space-y-1">
+            {/* Customer Info */}
+            <div className="rounded-xl bg-slate-850 p-2.5 text-xs space-y-0.5">
               <div className="flex justify-between font-bold text-white">
-                <span>📍 Customer: {activeOrder.customer_name}</span>
-                <a
-                  href={`tel:${activeOrder.customer_phone}`}
-                  className="text-amber-400 underline font-bold"
-                >
+                <span>📍 {activeOrder.customer_name}</span>
+                <a href={`tel:${activeOrder.customer_phone}`} className="text-amber-400 text-[11px] underline">
                   Call Customer
                 </a>
               </div>
-              <p className="text-slate-400">
+              <p className="text-[10px] text-slate-400">
                 {activeOrder.customer_address?.street}, {activeOrder.customer_address?.city}
               </p>
-              <div className="pt-2 flex justify-between items-center text-slate-300 border-t border-slate-700/60 mt-1">
-                <span>Collect Cash (COD):</span>
-                <span className="text-base font-black text-amber-400">₹{activeOrder.total_amount}</span>
+              <div className="flex justify-between items-center pt-1.5 mt-1 border-t border-slate-800 text-[11px]">
+                <span className="text-slate-300">Collect Cash:</span>
+                <span className="font-black text-amber-400">₹{activeOrder.total_amount}</span>
               </div>
             </div>
 
-            {/* Delivery Action Controls */}
+            {/* Action Buttons */}
             {activeOrder.status === "rider_assigned" ? (
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleMarkPickedUp}
-                className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black rounded-2xl text-sm shadow-lg hover:from-blue-500 hover:to-indigo-500 transition"
+                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-xs font-bold text-white shadow-md hover:from-blue-500 hover:to-indigo-500 transition"
               >
-                {isSubmitting ? "Updating..." : "1. Confirm Pickup from Store ➔"}
+                {isSubmitting ? "Updating..." : "1. Confirm Pickup from Shop →"}
               </button>
             ) : (
-              <div className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl space-y-2">
-                <span className="text-xs font-bold text-amber-300 block">
-                  2. Handover: Ask 4-Digit Delivery OTP from Customer
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-2.5 space-y-2">
+                <span className="text-[10px] font-bold text-amber-300 block">
+                  2. Delivery Handover: Enter 4-Digit Customer OTP
                 </span>
                 <div className="flex gap-2">
                   <input
                     type="tel"
                     maxLength={4}
-                    placeholder="Enter 4-digit OTP"
+                    placeholder="4-digit OTP"
                     value={enteredOtp}
                     onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, ""))}
-                    className="w-full bg-slate-900 border border-amber-500/60 rounded-xl px-3 py-2 text-center text-lg font-mono font-black text-amber-300 tracking-widest focus:outline-none"
+                    className="w-full rounded-lg border border-amber-500/60 bg-slate-900 py-1.5 text-center font-mono text-sm font-bold tracking-widest text-amber-300 focus:outline-none"
                   />
                   <button
                     type="button"
                     disabled={isSubmitting || enteredOtp.length !== 4}
                     onClick={handleCompleteWithOtp}
-                    className="px-5 bg-amber-400 text-slate-950 font-black rounded-xl text-xs hover:bg-amber-300 disabled:opacity-50 transition"
+                    className="rounded-lg bg-amber-400 px-4 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-300 disabled:opacity-50 transition"
                   >
-                    {isSubmitting ? "..." : "Verify & Deliver"}
+                    {isSubmitting ? "..." : "Verify & Complete"}
                   </button>
                 </div>
-                {otpError && <p className="text-xs text-rose-400 font-semibold">{otpError}</p>}
+                {otpError && <p className="text-[10px] text-rose-400">{otpError}</p>}
               </div>
             )}
           </div>
         ) : (
-          <div className="p-8 text-center bg-slate-800/40 rounded-3xl border border-slate-800 text-slate-400 space-y-2">
-            <span className="text-3xl block">🛵</span>
-            <p className="text-sm font-bold text-slate-300">
-              {isOnline ? "Waiting for new delivery orders..." : "You are currently OFF DUTY"}
+          /* Clean Radar Waiting Box */
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6 text-center space-y-2">
+            <div className="relative mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-800">
+              <span className="text-lg">🛵</span>
+              {isOnline && (
+                <span className="absolute -inset-1 rounded-full border border-emerald-500/40 animate-ping" />
+              )}
+            </div>
+            <p className="text-xs font-bold text-slate-200">
+              {isOnline ? "Awaiting new orders..." : "You are currently OFF DUTY"}
             </p>
-            <p className="text-xs text-slate-500">
+            <p className="text-[10px] text-slate-400 max-w-xs mx-auto">
               {isOnline
-                ? "GPS active in Bahraich. When a shop prepares an order, loud buzzer will sound."
-                : "Toggle duty ON to start receiving food and kirana orders."}
+                ? "Radar active in Bahraich. When a restaurant prepares an order, loud buzzer will ring."
+                : "Toggle switch to ON to start receiving food and grocery orders."}
             </p>
           </div>
         )}
       </div>
 
-      {/* Floating Success Notification */}
+      {/* Floating Success Toast */}
       {successToast && (
-        <div className="my-2 p-3 bg-emerald-500 text-slate-950 font-bold rounded-2xl text-xs flex justify-between items-center shadow-lg">
+        <div className="my-2 rounded-xl bg-emerald-500 px-3 py-2 text-[11px] font-bold text-slate-950 flex justify-between items-center shadow-lg">
           <span>{successToast}</span>
-          <button onClick={() => setSuccessToast(null)} className="font-black px-2">
+          <button onClick={() => setSuccessToast(null)} className="font-bold px-1.5">
             ✕
           </button>
         </div>
       )}
 
-      {/* ── SIMULATED ANDROID POPUP OVERLAY ON INCOMING ORDER ── */}
+      {/* ── SIMULATED INCOMING ORDER SLIDE-UP SHEET ── */}
       {incomingOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-sm bg-gradient-to-b from-slate-900 to-indigo-950 border-2 border-amber-400 rounded-3xl p-5 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-end sm:items-center justify-center p-3">
+          <div className="w-full max-w-sm rounded-2xl border border-amber-400 bg-slate-900 p-4 shadow-2xl space-y-3 animate-in slide-in-from-bottom-6">
             <div className="flex items-center justify-between">
-              <span className="px-3 py-1 bg-amber-400 text-slate-950 text-xs font-black rounded-full animate-pulse">
+              <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-slate-950 animate-pulse">
                 ⚡ NEW ORDER REQUEST
               </span>
-              <span className="text-base font-black text-rose-400 font-mono">{countdown}s</span>
+              <span className="font-mono text-xs font-bold text-rose-400">{countdown}s</span>
             </div>
 
             <div>
-              <span className="text-xs text-slate-400 uppercase font-bold tracking-wider">Pickup From</span>
-              <h3 className="text-lg font-black text-white">{incomingOrder.business?.name || "Local Store"}</h3>
-              <p className="text-xs text-slate-400 line-clamp-1">{incomingOrder.business?.address}</p>
+              <span className="text-[9px] uppercase font-bold text-slate-400 block">Pickup Store</span>
+              <h3 className="text-sm font-bold text-white">{incomingOrder.business?.name || "Local Store"}</h3>
+              <p className="text-[10px] text-slate-400 line-clamp-1">{incomingOrder.business?.address}</p>
             </div>
 
-            <div className="p-3 bg-slate-800/80 rounded-2xl border border-slate-700/80 flex justify-between text-xs">
+            <div className="grid grid-cols-3 divide-x divide-slate-800 rounded-xl bg-slate-800/80 py-1.5 text-center text-xs">
               <div>
-                <span className="text-[10px] text-slate-400 font-bold block">Delivery Payout</span>
-                <span className="text-base font-black text-emerald-400">₹35.00</span>
+                <span className="text-[9px] text-slate-400 block">Payout</span>
+                <span className="font-bold text-emerald-400">₹35.00</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 font-bold block">Order Value</span>
-                <span className="text-base font-black text-amber-400">₹{incomingOrder.total_amount}</span>
+                <span className="text-[9px] text-slate-400 block">Bill</span>
+                <span className="font-bold text-amber-400">₹{incomingOrder.total_amount}</span>
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 font-bold block">Distance</span>
-                <span className="text-base font-black text-indigo-300">~1.4 km</span>
+                <span className="text-[9px] text-slate-400 block">Distance</span>
+                <span className="font-bold text-indigo-300">~1.2 km</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="grid grid-cols-2 gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => setIncomingOrder(null)}
-                className="py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs"
+                className="rounded-xl bg-slate-800 py-2 text-[11px] font-bold text-slate-400 hover:text-white"
               >
                 Pass / Reject
               </button>
@@ -761,9 +739,9 @@ export default function RiderAppPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleAcceptIncomingOrder}
-                className="py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-black text-xs shadow-lg hover:from-emerald-400 hover:to-teal-400 transition"
+                className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2 text-[11px] font-black text-slate-950 shadow-md transition"
               >
-                {isSubmitting ? "Accepting..." : "ACCEPT ORDER ➔"}
+                {isSubmitting ? "Accepting..." : "ACCEPT ORDER →"}
               </button>
             </div>
           </div>
