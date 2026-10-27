@@ -45,7 +45,7 @@ export default async function MerchantQrPage() {
           </span>
           <div><h2 id="template-gallery-title">All Standee Templates (Export & Customize)</h2><p>High-resolution print-ready templates with category-matched artwork.</p></div>
         </div>
-        <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="carousel" initialDesignAssets={designAssets} initialDesignRevision={designRevision} initialDesignError={designError} googleReviewLink={merchant.reviewLink} categoryConfig={categoryConfig} />
+        <QrTemplateGallery businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} initialTemplate={merchant.qrTemplate} display="carousel" initialDesignAssets={designAssets} initialDesignRevision={designRevision} initialDesignError={designError} googleReviewLink={merchant.reviewLink} categoryConfig={categoryConfig} plan={merchant.plan} />
       </section>
 
       <section className="merchant-lower-panel merchant-qr-help mt-4">

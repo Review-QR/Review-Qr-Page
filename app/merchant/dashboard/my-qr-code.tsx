@@ -8,6 +8,7 @@ import { buildTrustitQrImageUrl, buildTrustitReviewUrl, trustitAppOrigin } from 
 import { QrPosterPreview } from "./qr/qr-template-gallery";
 import { ModernStandee, STANDEE_THEMES } from "./qr/modern-standee";
 import { qrTemplates, type QrTemplateId, getQrTemplatePrintDimensions } from "./qr/templates";
+import { getAllowedTemplatesCount, getTemplatesForPlan } from "@/lib/plan-rules";
 import { saveQrTemplateAction } from "./qr/actions";
 import type { QrDesignAssets } from "@/lib/trustit-ai/provider-contracts";
 import type { UnifiedBusinessCategory } from "@/lib/business-category-catalog";
@@ -122,15 +123,11 @@ export default function MyQrCode({
   const currentTemplate = qrTemplates[currentIndex % qrTemplates.length] || qrTemplates[0];
   const currentTemplateId = currentTemplate.id;
 
-  // Plan gating logic: Basic plan has 2 templates unlocked; Standard & Premium unlock all 8
-  const normalizedPlan = String(plan || "").trim().toLowerCase();
-  const isPlanStandardOrPremium =
-    normalizedPlan.includes("premium") || normalizedPlan.includes("standard");
+  // Plan gating logic: Basic (2), Standard (5), Premium (8)
+  const allowedTemplatesCount = getAllowedTemplatesCount(plan);
 
   function isTemplateUnlocked(index: number): boolean {
-    if (isPlanStandardOrPremium) return true;
-    // Basic plan or unassigned: 2 templates unlocked (index 0 and 1)
-    return index < 2;
+    return index < allowedTemplatesCount;
   }
 
   const isCurrentUnlocked = isTemplateUnlocked(currentIndex);
@@ -143,12 +140,12 @@ export default function MyQrCode({
       : qrStatus?.trim() || "Status unavailable";
 
   function nextSlide() {
-    setCurrentIndex((prev) => (prev < STANDEE_THEMES.length - 1 ? prev + 1 : 0));
+    setCurrentIndex((prev) => (prev < allowedTemplatesCount - 1 ? prev + 1 : 0));
     setMessage("");
   }
 
   function prevSlide() {
-    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : STANDEE_THEMES.length - 1));
+    setCurrentIndex((prev) => (prev > 0 ? prev - 1 : allowedTemplatesCount - 1));
     setMessage("");
   }
 
@@ -427,7 +424,7 @@ export default function MyQrCode({
       {/* Template Selector Slider Strip */}
       <div className="merchant-template-slider-bar" role="tablist" aria-label="Standee templates slider">
         <div className="merchant-template-slider-track">
-          {STANDEE_THEMES.map((theme, idx) => {
+          {STANDEE_THEMES.slice(0, allowedTemplatesCount).map((theme, idx) => {
             const unlocked = isTemplateUnlocked(idx);
             const isSelected = idx === currentIndex;
             const isSaved = idx === savedStandeeIndex;
@@ -527,7 +524,7 @@ export default function MyQrCode({
           <div className="merchant-slider-footer">
             <div className="merchant-slider-footer__meta">
               <strong>{currentStandee.name}</strong>
-              <small>· 4 × 6 in (Portrait) · Slide {currentIndex + 1} of {STANDEE_THEMES.length}</small>
+              <small>· 4 × 6 in (Portrait) · Slide {currentIndex + 1} of {allowedTemplatesCount}</small>
             </div>
             <div className="merchant-slider-footer__actions">
               {isCurrentUnlocked ? (

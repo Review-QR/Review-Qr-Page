@@ -11,6 +11,7 @@ import type { QrDesignAsset, QrDesignAssets } from "@/lib/trustit-ai/provider-co
 import { saveQrTemplateAction } from "./actions";
 import { regenerateQrDesignAction } from "./regenerate-design-action";
 import { getQrTemplateFilename, getQrTemplatePrintCss, getQrTemplatePrintDimensions, qrTemplates, type QrTemplateId } from "./templates";
+import { getTemplatesForPlan } from "@/lib/plan-rules";
 
 type ExportAction = "png" | "pdf" | "print";
 type OutputFormat = "print" | "digital";
@@ -28,6 +29,7 @@ type Props = {
   display?: "carousel" | "dashboard";
   googleReviewLink?: string | null;
   categoryConfig?: UnifiedBusinessCategory | null;
+  plan?: string | null;
 };
 
 function TrustitMark({ templateId, className = "", compact = false }: { templateId: QrTemplateId; className?: string; compact?: boolean }) {
@@ -35,10 +37,10 @@ function TrustitMark({ templateId, className = "", compact = false }: { template
   return (
     <span className={`inline-flex items-center gap-2 font-black tracking-[0.13em] ${className}`} aria-label="Trustit">
       <svg aria-hidden="true" viewBox="0 0 40 40" className={`shrink-0 ${compact ? "h-6 w-6" : "h-8 w-8"}`}>
-        {templateId === "template_1" && <><circle cx="20" cy="20" r="17" fill="currentColor" opacity=".13" /><path {...common} d="m11 20 6 6 12-13" /></>}
-        {templateId === "template_2" && <><path d="M20 36C8 29 7 16 20 5c13 11 12 24 0 31Z" fill="currentColor" opacity=".16" /><path {...common} d="M13 27c6-2 10-7 13-14M17 21l-1-7m5 3 7 1" /></>}
+        {(templateId === "template_1" || templateId === "template_6") && <><circle cx="20" cy="20" r="17" fill="currentColor" opacity=".13" /><path {...common} d="m11 20 6 6 12-13" /></>}
+        {(templateId === "template_2" || templateId === "template_8") && <><path d="M20 36C8 29 7 16 20 5c13 11 12 24 0 31Z" fill="currentColor" opacity=".16" /><path {...common} d="M13 27c6-2 10-7 13-14M17 21l-1-7m5 3 7 1" /></>}
         {templateId === "template_3" && <><path d="M20 2 24 13 36 9 31 20 39 28 27 29 24 39 18 30 7 35 11 24 2 17 14 16Z" fill="currentColor" opacity=".18" /><path {...common} d="m14 20 4 4 8-9" /></>}
-        {templateId === "template_4" && <><path d="M20 2 36 11v18L20 38 4 29V11Z" fill="currentColor" opacity=".16" /><path {...common} d="m11 20 6 6 12-13M8 11l4-2m16 22 4-2" /></>}
+        {(templateId === "template_4" || templateId === "template_7") && <><path d="M20 2 36 11v18L20 38 4 29V11Z" fill="currentColor" opacity=".16" /><path {...common} d="m11 20 6 6 12-13M8 11l4-2m16 22 4-2" /></>}
         {templateId === "template_5" && <><path d="M20 2 38 20 20 38 2 20Z" fill="currentColor" opacity=".13" /><path {...common} d="M13 21c1-6 13-6 14 0M14 24c2 8 10 8 12 0m-6-10v19" /></>}
       </svg>
       <span className={compact ? "text-sm" : ""}>TRUSTIT</span>
@@ -247,13 +249,17 @@ function ReviewQr({ url, usable, businessName, templateId, compact = false, land
     ? "h-16 w-16"
     : digital ? "h-40 w-40 sm:h-44 sm:w-44"
     : landscape ? "h-44 w-44 sm:h-52 sm:w-52" : "h-60 w-60 sm:h-64 sm:w-64";
-  const frameStyle = {
+  const frameStyles: Record<QrTemplateId, string> = {
     template_1: "border-[#c9a65e] ring-2 ring-[#ead9ad]",
     template_2: "border-slate-300 rounded-lg",
     template_3: "border-emerald-200 rounded-[1.35rem]",
     template_4: "border-[#b57936] ring-1 ring-[#e7c58e]",
     template_5: "border-slate-200 rounded-md",
-  }[templateId];
+    template_6: "border-[#d97706] ring-2 ring-[#fde68a]",
+    template_7: "border-slate-400 rounded-lg",
+    template_8: "border-slate-200 rounded-md",
+  };
+  const frameStyle = frameStyles[templateId];
   const qrDisplayUrl = localQr || url;
   return (
     <div className={`relative z-30 isolate inline-flex shrink-0 items-center justify-center border bg-white shadow-xl ring-1 ring-slate-900/10 ${frameStyle} ${compact ? "p-1.5" : "p-3 sm:p-3.5"}`}>
@@ -456,10 +462,10 @@ function PosterByTemplate({ templateId, businessName, businessId, qrUrl, qrUsabl
   const aspect = digital ? "aspect-[4/5]" : template.ratio === "3 / 2" ? "aspect-[3/2]" : "aspect-[2/3]";
   return (
     <div className={`${aspect} w-full overflow-hidden rounded-xl shadow-inner`} data-template-id={templateId} data-design-theme={template.designTheme} data-background-direction={posterCategory.backgroundArtDirection} data-palette={posterCategory.palette.join(",")} data-screen-preview={screenPreview ? "true" : undefined} data-print-size={template.printSize} data-orientation={template.orientation} data-ratio={template.ratio}>
-      {templateId === "template_1" && <RestaurantPoster {...content} />}
-      {templateId === "template_2" && <HotelPoster {...content} />}
+      {(templateId === "template_1" || templateId === "template_6") && <RestaurantPoster {...content} />}
+      {(templateId === "template_2" || templateId === "template_8") && <HotelPoster {...content} />}
       {templateId === "template_3" && <LaundryPoster {...content} />}
-      {templateId === "template_4" && <RetailPoster {...content} />}
+      {(templateId === "template_4" || templateId === "template_7") && <RetailPoster {...content} />}
       {templateId === "template_5" && <SalonPoster {...content} />}
     </div>
   );
@@ -494,7 +500,8 @@ function isQrUsable(status: string | null, expiry: string | null) {
   return status?.trim().toLowerCase() === "active" && (!expiry || expiry >= today);
 }
 
-export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, initialDesignAssets = {}, initialDesignRevision = 0, initialDesignError, display = "carousel", googleReviewLink, categoryConfig }: Props) {
+export default function QrTemplateGallery({ businessId, businessName, businessType, qrStatus, expiry, initialTemplate, initialDesignAssets = {}, initialDesignRevision = 0, initialDesignError, display = "carousel", googleReviewLink, categoryConfig, plan }: Props) {
+  const availableTemplates = getTemplatesForPlan(qrTemplates, plan);
   const origin = trustitAppOrigin;
   const [selectedTemplate, setSelectedTemplate] = useState<QrTemplateId>(qrTemplates.some((template) => template.id === initialTemplate) ? initialTemplate as QrTemplateId : "template_1");
   const [designAssets, setDesignAssets] = useState<QrDesignAssets>(initialDesignAssets);
@@ -712,7 +719,7 @@ export default function QrTemplateGallery({ businessId, businessName, businessTy
       </div>
 
       <div ref={galleryRef} className={display === "dashboard" ? "merchant-template-grid" : "flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-4 [scrollbar-color:#cbd5e1_transparent] [scrollbar-width:thin]"} aria-label="Trustit QR template gallery">
-        {qrTemplates.map((template) => {
+        {availableTemplates.map((template) => {
           const isSelected = selectedTemplate === template.id;
           return (
             <article key={template.id} className={display === "dashboard" ? `merchant-template-tile${template.ratio === "3 / 2" ? " merchant-template-tile--landscape" : ""}${isSelected ? " is-selected" : ""}` : `w-[min(84vw,360px)] shrink-0 snap-start overflow-hidden rounded-2xl border bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md sm:w-[min(50vw,420px)] lg:w-[min(40vw,480px)] xl:w-[min(38vw,480px)] ${isSelected ? "border-blue-500 ring-2 ring-blue-200" : "border-slate-200"}`}>
