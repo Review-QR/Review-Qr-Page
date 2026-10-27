@@ -22,7 +22,12 @@ export type DiscoveryBusiness = {
   phone?: string | null;
   catalogItems?: CatalogItem[];
 };
-export type RankedBusiness = DiscoveryBusiness & { adjustedRating: number; distanceKm: number | null; score: number };
+export type RankedBusiness = DiscoveryBusiness & {
+  adjustedRating: number;
+  distanceKm: number | null;
+  score: number;
+  matchedItems?: CatalogItem[];
+};
 
 export function slugify(value: string) {
   return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "business";
@@ -143,12 +148,35 @@ export function haversineKm(aLat: number, aLng: number, bLat: number, bLng: numb
   const a = Math.sin(dLat / 2) ** 2 + Math.cos(rad(aLat)) * Math.cos(rad(bLat)) * Math.sin(dLng / 2) ** 2;
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
+const SEARCH_SYNONYMS: Record<string, string[]> = {
+  ditergent: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin", "cleaner"],
+  detergent: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin"],
+  deturgent: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin"],
+  surf: ["detergent", "surf excel", "washing powder", "tide", "ariel"],
+  sarf: ["detergent", "surf excel", "washing powder", "tide", "ariel"],
+  soap: ["soap", "dettol", "lux", "lifebuoy", "bathing"],
+  dant: ["dental", "teeth", "tooth", "dentist"],
+  dantist: ["dental", "teeth", "tooth", "dentist"],
+  dentist: ["dental", "teeth", "tooth", "dentist"],
+  hercut: ["haircut", "hair cut", "barber", "salon"],
+  haircutting: ["haircut", "hair cut", "barber", "salon"],
+  briyani: ["biryani", "chicken biryani", "dum biryani"],
+  mithai: ["sweet", "sweets", "kaju katli", "ladoo", "rasgulla"],
+  simint: ["cement", "ultratech", "building"],
+  ciment: ["cement", "ultratech", "building"],
+  dawa: ["pharmacy", "medical", "paracetamol", "medicine", "tablet"],
+  medicine: ["pharmacy", "medical", "paracetamol", "dolo", "crocin"],
+  tyre: ["mrf", "tyre", "puncture", "wheel"],
+  tire: ["mrf", "tyre", "puncture", "wheel"],
+};
+
 export function rankBusinesses(items: DiscoveryBusiness[], options: { sort?: string; q?: string; minRating?: number; lat?: number; lng?: number; now?: number } = {}): RankedBusiness[] {
   const now = options.now ?? Date.now();
   const query = options.q?.trim().toLocaleLowerCase() ?? "";
   const tokens = query.split(/\s+/).map((t) => t.trim().toLowerCase()).filter((t) => t.length >= 2);
   const stems = tokens.map((t) => t.replace(/(ting|ing|s|es)$/, "")).filter((s) => s.length >= 3);
-  const allTokens = [...new Set([...tokens, ...stems])];
+  const synonyms = tokens.flatMap((t) => SEARCH_SYNONYMS[t] ?? (SEARCH_SYNONYMS[query] ?? []));
+  const allTokens = [...new Set([...tokens, ...stems, ...synonyms])];
 
   const ranked = items.filter((b) => {
     if (options.minRating && (b.ratingAverage ?? 0) < options.minRating) return false;
@@ -171,9 +199,18 @@ export function rankBusinesses(items: DiscoveryBusiness[], options: { sort?: str
     const distanceKm = options.lat !== undefined && options.lng !== undefined && b.latitude !== null && b.longitude !== null ? haversineKm(options.lat, options.lng, b.latitude, b.longitude) : null;
     const name = b.name.toLocaleLowerCase();
     let queryRelevance = !query ? 0 : name === query ? 1 : name.startsWith(query) ? .8 : name.includes(query) ? .6 : .3;
+
+    // Filter matched items for multi-store product discovery
+    const matchedItems = query && b.catalogItems?.length
+      ? b.catalogItems.filter((item) => {
+          const itemText = `${item.name} ${item.category} ${item.description ?? ""}`.toLocaleLowerCase();
+          return itemText.includes(query) || (allTokens.length > 0 && allTokens.some((t) => itemText.includes(t)));
+        })
+      : [];
+
     if (query && b.catalogItems?.length) {
       const exactItem = b.catalogItems.some((item) => item.name.toLocaleLowerCase() === query);
-      const partialItem = b.catalogItems.some((item) => item.name.toLocaleLowerCase().includes(query) || item.category.toLocaleLowerCase().includes(query));
+      const partialItem = matchedItems.length > 0;
       if (exactItem) queryRelevance = Math.max(queryRelevance, 0.9);
       else if (partialItem) queryRelevance = Math.max(queryRelevance, 0.7);
     }
@@ -182,7 +219,7 @@ export function rankBusinesses(items: DiscoveryBusiness[], options: { sort?: str
     // review recency (5%), public profile completeness (5%), optional supplied distance (3%),
     // and query-name relevance (5%). Plans, payments, admin preferences, and private data are excluded.
     const score = (adjustedRating / 5) * .62 + confidence * .2 + recency * .05 + complete * .05 + proximity * .03 + queryRelevance * .05;
-    return { ...b, adjustedRating, distanceKm, score };
+    return { ...b, adjustedRating, distanceKm, score, matchedItems };
   });
   const sort = options.sort ?? "recommended";
   return ranked.sort((a, b) => {
