@@ -146,15 +146,19 @@ export function haversineKm(aLat: number, aLng: number, bLat: number, bLng: numb
 export function rankBusinesses(items: DiscoveryBusiness[], options: { sort?: string; q?: string; minRating?: number; lat?: number; lng?: number; now?: number } = {}): RankedBusiness[] {
   const now = options.now ?? Date.now();
   const query = options.q?.trim().toLocaleLowerCase() ?? "";
+  const tokens = query.split(/\s+/).map((t) => t.trim().toLowerCase()).filter((t) => t.length >= 2);
+  const stems = tokens.map((t) => t.replace(/(ting|ing|s|es)$/, "")).filter((s) => s.length >= 3);
+  const allTokens = [...new Set([...tokens, ...stems])];
+
   const ranked = items.filter((b) => {
     if (options.minRating && (b.ratingAverage ?? 0) < options.minRating) return false;
     if (!query) return true;
-    const baseMatch = `${b.name} ${b.address ?? ""} ${b.locality ?? ""} ${b.city ?? ""}`.toLocaleLowerCase().includes(query);
-    const catalogMatch = b.catalogItems?.some((item) =>
-      item.name.toLocaleLowerCase().includes(query) ||
-      item.category.toLocaleLowerCase().includes(query) ||
-      (item.description && item.description.toLocaleLowerCase().includes(query))
-    );
+    const baseText = `${b.name} ${b.type} ${b.address ?? ""} ${b.locality ?? ""} ${b.city ?? ""}`.toLocaleLowerCase();
+    const baseMatch = baseText.includes(query) || (allTokens.length > 0 && allTokens.some((t) => baseText.includes(t)));
+    const catalogMatch = b.catalogItems?.some((item) => {
+      const itemText = `${item.name} ${item.category} ${item.description ?? ""}`.toLocaleLowerCase();
+      return itemText.includes(query) || (allTokens.length > 0 && allTokens.some((t) => itemText.includes(t)));
+    });
     return baseMatch || Boolean(catalogMatch);
   }).map((b) => {
     const count = b.reviewCount;

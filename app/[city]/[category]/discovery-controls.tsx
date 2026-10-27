@@ -45,7 +45,7 @@ export function DiscoveryControls({
             id="discovery-search-input"
             className={`w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2.5 pl-9 pr-3 text-sm font-medium text-slate-900 transition focus:border-blue-500 focus:bg-white ${controlFocus}`}
             name="q"
-            placeholder="Shop name or locality (e.g. Chhavni)"
+            placeholder="Search dish, service, or shop (e.g. Samosa, Haircut, Chhavni)"
             defaultValue={search}
           />
         </div>
