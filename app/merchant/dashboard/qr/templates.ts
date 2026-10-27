@@ -4,6 +4,9 @@ export const qrTemplateIds = [
   "template_3",
   "template_4",
   "template_5",
+  "template_6",
+  "template_7",
+  "template_8",
 ] as const;
 
 export type QrTemplateId = (typeof qrTemplateIds)[number];
@@ -26,6 +29,9 @@ export const qrTemplates: Array<{
   { id: "template_3", name: "Fresh Portrait", designTheme: "Nature", description: "Clean, light portrait layout", printSize: "4 × 6 in", orientation: "Portrait", ratio: "2 / 3" },
   { id: "template_4", name: "Local Landscape", designTheme: "Heritage", description: "Compact landscape layout with side QR", printSize: "6 × 4 in", orientation: "Landscape", ratio: "3 / 2" },
   { id: "template_5", name: "Modern Landscape", designTheme: "Minimal", description: "Polished landscape layout with side QR", printSize: "6 × 4 in", orientation: "Landscape", ratio: "3 / 2" },
+  { id: "template_6", name: "Royal Gold Portrait", designTheme: "Luxury", description: "Regal gold-accented portrait layout", printSize: "4 × 6 in", orientation: "Portrait", ratio: "2 / 3" },
+  { id: "template_7", name: "Obsidian Slate Landscape", designTheme: "Modern", description: "Sleek obsidian landscape layout", printSize: "6 × 4 in", orientation: "Landscape", ratio: "3 / 2" },
+  { id: "template_8", name: "Minimalist Crest Portrait", designTheme: "Minimal", description: "Modern crest badge portrait layout", printSize: "4 × 6 in", orientation: "Portrait", ratio: "2 / 3" },
 ];
 
 export function getQrTemplatePrintDimensions(templateId: QrTemplateId) {

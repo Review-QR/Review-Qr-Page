@@ -22,9 +22,12 @@ test("all five QR poster exports retain their exact print page dimensions and or
     ["template_3", "4 × 6 in", "Portrait", 4, 6, "portrait"],
     ["template_4", "6 × 4 in", "Landscape", 6, 4, "landscape"],
     ["template_5", "6 × 4 in", "Landscape", 6, 4, "landscape"],
+    ["template_6", "4 × 6 in", "Portrait", 4, 6, "portrait"],
+    ["template_7", "6 × 4 in", "Landscape", 6, 4, "landscape"],
+    ["template_8", "4 × 6 in", "Portrait", 4, 6, "portrait"],
   ];
 
-  assert.equal(qrTemplates.length, 5);
+  assert.equal(qrTemplates.length, 8);
   for (const [id, size, orientation, widthIn, heightIn, cssOrientation] of expected) {
     const template = qrTemplates.find((item) => item.id === id);
     assert.ok(template);

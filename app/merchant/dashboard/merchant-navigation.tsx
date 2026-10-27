@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import NotificationPanel from "./notifications/notification-panel";
+import { normalizePlanTier } from "@/lib/plan-rules";
 
 const items = [
   { href: "/merchant/dashboard", label: "Dashboard", icon: "dashboard" },
@@ -40,10 +41,12 @@ export default function MerchantNavigation({
   mobile = false,
   hasUnreadNotifications = false,
   isPremium = false,
+  plan = null,
 }: {
   mobile?: boolean;
   hasUnreadNotifications?: boolean;
   isPremium?: boolean;
+  plan?: string | null;
 }) {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
@@ -55,15 +58,24 @@ export default function MerchantNavigation({
     return () => window.removeEventListener("hashchange", updateHash);
   }, []);
 
+  const isBasic = !plan || normalizePlanTier(plan) === "basic";
+  const visibleItems = isBasic
+    ? items.filter(
+        (item) =>
+          item.href !== "/merchant/dashboard/menu" &&
+          item.href !== "/merchant/dashboard/messages" &&
+          !item.href.includes("#scan-analytics"),
+      )
+    : items;
+
   return (
     <nav aria-label="Merchant navigation" className={mobile ? "merchant-mobile-nav" : "merchant-nav"}>
-      {items.map((item) => {
+      {visibleItems.map((item) => {
         const active = item.href.endsWith("#scan-analytics")
           ? pathname === "/merchant/dashboard" && hash === "#scan-analytics"
           : item.href === "/merchant/dashboard"
             ? pathname === item.href && hash !== "#scan-analytics"
             : pathname === item.href || pathname.startsWith(`${item.href}/`);
-        const isMessages = item.href === "/merchant/dashboard/messages";
         const link = (
           <Link
             href={item.href}
@@ -73,11 +85,6 @@ export default function MerchantNavigation({
           >
             <span className="relative inline-flex"><NavigationIcon name={item.icon} /></span>
             <span>{item.label}</span>
-            {isMessages && !isPremium && (
-              <span className="ml-auto inline-flex items-center gap-0.5 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-800" title="Premium plan (₹99) only">
-                🔒
-              </span>
-            )}
           </Link>
         );
         return item.icon === "reviews" ? (

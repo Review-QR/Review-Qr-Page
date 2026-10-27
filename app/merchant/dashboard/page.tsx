@@ -2,6 +2,7 @@ import Link from "next/link";
 import { appConfig } from "@/lib/config";
 import { isPublicDiscoveryLocationComplete } from "@/lib/business-location";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
+import { normalizePlanTier } from "@/lib/plan-rules";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import MyQrCode from "./my-qr-code";
 import ScanAnalytics from "./scan-analytics";
@@ -83,6 +84,7 @@ const actions = [
 
 export default async function MerchantDashboardPage() {
   const merchant = await requireActiveMerchant();
+  const isPremium = normalizePlanTier(merchant.plan) === "premium";
   let designAssets: Awaited<ReturnType<typeof getPersistedBusinessQrDesignAssets>> | undefined;
   let designAssetError: string | undefined;
   try {
@@ -141,7 +143,7 @@ export default async function MerchantDashboardPage() {
 
   return (
     <div className="merchant-dashboard-page">
-      <section className={`merchant-hero${sweetsBusiness ? " merchant-hero--sweets" : ""}`}>
+      <section className={`merchant-hero${isPremium ? " merchant-hero--premium" : sweetsBusiness ? " merchant-hero--sweets" : ""}`}>
         <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border-[40px] border-white/5" /><div aria-hidden="true" className="pointer-events-none absolute -bottom-28 left-1/2 h-72 w-72 rounded-full bg-blue-400/10 blur-3xl" />
         <div className="relative flex min-w-0 flex-wrap items-start justify-between gap-5">
           <div className="min-w-0">
@@ -149,7 +151,18 @@ export default async function MerchantDashboardPage() {
               <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
               {greeting()} · Merchant Dashboard
             </div>
-            <h1 className="mt-3 break-words text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">{merchant.businessName}</h1>
+            <h1 className="mt-3 inline-flex flex-wrap items-center gap-2.5 break-words text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
+              <span>{merchant.businessName}</span>
+              {isPremium && (
+                <span
+                  className="premium-gold-badge inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-gradient-to-r from-amber-500/25 via-yellow-400/20 to-amber-600/25 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.25)] backdrop-blur-md"
+                  title="Trustit VIP Merchant"
+                >
+                  <span aria-hidden="true" className="text-sm">👑</span>
+                  <span>VIP Merchant</span>
+                </span>
+              )}
+            </h1>
             <p className="mt-2 text-sm text-slate-200">Here’s how your business and QR scans are performing.</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-100">
@@ -160,9 +173,15 @@ export default async function MerchantDashboardPage() {
                 <span>{categoryEmoji}</span>
                 <span>{merchant.businessType || "Business"}</span>
               </span>
-              <span className="rounded-full bg-blue-500/25 border border-blue-400/30 px-3 py-1.5 text-xs font-semibold text-blue-100">
-                {merchant.plan || "Standard"} Plan
-              </span>
+              {isPremium ? (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/30 to-yellow-500/30 border border-amber-400/50 px-3 py-1.5 text-xs font-bold text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
+                  <span>👑</span> Premium Plan
+                </span>
+              ) : (
+                <span className="rounded-full bg-blue-500/25 border border-blue-400/30 px-3 py-1.5 text-xs font-semibold text-blue-100">
+                  {merchant.plan || "Standard"} Plan
+                </span>
+              )}
             </div>
           </div>
           <div className="merchant-profile">

@@ -3,6 +3,7 @@ import { merchantSignOutAction } from "@/app/merchant/login/actions";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import MerchantNavigation from "./merchant-navigation";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
+import { normalizePlanTier } from "@/lib/plan-rules";
 import "./dashboard.css";
 
 export const dynamic = "force-dynamic";
@@ -31,10 +32,10 @@ export default async function MerchantDashboardLayout({ children }: { children: 
   const { count: unreadCount } = await supabase.from("merchant_notifications")
     .select("id", { count: "exact", head: true }).eq("business_id", merchant.businessId).eq("is_read", false);
   const hasUnreadNotifications = (unreadCount ?? 0) > 0;
-  const isPremium = merchant.plan?.trim().toLowerCase() === "premium";
+  const isPremium = normalizePlanTier(merchant.plan) === "premium";
 
   return (
-    <div className="trustit-merchant-app">
+    <div className={`trustit-merchant-app${isPremium ? " is-premium-vip" : ""}`}>
       <aside className="merchant-sidebar">
         <Link href="/merchant/dashboard" className="merchant-brand">
           <img src="/trustit-icon.svg" alt="" width="42" height="42" />
@@ -44,13 +45,20 @@ export default async function MerchantDashboardLayout({ children }: { children: 
         <div className="merchant-identity">
           <span className="merchant-identity__avatar" aria-hidden="true">{merchantIcon(merchant.businessType)}</span>
           <span className="merchant-identity__copy">
-            <strong>{merchant.businessName}</strong>
+            <span className="flex items-center gap-1.5">
+              <strong>{merchant.businessName}</strong>
+              {isPremium && (
+                <span title="Trustit VIP Merchant" aria-label="VIP Merchant" className="inline-flex items-center text-amber-400">
+                  👑
+                </span>
+              )}
+            </span>
             <small>{merchant.businessId}</small>
             <span className="merchant-active-pill"><i /> Active Merchant</span>
           </span>
         </div>
 
-        <MerchantNavigation hasUnreadNotifications={hasUnreadNotifications} isPremium={isPremium} />
+        <MerchantNavigation hasUnreadNotifications={hasUnreadNotifications} isPremium={isPremium} plan={merchant.plan} />
 
         <div className="merchant-sidebar__footer">
           <div className="merchant-help-icon" aria-hidden="true">?</div>
@@ -70,7 +78,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
           </Link>
           <form action={merchantSignOutAction}><button type="submit">Log out</button></form>
         </div>
-        <MerchantNavigation mobile hasUnreadNotifications={hasUnreadNotifications} isPremium={isPremium} />
+        <MerchantNavigation mobile hasUnreadNotifications={hasUnreadNotifications} isPremium={isPremium} plan={merchant.plan} />
         <main className="merchant-content">{children}</main>
       </div>
     </div>

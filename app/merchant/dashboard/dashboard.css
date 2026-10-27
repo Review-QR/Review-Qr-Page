@@ -607,3 +607,84 @@
   .merchant-template-panel .merchant-template-grid { grid-template-columns: minmax(0, 1fr); }
   .merchant-template-panel .merchant-template-grid .merchant-template-tile--landscape { grid-column: auto; }
 }
+
+/* Premium Plan (₹99) VIP Styling: Royal Gold & Obsidian with subtle glassmorphic gold accents */
+.trustit-merchant-app.is-premium-vip {
+  --merchant-vip-gold: #f59e0b;
+  --merchant-vip-gold-glow: rgba(245, 158, 11, 0.18);
+  --merchant-vip-obsidian: #0b0d13;
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-sidebar {
+  border-right-color: rgba(245, 158, 11, 0.25);
+  background: linear-gradient(180deg, #0d0f15 0%, #08090d 100%);
+  color: #f8fafc;
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-brand strong {
+  color: #ffffff;
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-identity {
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(15, 23, 42, 0.85) 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(251, 191, 36, 0.25);
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-identity__avatar {
+  background: linear-gradient(135deg, #d97706, #f59e0b);
+  color: #0b0d13;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-identity__copy strong {
+  color: #ffffff;
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-active-pill {
+  border-color: rgba(245, 158, 11, 0.45);
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.18);
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-active-pill i {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-nav__link {
+  color: #94a3b8;
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-nav__link:hover {
+  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-nav__link.is-active {
+  color: #fbbf24;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0.04) 100%);
+  border-left: 3px solid #f59e0b;
+}
+
+.merchant-hero.merchant-hero--premium {
+  background: radial-gradient(circle at top right, rgba(217, 119, 6, 0.25), transparent 45%),
+              radial-gradient(circle at bottom left, rgba(245, 158, 11, 0.18), transparent 40%),
+              linear-gradient(135deg, #07080c 0%, #101322 50%, #0a0c14 100%) !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(251, 191, 36, 0.3) !important;
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-stat {
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(254, 243, 199, 0.25));
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 0 14px rgba(245, 158, 11, 0.06);
+}
+
+.trustit-merchant-app.is-premium-vip .merchant-lower-panel,
+.trustit-merchant-app.is-premium-vip .merchant-analytics-grid > section,
+.trustit-merchant-app.is-premium-vip .merchant-data-grid > section,
+.trustit-merchant-app.is-premium-vip .merchant-data-panel {
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.04), 0 0 16px rgba(245, 158, 11, 0.04);
+}

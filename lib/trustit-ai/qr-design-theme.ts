@@ -166,6 +166,9 @@ const experienceNames: Record<QrTemplateId, string> = {
   template_3: "Fresh portrait experience",
   template_4: "Local landscape experience",
   template_5: "Modern landscape experience",
+  template_6: "Royal gold portrait experience",
+  template_7: "Obsidian slate landscape experience",
+  template_8: "Minimalist crest portrait experience",
 };
 
 const compositionSafety = "Premium, polished illustration suitable for a Trustit QR poster background. Keep a calm clean scan-safe region across the lower-right third, with low visual detail and strong quiet space. Do not draw a QR code or any machine-readable pattern. No logos, watermarks, business names, lettering, fake signage, UI screenshots, or clutter. Keep the subject away from the reserved scan-safe region.";
@@ -183,7 +186,7 @@ export type CustomCategoryVisual = { name: string; themes: readonly { palette: r
 export function getThemeVisualPrompts(value: string | null | undefined, categoryConfig?: CustomCategoryVisual | null): QrVisualPrompt[] {
   const theme = resolveBusinessTheme(value);
   const category = getBusinessCategory(value);
-  return qrTemplateIds.map((templateId, index) => {
+  return qrTemplateIds.slice(0, 5).map((templateId, index) => {
     const categoryTheme = category?.themes[index];
     const customTheme = categoryConfig?.themes[index];
     const promptPalette = customTheme?.palette ?? theme.palette;
