@@ -65,6 +65,12 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
 
           <nav className="flex items-center gap-2 sm:gap-3" aria-label="Main navigation">
             <Link
+              href="/order"
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-xs font-black text-white shadow-sm shadow-orange-500/25 transition hover:from-amber-600 hover:to-orange-600"
+            >
+              <span>⚡ Super-App</span>
+            </Link>
+            <Link
               href="/trustit"
               className="hidden rounded-xl px-3 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 sm:inline-flex"
             >
@@ -114,6 +120,39 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
           <div className="mx-auto mt-8 max-w-4xl" aria-label="Search local businesses">
             {/* Contract compatibility: name="city" name="category" name="q" Search local businesses */}
             <HomeHeroSearch defaultCity={city || "Bahraich"} defaultQuery={term} />
+          </div>
+
+          {/* ── Super-App Quick Action Banner ── */}
+          <div className="mx-auto mt-6 max-w-4xl">
+            <Link
+              href="/order"
+              className="group flex flex-col sm:flex-row items-center justify-between gap-3 rounded-3xl border border-amber-300 bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100/70 p-4 text-left shadow-md transition hover:border-amber-400 hover:shadow-lg"
+            >
+              <div className="flex items-center gap-3.5">
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-xl text-white shadow-md shadow-orange-500/30">
+                  ⚡
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block rounded-md bg-amber-200/80 px-2 py-0.5 text-[10px] font-black uppercase text-amber-950">
+                      Trustit Hyperlocal Super-App
+                    </span>
+                    <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                      Live in {city ? city.charAt(0).toUpperCase() + city.slice(1) : "Bahraich"}
+                    </span>
+                  </div>
+                  <div className="text-sm sm:text-base font-black text-slate-900 group-hover:text-orange-700 transition mt-0.5">
+                    Food Delivery · Salon Queue Token · Car Wash Bay · Kirana Parcha
+                  </div>
+                  <p className="text-xs text-slate-600">
+                    Bina line me lage number lagayein, rashan parcha upload karein ya restaurant se garam khana mangwayen.
+                  </p>
+                </div>
+              </div>
+              <span className="shrink-0 rounded-2xl bg-orange-600 px-5 py-2.5 text-xs font-black text-white shadow-md group-hover:bg-orange-700 transition">
+                Open Super-App →
+              </span>
+            </Link>
           </div>
 
             {/* Quick popular city tags */}
