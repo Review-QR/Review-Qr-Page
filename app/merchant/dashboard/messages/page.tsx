@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import MessageDesigner from "./message-designer";
-import { getMerchantMessages } from "./actions";
+import { getMerchantMessages, getMerchantCatalogItems, getMerchantSocialIntegration } from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +56,21 @@ export default async function MerchantMessagesPage() {
     );
   }
 
-  const saved = await getMerchantMessages();
-  return <MessageDesigner businessName={merchant.businessName} businessType={merchant.businessType} saved={saved} />;
+  const [saved, catalogItems, socialIntegration] = await Promise.all([
+    getMerchantMessages(),
+    getMerchantCatalogItems(),
+    getMerchantSocialIntegration(),
+  ]);
+
+  return (
+    <MessageDesigner
+      businessName={merchant.businessName}
+      businessType={merchant.businessType}
+      city={merchant.city ?? "Bahraich"}
+      phone={merchant.registeredMobile ?? ""}
+      saved={saved}
+      catalogItems={catalogItems}
+      socialIntegration={socialIntegration}
+    />
+  );
 }
