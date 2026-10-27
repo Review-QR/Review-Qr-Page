@@ -589,8 +589,8 @@ export default function RiderAppPage() {
 
         {/* Active Order Card or Clean Radar Waiting */}
         {activeOrder ? (
-          <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-slate-900 to-indigo-950/60 p-3.5 space-y-2.5 shadow-lg">
-            <div className="flex items-center justify-between">
+          <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-slate-900 to-indigo-950/60 p-3.5 space-y-3 shadow-lg">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <span className="rounded-md bg-indigo-600 px-2 py-0.5 text-[10px] font-black text-white">
                 ACTIVE #{activeOrder.id.slice(-6)}
               </span>
@@ -599,49 +599,109 @@ export default function RiderAppPage() {
               </span>
             </div>
 
-            {/* Shop Info */}
-            <div className="rounded-xl bg-slate-850 p-2.5 text-xs space-y-0.5">
-              <div className="flex justify-between font-bold text-white">
+            {/* Leg 1: Restaurant Pickup Information */}
+            <div className="rounded-xl bg-slate-850 p-2.5 text-xs space-y-1.5 border border-slate-800">
+              <div className="flex justify-between items-center font-bold text-white">
                 <span>🍽️ {activeOrder.business?.name || "Restaurant"}</span>
-                <a href={`tel:${activeOrder.business?.phone}`} className="text-amber-400 text-[11px] underline">
-                  Call Shop
-                </a>
+                {activeOrder.business?.phone && (
+                  <a href={`tel:${activeOrder.business.phone}`} className="text-amber-400 text-[11px] underline">
+                    📞 Call Shop
+                  </a>
+                )}
               </div>
               <p className="text-[10px] text-slate-400 line-clamp-1">{activeOrder.business?.address}</p>
+
+              {/* Navigation Leg 1 */}
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                  (activeOrder.business?.address || activeOrder.business?.name || "Bahraich") + ", UP",
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-400 hover:text-blue-300 pt-0.5"
+              >
+                <span>📍 Google Maps to Restaurant</span>
+                <span>↗</span>
+              </a>
             </div>
 
-            {/* Customer Info */}
-            <div className="rounded-xl bg-slate-850 p-2.5 text-xs space-y-0.5">
-              <div className="flex justify-between font-bold text-white">
-                <span>📍 {activeOrder.customer_name}</span>
+            {/* Leg 2: Customer Doorstep Information */}
+            <div className="rounded-xl bg-slate-850 p-2.5 text-xs space-y-1.5 border border-slate-800">
+              <div className="flex justify-between items-center font-bold text-white">
+                <span>👤 {activeOrder.customer_name}</span>
                 <a href={`tel:${activeOrder.customer_phone}`} className="text-amber-400 text-[11px] underline">
-                  Call Customer
+                  📞 Call Customer
                 </a>
               </div>
               <p className="text-[10px] text-slate-400">
                 {activeOrder.customer_address?.street}, {activeOrder.customer_address?.city}
               </p>
-              <div className="flex justify-between items-center pt-1.5 mt-1 border-t border-slate-800 text-[11px]">
-                <span className="text-slate-300">Collect Cash:</span>
-                <span className="font-black text-amber-400">₹{activeOrder.total_amount}</span>
+
+              {/* Navigation Leg 2 */}
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                  activeOrder.customer_address?.street + ", " + activeOrder.customer_address?.city,
+                )}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300 pt-0.5"
+              >
+                <span>📍 Google Maps to Customer Doorstep</span>
+                <span>↗</span>
+              </a>
+
+              {/* Cash Collection Alert */}
+              <div className="flex justify-between items-center pt-2 mt-1 border-t border-slate-800 text-[11px]">
+                <span className="text-slate-300">
+                  {activeOrder.payment_mode === "cod" ? "💵 Collect Cash on Delivery:" : "⚡ Paid Online:"}
+                </span>
+                <span className="font-black text-amber-400 text-xs">₹{activeOrder.total_amount}</span>
               </div>
             </div>
 
-            {/* Action Buttons */}
+            {/* Order Items Preview */}
+            {activeOrder.hyperlocal_order_items && activeOrder.hyperlocal_order_items.length > 0 && (
+              <div className="p-2 bg-slate-850 rounded-xl text-[11px] space-y-1 text-slate-300">
+                <span className="text-[9px] font-bold text-slate-400 uppercase block">Items to Pickup</span>
+                {activeOrder.hyperlocal_order_items.map((i, idx) => (
+                  <div key={idx} className="flex justify-between">
+                    <span>{i.quantity}x {i.item_name}</span>
+                    <span>₹{i.total_price}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Action State: 1. Pickup from Shop vs 2. OTP Delivery Handover */}
             {activeOrder.status === "rider_assigned" ? (
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={handleMarkPickedUp}
-                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-xs font-bold text-white shadow-md hover:from-blue-500 hover:to-indigo-500 transition"
-              >
-                {isSubmitting ? "Updating..." : "1. Confirm Pickup from Shop →"}
-              </button>
+              <div className="space-y-2">
+                <div className="rounded-xl bg-blue-500/10 border border-blue-500/30 p-2 text-center text-[11px] text-blue-300 font-medium">
+                  Step 1: Go to restaurant & collect food parcel.
+                </div>
+                <button
+                  type="button"
+                  disabled={isSubmitting}
+                  onClick={handleMarkPickedUp}
+                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-xs font-bold text-white shadow-md hover:from-blue-500 hover:to-indigo-500 transition"
+                >
+                  {isSubmitting ? "Updating..." : "1. Confirm Pickup from Shop →"}
+                </button>
+              </div>
             ) : (
-              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-2.5 space-y-2">
-                <span className="text-[10px] font-bold text-amber-300 block">
-                  2. Delivery Handover: Enter 4-Digit Customer OTP
-                </span>
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 space-y-2.5">
+                {activeOrder.payment_mode === "cod" && (
+                  <div className="rounded-lg bg-amber-400/20 border border-amber-400/40 p-2 text-center text-xs font-bold text-amber-300">
+                    💵 Collect ₹{activeOrder.total_amount} Cash from customer before submitting OTP!
+                  </div>
+                )}
+                <div>
+                  <span className="text-[11px] font-bold text-amber-300 block">
+                    Step 2: Ask customer for 4-Digit Delivery OTP
+                  </span>
+                  <p className="text-[10px] text-slate-400">
+                    Shown in customer's Trustit app under "My Bookings"
+                  </p>
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="tel"
@@ -649,13 +709,13 @@ export default function RiderAppPage() {
                     placeholder="4-digit OTP"
                     value={enteredOtp}
                     onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, ""))}
-                    className="w-full rounded-lg border border-amber-500/60 bg-slate-900 py-1.5 text-center font-mono text-sm font-bold tracking-widest text-amber-300 focus:outline-none"
+                    className="w-full rounded-lg border border-amber-500/60 bg-slate-900 py-2 text-center font-mono text-sm font-bold tracking-widest text-amber-300 focus:outline-none"
                   />
                   <button
                     type="button"
                     disabled={isSubmitting || enteredOtp.length !== 4}
                     onClick={handleCompleteWithOtp}
-                    className="rounded-lg bg-amber-400 px-4 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-300 disabled:opacity-50 transition"
+                    className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-300 disabled:opacity-50 transition shrink-0"
                   >
                     {isSubmitting ? "..." : "Verify & Complete"}
                   </button>
