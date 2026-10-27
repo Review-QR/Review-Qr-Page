@@ -13,6 +13,18 @@ export async function GET() {
     theme_color: "#1d4ed8",
     icons: [
       {
+        src: "/customer-icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any maskable",
+      },
+      {
+        src: "/customer-icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any maskable",
+      },
+      {
         src: "/trustit-icon.svg",
         sizes: "any",
         type: "image/svg+xml",
