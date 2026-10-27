@@ -18,6 +18,7 @@ export const PLAN_ALLOWED_TEMPLATES_COUNT: Record<PlanTier, number> = {
 export const RESTRICTED_ROUTES_FOR_BASIC = [
   "/merchant/dashboard/menu",
   "/merchant/dashboard/messages",
+  "/merchant/dashboard/orders",
 ] as const;
 
 export const BASIC_PLAN_NAV_ITEMS = [

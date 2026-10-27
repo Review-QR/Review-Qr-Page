@@ -9,6 +9,7 @@ import { normalizePlanTier } from "@/lib/plan-rules";
 const items = [
   { href: "/merchant/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/merchant/dashboard/business", label: "My Business", icon: "business" },
+  { href: "/merchant/dashboard/orders", label: "Live Orders & Queue", icon: "orders" },
   { href: "/merchant/dashboard/menu", label: "Menu & Items", icon: "menu" },
   { href: "/merchant/dashboard/qr", label: "My QR Code", icon: "qr" },
   { href: "/merchant/dashboard/products", label: "QR Standees & Kits", icon: "products" },
@@ -25,6 +26,7 @@ function NavigationIcon({ name }: { name: string }) {
   const paths: Record<string, React.ReactNode> = {
     dashboard: <><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></>,
     business: <><path d="M3 10h18v10H3zM2 10l2-6h16l2 6" /><path d="M8 20v-6h8v6M6 7h.01M10 7h.01M14 7h.01M18 7h.01" /></>,
+    orders: <><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></>,
     menu: <><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z" /><path d="M6 6h10M6 10h10M6 14h6" /></>,
     qr: <><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM19 14v2M21 19v2h-4" /><path d="M6 6h1M17 6h1M6 17h1" /></>,
     products: <><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></>,
@@ -62,6 +64,7 @@ export default function MerchantNavigation({
   const visibleItems = isBasic
     ? items.filter(
         (item) =>
+          item.href !== "/merchant/dashboard/orders" &&
           item.href !== "/merchant/dashboard/menu" &&
           item.href !== "/merchant/dashboard/messages" &&
           !item.href.includes("#scan-analytics"),
