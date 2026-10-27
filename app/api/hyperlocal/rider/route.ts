@@ -8,15 +8,22 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const riderId = searchParams.get("riderId") || "33333333-3333-4333-a333-333333333301";
+  const riderId = searchParams.get("riderId");
+  const phone = searchParams.get("phone");
 
   const admin = createSupabaseAdminClient();
+  let query = admin.from("delivery_riders").select("*");
 
-  const { data: rider, error: riderErr } = await admin
-    .from("delivery_riders")
-    .select("*")
-    .eq("id", riderId)
-    .maybeSingle();
+  if (riderId) {
+    query = query.eq("id", riderId);
+  } else if (phone) {
+    const clean = phone.replace(/\D/g, "").slice(-10);
+    query = query.or(`phone.eq.${clean},phone.eq.+91${clean}`);
+  } else {
+    query = query.eq("id", "33333333-3333-4333-a333-333333333301");
+  }
+
+  const { data: rider, error: riderErr } = await query.maybeSingle();
 
   if (riderErr || !rider) {
     return Response.json({ error: "Rider not found" }, { status: 404 });
@@ -30,7 +37,7 @@ export async function GET(request: Request) {
       hyperlocal_order_items (*),
       businesses (name, city, address, phone, location_latitude, location_longitude)
     `)
-    .eq("rider_id", riderId)
+    .eq("rider_id", rider.id)
     .in("status", ["rider_assigned", "picked_up", "out_for_delivery"])
     .maybeSingle();
 
@@ -59,6 +66,66 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, riderId, orderId } = body;
     const admin = createSupabaseAdminClient();
+
+    if (action === "login") {
+      const cleanPhone = String(body.phone || "").replace(/\D/g, "").slice(-10);
+      if (cleanPhone.length < 10) {
+        return Response.json(
+          { success: false, error: "Please enter a valid 10-digit mobile number." },
+          { status: 400 },
+        );
+      }
+
+      const { data: rider } = await admin
+        .from("delivery_riders")
+        .select("*")
+        .or(`phone.eq.${cleanPhone},phone.eq.+91${cleanPhone}`)
+        .maybeSingle();
+
+      if (!rider) {
+        return Response.json(
+          {
+            success: false,
+            notRegistered: true,
+            error: "Rider is not registered with this number. Please register as a new partner.",
+          },
+          { status: 404 },
+        );
+      }
+
+      return Response.json({ success: true, rider });
+    }
+
+    if (action === "register") {
+      const { fullName, phone, vehicleType, vehicleNumber } = body;
+      const cleanPhone = String(phone || "").replace(/\D/g, "").slice(-10);
+      if (!fullName?.trim() || cleanPhone.length < 10) {
+        return Response.json(
+          { success: false, error: "Full Name and 10-digit mobile number are required." },
+          { status: 400 },
+        );
+      }
+
+      const { data: newRider, error: regError } = await admin
+        .from("delivery_riders")
+        .insert({
+          full_name: fullName.trim(),
+          phone: `+91${cleanPhone}`,
+          vehicle_type: vehicleType || "bike",
+          vehicle_number: (vehicleNumber || "UP-40-TEMP").toUpperCase().trim(),
+          is_online: true,
+          is_available: true,
+          rating: 5.0,
+        })
+        .select()
+        .single();
+
+      if (regError) {
+        return Response.json({ success: false, error: regError.message }, { status: 400 });
+      }
+
+      return Response.json({ success: true, rider: newRider });
+    }
 
     if (action === "update_gps") {
       const { latitude, longitude } = body;

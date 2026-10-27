@@ -90,6 +90,7 @@ export default function CustomerSuperAppClient({
   const [customerName, setCustomerName] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [customerAddress, setCustomerAddress] = useState<string>("");
+  const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
   const [isDetectingGps, setIsDetectingGps] = useState(false);
 
   // Cart for Food & Sweets
@@ -514,13 +515,29 @@ export default function CustomerSuperAppClient({
               onClick={() => setIsMyBookingsOpen(true)}
               className="relative inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition"
             >
-              <span>📋 My Bookings & Passes</span>
+              <span>📋 My Bookings</span>
               {totalActiveCount > 0 && (
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-slate-950 animate-pulse">
                   {totalActiveCount}
                 </span>
               )}
             </button>
+
+            {customerPhone ? (
+              <button
+                onClick={() => setIsCustomerLoginOpen(true)}
+                className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-xs hover:bg-slate-50 transition"
+              >
+                <span>👤 {customerName ? customerName.split(" ")[0] : "Account"}</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => setIsCustomerLoginOpen(true)}
+                className="flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-2 text-xs font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-700 transition"
+              >
+                <span>👤 Log In</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -1540,6 +1557,189 @@ export default function CustomerSuperAppClient({
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Customer Account & Login Modal ── */}
+      {isCustomerLoginOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-black uppercase text-blue-800">
+                  Customer Profile
+                </span>
+                <h3 className="text-lg font-black text-slate-900">
+                  {customerPhone ? "My Customer Account" : "Sign In to Super-App"}
+                </h3>
+              </div>
+              <button
+                onClick={() => setIsCustomerLoginOpen(false)}
+                className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            {customerPhone ? (
+              <div className="mt-4 space-y-4">
+                <div className="rounded-2xl bg-blue-50/70 border border-blue-100 p-4 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-black text-slate-900">{customerName || "Customer"}</span>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      Active Account
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 font-mono">📱 +91 {customerPhone}</p>
+                  {customerAddress && <p className="text-xs text-slate-500 pt-1">📍 {customerAddress}</p>}
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsCustomerLoginOpen(false);
+                      setIsMyBookingsOpen(true);
+                    }}
+                    className="flex-1 rounded-2xl bg-slate-900 py-3 text-xs font-black text-white shadow-md hover:bg-slate-800 transition"
+                  >
+                    View My Bookings & Passes →
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      try {
+                        localStorage.removeItem("trustit_cust_name");
+                        localStorage.removeItem("trustit_cust_phone");
+                        localStorage.removeItem("trustit_cust_addr");
+                      } catch {}
+                      setCustomerName("");
+                      setCustomerPhone("");
+                      setCustomerAddress("");
+                      setActiveOrders([]);
+                      setActiveTokens([]);
+                      setActiveParchas([]);
+                      setIsCustomerLoginOpen(false);
+                    }}
+                    className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-4 space-y-4">
+                <p className="text-xs text-slate-500">
+                  Enter your mobile number to sync your food orders, salon queue tokens, and kirana parchas automatically.
+                </p>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Your Full Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Ramesh Kumar"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number (10 digits)</label>
+                  <div className="flex rounded-xl border border-slate-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+                    <span className="px-3 py-2 bg-slate-50 text-xs font-bold text-slate-500 border-r border-slate-200">
+                      +91
+                    </span>
+                    <input
+                      type="tel"
+                      placeholder="e.g. 9876543210"
+                      value={customerPhone}
+                      onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      className="w-full px-3 py-2 text-xs text-slate-900 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-slate-700">Delivery Address</label>
+                    <button
+                      type="button"
+                      onClick={handleDetectGps}
+                      className="text-[10px] font-bold text-blue-600 hover:underline"
+                    >
+                      📍 {isDetectingGps ? "Detecting GPS..." : "Auto-fill with GPS"}
+                    </button>
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="House/Shop No., Mohalla, Landmark, Bahraich"
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  />
+                </div>
+
+                {/* 1-Tap Quick Select Pills */}
+                <div>
+                  <span className="block text-[11px] font-semibold text-slate-400 mb-1.5">
+                    ⚡ Quick 1-Tap Customer Profiles:
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name = "Ramesh Kumar";
+                        const phone = "9876543210";
+                        const addr = "Civil Lines, Near KDC Chauraha, Bahraich";
+                        setCustomerName(name);
+                        setCustomerPhone(phone);
+                        setCustomerAddress(addr);
+                        saveCustomerProfile(name, phone, addr);
+                        fetchActiveBookings(phone);
+                        setIsCustomerLoginOpen(false);
+                      }}
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-left hover:border-blue-400 hover:bg-blue-50 transition"
+                    >
+                      <div className="text-xs font-bold text-slate-900">Ramesh Kumar</div>
+                      <div className="text-[10px] text-slate-500">+91 98765 43210</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const name = "Priya Sharma";
+                        const phone = "9876543211";
+                        const addr = "Hospital Road, Salarganj, Bahraich";
+                        setCustomerName(name);
+                        setCustomerPhone(phone);
+                        setCustomerAddress(addr);
+                        saveCustomerProfile(name, phone, addr);
+                        fetchActiveBookings(phone);
+                        setIsCustomerLoginOpen(false);
+                      }}
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-left hover:border-blue-400 hover:bg-blue-50 transition"
+                    >
+                      <div className="text-xs font-bold text-slate-900">Priya Sharma</div>
+                      <div className="text-[10px] text-slate-500">+91 98765 43211</div>
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  disabled={customerPhone.length < 10}
+                  onClick={() => {
+                    saveCustomerProfile(customerName || "Customer", customerPhone, customerAddress);
+                    fetchActiveBookings(customerPhone);
+                    setIsCustomerLoginOpen(false);
+                  }}
+                  className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3 text-xs font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50 transition"
+                >
+                  Save & Log In →
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
