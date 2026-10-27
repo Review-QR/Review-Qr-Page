@@ -30,18 +30,44 @@ function categoryIconEmoji(type: string): string {
   if (t.includes("restaurant") || t.includes("dining") || t.includes("food") || t.includes("cafe")) return "🍽️";
   if (t.includes("salon") || t.includes("beauty") || t.includes("spa") || t.includes("barber")) return "✂️";
   if (t.includes("clinic") || t.includes("doctor") || t.includes("health") || t.includes("dental") || t.includes("hospital")) return "🩺";
+  if (t.includes("pharmacy") || t.includes("medical") || t.includes("chemist")) return "💊";
   if (t.includes("hotel") || t.includes("stay") || t.includes("resort") || t.includes("guest")) return "🏨";
   if (t.includes("grocery") || t.includes("kirana") || t.includes("supermarket") || t.includes("mart")) return "🛒";
   if (t.includes("bakery") || t.includes("cake")) return "🍞";
   if (t.includes("fashion") || t.includes("cloth") || t.includes("boutique") || t.includes("wear")) return "🛍️";
-  if (t.includes("auto") || t.includes("car") || t.includes("bike") || t.includes("repair")) return "🚗";
+  if (t.includes("auto") || t.includes("car") || t.includes("bike") || t.includes("garage") || t.includes("repair")) return "🚗";
+  if (t.includes("hardware") || t.includes("paint") || t.includes("cement") || t.includes("pipe")) return "🔨";
+  if (t.includes("electronics") || t.includes("mobile")) return "📱";
   if (t.includes("education") || t.includes("school") || t.includes("coach") || t.includes("class")) return "🎓";
   if (t.includes("jewel") || t.includes("gold")) return "💍";
-  if (t.includes("electronics") || t.includes("mobile")) return "📱";
   return "🏪";
 }
 
+const ALL_DISCOVERY_CATEGORIES = [
+  { slug: "grocery-stores", name: "Grocery & Mart", icon: "🛒" },
+  { slug: "sweet-shops", name: "Sweet Shops", icon: "🍰" },
+  { slug: "restaurants", name: "Restaurants", icon: "🍽️" },
+  { slug: "pharmacies", name: "Pharmacies", icon: "💊" },
+  { slug: "salons", name: "Salons & Spa", icon: "✂️" },
+  { slug: "clinics", name: "Clinics & Doctors", icon: "🩺" },
+  { slug: "mobile-shops", name: "Mobile & Tech", icon: "📱" },
+  { slug: "auto-services", name: "Auto & Garage", icon: "🚗" },
+  { slug: "hardware-stores", name: "Hardware & Paints", icon: "🔨" },
+  { slug: "clothing-stores", name: "Clothing & Fashion", icon: "🛍️" },
+  { slug: "hotels", name: "Hotels & Stays", icon: "🏨" },
+];
+
 const CATEGORY_QUICK_FILTERS: Record<string, Array<{ label: string; q: string; icon: string }>> = {
+  "grocery-stores": [
+    { label: "All Essentials", q: "", icon: "🛒" },
+    { label: "Detergent & Surf", q: "detergent", icon: "🧼" },
+    { label: "Atta & Rice", q: "atta", icon: "🌾" },
+    { label: "Oil & Ghee", q: "ghee", icon: "🫒" },
+    { label: "Dals & Pulses", q: "dal", icon: "🥣" },
+    { label: "Tea & Spices", q: "tea", icon: "☕" },
+    { label: "Bathing Soap", q: "soap", icon: "🫧" },
+    { label: "Biscuits & Snacks", q: "biscuit", icon: "🍪" },
+  ],
   "sweet-shops": [
     { label: "All Sweets", q: "", icon: "🍰" },
     { label: "Kaju Katli", q: "kaju", icon: "💎" },
@@ -78,18 +104,54 @@ const CATEGORY_QUICK_FILTERS: Record<string, Array<{ label: string; q: string; i
     { label: "Physiotherapy", q: "physio", icon: "🦴" },
     { label: "Diagnostics & Labs", q: "pathology", icon: "🔬" },
   ],
+  "pharmacies": [
+    { label: "All Medicines", q: "", icon: "💊" },
+    { label: "Paracetamol & Pain", q: "paracetamol", icon: "💊" },
+    { label: "Cough Syrup", q: "cough", icon: "🍯" },
+    { label: "First Aid & Bandage", q: "bandage", icon: "🩹" },
+    { label: "Digene & Gas", q: "digene", icon: "🥛" },
+    { label: "Vitamins & Calcium", q: "vitamin", icon: "⚡" },
+    { label: "ORS & Glucose", q: "ors", icon: "💧" },
+  ],
+  "mobile-shops": [
+    { label: "All Tech & Accessories", q: "", icon: "📱" },
+    { label: "Screen Guard Glass", q: "screen", icon: "🛡️" },
+    { label: "Fast Charger & Cable", q: "charger", icon: "⚡" },
+    { label: "Back Covers", q: "cover", icon: "📱" },
+    { label: "Earbuds & TWS", q: "earbuds", icon: "🎧" },
+    { label: "Power Bank", q: "power bank", icon: "🔋" },
+    { label: "Phone Repairing", q: "repair", icon: "🔧" },
+  ],
+  "auto-services": [
+    { label: "All Auto Services", q: "", icon: "🚗" },
+    { label: "MRF & Bike Tyres", q: "tyre", icon: "🛞" },
+    { label: "Mobil & Engine Oil", q: "engine oil", icon: "🛢️" },
+    { label: "Water Wash & Polish", q: "wash", icon: "🚿" },
+    { label: "Bike General Service", q: "bike", icon: "🏍️" },
+    { label: "Brake Pads & Service", q: "brake", icon: "⚙️" },
+    { label: "Tubeless Puncture", q: "puncture", icon: "🔧" },
+  ],
+  "hardware-stores": [
+    { label: "All Hardware", q: "", icon: "🔨" },
+    { label: "UltraTech Cement", q: "cement", icon: "🧱" },
+    { label: "Asian Paints & Primer", q: "paint", icon: "🎨" },
+    { label: "PVC Pipes & Fitting", q: "pipe", icon: "🚰" },
+    { label: "TMT Saria Steel", q: "saria", icon: "🏗️" },
+    { label: "Door Locks & Handles", q: "lock", icon: "🔒" },
+  ],
+  "clothing-stores": [
+    { label: "All Clothing", q: "", icon: "🛍️" },
+    { label: "Cotton Shirts", q: "shirt", icon: "👔" },
+    { label: "Denim Jeans", q: "jeans", icon: "👖" },
+    { label: "Banarasi Saree", q: "saree", icon: "🥻" },
+    { label: "Kurti & Suits", q: "kurti", icon: "👗" },
+    { label: "Kids Wear", q: "kids", icon: "🧒" },
+  ],
   "hotels": [
     { label: "All Stays", q: "", icon: "🏨" },
     { label: "AC Deluxe Rooms", q: "deluxe", icon: "🛏️" },
     { label: "Banquet & Events", q: "banquet", icon: "🎉" },
     { label: "Suite Rooms", q: "suite", icon: "👑" },
-  ],
-  "grocery-stores": [
-    { label: "All Essentials", q: "", icon: "🛒" },
-    { label: "Atta & Rice", q: "atta", icon: "🌾" },
-    { label: "Oil & Ghee", q: "ghee", icon: "🫒" },
-    { label: "Dals & Pulses", q: "dal", icon: "🥣" },
-    { label: "Tea & Spices", q: "tea", icon: "☕" },
   ],
 };
 
@@ -204,6 +266,49 @@ export default async function DiscoveryPage({
   const categoryName = categoryNameForSlug(canonicalCategory) || discoveryTitle(canonicalCategory);
   const quickFilters = CATEGORY_QUICK_FILTERS[canonicalCategory] ?? [];
 
+  // Multi-store brand discovery: collect matched catalog items across ranked businesses
+  const allMatchedItems = searchQuery
+    ? ranked.flatMap((b) =>
+        (b.matchedItems ?? []).map((item) => ({
+          ...item,
+          businessName: b.name,
+          businessSlug: b.slug,
+        }))
+      )
+    : [];
+
+  const brandSummaries = (() => {
+    if (!allMatchedItems.length) return [];
+    const map = new Map<
+      string,
+      { name: string; minPrice: number; maxPrice: number; storeCount: number; stores: string[] }
+    >();
+    for (const item of allMatchedItems) {
+      const existing = map.get(item.name);
+      if (existing) {
+        existing.minPrice = Math.min(existing.minPrice, item.price);
+        existing.maxPrice = Math.max(existing.maxPrice, item.price);
+        if (!existing.stores.includes(item.businessName)) {
+          existing.stores.push(item.businessName);
+          existing.storeCount += 1;
+        }
+      } else {
+        map.set(item.name, {
+          name: item.name,
+          minPrice: item.price,
+          maxPrice: item.price,
+          storeCount: 1,
+          stores: [item.businessName],
+        });
+      }
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => b.storeCount - a.storeCount || a.minPrice - b.minPrice
+    );
+  })();
+
+  const storesWithItemCount = ranked.filter((b) => (b.matchedItems?.length ?? 0) > 0).length;
+
   function pageHref(next: number) {
     const p = new URLSearchParams();
     for (const key of ["q", "sort", "minRating", "lat", "lng"]) {
@@ -277,35 +382,33 @@ export default async function DiscoveryPage({
             </div>
           </div>
 
-          {/* ── City Category Switcher Pills ── */}
-          <div className="mb-4 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 shrink-0 mr-1">
-              Explore {cityName}:
-            </span>
-            {[
-              { slug: "sweet-shops", name: "Sweet Shops", icon: "🍰" },
-              { slug: "restaurants", name: "Restaurants", icon: "🍽️" },
-              { slug: "salons", name: "Salons & Parlours", icon: "✂️" },
-              { slug: "clinics", name: "Clinics & Doctors", icon: "🩺" },
-              { slug: "hotels", name: "Hotels & Stays", icon: "🏨" },
-              { slug: "grocery-stores", name: "Grocery & Mart", icon: "🛒" },
-            ].map((cat) => {
-              const isActive = cat.slug === canonicalCategory;
-              return (
-                <Link
-                  key={cat.slug}
-                  href={`/${canonicalCity}/${cat.slug}`}
-                  className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold transition ${
-                    isActive
-                      ? "bg-slate-900 text-white shadow-sm ring-2 ring-slate-900/20"
-                      : "border border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                  }`}
-                >
-                  <span>{cat.icon}</span>
-                  <span>{cat.name}</span>
-                </Link>
-              );
-            })}
+          {/* ── Justdial Style Category Grid / Switcher Bar ── */}
+          <div className="mb-4 overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-3 shadow-2xs">
+            <div className="mb-2 flex items-center justify-between px-1">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
+                Explore Categories in {cityName}
+              </span>
+              <span className="text-[10px] font-bold text-blue-700">{ALL_DISCOVERY_CATEGORIES.length} Categories</span>
+            </div>
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {ALL_DISCOVERY_CATEGORIES.map((cat) => {
+                const isActive = cat.slug === canonicalCategory;
+                return (
+                  <Link
+                    key={cat.slug}
+                    href={`/${canonicalCity}/${cat.slug}`}
+                    className={`inline-flex shrink-0 items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition ${
+                      isActive
+                        ? "bg-slate-900 text-white shadow-sm ring-2 ring-slate-900/30"
+                        : "border border-slate-200/80 bg-slate-50/70 text-slate-700 hover:border-slate-300 hover:bg-slate-100"
+                    }`}
+                  >
+                    <span className="text-sm">{cat.icon}</span>
+                    <span>{cat.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
 
           {/* ── Discovery Search & Filter Controls ── */}
@@ -359,6 +462,49 @@ export default async function DiscoveryPage({
             </div>
           )}
 
+          {/* ── Multi-Store Brand & Item Availability Summary Banner ── */}
+          {searchQuery && brandSummaries.length > 0 && (
+            <div className="mb-6 rounded-3xl border border-emerald-200/90 bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-white p-4 sm:p-5 shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-emerald-100/80 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid size-8 place-items-center rounded-xl bg-emerald-600 text-white font-bold text-sm shadow-xs">
+                    ✓
+                  </span>
+                  <div>
+                    <h2 className="text-sm font-extrabold text-slate-900">
+                      Available across {storesWithItemCount} {storesWithItemCount === 1 ? "store" : "stores"} in {cityName}
+                    </h2>
+                    <p className="text-xs text-slate-600">
+                      Found verified brands &amp; real in-store pricing matching <span className="font-bold text-slate-950">&ldquo;{searchQuery}&rdquo;</span>
+                    </p>
+                  </div>
+                </div>
+                <span className="self-start sm:self-auto inline-flex items-center gap-1 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800 ring-1 ring-emerald-600/20">
+                  Multi-Store Find
+                </span>
+              </div>
+
+              {/* Brand Pills */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {brandSummaries.map((brand) => (
+                  <div
+                    key={brand.name}
+                    className="inline-flex items-center gap-2 rounded-2xl border border-emerald-200/90 bg-white px-3 py-1.5 text-xs shadow-2xs"
+                  >
+                    <span className="size-2 rounded-full bg-emerald-500" />
+                    <span className="font-bold text-slate-900">{brand.name}</span>
+                    <span className="rounded-lg bg-emerald-50 px-1.5 py-0.5 font-black text-emerald-700">
+                      From ₹{brand.minPrice}
+                    </span>
+                    <span className="text-[11px] font-medium text-slate-500">
+                      ({brand.storeCount} {brand.storeCount === 1 ? "shop" : "shops"})
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ── Businesses Grid ── */}
           {page.items.length ? (
             <div className="grid gap-4 md:grid-cols-2">
@@ -376,13 +522,6 @@ export default async function DiscoveryPage({
                   ? `https://wa.me/${waPhone}?text=${encodeURIComponent(`Namaste ${business.name}, I found your business on Trustit.`)}`
                   : null;
                 const telLink = business.phone ? `tel:${business.phone}` : null;
-
-                // Check if search query matches any specific item in the menu
-                const matchedItem = searchQuery.trim() && business.catalogItems
-                  ? business.catalogItems.find((item) =>
-                      item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
-                    )
-                  : null;
 
                 return (
                   <article
@@ -454,23 +593,38 @@ export default async function DiscoveryPage({
                         )}
                       </div>
 
-                      {/* Matched Dish Highlight (if user searched for an item) */}
-                      {matchedItem && (
-                        <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900 ring-1 ring-emerald-600/25">
-                          <span>✓ In Menu:</span>
-                          <span className="text-slate-950 underline underline-offset-2">{matchedItem.name}</span>
-                          <span className="text-emerald-700 font-black">₹{matchedItem.price}</span>
-                          {matchedItem.unit && <span className="text-[10px] text-slate-500 font-normal">({matchedItem.unit})</span>}
+                      {/* In-Stock Brand Highlights (When search query matched items in this shop) */}
+                      {business.matchedItems && business.matchedItems.length > 0 ? (
+                        <div className="mt-3.5 rounded-2xl bg-emerald-50/80 p-3 border border-emerald-200/80">
+                          <div className="flex items-center justify-between text-[11px] font-bold text-emerald-950 mb-2">
+                            <span className="flex items-center gap-1.5">
+                              <span className="size-2 rounded-full bg-emerald-600 animate-pulse" />
+                              <span>IN-STOCK MATCHING &ldquo;{searchQuery}&rdquo;</span>
+                            </span>
+                            <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-100/90 px-2 py-0.5 rounded-full ring-1 ring-emerald-600/20">
+                              {business.matchedItems.length} {business.matchedItems.length === 1 ? "Brand" : "Brands"} Available
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {business.matchedItems.map((item) => (
+                              <span
+                                key={item.id}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-white border border-emerald-200/90 px-2.5 py-1 text-xs text-slate-800 shadow-2xs"
+                              >
+                                <span className="size-1.5 rounded-full bg-emerald-500" />
+                                <span className="font-bold text-slate-900">{item.name}</span>
+                                <span className="font-black text-emerald-700">₹{item.price}</span>
+                                {item.unit && <span className="text-[10px] text-slate-500 font-normal">({item.unit})</span>}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      )}
-
-                      {/* Swiggy / Zomato Style Items & Highlights */}
-                      {business.catalogItems && business.catalogItems.length > 0 && !matchedItem && (
+                      ) : business.catalogItems && business.catalogItems.length > 0 ? (
                         <div className="mt-3.5 rounded-2xl bg-slate-50/90 p-3 border border-slate-200/70">
                           <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-2">
                             <span className="flex items-center gap-1">
                               <span>🍽️</span>
-                              <span>POPULAR ITEMS & MENU</span>
+                              <span>POPULAR ITEMS &amp; MENU</span>
                             </span>
                             {business.catalogItems.some((i) => i.itemType === "veg") && (
                               <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded ring-1 ring-emerald-600/20">
@@ -496,7 +650,7 @@ export default async function DiscoveryPage({
                             )}
                           </div>
                         </div>
-                      )}
+                      ) : null}
 
                       {/* Direct Contact Bar */}
                       {(waLink || telLink) && (
@@ -612,14 +766,7 @@ export default async function DiscoveryPage({
                   Or explore popular categories in {cityName}:
                 </p>
                 <div className="flex flex-wrap justify-center gap-2">
-                  {[
-                    { slug: "sweet-shops", name: "Sweet Shops", icon: "🍰" },
-                    { slug: "restaurants", name: "Restaurants", icon: "🍽️" },
-                    { slug: "salons", name: "Salons & Parlours", icon: "✂️" },
-                    { slug: "clinics", name: "Clinics & Doctors", icon: "🩺" },
-                    { slug: "hotels", name: "Hotels & Stays", icon: "🏨" },
-                    { slug: "grocery-stores", name: "Grocery & Mart", icon: "🛒" },
-                  ].map((cat) => (
+                  {ALL_DISCOVERY_CATEGORIES.map((cat) => (
                     <Link
                       key={cat.slug}
                       href={`/${canonicalCity}/${cat.slug}`}

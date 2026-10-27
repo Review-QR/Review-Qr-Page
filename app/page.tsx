@@ -29,13 +29,22 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
     redirect(`/${encodeURIComponent(city)}/${encodeURIComponent(category)}${params.size ? `?${params}` : ""}`);
   }
 
+  if (city && term && !category) {
+    redirect(`/${encodeURIComponent(city)}/grocery-stores?q=${encodeURIComponent(term.slice(0, 120))}`);
+  }
+
   const popular = [
+    { slug: "grocery-stores", name: "Grocery & Mart", emoji: "🛒", desc: "Supermarkets, Atta, Ghee & Essentials" },
     { slug: "sweet-shops", name: "Sweet Shops", emoji: "🍰", desc: "Mithai, Halwa, Laddoo & Bengali Sweets" },
-    { slug: "restaurants", name: "Restaurants & Dining", emoji: "🍽️", desc: "Family Dining, Thali & Fast Food" },
+    { slug: "restaurants", name: "Restaurants & Dining", emoji: "🍽️", desc: "Family Dining, Biryani, Thali & Fast Food" },
+    { slug: "pharmacies", name: "Pharmacies & Medical", emoji: "💊", desc: "Medicines, Health Essentials & Tablets" },
     { slug: "salons", name: "Salons & Parlours", emoji: "✂️", desc: "Haircut, Grooming & Beauty Spa" },
-    { slug: "clinics", name: "Doctors & Clinics", emoji: "🩺", desc: "General Physicians, Dental & Care" },
-    { slug: "hotels", name: "Hotels & Stays", emoji: "🏨", desc: "Rooms, Guest Houses & Banquets" },
-    { slug: "cafes", name: "Cafes & Bakeries", emoji: "☕", desc: "Coffee, Pastries, Cakes & Snacks" },
+    { slug: "clinics", name: "Doctors & Clinics", emoji: "🩺", desc: "General Physicians, Dental & Diagnostics" },
+    { slug: "mobile-shops", name: "Mobile & Accessories", emoji: "📱", desc: "Smartphones, Covers, Chargers & Repair" },
+    { slug: "auto-services", name: "Auto & Bike Care", emoji: "🚗", desc: "Garages, MRF Tyres, Mobil & Bike Service" },
+    { slug: "hardware-stores", name: "Hardware & Paints", emoji: "🔨", desc: "UltraTech Cement, Asian Paints & Tools" },
+    { slug: "clothing-stores", name: "Clothing & Fashion", emoji: "🛍️", desc: "Shirts, Sarees, Jeans & Kurtis" },
+    { slug: "hotels", name: "Hotels & Stays", emoji: "🏨", desc: "AC Rooms, Guest Houses & Banquets" },
   ];
 
   return (
