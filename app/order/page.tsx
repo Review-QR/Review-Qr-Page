@@ -11,6 +11,12 @@ export const metadata: Metadata = {
   title: "Trustit Super-App | Food Delivery, Salon Queue Token, Car Wash Bay & Kirana Parcha",
   description:
     "Order food & sweets, book live salon digital queue passes, schedule car wash bays, and send handwritten grocery parchas across Bahraich and Uttar Pradesh.",
+  manifest: "/api/manifest/customer",
+  appleWebApp: {
+    capable: true,
+    title: "Trustit",
+    statusBarStyle: "default",
+  },
 };
 
 export default async function CustomerOrderPortalPage() {

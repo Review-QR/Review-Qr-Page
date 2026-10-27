@@ -479,121 +479,147 @@ export default function CustomerSuperAppClient({
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-28">
-      {/* ── Top Super-App Header ── */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200/80 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-amber-500 text-lg font-black text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition">
-                ⚡
-              </span>
-              <div>
-                <span className="text-lg font-black tracking-tight text-slate-950 flex items-center gap-1.5">
-                  Trustit Super-App
-                  <span className="rounded-md bg-blue-100 px-1.5 py-0.5 text-[10px] font-black uppercase text-blue-800">
-                    Live
-                  </span>
-                </span>
-                <span className="text-xs text-slate-500 flex items-center gap-1">
-                  📍 {selectedCity}, UP
-                  <button
-                    onClick={() => {
-                      const next = selectedCity === "Bahraich" ? "Lucknow" : "Bahraich";
-                      setSelectedCity(next);
-                    }}
-                    className="text-[10px] text-blue-600 hover:underline font-bold"
-                  >
-                    Change
-                  </button>
-                </span>
+      {/* ── Top Super-App Header (Compact 44px Native Mobile Bar) ── */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-250 shadow-2xs">
+        <div className="max-w-md mx-auto px-3 py-2 flex items-center justify-between gap-2">
+          {/* Location Picker */}
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-blue-600 text-xs font-black text-white shadow-xs">
+              ⚡
+            </span>
+            <div className="min-w-0 leading-tight">
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-black text-slate-900 truncate">Bahraich</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = selectedCity === "Bahraich" ? "Lucknow" : "Bahraich";
+                    setSelectedCity(next);
+                  }}
+                  className="text-[10px] text-blue-600 font-bold"
+                >
+                  ▼
+                </button>
               </div>
-            </Link>
+              <span className="block text-[9px] text-slate-500 font-medium truncate">
+                Uttar Pradesh · Verified Local
+              </span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Right Action Icons (Compact 32px pills) */}
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
+              type="button"
               onClick={() => setIsMyBookingsOpen(true)}
-              className="relative inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:bg-slate-800 transition"
+              className="relative grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition text-sm"
+              title="My Bookings"
+              aria-label="My Bookings"
             >
-              <span>📋 My Bookings</span>
+              📋
               {totalActiveCount > 0 && (
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-slate-950 animate-pulse">
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-black text-slate-950 animate-pulse">
                   {totalActiveCount}
                 </span>
               )}
             </button>
 
-            {customerPhone ? (
-              <button
-                onClick={() => setIsCustomerLoginOpen(true)}
-                className="flex items-center gap-1.5 rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-xs hover:bg-slate-50 transition"
-              >
-                <span>👤 {customerName ? customerName.split(" ")[0] : "Account"}</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => setIsCustomerLoginOpen(true)}
-                className="flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-2 text-xs font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-700 transition"
-              >
-                <span>👤 Log In</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setIsCustomerLoginOpen(true)}
+              className="flex items-center gap-1 rounded-xl bg-slate-900 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-xs hover:bg-slate-800 transition"
+            >
+              <span>👤</span>
+              <span className="max-w-[65px] truncate">
+                {customerPhone ? (customerName ? customerName.split(" ")[0] : "Account") : "Log In"}
+              </span>
+            </button>
           </div>
         </div>
 
-        {/* ── 4 Hero Multi-Service Verticals Selector ── */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-2 pb-3 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-2 min-w-max">
-            <button
-              onClick={() => setActiveTab("food")}
-              className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition ${
+        {/* ── Slim Search Bar (Height 34px) ── */}
+        <div className="max-w-md mx-auto px-3 pb-2">
+          <div className="relative flex items-center">
+            <span className="absolute left-3 text-slate-400 text-xs">🔍</span>
+            <input
+              type="text"
+              placeholder={
                 activeTab === "food"
-                  ? "bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md shadow-orange-500/25 scale-[1.02]"
-                  : "bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50"
+                  ? "Search biryani, kaju katli, thali..."
+                  : activeTab === "salon"
+                    ? "Search haircut, barber, facial..."
+                    : activeTab === "car_wash"
+                      ? "Search car foam wash, bike wash..."
+                      : "Search atta, mustard oil, grocery parcha..."
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl border border-slate-200 bg-slate-100/90 pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition"
+            />
+          </div>
+        </div>
+
+        {/* ── 4 Hero Horizontal Applet Bubbles (Zomato/Blinkit Style) ── */}
+        <div className="max-w-md mx-auto px-3 pb-2.5 overflow-x-auto no-scrollbar">
+          <div className="grid grid-cols-4 gap-1.5 text-center">
+            <button
+              type="button"
+              onClick={() => setActiveTab("food")}
+              className={`flex flex-col items-center justify-center rounded-xl p-1.5 transition ${
+                activeTab === "food"
+                  ? "bg-orange-50 border border-orange-300 shadow-2xs"
+                  : "bg-white border border-slate-100 hover:bg-slate-50"
               }`}
             >
-              <span className="text-base">🍔</span>
-              <span>Food & Mithai Delivery</span>
-              <span className="text-[10px] opacity-80">· 25m</span>
+              <span className="text-lg leading-none">🍔</span>
+              <span className={`text-[10px] mt-1 font-bold truncate w-full ${activeTab === "food" ? "text-orange-700 font-black" : "text-slate-600"}`}>
+                Food & Mithai
+              </span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("salon")}
-              className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition ${
+              className={`flex flex-col items-center justify-center rounded-xl p-1.5 transition ${
                 activeTab === "salon"
-                  ? "bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-500/25 scale-[1.02]"
-                  : "bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50"
+                  ? "bg-emerald-50 border border-emerald-300 shadow-2xs"
+                  : "bg-white border border-slate-100 hover:bg-slate-50"
               }`}
             >
-              <span className="text-base">✂️</span>
-              <span>Salon & Barber Queue</span>
-              <span className="text-[10px] opacity-80">· Live Token</span>
+              <span className="text-lg leading-none">✂️</span>
+              <span className={`text-[10px] mt-1 font-bold truncate w-full ${activeTab === "salon" ? "text-emerald-700 font-black" : "text-slate-600"}`}>
+                Salon Queue
+              </span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("car_wash")}
-              className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition ${
+              className={`flex flex-col items-center justify-center rounded-xl p-1.5 transition ${
                 activeTab === "car_wash"
-                  ? "bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-md shadow-blue-500/25 scale-[1.02]"
-                  : "bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50"
+                  ? "bg-blue-50 border border-blue-300 shadow-2xs"
+                  : "bg-white border border-slate-100 hover:bg-slate-50"
               }`}
             >
-              <span className="text-base">🚗</span>
-              <span>Car & Bike Wash</span>
-              <span className="text-[10px] opacity-80">· Bay Slots</span>
+              <span className="text-lg leading-none">🚗</span>
+              <span className={`text-[10px] mt-1 font-bold truncate w-full ${activeTab === "car_wash" ? "text-blue-700 font-black" : "text-slate-600"}`}>
+                Car Wash Bay
+              </span>
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab("kirana")}
-              className={`flex items-center gap-2 rounded-2xl px-4 py-2.5 text-xs font-black transition ${
+              className={`flex flex-col items-center justify-center rounded-xl p-1.5 transition ${
                 activeTab === "kirana"
-                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md shadow-purple-500/25 scale-[1.02]"
-                  : "bg-white text-slate-700 border border-slate-200/80 hover:bg-slate-50"
+                  ? "bg-purple-50 border border-purple-300 shadow-2xs"
+                  : "bg-white border border-slate-100 hover:bg-slate-50"
               }`}
             >
-              <span className="text-base">🛒</span>
-              <span>Kirana Parcha (Chitthi)</span>
-              <span className="text-[10px] opacity-80">· Photo Upload</span>
+              <span className="text-lg leading-none">🛒</span>
+              <span className={`text-[10px] mt-1 font-bold truncate w-full ${activeTab === "kirana" ? "text-purple-700 font-black" : "text-slate-600"}`}>
+                Kirana Parcha
+              </span>
             </button>
           </div>
         </div>
@@ -601,106 +627,81 @@ export default function CustomerSuperAppClient({
 
       {/* ── Notification Banner if any booking just created ── */}
       {bookingSuccessNotice && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-4">
-          <div className="flex items-center justify-between rounded-2xl bg-emerald-500 p-4 text-white shadow-lg">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">🎉</span>
-              <p className="text-xs sm:text-sm font-bold">{bookingSuccessNotice}</p>
+        <div className="max-w-md mx-auto px-3 pt-2">
+          <div className="flex items-center justify-between rounded-xl bg-emerald-500 p-2.5 text-white shadow-sm text-xs">
+            <div className="flex items-center gap-2">
+              <span>🎉</span>
+              <p className="text-[11px] font-bold leading-tight">{bookingSuccessNotice}</p>
             </div>
             <button
               onClick={() => setBookingSuccessNotice(null)}
-              className="rounded-lg bg-emerald-700 px-3 py-1 text-xs font-bold"
+              className="rounded bg-emerald-700 px-2 py-0.5 text-[10px] font-bold shrink-0"
             >
-              Dismiss
+              ✕
             </button>
           </div>
         </div>
       )}
 
-      {/* ── Main Vertical Content ── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        {/* Vertical Hero Card */}
-        <div className="mb-6 rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 p-6 text-white shadow-xl relative overflow-hidden">
-          <div className="relative z-10 max-w-2xl">
-            <span className="inline-block rounded-full bg-white/10 backdrop-blur px-3 py-1 text-[11px] font-bold text-amber-300 uppercase tracking-wider mb-2">
-              {activeTab === "food" && "⚡ 25-35 Mins Hyperlocal Food & Sweets Delivery"}
-              {activeTab === "salon" && "✂️ No Physical Waiting · Live Digital Queue Pass"}
-              {activeTab === "car_wash" && "🚗 Live Bay Slot Booking · Foam Wash & Detailing"}
-              {activeTab === "kirana" && "📝 Handwritten Grocery List · Dukandar Billing & Delivery"}
+      {/* ── Main Listings Content (Native Mobile Card Scale) ── */}
+      <main className="max-w-md mx-auto px-3 pt-2.5">
+        {/* Slim Promotional Pill (Replaces the 60% viewport giant dark box) */}
+        <div className="mb-3 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-3 py-2 flex items-center justify-between text-xs text-amber-900 shadow-2xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-sm">⚡</span>
+            <span className="text-[11px] font-bold truncate">
+              {activeTab === "food" && "Free Delivery above ₹499 · 25-35m Express"}
+              {activeTab === "salon" && "Live Token · Bina dukan me baithe number lagayein"}
+              {activeTab === "car_wash" && "Bay 1 / Bay 2 Live Availability · No waiting"}
+              {activeTab === "kirana" && "Parcha ki photo bhejein · Dukan se direct delivery"}
             </span>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-              {activeTab === "food" && "Bahraich Ke Best Restaurants & Halwai Se Order Karein"}
-              {activeTab === "salon" && "Bina Dukan Me Baithe Chair Number Lagayein"}
-              {activeTab === "car_wash" && "Gaadi Dhulwane Ka Bay Slot Book Karein"}
-              {activeTab === "kirana" && "Kagaz Ki Parchi Upload Karein, Samaan Ghar Mangawein"}
-            </h1>
-            <p className="mt-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
-              {activeTab === "food" &&
-                "Zaika, Brijwasi Sweets, Al-Bake Biryani aur sabhi verified places se fresh delivery. Live rider tracking aur 4-digit OTP handover."}
-              {activeTab === "salon" &&
-                "Looks & Style, Roopam Parlour me kitne log aage hain live dekhein. Aapka number aane par notification payein."}
-              {activeTab === "car_wash" &&
-                "Speed Shine Car Wash ke Bay 1 / Bay 2 ka live status dekhein. Gaadi ka number daalein aur seedhe slot par pahuchein."}
-              {activeTab === "kirana" &&
-                "Parcha ki photo kheenchiye ya likhiye, dukan parcha dekh kar samaan pack karegi aur bill banakar rider se bhejegi."}
-            </p>
           </div>
-
-          <div className="mt-4 flex items-center gap-2">
-            <input
-              type="text"
-              placeholder={`Search ${activeTab === "food" ? "biryani, mithai, restaurant..." : activeTab === "salon" ? "barber, parlour, haircut..." : activeTab === "car_wash" ? "car wash, bike foam..." : "kirana, grocery, mart..."}`}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full max-w-md rounded-2xl border border-white/20 bg-white/10 px-4 py-2.5 text-xs text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-400"
-            />
-          </div>
+          <span className="text-[9px] font-black uppercase text-amber-800 bg-amber-200/80 px-1.5 py-0.5 rounded">
+            Live UP
+          </span>
         </div>
 
-        {/* ── Business Cards Grid ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* ── Business Cards List (Refined Native Scale: 12-14px) ── */}
+        <div className="space-y-2.5">
           {filteredBusinesses.map((biz) => {
             const bizItems = catalogItems.filter((i) => i.business_id === biz.id);
 
             return (
               <div
                 key={biz.id}
-                className="group flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-5 shadow-xs transition hover:shadow-lg hover:border-blue-300"
+                className="rounded-2xl border border-slate-200 bg-white p-3 shadow-2xs hover:border-slate-300 transition"
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="inline-block rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-black uppercase text-slate-700">
-                        {biz.type}
-                      </span>
-                      <h3 className="mt-1.5 text-lg font-black text-slate-900 group-hover:text-blue-600 transition">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold uppercase text-slate-700">
+                          {biz.type}
+                        </span>
+                        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1 rounded">
+                          ★ 4.8
+                        </span>
+                      </div>
+                      <h3 className="mt-1 text-sm font-bold text-slate-900 truncate">
                         {biz.name}
                       </h3>
-                      <p className="text-xs text-slate-500 line-clamp-1 mt-0.5">
-                        📍 {biz.address || `${biz.city}, Uttar Pradesh`}
+                      <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                        📍 {biz.address || `${biz.city}, UP`}
                       </p>
                     </div>
-
-                    <span className="flex items-center gap-1 rounded-xl bg-emerald-50 px-2 py-1 text-xs font-black text-emerald-700">
-                      ★ 4.8
-                    </span>
                   </div>
 
                   {/* Highlights / Features per Vertical */}
-                  <div className="mt-3.5 rounded-2xl bg-slate-50 p-3 text-xs text-slate-700 space-y-1">
+                  <div className="mt-2 rounded-xl bg-slate-50 p-2 text-[11px] text-slate-700 space-y-0.5">
                     {activeTab === "food" && (
                       <>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-slate-600">🛵 Delivery in:</span>
-                          <span className="font-black text-slate-900">25–35 Mins</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">🛵 Delivery:</span>
+                          <span className="font-bold text-slate-900">25–35 Mins</span>
                         </div>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-slate-600">Free Delivery:</span>
-                          <span className="font-black text-emerald-700">Orders above ₹499</span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-200">
+                        <div className="text-[10px] text-slate-500 truncate pt-0.5">
                           {bizItems.length > 0
-                            ? `${bizItems.slice(0, 3).map((i) => i.name).join(", ")} +more`
+                            ? bizItems.slice(0, 3).map((i) => i.name).join(", ")
                             : "Freshly prepared dining & takeaway"}
                         </div>
                       </>
@@ -708,47 +709,37 @@ export default function CustomerSuperAppClient({
 
                     {activeTab === "salon" && (
                       <>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-slate-600">🟢 Current Serving:</span>
-                          <span className="font-black text-emerald-700">Token #04</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">🟢 Serving Now:</span>
+                          <span className="font-bold text-emerald-700">Token #04</span>
                         </div>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-slate-600">⏳ Waiting in Line:</span>
-                          <span className="font-black text-amber-700">2 Persons (~20m)</span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-200">
-                          Haircut ₹150 · Beard Trim ₹80 · Facial ₹450
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-slate-500">Waiting in line:</span>
+                          <span className="font-bold text-amber-700">2 Persons (~20m)</span>
                         </div>
                       </>
                     )}
 
                     {activeTab === "car_wash" && (
                       <>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-slate-600">🚿 Bay 1 Status:</span>
-                          <span className="font-black text-amber-700">Busy (10m left)</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">🚿 Bay 1:</span>
+                          <span className="font-bold text-amber-700">Busy (10m left)</span>
                         </div>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-slate-600">🚿 Bay 2 Status:</span>
-                          <span className="font-black text-emerald-700">Available Now 🟢</span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-200">
-                          Foam Wash ₹350 · Bike Wash ₹100 · Teflon Detailing
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className="text-slate-500">🚿 Bay 2:</span>
+                          <span className="font-bold text-emerald-700">Free Now 🟢</span>
                         </div>
                       </>
                     )}
 
                     {activeTab === "kirana" && (
                       <>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-slate-600">📝 Parcha Processing:</span>
-                          <span className="font-black text-purple-700">Instant Verification</span>
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-500">📝 Parcha:</span>
+                          <span className="font-bold text-purple-700">Photo / List Accepted</span>
                         </div>
-                        <div className="flex items-center justify-between text-[11px]">
-                          <span className="font-semibold text-slate-600">🛵 Rider Delivery:</span>
-                          <span className="font-black text-slate-900">Direct to Doorstep</span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-200">
+                        <div className="text-[10px] text-slate-500">
                           Atta, Oil, Sugar, Spices, Dairy & Daily Essentials
                         </div>
                       </>
@@ -757,11 +748,12 @@ export default function CustomerSuperAppClient({
                 </div>
 
                 {/* Primary Action Button */}
-                <div className="mt-4 pt-3 border-t border-slate-100">
+                <div className="mt-2.5 pt-2 border-t border-slate-100">
                   {activeTab === "food" && (
                     <button
+                      type="button"
                       onClick={() => setActiveStoreModal(biz)}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 py-3 text-xs font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 transition"
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-2 text-xs font-bold text-white shadow-xs hover:from-orange-600 hover:to-amber-600 transition"
                     >
                       <span>🍽️ View Menu & Order</span>
                       <span>→</span>
@@ -770,18 +762,20 @@ export default function CustomerSuperAppClient({
 
                   {activeTab === "salon" && (
                     <button
+                      type="button"
                       onClick={() => setSalonModal(biz)}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 py-3 text-xs font-black text-white shadow-md hover:from-emerald-700 hover:to-teal-800 transition"
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-2 text-xs font-bold text-white shadow-xs hover:from-emerald-700 hover:to-teal-700 transition"
                     >
-                      <span>✂️ Book Digital Queue Pass</span>
+                      <span>✂️ Book Queue Pass</span>
                       <span>→</span>
                     </button>
                   )}
 
                   {activeTab === "car_wash" && (
                     <button
+                      type="button"
                       onClick={() => setCarWashModal(biz)}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3 text-xs font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-800 transition"
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2 text-xs font-bold text-white shadow-xs hover:from-blue-700 hover:to-indigo-700 transition"
                     >
                       <span>🚗 Book Bay Slot</span>
                       <span>→</span>
@@ -790,10 +784,11 @@ export default function CustomerSuperAppClient({
 
                   {activeTab === "kirana" && (
                     <button
+                      type="button"
                       onClick={() => setKiranaModal(biz)}
-                      className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 py-3 text-xs font-black text-white shadow-md hover:from-purple-700 hover:to-pink-700 transition"
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 py-2 text-xs font-bold text-white shadow-xs hover:from-purple-700 hover:to-pink-700 transition"
                     >
-                      <span>📝 Upload / Send Parcha</span>
+                      <span>📝 Send Parcha</span>
                       <span>→</span>
                     </button>
                   )}
@@ -816,29 +811,84 @@ export default function CustomerSuperAppClient({
 
       {/* ── Sticky Bottom Cart Strip for Food ── */}
       {cartItemsList.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 p-4 shadow-2xl">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-4">
+        <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 p-3 shadow-2xl">
+          <div className="max-w-md mx-auto flex items-center justify-between gap-3">
             <div>
-              <span className="text-xs font-semibold text-slate-500">
+              <span className="text-[10px] font-semibold text-slate-500">
                 {cartItemsList.length} items in cart
               </span>
-              <div className="text-lg font-black text-slate-900">
+              <div className="text-base font-black text-slate-900">
                 ₹{cartGrandTotal}{" "}
-                <span className="text-xs font-normal text-slate-500">
-                  (incl. ₹35 delivery + ₹5 fee)
+                <span className="text-[10px] font-normal text-slate-500">
+                  (incl. fee)
                 </span>
               </div>
             </div>
 
             <button
               onClick={() => setIsCheckoutOpen(true)}
-              className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 px-6 py-3.5 text-sm font-black text-white shadow-lg shadow-orange-500/30 hover:scale-105 transition"
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 px-5 py-2.5 text-xs font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 transition"
             >
-              <span>Continue to Checkout</span>
+              <span>Checkout</span>
               <span>→</span>
             </button>
           </div>
         </div>
+      )}
+
+      {/* ── Native Sticky Bottom Navigation Bar (Zomato/Blinkit Mobile Scale) ── */}
+      {cartItemsList.length === 0 && (
+        <nav
+          aria-label="Bottom Navigation"
+          className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-slate-200 py-1 px-2 shadow-lg sm:hidden"
+        >
+          <div className="max-w-md mx-auto grid grid-cols-4 text-center">
+            <button
+              type="button"
+              onClick={() => setActiveTab("food")}
+              className={`flex flex-col items-center justify-center py-1 ${
+                activeTab === "food" ? "text-orange-600 font-bold" : "text-slate-500"
+              }`}
+            >
+              <span className="text-base leading-none">🍔</span>
+              <span className="text-[10px] mt-0.5">Food</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("salon")}
+              className={`flex flex-col items-center justify-center py-1 ${
+                activeTab === "salon" ? "text-emerald-600 font-bold" : "text-slate-500"
+              }`}
+            >
+              <span className="text-base leading-none">✂️</span>
+              <span className="text-[10px] mt-0.5">Salon Queue</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsMyBookingsOpen(true)}
+              className="relative flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900"
+            >
+              <span className="text-base leading-none">📋</span>
+              <span className="text-[10px] mt-0.5">Bookings</span>
+              {totalActiveCount > 0 && (
+                <span className="absolute top-0 right-5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-amber-500 px-0.5 text-[8px] font-black text-slate-950">
+                  {totalActiveCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsCustomerLoginOpen(true)}
+              className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900"
+            >
+              <span className="text-base leading-none">👤</span>
+              <span className="text-[10px] mt-0.5">{customerPhone ? "Account" : "Log In"}</span>
+            </button>
+          </div>
+        </nav>
       )}
 
       {/* ── Store Menu Modal for Food & Sweets ── */}
