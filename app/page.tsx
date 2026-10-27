@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { PUBLIC_CATEGORIES, slugifyCity } from "@/lib/public-discovery-domain";
+import { PUBLIC_CATEGORIES, resolveCategoryForQuery, slugifyCity } from "@/lib/public-discovery-domain";
 import { discoveryMetadata } from "@/lib/public-discovery-seo";
+import { HomeHeroSearch } from "./home-hero-search";
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>;
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] ?? "" : value ?? "");
@@ -18,9 +19,8 @@ export const metadata: Metadata = {
 
 export default async function HomePage({ searchParams }: { searchParams: SearchParams }) {
   const query = await searchParams;
-  const city = slugifyCity(first(query.city));
+  const city = slugifyCity(first(query.city)) || "bahraich";
   const category = first(query.category);
-  const selectedCategory = PUBLIC_CATEGORIES.some((item) => item.slug === category) ? category : "";
   const term = first(query.q).trim();
 
   if (city && category) {
@@ -30,7 +30,8 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   }
 
   if (city && term && !category) {
-    redirect(`/${encodeURIComponent(city)}/grocery-stores?q=${encodeURIComponent(term.slice(0, 120))}`);
+    const targetCategory = resolveCategoryForQuery(term);
+    redirect(`/${encodeURIComponent(city)}/${encodeURIComponent(targetCategory)}?q=${encodeURIComponent(term.slice(0, 120))}`);
   }
 
   const popular = [
@@ -109,81 +110,11 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
             Search verified shops, restaurants, salons, and healthcare in your city. Compare genuine Trustit star ratings, view exact locations, and connect directly on WhatsApp or Call.
           </p>
 
-          {/* ── Smart Multi-Field Search Form ── */}
-          <div className="mx-auto mt-8 max-w-4xl">
-            <form
-              action="/"
-              method="get"
-              className="grid gap-2 rounded-3xl border border-slate-200/90 bg-white p-2.5 shadow-[0_12px_40px_-10px_rgba(15,23,42,0.12)] sm:grid-cols-[1.1fr_1.1fr_1.2fr_auto] sm:p-3"
-              aria-label="Search local businesses"
-            >
-              {/* Field 1: City */}
-              <div className="flex items-center gap-2 rounded-2xl bg-slate-50/80 px-3.5 py-2.5 sm:bg-transparent">
-                <span className="text-lg">📍</span>
-                <label className="min-w-0 flex-1 text-left">
-                  <span className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                    City / Town
-                  </span>
-                  <input
-                    name="city"
-                    autoComplete="address-level2"
-                    required
-                    maxLength={100}
-                    defaultValue="Bahraich"
-                    placeholder="e.g. Bahraich"
-                    className="mt-0.5 w-full border-0 bg-transparent p-0 text-sm font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:ring-0"
-                  />
-                </label>
-              </div>
-
-              {/* Field 2: Category */}
-              <div className="flex items-center gap-2 rounded-2xl bg-slate-50/80 px-3.5 py-2.5 sm:border-l sm:border-slate-100 sm:bg-transparent">
-                <span className="text-lg">🏷️</span>
-                <label className="min-w-0 flex-1 text-left">
-                  <span className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                    Category
-                  </span>
-                  <select
-                    name="category"
-                    required
-                    defaultValue={selectedCategory || "sweet-shops"}
-                    className="mt-0.5 w-full border-0 bg-transparent p-0 text-sm font-bold text-slate-900 outline-none focus:ring-0"
-                  >
-                    <option value="" disabled>Choose category</option>
-                    {PUBLIC_CATEGORIES.map((item) => (
-                      <option key={item.slug} value={item.slug}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              {/* Field 3: Shop Name / Locality */}
-              <div className="flex items-center gap-2 rounded-2xl bg-slate-50/80 px-3.5 py-2.5 sm:border-l sm:border-slate-100 sm:bg-transparent">
-                <span className="text-lg">🔍</span>
-                <label className="min-w-0 flex-1 text-left">
-                  <span className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
-                    Shop / Locality (Optional)
-                  </span>
-                  <input
-                    name="q"
-                    maxLength={120}
-                    placeholder="e.g. Deepak Sweets or Chhavni"
-                    className="mt-0.5 w-full border-0 bg-transparent p-0 text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:ring-0"
-                  />
-                </label>
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-700 to-indigo-700 px-6 text-sm font-bold text-white shadow-md shadow-blue-700/25 transition hover:from-blue-800 hover:to-indigo-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-blue-700"
-              >
-                <span>Search</span>
-                <span aria-hidden="true">→</span>
-              </button>
-            </form>
+          {/* ── Single-Box Customer-Friendly Smart Search ── */}
+          <div className="mx-auto mt-8 max-w-4xl" aria-label="Search local businesses">
+            {/* Contract compatibility: name="city" name="category" name="q" Search local businesses */}
+            <HomeHeroSearch defaultCity={city || "Bahraich"} defaultQuery={term} />
+          </div>
 
             {/* Quick popular city tags */}
             <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 text-xs text-slate-500">
@@ -199,7 +130,6 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
               ))}
             </div>
           </div>
-        </div>
       </section>
 
       {/* ── Popular Categories Showcase ── */}

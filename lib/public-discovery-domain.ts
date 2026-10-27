@@ -149,12 +149,18 @@ export function haversineKm(aLat: number, aLng: number, bLat: number, bLng: numb
   return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 const SEARCH_SYNONYMS: Record<string, string[]> = {
-  ditergent: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin", "cleaner"],
-  detergent: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin"],
-  deturgent: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin"],
-  surf: ["detergent", "surf excel", "washing powder", "tide", "ariel"],
-  sarf: ["detergent", "surf excel", "washing powder", "tide", "ariel"],
+  ditergent: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin", "cleaner", "nirma"],
+  detergent: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin", "nirma"],
+  deturgent: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin", "nirma"],
+  nirma: ["detergent", "surf", "washing powder", "ariel", "tide", "ghadi", "rin", "cleaner", "soap"],
+  surf: ["detergent", "surf excel", "washing powder", "tide", "ariel", "nirma"],
+  sarf: ["detergent", "surf excel", "washing powder", "tide", "ariel", "nirma"],
   soap: ["soap", "dettol", "lux", "lifebuoy", "bathing"],
+  gulab: ["gulab jamun", "sweet", "sweets", "mithai"],
+  saloon: ["salon", "haircut", "barber", "beauty parlour"],
+  sal: ["salon", "saloon", "haircut", "barber"],
+  rest: ["restaurant", "dining", "biryani", "food"],
+  restaurent: ["restaurant", "dining", "biryani", "food"],
   dant: ["dental", "teeth", "tooth", "dentist"],
   dantist: ["dental", "teeth", "tooth", "dentist"],
   dentist: ["dental", "teeth", "tooth", "dentist"],
@@ -169,6 +175,165 @@ const SEARCH_SYNONYMS: Record<string, string[]> = {
   tyre: ["mrf", "tyre", "puncture", "wheel"],
   tire: ["mrf", "tyre", "puncture", "wheel"],
 };
+
+export function resolveCategoryForQuery(query: string): string {
+  const q = (query || "").trim().toLowerCase();
+  if (!q) return "grocery-stores";
+
+  // Sweets & Bakeries
+  if (/(gulab|jamun|rasgulla|kaju|katli|mithai|sweet|ladoo|laddoo|peda|barfi|halwa|jalebi|samosa|kachori|namkeen|baker|cake)/i.test(q)) {
+    return "sweet-shops";
+  }
+  // Restaurants & Dining
+  if (/(rest|restaurent|restaurant|biryani|briyani|khana|dinner|lunch|thali|paneer|chicken|mutton|kebab|burger|pizza|noodle|chowmein|roll|dosa|fast food|cafe|dhaba)/i.test(q)) {
+    return "restaurants";
+  }
+  // Salons & Grooming
+  if (/(sal\b|salon|saloon|barber|hair|haircut|hercut|shave|shaving|beard|facial|spa|parlour|parlor|keratin|makeup|bridal)/i.test(q)) {
+    return "salons";
+  }
+  // Clinics & Doctors
+  if (/(dant|dantist|dentist|dental|teeth|tooth|clinic|doctor|hospital|eye|dr\b|pathology|xray|physio|child specialist)/i.test(q)) {
+    return "clinics";
+  }
+  // Pharmacies & Medicines
+  if (/(dawa|medicine|medical|chemist|pharmacy|paracetamol|dolo|crocin|tablet|syrup|capsule|cough|bandage|digene)/i.test(q)) {
+    return "pharmacies";
+  }
+  // Mobile & Tech
+  if (/(mobile|phone|charger|screen|glass|cover|earbuds|headphone|neckband|power bank|repair|tech)/i.test(q)) {
+    return "mobile-shops";
+  }
+  // Automotive & Garage
+  if (/(auto|car|bike|garage|tyre|tire|mrf|apollo|puncture|wheel|engine oil|mobil|castrol|servicing|wash)/i.test(q)) {
+    return "auto-services";
+  }
+  // Hardware & Paints
+  if (/(hardware|paint|cement|simint|ciment|ultratech|asian paint|pipe|saria|iron|steel|fitting|lock)/i.test(q)) {
+    return "hardware-stores";
+  }
+  // Clothing & Fashion
+  if (/(cloth|clothes|fashion|wear|shirt|pant|jeans|saree|sari|kurti|suit|kurta|lehenga|kids)/i.test(q)) {
+    return "clothing-stores";
+  }
+  // Hotels & Stays
+  if (/(hotel|stay|room|lodge|guest house|resort|banquet|suite)/i.test(q)) {
+    return "hotels";
+  }
+  // Grocery & Supermarket (detergent, nirma, surf, atta, oil, ghee, dal, spices, soap, etc.)
+  if (/(ditergent|deturgent|detergent|nirma|surf|sarf|washing powder|soap|sabun|atta|rice|oil|ghee|dal|spices|tea|chai|kirana|supermarket|mart|ration)/i.test(q)) {
+    return "grocery-stores";
+  }
+
+  return "grocery-stores";
+}
+
+export type SearchSuggestion = {
+  id: string;
+  type: "category" | "product" | "shop";
+  title: string;
+  subtitle: string;
+  icon: string;
+  url: string;
+  badge?: string;
+};
+
+const POPULAR_SEARCH_INDEX = [
+  // Categories & Services
+  { keywords: ["sal", "salon", "saloon", "parlour", "hair", "haircut", "barber", "grooming"], title: "Salons & Beauty Parlours", subtitle: "Haircut, Beard Grooming & Styling", icon: "✂️", type: "category" as const, categorySlug: "salons", q: "" },
+  { keywords: ["haircut", "hercut", "hair", "cut", "shave", "sal"], title: "Haircut & Beard Grooming", subtitle: "Top Men's & Unisex Grooming in Bahraich", icon: "💇", type: "product" as const, categorySlug: "salons", q: "haircut" },
+  { keywords: ["facial", "d-tan", "spa", "keratin"], title: "Facial, D-Tan & Hair Spa", subtitle: "Skin & Hair Treatment", icon: "✨", type: "product" as const, categorySlug: "salons", q: "facial" },
+
+  // Grocery & FMCG & Detergent & Nirma
+  { keywords: ["dite", "ditergent", "deturgent", "detergent", "surf", "sarf", "nirma", "washing powder", "soap"], title: "Detergent & Washing Powder", subtitle: "Nirma, Surf Excel, Ariel, Tide & Ghadi", icon: "🧼", type: "product" as const, categorySlug: "grocery-stores", q: "detergent", badge: "From ₹25" },
+  { keywords: ["nirma", "washing", "ditergent"], title: "Nirma Washing Powder", subtitle: "Popular Detergent Bar & Powder", icon: "🧼", type: "product" as const, categorySlug: "grocery-stores", q: "nirma", badge: "From ₹35" },
+  { keywords: ["surf", "surf excel"], title: "Surf Excel Detergent", subtitle: "Quick Wash & Easy Wash Powder", icon: "🧼", type: "product" as const, categorySlug: "grocery-stores", q: "surf excel", badge: "From ₹75" },
+  { keywords: ["kirana", "grocery", "mart", "supermarket", "ration"], title: "Grocery & Kirana Stores", subtitle: "Daily Essentials, Atta, Ghee & Spices", icon: "🛒", type: "category" as const, categorySlug: "grocery-stores", q: "" },
+  { keywords: ["atta", "aashirvaad", "flour"], title: "Atta & Wheat Flour", subtitle: "Aashirvaad, Fortune & Chakki Fresh", icon: "🌾", type: "product" as const, categorySlug: "grocery-stores", q: "atta", badge: "From ₹42/kg" },
+  { keywords: ["oil", "ghee", "mustard oil", "fortune", "amul"], title: "Cooking Oil & Pure Ghee", subtitle: "Fortune, Amul & Patanjali", icon: "🫒", type: "product" as const, categorySlug: "grocery-stores", q: "ghee", badge: "From ₹135" },
+
+  // Sweets & Mithai
+  { keywords: ["gula", "gulab jamun", "jamun", "kala jamun"], title: "Gulab Jamun & Sweets", subtitle: "Hot Gulab Jamun & Desi Ghee Mithai", icon: "🍮", type: "product" as const, categorySlug: "sweet-shops", q: "gulab jamun", badge: "From ₹320/kg" },
+  { keywords: ["kaju", "kaju katli", "mithai", "barfi"], title: "Kaju Katli Special", subtitle: "Pure Kaju Katli in Bahraich", icon: "💎", type: "product" as const, categorySlug: "sweet-shops", q: "kaju", badge: "From ₹950/kg" },
+  { keywords: ["rasgulla", "rasmalai", "bengali sweet"], title: "Rasgulla & Rasmalai", subtitle: "Fresh Chhena & Bengali Sweets", icon: "🥛", type: "product" as const, categorySlug: "sweet-shops", q: "rasgulla", badge: "From ₹280/kg" },
+  { keywords: ["sweet", "sweets", "mithai", "mithayi"], title: "Sweet Shops & Bakeries", subtitle: "Laddoo, Peda, Samosa & Mithai", icon: "🍰", type: "category" as const, categorySlug: "sweet-shops", q: "" },
+  { keywords: ["samosa", "kachori", "snacks"], title: "Samosa & Khasta Kachori", subtitle: "Crispy Evening Snacks", icon: "🥟", type: "product" as const, categorySlug: "sweet-shops", q: "samosa", badge: "₹10/pc" },
+
+  // Restaurants & Food
+  { keywords: ["rest", "restaurent", "restaurant", "dining", "dhaba", "food", "khana"], title: "Restaurants & Family Dining", subtitle: "Thali, North Indian, Chinese & Fast Food", icon: "🍽️", type: "category" as const, categorySlug: "restaurants", q: "" },
+  { keywords: ["biry", "biryani", "briyani", "chicken biryani", "dum biryani"], title: "Awadhi Dum Biryani", subtitle: "Special Chicken & Mutton Biryani", icon: "🍗", type: "product" as const, categorySlug: "restaurants", q: "biryani", badge: "From ₹160" },
+  { keywords: ["paneer", "dal makhani", "veg food"], title: "Paneer & Veg Special Thali", subtitle: "Shahi Paneer, Dal Makhani & Roti", icon: "🧀", type: "product" as const, categorySlug: "restaurants", q: "paneer", badge: "From ₹180" },
+  { keywords: ["burger", "pizza", "roll", "fast food", "chowmein"], title: "Fast Food, Rolls & Chinese", subtitle: "Burgers, Chowmein & Kathi Rolls", icon: "🍔", type: "product" as const, categorySlug: "restaurants", q: "burger", badge: "From ₹60" },
+
+  // Clinics & Doctors
+  { keywords: ["dant", "dantist", "dentist", "dental", "teeth", "tooth"], title: "Dentist & Dental Clinics", subtitle: "Teeth Cleaning, Root Canal & Braces", icon: "🦷", type: "category" as const, categorySlug: "clinics", q: "dental" },
+  { keywords: ["clinic", "doctor", "hospital", "physician", "care"], title: "Doctors & Health Clinics", subtitle: "General Physicians, Dental & Eye Care", icon: "🩺", type: "category" as const, categorySlug: "clinics", q: "" },
+  { keywords: ["eye", "optical", "chashma", "optician"], title: "Eye Care & Opticals", subtitle: "Vision Testing & Spectacles", icon: "👁️", type: "product" as const, categorySlug: "clinics", q: "eye" },
+
+  // Pharmacies & Medicines
+  { keywords: ["dawa", "medicine", "medical", "chemist", "pharmacy", "paracetamol", "dolo"], title: "Pharmacies & Medical Stores", subtitle: "All Allopathic Medicines & Health Supplies", icon: "💊", type: "category" as const, categorySlug: "pharmacies", q: "" },
+  { keywords: ["paracetamol", "dolo", "crocin", "fever", "pain"], title: "Paracetamol / Dolo Tablets", subtitle: "Fever & Pain Relief Medicines", icon: "💊", type: "product" as const, categorySlug: "pharmacies", q: "paracetamol", badge: "From ₹30" },
+
+  // Mobiles & Electronics
+  { keywords: ["mobile", "phone", "smartphone", "screen", "glass", "charger", "cover"], title: "Mobile & Tech Accessories", subtitle: "Screen Glass, Fast Chargers & Back Covers", icon: "📱", type: "category" as const, categorySlug: "mobile-shops", q: "" },
+
+  // Auto Services & Garages
+  { keywords: ["auto", "bike", "car", "garage", "tyre", "puncture", "service", "mobil"], title: "Auto & Bike Care Garages", subtitle: "MRF Tyres, Castrol Mobil & Bike Servicing", icon: "🚗", type: "category" as const, categorySlug: "auto-services", q: "" },
+  { keywords: ["tyre", "tire", "mrf", "apollo"], title: "MRF & Bike Tyres", subtitle: "Tubeless Tyres & Wheel Balancing", icon: "🛞", type: "product" as const, categorySlug: "auto-services", q: "tyre", badge: "From ₹1,450" },
+
+  // Hardware & Paints
+  { keywords: ["hardware", "paint", "cement", "simint", "ultratech", "asian"], title: "Hardware & Paint Stores", subtitle: "UltraTech Cement, Asian Paints & TMT Steel", icon: "🔨", type: "category" as const, categorySlug: "hardware-stores", q: "" },
+  { keywords: ["cement", "simint", "ultratech"], title: "UltraTech Cement", subtitle: "Premium Grade Building Cement", icon: "🧱", type: "product" as const, categorySlug: "hardware-stores", q: "cement", badge: "From ₹390/bag" },
+  { keywords: ["paint", "asian paint", "primer"], title: "Asian Paints & Primer", subtitle: "Wall Paints, Distemper & Brushes", icon: "🎨", type: "product" as const, categorySlug: "hardware-stores", q: "paint" },
+
+  // Clothing & Fashion
+  { keywords: ["cloth", "clothes", "fashion", "saree", "shirt", "jeans"], title: "Clothing & Fashion Stores", subtitle: "Banarasi Sarees, Cotton Shirts & Denim", icon: "🛍️", type: "category" as const, categorySlug: "clothing-stores", q: "" },
+
+  // Hotels & Stays
+  { keywords: ["hotel", "stay", "room", "lodge", "banquet"], title: "Hotels & Stays", subtitle: "AC Deluxe Rooms, Banquets & Stays", icon: "🏨", type: "category" as const, categorySlug: "hotels", q: "" },
+
+  // Popular Verified Shops in Bahraich
+  { keywords: ["deepak", "deepak sweet", "deepak sweets"], title: "Deepak Sweet House", subtitle: "Station Road, Bahraich · ★ 4.9", icon: "🍰", type: "shop" as const, categorySlug: "sweet-shops", q: "Deepak Sweet House", badge: "Verified Shop" },
+  { keywords: ["madhuram", "madhuram sweets"], title: "Madhuram Sweets & Bakery", subtitle: "Chowk Bazar, Bahraich · ★ 4.8", icon: "🍰", type: "shop" as const, categorySlug: "sweet-shops", q: "Madhuram Sweets", badge: "Verified Shop" },
+  { keywords: ["gupta", "gupta kirana"], title: "Gupta Kirana & General Store", subtitle: "Chowk Bazar, Bahraich · ★ 4.8", icon: "🛒", type: "shop" as const, categorySlug: "grocery-stores", q: "Gupta Kirana", badge: "Verified Shop" },
+  { keywords: ["shivam", "shivam supermarket"], title: "Shivam Supermarket", subtitle: "Hospital Road, Bahraich · ★ 4.7", icon: "🛒", type: "shop" as const, categorySlug: "grocery-stores", q: "Shivam Supermarket", badge: "Verified Shop" },
+  { keywords: ["awadh", "awadh biryani"], title: "Awadh Biryani Corner", subtitle: "Peepal Chauraha, Bahraich · ★ 4.8", icon: "🍽️", type: "shop" as const, categorySlug: "restaurants", q: "Awadh Biryani", badge: "Verified Shop" },
+  { keywords: ["royal", "royal darbar"], title: "Royal Darbar Restaurant", subtitle: "KDC Chauraha, Bahraich · ★ 4.7", icon: "🍽️", type: "shop" as const, categorySlug: "restaurants", q: "Royal Darbar", badge: "Verified Shop" },
+  { keywords: ["looks", "looks salon"], title: "Looks Unisex Salon", subtitle: "Civil Lines, Bahraich · ★ 4.9", icon: "✂️", type: "shop" as const, categorySlug: "salons", q: "Looks Unisex Salon", badge: "Verified Shop" },
+  { keywords: ["jawed", "jawed habib"], title: "Jawed Habib Hair & Beauty", subtitle: "Station Road, Bahraich · ★ 4.8", icon: "✂️", type: "shop" as const, categorySlug: "salons", q: "Jawed Habib", badge: "Verified Shop" },
+  { keywords: ["agarwal", "dr agarwal", "dental clinic"], title: "Dr. Agarwal Dental Clinic", subtitle: "Hospital Road, Bahraich · ★ 4.9", icon: "🩺", type: "shop" as const, categorySlug: "clinics", q: "Dr. Agarwal Dental", badge: "Verified Clinic" },
+  { keywords: ["verma", "verma medical"], title: "Verma Medical Hall", subtitle: "Chhawni Road, Bahraich · ★ 4.8", icon: "💊", type: "shop" as const, categorySlug: "pharmacies", q: "Verma Medical", badge: "Verified Medical" },
+  { keywords: ["singhal", "singhal hardware"], title: "Singhal Hardware & Paints", subtitle: "Galla Mandi, Bahraich · ★ 4.8", icon: "🔨", type: "shop" as const, categorySlug: "hardware-stores", q: "Singhal Hardware", badge: "Verified Hardware" },
+  { keywords: ["super", "super bike"], title: "Super Bike Service & Garage", subtitle: "Nanpara Road, Bahraich · ★ 4.7", icon: "🚗", type: "shop" as const, categorySlug: "auto-services", q: "Super Bike Service", badge: "Verified Garage" },
+];
+
+export function getSearchSuggestions(query: string, citySlug = "bahraich"): SearchSuggestion[] {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return [];
+
+  const matched = POPULAR_SEARCH_INDEX.filter((item) => {
+    return (
+      item.title.toLowerCase().includes(q) ||
+      item.subtitle.toLowerCase().includes(q) ||
+      item.keywords.some((k) => k.startsWith(q) || k.includes(q) || q.startsWith(k))
+    );
+  });
+
+  return matched.slice(0, 6).map((item, idx) => {
+    const url = item.q
+      ? `/${citySlug}/${item.categorySlug}?q=${encodeURIComponent(item.q)}`
+      : `/${citySlug}/${item.categorySlug}`;
+    return {
+      id: `${item.type}-${idx}-${item.title}`,
+      type: item.type,
+      title: item.title,
+      subtitle: item.subtitle,
+      icon: item.icon,
+      url,
+      badge: item.badge,
+    };
+  });
+}
 
 export function rankBusinesses(items: DiscoveryBusiness[], options: { sort?: string; q?: string; minRating?: number; lat?: number; lng?: number; now?: number } = {}): RankedBusiness[] {
   const now = options.now ?? Date.now();
