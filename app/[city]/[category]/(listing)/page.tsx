@@ -39,6 +39,58 @@ function categoryIconEmoji(type: string): string {
   return "🏪";
 }
 
+const CATEGORY_QUICK_FILTERS: Record<string, Array<{ label: string; q: string; icon: string }>> = {
+  "sweet-shops": [
+    { label: "All Sweets", q: "", icon: "🍰" },
+    { label: "Kaju Katli", q: "kaju", icon: "💎" },
+    { label: "Gulab Jamun", q: "jamun", icon: "🟤" },
+    { label: "Rasgulla", q: "rasgulla", icon: "⚪" },
+    { label: "Rasmalai", q: "rasmalai", icon: "🥛" },
+    { label: "Laddoo & Peda", q: "laddoo", icon: "🟡" },
+    { label: "Samosa & Snacks", q: "samosa", icon: "🥟" },
+    { label: "Kachori", q: "kachori", icon: "🫓" },
+  ],
+  "restaurants": [
+    { label: "All Food", q: "", icon: "🍽️" },
+    { label: "Biryani Special", q: "biryani", icon: "🍗" },
+    { label: "Paneer & Dal", q: "paneer", icon: "🧀" },
+    { label: "Kebab & Tandoor", q: "kebab", icon: "🍢" },
+    { label: "Fast Food & Rolls", q: "burger", icon: "🍔" },
+    { label: "Chinese & Noodles", q: "noodles", icon: "🍜" },
+    { label: "Special Thali", q: "thali", icon: "🍱" },
+    { label: "Dosa & South Indian", q: "dosa", icon: "🥞" },
+  ],
+  "salons": [
+    { label: "All Services", q: "", icon: "✂️" },
+    { label: "Hair Cut & Styling", q: "haircut", icon: "💇" },
+    { label: "Beard & Grooming", q: "beard", icon: "🧔" },
+    { label: "Facial & D-Tan", q: "facial", icon: "✨" },
+    { label: "Hair Spa & Keratin", q: "keratin", icon: "💆" },
+    { label: "Bridal Makeup", q: "bridal", icon: "💄" },
+  ],
+  "clinics": [
+    { label: "All Clinics", q: "", icon: "🩺" },
+    { label: "Dental & Teeth", q: "dental", icon: "🦷" },
+    { label: "Eye Care", q: "eye", icon: "👁️" },
+    { label: "Child Specialist", q: "child", icon: "👶" },
+    { label: "Physiotherapy", q: "physio", icon: "🦴" },
+    { label: "Diagnostics & Labs", q: "pathology", icon: "🔬" },
+  ],
+  "hotels": [
+    { label: "All Stays", q: "", icon: "🏨" },
+    { label: "AC Deluxe Rooms", q: "deluxe", icon: "🛏️" },
+    { label: "Banquet & Events", q: "banquet", icon: "🎉" },
+    { label: "Suite Rooms", q: "suite", icon: "👑" },
+  ],
+  "grocery-stores": [
+    { label: "All Essentials", q: "", icon: "🛒" },
+    { label: "Atta & Rice", q: "atta", icon: "🌾" },
+    { label: "Oil & Ghee", q: "ghee", icon: "🫒" },
+    { label: "Dals & Pulses", q: "dal", icon: "🥣" },
+    { label: "Tea & Spices", q: "tea", icon: "☕" },
+  ],
+};
+
 export async function generateMetadata({
   params,
   searchParams,
@@ -105,9 +157,10 @@ export default async function DiscoveryPage({
     value(query.lat) &&
     value(query.lng);
   const minimum = Number(value(query.minRating));
+  const searchQuery = value(query.q);
   const ranked = rankBusinesses(businesses, {
     sort: value(query.sort),
-    q: value(query.q),
+    q: searchQuery,
     minRating: [3, 4, 4.5].includes(minimum) ? minimum : undefined,
     lat: coords ? latValue : undefined,
     lng: coords ? lngValue : undefined,
@@ -115,6 +168,7 @@ export default async function DiscoveryPage({
   const page = paginate(ranked, Number(value(query.page)) || 1);
   const cityName = businesses[0]?.city ?? discoveryTitle(citySlug);
   const categoryName = categoryNameForSlug(canonicalCategory) || discoveryTitle(canonicalCategory);
+  const quickFilters = CATEGORY_QUICK_FILTERS[canonicalCategory] ?? [];
 
   function pageHref(next: number) {
     const p = new URLSearchParams();
@@ -190,17 +244,55 @@ export default async function DiscoveryPage({
           </div>
 
           {/* ── Discovery Search & Filter Controls ── */}
-          <div className="mb-6">
+          <div className="mb-4">
             <DiscoveryControls
               city={canonicalCity}
               category={canonicalCategory}
-              search={value(query.q)}
+              search={searchQuery}
               sort={value(query.sort) || "recommended"}
               minRating={value(query.minRating)}
               lat={coords ? String(latValue) : ""}
               lng={coords ? String(lngValue) : ""}
             />
           </div>
+
+          {/* ── Swiggy / Zomato Style Quick Food & Item Pills ── */}
+          {quickFilters.length > 0 && (
+            <div className="mb-6 -mt-1">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none text-xs">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 shrink-0 mr-1">
+                  Quick Find:
+                </span>
+                {quickFilters.map((pill) => {
+                  const currentQ = searchQuery.toLowerCase().trim();
+                  const isSelected = (!pill.q && !currentQ) || (pill.q && currentQ.includes(pill.q));
+                  const p = new URLSearchParams();
+                  if (pill.q) p.set("q", pill.q);
+                  if (value(query.sort)) p.set("sort", value(query.sort));
+                  if (value(query.minRating)) p.set("minRating", value(query.minRating));
+                  if (coords) {
+                    p.set("lat", String(latValue));
+                    p.set("lng", String(lngValue));
+                  }
+                  const href = `/${canonicalCity}/${canonicalCategory}${p.toString() ? `?${p.toString()}` : ""}`;
+                  return (
+                    <Link
+                      key={pill.label}
+                      href={href}
+                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3.5 py-1.5 font-bold transition shadow-2xs ${
+                        isSelected
+                          ? "bg-blue-700 text-white shadow-blue-700/20 ring-2 ring-blue-700/30"
+                          : "bg-white border border-slate-200/90 text-slate-700 hover:border-blue-400 hover:text-blue-700"
+                      }`}
+                    >
+                      <span>{pill.icon}</span>
+                      <span>{pill.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* ── Businesses Grid ── */}
           {page.items.length ? (
@@ -219,6 +311,13 @@ export default async function DiscoveryPage({
                   ? `https://wa.me/${waPhone}?text=${encodeURIComponent(`Namaste ${business.name}, I found your business on Trustit.`)}`
                   : null;
                 const telLink = business.phone ? `tel:${business.phone}` : null;
+
+                // Check if search query matches any specific item in the menu
+                const matchedItem = searchQuery.trim() && business.catalogItems
+                  ? business.catalogItems.find((item) =>
+                      item.name.toLowerCase().includes(searchQuery.toLowerCase().trim())
+                    )
+                  : null;
 
                 return (
                   <article
@@ -275,7 +374,7 @@ export default async function DiscoveryPage({
                       </div>
 
                       {/* Location & Distance */}
-                      <div className="mt-4 flex flex-col gap-1 text-xs text-slate-600">
+                      <div className="mt-3.5 flex flex-col gap-1 text-xs text-slate-600">
                         {address && (
                           <p className="flex items-start gap-1.5 leading-5">
                             <span className="shrink-0 text-slate-400">📍</span>
@@ -289,6 +388,50 @@ export default async function DiscoveryPage({
                           </p>
                         )}
                       </div>
+
+                      {/* Matched Dish Highlight (if user searched for an item) */}
+                      {matchedItem && (
+                        <div className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-900 ring-1 ring-emerald-600/25">
+                          <span>✓ In Menu:</span>
+                          <span className="text-slate-950 underline underline-offset-2">{matchedItem.name}</span>
+                          <span className="text-emerald-700 font-black">₹{matchedItem.price}</span>
+                          {matchedItem.unit && <span className="text-[10px] text-slate-500 font-normal">({matchedItem.unit})</span>}
+                        </div>
+                      )}
+
+                      {/* Swiggy / Zomato Style Items & Highlights */}
+                      {business.catalogItems && business.catalogItems.length > 0 && !matchedItem && (
+                        <div className="mt-3.5 rounded-2xl bg-slate-50/90 p-3 border border-slate-200/70">
+                          <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 mb-2">
+                            <span className="flex items-center gap-1">
+                              <span>🍽️</span>
+                              <span>POPULAR ITEMS & MENU</span>
+                            </span>
+                            {business.catalogItems.some((i) => i.itemType === "veg") && (
+                              <span className="inline-flex items-center gap-1 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded ring-1 ring-emerald-600/20">
+                                <span className="size-1.5 rounded-full bg-emerald-600" /> Pure Veg
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {business.catalogItems.slice(0, 4).map((item) => (
+                              <span
+                                key={item.id}
+                                className="inline-flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-2 py-0.5 text-xs text-slate-800 shadow-2xs"
+                              >
+                                <span className="font-semibold text-slate-900">{item.name}</span>
+                                <span className="font-black text-emerald-700">₹{item.price}</span>
+                                {item.unit && <span className="text-[10px] text-slate-400 font-normal">({item.unit})</span>}
+                              </span>
+                            ))}
+                            {business.catalogItems.length > 4 && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-bold text-blue-700">
+                                +{business.catalogItems.length - 4} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       {/* Direct Contact Bar */}
                       {(waLink || telLink) && (
@@ -382,7 +525,7 @@ export default async function DiscoveryPage({
               </h2>
               <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-600">
                 There are no {categoryName.toLowerCase()} to show in {cityName}
-                {value(query.q) || minimum ? " with these filters" : " yet"}. Try adjusting your search or check again later.
+                {searchQuery || minimum ? " with these filters" : " yet"}. Try adjusting your search or check again later.
               </p>
               <div className="mt-6 flex justify-center gap-3">
                 <Link
@@ -403,59 +546,28 @@ export default async function DiscoveryPage({
 
           {/* ── Pagination ── */}
           {page.totalPages > 1 && (
-            <nav className="mt-8 flex justify-center gap-3" aria-label="Pagination">
+            <div className="mt-10 flex items-center justify-center gap-2">
               {page.currentPage > 1 && (
                 <Link
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
                   href={pageHref(page.currentPage - 1)}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
                 >
                   ← Previous
                 </Link>
               )}
-              <span className="inline-flex items-center px-3 text-xs font-bold text-slate-500">
+              <span className="text-xs font-semibold text-slate-500">
                 Page {page.currentPage} of {page.totalPages}
               </span>
               {page.currentPage < page.totalPages && (
                 <Link
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
                   href={pageHref(page.currentPage + 1)}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition"
                 >
                   Next →
                 </Link>
               )}
-            </nav>
-          )}
-
-          {/* ── Local SEO Information Section (For Google Search Ranking) ── */}
-          <section className="mt-14 rounded-3xl border border-slate-200/80 bg-white p-6 sm:p-8">
-            <h2 className="text-lg font-black text-slate-900 sm:text-xl tracking-tight">
-              About {categoryName} in {cityName} on Trustit
-            </h2>
-            <div className="mt-4 grid gap-5 text-xs text-slate-600 sm:grid-cols-3 leading-relaxed">
-              <div>
-                <strong className="block text-sm font-bold text-slate-900 mb-1">
-                  100% Genuine In-Store Ratings
-                </strong>
-                Every review displayed on Trustit comes from real customers who physically visit the business and scan its counter QR standee.
-              </div>
-              <div>
-                <strong className="block text-sm font-bold text-slate-900 mb-1">
-                  Direct Contact & Directions
-                </strong>
-                Get instant turn-by-turn driving directions on Google Maps or connect with the shop owner without any third-party fees.
-              </div>
-              <div>
-                <strong className="block text-sm font-bold text-slate-900 mb-1">
-                  Are you a shop owner in {cityName}?
-                </strong>
-                Join Trustit to display your business on this public page and collect 5-star customer reviews on Google.
-              </div>
             </div>
-          </section>
-
-          <footer className="mt-8 border-t border-slate-200 pt-5 text-xs text-slate-500">
-            Trustit displays submitted Trustit ratings only. Individual customer reviews are private.
-          </footer>
+          )}
         </div>
       </main>
       <TrustitPublicFooter />

@@ -2,7 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
-import { categorySlugForBusinessType, hasUsablePublicDiscoveryLocation, PUBLIC_CATEGORIES, slugifyCity, type DiscoveryBusiness } from "@/lib/public-discovery-domain";
+import { categorySlugForBusinessType, hasUsablePublicDiscoveryLocation, PUBLIC_CATEGORIES, slugifyCity, type DiscoveryBusiness, type CatalogItem } from "@/lib/public-discovery-domain";
 
 function publicGoogleLink(value: unknown) {
   const safe = safeReviewLink(value);
@@ -34,13 +34,42 @@ const getBusinessesCached = cache(async (citySlug: string, typesKey: string): Pr
   const rows = (data ?? []) as Array<Record<string, unknown>>;
   const ids = rows.map((r) => typeof r.business_id === "string" ? r.business_id : "").filter(Boolean);
   const contactMap = new Map<string, string>();
+  const catalogMap = new Map<string, CatalogItem[]>();
   if (ids.length) {
-    const { data: contacts } = await client.from("businesses").select("id, phone").in("id", ids);
+    const [{ data: contacts }, { data: catalogRows }] = await Promise.all([
+      client.from("businesses").select("id, phone").in("id", ids),
+      client
+        .from("business_catalog_items")
+        .select("id, business_id, name, category, price, unit, item_type, image_url, description, is_available")
+        .in("business_id", ids)
+        .eq("is_available", true)
+        .order("display_order"),
+    ]);
     if (contacts) {
       for (const item of contacts) {
         if (item.id && typeof item.phone === "string" && item.phone.trim()) {
           contactMap.set(item.id, item.phone.trim());
         }
+      }
+    }
+    if (catalogRows) {
+      for (const item of catalogRows) {
+        const bId = String(item.business_id ?? "");
+        if (!bId) continue;
+        const list = catalogMap.get(bId) ?? [];
+        list.push({
+          id: String(item.id),
+          businessId: bId,
+          name: String(item.name ?? ""),
+          category: String(item.category ?? "General"),
+          price: Number(item.price) || 0,
+          unit: item.unit ? String(item.unit) : null,
+          itemType: (item.item_type as CatalogItem["itemType"]) ?? "veg",
+          imageUrl: item.image_url ? String(item.image_url) : null,
+          description: item.description ? String(item.description) : null,
+          isAvailable: item.is_available === true,
+        });
+        catalogMap.set(bId, list);
       }
     }
   }
@@ -56,6 +85,7 @@ const getBusinessesCached = cache(async (citySlug: string, typesKey: string): Pr
       address: nullable("address"), locality: nullable("locality"), city: nullable("city"), district: nullable("district"),
       state: nullable("state"), pincode: nullable("pincode"), latitude: numeric("location_latitude"), longitude: numeric("location_longitude"),
       phone: contactMap.get(id) ?? null,
+      catalogItems: catalogMap.get(id) ?? [],
       googleReviewUrl: publicGoogleLink(row.review_link), reviewCount: Number(row.review_count) || 0,
       ratingAverage: numeric("rating_average"), latestReviewAt: nullable("latest_submitted_at"),
       publicCitySlug: nullable("public_city_slug") ?? "",
