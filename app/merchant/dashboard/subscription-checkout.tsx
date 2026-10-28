@@ -295,22 +295,29 @@ export default function SubscriptionCheckout({
                     {spec?.features.map((feat, idx) => (
                       <li
                         key={idx}
-                        className={`flex items-start gap-1.5 ${
-                          feat.included ? "text-slate-700" : "text-slate-400 line-through opacity-70"
+                        className={`flex items-center justify-between gap-1.5 text-[11px] ${
+                          feat.included ? "text-slate-700" : "text-slate-400"
                         }`}
                       >
-                        {feat.included ? (
-                          <span className="mt-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-bold text-emerald-700">
-                            ✓
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {feat.included ? (
+                            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[9px] font-black text-emerald-700">
+                              ✓
+                            </span>
+                          ) : (
+                            <span className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-50 text-[10px] text-amber-700">
+                              🔒
+                            </span>
+                          )}
+                          <span className={`truncate ${feat.highlight ? "font-semibold text-blue-900" : ""} ${!feat.included ? "line-through opacity-75" : ""}`}>
+                            {feat.name}
                           </span>
-                        ) : (
-                          <span className="mt-0.5 inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] font-bold text-slate-400">
-                            ✕
+                        </div>
+                        {!feat.included && (
+                          <span className="shrink-0 rounded bg-amber-100/70 px-1 py-0.2 text-[9px] font-bold uppercase tracking-wider text-amber-800">
+                            Locked
                           </span>
                         )}
-                        <span className={feat.highlight ? "font-semibold text-blue-900" : ""}>
-                          {feat.name}
-                        </span>
                       </li>
                     ))}
                   </ul>

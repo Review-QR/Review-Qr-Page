@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import AdminNavigation from "@/app/admin-navigation";
+import { OtaUpdateBanner } from "@/app/components/ota-update-banner";
 import { TRUSTIT_SITE_URL } from "@/lib/public-discovery-seo";
 import "./globals.css";
 
@@ -33,6 +34,7 @@ export default function RootLayout({
         <Suspense fallback={null}>
           <AdminNavigation />
         </Suspense>
+        <OtaUpdateBanner />
         {children}
       </body>
     </html>

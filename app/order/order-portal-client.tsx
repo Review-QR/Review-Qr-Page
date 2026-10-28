@@ -112,7 +112,7 @@ export default function CustomerSuperAppClient({
   catalogItems: SuperAppCatalogItem[];
 }) {
   // Navigation & Category Tab
-  const [activeTab, setActiveTab] = useState<"food" | "salon" | "car_wash" | "kirana">("food");
+  const [activeTab, setActiveTab] = useState<"food" | "dairy" | "kirana" | "medical" | "car_wash" | "salon">("food");
   const [selectedCity, setSelectedCity] = useState<string>("Bahraich");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -120,6 +120,16 @@ export default function CustomerSuperAppClient({
   const [customerName, setCustomerName] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [customerAddress, setCustomerAddress] = useState<string>("");
+  // Structured Address Fields (Point 4)
+  const [addrHouseNo, setAddrHouseNo] = useState<string>("");
+  const [addrMohalla, setAddrMohalla] = useState<string>("");
+  const [addrRoad, setAddrRoad] = useState<string>("");
+  const [addrPincode, setAddrPincode] = useState<string>("271801");
+  const [addrDistrict, setAddrDistrict] = useState<string>("Bahraich");
+
+  const buildAddressString = (h: string, m: string, r: string, p: string, d: string) => {
+    return [h.trim(), m.trim(), r.trim(), p.trim() ? `Pin: ${p.trim()}` : "", d.trim() || "Bahraich"].filter(Boolean).join(", ");
+  };
   const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
   const [isDetectingGps, setIsDetectingGps] = useState(false);
 
@@ -173,17 +183,39 @@ export default function CustomerSuperAppClient({
       if (savedName) setCustomerName(savedName);
       if (savedPhone) setCustomerPhone(savedPhone);
       if (savedAddr) setCustomerAddress(savedAddr);
+      const sH = localStorage.getItem("trustit_cust_house");
+      const sM = localStorage.getItem("trustit_cust_mohalla");
+      const sR = localStorage.getItem("trustit_cust_road");
+      const sP = localStorage.getItem("trustit_cust_pin");
+      const sD = localStorage.getItem("trustit_cust_dist");
+      if (sH) setAddrHouseNo(sH);
+      if (sM) setAddrMohalla(sM);
+      if (sR) setAddrRoad(sR);
+      if (sP) setAddrPincode(sP);
+      if (sD) setAddrDistrict(sD);
     } catch {
       // Ignore localStorage availability
     }
   }, []);
 
   // Save customer info
-  const saveCustomerProfile = (name: string, phone: string, address: string) => {
+  const saveCustomerProfile = (
+    name: string,
+    phone: string,
+    address: string,
+    struct?: { house?: string; mohalla?: string; road?: string; pin?: string; dist?: string }
+  ) => {
     try {
       localStorage.setItem("trustit_cust_name", name);
       localStorage.setItem("trustit_cust_phone", phone);
       localStorage.setItem("trustit_cust_addr", address);
+      if (struct) {
+        if (struct.house) localStorage.setItem("trustit_cust_house", struct.house);
+        if (struct.mohalla) localStorage.setItem("trustit_cust_mohalla", struct.mohalla);
+        if (struct.road) localStorage.setItem("trustit_cust_road", struct.road);
+        if (struct.pin) localStorage.setItem("trustit_cust_pin", struct.pin);
+        if (struct.dist) localStorage.setItem("trustit_cust_dist", struct.dist);
+      }
     } catch {}
   };
 
@@ -240,7 +272,11 @@ export default function CustomerSuperAppClient({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setIsDetectingGps(false);
-        const auto = `Near GPS Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)}, Bahraich`;
+        setAddrDistrict("Bahraich");
+        if (!addrPincode) setAddrPincode("271801");
+        const detectedMohalla = addrMohalla || "Civil Lines / Chowk Area";
+        setAddrMohalla(detectedMohalla);
+        const auto = buildAddressString(addrHouseNo, detectedMohalla, addrRoad, addrPincode || "271801", "Bahraich");
         setCustomerAddress(auto);
       },
       () => {
@@ -268,18 +304,21 @@ export default function CustomerSuperAppClient({
           type.includes("fast food") ||
           type.includes("cafe") ||
           type.includes("bakery") ||
-          type.includes("cake")
+          type.includes("cake") ||
+          type.includes("food") ||
+          type.includes("dhaba") ||
+          type.includes("pizza") ||
+          type.includes("biryani")
         );
       }
-      if (activeTab === "salon") {
-        return type.includes("salon") || type.includes("parlour") || type.includes("barber");
-      }
-      if (activeTab === "car_wash") {
+      if (activeTab === "dairy") {
         return (
-          type.includes("car wash") ||
-          type.includes("automobile") ||
-          type.includes("bike") ||
-          type.includes("garage")
+          type.includes("dairy") ||
+          type.includes("milk") ||
+          type.includes("doodh") ||
+          type.includes("paneer") ||
+          type.includes("ghee") ||
+          type.includes("sweet")
         );
       }
       if (activeTab === "kirana") {
@@ -287,7 +326,38 @@ export default function CustomerSuperAppClient({
           type.includes("supermarket") ||
           type.includes("grocery") ||
           type.includes("kirana") ||
-          type.includes("mart")
+          type.includes("mart") ||
+          type.includes("ration") ||
+          type.includes("store")
+        );
+      }
+      if (activeTab === "medical") {
+        return (
+          type.includes("medical") ||
+          type.includes("medicine") ||
+          type.includes("pharmacy") ||
+          type.includes("chemist") ||
+          type.includes("clinic") ||
+          type.includes("health") ||
+          type.includes("hospital")
+        );
+      }
+      if (activeTab === "car_wash") {
+        return (
+          type.includes("car wash") ||
+          type.includes("automobile") ||
+          type.includes("bike") ||
+          type.includes("garage") ||
+          type.includes("detailing")
+        );
+      }
+      if (activeTab === "salon") {
+        return (
+          type.includes("salon") ||
+          type.includes("parlour") ||
+          type.includes("barber") ||
+          type.includes("beauty") ||
+          type.includes("grooming")
         );
       }
       return true;
@@ -378,20 +448,21 @@ export default function CustomerSuperAppClient({
       alert("Please fill in your Name, 10-digit Phone, and Delivery Address.");
       return;
     }
-    if (cartItemsList.length === 0 || !activeStoreModal) {
+    const targetBizId = activeStoreModal?.id || cartItemsList[0]?.item?.business_id;
+    if (cartItemsList.length === 0 || !targetBizId) {
       alert("Your cart is empty.");
       return;
     }
 
     startTransition(async () => {
       try {
-        saveCustomerProfile(customerName, customerPhone, customerAddress);
+        saveCustomerProfile(customerName, customerPhone, customerAddress, { house: addrHouseNo, mohalla: addrMohalla, road: addrRoad, pin: addrPincode, dist: addrDistrict });
 
         const res = await fetch("/api/hyperlocal/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            businessId: activeStoreModal.id,
+            businessId: targetBizId,
             orderType: "food_delivery",
             customerName,
             customerPhone,
@@ -660,68 +731,34 @@ export default function CustomerSuperAppClient({
           </div>
         </div>
 
-        {/* ── 4 Hero Horizontal Applet Bubbles (Zomato/Blinkit Style) ── */}
-        <div className="max-w-md mx-auto px-3 pb-2.5 overflow-x-auto no-scrollbar">
-          <div className="grid grid-cols-4 gap-1.5 text-center">
-            <button
-              type="button"
-              onClick={() => setActiveTab("food")}
-              className={`flex flex-col items-center justify-center rounded-xl p-1.5 transition ${
-                activeTab === "food"
-                  ? "bg-orange-50 border border-orange-300 shadow-2xs"
-                  : "bg-white border border-slate-100 hover:bg-slate-50"
-              }`}
-            >
-              <span className="text-lg leading-none">🍔</span>
-              <span className={`text-[10px] mt-1 font-bold truncate w-full ${activeTab === "food" ? "text-orange-700 font-black" : "text-slate-600"}`}>
-                Food & Mithai
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("salon")}
-              className={`flex flex-col items-center justify-center rounded-xl p-1.5 transition ${
-                activeTab === "salon"
-                  ? "bg-emerald-50 border border-emerald-300 shadow-2xs"
-                  : "bg-white border border-slate-100 hover:bg-slate-50"
-              }`}
-            >
-              <span className="text-lg leading-none">✂️</span>
-              <span className={`text-[10px] mt-1 font-bold truncate w-full ${activeTab === "salon" ? "text-emerald-700 font-black" : "text-slate-600"}`}>
-                Salon Queue
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("car_wash")}
-              className={`flex flex-col items-center justify-center rounded-xl p-1.5 transition ${
-                activeTab === "car_wash"
-                  ? "bg-blue-50 border border-blue-300 shadow-2xs"
-                  : "bg-white border border-slate-100 hover:bg-slate-50"
-              }`}
-            >
-              <span className="text-lg leading-none">🚗</span>
-              <span className={`text-[10px] mt-1 font-bold truncate w-full ${activeTab === "car_wash" ? "text-blue-700 font-black" : "text-slate-600"}`}>
-                Car Wash Bay
-              </span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setActiveTab("kirana")}
-              className={`flex flex-col items-center justify-center rounded-xl p-1.5 transition ${
-                activeTab === "kirana"
-                  ? "bg-purple-50 border border-purple-300 shadow-2xs"
-                  : "bg-white border border-slate-100 hover:bg-slate-50"
-              }`}
-            >
-              <span className="text-lg leading-none">🛒</span>
-              <span className={`text-[10px] mt-1 font-bold truncate w-full ${activeTab === "kirana" ? "text-purple-700 font-black" : "text-slate-600"}`}>
-                Kirana Parcha
-              </span>
-            </button>
+        {/* ── 6 Hero Horizontal Applet Bubbles (Point 5 Sequence) ── */}
+        <div className="max-w-xl mx-auto px-3 pb-2.5 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 min-w-max pb-0.5">
+            {[
+              { id: "food", label: "Food & Sweets", icon: "🍔", activeColor: "bg-orange-50 border-orange-300 text-orange-800" },
+              { id: "dairy", label: "Milk & Products", icon: "🥛", activeColor: "bg-sky-50 border-sky-300 text-sky-800" },
+              { id: "kirana", label: "Groceries", icon: "🛒", activeColor: "bg-purple-50 border-purple-300 text-purple-800" },
+              { id: "medical", label: "Medical / Medicine 💊", icon: "💊", activeColor: "bg-rose-50 border-rose-300 text-rose-800" },
+              { id: "car_wash", label: "Car Wash", icon: "🚗", activeColor: "bg-blue-50 border-blue-300 text-blue-800" },
+              { id: "salon", label: "Salon & Grooming", icon: "✂️", activeColor: "bg-emerald-50 border-emerald-300 text-emerald-800" },
+            ].map((cat) => {
+              const active = activeTab === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActiveTab(cat.id as typeof activeTab)}
+                  className={`flex items-center gap-1.5 rounded-xl px-3 py-2 transition border text-xs font-bold shrink-0 ${
+                    active
+                      ? `${cat.activeColor} shadow-2xs font-black`
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
+                  }`}
+                >
+                  <span className="text-base leading-none">{cat.icon}</span>
+                  <span className="whitespace-nowrap">{cat.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </header>
@@ -850,24 +887,35 @@ export default function CustomerSuperAppClient({
 
                 {/* Primary Action Button */}
                 <div className="mt-2.5 pt-2 border-t border-slate-100">
-                  {activeTab === "food" && (
+                  {(activeTab === "food" || activeTab === "dairy") && (
                     <button
                       type="button"
                       onClick={() => setActiveStoreModal(biz)}
                       className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-2 text-xs font-bold text-white shadow-xs hover:from-orange-600 hover:to-amber-600 transition"
                     >
-                      <span>🍽️ View Menu & Order</span>
+                      <span>{activeTab === "dairy" ? "🥛 View Milk & Dairy Items" : "🍽️ View Menu & Order"}</span>
                       <span>→</span>
                     </button>
                   )}
 
-                  {activeTab === "salon" && (
+                  {activeTab === "medical" && (
                     <button
                       type="button"
-                      onClick={() => setSalonModal(biz)}
-                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-2 text-xs font-bold text-white shadow-xs hover:from-emerald-700 hover:to-teal-700 transition"
+                      onClick={() => setKiranaModal(biz)}
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 py-2 text-xs font-bold text-white shadow-xs hover:from-rose-700 hover:to-pink-700 transition"
                     >
-                      <span>✂️ Book Queue Pass</span>
+                      <span>💊 Send Medicine Parcha / Rx</span>
+                      <span>→</span>
+                    </button>
+                  )}
+
+                  {activeTab === "kirana" && (
+                    <button
+                      type="button"
+                      onClick={() => setKiranaModal(biz)}
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 py-2 text-xs font-bold text-white shadow-xs hover:from-purple-700 hover:to-pink-700 transition"
+                    >
+                      <span>📝 Send Grocery Parcha</span>
                       <span>→</span>
                     </button>
                   )}
@@ -883,13 +931,13 @@ export default function CustomerSuperAppClient({
                     </button>
                   )}
 
-                  {activeTab === "kirana" && (
+                  {activeTab === "salon" && (
                     <button
                       type="button"
-                      onClick={() => setKiranaModal(biz)}
-                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 py-2 text-xs font-bold text-white shadow-xs hover:from-purple-700 hover:to-pink-700 transition"
+                      onClick={() => setSalonModal(biz)}
+                      className="w-full flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 py-2 text-xs font-bold text-white shadow-xs hover:from-emerald-700 hover:to-teal-700 transition"
                     >
-                      <span>📝 Send Parcha</span>
+                      <span>✂️ Book Queue Pass</span>
                       <span>→</span>
                     </button>
                   )}
@@ -1102,7 +1150,6 @@ export default function CustomerSuperAppClient({
                 </div>
                 <button
                   onClick={() => {
-                    setActiveStoreModal(null);
                     setIsCheckoutOpen(true);
                   }}
                   className="rounded-2xl bg-orange-600 px-6 py-2.5 text-xs font-black text-white shadow-md hover:bg-orange-700"
@@ -1368,24 +1415,99 @@ export default function CustomerSuperAppClient({
                 />
               </div>
 
-              <div>
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-700">Delivery Address</label>
+                  <label className="block text-xs font-bold text-slate-800">📍 Structured Delivery Address</label>
                   <button
                     type="button"
                     onClick={handleDetectGps}
                     className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1"
                   >
-                    📍 {isDetectingGps ? "Detecting GPS..." : "Auto-fill with GPS"}
+                    📍 {isDetectingGps ? "Detecting GPS..." : "Auto-fill GPS"}
                   </button>
                 </div>
-                <textarea
-                  rows={2}
-                  placeholder="House/Shop No., Mohalla, Landmark, Bahraich"
-                  value={customerAddress}
-                  onChange={(e) => setCustomerAddress(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500">House / Shop / Flat No.</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Shop 14 / House 28B"
+                      value={addrHouseNo}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAddrHouseNo(val);
+                        setCustomerAddress(buildAddressString(val, addrMohalla, addrRoad, addrPincode, addrDistrict));
+                      }}
+                      className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500">Colony / Mohalla / Area</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Civil Lines / Brahmani Pura"
+                      value={addrMohalla}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAddrMohalla(val);
+                        setCustomerAddress(buildAddressString(addrHouseNo, val, addrRoad, addrPincode, addrDistrict));
+                      }}
+                      className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-xs">
+                  <div className="col-span-2">
+                    <label className="block text-[10px] font-semibold text-slate-500">Road / Landmark</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Near KDC College / Galla Mandi"
+                      value={addrRoad}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAddrRoad(val);
+                        setCustomerAddress(buildAddressString(addrHouseNo, addrMohalla, val, addrPincode, addrDistrict));
+                      }}
+                      className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-slate-500">Pincode</label>
+                    <input
+                      type="text"
+                      placeholder="271801"
+                      value={addrPincode}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setAddrPincode(val);
+                        setCustomerAddress(buildAddressString(addrHouseNo, addrMohalla, addrRoad, val, addrDistrict));
+                      }}
+                      className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500">District / City</label>
+                  <input
+                    type="text"
+                    value={addrDistrict}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAddrDistrict(val);
+                      setCustomerAddress(buildAddressString(addrHouseNo, addrMohalla, addrRoad, addrPincode, val));
+                    }}
+                    className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  />
+                </div>
+
+                {customerAddress && (
+                  <p className="mt-1 text-[11px] font-mono text-slate-600 bg-white rounded-lg p-2 border border-slate-200">
+                    <span className="font-bold text-slate-700">Preview: </span>{customerAddress}
+                  </p>
+                )}
               </div>
 
               {/* Delivery Partner Tip (Swiggy / Zomato Feature) */}

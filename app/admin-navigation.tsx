@@ -5,15 +5,23 @@ import { usePathname } from "next/navigation";
 
 const ADMIN_LINKS = [
   { label: "Dashboard", href: "/admin" },
-  { label: "Businesses", href: "/businesses" },
   { label: "Business Categories", href: "/business-categories" },
-  { label: "QR Codes", href: "/qr-codes" },
+  { label: "Standee Orders", href: "/admin/orders" },
   { label: "Payments", href: "/payments" },
   { label: "Analytics", href: "/analytics" },
   { label: "Merchants", href: "/merchants" },
 ] as const;
 
 function isAdminPath(pathname: string) {
+  // Allow all active nav links as well as /businesses, /qr-codes, and /admin sub-routes
+  if (
+    pathname === "/businesses" ||
+    pathname.startsWith("/businesses/") ||
+    pathname === "/qr-codes" ||
+    pathname.startsWith("/qr-codes/")
+  ) {
+    return true;
+  }
   return ADMIN_LINKS.some(({ href }) => pathname === href || pathname.startsWith(`${href}/`));
 }
 

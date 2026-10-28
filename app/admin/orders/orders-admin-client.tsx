@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { generateStylishStandeeSvg, type StandeeTheme } from "@/lib/standee-stylish-generator";
 import type { ProductOrder, ProductOrderStatus } from "@/lib/product-orders/types";
 import {
   updateAdminOrderStatusAction,
@@ -197,47 +198,26 @@ export default function OrdersAdminClient({ initialOrders }: Props) {
     }
   }
 
-  function downloadPrintSvg(order: ProductOrder) {
+  function downloadPrintSvg(order: ProductOrder, theme: StandeeTheme = "royal_gold") {
     const biz = (order as unknown as { businesses?: { name?: string; city?: string } }).businesses;
     const businessName = biz?.name || order.shipping_address?.fullName || "Trustit Merchant";
     const qrUrl = `https://trustitreview.com/r/${order.business_id}`;
 
-    const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600" width="1200" height="1600">
-  <rect width="100%" height="100%" fill="#ffffff" />
-  <rect x="60" y="60" width="1080" height="1480" rx="30" fill="#f8fafc" stroke="#e2e8f0" stroke-width="4" />
-  
-  <!-- Header Bar -->
-  <rect x="60" y="60" width="1080" height="260" rx="30" fill="#4f46e5" />
-  <text x="600" y="160" font-family="Arial, sans-serif" font-size="52" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="4">TRUSTIT REVIEW</text>
-  <text x="600" y="230" font-family="Arial, sans-serif" font-size="28" fill="#e0e7ff" text-anchor="middle">OFFICIAL VERIFIED BADGE</text>
-
-  <!-- Business Name -->
-  <text x="600" y="420" font-family="Arial, sans-serif" font-size="58" font-weight="bold" fill="#0f172a" text-anchor="middle">${businessName}</text>
-  <text x="600" y="480" font-family="Arial, sans-serif" font-size="26" fill="#64748b" text-anchor="middle">Scan camera to leave your 5-star review</text>
-
-  <!-- Stars -->
-  <text x="600" y="550" font-family="Arial, sans-serif" font-size="44" fill="#f59e0b" text-anchor="middle">★ ★ ★ ★ ★</text>
-
-  <!-- QR Frame -->
-  <rect x="350" y="620" width="500" height="500" rx="24" fill="#0f172a" />
-  <rect x="380" y="650" width="440" height="440" rx="16" fill="#ffffff" />
-  <text x="600" y="880" font-family="monospace" font-size="34" font-weight="bold" fill="#0f172a" text-anchor="middle">[ QR CODE ]</text>
-  <text x="600" y="930" font-family="monospace" font-size="18" fill="#475569" text-anchor="middle">${qrUrl}</text>
-
-  <!-- Footer Instructions -->
-  <text x="600" y="1220" font-family="Arial, sans-serif" font-size="32" font-weight="bold" fill="#1e293b" text-anchor="middle">Rate our service on Trustit &amp; Google</text>
-  <text x="600" y="1270" font-family="Arial, sans-serif" font-size="22" fill="#64748b" text-anchor="middle">100% Genuine Customer Reviews</text>
-
-  <!-- Production Watermark -->
-  <text x="600" y="1480" font-family="monospace" font-size="16" fill="#94a3b8" text-anchor="middle">Print SKU: ${order.items?.[0]?.sku || "TRUSTIT-A5"} · Order Ref: ${order.id}</text>
-</svg>`;
+    const svgContent = generateStylishStandeeSvg({
+      businessName,
+      businessId: order.business_id,
+      city: biz?.city || order.shipping_address?.city || "Bahraich",
+      reviewUrl: qrUrl,
+      theme,
+      sku: order.items?.[0]?.sku || "TRUSTIT-A5",
+      orderId: order.id,
+    });
 
     const blob = new Blob([svgContent], { type: "image/svg+xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `Trustit-Print-${order.id}.svg`;
+    a.download = `Trustit-Standee-${theme}-${order.id}.svg`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -437,14 +417,24 @@ export default function OrdersAdminClient({ initialOrders }: Props) {
 
                       {/* Actions */}
                       <td className="px-5 py-4 text-right space-x-1">
-                        <button
-                          type="button"
-                          onClick={() => downloadPrintSvg(order)}
-                          className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[11px] font-bold shadow-2xs"
-                          title="Download High-Res SVG for Printing"
-                        >
-                          Print File
-                        </button>
+                        <div className="inline-flex rounded-lg shadow-2xs border border-slate-200 overflow-hidden align-middle">
+                          <button
+                            type="button"
+                            onClick={() => downloadPrintSvg(order, "royal_gold")}
+                            className="px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 text-[10px] font-black border-r border-slate-200"
+                            title="Download Royal Obsidian & Gold Acrylic Standee"
+                          >
+                            👑 Gold
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => downloadPrintSvg(order, "studio_white")}
+                            className="px-2 py-1 bg-white hover:bg-slate-50 text-slate-800 text-[10px] font-black"
+                            title="Download Studio Arctic White Acrylic Standee"
+                          >
+                            ⚪ White
+                          </button>
+                        </div>
 
                         <button
                           type="button"

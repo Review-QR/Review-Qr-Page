@@ -13,6 +13,7 @@ import {
   type MerchantAccessState,
 } from "@/app/businesses/merchant-access-actions";
 import { softDeleteMerchantAction, type MerchantLifecycleResult } from "@/app/merchants/actions";
+import { MerchantQrModal } from "./merchant-qr-modal";
 
 const INITIAL_ACTION_STATE: MerchantAccessState = { message: "", success: false };
 const MERCHANT_STATUSES = ["all", "pending", "active", "suspended", "expired"] as const;
@@ -155,10 +156,12 @@ function DetailDialog({
   business,
   provisioned,
   onClose,
+  onOpenQr,
 }: {
   business: Business;
   provisioned: boolean;
   onClose: () => void;
+  onOpenQr: (business: Business) => void;
 }) {
   const merchantStatus = business.merchant_status || "pending";
   const detailGroups = [
@@ -252,13 +255,20 @@ function DetailDialog({
             </section>
           ))}
         </div>
-        <div className="mt-5 border-t border-slate-100 pt-4">
+        <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
           <Link
             href={`/merchants/${encodeURIComponent(business.id)}/trustit-customer-data`}
-            className="inline-flex rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
           >
-            Trustit Customer Data
+            📊 Trustit Customer Data
           </Link>
+          <button
+            type="button"
+            onClick={() => onOpenQr(business)}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-sm font-bold text-white shadow-xs hover:bg-blue-700 transition"
+          >
+            🔲 Merchant QR
+          </button>
         </div>
       </section>
     </div>
@@ -271,6 +281,7 @@ function MerchantActions({
   onProvisioned,
   onStatusChange,
   onView,
+  onOpenQr,
   onDelete,
 }: {
   business: Business;
@@ -278,6 +289,7 @@ function MerchantActions({
   onProvisioned: (businessId: string) => void;
   onStatusChange: (businessId: string, status: MerchantStatus) => void;
   onView: () => void;
+  onOpenQr: () => void;
   onDelete: () => void;
 }) {
   const status = normalized(business.merchant_status || "pending");
@@ -295,6 +307,7 @@ function MerchantActions({
     <div className="flex min-w-64 flex-col items-start gap-2">
       <div className="flex flex-wrap items-start gap-2">
         <button type="button" onClick={onView} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">View</button>
+        <button type="button" onClick={onOpenQr} className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-100">Merchant QR</button>
         {status === "pending" && !provisioned ? (
           <PasswordActionForm businessId={business.id} mode="activate" onSuccess={handleProvisioned} />
         ) : canManage ? (
@@ -372,6 +385,7 @@ export default function MerchantManagement({
   const [statusFilter, setStatusFilter] = useState<(typeof MERCHANT_STATUSES)[number]>("all");
   const [planFilter, setPlanFilter] = useState<(typeof PLANS)[number]>("all");
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
+  const [qrTargetBusiness, setQrTargetBusiness] = useState<Business | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Business | null>(null);
   const [deleteNotice, setDeleteNotice] = useState("");
   const [deleteNoticeIsError, setDeleteNoticeIsError] = useState(false);
@@ -571,6 +585,7 @@ export default function MerchantManagement({
                           onProvisioned={markProvisioned}
                           onStatusChange={updateStatus}
                           onView={() => setSelectedBusiness(business)}
+                          onOpenQr={() => setQrTargetBusiness(business)}
                           onDelete={() => { setDeleteNotice(""); setDeleteNoticeIsError(false); setDeleteTarget(business); }}
                         />
                       </td>
@@ -583,11 +598,19 @@ export default function MerchantManagement({
         )}
       </section>
 
+      {qrTargetBusiness && (
+        <MerchantQrModal
+          business={qrTargetBusiness}
+          onClose={() => setQrTargetBusiness(null)}
+        />
+      )}
+
       {selectedBusiness && (
         <DetailDialog
           business={selectedBusiness}
           provisioned={selectedProvisioned}
           onClose={() => setSelectedBusiness(null)}
+          onOpenQr={(b) => setQrTargetBusiness(b)}
         />
       )}
       {deleteTarget && (
