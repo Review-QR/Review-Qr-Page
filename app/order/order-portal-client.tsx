@@ -148,6 +148,9 @@ export default function CustomerSuperAppClient({
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [newAddressTag, setNewAddressTag] = useState<"Home" | "Work" | "Other">("Home");
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isVegOnly, setIsVegOnly] = useState(false);
+  const [isFastDeliveryOnly, setIsFastDeliveryOnly] = useState(false);
+  const [isTopRatedOnly, setIsTopRatedOnly] = useState(false);
 
   // Cart for Food & Sweets
   const [cart, setCart] = useState<{ [cartKey: string]: CartLineItem }>({});
@@ -363,6 +366,12 @@ export default function CustomerSuperAppClient({
 
       const matchesSearch = !query || name.includes(query) || type.includes(query) || hasMatchingDish;
       if (!matchesSearch) return false;
+
+      if (isVegOnly) {
+        const isVegStore = type.includes("sweet") || type.includes("veg") || type.includes("bakery");
+        const hasVegItems = catalogItems.some((i) => i.business_id === b.id && i.item_type === "veg");
+        if (!isVegStore && !hasVegItems) return false;
+      }
 
       if (activeTab === "food") {
         return (
@@ -899,6 +908,48 @@ export default function CustomerSuperAppClient({
               );
             })}
           </div>
+        </div>
+
+        {/* Quick Swiggy / Zomato Filter Pills */}
+        <div className="max-w-md mx-auto px-3 pb-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setIsVegOnly(!isVegOnly)}
+            className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border transition shrink-0 ${
+              isVegOnly
+                ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <span>🌱</span>
+            <span>Pure Veg</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsFastDeliveryOnly(!isFastDeliveryOnly)}
+            className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border transition shrink-0 ${
+              isFastDeliveryOnly
+                ? "bg-amber-500 text-slate-950 border-amber-500 shadow-2xs font-black"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <span>⚡</span>
+            <span>Fast Delivery</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setIsTopRatedOnly(!isTopRatedOnly)}
+            className={`flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border transition shrink-0 ${
+              isTopRatedOnly
+                ? "bg-blue-600 text-white border-blue-600 shadow-2xs font-black"
+                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <span>★</span>
+            <span>Rating 4.0+</span>
+          </button>
         </div>
       </header>
 
