@@ -5,11 +5,12 @@ import {
   randomUUID,
   timingSafeEqual,
 } from "node:crypto";
-import { isIP } from "node:net";
 import { appConfig, type PlanId } from "@/lib/config";
 import { classifyCashfreePaymentAttempts } from "@/lib/cashfree-payment-attempts.mjs";
 import { cashfreeLivePaymentsEnabled, resolveCashfreeServerConfiguration, type CashfreeEnvironment } from "@/lib/cashfree-environment";
 import { verifyCashfreeSignature } from "@/lib/cashfree-signature";
+import { resolveCashfreeReturnUrl, resolveCashfreeWebhookUrl } from "@/lib/cashfree-webhook-url";
+import { createCashfreeRequestInit } from "@/lib/cashfree-request-init";
 import { logTrustitCheckoutStage, type TrustitCheckoutDiagnosticStage } from "@/lib/trustit-checkout-diagnostics";
 
 const CASHFREE_API_VERSION = "2026-01-01";
@@ -198,90 +199,11 @@ function readSignedOrderContext(
 }
 
 function configuredWebhookUrl(): string | null {
-  const configured =
-    process.env.CASHFREE_WEBHOOK_URL?.trim() ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.trim()}/api/cashfree/webhook`
-      : "");
-  if (!configured) return null;
-
-  try {
-    const url = new URL(configured);
-    const hostname = url.hostname
-      .toLowerCase()
-      .replace(/^\[|\]$/g, "")
-      .replace(/\.$/, "");
-    if (
-      url.protocol !== "https:" ||
-      url.username ||
-      url.password ||
-      url.search ||
-      url.hash ||
-      url.pathname !== "/api/cashfree/webhook" ||
-      isLocalOrPrivateWebhookHost(hostname)
-    ) {
-      return null;
-    }
-    return url.toString();
-  } catch {
-    return null;
-  }
+  return resolveCashfreeWebhookUrl(process.env);
 }
 
 export function configuredTrustitPaymentReturnUrl(): string | null {
-  const webhookUrl = configuredWebhookUrl();
-  if (!webhookUrl) return null;
-
-  try {
-    const origin = new URL(webhookUrl).origin;
-    return `${origin}/register/payment?order_id={order_id}`;
-  } catch {
-    return null;
-  }
-}
-
-function isLocalOrPrivateWebhookHost(hostname: string): boolean {
-  if (
-    hostname === "localhost" ||
-    !hostname.includes(".") ||
-    hostname.split(".").some((label) => !label) ||
-    hostname.endsWith(".localhost") ||
-    hostname.endsWith(".local") ||
-    hostname.endsWith(".internal") ||
-    hostname.endsWith(".example") ||
-    hostname.endsWith(".invalid") ||
-    hostname.endsWith(".test") ||
-    hostname.endsWith(".onion") ||
-    hostname === "0.0.0.0"
-  ) {
-    return true;
-  }
-
-  const addressType = isIP(hostname);
-  if (addressType === 4) {
-    const octets = hostname.split(".").map(Number);
-    return (
-      octets[0] === 0 ||
-      octets[0] === 10 ||
-      octets[0] === 127 ||
-      (octets[0] === 169 && octets[1] === 254) ||
-      (octets[0] === 172 && octets[1] >= 16 && octets[1] <= 31) ||
-      (octets[0] === 192 && octets[1] === 168)
-    );
-  }
-  if (addressType === 6) {
-    return (
-      hostname === "::" ||
-      hostname === "::1" ||
-      hostname.startsWith("fc") ||
-      hostname.startsWith("fd") ||
-      hostname.startsWith("fe8") ||
-      hostname.startsWith("fe9") ||
-      hostname.startsWith("fea") ||
-      hostname.startsWith("feb")
-    );
-  }
-  return false;
+  return resolveCashfreeReturnUrl(process.env);
 }
 
 function signClaims(encodedClaims: string): string {
@@ -378,12 +300,11 @@ export function createCashfreeClient(): CashfreeClient {
     apiVersion: CASHFREE_API_VERSION,
     environment: configuration.environment,
     createRequestInit(init = {}) {
-      const headers = new Headers(init.headers);
-      headers.set("x-client-id", configuration.clientId);
-      headers.set("x-client-secret", configuration.clientSecret);
-      headers.set("x-api-version", CASHFREE_API_VERSION);
-
-      return { ...init, headers };
+      return createCashfreeRequestInit(init, {
+        clientId: configuration.clientId,
+        clientSecret: configuration.clientSecret,
+        apiVersion: CASHFREE_API_VERSION,
+      });
     },
   };
 }
@@ -399,6 +320,7 @@ async function createOrder(input: {
   customerName?: string;
   customerPhone?: string;
   diagnosticScope?: "trustit_registration";
+  idempotencyKey?: string;
 }): Promise<CashfreeOrderResult> {
   if (!Number.isFinite(input.amount) || input.amount < 1 || !input.customerId) {
     return {
@@ -426,7 +348,7 @@ async function createOrder(input: {
   if (input.diagnosticScope === "trustit_registration") logTrustitCheckoutStage("cashfree_client_configuration_success");
 
   const orderId = input.orderId ?? `rqr_${randomUUID().replaceAll("-", "")}`;
-  const idempotencyKey = randomUUID();
+  const idempotencyKey = input.idempotencyKey ?? randomUUID();
   let response: Response;
 
   try {
@@ -533,6 +455,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
   customerName?: string;
   customerPhone?: string;
   orderId?: string;
+  idempotencyKey?: string;
   returnUrl?: string;
   diagnosticScope?: "trustit_registration";
 }): Promise<CashfreeOrderResult> {
@@ -576,6 +499,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
       orderId,
       customerName: input.customerName,
       customerPhone: input.customerPhone,
+      idempotencyKey: input.idempotencyKey,
       diagnosticScope: input.diagnosticScope,
       orderTags: {
         review_qr_context: signOrderContext({ orderId, businessId: input.businessId, planId: input.planId }),
@@ -594,6 +518,7 @@ export async function createCashfreeMerchantCheckoutOrder(input: {
     orderId,
     customerName: input.customerName,
     customerPhone: input.customerPhone,
+    idempotencyKey: input.idempotencyKey,
     diagnosticScope: input.diagnosticScope,
     orderTags: {
       review_qr_context: signOrderContext({

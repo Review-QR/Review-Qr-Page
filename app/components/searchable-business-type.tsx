@@ -6,6 +6,7 @@ import { getAdminSelectableBusinessCategoriesAction } from "@/app/business-categ
 import BusinessCategoryIcon from "@/app/components/business-category-icon";
 
 type Props = {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   name?: string;
@@ -15,6 +16,7 @@ type Props = {
 };
 
 export default function SearchableBusinessType({
+  id,
   value,
   onChange,
   name = "type",
@@ -27,6 +29,7 @@ export default function SearchableBusinessType({
   const [activeIndex, setActiveIndex] = useState(0);
   const rootRef = useRef<HTMLDivElement>(null);
   const listId = useId().replace(/:/g, "");
+  const inputId = id ?? `${listId}-input`;
   const localEdit = useRef(false);
   const [loadedCategories, setLoadedCategories] = useState<UnifiedBusinessCategory[] | null>(null);
   const categoryCatalog = categories ?? loadedCategories ?? mergeBusinessCategoryCatalog();
@@ -100,6 +103,7 @@ export default function SearchableBusinessType({
     <div ref={rootRef} className="relative">
       <input type="hidden" name={name} value={value} />
       <input
+        id={inputId}
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={open}
