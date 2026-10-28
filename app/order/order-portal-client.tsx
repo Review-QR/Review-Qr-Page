@@ -133,11 +133,27 @@ export default function CustomerSuperAppClient({
   const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
   const [isDetectingGps, setIsDetectingGps] = useState(false);
 
+  // Address Book & Multi-Address Management (Image 3 Benchmark)
+  type CustomerSavedAddress = {
+    id: string;
+    tag: "Home" | "Work" | "Other";
+    houseNo: string;
+    mohalla: string;
+    road: string;
+    pincode: string;
+    district: string;
+  };
+  const [savedAddresses, setSavedAddresses] = useState<CustomerSavedAddress[]>([]);
+  const [selectedAddressId, setSelectedAddressId] = useState<string>("");
+  const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+  const [newAddressTag, setNewAddressTag] = useState<"Home" | "Work" | "Other">("Home");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+
   // Cart for Food & Sweets
   const [cart, setCart] = useState<{ [cartKey: string]: CartLineItem }>({});
   const [activeStoreModal, setActiveStoreModal] = useState<SuperAppBusiness | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [paymentMode, setPaymentMode] = useState<"cod" | "counter_cash">("cod");
+  const [paymentMode, setPaymentMode] = useState<"online" | "cod" | "counter_cash">("online");
 
   // Customization Bottom Sheet State (Half/Full, Addons, Cooking Notes)
   const [customizingItem, setCustomizingItem] = useState<SuperAppCatalogItem | null>(null);
@@ -193,6 +209,29 @@ export default function CustomerSuperAppClient({
       if (sR) setAddrRoad(sR);
       if (sP) setAddrPincode(sP);
       if (sD) setAddrDistrict(sD);
+
+      const rawAddrs = localStorage.getItem("trustit_saved_addresses_v1");
+      if (rawAddrs) {
+        try {
+          const parsed = JSON.parse(rawAddrs);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setSavedAddresses(parsed);
+            setSelectedAddressId(parsed[0].id);
+          }
+        } catch {}
+      } else if (sH || sM) {
+        const initialAddr: CustomerSavedAddress = {
+          id: "addr_default",
+          tag: "Home",
+          houseNo: sH || "",
+          mohalla: sM || "",
+          road: sR || "",
+          pincode: sP || "271801",
+          district: sD || "Bahraich",
+        };
+        setSavedAddresses([initialAddr]);
+        setSelectedAddressId("addr_default");
+      }
     } catch {
       // Ignore localStorage availability
     }
@@ -221,7 +260,8 @@ export default function CustomerSuperAppClient({
 
   // Poll active bookings when customer phone is set
   const fetchActiveBookings = async (phone: string) => {
-    if (!phone || phone.length < 10) return;
+    const cleanPhone = (phone || "").replace(/\D/g, "");
+    if (!cleanPhone || cleanPhone.length < 5) return;
     setIsRefreshingBookings(true);
     try {
       // 1. Fetch Orders
@@ -287,14 +327,41 @@ export default function CustomerSuperAppClient({
     );
   };
 
-  // Filter businesses by active vertical
+  // Real-time Auto-Suggest matching dishes & stores (Image 1 Benchmark)
+  const searchSuggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (q.length < 2) return { dishes: [], stores: [] };
+
+    const matchingDishes = catalogItems
+      .filter((item) => item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q))
+      .slice(0, 6)
+      .map((item) => {
+        const store = businesses.find((b) => b.id === item.business_id);
+        return { item, storeName: store?.name || "Verified Restaurant", store };
+      });
+
+    const matchingStores = businesses
+      .filter((b) => b.name.toLowerCase().includes(q) || (b.type || "").toLowerCase().includes(q))
+      .slice(0, 4);
+
+    return { dishes: matchingDishes, stores: matchingStores };
+  }, [searchQuery, catalogItems, businesses]);
+
+  // Filter businesses by active vertical AND catalog dishes (Image 1 Benchmark)
   const filteredBusinesses = useMemo(() => {
     return businesses.filter((b) => {
       const type = (b.type || "").toLowerCase();
       const name = (b.name || "").toLowerCase();
-      const query = searchQuery.toLowerCase();
+      const query = searchQuery.trim().toLowerCase();
 
-      const matchesSearch = !query || name.includes(query) || type.includes(query);
+      // Check if any catalog dish inside this store matches user query (e.g. 'chicken', 'thali')
+      const hasMatchingDish = query
+        ? catalogItems.some(
+            (i) => i.business_id === b.id && (i.name.toLowerCase().includes(query) || i.category.toLowerCase().includes(query))
+          )
+        : false;
+
+      const matchesSearch = !query || name.includes(query) || type.includes(query) || hasMatchingDish;
       if (!matchesSearch) return false;
 
       if (activeTab === "food") {
@@ -495,12 +562,15 @@ export default function CustomerSuperAppClient({
 
         const data = await res.json();
         if (data.success) {
+          if (data.order) {
+            setActiveOrders((prev) => [data.order, ...prev.filter((o) => o.id !== data.order.id)]);
+          }
           setCart({});
           setRiderTip(0);
           setIsCheckoutOpen(false);
           setActiveStoreModal(null);
           setBookingSuccessNotice(
-            `Order Placed Successfully! Your Order ID is #${data.orderId.slice(-8)}. Delivery OTP: ${data.deliveryOtp}`,
+            `Order Placed Successfully (${paymentMode === "online" ? "Online Paid" : "Pay on Delivery"})! Your Order ID is #${data.orderId.slice(-8)}. Delivery OTP: ${data.deliveryOtp}`,
           );
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
@@ -709,15 +779,15 @@ export default function CustomerSuperAppClient({
           </div>
         </div>
 
-        {/* ── Slim Search Bar (Height 34px) ── */}
-        <div className="max-w-md mx-auto px-3 pb-2">
+        {/* ── Slim Search Bar (Height 34px) with Auto-Suggest (Image 1 Benchmark) ── */}
+        <div className="max-w-md mx-auto px-3 pb-2 relative">
           <div className="relative flex items-center">
             <span className="absolute left-3 text-slate-400 text-xs">🔍</span>
             <input
               type="text"
               placeholder={
                 activeTab === "food"
-                  ? "Search biryani, kaju katli, thali..."
+                  ? "Search chicken, thali, biryani, sweets..."
                   : activeTab === "salon"
                     ? "Search haircut, barber, facial..."
                     : activeTab === "car_wash"
@@ -725,10 +795,79 @@ export default function CustomerSuperAppClient({
                       : "Search atta, mustard oil, grocery parcha..."
               }
               value={searchQuery}
+              onFocus={() => setIsSearchFocused(true)}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-100/90 pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition"
+              className="w-full rounded-xl border border-slate-200 bg-slate-100/90 pl-8 pr-8 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 grid h-5 w-5 place-items-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600 hover:bg-slate-300"
+              >
+                ✕
+              </button>
+            )}
           </div>
+
+          {/* Real-time Predictive Dropdown Tray (Swiggy / Zomato Benchmark) */}
+          {searchQuery.trim().length >= 2 && (searchSuggestions.dishes.length > 0 || searchSuggestions.stores.length > 0) && (
+            <div className="absolute top-full left-3 right-3 mt-1.5 z-50 rounded-2xl bg-white border border-slate-200 shadow-2xl p-2 space-y-2 text-xs">
+              {searchSuggestions.dishes.length > 0 && (
+                <div>
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 py-0.5">
+                    Dishes & Products ({searchSuggestions.dishes.length})
+                  </span>
+                  {searchSuggestions.dishes.map(({ item, storeName, store }) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        if (store) setActiveStoreModal(store);
+                        openCustomizer(item);
+                        setSearchQuery("");
+                      }}
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-orange-50 text-left transition group"
+                    >
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 group-hover:text-orange-600 flex items-center gap-1.5 truncate">
+                          <span>{item.item_type === "veg" ? "🌱" : "🍗"}</span>
+                          <span className="truncate">{item.name}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-500 truncate block">from {storeName}</span>
+                      </div>
+                      <span className="text-xs font-black text-slate-900 shrink-0 ml-2">₹{item.price}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {searchSuggestions.stores.length > 0 && (
+                <div className="border-t border-slate-100 pt-1.5">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-slate-400 px-2 py-0.5">
+                    Matching Restaurants & Stores
+                  </span>
+                  {searchSuggestions.stores.map((store) => (
+                    <button
+                      key={store.id}
+                      type="button"
+                      onClick={() => {
+                        setActiveStoreModal(store);
+                        setSearchQuery("");
+                      }}
+                      className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 text-left transition"
+                    >
+                      <div className="min-w-0">
+                        <span className="font-bold text-slate-900 truncate block">{store.name}</span>
+                        <span className="text-[10px] text-slate-500 capitalize">{store.type || "Store"} · Bahraich</span>
+                      </div>
+                      <span className="text-xs text-blue-600 font-bold shrink-0">View Menu →</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* ── 6 Hero Horizontal Applet Bubbles (Point 5 Sequence) ── */}
@@ -1415,99 +1554,74 @@ export default function CustomerSuperAppClient({
                 />
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+              {/* Customer Saved Address Book & Switcher (Image 3 Benchmark) */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-bold text-slate-800">📍 Structured Delivery Address</label>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm">📍</span>
+                    <label className="text-xs font-black text-slate-900">Delivery Address</label>
+                  </div>
                   <button
                     type="button"
-                    onClick={handleDetectGps}
-                    className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1"
+                    onClick={() => setIsAddressModalOpen(true)}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-0.5"
                   >
-                    📍 {isDetectingGps ? "Detecting GPS..." : "Auto-fill GPS"}
+                    + Add Another Address
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <label className="block text-[10px] font-semibold text-slate-500">House / Shop / Flat No.</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Shop 14 / House 28B"
-                      value={addrHouseNo}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setAddrHouseNo(val);
-                        setCustomerAddress(buildAddressString(val, addrMohalla, addrRoad, addrPincode, addrDistrict));
-                      }}
-                      className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
+                {/* Saved Address Quick Selector Chips */}
+                {savedAddresses.length > 0 && (
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                    {savedAddresses.map((addr) => {
+                      const isSel = selectedAddressId === addr.id;
+                      return (
+                        <button
+                          key={addr.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedAddressId(addr.id);
+                            setAddrHouseNo(addr.houseNo);
+                            setAddrMohalla(addr.mohalla);
+                            setAddrRoad(addr.road);
+                            setAddrPincode(addr.pincode);
+                            setAddrDistrict(addr.district);
+                            const full = buildAddressString(addr.houseNo, addr.mohalla, addr.road, addr.pincode, addr.district);
+                            setCustomerAddress(full);
+                          }}
+                          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 border text-[11px] font-bold shrink-0 transition ${
+                            isSel
+                              ? "bg-orange-50 border-orange-400 text-orange-950 shadow-2xs font-black"
+                              : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span>{addr.tag === "Home" ? "🏠" : addr.tag === "Work" ? "💼" : "📍"}</span>
+                          <span>{addr.tag}</span>
+                          <span className="text-[10px] text-slate-400 font-normal truncate max-w-[90px]">({addr.mohalla || addr.houseNo})</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold text-slate-500">Colony / Mohalla / Area</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Civil Lines / Brahmani Pura"
-                      value={addrMohalla}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setAddrMohalla(val);
-                        setCustomerAddress(buildAddressString(addrHouseNo, val, addrRoad, addrPincode, addrDistrict));
-                      }}
-                      className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div className="col-span-2">
-                    <label className="block text-[10px] font-semibold text-slate-500">Road / Landmark</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Near KDC College / Galla Mandi"
-                      value={addrRoad}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setAddrRoad(val);
-                        setCustomerAddress(buildAddressString(addrHouseNo, addrMohalla, val, addrPincode, addrDistrict));
-                      }}
-                      className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-semibold text-slate-500">Pincode</label>
-                    <input
-                      type="text"
-                      placeholder="271801"
-                      value={addrPincode}
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        setAddrPincode(val);
-                        setCustomerAddress(buildAddressString(addrHouseNo, addrMohalla, addrRoad, val, addrDistrict));
-                      }}
-                      className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-semibold text-slate-500">District / City</label>
-                  <input
-                    type="text"
-                    value={addrDistrict}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setAddrDistrict(val);
-                      setCustomerAddress(buildAddressString(addrHouseNo, addrMohalla, addrRoad, addrPincode, val));
-                    }}
-                    className="mt-0.5 w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                {customerAddress && (
-                  <p className="mt-1 text-[11px] font-mono text-slate-600 bg-white rounded-lg p-2 border border-slate-200">
-                    <span className="font-bold text-slate-700">Preview: </span>{customerAddress}
-                  </p>
                 )}
+
+                {/* Active Deliver-to Card */}
+                <div className="rounded-xl border border-slate-200 bg-white p-2.5 text-xs shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-slate-900">
+                      {addrHouseNo ? `${addrHouseNo}, ${addrMohalla || "Bahraich"}` : (addrMohalla || "Bahraich Location")}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleDetectGps}
+                      className="text-[10px] font-bold text-blue-600 hover:underline"
+                    >
+                      📍 {isDetectingGps ? "Detecting..." : "GPS Auto"}
+                    </button>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-600 font-mono">
+                    {customerAddress || "House No, Mohalla, Road, Bahraich"}
+                  </p>
+                </div>
               </div>
 
               {/* Delivery Partner Tip (Swiggy / Zomato Feature) */}
@@ -2362,6 +2476,137 @@ export default function CustomerSuperAppClient({
           </div>
         </div>
       )}
+      {/* ── Address Management Modal (+ Add Another Address) (Image 3 Benchmark) ── */}
+      {isAddressModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-black text-slate-900">📍 Add Delivery Address</h3>
+              <button
+                type="button"
+                onClick={() => setIsAddressModalOpen(false)}
+                className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Address Tag Selector */}
+            <div>
+              <label className="block text-[11px] font-bold text-slate-600 mb-1">Save Address As:</label>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { tag: "Home", icon: "🏠" },
+                  { tag: "Work", icon: "💼" },
+                  { tag: "Other", icon: "📍" },
+                ].map((item) => (
+                  <button
+                    key={item.tag}
+                    type="button"
+                    onClick={() => setNewAddressTag(item.tag as typeof newAddressTag)}
+                    className={`py-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1 transition ${
+                      newAddressTag === item.tag
+                        ? "bg-blue-50 border-blue-400 text-blue-900 ring-1 ring-blue-300"
+                        : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>{item.icon}</span>
+                    <span>{item.tag}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Structured Address Form */}
+            <div className="space-y-2.5 text-xs">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500">House / Shop / Flat No.</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Shop 14 / House 28"
+                    value={addrHouseNo}
+                    onChange={(e) => setAddrHouseNo(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500">Colony / Mohalla / Area</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Civil Lines / Chowk"
+                    value={addrMohalla}
+                    onChange={(e) => setAddrMohalla(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500">Road / Landmark</label>
+                <input
+                  type="text"
+                  placeholder="e.g. KDC Lucknow Road, Near Petrol Pump"
+                  value={addrRoad}
+                  onChange={(e) => setAddrRoad(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500">Pincode</label>
+                  <input
+                    type="text"
+                    value={addrPincode}
+                    onChange={(e) => setAddrPincode(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500">District / City</label>
+                  <input
+                    type="text"
+                    value={addrDistrict}
+                    onChange={(e) => setAddrDistrict(e.target.value)}
+                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const full = buildAddressString(addrHouseNo, addrMohalla, addrRoad, addrPincode, addrDistrict);
+                setCustomerAddress(full);
+                const newId = `addr_${Date.now()}`;
+                const newEntry: CustomerSavedAddress = {
+                  id: newId,
+                  tag: newAddressTag,
+                  houseNo: addrHouseNo,
+                  mohalla: addrMohalla,
+                  road: addrRoad,
+                  pincode: addrPincode,
+                  district: addrDistrict,
+                };
+                const updated = [newEntry, ...savedAddresses.filter(a => a.tag !== newAddressTag)];
+                setSavedAddresses(updated);
+                setSelectedAddressId(newId);
+                try {
+                  localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(updated));
+                  localStorage.setItem("trustit_cust_addr", full);
+                } catch {}
+                setIsAddressModalOpen(false);
+              }}
+              className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-xs font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-700 transition"
+            >
+              Save Address &amp; Use for Delivery →
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
