@@ -71,6 +71,12 @@ export interface HyperlocalOrder {
   total_amount: number;
   delivery_otp: string;
   rider_id?: string | null;
+  dispatch_target_rider_id?: string | null;
+  dispatch_expires_at?: string | null;
+  dispatch_current_radius_meters?: number;
+  dispatch_declined_rider_ids?: string[];
+  cashfree_order_id?: string | null;
+  cashfree_payment_id?: string | null;
   merchant_prep_time_minutes?: number;
   customer_notes?: string | null;
   cancellation_reason?: string | null;

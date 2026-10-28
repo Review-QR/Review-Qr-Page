@@ -3,6 +3,10 @@ import {
   riderAcceptOrder,
   riderCompleteDeliveryWithOtp,
 } from "@/lib/hyperlocal/hyperlocal-service";
+import {
+  handleRiderTimeoutOrDecline,
+  dispatchCascadingRadar,
+} from "@/lib/hyperlocal/dispatch-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +45,37 @@ export async function GET(request: Request) {
     .in("status", ["rider_assigned", "picked_up", "out_for_delivery"])
     .maybeSingle();
 
+  // Cascading proximity radar slot specifically targeted to this rider
+  const { data: targetedSlot } = await admin
+    .from("hyperlocal_orders")
+    .select(`
+      *,
+      hyperlocal_order_items (*),
+      businesses (name, city, address, phone, location_latitude, location_longitude)
+    `)
+    .eq("dispatch_target_rider_id", rider.id)
+    .is("rider_id", null)
+    .maybeSingle();
+
+  let incomingDispatchOrder = null;
+  if (targetedSlot) {
+    const expiryMs = new Date(targetedSlot.dispatch_expires_at || 0).getTime();
+    if (expiryMs > Date.now()) {
+      const secondsRemaining = Math.max(1, Math.round((expiryMs - Date.now()) / 1000));
+      incomingDispatchOrder = {
+        ...targetedSlot,
+        secondsRemaining,
+      };
+    } else {
+      // 30s Window expired! Auto-escalate to next nearest rider
+      try {
+        await handleRiderTimeoutOrDecline(targetedSlot.id, rider.id);
+      } catch {
+        // Non-blocking catch
+      }
+    }
+  }
+
   // Available ready orders awaiting pickup within the city
   const { data: availableOrders } = await admin
     .from("hyperlocal_orders")
@@ -57,6 +92,7 @@ export async function GET(request: Request) {
   return Response.json({
     rider,
     activeOrder: activeOrder || null,
+    incomingOrder: incomingDispatchOrder || null,
     availableOrders: availableOrders || [],
   });
 }
@@ -157,6 +193,11 @@ export async function POST(request: Request) {
     if (action === "accept_order") {
       const res = await riderAcceptOrder(orderId, riderId);
       return Response.json(res);
+    }
+
+    if (action === "decline_order") {
+      const res = await handleRiderTimeoutOrDecline(orderId, riderId);
+      return Response.json({ success: true, nextDispatch: res });
     }
 
     if (action === "pickup_order") {

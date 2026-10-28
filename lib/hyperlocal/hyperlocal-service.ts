@@ -2,7 +2,7 @@ import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { generateHyperlocalOrderId, generateDeliveryOtp, isValidHyperlocalOrderId } from "./order-id";
-import { findNearestAvailableRiders } from "./dispatch-engine";
+import { findNearestAvailableRiders, dispatchCascadingRadar } from "./dispatch-engine";
 import { calculatePayoutSplits } from "./split-calculator";
 import type {
   HyperlocalOrder,
@@ -174,7 +174,16 @@ export async function merchantAcceptOrder(orderId: string, prepTimeMinutes = 20)
     .eq("id", orderId);
 
   if (error) throw new Error(error.message);
-  return { success: true };
+
+  // Immediately initiate proximity cascading rider dispatch (Option A: Instant Dispatch on Accept)
+  let dispatchResult = null;
+  try {
+    dispatchResult = await dispatchCascadingRadar(orderId);
+  } catch {
+    // Non-blocking catch
+  }
+
+  return { success: true, prepTimeMinutes, dispatch: dispatchResult };
 }
 
 /**
@@ -214,6 +223,8 @@ export async function riderAcceptOrder(orderId: string, riderId: string) {
     .update({
       rider_id: riderId,
       status: "rider_assigned",
+      dispatch_target_rider_id: null,
+      dispatch_expires_at: null,
       updated_at: now,
     })
     .eq("id", orderId);

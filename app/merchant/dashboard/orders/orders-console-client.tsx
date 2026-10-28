@@ -74,10 +74,12 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
     return () => clearInterval(timer);
   }, []);
 
-  // Continuous Siren loop when placed unaccepted orders exist
+  // Continuous Siren loop when placed unaccepted orders exist (Paid Online or Cash on Delivery)
   useEffect(() => {
     if (isSalon || isCarWash || isSirenMuted) return;
-    const hasUnaccepted = orders.some((o) => o.status === "placed");
+    const hasUnaccepted = orders.some(
+      (o) => o.status === "placed" && (o.payment_mode === "cod" || o.payment_status === "paid"),
+    );
     if (!hasUnaccepted) return;
 
     // Immediately play once, then repeat every 2.5 seconds
@@ -367,31 +369,49 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                     <div className="flex items-center gap-2">
                       {isNewPlaced && (
                         <>
-                          <div className="flex items-center gap-1 text-xs">
-                            <span className="text-slate-500 font-medium">Prep:</span>
-                            {[15, 25, 35, 45].map((mins) => (
+                          <div className="flex items-center gap-1.5 text-xs bg-slate-50 p-1.5 rounded-xl border border-slate-200">
+                            <span className="text-slate-600 font-semibold text-[11px]">
+                              {order.order_type === "grocery_parcha" ? "📦 Packing Time:" : "🍳 Kitchen Cooking:"}
+                            </span>
+                            {(order.order_type === "grocery_parcha" ? [20, 30, 40, 60] : [15, 20, 25, 35]).map((mins) => (
                               <button
                                 key={mins}
                                 type="button"
                                 onClick={() => setPrepTimeMinutes(mins)}
-                                className={`px-2 py-1 rounded-lg text-xs font-bold transition ${
+                                className={`px-2 py-0.5 rounded-lg text-xs font-bold transition ${
                                   prepTimeMinutes === mins
-                                    ? "bg-slate-900 text-white"
-                                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                    ? "bg-slate-900 text-white shadow-xs"
+                                    : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
                                 }`}
                               >
                                 {mins}m
                               </button>
                             ))}
+                            <div className="flex items-center gap-0.5 ml-1">
+                              <input
+                                type="number"
+                                min={5}
+                                max={120}
+                                value={prepTimeMinutes}
+                                onChange={(e) => setPrepTimeMinutes(Math.max(5, Math.min(120, Number(e.target.value) || 20)))}
+                                className="w-12 px-1.5 py-0.5 text-xs text-center font-bold bg-white border border-slate-300 rounded-md outline-none focus:border-slate-800"
+                              />
+                              <span className="text-[10px] text-slate-400 font-mono">min</span>
+                            </div>
                           </div>
 
                           <button
                             type="button"
                             disabled={isSubmitting}
                             onClick={() => handleAcceptOrder(order.id)}
-                            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow transition"
+                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5"
                           >
-                            Accept Order & Start Kitchen →
+                            <span>✓</span>
+                            <span>
+                              {order.order_type === "grocery_parcha"
+                                ? `Accept & Start Packing (~${prepTimeMinutes}m) →`
+                                : `Accept & Dispatch Rider (~${prepTimeMinutes}m) →`}
+                            </span>
                           </button>
                         </>
                       )}

@@ -104,6 +104,7 @@ export type ActiveHyperlocalOrder = {
   subtotal_amount: number;
   delivery_fee: number;
   delivery_otp: string;
+  merchant_prep_time_minutes?: number;
   created_at: string;
   businesses?: { name: string; city: string; address: string | null; phone?: string | null };
   delivery_riders?: { id: string; full_name: string; phone: string; vehicle_number?: string } | null;
@@ -2759,14 +2760,34 @@ export default function CustomerSuperAppClient({
                               })}
                             </div>
 
-                            {/* Stepper Status Note */}
-                            <p className="mt-2 text-center text-[10px] text-slate-500 font-medium">
-                              {stepIndex === 0 && "Waiting for restaurant to accept your order."}
-                              {stepIndex === 1 && "Kitchen is preparing your dishes fresh."}
-                              {stepIndex === 2 && "Food is packed & waiting for delivery partner pickup."}
-                              {stepIndex === 3 && `Rider assigned: ${ord.delivery_riders?.full_name || "Arriving at store"}.`}
-                              {stepIndex === 4 && "Delivery partner is on the way to your doorstep!"}
-                              {stepIndex === 5 && "Order delivered successfully. Enjoy your food!"}
+                            {/* Stepper Status Note with Food vs Grocery Differentiation */}
+                            <p className="mt-2 text-center text-[10px] text-slate-700 font-semibold bg-slate-50 py-1.5 px-2 rounded-lg border border-slate-100">
+                              {stepIndex === 0 && (
+                                ord.order_type === "grocery_parcha"
+                                  ? "⏳ Order Placed: Waiting for grocery store to accept your order."
+                                  : "⏳ Order Placed: Waiting for restaurant to accept your order."
+                              )}
+                              {stepIndex === 1 && (
+                                ord.order_type === "grocery_parcha"
+                                  ? `📦 Grocery Packing in Progress: Your items are being packed & will be dispatched in ~${ord.merchant_prep_time_minutes || 40} mins`
+                                  : `🍳 Fresh Food in Kitchen: Your food is being prepared freshly (Ready in ~${ord.merchant_prep_time_minutes || 25} mins)`
+                              )}
+                              {stepIndex === 2 && (
+                                ord.order_type === "grocery_parcha"
+                                  ? "📦 Items Packed: Ready at counter, awaiting delivery partner pickup."
+                                  : "🍲 Food Packed: Freshly prepared, awaiting delivery partner pickup."
+                              )}
+                              {stepIndex === 3 && (
+                                `🛵 Delivery Partner Assigned: ${ord.delivery_riders?.full_name || "Rider"} is heading to the store.`
+                              )}
+                              {stepIndex === 4 && (
+                                `🚀 Out for Delivery: ${ord.delivery_riders?.full_name || "Delivery Partner"} is on the way to your doorstep!`
+                              )}
+                              {stepIndex === 5 && (
+                                ord.order_type === "grocery_parcha"
+                                  ? "✅ Delivered: Your grocery order has been delivered successfully. Thank you!"
+                                  : "✅ Delivered: Your hot food has been delivered successfully. Enjoy your meal!"
+                              )}
                             </p>
                           </div>
 

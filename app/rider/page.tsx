@@ -103,10 +103,13 @@ export default function RiderAppPage() {
         setIncomingOrder(null);
       } else {
         setActiveOrder(null);
-        if (data.availableOrders && data.availableOrders.length > 0 && !incomingOrder && isOnline) {
-          setIncomingOrder(data.availableOrders[0]);
-          setCountdown(30);
+        if (data.incomingOrder && !incomingOrder && isOnline) {
+          setIncomingOrder(data.incomingOrder);
+          setCountdown(data.incomingOrder.secondsRemaining || 30);
           playAlertBuzzer();
+          try { navigator.vibrate?.([300, 150, 300, 150, 600]); } catch {}
+        } else if (!data.incomingOrder && incomingOrder) {
+          setIncomingOrder(null);
         }
       }
       setAvailableOrders(data.availableOrders || []);
@@ -153,19 +156,45 @@ export default function RiderAppPage() {
     };
   }, [rider?.id, isOnline]);
 
-  // Countdown timer for incoming order popup
+  // Countdown timer for incoming order popup with 30s waterfall escalation
   useEffect(() => {
     if (!incomingOrder) return;
     if (countdown <= 0) {
-      setIncomingOrder(null);
+      handleDeclineIncomingOrder();
       return;
     }
     const timer = setTimeout(() => {
       setCountdown((c) => c - 1);
-      if (countdown % 2 === 0) playAlertBuzzer();
+      if (countdown % 2 === 0) {
+        playAlertBuzzer();
+        try { navigator.vibrate?.([200, 100, 200]); } catch {}
+      }
     }, 1000);
     return () => clearTimeout(timer);
   }, [incomingOrder, countdown]);
+
+  async function handleDeclineIncomingOrder() {
+    if (!incomingOrder || !rider) {
+      setIncomingOrder(null);
+      return;
+    }
+    const orderToDecline = incomingOrder;
+    setIncomingOrder(null);
+    try {
+      await fetch("/api/hyperlocal/rider", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "decline_order",
+          riderId: rider.id,
+          orderId: orderToDecline.id,
+        }),
+      });
+      fetchRiderData();
+    } catch {
+      // Non-blocking catch
+    }
+  }
 
   // Rider Login
   async function handleRiderLogin(targetPhone?: string) {
@@ -790,7 +819,7 @@ export default function RiderAppPage() {
             <div className="grid grid-cols-2 gap-2 pt-0.5">
               <button
                 type="button"
-                onClick={() => setIncomingOrder(null)}
+                onClick={handleDeclineIncomingOrder}
                 className="rounded-xl bg-slate-800 py-1.5 text-[10px] font-bold text-slate-400 hover:text-white"
               >
                 Pass / Reject

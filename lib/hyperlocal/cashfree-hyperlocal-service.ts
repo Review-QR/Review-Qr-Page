@@ -75,8 +75,8 @@ export async function createCashfreeHyperlocalPaymentOrder(
   const customerName = input.customerName?.trim() || "Trustit Customer";
   const customerEmail = input.customerEmail?.trim() || `customer_${validPhone}@trustitreview.com`;
 
-  // Standard NPCI UPI payload for Dynamic QR & Deep-linking
-  const upiString = `upi://pay?pa=trustit@icici&pn=${encodeURIComponent("Trustit Super-App")}&am=${input.amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order ${input.orderId.slice(-8)}`)}&tr=${input.orderId}`;
+  // Note: All online payments are handled directly via Cashfree Payment Gateway rails.
+  const upiString = "";
 
   let client;
   try {
@@ -90,7 +90,7 @@ export async function createCashfreeHyperlocalPaymentOrder(
       paymentSessionId: `mock_session_${randomUUID().replaceAll("-", "").slice(0, 20)}`,
       orderStatus: "ACTIVE",
       checkoutMode: "sandbox",
-      upiString,
+      upiString: "",
     };
   }
 
@@ -106,8 +106,8 @@ export async function createCashfreeHyperlocalPaymentOrder(
       customer_phone: validPhone,
     },
     order_meta: {
-      return_url: input.returnUrl || undefined,
-      notify_url: input.notifyUrl || undefined,
+      return_url: input.returnUrl || `https://trustitreview.com/order?order_id=${input.orderId}`,
+      notify_url: process.env.CASHFREE_WEBHOOK_URL || "https://trustitreview.com/api/cashfree/webhook",
     },
     order_note: `Trustit Hyperlocal Order (${input.orderId})`,
     order_tags: {

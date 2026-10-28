@@ -49,6 +49,41 @@ export async function POST(request: Request): Promise<Response> {
     const text = await cloned.text();
     const payload = JSON.parse(text);
     const orderId = payload?.data?.order?.order_id;
+    if (typeof orderId === "string" && orderId.startsWith("hord_")) {
+      // Verify webhook signature for Hyperlocal Super-App Order
+      const timestamp = request.headers.get("x-webhook-timestamp");
+      const signature = request.headers.get("x-webhook-signature");
+      if (!verifyCashfreeWebhookSignature({ rawBody: text, timestamp, signature })) {
+        return Response.json({ result: "unauthorized" }, { status: 401 });
+      }
+
+      const admin = createSupabaseAdminClient();
+      const paymentStatus = payload?.data?.payment?.payment_status;
+      const eventType = payload?.type;
+      const isSuccess = paymentStatus === "SUCCESS" || eventType === "PAYMENT_SUCCESS_WEBHOOK";
+
+      if (isSuccess) {
+        const cfPaymentId = payload?.data?.payment?.cf_payment_id
+          ? String(payload.data.payment.cf_payment_id)
+          : null;
+
+        await admin
+          .from("hyperlocal_orders")
+          .update({
+            payment_status: "paid",
+            payment_mode: "online_cashfree",
+            cashfree_order_id: orderId,
+            cashfree_payment_id: cfPaymentId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", orderId);
+
+        return Response.json({ success: true, orderId, paymentStatus: "paid" });
+      }
+
+      return Response.json({ success: true, orderId, paymentStatus: paymentStatus || "PENDING" });
+    }
+
     if (typeof orderId === "string" && orderId.startsWith("tord_")) {
       // Verify webhook signature for product order
       const timestamp = request.headers.get("x-webhook-timestamp");
