@@ -2,6 +2,42 @@
 
 import { useState, useEffect, useMemo, useTransition } from "react";
 import Link from "next/link";
+import QRCode from "qrcode";
+
+type CashfreeCheckoutSdk = (options: { mode: "sandbox" | "production" }) => {
+  checkout: (options: {
+    paymentSessionId: string;
+    redirectTarget?: "_self" | "_blank" | "_top" | "_modal";
+  }) => Promise<{
+    paymentDetails?: unknown;
+    error?: unknown;
+    redirect?: boolean;
+  }>;
+};
+
+let cashfreeSdkPromise: Promise<void> | null = null;
+function loadCashfreeSdk(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if (window.Cashfree) return Promise.resolve();
+  if (cashfreeSdkPromise) return cashfreeSdkPromise;
+
+  cashfreeSdkPromise = new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+    script.async = true;
+    script.onload = () => {
+      if (window.Cashfree) resolve();
+      else reject(new Error("Cashfree checkout could not be loaded."));
+    };
+    script.onerror = () => reject(new Error("Cashfree checkout could not be loaded."));
+    document.head.appendChild(script);
+  }).catch((error: unknown) => {
+    cashfreeSdkPromise = null;
+    throw error;
+  });
+
+  return cashfreeSdkPromise;
+}
 
 export type SuperAppBusiness = {
   id: string;
@@ -168,7 +204,18 @@ export default function CustomerSuperAppClient({
   const [cart, setCart] = useState<{ [cartKey: string]: CartLineItem }>({});
   const [activeStoreModal, setActiveStoreModal] = useState<SuperAppBusiness | null>(null);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [paymentMode, setPaymentMode] = useState<"online" | "cod" | "counter_cash">("online");
+  const [paymentMethodChoice, setPaymentMethodChoice] = useState<
+    "online_cashfree" | "dynamic_upi_qr" | "cod"
+  >("dynamic_upi_qr");
+  const [activeQrPayment, setActiveQrPayment] = useState<{
+    orderId: string;
+    deliveryOtp: string;
+    amount: number;
+    qrDataUrl: string;
+    upiString: string;
+    secondsRemaining: number;
+  } | null>(null);
+  const [isVerifyingPaymentManual, setIsVerifyingPaymentManual] = useState(false);
 
   // Customization Bottom Sheet State (Half/Full, Addons, Cooking Notes)
   const [customizingItem, setCustomizingItem] = useState<SuperAppCatalogItem | null>(null);
@@ -329,6 +376,51 @@ export default function CustomerSuperAppClient({
       return () => clearInterval(interval);
     }
   }, [customerPhone]);
+
+  // Countdown timer for active Dynamic UPI QR
+  useEffect(() => {
+    if (!activeQrPayment) return;
+    const timer = setInterval(() => {
+      setActiveQrPayment((prev) => {
+        if (!prev) return null;
+        if (prev.secondsRemaining <= 1) {
+          clearInterval(timer);
+          return { ...prev, secondsRemaining: 0 };
+        }
+        return { ...prev, secondsRemaining: prev.secondsRemaining - 1 };
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [activeQrPayment?.orderId]);
+
+  // Real-time payment verification auto-polling for Dynamic QR
+  useEffect(() => {
+    if (!activeQrPayment || activeQrPayment.secondsRemaining <= 0) return;
+    const orderIdToVerify = activeQrPayment.orderId;
+    const otpToUse = activeQrPayment.deliveryOtp;
+    const poll = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(orderIdToVerify)}`);
+        const data = await res.json();
+        if (data.status === "VERIFIED_SUCCESS") {
+          clearInterval(poll);
+          setActiveQrPayment(null);
+          setCart({});
+          setRiderTip(0);
+          setIsCheckoutOpen(false);
+          setActiveStoreModal(null);
+          setBookingSuccessNotice(
+            `🎉 Payment Verified! Order Placed Successfully #${orderIdToVerify.slice(-8)}. Delivery OTP: ${otpToUse}`
+          );
+          setIsMyBookingsOpen(true);
+          fetchActiveBookings(customerPhone);
+        }
+      } catch {
+        // silent polling catch
+      }
+    }, 2500);
+    return () => clearInterval(poll);
+  }, [activeQrPayment?.orderId, customerPhone]);
 
   // GPS auto-detect for delivery address
   const handleDetectGps = () => {
@@ -543,21 +635,17 @@ export default function CustomerSuperAppClient({
     });
   };
 
-  // Place Food Order
-  const handlePlaceFoodOrder = () => {
-    if (!customerName.trim() || !customerPhone.trim() || !customerAddress.trim()) {
-      alert("Please fill in your Name, 10-digit Phone, and Delivery Address.");
-      return;
-    }
-    const targetBizId = activeStoreModal?.id || cartItemsList[0]?.item?.business_id;
-    if (cartItemsList.length === 0 || !targetBizId) {
-      alert("Your cart is empty.");
-      return;
-    }
-
+  // ── Place Order via Cash on Delivery ──
+  const handlePlaceCodOrder = (targetBizId: string) => {
     startTransition(async () => {
       try {
-        saveCustomerProfile(customerName, customerPhone, customerAddress, { house: addrHouseNo, mohalla: addrMohalla, road: addrRoad, pin: addrPincode, dist: addrDistrict });
+        saveCustomerProfile(customerName, customerPhone, customerAddress, {
+          house: addrHouseNo,
+          mohalla: addrMohalla,
+          road: addrRoad,
+          pin: addrPincode,
+          dist: addrDistrict,
+        });
 
         const res = await fetch("/api/hyperlocal/orders", {
           method: "POST",
@@ -568,7 +656,7 @@ export default function CustomerSuperAppClient({
             customerName,
             customerPhone,
             customerAddress: { street: customerAddress, city: selectedCity },
-            paymentMode,
+            paymentMode: "cod",
             customerNotes: [
               customerAddress ? `Drop: ${customerAddress}` : "",
               riderTip > 0 ? `Rider Tip: ₹${riderTip}` : "",
@@ -604,17 +692,255 @@ export default function CustomerSuperAppClient({
           setIsCheckoutOpen(false);
           setActiveStoreModal(null);
           setBookingSuccessNotice(
-            `Order Placed Successfully (${paymentMode === "online" ? "Online Paid" : "Pay on Delivery"})! Your Order ID is #${data.orderId.slice(-8)}. Delivery OTP: ${data.deliveryOtp}`,
+            `💵 Order Placed (Cash on Delivery)! Your Order ID is #${data.orderId.slice(-8)}. Delivery OTP: ${data.deliveryOtp}`
           );
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
         } else {
           alert(`Order failed: ${data.error || "Please try again."}`);
         }
-      } catch (err) {
+      } catch {
         alert("Network error while placing order.");
       }
     });
+  };
+
+  // ── Place Order & Generate Instant Dynamic UPI QR ──
+  const handleInitiateDynamicQr = (targetBizId: string) => {
+    startTransition(async () => {
+      try {
+        saveCustomerProfile(customerName, customerPhone, customerAddress, {
+          house: addrHouseNo,
+          mohalla: addrMohalla,
+          road: addrRoad,
+          pin: addrPincode,
+          dist: addrDistrict,
+        });
+
+        // 1. Create order in DB with status placed, payment_status pending
+        const resOrder = await fetch("/api/hyperlocal/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            businessId: targetBizId,
+            orderType: "food_delivery",
+            customerName,
+            customerPhone,
+            customerAddress: { street: customerAddress, city: selectedCity },
+            paymentMode: "online_cashfree",
+            customerNotes: [
+              customerAddress ? `Drop: ${customerAddress}` : "",
+              riderTip > 0 ? `Rider Tip: ₹${riderTip}` : "",
+            ].filter(Boolean).join(" | "),
+            items: cartItemsList.map((c) => ({
+              item_name: c.customization
+                ? `${c.item.name} (${c.customization.portion === "half" ? "Half" : "Full"})`
+                : c.item.name,
+              quantity: c.quantity,
+              unit_price: c.itemUnitPrice,
+              is_veg: c.item.item_type === "veg",
+              notes: [
+                c.customization?.addons?.length
+                  ? `Addons: ${c.customization.addons.map((a) => a.name).join(", ")}`
+                  : "",
+                c.customization?.cookingNotes
+                  ? `Chef: ${c.customization.cookingNotes}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" | "),
+            })),
+          }),
+        });
+
+        const orderData = await resOrder.json();
+        if (!orderData.success) {
+          alert(`Order initialization failed: ${orderData.error || "Please try again."}`);
+          return;
+        }
+
+        if (orderData.order) {
+          setActiveOrders((prev) => [orderData.order, ...prev.filter((o) => o.id !== orderData.order.id)]);
+        }
+
+        // 2. Create Cashfree payment session / dynamic UPI string
+        const resSession = await fetch("/api/hyperlocal/payment/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: orderData.orderId,
+            amount: cartGrandTotal,
+            businessId: targetBizId,
+            customerName,
+            customerPhone,
+          }),
+        });
+
+        const sessionData = await resSession.json();
+        const upiPayload =
+          sessionData.upiString ||
+          `upi://pay?pa=trustit@icici&pn=Trustit%20Super-App&am=${cartGrandTotal.toFixed(2)}&cu=INR&tn=Order%20${orderData.orderId.slice(-8)}&tr=${orderData.orderId}`;
+
+        // 3. Render dynamic high-res QR code
+        const qrDataUrl = await QRCode.toDataURL(upiPayload, {
+          width: 320,
+          margin: 2,
+          color: {
+            dark: "#0f172a",
+            light: "#ffffff",
+          },
+        });
+
+        // 4. Open Dynamic QR Modal with 5:00 countdown
+        setActiveQrPayment({
+          orderId: orderData.orderId,
+          deliveryOtp: orderData.deliveryOtp,
+          amount: cartGrandTotal,
+          qrDataUrl,
+          upiString: upiPayload,
+          secondsRemaining: 300,
+        });
+      } catch {
+        alert("Network error generating dynamic UPI QR code.");
+      }
+    });
+  };
+
+  // ── Place Order & Open Cashfree Modal (Cards, UPI Apps, NetBanking) ──
+  const handleInitiateCashfreeGateway = (targetBizId: string) => {
+    startTransition(async () => {
+      try {
+        saveCustomerProfile(customerName, customerPhone, customerAddress, {
+          house: addrHouseNo,
+          mohalla: addrMohalla,
+          road: addrRoad,
+          pin: addrPincode,
+          dist: addrDistrict,
+        });
+
+        // 1. Create order
+        const resOrder = await fetch("/api/hyperlocal/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            businessId: targetBizId,
+            orderType: "food_delivery",
+            customerName,
+            customerPhone,
+            customerAddress: { street: customerAddress, city: selectedCity },
+            paymentMode: "online_cashfree",
+            customerNotes: [
+              customerAddress ? `Drop: ${customerAddress}` : "",
+              riderTip > 0 ? `Rider Tip: ₹${riderTip}` : "",
+            ].filter(Boolean).join(" | "),
+            items: cartItemsList.map((c) => ({
+              item_name: c.customization
+                ? `${c.item.name} (${c.customization.portion === "half" ? "Half" : "Full"})`
+                : c.item.name,
+              quantity: c.quantity,
+              unit_price: c.itemUnitPrice,
+              is_veg: c.item.item_type === "veg",
+              notes: [
+                c.customization?.addons?.length
+                  ? `Addons: ${c.customization.addons.map((a) => a.name).join(", ")}`
+                  : "",
+                c.customization?.cookingNotes
+                  ? `Chef: ${c.customization.cookingNotes}`
+                  : "",
+              ]
+                .filter(Boolean)
+                .join(" | "),
+            })),
+          }),
+        });
+
+        const orderData = await resOrder.json();
+        if (!orderData.success) {
+          alert(`Order initialization failed: ${orderData.error || "Please try again."}`);
+          return;
+        }
+
+        if (orderData.order) {
+          setActiveOrders((prev) => [orderData.order, ...prev.filter((o) => o.id !== orderData.order.id)]);
+        }
+
+        // 2. Create Payment Session
+        const resSession = await fetch("/api/hyperlocal/payment/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: orderData.orderId,
+            amount: cartGrandTotal,
+            businessId: targetBizId,
+            customerName,
+            customerPhone,
+          }),
+        });
+
+        const sessionData = await resSession.json();
+        if (!sessionData.success || !sessionData.paymentSessionId) {
+          alert(`Cashfree session failed: ${sessionData.error || "Please try again."}`);
+          return;
+        }
+
+        // 3. Load Cashfree SDK & Launch Modal
+        await loadCashfreeSdk();
+        if (window.Cashfree) {
+          const cashfree = window.Cashfree({ mode: sessionData.checkoutMode || "sandbox" });
+          await cashfree.checkout({
+            paymentSessionId: sessionData.paymentSessionId,
+            redirectTarget: "_modal",
+          });
+        }
+
+        // 4. Verify payment status
+        const resVerify = await fetch(`/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(orderData.orderId)}`);
+        const verifyData = await resVerify.json();
+
+        if (verifyData.status === "VERIFIED_SUCCESS") {
+          setCart({});
+          setRiderTip(0);
+          setIsCheckoutOpen(false);
+          setActiveStoreModal(null);
+          setBookingSuccessNotice(
+            `🎉 Paid Online Successfully! Order Placed #${orderData.orderId.slice(-8)}. Delivery OTP: ${orderData.deliveryOtp}`
+          );
+          setIsMyBookingsOpen(true);
+          fetchActiveBookings(customerPhone);
+        } else {
+          setIsCheckoutOpen(false);
+          setBookingSuccessNotice(
+            `Order #${orderData.orderId.slice(-8)} placed with pending payment. Delivery OTP: ${orderData.deliveryOtp}. Check Active Bookings to complete.`
+          );
+          setIsMyBookingsOpen(true);
+          fetchActiveBookings(customerPhone);
+        }
+      } catch {
+        alert("Error launching payment gateway.");
+      }
+    });
+  };
+
+  // ── Master Checkout Dispatcher ──
+  const handleCheckoutPayment = () => {
+    if (!customerName.trim() || !customerPhone.trim() || !customerAddress.trim()) {
+      handleOpenCustomerLogin();
+      alert("Please save your Name, 10-digit Phone, and Delivery Address to continue.");
+      return;
+    }
+    const targetBizId = activeStoreModal?.id || cartItemsList[0]?.item?.business_id;
+    if (cartItemsList.length === 0 || !targetBizId) {
+      alert("Your cart is empty.");
+      return;
+    }
+
+    if (paymentMethodChoice === "cod") {
+      handlePlaceCodOrder(targetBizId);
+    } else if (paymentMethodChoice === "dynamic_upi_qr") {
+      handleInitiateDynamicQr(targetBizId);
+    } else {
+      handleInitiateCashfreeGateway(targetBizId);
+    }
   };
 
   // Book Salon Token
@@ -1759,42 +2085,252 @@ export default function CustomerSuperAppClient({
                 </div>
               </div>
 
-              {/* Payment Mode */}
+              {/* Payment Method Selector (3 Modern Options) */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">Payment Method</label>
-                <div className="grid grid-cols-2 gap-1.5">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                  Select Payment Method
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
                   <button
                     type="button"
-                    onClick={() => setPaymentMode("cod")}
-                    className={`rounded-xl border p-2 text-xs font-bold transition ${
-                      paymentMode === "cod"
-                        ? "border-orange-500 bg-orange-50 text-orange-900"
-                        : "border-slate-200 bg-white text-slate-700"
+                    onClick={() => setPaymentMethodChoice("dynamic_upi_qr")}
+                    className={`flex flex-col items-center justify-center rounded-xl border p-2 text-center transition ${
+                      paymentMethodChoice === "dynamic_upi_qr"
+                        ? "border-emerald-500 bg-emerald-50 text-emerald-950 font-black shadow-xs ring-1 ring-emerald-500"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold"
                     }`}
                   >
-                    💵 Cash on Delivery
+                    <span className="text-base">📱</span>
+                    <span className="text-[11px] mt-0.5 leading-tight">UPI QR Code</span>
+                    <span className="text-[9px] text-emerald-700 font-medium">Auto-Scan</span>
                   </button>
+
                   <button
                     type="button"
-                    onClick={() => setPaymentMode("counter_cash")}
-                    className={`rounded-xl border p-2 text-xs font-bold transition ${
-                      paymentMode === "counter_cash"
-                        ? "border-orange-500 bg-orange-50 text-orange-900"
-                        : "border-slate-200 bg-white text-slate-700"
+                    onClick={() => setPaymentMethodChoice("online_cashfree")}
+                    className={`flex flex-col items-center justify-center rounded-xl border p-2 text-center transition ${
+                      paymentMethodChoice === "online_cashfree"
+                        ? "border-blue-500 bg-blue-50 text-blue-950 font-black shadow-xs ring-1 ring-blue-500"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold"
                     }`}
                   >
-                    ⚡ UPI to Rider / Counter
+                    <span className="text-base">💳</span>
+                    <span className="text-[11px] mt-0.5 leading-tight">Card / NetBanking</span>
+                    <span className="text-[9px] text-blue-700 font-medium">Cashfree PG</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setPaymentMethodChoice("cod")}
+                    className={`flex flex-col items-center justify-center rounded-xl border p-2 text-center transition ${
+                      paymentMethodChoice === "cod"
+                        ? "border-amber-500 bg-amber-50 text-amber-950 font-black shadow-xs ring-1 ring-amber-500"
+                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold"
+                    }`}
+                  >
+                    <span className="text-base">💵</span>
+                    <span className="text-[11px] mt-0.5 leading-tight">Cash on Delivery</span>
+                    <span className="text-[9px] text-amber-700 font-medium">Pay to Rider</span>
                   </button>
                 </div>
+              </div>
+
+              {/* Payment Explanatory Pill */}
+              <div className="rounded-lg bg-slate-100 p-2 text-[10px] text-slate-600">
+                {paymentMethodChoice === "dynamic_upi_qr" && (
+                  <p>⚡ <strong>Dynamic UPI QR:</strong> Instant on-screen QR code with 5-minute timer &amp; GPay / PhonePe / Paytm 1-tap app buttons.</p>
+                )}
+                {paymentMethodChoice === "online_cashfree" && (
+                  <p>🔒 <strong>Cashfree Gateway:</strong> Pay securely using Visa, RuPay, MasterCard, 3D-Secure OTP or NetBanking.</p>
+                )}
+                {paymentMethodChoice === "cod" && (
+                  <p>💵 <strong>Cash on Delivery:</strong> Pay ₹{cartGrandTotal} directly to the delivery rider with your secret 4-digit OTP.</p>
+                )}
               </div>
 
               <button
                 type="button"
                 disabled={isSubmitting}
-                onClick={handlePlaceFoodOrder}
-                className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2.5 text-xs sm:text-sm font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
+                onClick={handleCheckoutPayment}
+                className={`w-full rounded-xl py-2.5 text-xs sm:text-sm font-black text-white shadow-md disabled:opacity-50 transition ${
+                  paymentMethodChoice === "dynamic_upi_qr"
+                    ? "bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800"
+                    : paymentMethodChoice === "online_cashfree"
+                      ? "bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800"
+                      : "bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
+                }`}
               >
-                {isSubmitting ? "Placing Order..." : `Place Order (₹${cartGrandTotal}) →`}
+                {isSubmitting
+                  ? "Processing Order & Gateway..."
+                  : paymentMethodChoice === "dynamic_upi_qr"
+                    ? `Open UPI QR & Pay (₹${cartGrandTotal}) →`
+                    : paymentMethodChoice === "online_cashfree"
+                      ? `Pay ₹${cartGrandTotal} via Card / Gateway →`
+                      : `Confirm Cash on Delivery Order (₹${cartGrandTotal}) →`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Dynamic UPI QR Code & 1-Tap Apps Modal (Real Payment Gateway) ── */}
+      {activeQrPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-3 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-4 sm:p-5 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-1.5">
+                <span className="grid h-6 w-6 place-items-center rounded-lg bg-emerald-500 text-white text-xs font-black">
+                  ⚡
+                </span>
+                <div>
+                  <h3 className="text-xs font-black text-slate-900 leading-none">Trustit Dynamic UPI QR</h3>
+                  <span className="text-[10px] text-slate-500">Scan &amp; Pay via Any UPI App</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveQrPayment(null)}
+                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Amount & Live Countdown Timer */}
+            <div className="mt-3 rounded-xl bg-gradient-to-r from-slate-900 to-slate-800 p-2.5 text-white flex items-center justify-between">
+              <div>
+                <div className="text-[10px] text-slate-300 font-medium">Payable Amount:</div>
+                <div className="text-base font-black text-emerald-400">₹{activeQrPayment.amount}</div>
+              </div>
+              <div className="text-right">
+                <div className="text-[10px] text-slate-300 font-medium">Valid For:</div>
+                <div
+                  className={`text-xs font-mono font-bold px-2 py-0.5 rounded-md ${
+                    activeQrPayment.secondsRemaining < 60
+                      ? "bg-red-500/30 text-red-300 animate-pulse"
+                      : "bg-emerald-500/20 text-emerald-300"
+                  }`}
+                >
+                  ⏱️ {Math.floor(activeQrPayment.secondsRemaining / 60).toString().padStart(2, "0")}:
+                  {(activeQrPayment.secondsRemaining % 60).toString().padStart(2, "0")}
+                </div>
+              </div>
+            </div>
+
+            {/* QR Code Container */}
+            <div className="mt-3 flex flex-col items-center justify-center p-3 rounded-xl bg-slate-50 border border-slate-200">
+              {activeQrPayment.secondsRemaining > 0 ? (
+                <>
+                  <img
+                    src={activeQrPayment.qrDataUrl}
+                    alt="Scan UPI QR"
+                    className="h-44 w-44 rounded-lg shadow-xs border border-white bg-white p-1"
+                  />
+                  <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-semibold text-slate-700">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                    </span>
+                    <span>Awaiting payment... auto-verifying</span>
+                  </div>
+                </>
+              ) : (
+                <div className="py-8 text-center">
+                  <span className="text-2xl">⏳</span>
+                  <p className="mt-1 text-xs font-bold text-red-600">QR Code Expired</p>
+                  <p className="text-[10px] text-slate-500">Tap below to restart payment</p>
+                </div>
+              )}
+            </div>
+
+            {/* 1-Tap UPI Apps Tray */}
+            {activeQrPayment.secondsRemaining > 0 && (
+              <div className="mt-3">
+                <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 text-center">
+                  ⚡ 1-Tap Pay via Mobile UPI App:
+                </span>
+                <div className="grid grid-cols-4 gap-1.5">
+                  <a
+                    href={activeQrPayment.upiString}
+                    className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-1.5 hover:border-purple-500 hover:bg-purple-50 transition shadow-2xs"
+                  >
+                    <span className="text-sm">🟣</span>
+                    <span className="text-[9px] font-bold text-slate-800 mt-0.5">PhonePe</span>
+                  </a>
+                  <a
+                    href={activeQrPayment.upiString}
+                    className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-1.5 hover:border-blue-500 hover:bg-blue-50 transition shadow-2xs"
+                  >
+                    <span className="text-sm">🔵</span>
+                    <span className="text-[9px] font-bold text-slate-800 mt-0.5">GPay</span>
+                  </a>
+                  <a
+                    href={activeQrPayment.upiString}
+                    className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-1.5 hover:border-cyan-500 hover:bg-cyan-50 transition shadow-2xs"
+                  >
+                    <span className="text-sm">🔷</span>
+                    <span className="text-[9px] font-bold text-slate-800 mt-0.5">Paytm</span>
+                  </a>
+                  <a
+                    href={activeQrPayment.upiString}
+                    className="flex flex-col items-center justify-center rounded-xl border border-slate-200 bg-white p-1.5 hover:border-orange-500 hover:bg-orange-50 transition shadow-2xs"
+                  >
+                    <span className="text-sm">🇮🇳</span>
+                    <span className="text-[9px] font-bold text-slate-800 mt-0.5">BHIM</span>
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Manual Check & Alternate Actions */}
+            <div className="mt-3 space-y-1.5">
+              <button
+                type="button"
+                disabled={isVerifyingPaymentManual}
+                onClick={async () => {
+                  setIsVerifyingPaymentManual(true);
+                  try {
+                    const res = await fetch(
+                      `/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(activeQrPayment.orderId)}`
+                    );
+                    const data = await res.json();
+                    if (data.status === "VERIFIED_SUCCESS") {
+                      const otp = activeQrPayment.deliveryOtp;
+                      const oId = activeQrPayment.orderId;
+                      setActiveQrPayment(null);
+                      setCart({});
+                      setRiderTip(0);
+                      setIsCheckoutOpen(false);
+                      setActiveStoreModal(null);
+                      setBookingSuccessNotice(
+                        `🎉 Payment Confirmed! Order Placed Successfully #${oId.slice(-8)}. Delivery OTP: ${otp}`
+                      );
+                      setIsMyBookingsOpen(true);
+                      fetchActiveBookings(customerPhone);
+                    } else {
+                      alert(
+                        `Payment not detected yet (${data.status || "Pending"}). If already paid, please allow a few seconds for bank clearance and tap again.`
+                      );
+                    }
+                  } catch {
+                    alert("Status check failed. Please check network connection.");
+                  } finally {
+                    setIsVerifyingPaymentManual(false);
+                  }
+                }}
+                className="w-full rounded-xl bg-emerald-600 py-2 text-xs font-bold text-white hover:bg-emerald-700 disabled:opacity-50 transition shadow-xs flex items-center justify-center gap-1.5"
+              >
+                <span>✓</span>
+                <span>{isVerifyingPaymentManual ? "Checking Bank Status..." : "I have Paid, Verify Status"}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveQrPayment(null)}
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 text-[11px] font-semibold text-slate-600 hover:bg-slate-100 transition"
+              >
+                Cancel &amp; Change Payment Method
               </button>
             </div>
           </div>

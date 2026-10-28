@@ -15,6 +15,7 @@ import type {
 } from "./types";
 
 export interface CreateHyperlocalOrderInput {
+  orderId?: string;
   businessId: string;
   orderType: HyperlocalOrderType;
   customerName: string;
@@ -71,7 +72,9 @@ export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
   const platformFee = 5; // Flat ₹5 platform convenience fee
   const totalAmount = Math.round((subtotal + deliveryFee + platformFee) * 100) / 100;
 
-  const orderId = generateHyperlocalOrderId();
+  const orderId = input.orderId && isValidHyperlocalOrderId(input.orderId)
+    ? input.orderId
+    : generateHyperlocalOrderId();
   const deliveryOtp = generateDeliveryOtp();
 
   // 3. Insert order
@@ -86,7 +89,7 @@ export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
       order_type: input.orderType,
       status: "placed",
       payment_mode: input.paymentMode,
-      payment_status: input.paymentMode === "cod" ? "pending" : "paid",
+      payment_status: input.paymentMode === "cod" ? "pending" : (input.paymentMode === "online_cashfree" ? "pending" : "paid"),
       subtotal_amount: subtotal,
       delivery_fee: deliveryFee,
       platform_fee: platformFee,

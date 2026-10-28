@@ -11,6 +11,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const result = await createHyperlocalOrder({
+      orderId: body.orderId,
       businessId: body.businessId,
       orderType: body.orderType || "food_delivery",
       customerName: body.customerName,
