@@ -51,6 +51,13 @@ test("admin merchant management exposes Banking and Payout compliance section in
 test("merchant profile page presents the dedicated Business Account and Settlements section", async () => {
   const profilePage = await read("../profile/page.tsx");
   assert.match(profilePage, /Business Account and Settlements/);
-  assert.match(profilePage, /Penny-Drop Verified/);
   assert.match(profilePage, /View Settlements & Bank Passbook/);
+});
+
+test("user-added merchants start with clean blank bank details and empty settlements for testing", async () => {
+  const serviceCode = await read("../../../../lib/bank-payouts-service.ts");
+  assert.match(serviceCode, /isTestMerchant/);
+  assert.match(serviceCode, /return null/);
+  assert.match(serviceCode, /return \[\]/);
+  assert.match(serviceCode, /orders_count: 0, gross_sales: 0, net_payout: 0/);
 });

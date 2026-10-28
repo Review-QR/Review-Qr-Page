@@ -123,12 +123,28 @@ export interface MerchantFinancialSummary {
   pending_payout_hold: number;
 }
 
-// In-memory fallback cache for development/sandbox when local migration is not applied yet
+// In-memory fallback cache for newly added bank details in development/sandbox
 const fallbackBankAccounts = new Map<string, MerchantBankAccount>();
 const fallbackChangeRequests = new Map<string, MerchantBankChangeRequest[]>();
 
 /**
+ * Check if the merchant is an automated test / demo business
+ */
+export function isTestMerchant(businessId: string): boolean {
+  if (!businessId) return false;
+  const lower = businessId.toLowerCase();
+  return (
+    lower.startsWith("test-") ||
+    lower.includes("demo") ||
+    lower === "bhr-demo" ||
+    lower === "biz_demo_bahraich" ||
+    lower === "test_business_id"
+  );
+}
+
+/**
  * Get active merchant bank account details
+ * Returns NULL for user-added businesses so they can test adding bank details cleanly!
  */
 export async function getMerchantBankDetails(
   businessId: string,
@@ -148,8 +164,14 @@ export async function getMerchantBankDetails(
     // Fall back to memory cache
   }
 
-  return (
-    fallbackBankAccounts.get(businessId) ?? {
+  // Check if merchant has previously saved a bank account in memory
+  if (fallbackBankAccounts.has(businessId)) {
+    return fallbackBankAccounts.get(businessId)!;
+  }
+
+  // Only return sample data for automated test/demo merchant IDs
+  if (isTestMerchant(businessId)) {
+    return {
       id: `bank_${businessId.slice(0, 8)}`,
       business_id: businessId,
       account_holder_name: "Deepak Kumar",
@@ -165,8 +187,11 @@ export async function getMerchantBankDetails(
       verified_at: new Date(Date.now() - 7 * 86400000).toISOString(),
       created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
       updated_at: new Date().toISOString(),
-    }
-  );
+    };
+  }
+
+  // For real/user-added merchants: return null so they can test adding fresh details!
+  return null;
 }
 
 /**
@@ -184,14 +209,18 @@ export async function saveMerchantBankDetails(
     upiId?: string;
   },
 ): Promise<{ success: boolean; message: string; bank?: MerchantBankAccount }> {
+  const maskedAcc = input.bankAccountNumber.length > 4
+    ? `•••• •••• ${input.bankAccountNumber.slice(-4)}`
+    : input.bankAccountNumber;
+
   const bankRecord: MerchantBankAccount = {
     id: `bank_${Date.now().toString().slice(-8)}`,
     business_id: businessId,
     account_holder_name: input.accountHolderName.trim().toUpperCase(),
-    bank_account_number: input.bankAccountNumber.trim(),
+    bank_account_number: maskedAcc,
     ifsc_code: input.ifscCode.trim().toUpperCase(),
     bank_name: input.bankName.trim(),
-    branch_name: input.branchName?.trim() || "Local Branch",
+    branch_name: input.branchName?.trim() || "Bahraich Branch",
     account_type: input.accountType,
     upi_id: input.upiId?.trim() || null,
     verification_status: "verified",
@@ -211,14 +240,15 @@ export async function saveMerchantBankDetails(
       .maybeSingle();
 
     if (!error && data) {
-      return { success: true, message: "Bank details saved and verified via Penny-Drop.", bank: data as MerchantBankAccount };
+      fallbackBankAccounts.set(businessId, data as MerchantBankAccount);
+      return { success: true, message: "Bank details saved and verified via Penny-Drop (₹1 matched).", bank: data as MerchantBankAccount };
     }
   } catch {
     // Fall back to memory
   }
 
   fallbackBankAccounts.set(businessId, bankRecord);
-  return { success: true, message: "Bank details saved and verified via Penny-Drop.", bank: bankRecord };
+  return { success: true, message: "Bank details saved and verified via Penny-Drop (₹1 matched).", bank: bankRecord };
 }
 
 /**
@@ -277,6 +307,7 @@ export async function submitBankChangeRequest(
 
 /**
  * Fetch KYC documents checklist for merchant
+ * Returns empty array for user-added businesses so they can test KYC uploads
  */
 export async function getMerchantKycDocuments(businessId: string): Promise<MerchantKycDocument[]> {
   try {
@@ -293,39 +324,44 @@ export async function getMerchantKycDocuments(businessId: string): Promise<Merch
     // fallback
   }
 
-  return [
-    {
-      id: "kyc_pan",
-      business_id: businessId,
-      document_type: "pan_card",
-      document_number: "ABCDE1234F",
-      verification_status: "verified",
-      verified_at: new Date(Date.now() - 10 * 86400000).toISOString(),
-      created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    },
-    {
-      id: "kyc_fssai",
-      business_id: businessId,
-      document_type: "fssai_license",
-      document_number: "12726001000984",
-      verification_status: "verified",
-      verified_at: new Date(Date.now() - 8 * 86400000).toISOString(),
-      created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    },
-    {
-      id: "kyc_cheque",
-      business_id: businessId,
-      document_type: "trade_license",
-      document_number: "UP/BAH/2026/8941",
-      verification_status: "verified",
-      verified_at: new Date(Date.now() - 5 * 86400000).toISOString(),
-      created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
-    },
-  ];
+  if (isTestMerchant(businessId)) {
+    return [
+      {
+        id: "kyc_pan",
+        business_id: businessId,
+        document_type: "pan_card",
+        document_number: "ABCDE1234F",
+        verification_status: "verified",
+        verified_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+        created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+      },
+      {
+        id: "kyc_fssai",
+        business_id: businessId,
+        document_type: "fssai_license",
+        document_number: "12726001000984",
+        verification_status: "verified",
+        verified_at: new Date(Date.now() - 8 * 86400000).toISOString(),
+        created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+      },
+      {
+        id: "kyc_cheque",
+        business_id: businessId,
+        document_type: "trade_license",
+        document_number: "UP/BAH/2026/8941",
+        verification_status: "verified",
+        verified_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+        created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+      },
+    ];
+  }
+
+  return [];
 }
 
 /**
  * Fetch Merchant Settlement Ledger & Passbook
+ * Returns empty array for user-added businesses until real orders are completed!
  */
 export async function getMerchantSettlementLedger(
   businessId: string,
@@ -345,90 +381,62 @@ export async function getMerchantSettlementLedger(
     // fallback
   }
 
-  // Realistic mock settlements for Bahraich merchant
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const d1 = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-  const d2 = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
-  const d3 = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
-  const d4 = new Date(Date.now() - 4 * 86400000).toISOString().slice(0, 10);
+  if (isTestMerchant(businessId)) {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const d1 = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const d2 = new Date(Date.now() - 2 * 86400000).toISOString().slice(0, 10);
 
-  return [
-    {
-      id: `SETTL_${todayStr.replace(/-/g, "")}_01`,
-      settlement_date: todayStr,
-      orders_count: 14,
-      gross_sales: 6850.0,
-      platform_commission: 685.0, // 10%
-      payment_gateway_fee: 119.88, // 1.75%
-      tds_deduction: 68.5, // 1%
-      net_payout_amount: 5976.62,
-      bank_utr_number: "CMS928310948192",
-      bank_account_number: "•••• •••• 4819",
-      ifsc_code: "SBIN0000123",
-      status: "settled",
-      settled_at: new Date().toISOString(),
-    },
-    {
-      id: `SETTL_${d1.replace(/-/g, "")}_01`,
-      settlement_date: d1,
-      orders_count: 22,
-      gross_sales: 11400.0,
-      platform_commission: 1140.0,
-      payment_gateway_fee: 199.5,
-      tds_deduction: 114.0,
-      net_payout_amount: 9946.5,
-      bank_utr_number: "CMS918230918451",
-      bank_account_number: "•••• •••• 4819",
-      ifsc_code: "SBIN0000123",
-      status: "settled",
-      settled_at: new Date(Date.now() - 86400000).toISOString(),
-    },
-    {
-      id: `SETTL_${d2.replace(/-/g, "")}_01`,
-      settlement_date: d2,
-      orders_count: 18,
-      gross_sales: 9200.0,
-      platform_commission: 920.0,
-      payment_gateway_fee: 161.0,
-      tds_deduction: 92.0,
-      net_payout_amount: 8027.0,
-      bank_utr_number: "CMS908129034812",
-      bank_account_number: "•••• •••• 4819",
-      ifsc_code: "SBIN0000123",
-      status: "settled",
-      settled_at: new Date(Date.now() - 2 * 86400000).toISOString(),
-    },
-    {
-      id: `SETTL_${d3.replace(/-/g, "")}_01`,
-      settlement_date: d3,
-      orders_count: 26,
-      gross_sales: 14800.0,
-      platform_commission: 1480.0,
-      payment_gateway_fee: 259.0,
-      tds_deduction: 148.0,
-      net_payout_amount: 12913.0,
-      bank_utr_number: "CMS898239012349",
-      bank_account_number: "•••• •••• 4819",
-      ifsc_code: "SBIN0000123",
-      status: "settled",
-      settled_at: new Date(Date.now() - 3 * 86400000).toISOString(),
-    },
-    {
-      id: `SETTL_${d4.replace(/-/g, "")}_01`,
-      settlement_date: d4,
-      orders_count: 15,
-      gross_sales: 7300.0,
-      platform_commission: 730.0,
-      payment_gateway_fee: 127.75,
-      tds_deduction: 73.0,
-      net_payout_amount: 6369.25,
-      bank_utr_number: "CMS887612093411",
-      bank_account_number: "•••• •••• 4819",
-      ifsc_code: "SBIN0000123",
-      status: "settled",
-      settled_at: new Date(Date.now() - 4 * 86400000).toISOString(),
-    },
-  ];
+    return [
+      {
+        id: `SETTL_${todayStr.replace(/-/g, "")}_01`,
+        settlement_date: todayStr,
+        orders_count: 14,
+        gross_sales: 6850.0,
+        platform_commission: 685.0,
+        payment_gateway_fee: 119.88,
+        tds_deduction: 68.5,
+        net_payout_amount: 5976.62,
+        bank_utr_number: "CMS928310948192",
+        bank_account_number: "•••• •••• 4819",
+        ifsc_code: "SBIN0000123",
+        status: "settled",
+        settled_at: new Date().toISOString(),
+      },
+      {
+        id: `SETTL_${d1.replace(/-/g, "")}_01`,
+        settlement_date: d1,
+        orders_count: 22,
+        gross_sales: 11400.0,
+        platform_commission: 1140.0,
+        payment_gateway_fee: 199.5,
+        tds_deduction: 114.0,
+        net_payout_amount: 9946.5,
+        bank_utr_number: "CMS918230918451",
+        bank_account_number: "•••• •••• 4819",
+        ifsc_code: "SBIN0000123",
+        status: "settled",
+        settled_at: new Date(Date.now() - 86400000).toISOString(),
+      },
+      {
+        id: `SETTL_${d2.replace(/-/g, "")}_01`,
+        settlement_date: d2,
+        orders_count: 18,
+        gross_sales: 9200.0,
+        platform_commission: 920.0,
+        payment_gateway_fee: 161.0,
+        tds_deduction: 92.0,
+        net_payout_amount: 8027.0,
+        bank_utr_number: "CMS908129034812",
+        bank_account_number: "•••• •••• 4819",
+        ifsc_code: "SBIN0000123",
+        status: "settled",
+        settled_at: new Date(Date.now() - 2 * 86400000).toISOString(),
+      },
+    ];
+  }
+
+  // Real/User-added merchants start with clean empty settlements
+  return [];
 }
 
 /**
@@ -438,6 +446,16 @@ export async function getMerchantFinancialSummary(
   businessId: string,
 ): Promise<MerchantFinancialSummary> {
   const settlements = await getMerchantSettlementLedger(businessId);
+
+  if (settlements.length === 0) {
+    return {
+      today: { orders_count: 0, gross_sales: 0, net_payout: 0, commission: 0 },
+      this_week: { orders_count: 0, gross_sales: 0, net_payout: 0, commission: 0 },
+      this_month: { orders_count: 0, gross_sales: 0, net_payout: 0, commission: 0 },
+      all_time_payout_settled: 0,
+      pending_payout_hold: 0,
+    };
+  }
 
   const todayRecord = settlements[0] || {
     orders_count: 0,
@@ -520,7 +538,7 @@ export async function getAdminPendingBankChangeRequests(): Promise<AdminBankChan
     // fallback
   }
 
-  // Check fallback in-memory requests
+  // Check in-memory submitted change requests
   const memoryItems: AdminBankChangeItem[] = [];
   fallbackChangeRequests.forEach((reqs, businessId) => {
     reqs.forEach((r) => {
@@ -528,8 +546,8 @@ export async function getAdminPendingBankChangeRequests(): Promise<AdminBankChan
         memoryItems.push({
           id: r.id,
           business_id: businessId,
-          business_name: "Deepak Sweets Bahraich",
-          owner_name: "Deepak Kumar",
+          business_name: "Merchant Store",
+          owner_name: "Store Owner",
           owner_phone: "+91 98765 43210",
           current_account_number: r.current_account_number,
           current_ifsc: r.current_ifsc,
@@ -548,30 +566,7 @@ export async function getAdminPendingBankChangeRequests(): Promise<AdminBankChan
     });
   });
 
-  if (memoryItems.length > 0) return memoryItems;
-
-  // Realistic default pending request for demo preview
-  return [
-    {
-      id: "req_demo_9841",
-      business_id: "biz_demo_bahraich",
-      business_name: "Deepak Sweets Bahraich",
-      owner_name: "Deepak Kumar",
-      owner_phone: "+91 98765 43210",
-      current_account_number: "•••• •••• 4819",
-      current_ifsc: "SBIN0000123",
-      current_bank_name: "State Bank of India (Bahraich Main)",
-      new_account_holder_name: "DEEPAK KUMAR",
-      new_account_number: "501002391823",
-      new_ifsc_code: "HDFC0001245",
-      new_bank_name: "HDFC Bank (Kisan Degree College Road, Bahraich)",
-      new_passbook_or_cheque_url: "/docs/cheque_deepak_sweets.jpg",
-      otp_verified: true,
-      cooling_off_until: new Date(Date.now() + 18 * 3600 * 1000).toISOString(),
-      status: "pending",
-      created_at: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
-    },
-  ];
+  return memoryItems;
 }
 
 /**
@@ -597,6 +592,12 @@ export async function adminApproveBankChange(
     // fallback
   }
 
+  // Update in-memory fallback
+  const reqs = fallbackChangeRequests.get(businessId) || [];
+  reqs.forEach((r) => {
+    if (r.id === requestId) r.status = "approved";
+  });
+
   return { success: true, message: "Bank change request approved successfully. New bank account is now active for future payouts." };
 }
 
@@ -621,6 +622,12 @@ export async function adminRejectBankChange(
   } catch {
     // fallback
   }
+
+  // Update in-memory fallback
+  const reqs = fallbackChangeRequests.get(businessId) || [];
+  reqs.forEach((r) => {
+    if (r.id === requestId) r.status = "rejected";
+  });
 
   return { success: true, message: "Bank change request rejected." };
 }

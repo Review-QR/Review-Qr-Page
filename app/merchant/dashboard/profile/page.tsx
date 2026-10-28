@@ -43,13 +43,20 @@ export default async function MerchantProfilePage() {
     getMerchantFinancialSummary(merchant.businessId),
   ]);
 
-  const bankAccountItems = [
-    { label: "Bank Name", value: bankDetails?.bank_name ?? "State Bank of India", status: "Verified" },
-    { label: "Account Number", value: `${bankDetails?.bank_account_number ?? "•••• •••• 4819"} (${bankDetails?.account_type === "savings" ? "Savings" : "Current"})`, status: "Verified" },
-    { label: "IFSC Code", value: bankDetails?.ifsc_code ?? "SBIN0000123", status: "Verified" },
-    { label: "Beneficiary / Account Holder", value: bankDetails?.account_holder_name ?? merchant.businessName, status: "Verified" },
+  const bankAccountItems = bankDetails ? [
+    { label: "Bank Name", value: bankDetails.bank_name, status: "Verified" },
+    { label: "Account Number", value: `${bankDetails.bank_account_number} (${bankDetails.account_type === "savings" ? "Savings" : "Current"})`, status: "Verified" },
+    { label: "IFSC Code", value: bankDetails.ifsc_code, status: "Verified" },
+    { label: "Beneficiary / Account Holder", value: bankDetails.account_holder_name, status: "Verified" },
     { label: "Settlement Cycle", value: "Daily T+1 Automated IMPS (10:00 AM)", status: "Active" },
     { label: "Today's Net Payout", value: `${formatCurrency(financialSummary.today.net_payout)} (${financialSummary.today.orders_count} Orders)`, status: "Scheduled" },
+  ] : [
+    { label: "Bank Name", value: "Not linked yet", status: "Action Required" },
+    { label: "Account Number", value: "Not provided", status: "Pending" },
+    { label: "IFSC Code", value: "Not provided", status: "Pending" },
+    { label: "Beneficiary / Account Holder", value: merchant.ownerName || merchant.businessName, status: "Pending" },
+    { label: "Settlement Cycle", value: "Daily T+1 Automated IMPS (10:00 AM)", status: "On Hold" },
+    { label: "Today's Net Payout", value: "₹0.00 (0 Orders)", status: "No Orders" },
   ];
 
   return (
@@ -99,34 +106,50 @@ export default async function MerchantProfilePage() {
         {!discoveryComplete && <Link href="/merchant/dashboard/business#public-discovery-location" className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-orange-100 px-4 text-sm font-bold text-orange-900 hover:bg-orange-200">Complete Public Discovery Location</Link>}
       </section>
 
-      {/* NEW: BUSINESS ACCOUNT AND SETTLEMENTS */}
-      <section aria-labelledby="business-account-settlements-title" className="min-w-0 rounded-3xl border border-emerald-200 bg-white p-5 shadow-[0_8px_22px_rgba(89,62,30,0.05)] sm:p-7">
+      {/* BUSINESS ACCOUNT AND SETTLEMENTS */}
+      <section aria-labelledby="business-account-settlements-title" className={`min-w-0 rounded-3xl border p-5 shadow-[0_8px_22px_rgba(89,62,30,0.05)] sm:p-7 ${
+        bankDetails ? "border-emerald-200 bg-white" : "border-amber-200 bg-amber-50/20"
+      }`}>
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.14em] text-emerald-800">Bank & Payouts Engine</p>
+            <p className={`text-xs font-bold uppercase tracking-[0.14em] ${bankDetails ? "text-emerald-800" : "text-amber-800"}`}>
+              Bank & Payouts Engine
+            </p>
             <h2 id="business-account-settlements-title" className="mt-1 text-lg font-bold text-slate-950">
               Business Account and Settlements
             </h2>
           </div>
-          <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-800">
-            ✓ Penny-Drop Verified
+          <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+            bankDetails ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"
+          }`}>
+            {bankDetails ? "✓ Penny-Drop Verified" : "⚠️ Bank Account Missing"}
           </span>
         </div>
         <p className="mt-2 text-sm text-slate-600">
-          Your verified bank account for daily T+1 automated payouts, platform commission splits, and bank UTR settlements for orders placed on Trustit.
+          {bankDetails
+            ? "Your verified bank account for daily T+1 automated payouts, platform commission splits, and bank UTR settlements for orders placed on Trustit."
+            : "Apne business orders ka rozana subah 10:00 AM bank payout lene ke liye apna bank account link karein."}
         </p>
 
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
           {bankAccountItems.map((item) => (
             <li
               key={item.label}
-              className="flex items-center justify-between gap-3 rounded-xl border border-emerald-100/70 bg-[#f9fcfa] px-3.5 py-3 text-sm"
+              className={`flex items-center justify-between gap-3 rounded-xl border px-3.5 py-3 text-sm ${
+                bankDetails
+                  ? "border-emerald-100/70 bg-[#f9fcfa]"
+                  : "border-slate-100 bg-[#fffdfa]"
+              }`}
             >
               <div className="min-w-0">
                 <span className="block text-xs font-medium text-slate-500">{item.label}</span>
                 <span className="font-semibold text-slate-900 truncate block">{item.value}</span>
               </div>
-              <span className="font-semibold text-xs text-emerald-700 shrink-0 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+              <span className={`font-semibold text-xs shrink-0 px-2 py-0.5 rounded-md border ${
+                item.status === "Verified" || item.status === "Active"
+                  ? "text-emerald-700 bg-emerald-50 border-emerald-200"
+                  : "text-amber-800 bg-amber-50 border-amber-200"
+              }`}>
                 {item.status}
               </span>
             </li>
@@ -136,9 +159,11 @@ export default async function MerchantProfilePage() {
         <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
           <Link
             href="/merchant/dashboard/payments"
-            className="inline-flex min-h-10 items-center rounded-xl bg-emerald-700 px-4 text-xs font-bold text-white hover:bg-emerald-800 transition"
+            className={`inline-flex min-h-10 items-center rounded-xl px-4 text-xs font-bold text-white transition ${
+              bankDetails ? "bg-emerald-700 hover:bg-emerald-800" : "bg-blue-600 hover:bg-blue-700"
+            }`}
           >
-            View Settlements & Bank Passbook (UTR) →
+            {bankDetails ? "View Settlements & Bank Passbook (UTR) →" : "+ Add Bank Account for Payouts →"}
           </Link>
           <Link
             href="/merchant/dashboard/payments"
