@@ -44,3 +44,10 @@ test("admin merchant management exposes Banking and Payout compliance section in
   assert.match(adminUi, /Penny-Drop ₹1 Matched/);
   assert.match(adminUi, /FSSAI & PAN Verified/);
 });
+
+test("merchant profile page presents the dedicated Business Account and Settlements section", async () => {
+  const profilePage = await read("../profile/page.tsx");
+  assert.match(profilePage, /Business Account and Settlements/);
+  assert.match(profilePage, /Penny-Drop Verified/);
+  assert.match(profilePage, /View Settlements & Bank Passbook/);
+});
