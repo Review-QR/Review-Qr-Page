@@ -139,3 +139,30 @@ export async function permanentlyDeleteMerchantAction(
 
   return { success: true, businessDeleted: true, message: "Merchant permanently deleted." };
 }
+
+
+export async function approveBankChangeAction(
+  requestId: string,
+  businessId: string,
+  notes?: string
+) {
+  const admin = await requireActiveAdmin();
+  if (!admin) return { success: false, message: "Unauthorized: Active admin required." };
+  const { adminApproveBankChange } = await import("@/lib/bank-payouts-service");
+  const res = await adminApproveBankChange(requestId, businessId, notes);
+  revalidateMerchantLists();
+  return res;
+}
+
+export async function rejectBankChangeAction(
+  requestId: string,
+  businessId: string,
+  reason?: string
+) {
+  const admin = await requireActiveAdmin();
+  if (!admin) return { success: false, message: "Unauthorized: Active admin required." };
+  const { adminRejectBankChange } = await import("@/lib/bank-payouts-service");
+  const res = await adminRejectBankChange(requestId, businessId, reason);
+  revalidateMerchantLists();
+  return res;
+}

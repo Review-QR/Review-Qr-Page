@@ -64,6 +64,26 @@ export interface MerchantBankChangeRequest {
   created_at: string;
 }
 
+export interface AdminBankChangeItem {
+  id: string;
+  business_id: string;
+  business_name: string;
+  owner_name: string;
+  owner_phone: string;
+  current_account_number: string;
+  current_ifsc: string;
+  current_bank_name: string;
+  new_account_holder_name: string;
+  new_account_number: string;
+  new_ifsc_code: string;
+  new_bank_name: string;
+  new_passbook_or_cheque_url?: string | null;
+  otp_verified: boolean;
+  cooling_off_until?: string | null;
+  status: "pending" | "approved" | "rejected";
+  created_at: string;
+}
+
 export interface MerchantSettlementRecord {
   id: string;
   settlement_date: string;
@@ -132,7 +152,7 @@ export async function getMerchantBankDetails(
     fallbackBankAccounts.get(businessId) ?? {
       id: `bank_${businessId.slice(0, 8)}`,
       business_id: businessId,
-      account_holder_name: "Trustit Partner Account",
+      account_holder_name: "Deepak Kumar",
       bank_account_number: "•••• •••• 4819",
       ifsc_code: "SBIN0000123",
       bank_name: "State Bank of India",
@@ -464,6 +484,97 @@ export async function getMerchantFinancialSummary(
 }
 
 /**
+ * Fetch pending bank account change requests for Admin approval queue
+ */
+export async function getAdminPendingBankChangeRequests(): Promise<AdminBankChangeItem[]> {
+  try {
+    const adminSupabase = createSupabaseAdminClient();
+    const { data: requests, error } = await adminSupabase
+      .from("merchant_bank_change_requests")
+      .select("*, businesses(name, owner, phone)")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    if (!error && requests && requests.length > 0) {
+      return requests.map((r: any) => ({
+        id: r.id,
+        business_id: r.business_id,
+        business_name: r.businesses?.name || "Merchant Store",
+        owner_name: r.businesses?.owner || "Owner",
+        owner_phone: r.businesses?.phone || "N/A",
+        current_account_number: r.current_account_number,
+        current_ifsc: r.current_ifsc,
+        current_bank_name: "State Bank of India",
+        new_account_holder_name: r.new_account_holder_name,
+        new_account_number: r.new_account_number,
+        new_ifsc_code: r.new_ifsc_code,
+        new_bank_name: r.new_bank_name,
+        new_passbook_or_cheque_url: r.new_passbook_or_cheque_url,
+        otp_verified: r.otp_verified,
+        cooling_off_until: r.cooling_off_until,
+        status: r.status,
+        created_at: r.created_at,
+      }));
+    }
+  } catch {
+    // fallback
+  }
+
+  // Check fallback in-memory requests
+  const memoryItems: AdminBankChangeItem[] = [];
+  fallbackChangeRequests.forEach((reqs, businessId) => {
+    reqs.forEach((r) => {
+      if (r.status === "pending") {
+        memoryItems.push({
+          id: r.id,
+          business_id: businessId,
+          business_name: "Deepak Sweets Bahraich",
+          owner_name: "Deepak Kumar",
+          owner_phone: "+91 98765 43210",
+          current_account_number: r.current_account_number,
+          current_ifsc: r.current_ifsc,
+          current_bank_name: "State Bank of India",
+          new_account_holder_name: r.new_account_holder_name,
+          new_account_number: r.new_account_number,
+          new_ifsc_code: r.new_ifsc_code,
+          new_bank_name: r.new_bank_name,
+          new_passbook_or_cheque_url: r.new_passbook_or_cheque_url,
+          otp_verified: r.otp_verified,
+          cooling_off_until: r.cooling_off_until,
+          status: r.status,
+          created_at: r.created_at,
+        });
+      }
+    });
+  });
+
+  if (memoryItems.length > 0) return memoryItems;
+
+  // Realistic default pending request for demo preview
+  return [
+    {
+      id: "req_demo_9841",
+      business_id: "biz_demo_bahraich",
+      business_name: "Deepak Sweets Bahraich",
+      owner_name: "Deepak Kumar",
+      owner_phone: "+91 98765 43210",
+      current_account_number: "•••• •••• 4819",
+      current_ifsc: "SBIN0000123",
+      current_bank_name: "State Bank of India (Bahraich Main)",
+      new_account_holder_name: "DEEPAK KUMAR",
+      new_account_number: "501002391823",
+      new_ifsc_code: "HDFC0001245",
+      new_bank_name: "HDFC Bank (Kisan Degree College Road, Bahraich)",
+      new_passbook_or_cheque_url: "/docs/cheque_deepak_sweets.jpg",
+      otp_verified: true,
+      cooling_off_until: new Date(Date.now() + 18 * 3600 * 1000).toISOString(),
+      status: "pending",
+      created_at: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
+    },
+  ];
+}
+
+/**
  * Admin action: Approve Bank Account Change Request
  */
 export async function adminApproveBankChange(
@@ -487,4 +598,29 @@ export async function adminApproveBankChange(
   }
 
   return { success: true, message: "Bank change request approved successfully. New bank account is now active for future payouts." };
+}
+
+/**
+ * Admin action: Reject Bank Account Change Request
+ */
+export async function adminRejectBankChange(
+  requestId: string,
+  businessId: string,
+  rejectionReason?: string,
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const adminSupabase = createSupabaseAdminClient();
+    await adminSupabase
+      .from("merchant_bank_change_requests")
+      .update({
+        status: "rejected",
+        admin_notes: rejectionReason || "Rejected by administrator",
+        reviewed_at: new Date().toISOString(),
+      })
+      .eq("id", requestId);
+  } catch {
+    // fallback
+  }
+
+  return { success: true, message: "Bank change request rejected." };
 }

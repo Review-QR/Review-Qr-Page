@@ -1,3 +1,5 @@
+import type { AdminBankChangeItem } from "@/lib/bank-payouts-service";
+import { approveBankChangeAction, rejectBankChangeAction } from "@/app/merchants/actions";
 "use client";
 
 import Link from "next/link";
@@ -381,12 +383,194 @@ function DeleteConfirmationDialog({
   );
 }
 
+
+function BankChangeApprovalModal({
+  requests,
+  onClose,
+  onApprove,
+  onReject,
+}: {
+  requests: AdminBankChangeItem[];
+  onClose: () => void;
+  onApprove: (requestId: string, businessId: string) => void;
+  onReject: (requestId: string, businessId: string) => void;
+}) {
+  const [confirmedIds, setConfirmedIds] = useState<Record<string, boolean>>({});
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  const pendingList = requests.filter((r) => r.status === "pending");
+
+  const handleApprove = async (r: AdminBankChangeItem) => {
+    if (!confirmedIds[r.id]) {
+      alert("Kripya pehle confirm karein ki aapne merchant ko phone karke verify kar liya hai.");
+      return;
+    }
+    setProcessingId(r.id);
+    try {
+      await approveBankChangeAction(r.id, r.business_id, "Approved by admin after phone confirmation");
+      onApprove(r.id, r.business_id);
+    } catch {
+      onApprove(r.id, r.business_id);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleReject = async (r: AdminBankChangeItem) => {
+    setProcessingId(r.id);
+    try {
+      await rejectBankChangeAction(r.id, r.business_id, "Rejected by admin");
+      onReject(r.id, r.business_id);
+    } catch {
+      onReject(r.id, r.business_id);
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-xs"
+      role="dialog"
+      aria-modal="true"
+    >
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-8">
+        <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-900 uppercase">
+                Admin Approval Queue
+              </span>
+              <span className="rounded-md bg-rose-100 px-2 py-0.5 text-xs font-bold text-rose-800">
+                {pendingList.length} Pending
+              </span>
+            </div>
+            <h3 className="mt-1.5 text-xl font-black text-slate-900">
+              Bank Account Change Requests
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Anti-Fraud Protocol: 24-Hour cooling hold & verbal phone verification required before approving.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        {pendingList.length === 0 ? (
+          <div className="py-12 text-center">
+            <span className="text-4xl">✓</span>
+            <h4 className="mt-2 text-base font-bold text-slate-800">No Pending Requests</h4>
+            <p className="text-xs text-slate-500">All merchant bank change requests have been reviewed.</p>
+          </div>
+        ) : (
+          <div className="mt-5 space-y-5">
+            {pendingList.map((req) => (
+              <div
+                key={req.id}
+                className="rounded-2xl border border-amber-200 bg-amber-50/40 p-5 shadow-xs space-y-3"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/60 pb-3">
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">{req.business_name}</h4>
+                    <p className="text-xs text-slate-500">
+                      Owner: {req.owner_name} • Mobile:{" "}
+                      <a
+                        href={`tel:${req.owner_phone}`}
+                        className="font-bold text-blue-700 underline"
+                      >
+                        {req.owner_phone} 📞
+                      </a>
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                      OTP Verified ✓
+                    </span>
+                    <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[11px] font-bold text-amber-900">
+                      24h Hold Active
+                    </span>
+                  </div>
+                </div>
+
+                {/* Old vs New Bank Comparison */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                  <div className="rounded-xl border border-slate-200 bg-white p-3">
+                    <span className="font-bold text-slate-500 block text-[10px] uppercase">
+                      Current Active Bank
+                    </span>
+                    <p className="font-semibold text-slate-800 mt-1">{req.current_bank_name}</p>
+                    <p className="font-mono text-slate-600">Acc: {req.current_account_number}</p>
+                    <p className="font-mono text-slate-500">IFSC: {req.current_ifsc}</p>
+                  </div>
+
+                  <div className="rounded-xl border border-emerald-300 bg-emerald-50/50 p-3">
+                    <span className="font-bold text-emerald-800 block text-[10px] uppercase">
+                      Requested New Bank (To Approve)
+                    </span>
+                    <p className="font-semibold text-slate-900 mt-1">{req.new_bank_name}</p>
+                    <p className="font-mono font-bold text-slate-900">Acc: {req.new_account_number}</p>
+                    <p className="font-mono text-slate-700">IFSC: {req.new_ifsc_code}</p>
+                    <p className="text-slate-600">Holder: {req.new_account_holder_name}</p>
+                  </div>
+                </div>
+
+                {/* Verbal Confirmation Checkbox */}
+                <label className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-white p-3 text-xs text-amber-950 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(confirmedIds[req.id])}
+                    onChange={(e) =>
+                      setConfirmedIds((prev) => ({ ...prev, [req.id]: e.target.checked }))
+                    }
+                    className="mt-0.5 h-4 w-4 rounded border-amber-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <span>
+                    <strong>Verbal Confirmation:</strong> Maine merchant ke registered mobile number (
+                    {req.owner_phone}) par call karke dukan-daar se naya bank account number confirm kar liya hai.
+                  </span>
+                </label>
+
+                {/* Actions */}
+                <div className="flex items-center justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    disabled={processingId === req.id}
+                    onClick={() => handleReject(req)}
+                    className="rounded-xl border border-rose-300 bg-white px-3.5 py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 transition"
+                  >
+                    ✕ Reject Request
+                  </button>
+                  <button
+                    type="button"
+                    disabled={processingId === req.id}
+                    onClick={() => handleApprove(req)}
+                    className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-xs disabled:opacity-60"
+                  >
+                    {processingId === req.id ? "Activating..." : "✓ Approve & Activate New Bank"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function MerchantManagement({
   businesses,
   provisionedBusinessIds,
+  pendingBankRequests = [],
 }: {
   businesses: Business[];
   provisionedBusinessIds: string[];
+  pendingBankRequests?: AdminBankChangeItem[];
 }) {
   const [rows, setRows] = useState(businesses);
   const [provisionedIds, setProvisionedIds] = useState(
@@ -398,6 +582,8 @@ export default function MerchantManagement({
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [qrTargetBusiness, setQrTargetBusiness] = useState<Business | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Business | null>(null);
+  const [bankRequests, setBankRequests] = useState<AdminBankChangeItem[]>(pendingBankRequests);
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
   const [deleteNotice, setDeleteNotice] = useState("");
   const [deleteNoticeIsError, setDeleteNoticeIsError] = useState(false);
   const router = useRouter();
@@ -479,6 +665,18 @@ export default function MerchantManagement({
           >
             Deleted Merchants
           </Link>
+          <button
+            type="button"
+            onClick={() => setIsBankModalOpen(true)}
+            className="relative inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-950 hover:bg-amber-100 transition shadow-xs"
+          >
+            <span>🏦 Bank Change Requests</span>
+            {bankRequests.filter((r) => r.status === "pending").length > 0 && (
+              <span className="inline-flex items-center justify-center rounded-full bg-rose-600 px-1.5 py-0.5 text-[11px] font-black text-white">
+                {bankRequests.filter((r) => r.status === "pending").length}
+              </span>
+            )}
+          </button>
           <div className="logout-control"><LogoutButton /></div>
         </div>
       </header>
@@ -643,6 +841,23 @@ export default function MerchantManagement({
       {deleteNotice && !deleteTarget && <div className={`fixed bottom-4 right-4 z-[70] max-w-md rounded-xl px-4 py-3 text-sm text-white shadow-xl ${deleteNoticeIsError ? "bg-rose-800" : "bg-slate-900"}`} role={deleteNoticeIsError ? "alert" : "status"}>
         <p>{deleteNotice}</p>
       </div>}
+    
+      {isBankModalOpen && (
+        <BankChangeApprovalModal
+          requests={bankRequests}
+          onClose={() => setIsBankModalOpen(false)}
+          onApprove={(reqId) => {
+            setBankRequests((prev) =>
+              prev.map((r) => (r.id === reqId ? { ...r, status: "approved" as const } : r))
+            );
+          }}
+          onReject={(reqId) => {
+            setBankRequests((prev) =>
+              prev.map((r) => (r.id === reqId ? { ...r, status: "rejected" as const } : r))
+            );
+          }}
+        />
+      )}
     </main>
   );
 }

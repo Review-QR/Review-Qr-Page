@@ -4,6 +4,7 @@ import {
   createSupabaseServerClient,
   requireActiveAdmin,
 } from "@/lib/supabase-server";
+import { getAdminPendingBankChangeRequests } from "@/lib/bank-payouts-service";
 import MerchantManagement from "./merchant-management";
 
 export const dynamic = "force-dynamic";
@@ -20,10 +21,11 @@ export default async function MerchantsPage() {
     data: { business_id: string }[] | null;
     error: { message: string } | null;
   };
+  let pendingBankRequests: Awaited<ReturnType<typeof getAdminPendingBankChangeRequests>> = [];
 
   try {
     const adminClient = createSupabaseAdminClient();
-    [businessResult, mappingResult] = await Promise.all([
+    const [bRes, mRes, pReqs] = await Promise.all([
       supabase
         .from("businesses")
         .select(
@@ -32,7 +34,11 @@ export default async function MerchantsPage() {
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       adminClient.from("merchant_accounts").select("business_id"),
+      getAdminPendingBankChangeRequests(),
     ]);
+    businessResult = bRes;
+    mappingResult = mRes;
+    pendingBankRequests = pReqs;
   } catch {
     return <MerchantListError />;
   }
@@ -45,6 +51,7 @@ export default async function MerchantsPage() {
       provisionedBusinessIds={(mappingResult.data ?? []).map(
         (mapping) => mapping.business_id
       )}
+      pendingBankRequests={pendingBankRequests}
     />
   );
 }
