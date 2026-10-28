@@ -14,7 +14,7 @@ import {
   resolveCategory,
   slugifyCity,
 } from "@/lib/public-discovery-domain";
-import { discoveryMetadata, discoveryTitle } from "@/lib/public-discovery-seo";
+import { discoveryMetadata, discoveryTitle, categoryListingSchema, serializeJsonLd, BAHRAICH_SEO_KEYWORDS } from "@/lib/public-discovery-seo";
 
 type Params = Promise<{ city: string; category: string }>;
 type Search = Promise<Record<string, string | string[] | undefined>>;
@@ -177,11 +177,27 @@ export async function generateMetadata({
   const countText = businesses.length
     ? `${businesses.length} eligible ${businesses.length === 1 ? "business" : "businesses"} in ${cityName}, listed under ${categoryName}`
     : `registered ${categoryName} businesses in ${cityName}`;
+  const isBahraich = cityName.toLowerCase().includes("bahraich");
+  const targetedTitle = isBahraich
+    ? `${categoryName} in Bahraich | Trustit Review & Local Service`
+    : `${categoryName} in ${cityName} | Trustit`;
+
+  const targetedDesc = isBahraich
+    ? `Trustit Bahraich: Verified ${categoryName} in Bahraich. 100% genuine Google reviews, official QR standees, and hyperlocal ordering.`
+    : `Explore ${countText} in ${cityName} with publicly verified locations and Trustit review information.`;
+
   return {
     ...discoveryMetadata({
-      title: `${categoryName} in ${cityName} | Trustit`,
-      description: `Explore ${countText} in ${cityName} with publicly verified locations and Trustit review information.`,
+      title: targetedTitle,
+      description: targetedDesc,
       canonicalPath: `/${canonicalCity}/${canonicalCategory}`,
+      keywords: [
+        `Trustit ${cityName}`,
+        `Trustit ${categoryName}`,
+        `Trustit Review ${cityName}`,
+        `Best ${categoryName} in ${cityName}`,
+        ...BAHRAICH_SEO_KEYWORDS,
+      ],
     }),
     robots: {
       index:
@@ -351,6 +367,20 @@ export default async function DiscoveryPage({
             </div>
           </div>
         </header>
+
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: serializeJsonLd(
+              categoryListingSchema({
+                cityName,
+                categoryName,
+                canonicalPath: `/${canonicalCity}/${canonicalCategory}`,
+                businesses,
+              })
+            ),
+          }}
+        />
 
         <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:py-10">
           {/* ── Breadcrumb & Eyebrow ── */}
