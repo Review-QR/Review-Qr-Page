@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     .in("status", ["rider_assigned", "picked_up", "out_for_delivery"])
     .maybeSingle();
 
-  // Cascading proximity radar slot specifically targeted to this rider
+  // Cascading proximity radar slot specifically targeted to this rider (must be paid or COD)
   const { data: targetedSlot } = await admin
     .from("hyperlocal_orders")
     .select(`
@@ -55,6 +55,7 @@ export async function GET(request: Request) {
     `)
     .eq("dispatch_target_rider_id", rider.id)
     .is("rider_id", null)
+    .or("payment_status.eq.paid,payment_mode.eq.cod")
     .maybeSingle();
 
   let incomingDispatchOrder = null;
@@ -76,7 +77,7 @@ export async function GET(request: Request) {
     }
   }
 
-  // Available ready orders awaiting pickup within the city
+  // Available ready orders awaiting pickup within the city (only paid or COD)
   const { data: availableOrders } = await admin
     .from("hyperlocal_orders")
     .select(`
@@ -86,6 +87,7 @@ export async function GET(request: Request) {
     `)
     .in("status", ["placed", "accepted_by_merchant", "ready_for_pickup"])
     .is("rider_id", null)
+    .or("payment_status.eq.paid,payment_mode.eq.cod")
     .order("created_at", { ascending: false })
     .limit(5);
 

@@ -83,10 +83,27 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
 
   // Timer loop for 180s countdown ticks
   useEffect(() => {
+    function primeAudio() {
+      try {
+        if (!audioCtxRef.current) {
+          audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        }
+        if (audioCtxRef.current.state === "suspended") {
+          audioCtxRef.current.resume();
+        }
+      } catch {}
+    }
+    window.addEventListener("click", primeAudio, { once: true });
+    window.addEventListener("touchstart", primeAudio, { once: true });
+
     const timer = setInterval(() => {
       setCurrentTime(Date.now());
     }, 1000);
-    return () => clearInterval(timer);
+    return () => {
+      window.removeEventListener("click", primeAudio);
+      window.removeEventListener("touchstart", primeAudio);
+      clearInterval(timer);
+    };
   }, []);
 
   // Auto-open Pop-Up Notification Modal whenever a confirmed unaccepted order is present

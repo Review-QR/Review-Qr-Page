@@ -63,14 +63,32 @@ export default function RiderAppPage() {
     } catch {}
   }
 
-  // Load saved rider on mount
+  // Load saved rider on mount & prime audio context on first touch/click
   useEffect(() => {
+    function primeRiderAudio() {
+      try {
+        if (!audioCtxRef.current) {
+          audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+        }
+        if (audioCtxRef.current.state === "suspended") {
+          audioCtxRef.current.resume();
+        }
+      } catch {}
+    }
+    window.addEventListener("click", primeRiderAudio, { once: true });
+    window.addEventListener("touchstart", primeRiderAudio, { once: true });
+
     try {
       const savedId = localStorage.getItem("trustit_rider_id");
       if (savedId) {
         loadRiderById(savedId);
       }
     } catch {}
+
+    return () => {
+      window.removeEventListener("click", primeRiderAudio);
+      window.removeEventListener("touchstart", primeRiderAudio);
+    };
   }, []);
 
   async function loadRiderById(id: string) {
