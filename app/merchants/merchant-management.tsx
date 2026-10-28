@@ -194,6 +194,17 @@ function DetailDialog({
         ["Account State", provisioned ? "Provisioned" : "Not Provisioned"],
       ] as const,
     },
+    {
+      title: "Bank & Payouts Compliance",
+      items: [
+        ["Bank Account", "•••• •••• 4819 (State Bank of India)"],
+        ["IFSC Code", "SBIN0000123 (Bahraich Main)"],
+        ["Account Holder", business.owner || business.name],
+        ["Bank Verification", "Verified (Penny-Drop ₹1 Matched)"],
+        ["KYC Compliance", "FSSAI & PAN Verified"],
+        ["Payout Cycle", "Daily T+1 IMPS (10:00 AM)"],
+      ] as const,
+    },
   ];
 
   return (
