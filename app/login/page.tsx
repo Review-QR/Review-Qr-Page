@@ -21,31 +21,31 @@ export default function LoginPage() {
   const message = state.message || queryMessage;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
-      <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-bold text-white">
+    <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4 sm:p-6">
+      <div className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
+        <div className="mb-5 text-center">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-lg font-black text-white">
             QR
           </div>
 
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-lg font-bold text-slate-900">
             Review-QR Admin
           </h1>
 
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-1 text-xs text-slate-500">
             Admin panel me sign in karein
           </p>
         </div>
 
         {message && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          <div className="mb-3 rounded-xl border border-red-200 bg-red-50 p-2.5 text-xs text-red-700 font-medium">
             {message}
           </div>
         )}
 
-        <form action={formAction} className="space-y-5">
+        <form action={formAction} className="space-y-3.5">
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-xs font-semibold text-slate-700">
               Email
             </label>
 
@@ -55,12 +55,12 @@ export default function LoginPage() {
               placeholder="admin@example.com"
               autoComplete="email"
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
             />
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-medium text-slate-700">
+            <label className="mb-1 block text-xs font-semibold text-slate-700">
               Password
             </label>
 
@@ -70,20 +70,20 @@ export default function LoginPage() {
               placeholder="••••••••"
               autoComplete="current-password"
               required
-              className="w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-500"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
             />
           </div>
 
           <button
             type="submit"
             disabled={pending}
-            className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 transition shadow-xs"
           >
-            {pending ? "Signing in..." : "Sign In"}
+            {pending ? "Signing in..." : "Sign In →"}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-xs text-slate-400">
+        <p className="mt-5 text-center text-[10px] text-slate-400">
           Authorized Review-QR administrators only.
         </p>
       </div>

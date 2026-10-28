@@ -9,14 +9,14 @@ export default function MerchantLoginForm() {
   });
 
   return (
-    <form action={formAction} className="mt-6 space-y-4">
+    <form action={formAction} className="mt-4 space-y-3 text-left">
       {state.message && (
-        <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700" role="alert">
+        <p className="rounded-xl border border-red-200 bg-red-50 p-2.5 text-xs text-red-700 font-medium" role="alert">
           {state.message}
         </p>
       )}
       <div>
-        <label htmlFor="businessId" className="mb-1 block text-sm font-medium text-slate-700">
+        <label htmlFor="businessId" className="mb-1 block text-xs font-semibold text-slate-700">
           Business ID or verified mobile (+country code)
         </label>
         <input
@@ -25,11 +25,12 @@ export default function MerchantLoginForm() {
           autoComplete="username"
           required
           maxLength={128}
-          className="w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-500"
+          placeholder="e.g. biz_... or +919415..."
+          className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
         />
       </div>
       <div>
-        <label htmlFor="merchantPassword" className="mb-1 block text-sm font-medium text-slate-700">
+        <label htmlFor="merchantPassword" className="mb-1 block text-xs font-semibold text-slate-700">
           Password
         </label>
         <input
@@ -38,17 +39,17 @@ export default function MerchantLoginForm() {
           type="password"
           autoComplete="current-password"
           required
-          className="w-full rounded-lg border border-slate-300 px-3 py-3 outline-none focus:border-blue-500"
+          placeholder="••••••••"
+          className="w-full rounded-xl border border-slate-300 px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition"
         />
       </div>
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 transition shadow-xs"
       >
-        {pending ? "Signing in..." : "Sign In"}
+        {pending ? "Signing in..." : "Sign In →"}
       </button>
     </form>
   );
 }
-

@@ -132,6 +132,18 @@ export default function CustomerSuperAppClient({
   };
   const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
   const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [loginInputName, setLoginInputName] = useState<string>("");
+  const [loginInputPhone, setLoginInputPhone] = useState<string>("");
+  const [loginInputAddress, setLoginInputAddress] = useState<string>("");
+  const [isCustomerEditing, setIsCustomerEditing] = useState<boolean>(false);
+
+  const handleOpenCustomerLogin = () => {
+    setLoginInputName(customerName);
+    setLoginInputPhone(customerPhone.length === 10 ? customerPhone : "");
+    setLoginInputAddress(customerAddress);
+    setIsCustomerEditing(false);
+    setIsCustomerLoginOpen(true);
+  };
 
   // Address Book & Multi-Address Management (Image 3 Benchmark)
   type CustomerSavedAddress = {
@@ -199,9 +211,22 @@ export default function CustomerSuperAppClient({
       const savedName = localStorage.getItem("trustit_cust_name");
       const savedPhone = localStorage.getItem("trustit_cust_phone");
       const savedAddr = localStorage.getItem("trustit_cust_addr");
-      if (savedName) setCustomerName(savedName);
-      if (savedPhone) setCustomerPhone(savedPhone);
-      if (savedAddr) setCustomerAddress(savedAddr);
+      if (savedName) {
+        setCustomerName(savedName);
+        setLoginInputName(savedName);
+      }
+      if (savedPhone && savedPhone.length === 10) {
+        setCustomerPhone(savedPhone);
+        setLoginInputPhone(savedPhone);
+      } else {
+        try { localStorage.removeItem("trustit_cust_phone"); } catch {}
+        setCustomerPhone("");
+        setLoginInputPhone("");
+      }
+      if (savedAddr) {
+        setCustomerAddress(savedAddr);
+        setLoginInputAddress(savedAddr);
+      }
       const sH = localStorage.getItem("trustit_cust_house");
       const sM = localStorage.getItem("trustit_cust_mohalla");
       const sR = localStorage.getItem("trustit_cust_road");
@@ -777,7 +802,7 @@ export default function CustomerSuperAppClient({
 
             <button
               type="button"
-              onClick={() => setIsCustomerLoginOpen(true)}
+              onClick={handleOpenCustomerLogin}
               className="flex items-center gap-1 rounded-xl bg-slate-900 px-2.5 py-1.5 text-[11px] font-bold text-white shadow-xs hover:bg-slate-800 transition"
             >
               <span>👤</span>
@@ -1220,7 +1245,7 @@ export default function CustomerSuperAppClient({
 
             <button
               type="button"
-              onClick={() => setIsCustomerLoginOpen(true)}
+              onClick={handleOpenCustomerLogin}
               className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900"
             >
               <span className="text-base leading-none">👤</span>
@@ -2347,147 +2372,185 @@ export default function CustomerSuperAppClient({
 
       {/* ── Customer Account & Login Modal ── */}
       {isCustomerLoginOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-3.5 sm:p-4 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div>
-                <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-black uppercase text-blue-800">
+                <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[9px] font-black uppercase text-blue-800">
                   Customer Profile
                 </span>
-                <h3 className="text-lg font-black text-slate-900">
-                  {customerPhone ? "My Customer Account" : "Sign In to Super-App"}
+                <h3 className="text-sm font-extrabold text-slate-900 mt-0.5">
+                  {customerPhone && customerPhone.length === 10 && !isCustomerEditing
+                    ? "My Customer Account"
+                    : "Sign In to Super-App"}
                 </h3>
               </div>
               <button
-                onClick={() => setIsCustomerLoginOpen(false)}
-                className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"
+                type="button"
+                onClick={() => {
+                  setIsCustomerEditing(false);
+                  setIsCustomerLoginOpen(false);
+                }}
+                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
               >
                 ✕
               </button>
             </div>
 
-            {customerPhone ? (
-              <div className="mt-4 space-y-4">
-                <div className="rounded-2xl bg-blue-50/70 border border-blue-100 p-4 space-y-1.5">
+            {customerPhone && customerPhone.length === 10 && !isCustomerEditing ? (
+              <div className="mt-3 space-y-3">
+                <div className="rounded-xl bg-blue-50/70 border border-blue-100 p-3 space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-black text-slate-900">{customerName || "Customer"}</span>
-                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                    <span className="text-xs font-bold text-slate-900">{customerName || "Customer"}</span>
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.2 rounded-full">
                       Active Account
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 font-mono">📱 +91 {customerPhone}</p>
-                  {customerAddress && <p className="text-xs text-slate-500 pt-1">📍 {customerAddress}</p>}
+                  <p className="text-[11px] text-slate-600 font-mono">📱 +91 {customerPhone}</p>
+                  {customerAddress && (
+                    <p className="text-[10px] text-slate-500 pt-0.5 truncate">📍 {customerAddress}</p>
+                  )}
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-1.5">
                   <button
                     type="button"
                     onClick={() => {
                       setIsCustomerLoginOpen(false);
                       setIsMyBookingsOpen(true);
                     }}
-                    className="flex-1 rounded-2xl bg-slate-900 py-3 text-xs font-black text-white shadow-md hover:bg-slate-800 transition"
+                    className="w-full rounded-xl bg-slate-900 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition"
                   >
                     View My Bookings & Passes →
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      try {
-                        localStorage.removeItem("trustit_cust_name");
-                        localStorage.removeItem("trustit_cust_phone");
-                        localStorage.removeItem("trustit_cust_addr");
-                      } catch {}
-                      setCustomerName("");
-                      setCustomerPhone("");
-                      setCustomerAddress("");
-                      setActiveOrders([]);
-                      setActiveTokens([]);
-                      setActiveParchas([]);
-                      setIsCustomerLoginOpen(false);
-                    }}
-                    className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
-                  >
-                    Sign Out
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLoginInputName(customerName);
+                        setLoginInputPhone(customerPhone);
+                        setLoginInputAddress(customerAddress);
+                        setIsCustomerEditing(true);
+                      }}
+                      className="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
+                    >
+                      ✏️ Edit Details
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        try {
+                          localStorage.removeItem("trustit_cust_name");
+                          localStorage.removeItem("trustit_cust_phone");
+                          localStorage.removeItem("trustit_cust_addr");
+                        } catch {}
+                        setCustomerName("");
+                        setCustomerPhone("");
+                        setCustomerAddress("");
+                        setLoginInputName("");
+                        setLoginInputPhone("");
+                        setLoginInputAddress("");
+                        setActiveOrders([]);
+                        setActiveTokens([]);
+                        setActiveParchas([]);
+                        setIsCustomerEditing(false);
+                        setIsCustomerLoginOpen(false);
+                      }}
+                      className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+                    >
+                      Sign Out
+                    </button>
+                  </div>
                 </div>
               </div>
             ) : (
-              <div className="mt-4 space-y-4">
-                <p className="text-xs text-slate-500">
+              <div className="mt-3 space-y-2.5">
+                <p className="text-[11px] text-slate-500 leading-tight">
                   Enter your mobile number to sync your food orders, salon queue tokens, and kirana parchas automatically.
                 </p>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Your Full Name</label>
+                  <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Your Full Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Ramesh Kumar"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                    value={loginInputName}
+                    onChange={(e) => setLoginInputName(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Mobile Number (10 digits)</label>
-                  <div className="flex rounded-xl border border-slate-200 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                    <span className="px-3 py-2 bg-slate-50 text-xs font-bold text-slate-500 border-r border-slate-200">
+                  <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                    Mobile Number (10 digits)
+                  </label>
+                  <div className="flex rounded-xl border border-slate-200 overflow-hidden focus-within:ring-1 focus-within:ring-blue-500">
+                    <span className="px-2.5 py-1.5 bg-slate-50 text-xs font-bold text-slate-500 border-r border-slate-200">
                       +91
                     </span>
                     <input
                       type="tel"
                       placeholder="e.g. 9876543210"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      className="w-full px-3 py-2 text-xs text-slate-900 focus:outline-none"
+                      maxLength={10}
+                      value={loginInputPhone}
+                      onChange={(e) => setLoginInputPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                      className="w-full px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none font-mono"
                     />
                   </div>
+                  {loginInputPhone && loginInputPhone.length < 10 && (
+                    <span className="text-[9px] text-amber-600 font-medium mt-0.5 block">
+                      Enter {10 - loginInputPhone.length} more digits
+                    </span>
+                  )}
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-xs font-bold text-slate-700">Delivery Address</label>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="text-[10px] font-bold text-slate-600">Delivery Address</label>
                     <button
                       type="button"
                       onClick={handleDetectGps}
-                      className="text-[10px] font-bold text-blue-600 hover:underline"
+                      className="text-[9px] font-bold text-blue-600 hover:underline"
                     >
-                      📍 {isDetectingGps ? "Detecting GPS..." : "Auto-fill with GPS"}
+                      📍 {isDetectingGps ? "Detecting..." : "GPS Auto"}
                     </button>
                   </div>
                   <textarea
                     rows={2}
                     placeholder="House/Shop No., Mohalla, Landmark, Bahraich"
-                    value={customerAddress}
-                    onChange={(e) => setCustomerAddress(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                    value={loginInputAddress}
+                    onChange={(e) => setLoginInputAddress(e.target.value)}
+                    className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
 
                 {/* 1-Tap Quick Select Pills */}
                 <div>
-                  <span className="block text-[11px] font-semibold text-slate-400 mb-1.5">
-                    ⚡ Quick 1-Tap Customer Profiles:
+                  <span className="block text-[10px] font-semibold text-slate-400 mb-1">
+                    ⚡ Quick 1-Tap Test Profiles:
                   </span>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <button
                       type="button"
                       onClick={() => {
                         const name = "Ramesh Kumar";
                         const phone = "9876543210";
                         const addr = "Civil Lines, Near KDC Chauraha, Bahraich";
+                        setLoginInputName(name);
+                        setLoginInputPhone(phone);
+                        setLoginInputAddress(addr);
                         setCustomerName(name);
                         setCustomerPhone(phone);
                         setCustomerAddress(addr);
                         saveCustomerProfile(name, phone, addr);
                         fetchActiveBookings(phone);
+                        setIsCustomerEditing(false);
                         setIsCustomerLoginOpen(false);
                       }}
-                      className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-left hover:border-blue-400 hover:bg-blue-50 transition"
+                      className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-left hover:border-blue-400 hover:bg-blue-50 transition"
                     >
-                      <div className="text-xs font-bold text-slate-900">Ramesh Kumar</div>
-                      <div className="text-[10px] text-slate-500">+91 98765 43210</div>
+                      <div className="text-[11px] font-bold text-slate-900">Ramesh Kumar</div>
+                      <div className="text-[9px] text-slate-500 font-mono">+91 98765 43210</div>
                     </button>
                     <button
                       type="button"
@@ -2495,32 +2558,41 @@ export default function CustomerSuperAppClient({
                         const name = "Priya Sharma";
                         const phone = "9876543211";
                         const addr = "Hospital Road, Salarganj, Bahraich";
+                        setLoginInputName(name);
+                        setLoginInputPhone(phone);
+                        setLoginInputAddress(addr);
                         setCustomerName(name);
                         setCustomerPhone(phone);
                         setCustomerAddress(addr);
                         saveCustomerProfile(name, phone, addr);
                         fetchActiveBookings(phone);
+                        setIsCustomerEditing(false);
                         setIsCustomerLoginOpen(false);
                       }}
-                      className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-left hover:border-blue-400 hover:bg-blue-50 transition"
+                      className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-left hover:border-blue-400 hover:bg-blue-50 transition"
                     >
-                      <div className="text-xs font-bold text-slate-900">Priya Sharma</div>
-                      <div className="text-[10px] text-slate-500">+91 98765 43211</div>
+                      <div className="text-[11px] font-bold text-slate-900">Priya Sharma</div>
+                      <div className="text-[9px] text-slate-500 font-mono">+91 98765 43211</div>
                     </button>
                   </div>
                 </div>
 
                 <button
                   type="button"
-                  disabled={customerPhone.length < 10}
+                  disabled={loginInputPhone.length < 10}
                   onClick={() => {
-                    saveCustomerProfile(customerName || "Customer", customerPhone, customerAddress);
-                    fetchActiveBookings(customerPhone);
+                    const finalName = loginInputName.trim() || "Customer";
+                    setCustomerName(finalName);
+                    setCustomerPhone(loginInputPhone);
+                    setCustomerAddress(loginInputAddress);
+                    saveCustomerProfile(finalName, loginInputPhone, loginInputAddress);
+                    fetchActiveBookings(loginInputPhone);
+                    setIsCustomerEditing(false);
                     setIsCustomerLoginOpen(false);
                   }}
-                  className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3 text-xs font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50 transition"
+                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 py-2.5 text-xs font-bold text-white shadow-md hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50 transition"
                 >
-                  Save & Log In →
+                  Save &amp; Log In →
                 </button>
               </div>
             )}

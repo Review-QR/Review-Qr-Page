@@ -9,30 +9,30 @@ export default async function MerchantLoginPage() {
   const merchant = await getActiveMerchant();
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 p-6">
-      <section className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+    <main className="flex min-h-screen items-center justify-center bg-slate-100 p-4 sm:p-6">
+      <section className="w-full max-w-sm rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-sm">
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 text-2xl font-bold text-white" aria-hidden="true">
+          <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600 text-lg font-black text-white" aria-hidden="true">
             QR
           </div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-700">Review-QR Merchant</p>
-          <h1 className="mt-2 text-2xl font-bold text-slate-900">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Review-QR Merchant</p>
+          <h1 className="mt-1 text-lg font-bold text-slate-900">
             {merchant ? "Merchant sign-in active" : "Merchant Sign In"}
           </h1>
           {merchant ? (
             <>
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-2 text-xs text-slate-600">
                 Signed in to {merchant.businessName} ({merchant.businessId}).
               </p>
-              <div className="mt-6 space-y-3">
+              <div className="mt-4 space-y-2">
                 <Link
                   href="/merchant/dashboard"
-                  className="block w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white hover:bg-blue-700"
+                  className="block w-full rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition"
                 >
-                  Open Merchant Dashboard
+                  Open Merchant Dashboard →
                 </Link>
                 <form action={merchantSignOutAction}>
-                  <button className="w-full rounded-lg border border-slate-300 px-4 py-3 font-medium text-slate-700 hover:bg-slate-50">
+                  <button className="w-full rounded-xl border border-slate-300 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition">
                     Sign Out
                   </button>
                 </form>
@@ -40,9 +40,9 @@ export default async function MerchantLoginPage() {
             </>
           ) : (
             <>
-              <p className="mt-2 text-sm text-slate-500">Existing merchants can sign in with Business ID; self-registered merchants can use their verified mobile number.</p>
+              <p className="mt-1.5 text-xs text-slate-500">Existing merchants can sign in with Business ID; self-registered merchants can use their verified mobile number.</p>
               <MerchantLoginForm />
-              <p className="mt-5 text-sm text-slate-600">New Business? <Link href="/register" className="font-semibold text-blue-700">Register here</Link></p>
+              <p className="mt-4 text-xs text-slate-600">New Business? <Link href="/register" className="font-semibold text-blue-700 hover:underline">Register here</Link></p>
             </>
           )}
         </div>

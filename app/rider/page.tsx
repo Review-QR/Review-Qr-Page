@@ -340,14 +340,14 @@ export default function RiderAppPage() {
   // ── RIDER LOGIN SCREEN (Clean, native 11-13px scale) ──
   if (!rider) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 px-4 py-8 max-w-sm mx-auto flex flex-col justify-center font-sans">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-5 shadow-xl">
+      <div className="min-h-screen bg-slate-950 text-slate-100 px-3.5 py-6 max-w-sm mx-auto flex flex-col justify-center font-sans">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-xl">
           <div className="text-center">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-2xl mx-auto shadow-md">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-lg mx-auto shadow-md">
               🛵
             </span>
-            <h1 className="mt-3 text-base font-bold text-white tracking-tight">Trustit Rider Partner</h1>
-            <p className="text-[11px] text-slate-400">Bahraich Hyperlocal Delivery Fleet</p>
+            <h1 className="mt-2 text-sm font-bold text-white tracking-tight">Trustit Rider Partner</h1>
+            <p className="text-[10px] text-slate-400">Bahraich Hyperlocal Delivery Fleet</p>
           </div>
 
           <div className="mt-4 flex rounded-xl bg-slate-800 p-0.5 text-[11px] font-semibold">
