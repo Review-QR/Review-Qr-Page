@@ -92,7 +92,14 @@ export async function GET(request: Request) {
     .order("created_at", { ascending: false });
 
   if (orderId) query = query.eq("id", orderId);
-  else if (businessId) query = query.eq("business_id", businessId);
+  else if (businessId) {
+    // Merchant console must ONLY receive confirmed orders:
+    // Either Online orders where payment_status = 'paid' (confirmed via Cashfree webhook)
+    // OR Cash on Delivery (payment_mode = 'cod')
+    query = query
+      .eq("business_id", businessId)
+      .or("payment_status.eq.paid,payment_mode.eq.cod");
+  }
   else if (phone) query = query.eq("customer_phone", phone);
   else query = query.limit(20);
 

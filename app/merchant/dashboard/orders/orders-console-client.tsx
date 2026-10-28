@@ -22,7 +22,16 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
   // Siren alert & KOT state
   const [isSirenMuted, setIsSirenMuted] = useState(false);
   const [kotOrderModal, setKotOrderModal] = useState<HyperlocalOrder | null>(null);
+  const [incomingOrderModal, setIncomingOrderModal] = useState<HyperlocalOrder | null>(null);
+  const [dismissedOrderIds, setDismissedOrderIds] = useState<string[]>([]);
   const [currentTime, setCurrentTime] = useState(Date.now());
+
+  // Filter confirmed orders ONLY:
+  // Paid Online (payment_status === "paid") OR Cash on Delivery (payment_mode === "cod")
+  // Unpaid online orders must NEVER appear on the merchant's screen until Cashfree confirms!
+  const confirmedOrders = orders.filter(
+    (o) => o.payment_status === "paid" || o.payment_mode === "cod"
+  );
 
   // Walk-in token state (Salon / Car Wash)
   const [customerName, setCustomerName] = useState("");
@@ -33,10 +42,10 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
   const isSalon = businessType.includes("salon") || businessType.includes("barber") || businessType.includes("beauty");
   const isCarWash = businessType.includes("wash") || businessType.includes("auto") || businessType.includes("mechanic") || businessType.includes("garage");
 
-  // Web Audio Continuous Siren for incoming restaurant orders (Swiggy / Zomato Kitchen Standard)
+  // Web Audio Continuous High-Ringing Siren for incoming confirmed orders (Swiggy / Zomato Kitchen Standard)
   const audioCtxRef = useRef<AudioContext | null>(null);
 
-  function playOrderRing() {
+  function playHighRingAlert() {
     try {
       if (!audioCtxRef.current) {
         audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
@@ -48,25 +57,31 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
       const gain = ctx.createGain();
 
       osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(659.25, ctx.currentTime); // E5
-      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15); // A5
-      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.3); // E5
-      osc.frequency.setValueAtTime(1046.5, ctx.currentTime + 0.45); // C6
+      // Loud alternating high-frequency alarm: A5 (880Hz) -> E6 (1320Hz) -> A6 (1760Hz)
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.12);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.24);
+      osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.36);
+      osc.frequency.setValueAtTime(1760, ctx.currentTime + 0.48);
 
-      gain.gain.setValueAtTime(0.28, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.65);
+      gain.gain.setValueAtTime(0.42, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.7);
 
       osc.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start();
-      osc.stop(ctx.currentTime + 0.65);
+      osc.stop(ctx.currentTime + 0.7);
+
+      if (typeof navigator !== "undefined" && navigator.vibrate) {
+        navigator.vibrate([300, 150, 300, 150, 300]);
+      }
     } catch {
       // Audio autoplay handled safely
     }
   }
 
-  // Timer loop for 180s countdown ticks and siren re-trigger
+  // Timer loop for 180s countdown ticks
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(Date.now());
@@ -74,22 +89,35 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
     return () => clearInterval(timer);
   }, []);
 
-  // Continuous Siren loop when placed unaccepted orders exist (Paid Online or Cash on Delivery)
+  // Auto-open Pop-Up Notification Modal whenever a confirmed unaccepted order is present
+  useEffect(() => {
+    if (isSalon || isCarWash) return;
+    const unaccepted = confirmedOrders.find(
+      (o) => o.status === "placed" && !dismissedOrderIds.includes(o.id)
+    );
+    if (unaccepted) {
+      setIncomingOrderModal(unaccepted);
+    } else if (incomingOrderModal && !confirmedOrders.some((o) => o.id === incomingOrderModal.id && o.status === "placed")) {
+      setIncomingOrderModal(null);
+    }
+  }, [confirmedOrders, dismissedOrderIds, isSalon, isCarWash]);
+
+  // Continuous High-Ringing Siren loop when placed unaccepted confirmed orders exist
   useEffect(() => {
     if (isSalon || isCarWash || isSirenMuted) return;
-    const hasUnaccepted = orders.some(
+    const hasUnaccepted = confirmedOrders.some(
       (o) => o.status === "placed" && (o.payment_mode === "cod" || o.payment_status === "paid"),
     );
     if (!hasUnaccepted) return;
 
-    // Immediately play once, then repeat every 2.5 seconds
-    playOrderRing();
+    // Immediately play once, then repeat every 1.8 seconds with high volume
+    playHighRingAlert();
     const sirenInterval = setInterval(() => {
-      playOrderRing();
-    }, 2500);
+      playHighRingAlert();
+    }, 1800);
 
     return () => clearInterval(sirenInterval);
-  }, [orders, isSirenMuted, isSalon, isCarWash]);
+  }, [confirmedOrders, isSirenMuted, isSalon, isCarWash]);
 
   async function refreshData() {
     try {
@@ -212,43 +240,57 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
         </div>
       )}
 
-      {/* Sticky Siren Alert Banner when unaccepted food orders exist */}
-      {!isSalon && !isCarWash && orders.some((o) => o.status === "placed") && (
+      {/* Sticky Siren Alert Banner when unaccepted confirmed food orders exist */}
+      {!isSalon && !isCarWash && confirmedOrders.some((o) => o.status === "placed") && (
         <div className="sticky top-4 z-30 p-3.5 bg-gradient-to-r from-rose-600 via-amber-600 to-orange-600 text-white rounded-2xl shadow-xl flex items-center justify-between animate-pulse">
           <div className="flex items-center gap-2.5">
             <span className="text-xl">🚨</span>
             <div>
               <span className="text-xs font-black uppercase tracking-wider block">
-                {orders.filter((o) => o.status === "placed").length} New Order Received!
+                {confirmedOrders.filter((o) => o.status === "placed").length} New Confirmed Order Received!
               </span>
               <p className="text-[10px] text-amber-100 font-medium">
                 Continuous Kitchen Siren Active. Accept within 3 minutes.
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsSirenMuted(!isSirenMuted)}
-            className="px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl text-xs font-bold transition flex items-center gap-1"
-          >
-            <span>{isSirenMuted ? "🔔 Unmute Siren" : "🔕 Mute Buzzer"}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {incomingOrderModal === null && confirmedOrders.some((o) => o.status === "placed") && (
+              <button
+                type="button"
+                onClick={() => {
+                  const unaccepted = confirmedOrders.find((o) => o.status === "placed");
+                  if (unaccepted) setIncomingOrderModal(unaccepted);
+                }}
+                className="px-2.5 py-1.5 bg-white text-rose-700 rounded-xl text-xs font-black shadow-xs hover:bg-amber-50 transition"
+              >
+                Open Order Pop-up 🔔
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsSirenMuted(!isSirenMuted)}
+              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur rounded-xl text-xs font-bold transition flex items-center gap-1"
+            >
+              <span>{isSirenMuted ? "🔔 Unmute Siren" : "🔕 Mute Buzzer"}</span>
+            </button>
+          </div>
         </div>
       )}
 
       {/* ADAPTIVE VIEW 1: RESTAURANT & FOOD MODE */}
       {!isSalon && !isCarWash && (
         <div className="space-y-4">
-          {orders.length === 0 ? (
+          {confirmedOrders.length === 0 ? (
             <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-2">
               <span className="text-4xl block">🔔</span>
-              <h3 className="text-sm font-bold text-slate-900">Waiting for New Orders...</h3>
+              <h3 className="text-sm font-bold text-slate-900">Waiting for Confirmed Orders...</h3>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                Keep this tab open. When a customer orders, a loud ringtone will sound automatically and display the items.
+                Keep this tab open. When Cashfree webhook confirms payment (or a COD order is placed), a high-ringing kitchen siren &amp; pop-up notification modal will sound automatically.
               </p>
             </div>
           ) : (
-            orders.map((order) => {
+            confirmedOrders.map((order) => {
               const isNewPlaced = order.status === "placed";
               const isAccepted = order.status === "accepted_by_merchant" || order.status === "preparing";
 
@@ -311,9 +353,17 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                     <p className="text-slate-500">
                       Delivery Address: {order.customer_address?.street}, {order.customer_address?.city}
                     </p>
-                    <p className="text-indigo-600 font-semibold">
-                      Payment Mode: {order.payment_mode === "cod" ? "💵 Cash on Delivery" : "⚡ Paid Online via UPI/Cashfree"}
-                    </p>
+                    <div className="pt-0.5">
+                      {order.payment_status === "paid" ? (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
+                          ✅ Payment Confirmed via Cashfree Webhook
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">
+                          💵 Cash on Delivery
+                        </span>
+                      )}
+                    </div>
                     {order.customer_notes && (
                       <p className="text-amber-800 bg-amber-50 p-1.5 rounded-lg font-medium border border-amber-200">
                         📝 Customer Note: {order.customer_notes}
@@ -432,6 +482,217 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
               );
             })
           )}
+        </div>
+      )}
+
+      {/* ── High-Ringing Incoming Confirmed Order Pop-up Modal (Swiggy / Zomato KOT Live Alert) ── */}
+      {incomingOrderModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-3 sm:p-4 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-lg rounded-3xl bg-white shadow-2xl border-2 border-rose-500 overflow-hidden animate-in zoom-in-95 duration-150">
+            {/* Header: High Ringing Siren Alert Banner */}
+            <div className="bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 p-4 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-10 w-10 place-items-center rounded-2xl bg-white/20 text-2xl animate-bounce">
+                    🚨
+                  </span>
+                  <div>
+                    <span className="text-[10px] uppercase font-black tracking-widest text-amber-200 block">
+                      Kitchen Alert · Incoming Confirmed Order
+                    </span>
+                    <h3 className="text-base sm:text-lg font-black leading-tight">
+                      New Order Received!
+                    </h3>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsSirenMuted(!isSirenMuted)}
+                    className="px-2.5 py-1 bg-white/20 hover:bg-white/30 rounded-xl text-xs font-bold transition flex items-center gap-1"
+                  >
+                    <span>{isSirenMuted ? "🔔 Unmute" : "🔕 Mute Buzzer"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDismissedOrderIds((prev) => [...prev, incomingOrderModal.id]);
+                      setIncomingOrderModal(null);
+                    }}
+                    className="grid h-8 w-8 place-items-center rounded-full bg-white/20 hover:bg-white/30 text-white text-sm font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Siren Visual Audio Wave & Countdown */}
+              <div className="mt-3 flex items-center justify-between bg-black/20 rounded-xl p-2 text-xs">
+                <div className="flex items-center gap-1.5 text-amber-100 font-bold">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                  </span>
+                  <span>{isSirenMuted ? "Siren Muted" : "🔊 High Buzzer Ringing... Order Waiting"}</span>
+                </div>
+                <div className="font-mono font-bold text-amber-200">
+                  Auto-reject: {Math.max(0, Math.floor((180 - Math.floor((currentTime - new Date(incomingOrderModal.created_at).getTime()) / 1000)) / 60))}:
+                  {String(Math.max(0, (180 - Math.floor((currentTime - new Date(incomingOrderModal.created_at).getTime()) / 1000)) % 60)).padStart(2, "0")}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-4 sm:p-5 space-y-3.5 max-h-[70vh] overflow-y-auto">
+              {/* Payment Confirmation Status */}
+              <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                incomingOrderModal.payment_status === "paid"
+                  ? "bg-emerald-50 border-emerald-300 text-emerald-950"
+                  : "bg-amber-50 border-amber-300 text-amber-950"
+              }`}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">
+                    {incomingOrderModal.payment_status === "paid" ? "✅" : "💵"}
+                  </span>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider block">
+                      {incomingOrderModal.payment_status === "paid"
+                        ? "Payment Confirmed via Cashfree Webhook"
+                        : "Cash on Delivery Order"}
+                    </span>
+                    <span className="text-xs font-black">
+                      {incomingOrderModal.payment_status === "paid"
+                        ? "Online Payment Settled · Safe to Cook"
+                        : "Collect Cash at Delivery Doorstep"}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-[9px] text-slate-500 block uppercase">Order Value</span>
+                  <span className="text-base font-black text-slate-900">
+                    ₹{incomingOrderModal.total_amount}
+                  </span>
+                </div>
+              </div>
+
+              {/* Customer & Address Details */}
+              <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 text-xs space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-slate-900 text-sm">
+                    👤 {incomingOrderModal.customer_name}
+                  </span>
+                  <a
+                    href={`tel:${incomingOrderModal.customer_phone}`}
+                    className="px-2 py-0.5 bg-blue-100 text-blue-800 rounded-md font-bold text-[11px] hover:bg-blue-200 transition"
+                  >
+                    📞 {incomingOrderModal.customer_phone}
+                  </a>
+                </div>
+                <p className="text-slate-600">
+                  📍 <strong>Delivery Address:</strong> {incomingOrderModal.customer_address?.street}, {incomingOrderModal.customer_address?.city}
+                </p>
+                {incomingOrderModal.customer_notes && (
+                  <p className="text-amber-900 bg-amber-100/70 p-1.5 rounded-lg font-bold border border-amber-200 mt-1">
+                    📝 Special Instruction: {incomingOrderModal.customer_notes}
+                  </p>
+                )}
+              </div>
+
+              {/* Items List */}
+              <div className="space-y-1.5">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+                  Items to Prepare ({incomingOrderModal.hyperlocal_order_items?.length || 0})
+                </span>
+                <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-slate-50 p-2.5">
+                  {incomingOrderModal.hyperlocal_order_items?.map((item, idx) => (
+                    <div key={idx} className="py-1.5 first:pt-0 last:pb-0">
+                      <div className="flex justify-between font-bold text-slate-900 text-xs">
+                        <span>{item.quantity}x {item.item_name}</span>
+                        <span className="font-mono">₹{item.total_price}</span>
+                      </div>
+                      {item.notes && (
+                        <p className="text-[10px] text-amber-900 font-semibold bg-amber-100/60 px-1.5 py-0.5 rounded mt-0.5 inline-block">
+                          ⚠️ {item.notes}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Preparation / Packing Time Selector */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-800">
+                    {incomingOrderModal.order_type === "grocery_parcha" ? "📦 Estimated Packing Time:" : "🍳 Kitchen Cooking Time:"}
+                  </span>
+                  <span className="text-xs font-black text-indigo-700 font-mono">
+                    ~{prepTimeMinutes} mins
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {(incomingOrderModal.order_type === "grocery_parcha" ? [20, 30, 40, 60] : [15, 20, 25, 35]).map((mins) => (
+                    <button
+                      key={mins}
+                      type="button"
+                      onClick={() => setPrepTimeMinutes(mins)}
+                      className={`flex-1 min-w-[50px] py-1.5 rounded-lg text-xs font-bold transition ${
+                        prepTimeMinutes === mins
+                          ? "bg-slate-900 text-white shadow-xs"
+                          : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+                      }`}
+                    >
+                      {mins}m
+                    </button>
+                  ))}
+                  <div className="flex items-center gap-1 bg-white border border-slate-300 rounded-lg px-2 py-1">
+                    <input
+                      type="number"
+                      min={5}
+                      max={120}
+                      value={prepTimeMinutes}
+                      onChange={(e) => setPrepTimeMinutes(Math.max(5, Math.min(120, Number(e.target.value) || 20)))}
+                      className="w-10 text-xs text-center font-bold outline-none"
+                    />
+                    <span className="text-[10px] text-slate-400 font-mono">min</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={async () => {
+                  const targetId = incomingOrderModal.id;
+                  setIncomingOrderModal(null);
+                  await handleAcceptOrder(targetId);
+                }}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm shadow-md transition flex items-center justify-center gap-2"
+              >
+                <span>✓</span>
+                <span>
+                  {incomingOrderModal.order_type === "grocery_parcha"
+                    ? `Accept & Start Packing (~${prepTimeMinutes}m) →`
+                    : `Accept Order & Dispatch Rider (~${prepTimeMinutes}m) →`}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setDismissedOrderIds((prev) => [...prev, incomingOrderModal.id]);
+                  setIncomingOrderModal(null);
+                }}
+                className="py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs transition"
+              >
+                View in Queue
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
