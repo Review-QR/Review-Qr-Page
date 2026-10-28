@@ -1,6 +1,7 @@
+"use client";
+
 import type { AdminBankChangeItem } from "@/lib/bank-payouts-service";
 import { approveBankChangeAction, rejectBankChangeAction } from "@/app/merchants/actions";
-"use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
