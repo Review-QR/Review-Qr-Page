@@ -244,33 +244,33 @@ export default function MerchantPayoutsClient({
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-5">
         <div>
           <div className="flex items-center gap-2">
-            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-xs font-bold text-blue-700 uppercase tracking-wider">
+            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700 uppercase tracking-wider">
               Settlements & Payouts Engine
             </span>
-            <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-700">
+            <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
               T+1 Daily Cycle
             </span>
           </div>
-          <h1 className="mt-1.5 text-2xl font-black text-slate-900 tracking-tight sm:text-3xl">
+          <h1 className="mt-1 text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
             Financial Ledger & Bank Settlements
           </h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-0.5 text-xs text-slate-500">
             {business.name} • Bahraich Hyperlocal Hub • Rozana subah 10:00 AM bank payout ledger
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             type="button"
             onClick={handleExportCsv}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
           >
             📥 Export CSV Statement
           </button>
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
           >
             🖨️ Print Summary
           </button>
@@ -281,7 +281,7 @@ export default function MerchantPayoutsClient({
               setFormError("");
               setAddSuccessMessage("");
             }}
-            className={`inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold text-white shadow-sm transition ${
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-bold text-white shadow-xs transition ${
               currentBank ? "bg-blue-600 hover:bg-blue-700" : "bg-emerald-600 hover:bg-emerald-700 ring-2 ring-emerald-300"
             }`}
           >
@@ -291,23 +291,23 @@ export default function MerchantPayoutsClient({
       </div>
 
       {/* 4 Primary KPI Summary Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* Card 1: Today */}
-        <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/60 to-white p-5 shadow-xs">
-          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-emerald-700">
+        <div className="rounded-xl border border-emerald-100 bg-gradient-to-br from-emerald-50/60 to-white p-3.5 shadow-2xs">
+          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-emerald-700">
             <span>📅 Today&apos;s Orders</span>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px]">Live</span>
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px]">Live</span>
           </div>
-          <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-slate-900">
+          <div className="mt-2.5 flex items-baseline justify-between">
+            <span className="text-lg sm:text-xl font-black text-slate-900">
               {formatCurrency(financialSummary.today.net_payout)}
             </span>
-            <span className="text-xs font-bold text-slate-600">
+            <span className="text-[11px] font-bold text-slate-600">
               {financialSummary.today.orders_count} Orders
             </span>
           </div>
-          <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 border-t border-emerald-100/60 pt-2">
-            <span>Gross Sales: {formatCurrency(financialSummary.today.gross_sales)}</span>
+          <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500 border-t border-emerald-100/60 pt-1.5">
+            <span>Gross: {formatCurrency(financialSummary.today.gross_sales)}</span>
             <span className="text-rose-600 font-medium">
               Comm: -{formatCurrency(financialSummary.today.commission)}
             </span>
@@ -315,21 +315,21 @@ export default function MerchantPayoutsClient({
         </div>
 
         {/* Card 2: This Week */}
-        <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50/60 to-white p-5 shadow-xs">
-          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-blue-700">
+        <div className="rounded-xl border border-blue-100 bg-gradient-to-br from-blue-50/60 to-white p-3.5 shadow-2xs">
+          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-blue-700">
             <span>📈 This Week</span>
-            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px]">7 Days</span>
+            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[9px]">7 Days</span>
           </div>
-          <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-slate-900">
+          <div className="mt-2.5 flex items-baseline justify-between">
+            <span className="text-lg sm:text-xl font-black text-slate-900">
               {formatCurrency(financialSummary.this_week.net_payout)}
             </span>
-            <span className="text-xs font-bold text-slate-600">
+            <span className="text-[11px] font-bold text-slate-600">
               {financialSummary.this_week.orders_count} Orders
             </span>
           </div>
-          <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 border-t border-blue-100/60 pt-2">
-            <span>Gross GMV: {formatCurrency(financialSummary.this_week.gross_sales)}</span>
+          <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500 border-t border-blue-100/60 pt-1.5">
+            <span>Gross: {formatCurrency(financialSummary.this_week.gross_sales)}</span>
             <span className="text-rose-600 font-medium">
               Comm: -{formatCurrency(financialSummary.this_week.commission)}
             </span>
@@ -337,21 +337,21 @@ export default function MerchantPayoutsClient({
         </div>
 
         {/* Card 3: This Month */}
-        <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-white p-5 shadow-xs">
-          <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-indigo-700">
+        <div className="rounded-xl border border-indigo-100 bg-gradient-to-br from-indigo-50/60 to-white p-3.5 shadow-2xs">
+          <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-indigo-700">
             <span>🏆 This Month</span>
-            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[10px]">30 Days</span>
+            <span className="rounded-full bg-indigo-100 px-2 py-0.5 text-[9px]">30 Days</span>
           </div>
-          <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-2xl font-black text-slate-900">
+          <div className="mt-2.5 flex items-baseline justify-between">
+            <span className="text-lg sm:text-xl font-black text-slate-900">
               {formatCurrency(financialSummary.this_month.net_payout)}
             </span>
-            <span className="text-xs font-bold text-slate-600">
+            <span className="text-[11px] font-bold text-slate-600">
               {financialSummary.this_month.orders_count} Orders
             </span>
           </div>
-          <div className="mt-2.5 flex items-center justify-between text-xs text-slate-500 border-t border-indigo-100/60 pt-2">
-            <span>Gross GMV: {formatCurrency(financialSummary.this_month.gross_sales)}</span>
+          <div className="mt-2 flex items-center justify-between text-[10px] text-slate-500 border-t border-indigo-100/60 pt-1.5">
+            <span>Gross: {formatCurrency(financialSummary.this_month.gross_sales)}</span>
             <span className="text-indigo-700 font-bold">
               {financialSummary.this_month.orders_count > 0 ? "100% Settled" : "No Orders"}
             </span>
@@ -655,17 +655,17 @@ export default function MerchantPayoutsClient({
       {/* Manage / Add Bank Account Modal */}
       {isBankModalOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs"
           role="dialog"
           aria-modal="true"
         >
-          <div className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl sm:p-8">
-            <div className="flex items-start justify-between border-b border-slate-100 pb-4">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl sm:p-6">
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
               <div>
-                <span className="text-xs font-bold uppercase tracking-wider text-blue-700">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">
                   Bank Payouts Configuration
                 </span>
-                <h3 className="text-xl font-black text-slate-900">
+                <h3 className="text-base font-extrabold text-slate-900 mt-0.5">
                   {currentBank ? "Bank Account Details" : "Add Business Bank Account"}
                 </h3>
               </div>
@@ -678,7 +678,7 @@ export default function MerchantPayoutsClient({
                   setFormError("");
                   setAddSuccessMessage("");
                 }}
-                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600 text-xs"
               >
                 ✕
               </button>

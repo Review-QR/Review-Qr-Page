@@ -1233,29 +1233,29 @@ export default function CustomerSuperAppClient({
       {/* ── Store Menu Modal for Food & Sweets ── */}
       {activeStoreModal && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 p-0 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl overflow-hidden">
+          <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl overflow-hidden">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 p-4 sm:p-5">
+            <div className="flex items-center justify-between border-b border-slate-200 p-3.5 sm:p-4">
               <div>
-                <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[10px] font-black uppercase text-orange-800">
+                <span className="rounded-md bg-orange-100 px-2 py-0.5 text-[9px] font-black uppercase text-orange-800">
                   {activeStoreModal.type}
                 </span>
-                <h2 className="text-xl font-black text-slate-900">{activeStoreModal.name}</h2>
-                <p className="text-xs text-slate-500">📍 {activeStoreModal.address}</p>
+                <h2 className="text-base font-extrabold text-slate-900 mt-0.5">{activeStoreModal.name}</h2>
+                <p className="text-[11px] text-slate-500">📍 {activeStoreModal.address}</p>
               </div>
               <button
                 onClick={() => setActiveStoreModal(null)}
-                className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200"
+                className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs"
               >
                 ✕
               </button>
             </div>
 
             {/* Menu Items List */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-2.5">
               {activeStoreItems.length === 0 ? (
-                <div className="text-center py-10 text-slate-400">
-                  <p className="text-sm">Store items are being updated by merchant.</p>
+                <div className="text-center py-8 text-slate-400">
+                  <p className="text-xs">Store items are being updated by merchant.</p>
                 </div>
               ) : (
                 activeStoreItems.map((item) => {
@@ -1265,11 +1265,11 @@ export default function CustomerSuperAppClient({
                   return (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 bg-slate-50/60 p-3.5 hover:bg-slate-50 transition"
+                      className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-2.5 sm:p-3 hover:bg-slate-50 transition"
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-start gap-2.5">
                         <span
-                          className={`mt-1 grid h-4 w-4 place-items-center rounded-xs border text-[10px] font-black ${
+                          className={`mt-0.5 grid h-3.5 w-3.5 place-items-center rounded-xs border text-[9px] font-black ${
                             item.item_type === "veg"
                               ? "border-emerald-600 text-emerald-600"
                               : "border-rose-600 text-rose-600"
@@ -1278,13 +1278,13 @@ export default function CustomerSuperAppClient({
                           ●
                         </span>
                         <div>
-                          <h4 className="text-sm font-black text-slate-900">{item.name}</h4>
+                          <h4 className="text-xs sm:text-sm font-bold text-slate-900">{item.name}</h4>
                           <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-xs font-extrabold text-slate-800">₹{item.price}</span>
-                            <span className="text-[10px] text-slate-400">· Full / Half available</span>
+                            <span className="text-xs font-black text-slate-800">₹{item.price}</span>
+                            <span className="text-[9px] text-slate-400">· Full / Half available</span>
                           </div>
                           {item.description && (
-                            <p className="text-[11px] text-slate-500 line-clamp-1 mt-0.5">
+                            <p className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">
                               {item.description}
                             </p>
                           )}
@@ -1293,7 +1293,7 @@ export default function CustomerSuperAppClient({
 
                       <div className="flex flex-col items-end gap-1">
                         {inCartQty > 0 ? (
-                          <div className="flex items-center gap-2 rounded-xl bg-orange-600 px-2 py-1 text-white font-black text-xs shadow-sm">
+                          <div className="flex items-center gap-2 rounded-xl bg-orange-600 px-2 py-1 text-white font-black text-xs shadow-xs">
                             <button
                               type="button"
                               onClick={() => {
@@ -1318,7 +1318,7 @@ export default function CustomerSuperAppClient({
                           <button
                             type="button"
                             onClick={() => openCustomizer(item)}
-                            className="rounded-xl border border-orange-500 bg-orange-50 px-3.5 py-1.5 text-xs font-black text-orange-700 hover:bg-orange-500 hover:text-white transition shadow-2xs"
+                            className="rounded-xl border border-orange-500 bg-orange-50 px-3 py-1 text-xs font-bold text-orange-700 hover:bg-orange-500 hover:text-white transition shadow-2xs"
                           >
                             + ADD
                           </button>
@@ -1333,16 +1333,16 @@ export default function CustomerSuperAppClient({
 
             {/* Modal Footer with Cart Summary */}
             {cartItemsList.length > 0 && (
-              <div className="border-t border-slate-200 bg-slate-50 p-4 flex items-center justify-between">
+              <div className="border-t border-slate-200 bg-slate-50 p-3 flex items-center justify-between">
                 <div>
-                  <span className="text-xs text-slate-500">{cartItemsList.length} items</span>
-                  <div className="text-base font-black text-slate-900">₹{cartGrandTotal}</div>
+                  <span className="text-[11px] text-slate-500">{cartItemsList.length} items in cart</span>
+                  <div className="text-sm font-black text-slate-900">₹{cartGrandTotal}</div>
                 </div>
                 <button
                   onClick={() => {
                     setIsCheckoutOpen(true);
                   }}
-                  className="rounded-2xl bg-orange-600 px-6 py-2.5 text-xs font-black text-white shadow-md hover:bg-orange-700"
+                  className="rounded-xl bg-orange-600 px-4 py-2 text-xs font-black text-white shadow-md hover:bg-orange-700 transition"
                 >
                   Go to Checkout →
                 </button>
@@ -1355,9 +1355,9 @@ export default function CustomerSuperAppClient({
       {/* ── Dish Customization Modal (Half/Full Plate, Addons, Cooking Notes) ── */}
       {customizingItem && (
         <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center bg-slate-950/70 p-0 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white shadow-2xl max-h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
+          <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl max-h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
             {/* Header */}
-            <div className="p-4 border-b border-slate-100 flex items-start justify-between">
+            <div className="p-3.5 border-b border-slate-100 flex items-start justify-between">
               <div>
                 <span
                   className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
@@ -1368,35 +1368,35 @@ export default function CustomerSuperAppClient({
                 >
                   {customizingItem.item_type === "veg" ? "● Pure Veg" : "● Non-Veg"}
                 </span>
-                <h3 className="text-base font-black text-slate-900 mt-1">{customizingItem.name}</h3>
-                <p className="text-[11px] text-slate-500">Base full price: ₹{customizingItem.price}</p>
+                <h3 className="text-sm font-extrabold text-slate-900 mt-0.5">{customizingItem.name}</h3>
+                <p className="text-[10px] text-slate-500">Base full price: ₹{customizingItem.price}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setCustomizingItem(null)}
-                className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
+                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs"
               >
                 ✕
               </button>
             </div>
 
             {/* Scrollable Options */}
-            <div className="p-4 space-y-4 overflow-y-auto flex-1 text-xs">
+            <div className="p-3.5 space-y-3 overflow-y-auto flex-1 text-xs">
               {/* 1. Portion / Quantity Size */}
               <div>
-                <span className="block font-black text-slate-900 mb-2 uppercase text-[10px] tracking-wider">
+                <span className="block font-black text-slate-900 mb-1.5 uppercase text-[9px] tracking-wider">
                   1. Choose Portion Size (Required)
                 </span>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <label
                     onClick={() => setSelectedPortion("half")}
-                    className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition ${
+                    className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${
                       selectedPortion === "half"
                         ? "border-orange-500 bg-orange-50/60 ring-1 ring-orange-500"
                         : "border-slate-200 bg-white"
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2">
                       <input
                         type="radio"
                         checked={selectedPortion === "half"}
@@ -1404,24 +1404,24 @@ export default function CustomerSuperAppClient({
                         className="text-orange-600 focus:ring-orange-500"
                       />
                       <div>
-                        <span className="font-black text-slate-900 block text-xs">Half Plate</span>
-                        <span className="text-[10px] text-slate-500">Serves 1 person</span>
+                        <span className="font-bold text-slate-900 block text-xs">Half Plate</span>
+                        <span className="text-[9px] text-slate-500">Serves 1 person</span>
                       </div>
                     </div>
-                    <span className="font-black text-slate-900">
+                    <span className="font-black text-slate-900 text-xs">
                       ₹{Math.max(20, Math.round((customizingItem.price * 0.6) / 5) * 5)}
                     </span>
                   </label>
 
                   <label
                     onClick={() => setSelectedPortion("full")}
-                    className={`flex items-center justify-between p-3 rounded-2xl border cursor-pointer transition ${
+                    className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${
                       selectedPortion === "full"
                         ? "border-orange-500 bg-orange-50/60 ring-1 ring-orange-500"
                         : "border-slate-200 bg-white"
                     }`}
                   >
-                    <div className="flex items-center gap-2.5">
+                    <div className="flex items-center gap-2">
                       <input
                         type="radio"
                         checked={selectedPortion === "full"}
@@ -1429,18 +1429,18 @@ export default function CustomerSuperAppClient({
                         className="text-orange-600 focus:ring-orange-500"
                       />
                       <div>
-                        <span className="font-black text-slate-900 block text-xs">Full Plate</span>
-                        <span className="text-[10px] text-slate-500">Serves 2-3 persons</span>
+                        <span className="font-bold text-slate-900 block text-xs">Full Plate</span>
+                        <span className="text-[9px] text-slate-500">Serves 2-3 persons</span>
                       </div>
                     </div>
-                    <span className="font-black text-slate-900">₹{customizingItem.price}</span>
+                    <span className="font-black text-slate-900 text-xs">₹{customizingItem.price}</span>
                   </label>
                 </div>
               </div>
 
               {/* 2. Add-ons & Extras */}
               <div>
-                <span className="block font-black text-slate-900 mb-2 uppercase text-[10px] tracking-wider">
+                <span className="block font-black text-slate-900 mb-1.5 uppercase text-[9px] tracking-wider">
                   2. Add-ons & Extras (Optional)
                 </span>
                 <div className="space-y-1.5">
@@ -1454,7 +1454,7 @@ export default function CustomerSuperAppClient({
                             isChecked ? prev.filter((id) => id !== addon.id) : [...prev, addon.id],
                           );
                         }}
-                        className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${
+                        className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer transition ${
                           isChecked ? "border-orange-400 bg-orange-50/40" : "border-slate-200 bg-white"
                         }`}
                       >
@@ -1465,9 +1465,9 @@ export default function CustomerSuperAppClient({
                             onChange={() => {}}
                             className="rounded text-orange-600 focus:ring-orange-500"
                           />
-                          <span className="text-slate-800 font-bold text-[11px]">{addon.name}</span>
+                          <span className="text-slate-800 font-bold text-[10px]">{addon.name}</span>
                         </div>
-                        <span className="font-black text-slate-900 text-xs">+₹{addon.price}</span>
+                        <span className="font-black text-slate-900 text-[11px]">+₹{addon.price}</span>
                       </label>
                     );
                   })}
@@ -1476,10 +1476,10 @@ export default function CustomerSuperAppClient({
 
               {/* 3. Cooking Instructions */}
               <div>
-                <span className="block font-black text-slate-900 mb-1.5 uppercase text-[10px] tracking-wider">
+                <span className="block font-black text-slate-900 mb-1 uppercase text-[9px] tracking-wider">
                   3. Cooking Instructions (Chef Note)
                 </span>
-                <div className="flex flex-wrap gap-1.5 mb-2">
+                <div className="flex flex-wrap gap-1 mb-1.5">
                   {QUICK_COOKING_NOTES.map((note) => (
                     <button
                       key={note}
@@ -1489,7 +1489,7 @@ export default function CustomerSuperAppClient({
                           prev.includes(note) ? prev : `${prev} ${note}`.trim(),
                         )
                       }
-                      className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-orange-100 hover:text-orange-800 text-slate-700 text-[10px] font-bold transition"
+                      className="px-1.5 py-0.5 rounded-lg bg-slate-100 hover:bg-orange-100 hover:text-orange-800 text-slate-700 text-[9px] font-bold transition"
                     >
                       + {note}
                     </button>
@@ -1500,16 +1500,16 @@ export default function CustomerSuperAppClient({
                   placeholder="e.g. Kam mirch rakhna, extra salad packet"
                   value={cookingInstruction}
                   onChange={(e) => setCookingInstruction(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-orange-500"
                 />
               </div>
             </div>
 
             {/* Bottom Add CTA */}
-            <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+            <div className="p-2.5 sm:p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-slate-400 block font-medium">Item Total</span>
-                <span className="text-base font-black text-slate-900">
+                <span className="text-[9px] text-slate-400 block font-medium">Item Total</span>
+                <span className="text-sm font-black text-slate-900">
                   ₹
                   {(selectedPortion === "half"
                     ? Math.max(20, Math.round((customizingItem.price * 0.6) / 5) * 5)
@@ -1523,7 +1523,7 @@ export default function CustomerSuperAppClient({
               <button
                 type="button"
                 onClick={handleConfirmCustomization}
-                className="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl text-xs font-black shadow-md hover:from-orange-600 hover:to-amber-700 transition"
+                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl text-xs font-bold shadow-md hover:from-orange-600 hover:to-amber-700 transition"
               >
                 Add Item to Cart →
               </button>
@@ -1534,29 +1534,29 @@ export default function CustomerSuperAppClient({
 
       {/* ── Checkout Modal for Food Order ── */}
       {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-5 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-black text-slate-900">🛵 Order Checkout</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white p-3.5 sm:p-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <h3 className="text-sm font-black text-slate-900">🛵 Order Checkout</h3>
               <button
                 onClick={() => setIsCheckoutOpen(false)}
-                className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-600"
+                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
               >
                 ✕
               </button>
             </div>
 
-            <div className="mt-4 space-y-3.5">
+            <div className="mt-3 space-y-2.5">
               {/* Order Items Preview */}
-              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3 space-y-2 text-xs">
-                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider block">
+              <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 space-y-1.5 text-xs">
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">
                   Items in Cart ({cartItemsList.length})
                 </span>
                 {cartItemsList.map((entry) => (
                   <div key={entry.cartKey} className="flex justify-between items-start gap-2 border-b border-slate-200/60 pb-1.5 last:border-0 last:pb-0">
                     <div>
                       <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-slate-900">{entry.item.name}</span>
+                        <span className="font-bold text-slate-900 text-xs">{entry.item.name}</span>
                         {entry.customization && (
                           <span className="rounded bg-orange-100 px-1.5 py-0.2 text-[9px] font-bold text-orange-800">
                             {entry.customization.portion === "half" ? "Half" : "Full"}
@@ -1564,12 +1564,12 @@ export default function CustomerSuperAppClient({
                         )}
                       </div>
                       {entry.customization?.addons && entry.customization.addons.length > 0 && (
-                        <p className="text-[10px] text-slate-500">
+                        <p className="text-[9px] text-slate-500">
                           + {entry.customization.addons.map((a) => a.name).join(", ")}
                         </p>
                       )}
                       {entry.customization?.cookingNotes && (
-                        <p className="text-[10px] text-amber-700 italic">
+                        <p className="text-[9px] text-amber-700 italic">
                           Note: {entry.customization.cookingNotes}
                         </p>
                       )}
@@ -1584,38 +1584,38 @@ export default function CustomerSuperAppClient({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">Full Name</label>
+                <label className="block text-[11px] font-bold text-slate-700">Full Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Ramesh Kumar"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">Mobile Number (10 digits)</label>
+                <label className="block text-[11px] font-bold text-slate-700">Mobile Number (10 digits)</label>
                 <input
                   type="tel"
                   placeholder="e.g. 9876543210"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-orange-500"
                 />
               </div>
 
               {/* Customer Saved Address Book & Switcher (Image 3 Benchmark) */}
-              <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2.5">
+              <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm">📍</span>
-                    <label className="text-xs font-black text-slate-900">Delivery Address</label>
+                    <span className="text-xs">📍</span>
+                    <label className="text-[11px] font-black text-slate-900">Delivery Address</label>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsAddressModalOpen(true)}
-                    className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-0.5"
+                    className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-0.5"
                   >
                     + Add Another Address
                   </button>
@@ -1640,7 +1640,7 @@ export default function CustomerSuperAppClient({
                             const full = buildAddressString(addr.houseNo, addr.mohalla, addr.road, addr.pincode, addr.district);
                             setCustomerAddress(full);
                           }}
-                          className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 border text-[11px] font-bold shrink-0 transition ${
+                          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 border text-[10px] font-bold shrink-0 transition ${
                             isSel
                               ? "bg-orange-50 border-orange-400 text-orange-950 shadow-2xs font-black"
                               : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -1648,7 +1648,7 @@ export default function CustomerSuperAppClient({
                         >
                           <span>{addr.tag === "Home" ? "🏠" : addr.tag === "Work" ? "💼" : "📍"}</span>
                           <span>{addr.tag}</span>
-                          <span className="text-[10px] text-slate-400 font-normal truncate max-w-[90px]">({addr.mohalla || addr.houseNo})</span>
+                          <span className="text-[9px] text-slate-400 font-normal truncate max-w-[80px]">({addr.mohalla || addr.houseNo})</span>
                         </button>
                       );
                     })}
@@ -1656,9 +1656,9 @@ export default function CustomerSuperAppClient({
                 )}
 
                 {/* Active Deliver-to Card */}
-                <div className="rounded-xl border border-slate-200 bg-white p-2.5 text-xs shadow-2xs">
+                <div className="rounded-lg border border-slate-200 bg-white p-2 text-xs shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900">
+                    <span className="font-bold text-slate-900 text-xs">
                       {addrHouseNo ? `${addrHouseNo}, ${addrMohalla || "Bahraich"}` : (addrMohalla || "Bahraich Location")}
                     </span>
                     <button
@@ -1669,7 +1669,7 @@ export default function CustomerSuperAppClient({
                       📍 {isDetectingGps ? "Detecting..." : "GPS Auto"}
                     </button>
                   </div>
-                  <p className="mt-1 text-[11px] text-slate-600 font-mono">
+                  <p className="mt-0.5 text-[10px] text-slate-600 font-mono">
                     {customerAddress || "House No, Mohalla, Road, Bahraich"}
                   </p>
                 </div>
@@ -1677,16 +1677,16 @@ export default function CustomerSuperAppClient({
 
               {/* Delivery Partner Tip (Swiggy / Zomato Feature) */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                <label className="block text-[10px] font-bold text-slate-700 mb-1">
                   🛵 Delivery Partner Tip (Optional)
                 </label>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   {[0, 10, 20, 30, 50].map((tip) => (
                     <button
                       key={tip}
                       type="button"
                       onClick={() => setRiderTip(tip)}
-                      className={`px-3 py-1 rounded-xl text-xs font-bold transition ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
                         riderTip === tip
                           ? "bg-amber-500 text-slate-950 shadow-xs"
                           : "bg-slate-100 text-slate-700 hover:bg-slate-200"
@@ -1699,49 +1699,49 @@ export default function CustomerSuperAppClient({
               </div>
 
               {/* Swiggy / Zomato Transparent Bill Breakdown */}
-              <div className="rounded-2xl bg-slate-50 p-3.5 text-xs space-y-1.5 border border-slate-100">
-                <div className="flex justify-between text-slate-600">
+              <div className="rounded-xl bg-slate-50 p-2.5 text-xs space-y-1 border border-slate-100">
+                <div className="flex justify-between text-[11px] text-slate-600">
                   <span>Items Total:</span>
                   <span className="font-bold text-slate-900">₹{cartSubtotal}</span>
                 </div>
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-[11px] text-slate-600">
                   <span>Restaurant Packaging Charges:</span>
                   <span className="font-bold text-slate-900">₹{cartPackagingCharge}</span>
                 </div>
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-[11px] text-slate-600">
                   <span>Govt. Taxes & GST (5%):</span>
                   <span className="font-bold text-slate-900">₹{cartGstTax}</span>
                 </div>
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-[11px] text-slate-600">
                   <span>Delivery Partner Fee:</span>
                   <span className="font-bold text-slate-900">
                     {cartDeliveryFee === 0 ? "FREE" : `₹${cartDeliveryFee}`}
                   </span>
                 </div>
-                <div className="flex justify-between text-slate-600">
+                <div className="flex justify-between text-[11px] text-slate-600">
                   <span>Platform Convenience Fee:</span>
                   <span className="font-bold text-slate-900">₹{cartPlatformFee}</span>
                 </div>
                 {riderTip > 0 && (
-                  <div className="flex justify-between text-emerald-700 font-medium">
+                  <div className="flex justify-between text-[11px] text-emerald-700 font-medium">
                     <span>Delivery Tip:</span>
                     <span className="font-bold">₹{riderTip}</span>
                   </div>
                 )}
-                <div className="flex justify-between border-t border-slate-200 pt-2 text-sm font-black text-slate-900">
+                <div className="flex justify-between border-t border-slate-200 pt-1.5 text-xs font-black text-slate-900">
                   <span>Total Amount Payable:</span>
-                  <span className="text-orange-600">₹{cartGrandTotal}</span>
+                  <span className="text-sm font-black text-orange-600">₹{cartGrandTotal}</span>
                 </div>
               </div>
 
               {/* Payment Mode */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">Payment Method</label>
-                <div className="grid grid-cols-2 gap-2">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">Payment Method</label>
+                <div className="grid grid-cols-2 gap-1.5">
                   <button
                     type="button"
                     onClick={() => setPaymentMode("cod")}
-                    className={`rounded-xl border p-2.5 text-xs font-bold transition ${
+                    className={`rounded-xl border p-2 text-xs font-bold transition ${
                       paymentMode === "cod"
                         ? "border-orange-500 bg-orange-50 text-orange-900"
                         : "border-slate-200 bg-white text-slate-700"
@@ -1752,7 +1752,7 @@ export default function CustomerSuperAppClient({
                   <button
                     type="button"
                     onClick={() => setPaymentMode("counter_cash")}
-                    className={`rounded-xl border p-2.5 text-xs font-bold transition ${
+                    className={`rounded-xl border p-2 text-xs font-bold transition ${
                       paymentMode === "counter_cash"
                         ? "border-orange-500 bg-orange-50 text-orange-900"
                         : "border-slate-200 bg-white text-slate-700"
@@ -1767,7 +1767,7 @@ export default function CustomerSuperAppClient({
                 type="button"
                 disabled={isSubmitting}
                 onClick={handlePlaceFoodOrder}
-                className="w-full rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 py-3.5 text-sm font-black text-white shadow-lg shadow-orange-500/25 hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
+                className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2.5 text-xs sm:text-sm font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
               >
                 {isSubmitting ? "Placing Order..." : `Place Order (₹${cartGrandTotal}) →`}
               </button>
@@ -1778,30 +1778,30 @@ export default function CustomerSuperAppClient({
 
       {/* ── Salon Digital Queue Token Modal ── */}
       {salonModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white p-4 sm:p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div>
-                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-800">
+                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-800">
                   Live Queue Token
                 </span>
-                <h3 className="text-lg font-black text-slate-900">{salonModal.name}</h3>
+                <h3 className="text-sm font-black text-slate-900 mt-0.5">{salonModal.name}</h3>
               </div>
               <button
                 onClick={() => setSalonModal(null)}
-                className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600"
+                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
               >
                 ✕
               </button>
             </div>
 
-            <div className="mt-4 space-y-4">
+            <div className="mt-3 space-y-3 text-xs">
               <div>
-                <label className="block text-xs font-bold text-slate-700">Select Service</label>
+                <label className="block text-[11px] font-bold text-slate-700">Select Service</label>
                 <select
                   value={salonService}
                   onChange={(e) => setSalonService(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="Executive Haircut & Styling (₹150)">Executive Haircut & Styling (₹150)</option>
                   <option value="Beard Trim & Shaper (₹80)">Beard Trim & Shaper (₹80)</option>
@@ -1812,11 +1812,11 @@ export default function CustomerSuperAppClient({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">Barber / Stylist Preference</label>
+                <label className="block text-[11px] font-bold text-slate-700">Barber / Stylist Preference</label>
                 <select
                   value={salonStylist}
                   onChange={(e) => setSalonStylist(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
                 >
                   <option value="Any Available Stylist">Any First Available Stylist (Fastest)</option>
                   <option value="Master Barber Imran">Master Barber Imran</option>
@@ -1826,37 +1826,37 @@ export default function CustomerSuperAppClient({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">Your Full Name</label>
+                <label className="block text-[11px] font-bold text-slate-700">Your Full Name</label>
                 <input
                   type="text"
                   placeholder="e.g. Vicky Verma"
                   value={customerName}
                   onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">Mobile Number (SMS/WhatsApp Token)</label>
+                <label className="block text-[11px] font-bold text-slate-700">Mobile Number (SMS/WhatsApp Token)</label>
                 <input
                   type="tel"
                   placeholder="e.g. 9876543210"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                 />
               </div>
 
-              <div className="rounded-2xl bg-emerald-50 p-4 text-xs text-emerald-950 border border-emerald-100">
-                <span className="font-bold block mb-1">💡 Token Ka Fayda:</span>
-                Aapko dukan me baith kar wait karne ki zaroorat nahi. Token book karein, live status dekhein aur number aane par 5 minute pehle dukan pahuchein!
+              <div className="rounded-xl bg-emerald-50 p-2.5 text-[11px] text-emerald-950 border border-emerald-100">
+                <span className="font-bold block mb-0.5">💡 Token Ka Fayda:</span>
+                Dukan me wait karne ki zaroorat nahi. Token lein aur number aane par 5 minute pehle dukan pahuchein!
               </div>
 
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleBookSalonToken}
-                className="w-full rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 py-3.5 text-sm font-black text-white shadow-lg shadow-emerald-500/25 hover:from-emerald-700 hover:to-teal-800 disabled:opacity-50 transition"
+                className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 py-2.5 text-xs sm:text-sm font-black text-white shadow-md hover:from-emerald-700 hover:to-teal-800 disabled:opacity-50 transition"
               >
                 {isSubmitting ? "Issuing Digital Pass..." : "Confirm Live Queue Token (Free) →"}
               </button>
@@ -1867,30 +1867,30 @@ export default function CustomerSuperAppClient({
 
       {/* ── Car Wash Bay Booking Modal ── */}
       {carWashModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white p-4 sm:p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div>
-                <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-black uppercase text-blue-800">
+                <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[9px] font-black uppercase text-blue-800">
                   Bay Slot Booking
                 </span>
-                <h3 className="text-lg font-black text-slate-900">{carWashModal.name}</h3>
+                <h3 className="text-sm font-black text-slate-900 mt-0.5">{carWashModal.name}</h3>
               </div>
               <button
                 onClick={() => setCarWashModal(null)}
-                className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600"
+                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
               >
                 ✕
               </button>
             </div>
 
-            <div className="mt-4 space-y-4">
+            <div className="mt-3 space-y-3 text-xs">
               <div>
-                <label className="block text-xs font-bold text-slate-700">Wash Package</label>
+                <label className="block text-[11px] font-bold text-slate-700">Wash Package</label>
                 <select
                   value={carWashPackage}
                   onChange={(e) => setCarWashPackage(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                 >
                   <option value="Full Foam Car Wash & Vacuuming (₹350)">Full Foam Car Wash & Vacuuming (₹350)</option>
                   <option value="Bike Foam Wash & Chain Lube (₹100)">Bike Foam Wash & Chain Lube (₹100)</option>
@@ -1900,35 +1900,35 @@ export default function CustomerSuperAppClient({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">Vehicle Number (Required)</label>
+                <label className="block text-[11px] font-bold text-slate-700">Vehicle Number (Required)</label>
                 <input
                   type="text"
                   placeholder="e.g. UP 40 AB 1234"
                   value={vehicleNumber}
                   onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 font-mono font-bold"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">Vehicle Model (Optional)</label>
+                <label className="block text-[11px] font-bold text-slate-700">Vehicle Model (Optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Swift / Creta / Splendor"
                   value={vehicleModel}
                   onChange={(e) => setVehicleModel(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">Your Mobile Number</label>
+                <label className="block text-[11px] font-bold text-slate-700">Your Mobile Number</label>
                 <input
                   type="tel"
                   placeholder="e.g. 9876543210"
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                 />
               </div>
 
@@ -1936,7 +1936,7 @@ export default function CustomerSuperAppClient({
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleBookCarWashSlot}
-                className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-700 py-3.5 text-sm font-black text-white shadow-lg shadow-blue-500/25 hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50 transition"
+                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 py-2.5 text-xs sm:text-sm font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50 transition"
               >
                 {isSubmitting ? "Allocating Bay..." : "Confirm Bay Slot Token →"}
               </button>
@@ -1947,49 +1947,49 @@ export default function CustomerSuperAppClient({
 
       {/* ── Kirana Handwritten Parcha Upload Modal ── */}
       {kiranaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-3xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white p-4 sm:p-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div>
-                <span className="rounded-md bg-purple-100 px-2 py-0.5 text-[10px] font-black uppercase text-purple-800">
+                <span className="rounded-md bg-purple-100 px-2 py-0.5 text-[9px] font-black uppercase text-purple-800">
                   Kirana Handwritten Parcha
                 </span>
-                <h3 className="text-lg font-black text-slate-900">{kiranaModal.name}</h3>
+                <h3 className="text-sm font-black text-slate-900 mt-0.5">{kiranaModal.name}</h3>
               </div>
               <button
                 onClick={() => setKiranaModal(null)}
-                className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600"
+                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
               >
                 ✕
               </button>
             </div>
 
-            <div className="mt-4 space-y-4">
+            <div className="mt-3 space-y-3 text-xs">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-[11px] font-bold text-slate-700 mb-1">
                   📸 Parcha (Kagaz Ki Parchi) Ki Photo Upload Karein
                 </label>
-                <div className="relative rounded-2xl border-2 border-dashed border-purple-200 bg-purple-50/50 p-4 text-center">
+                <div className="relative rounded-xl border-2 border-dashed border-purple-200 bg-purple-50/50 p-3 text-center">
                   {parchaImagePreview ? (
                     <div className="relative">
                       <img
                         src={parchaImagePreview}
                         alt="Parcha preview"
-                        className="max-h-40 mx-auto rounded-xl shadow-xs"
+                        className="max-h-36 mx-auto rounded-lg shadow-xs"
                       />
                       <button
                         type="button"
                         onClick={() => setParchaImagePreview(null)}
-                        className="mt-2 text-xs font-bold text-rose-600 hover:underline"
+                        className="mt-1.5 text-[11px] font-bold text-rose-600 hover:underline"
                       >
                         Remove Photo
                       </button>
                     </div>
                   ) : (
                     <div>
-                      <span className="text-3xl">📷</span>
-                      <p className="mt-1 text-xs text-slate-600 font-semibold">
-                        Kagaz ki parchi ki saaf photo kheinchein ya gallery se chunein
+                      <span className="text-2xl">📷</span>
+                      <p className="mt-0.5 text-[11px] text-slate-600 font-semibold">
+                        Kagaz ki parchi ki photo kheinchein ya gallery se chunein
                       </p>
                       <input
                         type="file"
@@ -2012,60 +2012,60 @@ export default function CustomerSuperAppClient({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">
+                <label className="block text-[11px] font-bold text-slate-700">
                   Ya Yahan Samaan Ki List Likh Dein (Optional)
                 </label>
                 <textarea
-                  rows={3}
-                  placeholder="e.g. 5kg Ashirvaad Atta, 1L Fortune Mustard Oil, 2kg Sugar, 1 Dettol Soap..."
+                  rows={2}
+                  placeholder="e.g. 5kg Ashirvaad Atta, 1L Fortune Mustard Oil, 2kg Sugar..."
                   value={parchaText}
                   onChange={(e) => setParchaText(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700">Delivery Address</label>
+                <label className="block text-[11px] font-bold text-slate-700">Delivery Address</label>
                 <textarea
                   rows={2}
                   placeholder="Makaan No., Mohalla, Landmark, Bahraich"
                   value={customerAddress}
                   onChange={(e) => setCustomerAddress(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700">Name</label>
+                  <label className="block text-[11px] font-bold text-slate-700">Name</label>
                   <input
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700">Phone</label>
+                  <label className="block text-[11px] font-bold text-slate-700">Phone</label>
                   <input
                     type="tel"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                   />
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-purple-50 p-3.5 text-xs text-purple-950 border border-purple-100">
+              <div className="rounded-xl bg-purple-50 p-2.5 text-[11px] text-purple-950 border border-purple-100">
                 <span className="font-bold block mb-0.5">ℹ️ Dukandar Process:</span>
-                Dukandar parcha dekh kar bill banayega aur rider aapke ghar samaan deliver karke payment receive karega.
+                Dukandar parcha dekh kar bill banayega aur rider delivery par payment receive karega.
               </div>
 
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleSubmitParcha}
-                className="w-full rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 py-3.5 text-sm font-black text-white shadow-lg shadow-purple-500/25 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 transition"
+                className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 py-2.5 text-xs sm:text-sm font-black text-white shadow-md hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 transition"
               >
                 {isSubmitting ? "Sending to Dukandar..." : "Send Parcha to Dukandar →"}
               </button>
@@ -2079,23 +2079,23 @@ export default function CustomerSuperAppClient({
         <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-xs">
           <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 p-4 sm:p-5">
+            <div className="flex items-center justify-between border-b border-slate-200 p-3.5 sm:p-4">
               <div>
-                <h3 className="text-lg font-black text-slate-900">📋 My Active Bookings</h3>
-                <p className="text-xs text-slate-500">
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-900">📋 My Active Bookings</h3>
+                <p className="text-[10px] text-slate-500">
                   Live updates for {customerPhone ? `+91 ${customerPhone}` : "your mobile number"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => fetchActiveBookings(customerPhone)}
-                  className="rounded-xl bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-200"
+                  className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-200"
                 >
                   {isRefreshingBookings ? "↻ Syncing..." : "↻ Refresh"}
                 </button>
                 <button
                   onClick={() => setIsMyBookingsOpen(false)}
-                  className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-600"
+                  className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs"
                 >
                   ✕
                 </button>
@@ -2529,14 +2529,14 @@ export default function CustomerSuperAppClient({
       )}
       {/* ── Address Management Modal (+ Add Another Address) (Image 3 Benchmark) ── */}
       {isAddressModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-3xl bg-white p-5 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-black text-slate-900">📍 Add Delivery Address</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-sm sm:max-w-md rounded-2xl bg-white p-3.5 sm:p-4 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <h3 className="text-xs sm:text-sm font-black text-slate-900">📍 Add Delivery Address</h3>
               <button
                 type="button"
                 onClick={() => setIsAddressModalOpen(false)}
-                className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200"
+                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs"
               >
                 ✕
               </button>
@@ -2544,8 +2544,8 @@ export default function CustomerSuperAppClient({
 
             {/* Address Tag Selector */}
             <div>
-              <label className="block text-[11px] font-bold text-slate-600 mb-1">Save Address As:</label>
-              <div className="grid grid-cols-3 gap-2">
+              <label className="block text-[10px] font-bold text-slate-600 mb-1">Save Address As:</label>
+              <div className="grid grid-cols-3 gap-1.5">
                 {[
                   { tag: "Home", icon: "🏠" },
                   { tag: "Work", icon: "💼" },
@@ -2555,7 +2555,7 @@ export default function CustomerSuperAppClient({
                     key={item.tag}
                     type="button"
                     onClick={() => setNewAddressTag(item.tag as typeof newAddressTag)}
-                    className={`py-2 rounded-xl text-xs font-bold border flex items-center justify-center gap-1 transition ${
+                    className={`py-1.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-1 transition ${
                       newAddressTag === item.tag
                         ? "bg-blue-50 border-blue-400 text-blue-900 ring-1 ring-blue-300"
                         : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
@@ -2569,7 +2569,7 @@ export default function CustomerSuperAppClient({
             </div>
 
             {/* Structured Address Form */}
-            <div className="space-y-2.5 text-xs">
+            <div className="space-y-2 text-xs">
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500">House / Shop / Flat No.</label>
@@ -2578,7 +2578,7 @@ export default function CustomerSuperAppClient({
                     placeholder="e.g. Shop 14 / House 28"
                     value={addrHouseNo}
                     onChange={(e) => setAddrHouseNo(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -2588,7 +2588,7 @@ export default function CustomerSuperAppClient({
                     placeholder="e.g. Civil Lines / Chowk"
                     value={addrMohalla}
                     onChange={(e) => setAddrMohalla(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -2600,7 +2600,7 @@ export default function CustomerSuperAppClient({
                   placeholder="e.g. KDC Lucknow Road, Near Petrol Pump"
                   value={addrRoad}
                   onChange={(e) => setAddrRoad(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
 
@@ -2611,7 +2611,7 @@ export default function CustomerSuperAppClient({
                     type="text"
                     value={addrPincode}
                     onChange={(e) => setAddrPincode(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
                 <div>
@@ -2620,7 +2620,7 @@ export default function CustomerSuperAppClient({
                     type="text"
                     value={addrDistrict}
                     onChange={(e) => setAddrDistrict(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -2650,7 +2650,7 @@ export default function CustomerSuperAppClient({
                 } catch {}
                 setIsAddressModalOpen(false);
               }}
-              className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3 text-xs font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-700 transition"
+              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-xs font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-700 transition"
             >
               Save Address &amp; Use for Delivery →
             </button>

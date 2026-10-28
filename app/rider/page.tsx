@@ -688,17 +688,17 @@ export default function RiderAppPage() {
                 </button>
               </div>
             ) : (
-              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 space-y-2.5">
+              <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-2.5 space-y-2">
                 {activeOrder.payment_mode === "cod" && (
-                  <div className="rounded-lg bg-amber-400/20 border border-amber-400/40 p-2 text-center text-xs font-bold text-amber-300">
+                  <div className="rounded-lg bg-amber-400/20 border border-amber-400/40 p-1.5 text-center text-[11px] font-bold text-amber-300">
                     💵 Collect ₹{activeOrder.total_amount} Cash from customer before submitting OTP!
                   </div>
                 )}
                 <div>
-                  <span className="text-[11px] font-bold text-amber-300 block">
+                  <span className="text-[10px] font-bold text-amber-300 block">
                     Step 2: Ask customer for 4-Digit Delivery OTP
                   </span>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[9px] text-slate-400">
                     Shown in customer's Trustit app under "My Bookings"
                   </p>
                 </div>
@@ -709,26 +709,26 @@ export default function RiderAppPage() {
                     placeholder="4-digit OTP"
                     value={enteredOtp}
                     onChange={(e) => setEnteredOtp(e.target.value.replace(/\D/g, ""))}
-                    className="w-full rounded-lg border border-amber-500/60 bg-slate-900 py-2 text-center font-mono text-sm font-bold tracking-widest text-amber-300 focus:outline-none"
+                    className="w-full rounded-lg border border-amber-500/60 bg-slate-900 py-1.5 text-center font-mono text-xs font-bold tracking-widest text-amber-300 focus:outline-none"
                   />
                   <button
                     type="button"
                     disabled={isSubmitting || enteredOtp.length !== 4}
                     onClick={handleCompleteWithOtp}
-                    className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-300 disabled:opacity-50 transition shrink-0"
+                    className="rounded-lg bg-amber-400 px-3 py-1.5 text-xs font-bold text-slate-950 hover:bg-amber-300 disabled:opacity-50 transition shrink-0"
                   >
                     {isSubmitting ? "..." : "Verify & Complete"}
                   </button>
                 </div>
-                {otpError && <p className="text-[10px] text-rose-400">{otpError}</p>}
+                {otpError && <p className="text-[9px] text-rose-400">{otpError}</p>}
               </div>
             )}
           </div>
         ) : (
           /* Clean Radar Waiting Box */
-          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-6 text-center space-y-2">
-            <div className="relative mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-slate-800">
-              <span className="text-lg">🛵</span>
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-5 text-center space-y-1.5">
+            <div className="relative mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-slate-800">
+              <span className="text-base">🛵</span>
               {isOnline && (
                 <span className="absolute -inset-1 rounded-full border border-emerald-500/40 animate-ping" />
               )}
@@ -747,9 +747,9 @@ export default function RiderAppPage() {
 
       {/* Floating Success Toast */}
       {successToast && (
-        <div className="my-2 rounded-xl bg-emerald-500 px-3 py-2 text-[11px] font-bold text-slate-950 flex justify-between items-center shadow-lg">
+        <div className="my-2 rounded-xl bg-emerald-500 px-3 py-1.5 text-[10px] font-bold text-slate-950 flex justify-between items-center shadow-lg">
           <span>{successToast}</span>
-          <button onClick={() => setSuccessToast(null)} className="font-bold px-1.5">
+          <button onClick={() => setSuccessToast(null)} className="font-bold px-1 text-xs">
             ✕
           </button>
         </div>
@@ -758,40 +758,40 @@ export default function RiderAppPage() {
       {/* ── SIMULATED INCOMING ORDER SLIDE-UP SHEET ── */}
       {incomingOrder && (
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-end sm:items-center justify-center p-3">
-          <div className="w-full max-w-sm rounded-2xl border border-amber-400 bg-slate-900 p-4 shadow-2xl space-y-3 animate-in slide-in-from-bottom-6">
+          <div className="w-full max-w-xs sm:max-w-sm rounded-2xl border border-amber-400 bg-slate-900 p-3.5 shadow-2xl space-y-2.5 animate-in slide-in-from-bottom-6">
             <div className="flex items-center justify-between">
-              <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-black text-slate-950 animate-pulse">
+              <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-black text-slate-950 animate-pulse">
                 ⚡ NEW ORDER REQUEST
               </span>
-              <span className="font-mono text-xs font-bold text-rose-400">{countdown}s</span>
+              <span className="font-mono text-[11px] font-bold text-rose-400">{countdown}s</span>
             </div>
 
             <div>
               <span className="text-[9px] uppercase font-bold text-slate-400 block">Pickup Store</span>
-              <h3 className="text-sm font-bold text-white">{incomingOrder.business?.name || "Local Store"}</h3>
-              <p className="text-[10px] text-slate-400 line-clamp-1">{incomingOrder.business?.address}</p>
+              <h3 className="text-xs font-bold text-white">{incomingOrder.business?.name || "Local Store"}</h3>
+              <p className="text-[9px] text-slate-400 line-clamp-1">{incomingOrder.business?.address}</p>
             </div>
 
-            <div className="grid grid-cols-3 divide-x divide-slate-800 rounded-xl bg-slate-800/80 py-1.5 text-center text-xs">
+            <div className="grid grid-cols-3 divide-x divide-slate-800 rounded-xl bg-slate-800/80 py-1 text-center text-xs">
               <div>
                 <span className="text-[9px] text-slate-400 block">Payout</span>
-                <span className="font-bold text-emerald-400">₹35.00</span>
+                <span className="font-bold text-emerald-400 text-[11px]">₹35.00</span>
               </div>
               <div>
                 <span className="text-[9px] text-slate-400 block">Bill</span>
-                <span className="font-bold text-amber-400">₹{incomingOrder.total_amount}</span>
+                <span className="font-bold text-amber-400 text-[11px]">₹{incomingOrder.total_amount}</span>
               </div>
               <div>
                 <span className="text-[9px] text-slate-400 block">Distance</span>
-                <span className="font-bold text-indigo-300">~1.2 km</span>
+                <span className="font-bold text-indigo-300 text-[11px]">~1.2 km</span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2 pt-1">
+            <div className="grid grid-cols-2 gap-2 pt-0.5">
               <button
                 type="button"
                 onClick={() => setIncomingOrder(null)}
-                className="rounded-xl bg-slate-800 py-2 text-[11px] font-bold text-slate-400 hover:text-white"
+                className="rounded-xl bg-slate-800 py-1.5 text-[10px] font-bold text-slate-400 hover:text-white"
               >
                 Pass / Reject
               </button>
@@ -799,7 +799,7 @@ export default function RiderAppPage() {
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleAcceptIncomingOrder}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2 text-[11px] font-black text-slate-950 shadow-md transition"
+                className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-1.5 text-[10px] font-black text-slate-950 shadow-md transition"
               >
                 {isSubmitting ? "Accepting..." : "ACCEPT ORDER →"}
               </button>

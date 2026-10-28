@@ -174,16 +174,16 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
   return (
     <div className="space-y-6">
       {/* Universal Header */}
-      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 mb-1.5">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 mb-1">
             <span>🔴 LIVE</span>
             <span>
               {isSalon ? "Salon Token & Chair Manager" : isCarWash ? "Wash Bay & Slot Queue" : "Restaurant Order Dispatch"}
             </span>
           </div>
-          <h1 className="text-xl font-bold text-slate-900">{business.name}</h1>
-          <p className="text-xs text-slate-500 mt-0.5">
+          <h1 className="text-base sm:text-lg font-extrabold text-slate-900">{business.name}</h1>
+          <p className="text-[11px] text-slate-500 mt-0.5">
             {isSalon
               ? "Live waiting list and digital token appointments."
               : isCarWash
@@ -196,7 +196,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
           <button
             type="button"
             onClick={refreshData}
-            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition"
+            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl shadow-2xs transition"
           >
             ↻ Refresh Queue
           </button>
@@ -417,31 +417,31 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
 
       {/* ── Kitchen Order Ticket (KOT) Thermal Slip Modal ── */}
       {kotOrderModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl space-y-4 font-mono text-xs">
-            <div className="text-center border-b-2 border-dashed border-slate-300 pb-3">
-              <h3 className="text-base font-black text-slate-900 tracking-tight">{business.name}</h3>
-              <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-0.5">KITCHEN ORDER TICKET (KOT)</p>
-              <div className="mt-2 flex justify-between text-[10px] text-slate-600">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-3 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-xs sm:max-w-sm rounded-2xl bg-white p-4 sm:p-5 shadow-2xl space-y-3 font-mono text-xs">
+            <div className="text-center border-b-2 border-dashed border-slate-300 pb-2.5">
+              <h3 className="text-sm font-black text-slate-900 tracking-tight">{business.name}</h3>
+              <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">KITCHEN ORDER TICKET (KOT)</p>
+              <div className="mt-1.5 flex justify-between text-[9px] text-slate-600">
                 <span>Token: #{kotOrderModal.id.slice(-6)}</span>
                 <span>{new Date(kotOrderModal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             </div>
 
             {/* Items with Variants & Notes */}
-            <div className="space-y-2.5 border-b-2 border-dashed border-slate-300 pb-3">
-              <div className="flex justify-between text-[10px] font-bold text-slate-400 uppercase">
+            <div className="space-y-2 border-b-2 border-dashed border-slate-300 pb-2.5">
+              <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase">
                 <span>Qty · Item</span>
                 <span>Price</span>
               </div>
               {kotOrderModal.hyperlocal_order_items?.map((item, idx) => (
                 <div key={idx} className="space-y-0.5">
-                  <div className="flex justify-between font-bold text-slate-900 text-xs">
+                  <div className="flex justify-between font-bold text-slate-900 text-[11px]">
                     <span>{item.quantity}x {item.item_name}</span>
                     <span>₹{item.total_price}</span>
                   </div>
                   {item.notes && (
-                    <div className="bg-amber-100 text-amber-950 text-[10px] px-2 py-0.5 rounded font-bold">
+                    <div className="bg-amber-100 text-amber-950 text-[9px] px-1.5 py-0.5 rounded font-bold">
                       ⚠️ {item.notes}
                     </div>
                   )}
@@ -451,30 +451,30 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
 
             {/* Customer Special Notes */}
             {kotOrderModal.customer_notes && (
-              <div className="bg-amber-50 border border-amber-200 p-2.5 rounded-xl text-[10px] text-amber-900">
+              <div className="bg-amber-50 border border-amber-200 p-2 rounded-xl text-[9px] text-amber-900">
                 <span className="font-bold block uppercase">Customer Note:</span>
                 <p>{kotOrderModal.customer_notes}</p>
               </div>
             )}
 
             {/* Bill Summary */}
-            <div className="flex justify-between items-center text-xs font-bold pt-1">
+            <div className="flex justify-between items-center text-[11px] font-bold pt-0.5">
               <span>Customer: {kotOrderModal.customer_name}</span>
               <span className="text-slate-900">Total: ₹{kotOrderModal.total_amount}</span>
             </div>
 
-            <div className="pt-2 flex gap-2">
+            <div className="pt-1.5 flex gap-2">
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="flex-1 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
+                className="flex-1 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition"
               >
                 🖨️ Print KOT Slip
               </button>
               <button
                 type="button"
                 onClick={() => setKotOrderModal(null)}
-                className="py-2.5 px-4 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition"
+                className="py-2 px-3.5 bg-slate-100 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-200 transition"
               >
                 Close
               </button>
@@ -487,31 +487,31 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
       {(isSalon || isCarWash) && (
         <div className="space-y-6">
           {/* Live Queue Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Currently Serving</span>
-              <span className="text-2xl font-black text-emerald-600 block mt-1">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Currently Serving</span>
+              <span className="text-lg sm:text-xl font-black text-emerald-600 block mt-0.5">
                 {tokens.find((t) => t.status === "in_progress")?.token_number ? `Token #${tokens.find((t) => t.status === "in_progress")?.token_number}` : "All Free"}
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="text-[11px] text-slate-500">
                 {tokens.find((t) => t.status === "in_progress")?.customer_name || "Seat / Bay available"}
               </span>
             </div>
 
-            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Customers Waiting</span>
-              <span className="text-2xl font-black text-indigo-600 block mt-1">
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Customers Waiting</span>
+              <span className="text-lg sm:text-xl font-black text-indigo-600 block mt-0.5">
                 {tokens.filter((t) => t.status === "waiting").length} In Queue
               </span>
-              <span className="text-xs text-slate-500">Avg wait: ~15 mins</span>
+              <span className="text-[11px] text-slate-500">Avg wait: ~15 mins</span>
             </div>
 
-            <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-xs">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Today Completed</span>
-              <span className="text-2xl font-black text-slate-900 block mt-1">
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Today Completed</span>
+              <span className="text-lg sm:text-xl font-black text-slate-900 block mt-0.5">
                 {tokens.filter((t) => t.status === "completed").length} Done
               </span>
-              <span className="text-xs text-slate-500">Services delivered today</span>
+              <span className="text-[11px] text-slate-500">Services delivered today</span>
             </div>
           </div>
 
