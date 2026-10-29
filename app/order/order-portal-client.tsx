@@ -298,9 +298,10 @@ export default function CustomerSuperAppClient({
     if (!targetId && !targetPhone) return;
     setIsLoadingPastOrders(true);
     try {
-      const url = targetId
-        ? `/api/hyperlocal/orders?customerId=${encodeURIComponent(targetId)}`
-        : `/api/hyperlocal/orders?phone=${encodeURIComponent(targetPhone)}`;
+      const params = new URLSearchParams();
+      if (targetId) params.set("customerId", targetId);
+      if (targetPhone) params.set("phone", targetPhone);
+      const url = `/api/hyperlocal/orders?${params.toString()}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
@@ -486,6 +487,7 @@ export default function CustomerSuperAppClient({
         return;
       }
       setLoginEmail(targetEmail);
+      setLoginOtp("");
       setLoginStep("otp");
       setLoginOtpCountdown(30);
       setOtpNotice(data.message || `Verification code sent to ${targetEmail}`);
@@ -578,6 +580,7 @@ export default function CustomerSuperAppClient({
       setLoginOtp("");
       setProfileTab("orders"); // Opens past orders directly!
       setIsCustomerEditing(false);
+      setLoginStep("email");
     } catch {
       setOtpError("Network error verifying code. Please try again.");
     } finally {
@@ -632,6 +635,7 @@ export default function CustomerSuperAppClient({
       setOtpNotice(`Welcome to Trustit, ${cleanName}! Account created.`);
       setProfileTab("orders");
       setIsCustomerEditing(false);
+      setLoginStep("email");
     } catch {
       setOtpError("Network error. Please try again.");
     } finally {

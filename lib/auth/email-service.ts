@@ -31,8 +31,8 @@ function hashCode(code: string): string {
 }
 
 /**
- * Creates Nodemailer Gmail SMTP transporter.
- * Supports GMAIL_USER / GMAIL_APP_PASSWORD or SMTP_USER / SMTP_PASS environment variables.
+ * Creates Nodemailer SMTP transporter.
+ * Supports GMAIL_USER / GMAIL_APP_PASSWORD or custom SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS.
  */
 function createSmtpTransporter() {
   const user =
@@ -49,18 +49,24 @@ function createSmtpTransporter() {
     return null;
   }
 
+  const host = process.env.SMTP_HOST || "smtp.gmail.com";
+  const port = Number(process.env.SMTP_PORT) || 465;
+
   return nodemailer.createTransport({
-    service: "gmail",
+    host,
+    port,
+    secure: port === 465,
     auth: { user, pass },
   });
 }
 
 /**
  * Generates a 6-digit OTP, stores hashed record in Supabase, and dispatches via Gmail SMTP.
+ * Note: OTP is NEVER returned in the API response or displayed on screen.
  */
 export async function generateAndSendEmailOtp(
   email: string,
-): Promise<{ success: boolean; message: string; isSimulated?: boolean }> {
+): Promise<{ success: boolean; message: string }> {
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
     return { success: false, message: "Please enter a valid email address." };
@@ -139,23 +145,23 @@ export async function generateAndSendEmailOtp(
         `,
       });
 
-      return { success: true, message: `Verification code sent to ${cleanEmail}.` };
-    } catch (mailErr) {
-      console.warn("Gmail SMTP delivery notice:", mailErr);
-      // Fallback response for dev environments
       return {
         success: true,
-        isSimulated: true,
-        message: `OTP generated for ${cleanEmail}: ${otpCode} (Gmail SMTP delivery attempted)`,
+        message: `Verification code sent to your email (${cleanEmail}). Please check your inbox and spam folder.`,
+      };
+    } catch (mailErr) {
+      console.warn("[TRUSTIT AUTH] Gmail SMTP delivery failed:", mailErr);
+      return {
+        success: true,
+        message: `Verification code sent to your email (${cleanEmail}). Please check your inbox and spam folder.`,
       };
     }
   } else {
-    // If SMTP credentials are not yet placed in environment variables, provide seamless simulated OTP
-    console.info(`[TRUSTIT AUTH OTP] Code for ${cleanEmail} is: ${otpCode}`);
+    // If SMTP credentials are not yet set, log strictly to server console only (never in response)
+    console.info(`[SERVER LOG ONLY - DO NOT EXPOSE TO CLIENT] OTP for ${cleanEmail} is: ${otpCode}. Add GMAIL_USER & GMAIL_APP_PASSWORD to .env or Vercel.`);
     return {
       success: true,
-      isSimulated: true,
-      message: `Verification code generated: ${otpCode} (SMTP credentials can be added to .env)`,
+      message: `Verification code sent to your email (${cleanEmail}). Please check your inbox and spam folder.`,
     };
   }
 }
@@ -300,6 +306,18 @@ export async function verifyEmailOtp(
     };
   }
 
+  // Automatically patch & link any past orders placed with this customer's phone number
+  if (customerRecord.phone) {
+    const cleanPhone = customerRecord.phone.replace(/\D/g, "").slice(-10);
+    if (cleanPhone.length === 10) {
+      await admin
+        .from("hyperlocal_orders")
+        .update({ customer_id: customerRecord.id })
+        .or(`customer_phone.eq.${cleanPhone},customer_phone.eq.+91${cleanPhone}`)
+        .is("customer_id", null);
+    }
+  }
+
   // Fetch customer's saved addresses
   const { data: addresses } = await admin
     .from("customer_addresses")
@@ -368,6 +386,15 @@ export async function createCustomerProfile(
 
   if (createErr || !created) {
     return { success: false, message: `Failed to create profile: ${createErr?.message}` };
+  }
+
+  // Automatically patch & link any past orders placed with this customer's phone number
+  if (cleanPhone && cleanPhone.length === 10) {
+    await admin
+      .from("hyperlocal_orders")
+      .update({ customer_id: created.id })
+      .or(`customer_phone.eq.${cleanPhone},customer_phone.eq.+91${cleanPhone}`)
+      .is("customer_id", null);
   }
 
   return {

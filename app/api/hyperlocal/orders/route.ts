@@ -101,6 +101,9 @@ export async function GET(request: Request) {
     query = query
       .eq("business_id", businessId)
       .or("payment_status.eq.paid,payment_mode.eq.cod");
+  } else if (customerId && phone) {
+    const clean = phone.replace(/\D/g, "").slice(-10);
+    query = query.or(`customer_id.eq.${customerId},customer_phone.eq.${clean},customer_phone.eq.+91${clean}`);
   } else if (customerId) {
     query = query.eq("customer_id", customerId);
   } else if (phone) {
