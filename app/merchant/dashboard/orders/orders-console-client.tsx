@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { HyperlocalOrder, ServiceTokenSlot } from "@/lib/hyperlocal/types";
-import { formatDisplayOrderNumber } from "@/lib/hyperlocal/order-id";
+import { formatDisplayOrderNumber, formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
 
 interface Props {
   business: {
@@ -55,27 +55,39 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
       if (ctx.state === "suspended") ctx.resume();
 
       const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
 
       osc.type = "sawtooth";
-      // Loud alternating high-frequency alarm: A5 (880Hz) -> E6 (1320Hz) -> A6 (1760Hz)
+      osc2.type = "square";
+      // Loud alternating dual-frequency alarm: A5 (880Hz) -> E6 (1320Hz) -> A6 (1760Hz)
       osc.frequency.setValueAtTime(880, ctx.currentTime);
       osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.12);
       osc.frequency.setValueAtTime(880, ctx.currentTime + 0.24);
       osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.36);
       osc.frequency.setValueAtTime(1760, ctx.currentTime + 0.48);
 
-      gain.gain.setValueAtTime(0.42, ctx.currentTime);
+      osc2.frequency.setValueAtTime(440, ctx.currentTime);
+      osc2.frequency.setValueAtTime(660, ctx.currentTime + 0.12);
+      osc2.frequency.setValueAtTime(440, ctx.currentTime + 0.24);
+      osc2.frequency.setValueAtTime(660, ctx.currentTime + 0.36);
+      osc2.frequency.setValueAtTime(880, ctx.currentTime + 0.48);
+
+      // Full Volume Gain (0.95)
+      gain.gain.setValueAtTime(0.95, ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.7);
 
       osc.connect(gain);
+      osc2.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start();
+      osc2.start();
       osc.stop(ctx.currentTime + 0.7);
+      osc2.stop(ctx.currentTime + 0.7);
 
       if (typeof navigator !== "undefined" && navigator.vibrate) {
-        navigator.vibrate([300, 150, 300, 150, 300]);
+        navigator.vibrate([500, 200, 500, 200, 800]);
       }
     } catch {
       // Audio autoplay handled safely
@@ -330,7 +342,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
                     <div className="flex items-center gap-2">
                       <span className="font-mono font-black text-sm text-slate-950 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-300">
-                        {formatDisplayOrderNumber(order.id)}
+                        {formatUnifiedOrderCode(order.id, business.name)}
                       </span>
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                         isNewPlaced ? "bg-amber-500 text-white animate-pulse" : "bg-emerald-100 text-emerald-800"
@@ -521,7 +533,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                       Kitchen Alert · Incoming Confirmed Order
                     </span>
                     <h3 className="text-base sm:text-lg font-black leading-tight">
-                      New Order {formatDisplayOrderNumber(incomingOrderModal.id)} Received!
+                      New Order {formatUnifiedOrderCode(incomingOrderModal.id, business.name)} Received!
                     </h3>
                   </div>
                 </div>
@@ -724,7 +736,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
               <h3 className="text-sm font-black text-slate-900 tracking-tight">{business.name}</h3>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">KITCHEN ORDER TICKET (KOT)</p>
               <div className="mt-1.5 flex justify-between text-[9px] text-slate-600">
-                <span className="font-bold text-slate-900 text-xs">Order: {formatDisplayOrderNumber(kotOrderModal.id)}</span>
+                <span className="font-bold text-slate-900 text-xs">Order: {formatUnifiedOrderCode(kotOrderModal.id, business.name)}</span>
                 <span>{new Date(kotOrderModal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             </div>

@@ -39,3 +39,25 @@ export function formatDisplayOrderNumber(orderId: string | null | undefined): st
   }
   return `#${clean.slice(-4).toUpperCase()}`;
 }
+
+/**
+ * Extracts a 3-character capital merchant outlet code from business name.
+ * Examples: "Deliciated Cafe" -> "DEL", "Apna Super Bazaar" -> "APN"
+ */
+export function getOutletCode(businessName?: string | null): string {
+  if (!businessName) return "DEL";
+  const clean = businessName.trim().replace(/[^a-zA-Z]/g, "").toUpperCase();
+  if (clean.length >= 3) return clean.slice(0, 3);
+  return (clean + "TR").slice(0, 3);
+}
+
+/**
+ * Formats a canonical unified order code combining Trustit Brand prefix, outlet code, and 4-digit sequence.
+ * Example: #TR-DEL-4492 or #TR-APN-6367
+ */
+export function formatUnifiedOrderCode(orderId: string | null | undefined, businessName?: string | null): string {
+  if (!orderId) return "#TR-0000";
+  const num = formatDisplayOrderNumber(orderId).replace("#", "");
+  const outlet = getOutletCode(businessName);
+  return `#TR-${outlet}-${num}`;
+}

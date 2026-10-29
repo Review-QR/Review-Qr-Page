@@ -2,7 +2,7 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { createCashfreeClient } from "@/lib/cashfree";
-import { isValidHyperlocalOrderId } from "./order-id";
+import { isValidHyperlocalOrderId, getOutletCode, formatUnifiedOrderCode } from "./order-id";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export interface CreateHyperlocalPaymentOrderInput {
@@ -95,6 +95,9 @@ export async function createCashfreeHyperlocalPaymentOrder(
     };
   }
 
+  const outletCode = getOutletCode(input.businessName);
+  const unifiedCode = formatUnifiedOrderCode(input.orderId, input.businessName);
+
   const idempotencyKey = randomUUID();
   const requestBody = {
     order_id: input.orderId,
@@ -110,10 +113,12 @@ export async function createCashfreeHyperlocalPaymentOrder(
       return_url: input.returnUrl || `https://trustitreview.com/order?order_id=${input.orderId}`,
       notify_url: process.env.CASHFREE_WEBHOOK_URL || "https://trustitreview.com/api/cashfree/webhook",
     },
-    order_note: `Trustit Hyperlocal Order (${input.orderId})`,
+    order_note: `Trustit Order ${unifiedCode} (${input.businessName || "Local Merchant"})`,
     order_tags: {
       order_type: "hyperlocal_food",
       business_id: input.businessId,
+      outlet_code: outletCode,
+      unified_order_code: unifiedCode,
       ...(input.businessName
         ? { business_name: input.businessName.replace(/[^a-zA-Z0-9_\s-]/g, "").slice(0, 40) }
         : {}),
