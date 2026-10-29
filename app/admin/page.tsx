@@ -59,6 +59,35 @@ export default async function HomePage() {
     errorMessage = "Unable to load business data. Please try again later.";
   }
 
+  let activeHyperlocalCount = 0;
+  let disputedHyperlocalCount = 0;
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { count: activeCount } = await supabase
+      .from("hyperlocal_orders")
+      .select("*", { count: "exact", head: true })
+      .in("status", [
+        "placed",
+        "accepted_by_merchant",
+        "preparing",
+        "ready_for_pickup",
+        "rider_assigned",
+        "picked_up",
+        "out_for_delivery",
+        "arrived_at_doorstep",
+      ]);
+    activeHyperlocalCount = activeCount || 0;
+
+    const { count: dispCount } = await supabase
+      .from("hyperlocal_orders")
+      .select("*", { count: "exact", head: true })
+      .not("dispute_status", "in", '("none","resolved")');
+    disputedHyperlocalCount = dispCount || 0;
+  } catch {
+    // Graceful fallback
+  }
+
   const today = new Date().toISOString().slice(0, 10);
 
   const totalBusinesses = businesses.length;
@@ -151,6 +180,12 @@ export default async function HomePage() {
       value: totalScans.toLocaleString("en-IN"),
       tone: "orange",
       icon: "↗",
+    },
+    {
+      label: "Hyperlocal Running Orders",
+      value: activeHyperlocalCount,
+      tone: "orange",
+      icon: "🛵",
     },
   ];
 
@@ -344,22 +379,66 @@ export default async function HomePage() {
           )}
         </section>
 
-        <section className="dashboard-panel system-panel">
-          <div className="section-heading">
-            <div>
-              <p className="section-kicker">HEALTH</p>
-              <h2>System status</h2>
+        <div className="space-y-6">
+          {/* ── HYPERLOCAL SUPER-APP & DELIVERY COMMAND CENTER CARD ── */}
+          <section className="dashboard-panel hyperlocal-panel border-2 border-amber-400/50 bg-gradient-to-br from-slate-900 via-slate-900 to-amber-950/40 p-5 rounded-2xl shadow-md space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-amber-500/20">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-amber-400">LIVE OPERATIONS</p>
+                <h2 className="text-base font-black text-white flex items-center gap-1.5 mt-0.5">
+                  <span>🛵</span> Hyperlocal Command Center
+                </h2>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/40 animate-pulse">
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                Live Control
+              </span>
             </div>
-            <span className="system-live"><span />Live</span>
-          </div>
-          <div className="system-list">
-            <div className="system-row"><span className="system-indicator system-indicator--green" /><span>Next.js Foundation</span><strong>Ready</strong></div>
-            <div className="system-row"><span className={`system-indicator ${errorMessage ? "system-indicator--red" : "system-indicator--green"}`} /><span>Supabase Database</span><strong>{errorMessage ? "Error" : "Connected"}</strong></div>
-            <div className="system-row"><span className="system-indicator system-indicator--green" /><span>Authentication</span><strong>Connected</strong></div>
-            <div className="system-row"><span className="system-indicator system-indicator--green" /><span>QR Engine</span><strong>Connected</strong></div>
-            <div className="system-row"><span className="system-indicator system-indicator--yellow" /><span>Cashfree Payments</span><strong>Next stage</strong></div>
-          </div>
-        </section>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Food delivery, kirana parcha orders, doorstep refusal disputes, 4-digit OTP audit &amp; rider instant payouts in Bahraich.
+            </p>
+
+            <div className="grid grid-cols-2 gap-2 text-center">
+              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-2.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">Running Orders</span>
+                <span className="text-xl font-black text-emerald-400">{activeHyperlocalCount}</span>
+              </div>
+              <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-2.5">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">Disputes / Refusals</span>
+                <span className={`text-xl font-black ${disputedHyperlocalCount > 0 ? "text-rose-400 animate-pulse" : "text-slate-300"}`}>
+                  {disputedHyperlocalCount}
+                </span>
+              </div>
+            </div>
+
+            <Link
+              href="/admin/hyperlocal"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-400 py-3 text-xs font-black text-slate-950 shadow-md hover:from-amber-300 hover:to-amber-300 transition"
+            >
+              <span>⚡ Open Live Delivery Command Center</span>
+              <span>→</span>
+            </Link>
+          </section>
+
+          {/* System Status Panel */}
+          <section className="dashboard-panel system-panel">
+            <div className="section-heading">
+              <div>
+                <p className="section-kicker">HEALTH</p>
+                <h2>System status</h2>
+              </div>
+              <span className="system-live"><span />Live</span>
+            </div>
+            <div className="system-list">
+              <div className="system-row"><span className="system-indicator system-indicator--green" /><span>Next.js Foundation</span><strong>Ready</strong></div>
+              <div className="system-row"><span className={`system-indicator ${errorMessage ? "system-indicator--red" : "system-indicator--green"}`} /><span>Supabase Database</span><strong>{errorMessage ? "Error" : "Connected"}</strong></div>
+              <div className="system-row"><span className="system-indicator system-indicator--green" /><span>Authentication</span><strong>Connected</strong></div>
+              <div className="system-row"><span className="system-indicator system-indicator--green" /><span>QR Engine</span><strong>Connected</strong></div>
+              <div className="system-row"><span className="system-indicator system-indicator--yellow" /><span>Cashfree Payments</span><strong>Next stage</strong></div>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );

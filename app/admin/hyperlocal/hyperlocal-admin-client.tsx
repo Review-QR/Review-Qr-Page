@@ -29,6 +29,7 @@ export default function HyperlocalLiveAdminClient() {
   // Cancel Modal State
   const [cancelModalOrder, setCancelModalOrder] = useState<HyperlocalOrder | null>(null);
   const [adminNote, setAdminNote] = useState("");
+  const [actionError, setActionError] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
@@ -55,6 +56,7 @@ export default function HyperlocalLiveAdminClient() {
   async function handleConfirmDoorstepCancel() {
     if (!cancelModalOrder) return;
     setIsActionPending(true);
+    setActionError(null);
     try {
       const res = await fetch("/api/hyperlocal/admin/orders", {
         method: "POST",
@@ -67,16 +69,17 @@ export default function HyperlocalLiveAdminClient() {
         }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (res.ok && data.success) {
         setCancelModalOrder(null);
         setAdminNote("");
+        setActionError(null);
         setToastMessage(`✅ Order cancelled. Rider credited ₹${data.result?.riderCompensated || 35} trip fee. Active delivery unlocked.`);
-        fetchOrders();
+        await fetchOrders();
       } else {
-        alert(data.error || "Failed to cancel order.");
+        setActionError(data.error || "Failed to cancel order.");
       }
-    } catch {
-      alert("Network error processing cancellation.");
+    } catch (err: any) {
+      setActionError(err?.message || "Network error processing cancellation.");
     } finally {
       setIsActionPending(false);
     }
@@ -527,6 +530,12 @@ export default function HyperlocalLiveAdminClient() {
                 className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-rose-500"
               />
             </div>
+
+            {actionError && (
+              <div className="rounded-xl border border-rose-500 bg-rose-500/20 p-2.5 text-xs text-rose-300 font-bold">
+                ⚠️ {actionError}
+              </div>
+            )}
 
             <div className="flex gap-2 pt-1">
               <button
