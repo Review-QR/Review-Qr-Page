@@ -172,6 +172,7 @@ export async function verifyEmailOtp(
 ): Promise<{
   success: boolean;
   message: string;
+  isNewCustomer?: boolean;
   customer?: CustomerProfile;
   addresses?: CustomerSavedAddress[];
 }> {
@@ -235,10 +236,19 @@ export async function verifyEmailOtp(
     .eq("email", cleanEmail)
     .maybeSingle();
 
+  // If new customer and no name provided yet, ask for name
+  if (!existingCustomer && (!fullName || !fullName.trim())) {
+    return {
+      success: true,
+      isNewCustomer: true,
+      message: "Code verified! Please tell us your name to set up your profile.",
+    };
+  }
+
   let customerRecord: CustomerProfile;
 
   if (existingCustomer) {
-    // Update existing customer profile if updated name/phone supplied
+    // Returning customer: update existing customer profile if updated name/phone supplied
     const updates: Record<string, unknown> = { updated_at: now };
     if (fullName && fullName.trim() && fullName !== "Trustit Customer") {
       updates.full_name = fullName.trim();
@@ -262,7 +272,7 @@ export async function verifyEmailOtp(
       createdAt: updated?.created_at || existingCustomer.created_at,
     };
   } else {
-    // Create new customer
+    // Create new customer with their actual name
     const cleanPhone = phone ? phone.replace(/\D/g, "").slice(-10) : null;
     const nameToUse = fullName?.trim() || cleanEmail.split("@")[0] || "Trustit Customer";
 
@@ -312,9 +322,64 @@ export async function verifyEmailOtp(
 
   return {
     success: true,
-    message: "Verified successfully!",
+    isNewCustomer: false,
+    message: existingCustomer ? "Welcome back to Trustit!" : "Profile created successfully!",
     customer: customerRecord,
     addresses: formattedAddresses,
+  };
+}
+
+/**
+ * Creates or updates a customer profile with name & phone.
+ */
+export async function createCustomerProfile(
+  email: string,
+  fullName: string,
+  phone?: string,
+): Promise<{
+  success: boolean;
+  message: string;
+  customer?: CustomerProfile;
+}> {
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanName = fullName.trim();
+  if (!cleanName) {
+    return { success: false, message: "Please enter your full name." };
+  }
+
+  const admin = createSupabaseAdminClient();
+  const cleanPhone = phone ? phone.replace(/\D/g, "").slice(-10) : null;
+  const now = new Date().toISOString();
+
+  const { data: created, error: createErr } = await admin
+    .from("customers")
+    .upsert(
+      {
+        email: cleanEmail,
+        full_name: cleanName,
+        phone: cleanPhone,
+        is_verified: true,
+        updated_at: now,
+      },
+      { onConflict: "email" },
+    )
+    .select("id, email, full_name, phone, created_at")
+    .single();
+
+  if (createErr || !created) {
+    return { success: false, message: `Failed to create profile: ${createErr?.message}` };
+  }
+
+  return {
+    success: true,
+    message: "Welcome to Trustit! Profile created successfully.",
+    customer: {
+      id: created.id,
+      email: created.email,
+      fullName: created.full_name,
+      phone: created.phone,
+      createdAt: created.created_at,
+    },
   };
 }
 

@@ -200,7 +200,7 @@ export default function CustomerSuperAppClient({
 
   // OTP Login Flow & State
   const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
-  const [loginStep, setLoginStep] = useState<"email" | "otp">("email");
+  const [loginStep, setLoginStep] = useState<"email" | "otp" | "name_prompt">("email");
   const [loginEmail, setLoginEmail] = useState<string>("");
   const [loginOtp, setLoginOtp] = useState<string>("");
   const [loginOtpCountdown, setLoginOtpCountdown] = useState<number>(0);
@@ -208,6 +208,8 @@ export default function CustomerSuperAppClient({
   const [isVerifyingOtp, setIsVerifyingOtp] = useState<boolean>(false);
   const [otpError, setOtpError] = useState<string>("");
   const [otpNotice, setOtpNotice] = useState<string>("");
+  const [newCustomerName, setNewCustomerName] = useState<string>("");
+  const [newCustomerPhone, setNewCustomerPhone] = useState<string>("");
 
   const [isDetectingGps, setIsDetectingGps] = useState(false);
   const [loginInputName, setLoginInputName] = useState<string>("");
@@ -215,8 +217,8 @@ export default function CustomerSuperAppClient({
   const [loginInputAddress, setLoginInputAddress] = useState<string>("");
   const [isCustomerEditing, setIsCustomerEditing] = useState<boolean>(false);
 
-  // Customer Profile View (2 Tabs: Addresses & Orders)
-  const [profileTab, setProfileTab] = useState<"addresses" | "orders">("addresses");
+  // Customer Profile View (2 Tabs: Orders & Addresses - Default to Orders)
+  const [profileTab, setProfileTab] = useState<"orders" | "addresses">("orders");
   const [customerPastOrders, setCustomerPastOrders] = useState<ActiveHyperlocalOrder[]>([]);
   const [isLoadingPastOrders, setIsLoadingPastOrders] = useState<boolean>(false);
 
@@ -449,10 +451,13 @@ export default function CustomerSuperAppClient({
     setLoginInputPhone(customerPhone.length === 10 ? customerPhone : "");
     setLoginInputAddress(customerAddress);
     setLoginEmail(customerEmail);
+    setNewCustomerName("");
+    setNewCustomerPhone("");
     setOtpError("");
     setOtpNotice("");
     setLoginOtp("");
     setLoginStep("email");
+    setProfileTab("orders");
     setIsCustomerEditing(false);
     setIsCustomerLoginOpen(true);
     if (customerId || customerPhone) {
@@ -506,8 +511,6 @@ export default function CustomerSuperAppClient({
         body: JSON.stringify({
           email: loginEmail,
           otp: code,
-          fullName: loginInputName || undefined,
-          phone: loginInputPhone || undefined,
         }),
       });
       const data = await res.json();
@@ -516,11 +519,19 @@ export default function CustomerSuperAppClient({
         return;
       }
 
+      // If new customer (first time user), prompt for their name!
+      if (data.isNewCustomer) {
+        setLoginStep("name_prompt");
+        setOtpNotice("Verification successful! Please tell us your name.");
+        return;
+      }
+
+      // Returning customer: load existing profile directly
       const cust = data.customer;
       if (cust) {
         setCustomerId(cust.id);
         setCustomerEmail(cust.email);
-        const nameToUse = cust.fullName || loginInputName || "Customer";
+        const nameToUse = cust.fullName || "Customer";
         setCustomerName(nameToUse);
         setLoginInputName(nameToUse);
         if (cust.phone) {
@@ -529,7 +540,7 @@ export default function CustomerSuperAppClient({
         }
         saveCustomerProfile(
           nameToUse,
-          cust.phone || loginInputPhone || "",
+          cust.phone || "",
           customerAddress,
           cust.email,
           cust.id,
@@ -563,12 +574,66 @@ export default function CustomerSuperAppClient({
         fetchCustomerOrders(cust.id, cust.phone);
       }
 
-      setOtpNotice("Logged in successfully! Welcome to Trustit.");
+      setOtpNotice(`Welcome back, ${cust?.fullName || "Customer"}!`);
       setLoginOtp("");
-      setProfileTab("addresses");
+      setProfileTab("orders"); // Opens past orders directly!
       setIsCustomerEditing(false);
     } catch {
       setOtpError("Network error verifying code. Please try again.");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleCreateProfile = async () => {
+    const cleanName = newCustomerName.trim();
+    if (!cleanName) {
+      setOtpError("Please enter your full name.");
+      return;
+    }
+    setOtpError("");
+    setIsVerifyingOtp(true);
+    try {
+      const res = await fetch("/api/customer/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create_profile",
+          email: loginEmail,
+          fullName: cleanName,
+          phone: newCustomerPhone.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setOtpError(data.message || "Failed to create profile. Please try again.");
+        return;
+      }
+
+      const cust = data.customer;
+      if (cust) {
+        setCustomerId(cust.id);
+        setCustomerEmail(cust.email);
+        setCustomerName(cust.fullName);
+        setLoginInputName(cust.fullName);
+        if (cust.phone) {
+          setCustomerPhone(cust.phone);
+          setLoginInputPhone(cust.phone);
+        }
+        saveCustomerProfile(
+          cust.fullName,
+          cust.phone || "",
+          customerAddress,
+          cust.email,
+          cust.id,
+        );
+      }
+
+      setOtpNotice(`Welcome to Trustit, ${cleanName}! Account created.`);
+      setProfileTab("orders");
+      setIsCustomerEditing(false);
+    } catch {
+      setOtpError("Network error. Please try again.");
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -3005,19 +3070,8 @@ export default function CustomerSuperAppClient({
                     </button>
                   </div>
 
-                  {/* 2 Tabs */}
+                  {/* 2 Tabs (Default to Past Orders) */}
                   <div className="flex rounded-xl bg-slate-100 p-1">
-                    <button
-                      type="button"
-                      onClick={() => setProfileTab("addresses")}
-                      className={`flex-1 rounded-lg py-1.5 text-center text-xs font-bold transition ${
-                        profileTab === "addresses"
-                          ? "bg-white text-slate-900 shadow-xs"
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
-                    >
-                      🏠 Saved Addresses ({savedAddresses.length})
-                    </button>
                     <button
                       type="button"
                       onClick={() => {
@@ -3026,11 +3080,22 @@ export default function CustomerSuperAppClient({
                       }}
                       className={`flex-1 rounded-lg py-1.5 text-center text-xs font-bold transition ${
                         profileTab === "orders"
-                          ? "bg-white text-slate-900 shadow-xs"
+                          ? "bg-white text-slate-900 shadow-xs font-black"
                           : "text-slate-500 hover:text-slate-800"
                       }`}
                     >
                       📋 Past Orders ({customerPastOrders.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setProfileTab("addresses")}
+                      className={`flex-1 rounded-lg py-1.5 text-center text-xs font-bold transition ${
+                        profileTab === "addresses"
+                          ? "bg-white text-slate-900 shadow-xs font-black"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      🏠 Saved Addresses ({savedAddresses.length})
                     </button>
                   </div>
 
@@ -3274,34 +3339,6 @@ export default function CustomerSuperAppClient({
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
-                            Full Name (Optional)
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="e.g. Ramesh Kumar"
-                            value={loginInputName}
-                            onChange={(e) => setLoginInputName(e.target.value)}
-                            className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-orange-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
-                            Mobile No (Optional)
-                          </label>
-                          <input
-                            type="tel"
-                            maxLength={10}
-                            placeholder="e.g. 9876543210"
-                            value={loginInputPhone}
-                            onChange={(e) => setLoginInputPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                            className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-orange-500 font-mono"
-                          />
-                        </div>
-                      </div>
-
                       <button
                         type="button"
                         disabled={isSendingOtp || !loginEmail.trim()}
@@ -3321,9 +3358,7 @@ export default function CustomerSuperAppClient({
                             type="button"
                             onClick={() => {
                               const email = "customer@trustitreview.com";
-                              const name = "Ramesh Kumar";
                               setLoginEmail(email);
-                              setLoginInputName(name);
                               handleSendOtp(email);
                             }}
                             className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-left hover:border-orange-400 hover:bg-orange-50/50 transition"
@@ -3335,9 +3370,7 @@ export default function CustomerSuperAppClient({
                             type="button"
                             onClick={() => {
                               const email = "demo@trustitreview.com";
-                              const name = "Priya Sharma";
                               setLoginEmail(email);
-                              setLoginInputName(name);
                               handleSendOtp(email);
                             }}
                             className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-left hover:border-orange-400 hover:bg-orange-50/50 transition"
@@ -3348,12 +3381,12 @@ export default function CustomerSuperAppClient({
                         </div>
                       </div>
                     </div>
-                  ) : (
+                  ) : loginStep === "otp" ? (
                     /* Step 2: 6-Digit OTP Entry */
                     <div className="space-y-3">
                       <div className="text-center space-y-1">
                         <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-black uppercase text-orange-800">
-                          Step 2 of 2
+                          Step 2
                         </span>
                         <h4 className="text-sm font-extrabold text-slate-900">Enter 6-Digit Code</h4>
                         <p className="text-[11px] text-slate-500">
@@ -3408,10 +3441,64 @@ export default function CustomerSuperAppClient({
                         onClick={handleVerifyOtp}
                         className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2.5 text-xs font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
                       >
-                        {isVerifyingOtp ? "Verifying Code..." : "Verify & Open Profile →"}
+                        {isVerifyingOtp ? "Verifying Code..." : "Verify & Continue →"}
                       </button>
                     </div>
-                  )}
+                  ) : loginStep === "name_prompt" ? (
+                    /* Step 3: New Customer Name & Phone Prompt */
+                    <div className="space-y-3">
+                      <div className="text-center space-y-1">
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-800">
+                          🎉 Welcome to Trustit!
+                        </span>
+                        <h4 className="text-sm font-extrabold text-slate-900">What is your name?</h4>
+                        <p className="text-[11px] text-slate-500">
+                          Please enter your full name so restaurants know who this order is for.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-700 mb-0.5">
+                            Full Name <span className="text-rose-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Ramesh Kumar"
+                            value={newCustomerName}
+                            onChange={(e) => setNewCustomerName(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && newCustomerName.trim()) handleCreateProfile();
+                            }}
+                            className="w-full rounded-xl border border-slate-300 px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-orange-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-700 mb-0.5">
+                            Mobile No (Optional)
+                          </label>
+                          <input
+                            type="tel"
+                            maxLength={10}
+                            placeholder="e.g. 9876543210"
+                            value={newCustomerPhone}
+                            onChange={(e) => setNewCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                            className="w-full rounded-xl border border-slate-300 px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-orange-500 font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={isVerifyingOtp || !newCustomerName.trim()}
+                        onClick={handleCreateProfile}
+                        className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2.5 text-xs font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
+                      >
+                        {isVerifyingOtp ? "Creating Account..." : "Save Name & Open Profile →"}
+                      </button>
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>

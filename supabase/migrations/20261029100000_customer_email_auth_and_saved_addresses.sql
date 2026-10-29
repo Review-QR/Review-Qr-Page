@@ -47,7 +47,11 @@ create table if not exists public.customer_auth_codes (
 create index if not exists customer_auth_codes_dest_idx on public.customer_auth_codes(destination);
 create index if not exists customer_auth_codes_expiry_idx on public.customer_auth_codes(expires_at);
 
--- 4. Enable RLS and permissive policies for server operations
+-- 4. Enable RLS, grant permissions, and configure permissive policies
+grant all on table public.customers to postgres, service_role, authenticated, anon;
+grant all on table public.customer_addresses to postgres, service_role, authenticated, anon;
+grant all on table public.customer_auth_codes to postgres, service_role, authenticated, anon;
+
 alter table public.customers enable row level security;
 alter table public.customer_addresses enable row level security;
 alter table public.customer_auth_codes enable row level security;
