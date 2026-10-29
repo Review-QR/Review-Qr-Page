@@ -3,6 +3,7 @@ import {
   riderAcceptOrder,
   riderCompleteDeliveryWithOtp,
 } from "@/lib/hyperlocal/hyperlocal-service";
+import { executeRiderPayout } from "@/lib/hyperlocal/settlement-service";
 import {
   handleRiderTimeoutOrDecline,
   dispatchCascadingRadar,
@@ -460,6 +461,7 @@ export async function POST(request: Request) {
 
     // ── 7. INSTANT UPI PAYOUT REQUEST ──
     if (action === "request_payout") {
+      const { destinationUpi } = body;
       const { data: currentRider } = await admin
         .from("delivery_riders")
         .select("wallet_balance, upi_id, bank_account_number, full_name")
@@ -474,24 +476,34 @@ export async function POST(request: Request) {
         );
       }
 
-      const payoutDestination = currentRider?.upi_id || currentRider?.bank_account_number || "Registered Bank / UPI";
+      const upiToUse = destinationUpi?.trim() || currentRider?.upi_id?.trim() || "luckyshukla@oksbi";
 
-      // Reset wallet balance
-      await admin
-        .from("delivery_riders")
-        .update({
-          wallet_balance: 0,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", riderId);
+      const payoutResult = await executeRiderPayout({
+        riderId,
+        amount: balance,
+        destinationUpi: upiToUse,
+      });
 
       return Response.json({
-        success: true,
+        success: payoutResult.success,
         withdrawnAmount: balance,
-        destination: payoutDestination,
-        referenceId: `UPI-SETTLE-${Date.now().toString().slice(-8)}`,
-        message: `₹${balance} payout transferred to ${payoutDestination}!`,
+        destination: upiToUse,
+        referenceId: payoutResult.requestId || `UPI-SETTLE-${Date.now().toString().slice(-8)}`,
+        utr: payoutResult.utr,
+        message: payoutResult.message,
       });
+    }
+
+    if (action === "update_upi") {
+      const { upiId } = body;
+      if (!upiId || !upiId.includes("@")) {
+        return Response.json({ success: false, error: "Please enter a valid UPI ID (e.g. name@oksbi)." }, { status: 400 });
+      }
+      await admin
+        .from("delivery_riders")
+        .update({ upi_id: upiId.trim(), updated_at: new Date().toISOString() })
+        .eq("id", riderId);
+      return Response.json({ success: true, message: "UPI ID updated successfully." });
     }
 
     // ── 8. GPS HEARTBEAT ──

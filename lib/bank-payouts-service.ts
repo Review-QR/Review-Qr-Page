@@ -447,13 +447,63 @@ export async function getMerchantFinancialSummary(
 ): Promise<MerchantFinancialSummary> {
   const settlements = await getMerchantSettlementLedger(businessId);
 
-  if (settlements.length === 0) {
+  // Check for live delivered / pending orders from hyperlocal_payout_splits
+  let pendingOrdersCount = 0;
+  let pendingGross = 0;
+  let pendingNet = 0;
+  let pendingComm = 0;
+
+  try {
+    const admin = createSupabaseAdminClient();
+    const { data: pendingSplits } = await admin
+      .from("hyperlocal_payout_splits")
+      .select("merchant_gross, platform_commission, merchant_net_payable, settlement_status")
+      .eq("merchant_id", businessId)
+      .is("batch_id", null)
+      .neq("settlement_status", "settled_split");
+
+    if (pendingSplits && pendingSplits.length > 0) {
+      pendingOrdersCount = pendingSplits.length;
+      pendingGross = pendingSplits.reduce((acc, s) => acc + Number(s.merchant_gross || 0), 0);
+      pendingComm = pendingSplits.reduce((acc, s) => acc + Number(s.platform_commission || 0), 0);
+      pendingNet = pendingSplits.reduce((acc, s) => acc + Number(s.merchant_net_payable || 0), 0);
+    }
+  } catch {
+    // fallback
+  }
+
+  if (settlements.length === 0 && pendingOrdersCount === 0) {
     return {
       today: { orders_count: 0, gross_sales: 0, net_payout: 0, commission: 0 },
       this_week: { orders_count: 0, gross_sales: 0, net_payout: 0, commission: 0 },
       this_month: { orders_count: 0, gross_sales: 0, net_payout: 0, commission: 0 },
       all_time_payout_settled: 0,
       pending_payout_hold: 0,
+    };
+  }
+
+  if (settlements.length === 0) {
+    return {
+      today: {
+        orders_count: pendingOrdersCount,
+        gross_sales: Math.round(pendingGross * 100) / 100,
+        net_payout: Math.round(pendingNet * 100) / 100,
+        commission: Math.round(pendingComm * 100) / 100,
+      },
+      this_week: {
+        orders_count: pendingOrdersCount,
+        gross_sales: Math.round(pendingGross * 100) / 100,
+        net_payout: Math.round(pendingNet * 100) / 100,
+        commission: Math.round(pendingComm * 100) / 100,
+      },
+      this_month: {
+        orders_count: pendingOrdersCount,
+        gross_sales: Math.round(pendingGross * 100) / 100,
+        net_payout: Math.round(pendingNet * 100) / 100,
+        commission: Math.round(pendingComm * 100) / 100,
+      },
+      all_time_payout_settled: 0,
+      pending_payout_hold: Math.round(pendingNet * 100) / 100,
     };
   }
 
@@ -466,38 +516,40 @@ export async function getMerchantFinancialSummary(
 
   // Week summary (first 7 days)
   const weekRecords = settlements.slice(0, 7);
-  const weekOrders = weekRecords.reduce((acc, r) => acc + r.orders_count, 0);
-  const weekGross = weekRecords.reduce((acc, r) => acc + r.gross_sales, 0);
-  const weekNet = weekRecords.reduce((acc, r) => acc + r.net_payout_amount, 0);
-  const weekComm = weekRecords.reduce((acc, r) => acc + r.platform_commission, 0);
+  const weekOrders = weekRecords.reduce((acc, r) => acc + r.orders_count, 0) + pendingOrdersCount;
+  const weekGross = weekRecords.reduce((acc, r) => acc + r.gross_sales, 0) + pendingGross;
+  const weekNet = weekRecords.reduce((acc, r) => acc + r.net_payout_amount, 0) + pendingNet;
+  const weekComm = weekRecords.reduce((acc, r) => acc + r.platform_commission, 0) + pendingComm;
 
   // Month summary (all recorded settlements)
-  const monthOrders = settlements.reduce((acc, r) => acc + r.orders_count, 0);
-  const monthGross = settlements.reduce((acc, r) => acc + r.gross_sales, 0);
-  const monthNet = settlements.reduce((acc, r) => acc + r.net_payout_amount, 0);
-  const monthComm = settlements.reduce((acc, r) => acc + r.platform_commission, 0);
+  const monthOrders = settlements.reduce((acc, r) => acc + r.orders_count, 0) + pendingOrdersCount;
+  const monthGross = settlements.reduce((acc, r) => acc + r.gross_sales, 0) + pendingGross;
+  const monthNet = settlements.reduce((acc, r) => acc + r.net_payout_amount, 0) + pendingNet;
+  const monthComm = settlements.reduce((acc, r) => acc + r.platform_commission, 0) + pendingComm;
+
+  const settledAllTime = settlements.reduce((acc, r) => acc + r.net_payout_amount, 0);
 
   return {
     today: {
-      orders_count: todayRecord.orders_count,
-      gross_sales: todayRecord.gross_sales,
-      net_payout: todayRecord.net_payout_amount,
-      commission: todayRecord.platform_commission,
+      orders_count: todayRecord.orders_count + pendingOrdersCount,
+      gross_sales: Math.round((todayRecord.gross_sales + pendingGross) * 100) / 100,
+      net_payout: Math.round((todayRecord.net_payout_amount + pendingNet) * 100) / 100,
+      commission: Math.round((todayRecord.platform_commission + pendingComm) * 100) / 100,
     },
     this_week: {
       orders_count: weekOrders,
-      gross_sales: weekGross,
-      net_payout: weekNet,
-      commission: weekComm,
+      gross_sales: Math.round(weekGross * 100) / 100,
+      net_payout: Math.round(weekNet * 100) / 100,
+      commission: Math.round(weekComm * 100) / 100,
     },
     this_month: {
       orders_count: monthOrders,
-      gross_sales: monthGross,
-      net_payout: monthNet,
-      commission: monthComm,
+      gross_sales: Math.round(monthGross * 100) / 100,
+      net_payout: Math.round(monthNet * 100) / 100,
+      commission: Math.round(monthComm * 100) / 100,
     },
-    all_time_payout_settled: monthNet,
-    pending_payout_hold: 0,
+    all_time_payout_settled: Math.round(settledAllTime * 100) / 100,
+    pending_payout_hold: Math.round(pendingNet * 100) / 100,
   };
 }
 
