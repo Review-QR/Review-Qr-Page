@@ -6,8 +6,8 @@ import { TRUSTIT_SITE_URL } from "@/lib/public-discovery-seo";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Trustit | Discover local businesses", template: "%s | Trustit" },
-  description: "Find local businesses and explore public Trustit review summaries.",
+  title: { default: "Trustit | Hyperlocal Super-App & Delivery Network", template: "%s | Trustit" },
+  description: "Bahraich's verified hyperlocal super-app and home delivery network. Order trusted food, sweets, groceries, and healthcare delivered by our dedicated rider fleet.",
   metadataBase: new URL(TRUSTIT_SITE_URL),
   robots: { index: false, follow: false },
   manifest: "/manifest.webmanifest",
