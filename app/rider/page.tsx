@@ -358,7 +358,8 @@ export default function RiderAppPage() {
       setKycError("Full Name is required.");
       return;
     }
-    if (kycPhone.replace(/\D/g, "").length < 10) {
+    const cleanPhone = kycPhone.replace(/\D/g, "").slice(-10);
+    if (cleanPhone.length < 10) {
       setKycError("A valid 10-digit mobile number is required.");
       return;
     }
@@ -375,41 +376,44 @@ export default function RiderAppPage() {
     setKycError(null);
 
     try {
+      const emailToSend = (kycEmail || authEmail || "").trim().toLowerCase();
       const res = await fetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           action: "register_kyc",
-          email: kycEmail,
-          fullName: kycFullName,
-          phone: kycPhone,
+          email: emailToSend,
+          fullName: kycFullName.trim(),
+          phone: cleanPhone,
           profileImageUrl: kycProfileImage || null,
-          residentialAddress: kycAddress,
+          residentialAddress: kycAddress.trim(),
           city: "Bahraich",
           pincode: "271801",
           vehicleType: kycVehicleType,
-          vehicleNumber: kycVehicleNo.toUpperCase(),
-          drivingLicenseNumber: kycDlNo || null,
-          bankAccountHolderName: kycBankHolder || kycFullName,
-          bankAccountNumber: kycBankAcc || null,
-          bankIfscCode: kycIfsc || null,
-          bankName: kycBankName || null,
-          upiId: kycUpi || null,
-          panNumber: kycPan || null,
+          vehicleNumber: kycVehicleNo.toUpperCase().trim(),
+          drivingLicenseNumber: kycDlNo.trim() || null,
+          bankAccountHolderName: kycBankHolder.trim() || kycFullName.trim(),
+          bankAccountNumber: kycBankAcc.trim() || null,
+          bankIfscCode: kycIfsc.toUpperCase().trim() || null,
+          bankName: kycBankName.trim() || null,
+          upiId: kycUpi.trim() || null,
+          panNumber: kycPan.toUpperCase().trim() || null,
         }),
       });
-      const data = await res.json();
-      if (data.success && data.rider) {
+
+      const data = await res.json().catch(() => null);
+
+      if (res.ok && data?.success && data?.rider) {
         setRider(data.rider);
         setIsOnline(true);
         localStorage.setItem("trustit_rider_id", data.rider.id);
         setIsKycModalOpen(false);
         setToastMessage("Partner Profile & KYC Verified! You are now ONLINE.");
       } else {
-        setKycError(data.error || "KYC Registration failed.");
+        setKycError(data?.error || `Submission error (HTTP ${res.status}). Please check all details.`);
       }
-    } catch {
-      setKycError("Failed to submit KYC data.");
+    } catch (err) {
+      setKycError(err instanceof Error ? err.message : "Network error. Please try again.");
     } finally {
       setIsKycSubmitting(false);
     }
@@ -474,15 +478,45 @@ export default function RiderAppPage() {
     }
   }
 
-  // Profile image upload handler (reads image as base64)
+  // Profile image upload handler with client-side canvas compression (max 480px, ~40KB)
   function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = () => {
-      if (typeof reader.result === "string") {
-        setKycProfileImage(reader.result);
-      }
+      if (typeof reader.result !== "string") return;
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const maxDim = 480;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressed = canvas.toDataURL("image/jpeg", 0.75);
+          setKycProfileImage(compressed);
+        } else {
+          setKycProfileImage(reader.result as string);
+        }
+      };
+      img.src = reader.result;
     };
     reader.readAsDataURL(file);
   }
@@ -722,6 +756,23 @@ export default function RiderAppPage() {
             <div className="space-y-1.5">
               <button
                 type="button"
+                onClick={() => handleQuickLogin("9118643415")}
+                className="w-full flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/80 px-3 py-2 text-[11px] hover:border-orange-400 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-6 w-6 rounded-full bg-orange-500/20 text-orange-300 grid place-items-center text-xs">
+                    🏍️
+                  </span>
+                  <div className="text-left">
+                    <span className="font-bold text-white block">Lucky Shukla</span>
+                    <span className="text-[10px] text-slate-400 font-mono">Bahraich Fleet · Star: 5.0</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-orange-400">1-Tap Login →</span>
+              </button>
+
+              <button
+                type="button"
                 onClick={() => handleQuickLogin("9415011111")}
                 className="w-full flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/80 px-3 py-2 text-[11px] hover:border-amber-400 transition"
               >
@@ -740,7 +791,7 @@ export default function RiderAppPage() {
               <button
                 type="button"
                 onClick={() => handleQuickLogin("9415022222")}
-                className="w-full flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/80 px-3 py-2 text-[11px] hover:border-amber-400 transition"
+                className="w-full flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/80 px-3 py-2 text-[11px] hover:border-emerald-400 transition"
               >
                 <div className="flex items-center gap-2">
                   <span className="h-6 w-6 rounded-full bg-emerald-500/20 text-emerald-300 grid place-items-center text-xs">
@@ -752,6 +803,20 @@ export default function RiderAppPage() {
                   </div>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-400">1-Tap Login →</span>
+              </button>
+            </div>
+
+            <div className="pt-2 text-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setKycEmail(authEmail || "luckyshuklar@gmail.com");
+                  setKycPhone(authEmail ? "" : "9118643415");
+                  setIsKycModalOpen(true);
+                }}
+                className="text-[11px] font-semibold text-amber-400 hover:underline"
+              >
+                + Register New Rider Partner (KYC Form)
               </button>
             </div>
           </div>
@@ -816,6 +881,13 @@ export default function RiderAppPage() {
                   value={kycFullName}
                   onChange={(e) => setKycFullName(e.target.value)}
                   className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-white"
+                />
+                <input
+                  type="email"
+                  placeholder="Partner Email Address"
+                  value={kycEmail}
+                  onChange={(e) => setKycEmail(e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-white font-mono"
                 />
                 <input
                   type="tel"
