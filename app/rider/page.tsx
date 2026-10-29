@@ -22,6 +22,8 @@ interface RiderScorecard {
     billAmount: number;
     paymentMode: string;
     deliveredAt: string;
+    status?: string;
+    cancellationReason?: string | null;
   }>;
 }
 
@@ -79,6 +81,12 @@ export default function RiderAppPage() {
   const [otpError, setOtpError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  // Doorstep Dispute & Customer Refusal State
+  const [isDisputeModalOpen, setIsDisputeModalOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("customer_refused");
+  const [disputeNotes, setDisputeNotes] = useState("");
+  const [isReportingDispute, setIsReportingDispute] = useState(false);
 
   // Audio Buzzer using Web Audio API
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -669,6 +677,36 @@ export default function RiderAppPage() {
       }
     } finally {
       setIsSubmitting(false);
+    }
+  }
+
+  async function handleReportDispute() {
+    if (!activeOrder || !rider) return;
+    setIsReportingDispute(true);
+    try {
+      const res = await fetch("/api/hyperlocal/rider", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "report_dispute",
+          riderId: rider.id,
+          orderId: activeOrder.id,
+          reason: disputeReason,
+          notes: disputeNotes || "Customer refused delivery at doorstep",
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsDisputeModalOpen(false);
+        setToastMessage("🚨 Dispute reported to Admin Support! Admin is contacting customer.");
+        fetchRiderData();
+      } else {
+        alert(data.error || "Failed to report dispute.");
+      }
+    } catch {
+      alert("Network error reporting dispute.");
+    } finally {
+      setIsReportingDispute(false);
     }
   }
 
@@ -1384,6 +1422,40 @@ export default function RiderAppPage() {
                   </button>
                 </div>
                 {otpError && <p className="text-[9px] text-rose-400">{otpError}</p>}
+
+                {/* Doorstep Dispute Alert & Helpline Buttons */}
+                {activeOrder.dispute_status && activeOrder.dispute_status !== "none" ? (
+                  <div className="rounded-xl border border-rose-500/50 bg-rose-500/15 p-2 text-center space-y-1">
+                    <span className="text-[10px] font-black text-rose-300 block">
+                      🚨 Dispute Sent to Admin ({activeOrder.dispute_status.replace(/_/g, " ").toUpperCase()})
+                    </span>
+                    <p className="text-[9px] text-slate-300 leading-tight">
+                      Admin is calling customer. If refused, Admin will cancel &amp; credit your ₹35 trip earnings.
+                    </p>
+                    <a
+                      href="tel:+919118863415"
+                      className="inline-flex items-center gap-1 mt-1 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white text-[10px] font-bold rounded-lg transition"
+                    >
+                      <span>📞</span> Call Helpline Admin
+                    </a>
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t border-amber-500/20 flex gap-2">
+                    <a
+                      href="tel:+919118863415"
+                      className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-slate-700 bg-slate-800 py-1.5 text-[10.5px] font-bold text-slate-200 hover:bg-slate-700 transition"
+                    >
+                      <span>📞</span> Support
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => setIsDisputeModalOpen(true)}
+                      className="flex-1 flex items-center justify-center gap-1 rounded-lg border border-rose-500/40 bg-rose-500/10 py-1.5 text-[10.5px] font-bold text-rose-300 hover:bg-rose-500/20 transition"
+                    >
+                      <span>🚨</span> Customer Refused
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1490,11 +1562,16 @@ export default function RiderAppPage() {
                   className="flex items-center justify-between rounded-lg bg-slate-850 p-2 text-[11px]"
                 >
                   <div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <span className="font-bold text-white block">{trip.shopName}</span>
                       <span className="text-[9px] font-mono text-amber-400">
                         {formatUnifiedOrderCode(trip.id, trip.shopName)}
                       </span>
+                      {trip.status === "cancelled" && (
+                        <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/40">
+                          🔴 CANCELLED (Customer Refused)
+                        </span>
+                      )}
                     </div>
                     <span className="text-[9px] text-slate-400 font-mono">
                       Bill: ₹{trip.billAmount} · {trip.paymentMode.toUpperCase()}
@@ -1727,6 +1804,92 @@ export default function RiderAppPage() {
                 className="w-full rounded-xl bg-slate-800 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700"
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── DOORSTEP DISPUTE / CUSTOMER REFUSAL MODAL ── */}
+      {isDisputeModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-3 animate-in fade-in">
+          <div className="w-full max-w-xs rounded-2xl border-2 border-rose-500/80 bg-slate-900 p-4 shadow-2xl space-y-3.5">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base">🚨</span>
+                <span className="text-xs font-black text-rose-400">Report Customer Refusal</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDisputeModalOpen(false)}
+                className="text-xs text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="text-[11px] text-slate-300 leading-relaxed bg-rose-500/10 border border-rose-500/20 p-2.5 rounded-xl">
+              क्या आप कस्टमर के पते पर मौजूद हैं और कस्टमर ने ऑर्डर लेने या OTP देने से मना कर दिया है?
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Reason / कारण चुनें
+              </label>
+              {[
+                { id: "customer_refused", label: "ग्राहक ने खाना लेने से मना कर दिया (Refused)" },
+                { id: "customer_unreachable", label: "कॉल नहीं उठा रहे / ताला लगा है (Unreachable)" },
+                { id: "wrong_address", label: "गलत पता / बहुत दूर है (Wrong Address)" },
+              ].map((r) => (
+                <label
+                  key={r.id}
+                  className={`flex items-center gap-2 p-2 rounded-xl border text-[11px] cursor-pointer transition ${
+                    disputeReason === r.id
+                      ? "border-rose-500 bg-rose-500/20 text-rose-200 font-bold"
+                      : "border-slate-800 bg-slate-850 text-slate-300 hover:bg-slate-800"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="disputeReason"
+                    value={r.id}
+                    checked={disputeReason === r.id}
+                    onChange={() => setDisputeReason(r.id)}
+                    className="accent-rose-500"
+                  />
+                  <span>{r.label}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Additional Note / विवरण (वैकल्पिक)
+              </label>
+              <textarea
+                value={disputeNotes}
+                onChange={(e) => setDisputeNotes(e.target.value)}
+                placeholder="ग्राहक ने क्या कहा? (जैसे: लेट हो गया तो नहीं लेंगे)"
+                rows={2}
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-rose-500"
+              />
+            </div>
+
+            <div className="space-y-1.5 pt-1">
+              <button
+                type="button"
+                disabled={isReportingDispute}
+                onClick={handleReportDispute}
+                className="w-full rounded-xl bg-gradient-to-r from-rose-600 to-red-600 py-2.5 text-xs font-black text-white hover:from-rose-500 hover:to-red-500 disabled:opacity-50 transition shadow-md"
+              >
+                {isReportingDispute ? "Sending Alert to Admin..." : "🚨 Alert Admin & Helpline"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDisputeModalOpen(false)}
+                className="w-full rounded-xl bg-slate-800 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700"
+              >
+                Back / Cancel
               </button>
             </div>
           </div>

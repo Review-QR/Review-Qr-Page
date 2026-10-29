@@ -107,6 +107,8 @@ export type ActiveHyperlocalOrder = {
   payment_status?: string;
   payment_mode?: string;
   merchant_prep_time_minutes?: number;
+  cancellation_reason?: string | null;
+  dispute_status?: string | null;
   created_at: string;
   businesses?: { name: string; city: string; address: string | null; phone?: string | null };
   delivery_riders?: { id: string; full_name: string; phone: string; vehicle_number?: string } | null;
@@ -751,24 +753,39 @@ export default function CustomerSuperAppClient({
       const orderRes = await fetch(`/api/hyperlocal/orders?phone=${encodeURIComponent(phone)}`);
       if (orderRes.ok) {
         const data = await orderRes.json();
-        setActiveOrders(data.orders || []);
+        const allFetchedOrders = data.orders || [];
+        // Only truly running orders stay in active orders modal
+        const runningOrders = allFetchedOrders.filter(
+          (o: any) => !["delivered", "completed", "cancelled", "rejected"].includes(o.status),
+        );
+        setActiveOrders(runningOrders);
       }
 
       // 2. Fetch Tokens
       const tokenRes = await fetch(`/api/hyperlocal/tokens?phone=${encodeURIComponent(phone)}`);
       if (tokenRes.ok) {
         const data = await tokenRes.json();
-        setActiveTokens(data.tokens || []);
+        const runningTokens = (data.tokens || []).filter(
+          (t: any) => !["completed", "cancelled"].includes(t.status),
+        );
+        setActiveTokens(runningTokens);
       }
 
-      // 3. Fetch Parchas
+      // 3. Fetch Parchas (filter out duplicates already accepted as running orders)
       const parchaRes = await fetch(`/api/hyperlocal/parcha`);
       if (parchaRes.ok) {
         const data = await parchaRes.json();
         const myParchas = (data.parchas || []).filter(
           (p: any) => p.hyperlocal_orders?.customer_phone === phone,
         );
-        setActiveParchas(myParchas);
+        // Only show parchas that are still pending dukandar bill quote (not yet in active delivery)
+        const unbilledParchas = myParchas.filter(
+          (p: any) =>
+            !p.hyperlocal_orders?.status ||
+            p.hyperlocal_orders?.status === "placed" ||
+            !p.merchant_quote_amount,
+        );
+        setActiveParchas(unbilledParchas);
       }
     } catch {
       // Ignore network errors
@@ -3260,9 +3277,11 @@ export default function CustomerSuperAppClient({
                                           ? "In Kitchen 👨‍🍳"
                                           : ord.status === "food_ready"
                                             ? "Food Ready 🥡"
-                                            : ord.status === "placed"
-                                              ? "Placed ⏳"
-                                              : ord.status}
+                                            : ord.status === "cancelled"
+                                              ? (ord.cancellation_reason === "customer_refused_at_doorstep" ? "Cancelled (Refused) 🔴" : "Cancelled 🔴")
+                                              : ord.status === "placed"
+                                                ? "Placed ⏳"
+                                                : ord.status}
                                   </span>
                                 </div>
 

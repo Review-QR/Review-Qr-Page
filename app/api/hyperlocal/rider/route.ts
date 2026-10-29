@@ -159,23 +159,29 @@ export async function GET(request: Request) {
   const { data: completedOrders } = await admin
     .from("hyperlocal_orders")
     .select(`
-      id, total_amount, payment_mode, payment_status, status, delivered_at, created_at,
+      id, total_amount, payment_mode, payment_status, status, cancellation_reason, delivered_at, created_at, updated_at,
       businesses (name, city)
     `)
     .eq("rider_id", rider.id)
-    .eq("status", "delivered")
-    .order("delivered_at", { ascending: false })
+    .or("status.eq.delivered,and(status.eq.cancelled,cancellation_reason.eq.customer_refused_at_doorstep)")
+    .order("updated_at", { ascending: false })
     .limit(50);
 
   const trips = completedOrders || [];
   
   const todayTrips = trips.filter(
-    (o) => o.delivered_at && new Date(o.delivered_at).getTime() >= startOfToday.getTime(),
+    (o) => {
+      const tripTime = new Date(o.delivered_at || o.updated_at || o.created_at).getTime();
+      return tripTime >= startOfToday.getTime();
+    },
   );
   const todayEarnings = todayTrips.length * 35;
 
   const monthTrips = trips.filter(
-    (o) => o.delivered_at && new Date(o.delivered_at).getTime() >= startOfMonth.getTime(),
+    (o) => {
+      const tripTime = new Date(o.delivered_at || o.updated_at || o.created_at).getTime();
+      return tripTime >= startOfMonth.getTime();
+    },
   );
   const monthEarnings = monthTrips.length * 35;
 
@@ -197,7 +203,9 @@ export async function GET(request: Request) {
         amount: 35,
         billAmount: t.total_amount,
         paymentMode: t.payment_mode,
-        deliveredAt: t.delivered_at || t.created_at,
+        deliveredAt: t.delivered_at || t.updated_at || t.created_at,
+        status: t.status,
+        cancellationReason: t.cancellation_reason,
       };
     }),
   };
@@ -544,6 +552,23 @@ export async function POST(request: Request) {
       const { otp } = body;
       const res = await riderCompleteDeliveryWithOtp(orderId, riderId, otp);
       return Response.json(res);
+    }
+
+    // ── 12. REPORT DOORSTEP DISPUTE / CUSTOMER REFUSAL ──
+    if (action === "report_dispute") {
+      const { reason, notes } = body;
+      await admin
+        .from("hyperlocal_orders")
+        .update({
+          dispute_status: reason || "customer_refused",
+          dispute_reported_at: new Date().toISOString(),
+          dispute_notes: notes || "Customer refused delivery at doorstep",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", orderId)
+        .eq("rider_id", riderId);
+
+      return Response.json({ success: true, message: "Dispute reported to Admin Command Center." });
     }
 
     return Response.json({ error: "Unknown action" }, { status: 400 });

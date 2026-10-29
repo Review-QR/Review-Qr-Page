@@ -162,6 +162,13 @@ export default async function HomePage() {
 
   const actions = [
     {
+      href: "/admin/hyperlocal",
+      title: "⚡ Live Delivery Command Center",
+      description: "Running orders, OTP audit, disputes & doorstep refusal cancellation",
+      tone: "orange",
+      icon: "🛵",
+    },
+    {
       href: "/businesses",
       title: "Add / Manage Business",
       description: "Manage business profiles and plans",
