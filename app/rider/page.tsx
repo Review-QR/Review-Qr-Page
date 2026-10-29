@@ -134,6 +134,46 @@ export default function RiderAppPage() {
     } catch {}
   }
 
+  function playFoodReadyChime() {
+    try {
+      if (!audioCtxRef.current) {
+        audioCtxRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      if (ctx.state === "suspended") ctx.resume();
+
+      const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.type = "sine";
+      osc2.type = "triangle";
+
+      // Double harmonic bell chime: 587Hz -> 880Hz -> 1174Hz
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.setValueAtTime(880, ctx.currentTime + 0.15);
+      osc.frequency.setValueAtTime(1174.66, ctx.currentTime + 0.35);
+
+      osc2.frequency.setValueAtTime(293.66, ctx.currentTime);
+      osc2.frequency.setValueAtTime(440, ctx.currentTime + 0.15);
+      osc2.frequency.setValueAtTime(587.33, ctx.currentTime + 0.35);
+
+      gain.gain.setValueAtTime(0.95, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
+
+      osc.connect(gain);
+      osc2.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start();
+      osc2.start();
+      osc.stop(ctx.currentTime + 1.2);
+      osc2.stop(ctx.currentTime + 1.2);
+    } catch {}
+  }
+
+  const prevOrderStatusRef = useRef<string | null>(null);
+
   // Load saved rider on mount
   useEffect(() => {
     function primeRiderAudio() {
@@ -210,9 +250,19 @@ export default function RiderAppPage() {
         setScorecard(data.scorecard);
       }
       if (data.activeOrder) {
+        const currentStatus = data.activeOrder.status;
+        if (currentStatus === "ready_for_pickup" && prevOrderStatusRef.current !== "ready_for_pickup") {
+          playFoodReadyChime();
+          try {
+            navigator.vibrate?.([400, 150, 400, 150, 600]);
+          } catch {}
+          setToastMessage("🍱 Food is Ready for Pickup! Collect parcel from restaurant counter.");
+        }
+        prevOrderStatusRef.current = currentStatus;
         setActiveOrder(data.activeOrder);
         setIncomingOrder(null);
       } else {
+        prevOrderStatusRef.current = null;
         setActiveOrder(null);
         if (data.incomingOrder && !incomingOrder && isOnline) {
           setIncomingOrder(data.incomingOrder);
@@ -1373,19 +1423,54 @@ export default function RiderAppPage() {
               </div>
             )}
 
+            {/* Food Ready Alert Banner */}
+            {activeOrder.status === "ready_for_pickup" && (
+              <div className="rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 p-3 text-white shadow-lg flex items-center justify-between animate-pulse">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl animate-bounce">🍱</span>
+                  <div>
+                    <span className="text-xs font-black uppercase tracking-wider block">Food is Ready for Pickup!</span>
+                    <p className="text-[10px] text-emerald-100 font-medium">
+                      Restaurant has packed the parcel. Collect from counter immediately.
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2 py-1 bg-white/20 text-white text-[10px] font-black rounded-lg">READY</span>
+              </div>
+            )}
+
             {/* Action State: 1. Pickup vs 2. Customer OTP Delivery */}
-            {activeOrder.status === "rider_assigned" ? (
+            {activeOrder.status === "rider_assigned" ||
+            activeOrder.status === "ready_for_pickup" ||
+            activeOrder.status === "accepted_by_merchant" ||
+            activeOrder.status === "preparing" ? (
               <div className="space-y-2">
-                <div className="rounded-xl bg-blue-500/10 border border-blue-500/30 p-2 text-center text-[11px] text-blue-300 font-medium">
-                  Step 1: Go to restaurant & collect food parcel.
+                <div
+                  className={`rounded-xl p-2.5 text-center text-xs font-bold border ${
+                    activeOrder.status === "ready_for_pickup"
+                      ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-300"
+                      : "bg-blue-500/10 border-blue-500/30 text-blue-300"
+                  }`}
+                >
+                  {activeOrder.status === "ready_for_pickup"
+                    ? "✅ Food Ready at Counter! Collect parcel and confirm pickup."
+                    : "Step 1: Go to restaurant & await food preparation."}
                 </div>
                 <button
                   type="button"
                   disabled={isSubmitting}
                   onClick={handleMarkPickedUp}
-                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-xs font-bold text-white shadow-md hover:from-blue-500 hover:to-indigo-500 transition"
+                  className={`w-full rounded-xl py-2.5 text-xs font-black text-white shadow-md transition ${
+                    activeOrder.status === "ready_for_pickup"
+                      ? "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 ring-2 ring-emerald-400"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500"
+                  }`}
                 >
-                  {isSubmitting ? "Updating..." : "1. Confirm Pickup from Shop →"}
+                  {isSubmitting
+                    ? "Updating..."
+                    : activeOrder.status === "ready_for_pickup"
+                      ? "✅ Food Ready! Confirm Pickup from Counter →"
+                      : "1. Confirm Pickup from Shop →"}
                 </button>
               </div>
             ) : (
@@ -1570,6 +1655,9 @@ export default function RiderAppPage() {
                       {trip.status === "cancelled" && (
                         <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black bg-rose-500/20 text-rose-400 border border-rose-500/40">
                           🔴 CANCELLED (Customer Refused)
+                          {trip.cancellationReason && trip.cancellationReason !== "customer_refused_at_doorstep"
+                            ? ` - ${trip.cancellationReason.replace(/_/g, " ")}`
+                            : ""}
                         </span>
                       )}
                     </div>
