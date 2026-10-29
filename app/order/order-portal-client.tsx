@@ -39,6 +39,32 @@ function loadCashfreeSdk(): Promise<void> {
   return cashfreeSdkPromise;
 }
 
+export function getRestaurantThumbnail(name: string = ""): string {
+  const n = name.toLowerCase();
+  if (n.includes("pizza")) {
+    return "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=160&auto=format&fit=crop&q=80";
+  }
+  if (n.includes("cake") || n.includes("bakery")) {
+    return "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=160&auto=format&fit=crop&q=80";
+  }
+  if (n.includes("sweet") || n.includes("mithai") || n.includes("lassi")) {
+    return "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=160&auto=format&fit=crop&q=80";
+  }
+  if (n.includes("biryani") || n.includes("chicken") || n.includes("awadh")) {
+    return "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=160&auto=format&fit=crop&q=80";
+  }
+  if (n.includes("dosa") || n.includes("south")) {
+    return "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=160&auto=format&fit=crop&q=80";
+  }
+  if (n.includes("burger")) {
+    return "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=160&auto=format&fit=crop&q=80";
+  }
+  if (n.includes("cafe") || n.includes("coffee") || n.includes("queen") || n.includes("tea")) {
+    return "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=160&auto=format&fit=crop&q=80";
+  }
+  return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=160&auto=format&fit=crop&q=80";
+}
+
 export type SuperAppBusiness = {
   id: string;
   name: string;
@@ -220,8 +246,11 @@ export default function CustomerSuperAppClient({
   const [loginInputAddress, setLoginInputAddress] = useState<string>("");
   const [isCustomerEditing, setIsCustomerEditing] = useState<boolean>(false);
 
-  // Customer Profile View (2 Tabs: Orders & Addresses - Default to Orders)
+  // Customer Profile View (Swiggy-Style Account Hub & Past Orders)
   const [profileTab, setProfileTab] = useState<"orders" | "addresses">("orders");
+  const [accountView, setAccountView] = useState<"menu" | "past_orders" | "addresses" | "payments" | "refunds" | "wallet">("menu");
+  const [foodRatings, setFoodRatings] = useState<{ [orderId: string]: number }>({});
+  const [deliveryRatings, setDeliveryRatings] = useState<{ [orderId: string]: number }>({});
   const [customerPastOrders, setCustomerPastOrders] = useState<ActiveHyperlocalOrder[]>([]);
   const [isLoadingPastOrders, setIsLoadingPastOrders] = useState<boolean>(false);
 
@@ -310,7 +339,10 @@ export default function CustomerSuperAppClient({
         const data = await res.json();
         const orders = data.orders || [];
         setCustomerPastOrders(orders);
-        setActiveOrders(orders);
+        const runningOrders = orders.filter(
+          (o: any) => !["delivered", "completed", "cancelled", "rejected"].includes(o.status),
+        );
+        setActiveOrders(runningOrders);
       }
     } catch {
       // Ignore network errors
@@ -462,6 +494,7 @@ export default function CustomerSuperAppClient({
     setLoginOtp("");
     setLoginStep("email");
     setProfileTab("orders");
+    setAccountView("menu");
     setIsCustomerEditing(false);
     setIsCustomerLoginOpen(true);
     if (customerId || customerPhone) {
@@ -1409,31 +1442,34 @@ export default function CustomerSuperAppClient({
             </div>
           </div>
 
-          {/* Right Action Icons (Compact 28px pills) */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          {/* Right Action Icons (Swiggy Style ☰ Account Menu & Active Orders) */}
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Active Bookings (Only shows count badge when totalActiveCount > 0!) */}
             <button
               type="button"
               onClick={() => setIsMyBookingsOpen(true)}
-              className="relative grid h-7 w-7 place-items-center rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200 transition text-xs"
-              title="My Bookings"
-              aria-label="My Bookings"
+              className="relative grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition text-sm shadow-2xs"
+              title="Active Running Bookings & Delivery OTP"
+              aria-label="Active Bookings"
             >
               📋
               {totalActiveCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-amber-500 px-0.5 text-[8px] font-black text-slate-950 animate-pulse">
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-black text-slate-950 shadow-sm animate-pulse">
                   {totalActiveCount}
                 </span>
               )}
             </button>
 
+            {/* Hamburger / My Account Button (Swiggy Style ☰) */}
             <button
               type="button"
               onClick={handleOpenCustomerLogin}
-              className="flex items-center gap-1 rounded-lg bg-slate-900 px-2 py-1 text-[10px] font-bold text-white shadow-2xs hover:bg-slate-800 transition"
+              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 transition"
+              title="My Account"
             >
-              <span className="text-[10px]">👤</span>
-              <span className="max-w-[70px] truncate">
-                {customerEmail || customerPhone ? (customerName ? customerName.split(" ")[0] : "Account") : "Log In"}
+              <span className="text-sm font-black leading-none">☰</span>
+              <span className="max-w-[75px] truncate text-[11px] font-bold">
+                {customerName ? customerName.split(" ")[0] : (customerEmail || customerPhone ? "Account" : "Log In")}
               </span>
             </button>
           </div>
@@ -3033,134 +3069,523 @@ export default function CustomerSuperAppClient({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
           <div className="w-full max-w-md max-h-[88vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
             {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 bg-slate-50/70 shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="grid h-7 w-7 place-items-center rounded-lg bg-orange-100 text-orange-800 text-xs font-black">
-                  👤
-                </span>
-                <div>
-                  <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
-                    {customerEmail || customerPhone
-                      ? (customerName ? `${customerName}'s Account` : "My Customer Account")
-                      : "Sign In to Super-App"}
-                  </h3>
-                  <p className="text-[10px] text-slate-500">
-                    {customerEmail || customerPhone
-                      ? (customerEmail || `+91 ${customerPhone}`)
-                      : "Login with Email OTP for saved addresses & past orders"}
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsCustomerEditing(false);
-                  setIsCustomerLoginOpen(false);
-                }}
-                className="grid h-6 w-6 place-items-center rounded-full bg-slate-200 text-slate-600 text-xs hover:bg-slate-300"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {/* If Logged In: 2-Tab Navigation (Saved Addresses & Past Orders) */}
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 bg-white shrink-0">
               {(customerEmail || customerPhone) && !isCustomerEditing ? (
-                <div className="space-y-3">
-                  {/* Account Summary Banner */}
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-extrabold text-slate-900">{customerName || "Customer"}</span>
-                        {customerEmail && (
-                          <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[8px] font-black text-emerald-800">
-                            Verified Email ✓
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-slate-500 font-mono">
-                        {customerEmail} {customerPhone ? `• +91 ${customerPhone}` : ""}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleSignOut}
-                      className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[10px] font-bold text-rose-700 hover:bg-rose-100 transition"
-                    >
-                      Sign Out
-                    </button>
-                  </div>
-
-                  {/* 2 Tabs (Default to Past Orders) */}
-                  <div className="flex rounded-xl bg-slate-100 p-1">
+                accountView === "menu" ? (
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
                       onClick={() => {
-                        setProfileTab("orders");
-                        fetchCustomerOrders(customerId, customerPhone);
+                        setIsCustomerEditing(false);
+                        setIsCustomerLoginOpen(false);
                       }}
-                      className={`flex-1 rounded-lg py-1.5 text-center text-xs font-bold transition ${
-                        profileTab === "orders"
-                          ? "bg-white text-slate-900 shadow-xs font-black"
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
+                      className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 text-sm font-black transition"
+                      title="Back / Close"
                     >
-                      📋 Past Orders ({customerPastOrders.length})
+                      ←
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => setProfileTab("addresses")}
-                      className={`flex-1 rounded-lg py-1.5 text-center text-xs font-bold transition ${
-                        profileTab === "addresses"
-                          ? "bg-white text-slate-900 shadow-xs font-black"
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
-                    >
-                      🏠 Saved Addresses ({savedAddresses.length})
-                    </button>
+                    <span className="text-xs font-black tracking-wider text-slate-800 uppercase">MY ACCOUNT</span>
                   </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAccountView("menu")}
+                    className="flex items-center gap-1.5 text-xs font-black text-slate-800 hover:text-orange-600 transition"
+                  >
+                    <span className="text-sm font-black">←</span>
+                    <span className="uppercase tracking-wider">MY ACCOUNT</span>
+                  </button>
+                )
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-orange-100 text-orange-800 text-xs font-black">
+                    👤
+                  </span>
+                  <div>
+                    <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
+                      Sign In to Super-App
+                    </h3>
+                    <p className="text-[10px] text-slate-500">
+                      Login with Email OTP for saved addresses &amp; past orders
+                    </p>
+                  </div>
+                </div>
+              )}
 
-                  {/* Tab 1: Saved Addresses Book */}
-                  {profileTab === "addresses" && (
-                    <div className="space-y-2.5">
+              <div className="flex items-center gap-2">
+                <a
+                  href="tel:+919118863415"
+                  className="rounded-full border border-orange-200 bg-orange-50/80 px-3 py-1 text-[11px] font-black text-orange-600 hover:bg-orange-100 transition shadow-2xs"
+                  title="Bahraich Admin Helpline"
+                >
+                  Help
+                </a>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomerEditing(false);
+                    setIsCustomerLoginOpen(false);
+                  }}
+                  className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50">
+              {/* If Logged In: Swiggy-Style Account Hub & Past Orders Experience */}
+              {(customerEmail || customerPhone) && !isCustomerEditing ? (
+                <div>
+                  {/* VIEW 1: Swiggy-Style My Account Menu Hub (Photo 2 Reference) */}
+                  {accountView === "menu" && (
+                    <div className="space-y-3.5">
+                      {/* User Profile Header (Photo 2: Lucky Shukla, +91-9118643415, luckyshuklar@gmail.com) */}
+                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs space-y-1">
+                        <div className="flex items-center justify-between">
+                          <h2 className="text-xl font-black text-slate-900 leading-tight">
+                            {customerName || "Lucky Shukla"}
+                          </h2>
+                          <button
+                            type="button"
+                            onClick={handleSignOut}
+                            className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700 hover:bg-rose-100 transition"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                        <p className="text-xs text-slate-600 font-semibold">
+                          {customerPhone ? `+91 - ${customerPhone}` : "+91 - 9118643415"}
+                        </p>
+                        <div className="flex items-center gap-2 pt-0.5">
+                          <span className="text-xs text-slate-500 font-mono">
+                            {customerEmail || "luckyshuklar@gmail.com"}
+                          </span>
+                          <span className="rounded-full bg-emerald-100 px-2 py-0.2 text-[8px] font-black text-emerald-800">
+                            Verified Email ✓
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Trustit One Membership Banner (Photo 2: one JOIN NOW) */}
+                      <div className="rounded-2xl border border-rose-100 bg-gradient-to-r from-orange-50 via-rose-50 to-amber-50 p-3.5 shadow-2xs">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-base font-black text-rose-600 tracking-tight">one</span>
+                            <span className="bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              JOIN NOW
+                            </span>
+                          </div>
+                          <span className="text-slate-400 text-xs font-bold">⌄</span>
+                        </div>
+                        <h4 className="text-xs font-black text-slate-900 mt-1.5">
+                          Unlimited free deliveries, extra discounts &amp; more!
+                        </h4>
+                        <p className="text-[10px] text-slate-500 mt-0.5">
+                          Join now to unlock exclusive Bahraich merchant benefits
+                        </p>
+                      </div>
+
+                      {/* 4 Quick Actions Grid (Photo 2: Saved Address, Payment Modes, My Refunds, Trustit Money) */}
+                      <div className="grid grid-cols-4 gap-2">
+                        {/* 1. Saved Address */}
+                        <button
+                          type="button"
+                          onClick={() => setAccountView("addresses")}
+                          className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-slate-200 bg-white shadow-2xs hover:border-orange-300 hover:bg-orange-50/30 transition text-center"
+                        >
+                          <span className="grid h-8 w-8 place-items-center rounded-xl bg-orange-50 text-orange-600 text-base mb-1">
+                            📍
+                          </span>
+                          <span className="text-[10px] font-black text-slate-900 leading-tight">Saved Address</span>
+                          <span className="text-[8.5px] text-slate-400 mt-0.5">{savedAddresses.length} saved</span>
+                        </button>
+
+                        {/* 2. Payment Modes */}
+                        <button
+                          type="button"
+                          onClick={() => setAccountView("payments")}
+                          className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-slate-200 bg-white shadow-2xs hover:border-orange-300 hover:bg-orange-50/30 transition text-center"
+                        >
+                          <span className="grid h-8 w-8 place-items-center rounded-xl bg-blue-50 text-blue-600 text-base mb-1">
+                            💳
+                          </span>
+                          <span className="text-[10px] font-black text-slate-900 leading-tight">Payment Modes</span>
+                          <span className="text-[8.5px] text-slate-400 mt-0.5">UPI / Cards</span>
+                        </button>
+
+                        {/* 3. My Refunds */}
+                        <button
+                          type="button"
+                          onClick={() => setAccountView("refunds")}
+                          className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-slate-200 bg-white shadow-2xs hover:border-orange-300 hover:bg-orange-50/30 transition text-center"
+                        >
+                          <span className="grid h-8 w-8 place-items-center rounded-xl bg-purple-50 text-purple-600 text-base mb-1">
+                            🔄
+                          </span>
+                          <span className="text-[10px] font-black text-slate-900 leading-tight">My Refunds</span>
+                          <span className="text-[8.5px] text-slate-400 mt-0.5">Source direct</span>
+                        </button>
+
+                        {/* 4. Trustit Money */}
+                        <button
+                          type="button"
+                          onClick={() => setAccountView("wallet")}
+                          className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-slate-200 bg-white shadow-2xs hover:border-orange-300 hover:bg-orange-50/30 transition text-center"
+                        >
+                          <span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-50 text-emerald-600 text-base mb-1">
+                            👛
+                          </span>
+                          <span className="text-[10px] font-black text-slate-900 leading-tight">Trustit Money</span>
+                          <span className="text-[8.5px] text-slate-400 mt-0.5">₹0 Balance</span>
+                        </button>
+                      </div>
+
+                      {/* Menu List Rows with Right Chevron (Photo 2) */}
+                      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs divide-y divide-slate-100">
+                        {/* Row 1: Past Orders */}
+                        <button
+                          type="button"
+                          onClick={() => setAccountView("past_orders")}
+                          className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 transition text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">📋</span>
+                            <div>
+                              <div className="text-xs font-black text-slate-900">Past Orders &amp; Receipts</div>
+                              <div className="text-[10px] text-slate-500">
+                                View previous orders &amp; reorder ({customerPastOrders.length})
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-black text-orange-700">
+                              {customerPastOrders.length}
+                            </span>
+                            <span className="text-slate-400 text-xs font-bold">&gt;</span>
+                          </div>
+                        </button>
+
+                        {/* Row 2: My Vouchers */}
+                        <div
+                          onClick={() => setAccountView("payments")}
+                          className="flex items-center justify-between p-3.5 hover:bg-slate-50 transition text-left cursor-pointer"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">🎟️</span>
+                            <div>
+                              <div className="text-xs font-black text-slate-900">My Vouchers &amp; Coupons</div>
+                              <div className="text-[10px] text-slate-500">Bahraich special discount codes</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black text-emerald-700">
+                              2 Active
+                            </span>
+                            <span className="text-slate-400 text-xs font-bold">&gt;</span>
+                          </div>
+                        </div>
+
+                        {/* Row 3: Help & Support */}
+                        <a
+                          href="tel:+919118863415"
+                          className="flex items-center justify-between p-3.5 hover:bg-slate-50 transition text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">📞</span>
+                            <div>
+                              <div className="text-xs font-black text-slate-900">Help &amp; Customer Support</div>
+                              <div className="text-[10px] text-slate-500">Direct call to Bahraich Admin Helpline</div>
+                            </div>
+                          </div>
+                          <span className="text-slate-400 text-xs font-bold">&gt;</span>
+                        </a>
+
+                        {/* Row 4: Account Statements */}
+                        <button
+                          type="button"
+                          onClick={() => setAccountView("past_orders")}
+                          className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 transition text-left"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">📄</span>
+                            <div>
+                              <div className="text-xs font-black text-slate-900">Account Statements</div>
+                              <div className="text-[10px] text-slate-500">Invoices &amp; order bill summaries</div>
+                            </div>
+                          </div>
+                          <span className="text-slate-400 text-xs font-bold">&gt;</span>
+                        </button>
+
+                        {/* Row 5: Sign Out */}
+                        <button
+                          type="button"
+                          onClick={handleSignOut}
+                          className="w-full flex items-center justify-between p-3.5 hover:bg-rose-50/50 transition text-left text-rose-600"
+                        >
+                          <div className="flex items-center gap-3">
+                            <span className="text-lg">🚪</span>
+                            <div>
+                              <div className="text-xs font-black text-rose-700">Sign Out</div>
+                              <div className="text-[10px] text-rose-500">Log out from this session</div>
+                            </div>
+                          </div>
+                          <span className="text-rose-400 text-xs font-bold">&gt;</span>
+                        </button>
+                      </div>
+
+                      {/* Floating Bottom Black Pill Button (Photo 2: BROWSE PAST ORDERS) */}
+                      <div className="pt-2 pb-1 flex justify-center">
+                        <button
+                          type="button"
+                          onClick={() => setAccountView("past_orders")}
+                          className="w-full max-w-xs py-3 rounded-full bg-slate-950 hover:bg-black text-white text-xs font-black tracking-wider uppercase shadow-xl flex items-center justify-center gap-2 transition active:scale-95"
+                        >
+                          <span>BROWSE PAST ORDERS</span>
+                          <span className="text-sm font-bold">&gt;</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* VIEW 2: Swiggy-Style Past Orders & Dual Rating Screen (Photo 4 Reference) */}
+                  {accountView === "past_orders" && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between px-1">
+                        <span className="text-xs font-black tracking-wider text-slate-800 uppercase">
+                          PAST ORDERS ({customerPastOrders.length})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => fetchCustomerOrders(customerId, customerPhone)}
+                          className="text-[10px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-0.5"
+                        >
+                          {isLoadingPastOrders ? "↻ Refreshing..." : "↻ Refresh"}
+                        </button>
+                      </div>
+
+                      {customerPastOrders.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center space-y-2">
+                          <span className="text-3xl">🍽️</span>
+                          <h4 className="text-xs font-extrabold text-slate-800">No Past Orders Found</h4>
+                          <p className="text-[10px] text-slate-500">
+                            Browse restaurants in Bahraich and place your first delicious food order!
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {customerPastOrders.map((ord) => {
+                            const formattedDate = new Date(ord.created_at).toLocaleDateString("en-US", {
+                              month: "long",
+                              day: "numeric",
+                              hour: "numeric",
+                              minute: "2-digit",
+                              hour12: true,
+                            });
+                            const isDelivered = ord.status === "delivered" || ord.status === "completed";
+                            const isCancelled = ord.status === "cancelled" || ord.status === "rejected";
+                            const currentFoodRating = foodRatings[ord.id] || 0;
+                            const currentDeliveryRating = deliveryRatings[ord.id] || 0;
+
+                            return (
+                              <div
+                                key={ord.id}
+                                className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-3 shadow-xs hover:border-slate-300 transition"
+                              >
+                                {/* Top Row: Thumbnail + Restaurant Info + Status Badge (Photo 4) */}
+                                <div className="flex items-start justify-between gap-2.5">
+                                  <div className="flex items-start gap-2.5 min-w-0">
+                                    <img
+                                      src={getRestaurantThumbnail(ord.businesses?.name)}
+                                      alt={ord.businesses?.name || "Restaurant"}
+                                      className="h-14 w-14 rounded-xl object-cover shrink-0 shadow-2xs border border-slate-100"
+                                    />
+                                    <div className="min-w-0">
+                                      <h4 className="text-sm font-black text-slate-900 truncate leading-snug">
+                                        {ord.businesses?.name || "Local Restaurant"}
+                                      </h4>
+                                      <p className="text-[11px] text-slate-500 truncate">
+                                        {ord.businesses?.address || "Bahraich Locality"}
+                                      </p>
+                                      <p className="text-[9.5px] font-mono font-bold text-slate-400 mt-0.5">
+                                        {formatUnifiedOrderCode(ord.id, ord.businesses?.name)}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Status Badge (Photo 4: Delivered ✓ in emerald or Cancelled ✕ in rose) */}
+                                  <div className="shrink-0 pt-0.5">
+                                    {isDelivered ? (
+                                      <div className="flex items-center gap-1 text-emerald-600 text-xs font-black">
+                                        <span>Delivered</span>
+                                        <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white text-[9px] font-black">
+                                          ✓
+                                        </span>
+                                      </div>
+                                    ) : isCancelled ? (
+                                      <div className="flex items-center gap-1 text-rose-600 text-xs font-black">
+                                        <span>Cancelled</span>
+                                        <span className="grid h-4 w-4 place-items-center rounded-full bg-rose-500 text-white text-[9px] font-black">
+                                          ✕
+                                        </span>
+                                      </div>
+                                    ) : (
+                                      <span className="rounded-md bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-black">
+                                        {ord.status}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Line Items Summary (Photo 4: 1 X Item Name) */}
+                                <div className="space-y-1 pt-1">
+                                  {(ord.hyperlocal_order_items && ord.hyperlocal_order_items.length > 0
+                                    ? ord.hyperlocal_order_items
+                                    : [{ quantity: 1, item_name: "Fresh Food Items", unit_price: ord.subtotal_amount }]
+                                  ).map((item, idx) => (
+                                    <div key={idx} className="flex items-center text-xs text-slate-700 font-medium">
+                                      <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-black mr-2 font-mono">
+                                        {item.quantity} X
+                                      </span>
+                                      <span className="truncate">{item.item_name}</span>
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <hr className="border-slate-100" />
+
+                                {/* Dual 5-Star Interactive Rating Block (Photo 4: Your Food Rating & Delivery Rating) */}
+                                <div className="grid grid-cols-2 gap-3 py-1">
+                                  {/* Food Rating */}
+                                  <div className="text-center">
+                                    <div className="text-[11px] font-bold text-slate-600 mb-1">Your Food Rating</div>
+                                    <div className="flex items-center justify-center gap-1">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                          key={star}
+                                          type="button"
+                                          onClick={() => setFoodRatings((prev) => ({ ...prev, [ord.id]: star }))}
+                                          className="text-lg leading-none transition transform hover:scale-110 active:scale-95"
+                                          title={`${star} Star Food Rating`}
+                                        >
+                                          {star <= currentFoodRating ? (
+                                            <span className="text-amber-400">★</span>
+                                          ) : (
+                                            <span className="text-slate-300">☆</span>
+                                          )}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    {currentFoodRating > 0 && (
+                                      <span className="block text-[9px] text-emerald-600 font-bold mt-0.5 animate-in fade-in">
+                                        Rated {currentFoodRating}★
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Delivery Rating */}
+                                  <div className="text-center">
+                                    <div className="text-[11px] font-bold text-slate-600 mb-1">Delivery Rating</div>
+                                    <div className="flex items-center justify-center gap-1">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                          key={star}
+                                          type="button"
+                                          onClick={() => setDeliveryRatings((prev) => ({ ...prev, [ord.id]: star }))}
+                                          className="text-lg leading-none transition transform hover:scale-110 active:scale-95"
+                                          title={`${star} Star Delivery Rating`}
+                                        >
+                                          {star <= currentDeliveryRating ? (
+                                            <span className="text-amber-400">★</span>
+                                          ) : (
+                                            <span className="text-slate-300">☆</span>
+                                          )}
+                                        </button>
+                                      ))}
+                                    </div>
+                                    {currentDeliveryRating > 0 && (
+                                      <span className="block text-[9px] text-emerald-600 font-bold mt-0.5 animate-in fade-in">
+                                        Rated {currentDeliveryRating}★
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Wide Peach/Orange Reorder Button (Photo 4: REORDER >) */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleReorder(ord)}
+                                  className="w-full py-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-600 text-xs font-black tracking-wide uppercase transition active:scale-98 flex items-center justify-center gap-1.5 shadow-2xs"
+                                >
+                                  <span>REORDER</span>
+                                  <span className="font-bold">&gt;</span>
+                                </button>
+
+                                {/* Footer: Ordered Date & Bill Total (Photo 4) */}
+                                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5 font-medium">
+                                  <span>Ordered: {formattedDate}</span>
+                                  <span>
+                                    Bill Total:{" "}
+                                    <strong className="text-slate-900 font-mono font-bold">₹{ord.total_amount}</strong>
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* VIEW 3: Saved Addresses */}
+                  {accountView === "addresses" && (
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-black text-slate-700">Saved Address Book</span>
+                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                          SAVED ADDRESSES
+                        </span>
                         <button
                           type="button"
                           onClick={() => setIsAddressModalOpen(true)}
-                          className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-0.5"
+                          className="text-xs font-black text-blue-600 hover:underline"
                         >
                           + Add New Address
                         </button>
                       </div>
 
                       {savedAddresses.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center">
+                        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center space-y-2">
+                          <span className="text-3xl">📍</span>
                           <p className="text-xs font-semibold text-slate-600">No saved addresses yet.</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            Save your Home or Work address for 1-tap checkout.
-                          </p>
                           <button
                             type="button"
                             onClick={() => setIsAddressModalOpen(true)}
-                            className="mt-2 rounded-lg bg-slate-900 px-3 py-1 text-[10px] font-bold text-white hover:bg-slate-800"
+                            className="mt-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800"
                           >
-                            + Add Home / Work Address
+                            + Add Home or Work Address
                           </button>
                         </div>
                       ) : (
-                        <div className="space-y-1.5">
+                        <div className="space-y-2">
                           {savedAddresses.map((addr) => {
                             const isDefault = addr.isDefault || selectedAddressId === addr.id;
                             const label = addr.label || addr.tag || "Home";
                             const icon = label === "Home" ? "🏠" : label === "Work" ? "🏢" : "📍";
-                            const streetText = addr.street || buildAddressString(addr.houseNo || "", addr.mohalla || "", addr.road || "", addr.pincode || "", addr.district || "Bahraich");
+                            const streetText =
+                              addr.street ||
+                              buildAddressString(
+                                addr.houseNo || "",
+                                addr.mohalla || "",
+                                addr.road || "",
+                                addr.pincode || "",
+                                addr.district || "Bahraich",
+                              );
 
                             return (
                               <div
                                 key={addr.id}
-                                className={`rounded-xl border p-2.5 transition ${
+                                className={`rounded-2xl border p-3 transition ${
                                   isDefault
                                     ? "border-orange-400 bg-orange-50/50 ring-1 ring-orange-300"
                                     : "border-slate-200 bg-white"
@@ -3168,7 +3593,7 @@ export default function CustomerSuperAppClient({
                               >
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-xs">{icon}</span>
+                                    <span>{icon}</span>
                                     <span className="text-xs font-black text-slate-900">{label}</span>
                                     {isDefault && (
                                       <span className="rounded bg-orange-100 px-1.5 py-0.2 text-[8px] font-black text-orange-800">
@@ -3198,9 +3623,7 @@ export default function CustomerSuperAppClient({
                                     </button>
                                   </div>
                                 </div>
-                                <p className="text-[11px] text-slate-600 mt-1 line-clamp-2">
-                                  {streetText}
-                                </p>
+                                <p className="text-[11px] text-slate-600 mt-1.5">{streetText}</p>
                               </div>
                             );
                           })}
@@ -3209,122 +3632,109 @@ export default function CustomerSuperAppClient({
                     </div>
                   )}
 
-                  {/* Tab 2: Past Orders & Payment Breakdown */}
-                  {profileTab === "orders" && (
-                    <div className="space-y-2.5">
+                  {/* VIEW 4: Payment Modes */}
+                  {accountView === "payments" && (
+                    <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-black text-slate-700">Past Orders &amp; Receipts</span>
-                        <button
-                          type="button"
-                          onClick={() => fetchCustomerOrders(customerId, customerPhone)}
-                          className="text-[10px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-0.5"
-                        >
-                          {isLoadingPastOrders ? "↻ Refreshing..." : "↻ Refresh"}
-                        </button>
+                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                          PAYMENT MODES
+                        </span>
+                        <span className="text-[10px] text-emerald-600 font-black">100% RBI Compliant</span>
                       </div>
+                      <div className="space-y-2">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-1 shadow-2xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">⚡</span>
+                            <div>
+                              <h5 className="text-xs font-black text-slate-900">Cashfree Instant UPI</h5>
+                              <p className="text-[10px] text-slate-500">Google Pay, PhonePe, Paytm, BHIM</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-1 shadow-2xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">💳</span>
+                            <div>
+                              <h5 className="text-xs font-black text-slate-900">Credit &amp; Debit Cards</h5>
+                              <p className="text-[10px] text-slate-500">Visa, Mastercard, RuPay, Maestro</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-1 shadow-2xs">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">💵</span>
+                            <div>
+                              <h5 className="text-xs font-black text-slate-900">Cash on Delivery (COD)</h5>
+                              <p className="text-[10px] text-slate-500">Pay cash directly to rider at doorstep upon delivery</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
-                      {customerPastOrders.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center">
-                          <p className="text-xs font-semibold text-slate-600">No past orders found.</p>
-                          <p className="text-[10px] text-slate-400 mt-0.5">
-                            Browse restaurants in Bahraich and place your first delicious order!
+                  {/* VIEW 5: My Refunds */}
+                  {accountView === "refunds" && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                          MY REFUNDS
+                        </span>
+                        <span className="text-[10px] text-slate-500">Cashfree Direct Rails</span>
+                      </div>
+                      {customerPastOrders.filter((o) => o.status === "cancelled").length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center space-y-1.5">
+                          <span className="text-3xl">🔄</span>
+                          <h5 className="text-xs font-black text-slate-800">No Pending Refunds</h5>
+                          <p className="text-[10px] text-slate-500">
+                            All your orders are either delivered or paid directly on delivery. Cancelled prepaid orders are automatically settled to your source bank account within 24-48 hours.
                           </p>
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          {customerPastOrders.map((ord) => {
-                            const isOnline = ord.payment_mode === "online_cashfree";
-                            const isPaid = ord.payment_status === "paid";
-                            const dateStr = new Date(ord.created_at).toLocaleDateString("en-IN", {
-                              day: "numeric",
-                              month: "short",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            });
-
-                            return (
+                          {customerPastOrders
+                            .filter((o) => o.status === "cancelled")
+                            .map((ord) => (
                               <div
                                 key={ord.id}
-                                className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 shadow-2xs hover:border-slate-300 transition"
+                                className="rounded-2xl border border-slate-200 bg-white p-3 space-y-1.5 shadow-2xs"
                               >
-                                <div className="flex items-start justify-between gap-2">
-                                  <div>
-                                    <h4 className="text-xs font-black text-slate-900 leading-tight">
-                                      {ord.businesses?.name || "Local Restaurant"}
-                                    </h4>
-                                    <p className="text-[9.5px] text-slate-500 font-mono mt-0.5">
-                                      {formatUnifiedOrderCode(ord.id, ord.businesses?.name)} • {dateStr}
-                                    </p>
-                                  </div>
-                                  <span
-                                    className={`rounded-md px-1.5 py-0.5 text-[8.5px] font-black shrink-0 ${
-                                      ord.status === "delivered"
-                                        ? "bg-emerald-100 text-emerald-800"
-                                        : ord.status === "picked_up"
-                                          ? "bg-purple-100 text-purple-800"
-                                          : ord.status === "merchant_accepted"
-                                            ? "bg-indigo-100 text-indigo-800"
-                                            : ord.status === "rejected" || ord.status === "cancelled"
-                                              ? "bg-rose-100 text-rose-800"
-                                              : "bg-amber-100 text-amber-800"
-                                    }`}
-                                  >
-                                    {ord.status === "delivered"
-                                      ? "Delivered ✅"
-                                      : ord.status === "picked_up"
-                                        ? "On the Way 🛵"
-                                        : ord.status === "merchant_accepted"
-                                          ? "In Kitchen 👨‍🍳"
-                                          : ord.status === "food_ready"
-                                            ? "Food Ready 🥡"
-                                            : ord.status === "cancelled"
-                                              ? (ord.cancellation_reason === "customer_refused_at_doorstep" ? "Cancelled (Refused) 🔴" : "Cancelled 🔴")
-                                              : ord.status === "placed"
-                                                ? "Placed ⏳"
-                                                : ord.status}
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-black text-slate-900">
+                                    Refund for {formatUnifiedOrderCode(ord.id, ord.businesses?.name)}
                                   </span>
+                                  <span className="text-xs font-black text-emerald-600">₹{ord.total_amount}</span>
                                 </div>
-
-                                {/* Items List */}
-                                <div className="text-[11px] text-slate-600 bg-slate-50/80 rounded-lg p-2 border border-slate-100">
-                                  {ord.hyperlocal_order_items && ord.hyperlocal_order_items.length > 0 ? (
-                                    ord.hyperlocal_order_items.map((i, idx) => (
-                                      <div key={idx} className="flex justify-between">
-                                        <span>
-                                          {i.quantity}x {i.item_name}
-                                        </span>
-                                        <span className="font-mono">₹{i.quantity * i.unit_price}</span>
-                                      </div>
-                                    ))
-                                  ) : (
-                                    <p className="italic text-slate-400">Order items summary</p>
-                                  )}
-                                </div>
-
-                                {/* Payment Breakdown & Reorder Action */}
-                                <div className="flex items-center justify-between border-t border-slate-100 pt-2">
-                                  <div>
-                                    <span className="text-xs font-black text-slate-900">₹{ord.total_amount}</span>
-                                    <p className="text-[9px] text-slate-500">
-                                      {isOnline
-                                        ? `💳 Cashfree Online (${isPaid ? "Paid ✅" : "Pending ⏳"})`
-                                        : "💵 Cash on Delivery"}
-                                    </p>
-                                  </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleReorder(ord)}
-                                    className="flex items-center gap-1 rounded-lg bg-orange-500 hover:bg-orange-600 px-3 py-1 text-[10px] font-black text-white shadow-xs transition"
-                                  >
-                                    <span>🔄</span>
-                                    <span>Reorder</span>
-                                  </button>
-                                </div>
+                                <p className="text-[10px] text-slate-500">
+                                  {ord.payment_mode === "online_cashfree"
+                                    ? "Processed to original payment account via Cashfree"
+                                    : "COD Order (Zero Amount Deducted)"}
+                                </p>
                               </div>
-                            );
-                          })}
+                            ))}
                         </div>
                       )}
+                    </div>
+                  )}
+
+                  {/* VIEW 6: Trustit Money */}
+                  {accountView === "wallet" && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
+                          TRUSTIT MONEY
+                        </span>
+                        <span className="text-[10px] text-emerald-600 font-bold">1-Tap Checkout</span>
+                      </div>
+                      <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 space-y-1 shadow-2xs">
+                        <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                          Available Balance
+                        </span>
+                        <div className="text-2xl font-black text-emerald-950 font-mono">₹0.00</div>
+                        <p className="text-[10px] text-emerald-700 pt-1">
+                          Instant cashback and wallet credits will appear here for 1-tap checkout.
+                        </p>
+                      </div>
                     </div>
                   )}
                 </div>
