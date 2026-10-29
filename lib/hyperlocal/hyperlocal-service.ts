@@ -78,13 +78,26 @@ export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
     : generateHyperlocalOrderId();
   const deliveryOtp = generateDeliveryOtp();
 
+  // Validate customer_id against public.customers table if provided
+  let validCustomerId: string | null = null;
+  if (input.customerId) {
+    const { data: custRow } = await admin
+      .from("customers")
+      .select("id")
+      .eq("id", input.customerId)
+      .maybeSingle();
+    if (custRow) {
+      validCustomerId = custRow.id;
+    }
+  }
+
   // 3. Insert order
   const { error: insertOrderError } = await admin
     .from("hyperlocal_orders")
     .insert({
       id: orderId,
       business_id: input.businessId,
-      customer_id: input.customerId || null,
+      customer_id: validCustomerId,
       customer_name: input.customerName,
       customer_phone: input.customerPhone,
       customer_address: input.customerAddress,

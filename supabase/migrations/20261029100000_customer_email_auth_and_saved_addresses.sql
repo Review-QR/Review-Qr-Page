@@ -65,3 +65,9 @@ create policy "service_role_all_addresses" on public.customer_addresses
 
 create policy "service_role_all_auth_codes" on public.customer_auth_codes
   for all using (true) with check (true);
+
+-- 5. Link hyperlocal_orders customer_id to public.customers
+alter table public.hyperlocal_orders drop constraint if exists hyperlocal_orders_customer_id_fkey;
+alter table public.hyperlocal_orders
+  add constraint hyperlocal_orders_customer_id_fkey
+  foreign key (customer_id) references public.customers(id) on delete set null;
