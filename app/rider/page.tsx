@@ -3,35 +3,79 @@
 import { useEffect, useState, useRef } from "react";
 import type { DeliveryRider, HyperlocalOrder } from "@/lib/hyperlocal/types";
 
+interface RiderScorecard {
+  todayEarnings: number;
+  todayTripsCount: number;
+  monthEarnings: number;
+  monthTripsCount: number;
+  totalDeliveries: number;
+  walletBalance: number;
+  cashInHand: number;
+  codLimit: number;
+  rating: number;
+  recentTrips: Array<{
+    id: string;
+    shopName: string;
+    amount: number;
+    billAmount: number;
+    paymentMode: string;
+    deliveredAt: string;
+  }>;
+}
+
 export default function RiderAppPage() {
   const [rider, setRider] = useState<DeliveryRider | null>(null);
+  const [scorecard, setScorecard] = useState<RiderScorecard | null>(null);
   const [activeOrder, setActiveOrder] = useState<HyperlocalOrder | null>(null);
   const [availableOrders, setAvailableOrders] = useState<HyperlocalOrder[]>([]);
   const [isOnline, setIsOnline] = useState(true);
   const [locationStatus, setLocationStatus] = useState("Acquiring GPS...");
   const [currentCoords, setCurrentCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [shiftSeconds, setShiftSeconds] = useState(0);
 
-  // Login & Registration State
-  const [loginPhone, setLoginPhone] = useState("");
-  const [loginError, setLoginError] = useState<string | null>(null);
-  const [isLoginPending, setIsLoginPending] = useState(false);
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
+  // Auth & Email OTP State
+  const [authEmail, setAuthEmail] = useState("");
+  const [authOtp, setAuthOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [resendCountdown, setResendCountdown] = useState(0);
+  const [isAuthPending, setIsAuthPending] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccessMsg, setAuthSuccessMsg] = useState<string | null>(null);
 
-  // New Registration form
-  const [regName, setRegName] = useState("");
-  const [regPhone, setRegPhone] = useState("");
-  const [regVehicleType, setRegVehicleType] = useState<"bike" | "scooter">("bike");
-  const [regVehicleNo, setRegVehicleNo] = useState("");
+  // KYC Onboarding Modal State
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
+  const [kycEmail, setKycEmail] = useState("");
+  const [kycFullName, setKycFullName] = useState("");
+  const [kycPhone, setKycPhone] = useState("");
+  const [kycProfileImage, setKycProfileImage] = useState("");
+  const [kycAddress, setKycAddress] = useState("");
+  const [kycVehicleType, setKycVehicleType] = useState<"bike" | "scooter" | "electric_bike">("bike");
+  const [kycVehicleNo, setKycVehicleNo] = useState("");
+  const [kycDlNo, setKycDlNo] = useState("");
+  const [kycBankHolder, setKycBankHolder] = useState("");
+  const [kycBankAcc, setKycBankAcc] = useState("");
+  const [kycIfsc, setKycIfsc] = useState("");
+  const [kycBankName, setKycBankName] = useState("");
+  const [kycUpi, setKycUpi] = useState("");
+  const [kycPan, setKycPan] = useState("");
+  const [isKycSubmitting, setIsKycSubmitting] = useState(false);
+  const [kycError, setKycError] = useState<string | null>(null);
 
-  // Incoming Order Modal Simulation
+  // Profile Settings Modal & Payout Modal State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
+  const [payoutLoading, setPayoutLoading] = useState(false);
+  const [payoutResult, setPayoutResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Incoming Order Modal & Radar Buzzer
   const [incomingOrder, setIncomingOrder] = useState<HyperlocalOrder | null>(null);
   const [countdown, setCountdown] = useState(30);
 
-  // OTP Handover State
+  // Doorstep Delivery OTP
   const [enteredOtp, setEnteredOtp] = useState("");
   const [otpError, setOtpError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successToast, setSuccessToast] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Audio Buzzer using Web Audio API
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -63,7 +107,7 @@ export default function RiderAppPage() {
     } catch {}
   }
 
-  // Load saved rider on mount & prime audio context on first touch/click
+  // Load saved rider on mount
   useEffect(() => {
     function primeRiderAudio() {
       try {
@@ -91,12 +135,31 @@ export default function RiderAppPage() {
     };
   }, []);
 
+  // Duty shift seconds timer
+  useEffect(() => {
+    if (!rider || !isOnline) return;
+    const shiftInterval = setInterval(() => {
+      setShiftSeconds((s) => s + 1);
+    }, 1000);
+    return () => clearInterval(shiftInterval);
+  }, [rider, isOnline]);
+
+  // Resend OTP Countdown
+  useEffect(() => {
+    if (resendCountdown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCountdown((c) => c - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCountdown]);
+
   async function loadRiderById(id: string) {
     try {
       const res = await fetch(`/api/hyperlocal/rider?riderId=${encodeURIComponent(id)}`);
       const data = await res.json();
       if (data.rider) {
         setRider(data.rider);
+        setScorecard(data.scorecard || null);
         setIsOnline(data.rider.is_online);
         localStorage.setItem("trustit_rider_id", data.rider.id);
       } else {
@@ -106,7 +169,7 @@ export default function RiderAppPage() {
     } catch {}
   }
 
-  // Fetch Rider Profile & Orders
+  // Fetch Rider Profile & Orders Polling
   async function fetchRiderData() {
     if (!rider) return;
     try {
@@ -115,6 +178,9 @@ export default function RiderAppPage() {
       if (data.rider) {
         setRider(data.rider);
         setIsOnline(data.rider.is_online);
+      }
+      if (data.scorecard) {
+        setScorecard(data.scorecard);
       }
       if (data.activeOrder) {
         setActiveOrder(data.activeOrder);
@@ -209,64 +275,127 @@ export default function RiderAppPage() {
         }),
       });
       fetchRiderData();
-    } catch {
-      // Non-blocking catch
-    }
+    } catch {}
   }
 
-  // Rider Login
-  async function handleRiderLogin(targetPhone?: string) {
-    const phoneToUse = targetPhone || loginPhone;
-    const clean = phoneToUse.replace(/\D/g, "").slice(-10);
-    if (clean.length < 10) {
-      setLoginError("Please enter valid 10-digit mobile number.");
+  // ── SEND EMAIL OTP ──
+  async function handleSendEmailOtp() {
+    const clean = authEmail.trim().toLowerCase();
+    if (!clean.includes("@") || !clean.includes(".")) {
+      setAuthError("Please enter a valid email address.");
       return;
     }
-    setIsLoginPending(true);
-    setLoginError(null);
+    setIsAuthPending(true);
+    setAuthError(null);
+    setAuthSuccessMsg(null);
 
     try {
       const res = await fetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ action: "login", phone: clean }),
+        body: JSON.stringify({ action: "send_otp", email: clean }),
       });
       const data = await res.json();
-      if (data.success && data.rider) {
-        setRider(data.rider);
-        setIsOnline(data.rider.is_online);
-        localStorage.setItem("trustit_rider_id", data.rider.id);
-        setLoginError(null);
+      if (data.success) {
+        setOtpSent(true);
+        setResendCountdown(30);
+        setAuthSuccessMsg(data.message || `Verification code sent to ${clean}`);
       } else {
-        setLoginError(data.error || "Rider not found.");
+        setAuthError(data.message || "Failed to send verification code.");
       }
     } catch {
-      setLoginError("Failed to connect to server.");
+      setAuthError("Network error. Please check your connection.");
     } finally {
-      setIsLoginPending(false);
+      setIsAuthPending(false);
     }
   }
 
-  // Rider Registration
-  async function handleRiderRegister() {
-    const clean = regPhone.replace(/\D/g, "").slice(-10);
-    if (!regName.trim() || clean.length < 10) {
-      setLoginError("Please enter Name and 10-digit phone number.");
+  // ── VERIFY EMAIL OTP ──
+  async function handleVerifyEmailOtp() {
+    const cleanOtp = authOtp.trim();
+    if (cleanOtp.length !== 6) {
+      setAuthError("Please enter the 6-digit verification code sent to your email.");
       return;
     }
-    setIsLoginPending(true);
-    setLoginError(null);
+    setIsAuthPending(true);
+    setAuthError(null);
 
     try {
       const res = await fetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          action: "register",
-          fullName: regName,
-          phone: clean,
-          vehicleType: regVehicleType,
-          vehicleNumber: regVehicleNo || "UP-40-TEMP",
+          action: "verify_otp",
+          email: authEmail.trim().toLowerCase(),
+          otp: cleanOtp,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (data.isNewRider) {
+          // Open KYC Onboarding modal with prefilled email
+          setKycEmail(authEmail.trim().toLowerCase());
+          setIsKycModalOpen(true);
+        } else if (data.rider) {
+          setRider(data.rider);
+          setIsOnline(data.rider.is_online);
+          localStorage.setItem("trustit_rider_id", data.rider.id);
+          setToastMessage(`Welcome back, ${data.rider.full_name}!`);
+        }
+      } else {
+        setAuthError(data.message || "Invalid or expired verification code.");
+      }
+    } catch {
+      setAuthError("Failed to verify code.");
+    } finally {
+      setIsAuthPending(false);
+    }
+  }
+
+  // ── SUBMIT KYC REGISTRATION ──
+  async function handleSubmitKyc() {
+    if (!kycFullName.trim()) {
+      setKycError("Full Name is required.");
+      return;
+    }
+    if (kycPhone.replace(/\D/g, "").length < 10) {
+      setKycError("A valid 10-digit mobile number is required.");
+      return;
+    }
+    if (!kycAddress.trim()) {
+      setKycError("Local residential address is required.");
+      return;
+    }
+    if (!kycVehicleNo.trim()) {
+      setKycError("Vehicle registration number is required.");
+      return;
+    }
+
+    setIsKycSubmitting(true);
+    setKycError(null);
+
+    try {
+      const res = await fetch("/api/hyperlocal/rider", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "register_kyc",
+          email: kycEmail,
+          fullName: kycFullName,
+          phone: kycPhone,
+          profileImageUrl: kycProfileImage || null,
+          residentialAddress: kycAddress,
+          city: "Bahraich",
+          pincode: "271801",
+          vehicleType: kycVehicleType,
+          vehicleNumber: kycVehicleNo.toUpperCase(),
+          drivingLicenseNumber: kycDlNo || null,
+          bankAccountHolderName: kycBankHolder || kycFullName,
+          bankAccountNumber: kycBankAcc || null,
+          bankIfscCode: kycIfsc || null,
+          bankName: kycBankName || null,
+          upiId: kycUpi || null,
+          panNumber: kycPan || null,
         }),
       });
       const data = await res.json();
@@ -274,14 +403,88 @@ export default function RiderAppPage() {
         setRider(data.rider);
         setIsOnline(true);
         localStorage.setItem("trustit_rider_id", data.rider.id);
+        setIsKycModalOpen(false);
+        setToastMessage("Partner Profile & KYC Verified! You are now ONLINE.");
       } else {
-        setLoginError(data.error || "Registration failed.");
+        setKycError(data.error || "KYC Registration failed.");
       }
     } catch {
-      setLoginError("Failed to register rider.");
+      setKycError("Failed to submit KYC data.");
     } finally {
-      setIsLoginPending(false);
+      setIsKycSubmitting(false);
     }
+  }
+
+  // ── QUICK FLEET SWITCHER (FOR INSTANT TESTING) ──
+  async function handleQuickLogin(phone: string) {
+    setIsAuthPending(true);
+    setAuthError(null);
+    try {
+      const res = await fetch("/api/hyperlocal/rider", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "login", phone }),
+      });
+      const data = await res.json();
+      if (data.success && data.rider) {
+        setRider(data.rider);
+        setIsOnline(data.rider.is_online);
+        localStorage.setItem("trustit_rider_id", data.rider.id);
+        setToastMessage(`Switched to ${data.rider.full_name}`);
+      }
+    } catch {
+      setAuthError("Quick login failed.");
+    } finally {
+      setIsAuthPending(false);
+    }
+  }
+
+  // ── INSTANT UPI PAYOUT REQUEST ──
+  async function handleInstantPayout() {
+    if (!rider) return;
+    setPayoutLoading(true);
+    setPayoutResult(null);
+
+    try {
+      const res = await fetch("/api/hyperlocal/rider", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "request_payout",
+          riderId: rider.id,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPayoutResult({
+          success: true,
+          message: data.message || `₹${data.withdrawnAmount} transferred to ${data.destination}!`,
+        });
+        fetchRiderData();
+      } else {
+        setPayoutResult({
+          success: false,
+          message: data.error || "Payout request failed.",
+        });
+      }
+    } catch {
+      setPayoutResult({ success: false, message: "Network error processing payout." });
+    } finally {
+      setPayoutLoading(false);
+    }
+  }
+
+  // Profile image upload handler (reads image as base64)
+  function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setKycProfileImage(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
   }
 
   function handleRiderLogout() {
@@ -289,6 +492,9 @@ export default function RiderAppPage() {
     setRider(null);
     setActiveOrder(null);
     setIncomingOrder(null);
+    setScorecard(null);
+    setOtpSent(false);
+    setAuthOtp("");
   }
 
   async function handleToggleOnline() {
@@ -324,7 +530,7 @@ export default function RiderAppPage() {
       if (data.success) {
         setActiveOrder(incomingOrder);
         setIncomingOrder(null);
-        setSuccessToast("Order Accepted! Proceed to Restaurant.");
+        setToastMessage("Order Accepted! Proceed to Restaurant.");
       }
     } finally {
       setIsSubmitting(false);
@@ -345,7 +551,7 @@ export default function RiderAppPage() {
         }),
       });
       setActiveOrder((prev) => (prev ? { ...prev, status: "picked_up" } : null));
-      setSuccessToast("Food Picked Up! Navigate to Customer.");
+      setToastMessage("Food Picked Up! Navigate to Customer.");
     } finally {
       setIsSubmitting(false);
     }
@@ -374,7 +580,7 @@ export default function RiderAppPage() {
       if (data.success) {
         setEnteredOtp("");
         setActiveOrder(null);
-        setSuccessToast(`Delivered! Earned ₹${data.earnedPayout}`);
+        setToastMessage(`Delivered! Earned ₹${data.earnedPayout}`);
         fetchRiderData();
       } else {
         setOtpError(data.error || "Invalid OTP code.");
@@ -384,193 +590,389 @@ export default function RiderAppPage() {
     }
   }
 
-  // ── RIDER LOGIN SCREEN (Clean, native 11-13px scale) ──
+  // Format duty seconds into HH:MM:SS
+  function formatShiftTime(secs: number) {
+    const hrs = Math.floor(secs / 3600);
+    const mins = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    return `${hrs.toString().padStart(2, "0")}:${mins.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  }
+
+  // ═════════════════════════════════════════════════════════════════
+  // ── SCREEN 1: RIDER EMAIL OTP AUTH & FLEET LOGIN ──
+  // ═════════════════════════════════════════════════════════════════
   if (!rider) {
     return (
       <div className="min-h-screen bg-slate-950 text-slate-100 px-3.5 py-6 max-w-sm mx-auto flex flex-col justify-center font-sans">
-        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-xl">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-2xl space-y-4">
+          {/* Header Branding */}
           <div className="text-center">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-tr from-amber-500 to-orange-500 text-lg mx-auto shadow-md">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 text-2xl mx-auto shadow-lg shadow-orange-500/20">
               🛵
             </span>
-            <h1 className="mt-2 text-sm font-bold text-white tracking-tight">Trustit Rider Partner</h1>
-            <p className="text-[10px] text-slate-400">Bahraich Hyperlocal Delivery Fleet</p>
+            <h1 className="mt-2 text-base font-black text-white tracking-tight">Trustit Delivery Partner</h1>
+            <p className="text-[11px] text-slate-400">Bahraich Hyperlocal Pro Fleet Network</p>
           </div>
 
-          <div className="mt-4 flex rounded-xl bg-slate-800 p-0.5 text-[11px] font-semibold">
-            <button
-              onClick={() => {
-                setIsRegisterMode(false);
-                setLoginError(null);
-              }}
-              className={`flex-1 rounded-lg py-1.5 text-center transition ${
-                !isRegisterMode ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400"
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              onClick={() => {
-                setIsRegisterMode(true);
-                setLoginError(null);
-              }}
-              className={`flex-1 rounded-lg py-1.5 text-center transition ${
-                isRegisterMode ? "bg-amber-500 text-slate-950 font-bold" : "text-slate-400"
-              }`}
-            >
-              New Partner
-            </button>
-          </div>
-
-          {loginError && (
-            <div className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-2 text-[11px] text-rose-300">
-              {loginError}
+          {/* Email OTP Auth Box */}
+          <div className="rounded-xl bg-slate-850 p-3.5 border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-amber-400 uppercase tracking-wide">
+                {!otpSent ? "Step 1: Enter Partner Email" : "Step 2: Enter 6-Digit Code"}
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">Gmail SMTP Live</span>
             </div>
-          )}
 
-          {!isRegisterMode ? (
-            <div className="mt-4 space-y-3">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-1">Mobile Number</label>
-                <div className="flex rounded-xl border border-slate-700 bg-slate-800/90 overflow-hidden text-xs">
-                  <span className="px-2.5 py-2 text-slate-400 bg-slate-850 font-mono">+91</span>
+            {!otpSent ? (
+              <div className="space-y-2.5">
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    Registered Email ID
+                  </label>
                   <input
-                    type="tel"
-                    placeholder="e.g. 9415011111"
-                    value={loginPhone}
-                    onChange={(e) => setLoginPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    className="w-full bg-transparent px-2.5 py-2 text-xs text-white focus:outline-none font-mono"
+                    type="email"
+                    placeholder="e.g. rahul.rider@gmail.com"
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white placeholder-slate-500 focus:border-amber-400 focus:outline-none font-mono"
                   />
                 </div>
+
+                {authError && (
+                  <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-2 text-[11px] text-rose-300">
+                    {authError}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  disabled={isAuthPending || !authEmail.includes("@")}
+                  onClick={handleSendEmailOtp}
+                  className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-2.5 text-xs font-bold text-slate-950 shadow-md hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 transition"
+                >
+                  {isAuthPending ? "Sending OTP Code..." : "Send Verification Code →"}
+                </button>
               </div>
-
-              {/* Quick Select Buttons for Test Fleet */}
-              <div>
-                <span className="block text-[10px] font-medium text-slate-400 mb-1">
-                  Quick 1-Tap Login (Bahraich Fleet):
-                </span>
-                <div className="space-y-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginPhone("9415011111");
-                      handleRiderLogin("9415011111");
-                    }}
-                    className="w-full flex items-center justify-between rounded-xl border border-slate-750 bg-slate-800/70 px-2.5 py-1.5 text-[11px] hover:border-amber-400 transition"
-                  >
-                    <span className="font-semibold text-white">Rahul Verma</span>
-                    <span className="text-[10px] text-amber-400">UP-40-AB-1234 · Login →</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setLoginPhone("9415022222");
-                      handleRiderLogin("9415022222");
-                    }}
-                    className="w-full flex items-center justify-between rounded-xl border border-slate-750 bg-slate-800/70 px-2.5 py-1.5 text-[11px] hover:border-amber-400 transition"
-                  >
-                    <span className="font-semibold text-white">Amit Shukla</span>
-                    <span className="text-[10px] text-amber-400">UP-40-XY-5678 · Login →</span>
-                  </button>
+            ) : (
+              <div className="space-y-2.5">
+                <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/20 p-2 text-[10px] text-emerald-300">
+                  {authSuccessMsg || `Code delivered to ${authEmail}`}
                 </div>
-              </div>
 
-              <button
-                type="button"
-                disabled={isLoginPending || loginPhone.length < 10}
-                onClick={() => handleRiderLogin()}
-                className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-2.5 text-xs font-bold text-slate-950 shadow-md hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 transition"
-              >
-                {isLoginPending ? "Signing in..." : "Sign In & Go Online"}
-              </button>
-            </div>
-          ) : (
-            <div className="mt-3.5 space-y-2.5">
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Full Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Mohd Rashid"
-                  value={regName}
-                  onChange={(e) => setRegName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Mobile Number</label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 9876543210"
-                  value={regPhone}
-                  onChange={(e) => setRegPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="w-full rounded-xl border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs text-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Vehicle</label>
-                  <select
-                    value={regVehicleType}
-                    onChange={(e) => setRegVehicleType(e.target.value as "bike" | "scooter")}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-white"
-                  >
-                    <option value="bike">Bike</option>
-                    <option value="scooter">Scooter</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] font-semibold text-slate-300 mb-0.5">Vehicle No.</label>
+                  <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    6-Digit Verification Code
+                  </label>
                   <input
                     type="text"
-                    placeholder="UP-40-XX-0000"
-                    value={regVehicleNo}
-                    onChange={(e) => setRegVehicleNo(e.target.value.toUpperCase())}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-800 px-2 py-1.5 text-xs text-white font-mono"
+                    maxLength={6}
+                    placeholder="• • • • • •"
+                    value={authOtp}
+                    onChange={(e) => setAuthOtp(e.target.value.replace(/\D/g, ""))}
+                    className="w-full rounded-xl border border-amber-500/60 bg-slate-900 py-2 text-center text-lg font-black tracking-widest text-amber-300 focus:outline-none font-mono"
                   />
                 </div>
+
+                {authError && (
+                  <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-2 text-[11px] text-rose-300">
+                    {authError}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  disabled={isAuthPending || authOtp.length !== 6}
+                  onClick={handleVerifyEmailOtp}
+                  className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2.5 text-xs font-bold text-slate-950 shadow-md hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50 transition"
+                >
+                  {isAuthPending ? "Verifying..." : "Verify & Access Dashboard →"}
+                </button>
+
+                <div className="flex items-center justify-between pt-1 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setAuthOtp("");
+                      setAuthError(null);
+                    }}
+                    className="text-slate-400 hover:text-white"
+                  >
+                    ← Change Email
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={resendCountdown > 0 || isAuthPending}
+                    onClick={handleSendEmailOtp}
+                    className="text-amber-400 hover:underline disabled:text-slate-500"
+                  >
+                    {resendCountdown > 0 ? `Resend in ${resendCountdown}s` : "Resend Code"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Quick 1-Tap Fleet Switcher for Testing */}
+          <div>
+            <span className="block text-[10px] font-bold uppercase text-slate-400 mb-1.5 tracking-wider">
+              Quick 1-Tap Test Fleet (Bahraich Fleet):
+            </span>
+            <div className="space-y-1.5">
+              <button
+                type="button"
+                onClick={() => handleQuickLogin("9415011111")}
+                className="w-full flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/80 px-3 py-2 text-[11px] hover:border-amber-400 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-6 w-6 rounded-full bg-amber-500/20 text-amber-300 grid place-items-center text-xs">
+                    🏍️
+                  </span>
+                  <div className="text-left">
+                    <span className="font-bold text-white block">Rahul Verma</span>
+                    <span className="text-[10px] text-slate-400 font-mono">UP-40-AB-1234 · Star: 4.9</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-amber-400">1-Tap Login →</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickLogin("9415022222")}
+                className="w-full flex items-center justify-between rounded-xl border border-slate-800 bg-slate-800/80 px-3 py-2 text-[11px] hover:border-amber-400 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="h-6 w-6 rounded-full bg-emerald-500/20 text-emerald-300 grid place-items-center text-xs">
+                    🛵
+                  </span>
+                  <div className="text-left">
+                    <span className="font-bold text-white block">Amit Shukla</span>
+                    <span className="text-[10px] text-slate-400 font-mono">UP-40-XY-5678 · Star: 4.8</span>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-400">1-Tap Login →</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ═════════════════════════════════════════════════════════════════ */}
+        {/* ── KYC ONBOARDING MODAL (FOR NEW RIDERS) ── */}
+        {/* ═════════════════════════════════════════════════════════════════ */}
+        {isKycModalOpen && (
+          <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-center justify-center p-3 overflow-y-auto">
+            <div className="w-full max-w-sm rounded-2xl border border-amber-400/60 bg-slate-900 p-4 shadow-2xl space-y-3.5 my-auto max-h-[92vh] overflow-y-auto">
+              <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                <div>
+                  <h2 className="text-sm font-black text-white">Rider KYC Registration</h2>
+                  <p className="text-[10px] text-amber-400">Bahraich Delivery Partner Fleet</p>
+                </div>
+                <button
+                  onClick={() => setIsKycModalOpen(false)}
+                  className="h-6 w-6 rounded-full bg-slate-800 grid place-items-center text-xs text-slate-400 hover:text-white"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {kycError && (
+                <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-2 text-[11px] text-rose-300">
+                  {kycError}
+                </div>
+              )}
+
+              {/* Profile Photo Upload */}
+              <div className="flex items-center gap-3 p-2.5 rounded-xl bg-slate-850 border border-slate-800">
+                <div className="h-12 w-12 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden flex items-center justify-center shrink-0">
+                  {kycProfileImage ? (
+                    <img src={kycProfileImage} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="text-xl">📸</span>
+                  )}
+                </div>
+                <div className="text-left text-[11px] flex-1">
+                  <span className="font-bold text-white block">Profile Selfie / Photo</span>
+                  <label className="mt-1 inline-block cursor-pointer rounded-lg bg-amber-500 px-2.5 py-1 text-[10px] font-bold text-slate-950 hover:bg-amber-400">
+                    Upload Photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Personal Details */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+                  1. Personal & Contact Info
+                </span>
+                <input
+                  type="text"
+                  placeholder="Full Legal Name *"
+                  value={kycFullName}
+                  onChange={(e) => setKycFullName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-white"
+                />
+                <input
+                  type="tel"
+                  placeholder="10-Digit Mobile Number *"
+                  value={kycPhone}
+                  onChange={(e) => setKycPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-white font-mono"
+                />
+                <input
+                  type="text"
+                  placeholder="Residential Address (e.g. Digahia, Bahraich) *"
+                  value={kycAddress}
+                  onChange={(e) => setKycAddress(e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-white"
+                />
+              </div>
+
+              {/* Vehicle & Driving Details */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+                  2. Vehicle & License
+                </span>
+                <div className="grid grid-cols-2 gap-2">
+                  <select
+                    value={kycVehicleType}
+                    onChange={(e) => setKycVehicleType(e.target.value as any)}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2 py-1.5 text-xs text-white"
+                  >
+                    <option value="bike">Motorcycle / Bike</option>
+                    <option value="scooter">Scooter</option>
+                    <option value="electric_bike">EV Bike / Scooter</option>
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Vehicle No. (UP-40-XX-0000) *"
+                    value={kycVehicleNo}
+                    onChange={(e) => setKycVehicleNo(e.target.value.toUpperCase())}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2 py-1.5 text-xs text-white font-mono"
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Driving License Number (DL)"
+                  value={kycDlNo}
+                  onChange={(e) => setKycDlNo(e.target.value.toUpperCase())}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-white font-mono"
+                />
+              </div>
+
+              {/* Bank & Settlement Details */}
+              <div className="space-y-2">
+                <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+                  3. Bank & Daily UPI Payouts
+                </span>
+                <input
+                  type="text"
+                  placeholder="Bank Account Holder Name"
+                  value={kycBankHolder}
+                  onChange={(e) => setKycBankHolder(e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-white"
+                />
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Account Number"
+                    value={kycBankAcc}
+                    onChange={(e) => setKycBankAcc(e.target.value)}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2 py-1.5 text-xs text-white font-mono"
+                  />
+                  <input
+                    type="text"
+                    placeholder="IFSC Code (e.g. SBIN0001234)"
+                    value={kycIfsc}
+                    onChange={(e) => setKycIfsc(e.target.value.toUpperCase())}
+                    className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2 py-1.5 text-xs text-white font-mono"
+                  />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Bank Name (e.g. State Bank of India)"
+                  value={kycBankName}
+                  onChange={(e) => setKycBankName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-white"
+                />
+                <input
+                  type="text"
+                  placeholder="Instant UPI ID (e.g. 9415011111@paytm)"
+                  value={kycUpi}
+                  onChange={(e) => setKycUpi(e.target.value.toLowerCase())}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-emerald-400 font-mono"
+                />
+                <input
+                  type="text"
+                  placeholder="PAN Card (Optional for TDS)"
+                  value={kycPan}
+                  onChange={(e) => setKycPan(e.target.value.toUpperCase())}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-850 px-2.5 py-1.5 text-xs text-white font-mono"
+                />
               </div>
 
               <button
                 type="button"
-                disabled={isLoginPending}
-                onClick={handleRiderRegister}
-                className="w-full mt-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2.5 text-xs font-bold text-slate-950 shadow-md transition"
+                disabled={isKycSubmitting}
+                onClick={handleSubmitKyc}
+                className="w-full rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 py-2.5 text-xs font-bold text-slate-950 shadow-md hover:from-amber-400 hover:to-orange-400 disabled:opacity-50 transition"
               >
-                {isLoginPending ? "Registering..." : "Register As Partner"}
+                {isKycSubmitting ? "Submitting KYC..." : "Submit KYC & Go Online 🟢"}
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
 
-  // ── RIDER DASHBOARD (Refined Native Scale: 11-13px fonts, slim controls) ──
+  // ═════════════════════════════════════════════════════════════════
+  // ── SCREEN 2: RIDER PRO DASHBOARD (COMPLETE ECOSYSTEM) ──
+  // ═════════════════════════════════════════════════════════════════
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 px-3.5 py-3 max-w-sm mx-auto flex flex-col justify-between font-sans">
       <div className="space-y-3">
-        {/* Top Header: Slim 44px with compact iOS-style toggle */}
+        {/* Top Header: Rider Profile Bar */}
         <div className="flex items-center justify-between pb-2.5 border-b border-slate-800/90">
-          <div className="flex items-center gap-2">
-            <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-800 text-sm">
-              🛵
-            </span>
+          <div className="flex items-center gap-2.5">
+            {/* Avatar */}
+            <div className="relative">
+              <div className="h-9 w-9 rounded-xl bg-slate-800 border border-slate-700 overflow-hidden grid place-items-center">
+                {rider.profile_image_url ? (
+                  <img src={rider.profile_image_url} alt={rider.full_name} className="h-full w-full object-cover" />
+                ) : (
+                  <span className="text-base">🛵</span>
+                )}
+              </div>
+              <span
+                className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-slate-950 ${
+                  isOnline ? "bg-emerald-500" : "bg-slate-500"
+                }`}
+              />
+            </div>
+
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-bold text-white">{rider.full_name}</span>
+                <span className="text-xs font-black text-white">{rider.full_name}</span>
                 <span className="rounded-full bg-amber-400 px-1.5 py-0.2 text-[9px] font-bold text-slate-950">
-                  ★ {rider.rating.toFixed(1)}
+                  ★ {Number(rider.rating || 5.0).toFixed(1)}
                 </span>
               </div>
-              <p className="text-[10px] text-slate-400 font-mono leading-none mt-0.5">{rider.vehicle_number}</p>
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono leading-none mt-0.5">
+                <span>{rider.vehicle_number}</span>
+                <span>•</span>
+                <span className="text-emerald-400 font-semibold">KYC Verified ✓</span>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Slim iOS-style Duty Toggle (Height 26px, Width 54px) */}
+          <div className="flex items-center gap-1.5">
+            {/* Duty Online/Offline Toggle */}
             <button
               type="button"
               onClick={handleToggleOnline}
@@ -593,6 +995,17 @@ export default function RiderAppPage() {
               </span>
             </button>
 
+            {/* Profile / Bank Settings */}
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(true)}
+              title="Profile & Bank Settings"
+              className="grid h-6 w-6 place-items-center rounded-lg bg-slate-800 text-[11px] text-slate-300 hover:text-white"
+            >
+              ⚙️
+            </button>
+
+            {/* Logout */}
             <button
               type="button"
               onClick={handleRiderLogout}
@@ -604,7 +1017,7 @@ export default function RiderAppPage() {
           </div>
         </div>
 
-        {/* GPS Live Status Bar (Slim 26px) */}
+        {/* Live GPS & Shift Timer Bar */}
         <div className="flex items-center justify-between rounded-xl bg-slate-900 px-2.5 py-1.5 border border-slate-800 text-[10px]">
           <div className="flex items-center gap-1.5">
             <span className="relative flex h-2 w-2">
@@ -613,28 +1026,117 @@ export default function RiderAppPage() {
             </span>
             <span className="text-slate-300 font-mono">GPS: {locationStatus}</span>
           </div>
-          <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
-            Bahraich Fleet
-          </span>
-        </div>
 
-        {/* Compact 3-Column Metrics Row (Height 42px) */}
-        <div className="grid grid-cols-3 divide-x divide-slate-800 rounded-xl bg-slate-900 border border-slate-800/80 py-2 text-center">
-          <div>
-            <span className="text-[9px] uppercase font-bold text-slate-400 block leading-tight">Orders</span>
-            <span className="text-xs font-black text-white">{availableOrders.length}</span>
-          </div>
-          <div>
-            <span className="text-[9px] uppercase font-bold text-slate-400 block leading-tight">Earned</span>
-            <span className="text-xs font-black text-emerald-400">₹{rider.wallet_balance}</span>
-          </div>
-          <div>
-            <span className="text-[9px] uppercase font-bold text-slate-400 block leading-tight">COD Cash</span>
-            <span className="text-xs font-black text-amber-400">₹{rider.cash_in_hand}</span>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 font-mono">Duty: {formatShiftTime(shiftSeconds)}</span>
+            <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[9px] font-bold text-amber-300">
+              Bahraich Zone
+            </span>
           </div>
         </div>
 
-        {/* Active Order Card or Clean Radar Waiting */}
+        {/* ── 4-CARD FINANCIAL SCORECARD ── */}
+        <div className="grid grid-cols-2 gap-2">
+          {/* Card 1: Today's Earnings */}
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-2.5">
+            <div className="flex justify-between items-start">
+              <span className="text-[10px] font-bold uppercase text-slate-400">Today's Earned</span>
+              <span className="text-xs">💰</span>
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-base font-black text-emerald-400">
+                ₹{scorecard?.todayEarnings ?? 0}
+              </span>
+              <span className="text-[10px] text-slate-400">
+                ({scorecard?.todayTripsCount ?? 0} trips)
+              </span>
+            </div>
+          </div>
+
+          {/* Card 2: This Month's Earnings */}
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-2.5">
+            <div className="flex justify-between items-start">
+              <span className="text-[10px] font-bold uppercase text-slate-400">This Month</span>
+              <span className="text-xs">📈</span>
+            </div>
+            <div className="mt-1 flex items-baseline gap-1.5">
+              <span className="text-base font-black text-amber-400">
+                ₹{scorecard?.monthEarnings ?? Number(rider.total_earnings || 0)}
+              </span>
+              <span className="text-[10px] text-slate-400">
+                ({scorecard?.monthTripsCount ?? Number(rider.total_deliveries_count || 0)} orders)
+              </span>
+            </div>
+          </div>
+
+          {/* Card 3: COD Cash in Hand (With Limit Alert) */}
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-2.5">
+            <div className="flex justify-between items-start">
+              <span className="text-[10px] font-bold uppercase text-slate-400">COD Cash in Hand</span>
+              <span className="text-xs">💵</span>
+            </div>
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className="text-base font-black text-white">
+                ₹{scorecard?.cashInHand ?? Number(rider.cash_in_hand || 0)}
+              </span>
+              <span className="text-[9px] text-slate-400">Limit: ₹2,000</span>
+            </div>
+            <div className="mt-1.5 w-full bg-slate-800 rounded-full h-1 overflow-hidden">
+              <div
+                className={`h-full ${
+                  (scorecard?.cashInHand ?? Number(rider.cash_in_hand || 0)) > 1500
+                    ? "bg-rose-500"
+                    : "bg-amber-400"
+                }`}
+                style={{
+                  width: `${Math.min(
+                    100,
+                    (((scorecard?.cashInHand ?? Number(rider.cash_in_hand || 0)) / 2000) * 100),
+                  )}%`,
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Card 4: Total Deliveries Count */}
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-2.5">
+            <div className="flex justify-between items-start">
+              <span className="text-[10px] font-bold uppercase text-slate-400">All-Time Deliveries</span>
+              <span className="text-xs">📦</span>
+            </div>
+            <div className="mt-1 flex items-baseline gap-1">
+              <span className="text-base font-black text-indigo-400">
+                {scorecard?.totalDeliveries ?? Number(rider.total_deliveries_count || 0)}
+              </span>
+              <span className="text-[10px] text-slate-400">completed</span>
+            </div>
+          </div>
+        </div>
+
+        {/* ── WALLET & INSTANT UPI PAYOUT STRIP ── */}
+        <div className="rounded-xl border border-slate-800 bg-gradient-to-r from-slate-900 to-slate-850 p-2.5 flex items-center justify-between">
+          <div>
+            <span className="text-[9px] uppercase font-bold text-slate-400 block">Available Wallet Balance</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-sm font-black text-emerald-400">
+                ₹{scorecard?.walletBalance ?? Number(rider.wallet_balance || 0)}
+              </span>
+              <span className="text-[10px] text-slate-400 font-mono">
+                {rider.upi_id || "Direct UPI"}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsPayoutModalOpen(true)}
+            className="rounded-lg bg-emerald-500 px-3 py-1.5 text-[10px] font-bold text-slate-950 hover:bg-emerald-400 shadow-md transition"
+          >
+            ⚡ Instant UPI Payout
+          </button>
+        </div>
+
+        {/* ── ACTIVE ORDER OR RADAR SCANNER ── */}
         {activeOrder ? (
           <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-slate-900 to-indigo-950/60 p-3.5 space-y-3 shadow-lg">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
@@ -719,7 +1221,7 @@ export default function RiderAppPage() {
               </div>
             )}
 
-            {/* Action State: 1. Pickup from Shop vs 2. OTP Delivery Handover */}
+            {/* Action State: 1. Pickup vs 2. Customer OTP Delivery */}
             {activeOrder.status === "rider_assigned" ? (
               <div className="space-y-2">
                 <div className="rounded-xl bg-blue-500/10 border border-blue-500/30 p-2 text-center text-[11px] text-blue-300 font-medium">
@@ -746,7 +1248,7 @@ export default function RiderAppPage() {
                     Step 2: Ask customer for 4-Digit Delivery OTP
                   </span>
                   <p className="text-[9px] text-slate-400">
-                    Shown in customer's Trustit app under "My Bookings"
+                    Shown in customer's Trustit app under "My Orders"
                   </p>
                 </div>
                 <div className="flex gap-2">
@@ -772,85 +1274,253 @@ export default function RiderAppPage() {
             )}
           </div>
         ) : (
-          /* Clean Radar Waiting Box */
-          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-5 text-center space-y-1.5">
+          /* Radar Waiting Card */
+          <div className="rounded-2xl border border-slate-800/80 bg-slate-900/60 p-4 text-center space-y-1.5">
             <div className="relative mx-auto flex h-9 w-9 items-center justify-center rounded-full bg-slate-800">
-              <span className="text-base">🛵</span>
+              <span className="text-base">📡</span>
               {isOnline && (
                 <span className="absolute -inset-1 rounded-full border border-emerald-500/40 animate-ping" />
               )}
             </div>
             <p className="text-xs font-bold text-slate-200">
-              {isOnline ? "Awaiting new orders..." : "You are currently OFF DUTY"}
+              {isOnline ? "Proximity Radar Active (Ring 1 → Ring 3)" : "You are currently OFF DUTY"}
             </p>
             <p className="text-[10px] text-slate-400 max-w-xs mx-auto">
               {isOnline
-                ? "Radar active in Bahraich. When a restaurant prepares an order, loud buzzer will ring."
-                : "Toggle switch to ON to start receiving food and grocery orders."}
+                ? "Listening for orders nearest to your GPS position. Loud siren buzzer will ring when assigned."
+                : "Toggle duty switch to ON to start receiving food and grocery orders in Bahraich."}
             </p>
           </div>
         )}
+
+        {/* ── RECENT TRIP HISTORY ── */}
+        {scorecard?.recentTrips && scorecard.recentTrips.length > 0 && (
+          <div className="rounded-xl border border-slate-800 bg-slate-900 p-2.5 space-y-2">
+            <span className="text-[10px] font-bold uppercase text-slate-400 block tracking-wider">
+              Recent Completed Deliveries
+            </span>
+            <div className="space-y-1.5">
+              {scorecard.recentTrips.map((trip) => (
+                <div
+                  key={trip.id}
+                  className="flex items-center justify-between rounded-lg bg-slate-850 p-2 text-[11px]"
+                >
+                  <div>
+                    <span className="font-bold text-white block">{trip.shopName}</span>
+                    <span className="text-[9px] text-slate-400 font-mono">
+                      Bill: ₹{trip.billAmount} · {trip.paymentMode.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="text-right">
+                    <span className="font-black text-emerald-400 block">+₹{trip.amount}.00</span>
+                    <span className="text-[9px] text-slate-500 font-mono">
+                      {new Date(trip.deliveredAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Emergency SOS & Support Button */}
+        <div className="flex items-center justify-between rounded-xl bg-rose-500/10 border border-rose-500/30 p-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-base">🚨</span>
+            <div>
+              <span className="text-xs font-bold text-rose-300 block">Emergency & Safety SOS</span>
+              <span className="text-[9px] text-slate-400">24x7 Direct Police & Support Helpline</span>
+            </div>
+          </div>
+          <a
+            href="tel:112"
+            className="rounded-lg bg-rose-500 px-3 py-1 text-[10px] font-bold text-white hover:bg-rose-600 transition"
+          >
+            Call 112
+          </a>
+        </div>
       </div>
 
-      {/* Floating Success Toast */}
-      {successToast && (
-        <div className="my-2 rounded-xl bg-emerald-500 px-3 py-1.5 text-[10px] font-bold text-slate-950 flex justify-between items-center shadow-lg">
-          <span>{successToast}</span>
-          <button onClick={() => setSuccessToast(null)} className="font-bold px-1 text-xs">
+      {/* Floating Toast Notification */}
+      {toastMessage && (
+        <div className="my-2 rounded-xl bg-emerald-500 px-3 py-2 text-[10px] font-bold text-slate-950 flex justify-between items-center shadow-lg">
+          <span>{toastMessage}</span>
+          <button onClick={() => setToastMessage(null)} className="font-bold px-1 text-xs">
             ✕
           </button>
         </div>
       )}
 
-      {/* ── SIMULATED INCOMING ORDER SLIDE-UP SHEET ── */}
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {/* ── CASCADING PROXIMITY DISPATCH POPUP (30-SECOND SIREN RING) ── */}
+      {/* ═════════════════════════════════════════════════════════════════ */}
       {incomingOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-end sm:items-center justify-center p-3">
-          <div className="w-full max-w-xs sm:max-w-sm rounded-2xl border border-amber-400 bg-slate-900 p-3.5 shadow-2xl space-y-2.5 animate-in slide-in-from-bottom-6">
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-xs flex items-end sm:items-center justify-center p-3">
+          <div className="w-full max-w-xs sm:max-w-sm rounded-2xl border-2 border-amber-400 bg-slate-900 p-4 shadow-2xl space-y-3 animate-in slide-in-from-bottom-6">
             <div className="flex items-center justify-between">
               <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-black text-slate-950 animate-pulse">
-                ⚡ NEW ORDER REQUEST
+                ⚡ INCOMING DISPATCH (RING 1)
               </span>
-              <span className="font-mono text-[11px] font-bold text-rose-400">{countdown}s</span>
+              <span className="font-mono text-sm font-black text-rose-400">{countdown}s</span>
             </div>
 
             <div>
-              <span className="text-[9px] uppercase font-bold text-slate-400 block">Pickup Store</span>
-              <h3 className="text-xs font-bold text-white">{incomingOrder.business?.name || "Local Store"}</h3>
-              <p className="text-[9px] text-slate-400 line-clamp-1">{incomingOrder.business?.address}</p>
+              <span className="text-[9px] uppercase font-bold text-slate-400 block">Pickup Merchant</span>
+              <h3 className="text-sm font-bold text-white">{incomingOrder.business?.name || "Local Merchant"}</h3>
+              <p className="text-[10px] text-slate-400 line-clamp-1">{incomingOrder.business?.address}</p>
             </div>
 
-            <div className="grid grid-cols-3 divide-x divide-slate-800 rounded-xl bg-slate-800/80 py-1 text-center text-xs">
+            <div className="grid grid-cols-3 divide-x divide-slate-800 rounded-xl bg-slate-800/80 py-2 text-center text-xs">
               <div>
-                <span className="text-[9px] text-slate-400 block">Payout</span>
-                <span className="font-bold text-emerald-400 text-[11px]">₹35.00</span>
+                <span className="text-[9px] text-slate-400 block">Your Payout</span>
+                <span className="font-black text-emerald-400 text-xs">₹35.00</span>
               </div>
               <div>
-                <span className="text-[9px] text-slate-400 block">Bill</span>
-                <span className="font-bold text-amber-400 text-[11px]">₹{incomingOrder.total_amount}</span>
+                <span className="text-[9px] text-slate-400 block">Order Value</span>
+                <span className="font-black text-amber-400 text-xs">₹{incomingOrder.total_amount}</span>
               </div>
               <div>
                 <span className="text-[9px] text-slate-400 block">Distance</span>
-                <span className="font-bold text-indigo-300 text-[11px]">~1.2 km</span>
+                <span className="font-black text-indigo-300 text-xs">~1.1 km</span>
               </div>
             </div>
+
+            <p className="text-[9px] text-slate-400 text-center">
+              If ignored or declined, radar will automatically escalate to the next closest rider.
+            </p>
 
             <div className="grid grid-cols-2 gap-2 pt-0.5">
               <button
                 type="button"
                 onClick={handleDeclineIncomingOrder}
-                className="rounded-xl bg-slate-800 py-1.5 text-[10px] font-bold text-slate-400 hover:text-white"
+                className="rounded-xl bg-slate-850 py-2 text-[11px] font-bold text-slate-400 hover:text-white border border-slate-700"
               >
-                Pass / Reject
+                Pass / Decline
               </button>
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleAcceptIncomingOrder}
-                className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-1.5 text-[10px] font-black text-slate-950 shadow-md transition"
+                className="rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2 text-[11px] font-black text-slate-950 shadow-md transition"
               >
                 {isSubmitting ? "Accepting..." : "ACCEPT ORDER →"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {/* ── INSTANT UPI PAYOUT MODAL ── */}
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {isPayoutModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3">
+          <div className="w-full max-w-xs rounded-2xl border border-emerald-500/50 bg-slate-900 p-4 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <span className="text-xs font-black text-white">Instant UPI Settlement</span>
+              <button
+                onClick={() => {
+                  setIsPayoutModalOpen(false);
+                  setPayoutResult(null);
+                }}
+                className="text-xs text-slate-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="text-center py-2">
+              <span className="text-[10px] text-slate-400 uppercase font-bold block">Available Balance</span>
+              <span className="text-2xl font-black text-emerald-400">
+                ₹{scorecard?.walletBalance ?? Number(rider.wallet_balance || 0)}
+              </span>
+              <p className="text-[10px] text-slate-400 mt-1">
+                Withdrawal Destination:{" "}
+                <span className="text-white font-mono font-semibold">
+                  {rider.upi_id || rider.bank_account_number || "Linked Bank Account"}
+                </span>
+              </p>
+            </div>
+
+            {payoutResult && (
+              <div
+                className={`rounded-lg p-2 text-[11px] ${
+                  payoutResult.success
+                    ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/30"
+                    : "bg-rose-500/10 text-rose-300 border border-rose-500/30"
+                }`}
+              >
+                {payoutResult.message}
+              </div>
+            )}
+
+            {!payoutResult?.success && (
+              <button
+                type="button"
+                disabled={payoutLoading || (scorecard?.walletBalance ?? Number(rider.wallet_balance || 0)) <= 0}
+                onClick={handleInstantPayout}
+                className="w-full rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 py-2 text-xs font-bold text-slate-950 hover:from-emerald-400 hover:to-teal-400 disabled:opacity-50 transition"
+              >
+                {payoutLoading ? "Processing Transfer..." : "Confirm & Transfer Now ⚡"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {/* ── SETTINGS & PROFILE DETAILS MODAL ── */}
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3">
+          <div className="w-full max-w-xs rounded-2xl border border-slate-700 bg-slate-900 p-4 shadow-2xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+              <span className="text-xs font-black text-white">Partner Profile & Bank Info</span>
+              <button onClick={() => setIsSettingsOpen(false)} className="text-xs text-slate-400 hover:text-white">
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-400">Name:</span>
+                <span className="font-bold text-white">{rider.full_name}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-400">Phone:</span>
+                <span className="font-mono text-white">{rider.phone}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-400">Vehicle:</span>
+                <span className="font-mono text-amber-400">{rider.vehicle_number}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-400">Bank Name:</span>
+                <span className="text-white">{rider.bank_name || "State Bank of India"}</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-400">Account No:</span>
+                <span className="font-mono text-white">
+                  {rider.bank_account_number ? `•••• ${rider.bank_account_number.slice(-4)}` : "Registered"}
+                </span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800/80 pb-1.5">
+                <span className="text-slate-400">UPI ID:</span>
+                <span className="font-mono text-emerald-400">{rider.upi_id || "Not Linked"}</span>
+              </div>
+              <div className="flex justify-between pb-1.5">
+                <span className="text-slate-400">KYC Status:</span>
+                <span className="text-emerald-400 font-bold">Approved ✓</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setIsSettingsOpen(false)}
+              className="w-full rounded-xl bg-slate-800 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

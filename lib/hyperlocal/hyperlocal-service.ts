@@ -307,15 +307,17 @@ export async function riderCompleteDeliveryWithOtp(
 
   const riderPayout = split?.rider_payout || 35;
 
-  // 3. Update Rider wallet & COD cash handling
+  // 3. Update Rider wallet, COD cash handling & performance stats
   const { data: rider } = await admin
     .from("delivery_riders")
-    .select("cash_in_hand, wallet_balance")
+    .select("cash_in_hand, wallet_balance, total_deliveries_count, total_earnings")
     .eq("id", riderId)
     .maybeSingle();
 
   const currentCash = Number(rider?.cash_in_hand || 0);
   const currentWallet = Number(rider?.wallet_balance || 0);
+  const currentDeliveries = Number(rider?.total_deliveries_count || 0);
+  const currentTotalEarnings = Number(rider?.total_earnings || 0);
 
   const newCashInHand = order.payment_mode === "cod" ? currentCash + Number(order.total_amount) : currentCash;
   const newWalletBalance = currentWallet + Number(riderPayout);
@@ -325,6 +327,8 @@ export async function riderCompleteDeliveryWithOtp(
     .update({
       cash_in_hand: newCashInHand,
       wallet_balance: newWalletBalance,
+      total_deliveries_count: currentDeliveries + 1,
+      total_earnings: currentTotalEarnings + Number(riderPayout),
       is_available: true, // Rider becomes free for next order
       updated_at: now,
     })

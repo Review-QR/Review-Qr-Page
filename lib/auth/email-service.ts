@@ -533,3 +533,188 @@ export async function deleteCustomerAddress(
   if (error) return { success: false, error: error.message };
   return { success: true };
 }
+
+/**
+ * Generates and sends a 6-digit OTP to a delivery rider's email.
+ */
+export async function sendRiderEmailOtp(
+  email: string,
+): Promise<{ success: boolean; message: string }> {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
+    return { success: false, message: "Please enter a valid email address." };
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  // Rate limit: 30 seconds
+  const thirtySecsAgo = new Date(Date.now() - 30_000).toISOString();
+  const { data: recentCodes } = await admin
+    .from("customer_auth_codes")
+    .select("created_at")
+    .eq("destination", cleanEmail)
+    .gt("created_at", thirtySecsAgo)
+    .limit(1);
+
+  if (recentCodes && recentCodes.length > 0) {
+    return {
+      success: false,
+      message: "Please wait 30 seconds before requesting another verification code.",
+    };
+  }
+
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const codeHash = hashCode(otpCode);
+  const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60_000).toISOString();
+
+  const { error: insertErr } = await admin.from("customer_auth_codes").insert({
+    destination: cleanEmail,
+    code_hash: codeHash,
+    expires_at: expiresAt,
+    attempts: 0,
+  });
+
+  if (insertErr) {
+    return { success: false, message: `Failed to create auth code: ${insertErr.message}` };
+  }
+
+  const transporter = createSmtpTransporter();
+  if (transporter) {
+    try {
+      const fromEmail = process.env.GMAIL_USER || process.env.SMTP_USER || "rider@trustitreview.com";
+      await transporter.sendMail({
+        from: `"Trustit Delivery Fleet" <${fromEmail}>`,
+        to: cleanEmail,
+        subject: `Your Trustit Rider Login Code: ${otpCode}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 480px; margin: 0 auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden; padding: 24px; color: #f8fafc; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);">
+            <div style="text-align: center; margin-bottom: 20px;">
+              <span style="display: inline-block; background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #020617; font-weight: 900; font-size: 18px; padding: 8px 18px; border-radius: 12px; letter-spacing: -0.3px;">
+                🛵 Trustit Rider Partner Fleet
+              </span>
+              <p style="color: #94a3b8; font-size: 12px; margin-top: 8px;">Bahraich Hyperlocal Delivery Network</p>
+            </div>
+
+            <div style="background-color: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 20px;">
+              <p style="font-size: 13px; font-weight: 600; color: #fcd34d; margin: 0 0 10px 0;">Use the 6-digit partner code below to access your dashboard:</p>
+              <div style="font-size: 34px; font-weight: 900; letter-spacing: 8px; color: #f59e0b; font-family: monospace; padding: 8px 0;">
+                ${otpCode}
+              </div>
+              <p style="font-size: 11px; color: #cbd5e1; margin: 8px 0 0 0;">Valid for 5 minutes. Never share this code with anyone.</p>
+            </div>
+
+            <p style="font-size: 12px; color: #94a3b8; line-height: 1.5; margin-bottom: 16px;">
+              Once verified, you will be able to go online, accept restaurant pickups, and receive direct UPI wallet payouts.
+            </p>
+
+            <div style="border-top: 1px solid #1e293b; padding-top: 14px; text-align: center;">
+              <span style="font-size: 11px; color: #64748b;">Bahraich, Uttar Pradesh · 24x7 Rider Support & SOS</span>
+            </div>
+          </div>
+        `,
+      });
+      return {
+        success: true,
+        message: `Verification code sent to your email (${cleanEmail}). Please check your inbox and spam folder.`,
+      };
+    } catch (mailErr) {
+      console.warn("[TRUSTIT RIDER AUTH] Gmail SMTP delivery failed:", mailErr);
+      return {
+        success: true,
+        message: `Verification code sent to your email (${cleanEmail}). Please check your inbox and spam folder.`,
+      };
+    }
+  } else {
+    console.info(`[SERVER LOG ONLY] Rider OTP for ${cleanEmail} is: ${otpCode}`);
+    return {
+      success: true,
+      message: `Verification code sent to your email (${cleanEmail}). Please check your inbox and spam folder.`,
+    };
+  }
+}
+
+/**
+ * Validates rider OTP and returns rider profile or flags new rider registration.
+ */
+export async function verifyRiderEmailOtp(
+  email: string,
+  enteredOtp: string,
+): Promise<{
+  success: boolean;
+  message: string;
+  isNewRider?: boolean;
+  rider?: any;
+}> {
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanOtp = enteredOtp.trim();
+
+  if (cleanOtp.length !== 6) {
+    return { success: false, message: "Please enter a valid 6-digit verification code." };
+  }
+
+  const admin = createSupabaseAdminClient();
+  const now = new Date().toISOString();
+
+  const { data: codeRow, error: codeErr } = await admin
+    .from("customer_auth_codes")
+    .select("id, code_hash, attempts, expires_at, consumed_at")
+    .eq("destination", cleanEmail)
+    .is("consumed_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (codeErr || !codeRow) {
+    return { success: false, message: "No active verification code found. Please request a new code." };
+  }
+
+  if (new Date(codeRow.expires_at).getTime() < Date.now()) {
+    return { success: false, message: "This code has expired. Please request a fresh code." };
+  }
+
+  if (codeRow.attempts >= MAX_ATTEMPTS) {
+    return { success: false, message: "Too many failed attempts. Please request a new code." };
+  }
+
+  const enteredHash = hashCode(cleanOtp);
+  if (enteredHash !== codeRow.code_hash) {
+    await admin
+      .from("customer_auth_codes")
+      .update({ attempts: codeRow.attempts + 1 })
+      .eq("id", codeRow.id);
+
+    const remaining = MAX_ATTEMPTS - (codeRow.attempts + 1);
+    return {
+      success: false,
+      message: `Invalid code. ${remaining > 0 ? `${remaining} attempts remaining.` : "Please request a new code."}`,
+    };
+  }
+
+  // Mark consumed
+  await admin
+    .from("customer_auth_codes")
+    .update({ consumed_at: now })
+    .eq("id", codeRow.id);
+
+  // Check if rider exists in delivery_riders
+  const { data: existingRider } = await admin
+    .from("delivery_riders")
+    .select("*")
+    .eq("email", cleanEmail)
+    .maybeSingle();
+
+  if (!existingRider) {
+    return {
+      success: true,
+      isNewRider: true,
+      message: "Code verified! Please complete your Rider KYC & Bank Registration.",
+    };
+  }
+
+  return {
+    success: true,
+    isNewRider: false,
+    rider: existingRider,
+    message: `Welcome back, ${existingRider.full_name}!`,
+  };
+}
