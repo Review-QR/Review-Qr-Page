@@ -84,6 +84,58 @@ export async function GET(request: Request) {
     }
   }
 
+  // ── Dynamic Auto-Escalation Sweeper ──
+  // If no incoming order is targeted to this online, available rider,
+  // scan for unassigned orders whose target has expired (>30s) or is unassigned, and re-dispatch!
+  if (!incomingDispatchOrder && rider.is_online && rider.is_available) {
+    const { data: pendingOrders } = await admin
+      .from("hyperlocal_orders")
+      .select("id, dispatch_target_rider_id, dispatch_expires_at, status")
+      .in("status", ["placed", "accepted_by_merchant", "ready_for_pickup"])
+      .is("rider_id", null)
+      .or("payment_status.eq.paid,payment_mode.eq.cod")
+      .order("created_at", { ascending: true })
+      .limit(3);
+
+    if (pendingOrders && pendingOrders.length > 0) {
+      for (const po of pendingOrders) {
+        const isExpired = !po.dispatch_expires_at || new Date(po.dispatch_expires_at).getTime() <= Date.now();
+        if (isExpired) {
+          try {
+            if (po.dispatch_target_rider_id) {
+              await handleRiderTimeoutOrDecline(po.id, po.dispatch_target_rider_id);
+            } else {
+              await dispatchCascadingRadar(po.id);
+            }
+          } catch {}
+        }
+      }
+
+      // Check if this rider was matched after auto-escalation!
+      const { data: matchedSlot } = await admin
+        .from("hyperlocal_orders")
+        .select(`
+          *,
+          hyperlocal_order_items (*),
+          businesses (name, city, address, phone, location_latitude, location_longitude)
+        `)
+        .eq("dispatch_target_rider_id", rider.id)
+        .is("rider_id", null)
+        .or("payment_status.eq.paid,payment_mode.eq.cod")
+        .maybeSingle();
+
+      if (matchedSlot && matchedSlot.dispatch_expires_at) {
+        const expiryMs = new Date(matchedSlot.dispatch_expires_at).getTime();
+        if (expiryMs > Date.now()) {
+          incomingDispatchOrder = {
+            ...matchedSlot,
+            secondsRemaining: Math.max(1, Math.round((expiryMs - Date.now()) / 1000)),
+          };
+        }
+      }
+    }
+  }
+
   // Available ready orders awaiting pickup within the city (only paid or COD)
   const { data: availableOrders } = await admin
     .from("hyperlocal_orders")

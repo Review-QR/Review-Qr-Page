@@ -78,6 +78,24 @@ export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
     : generateHyperlocalOrderId();
   const deliveryOtp = generateDeliveryOtp();
 
+  // Idempotency check: if order with this ID already exists, return existing order safely
+  const { data: existingOrder } = await admin
+    .from("hyperlocal_orders")
+    .select("id, status, payment_status, total_amount, delivery_otp")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (existingOrder) {
+    return {
+      orderId: existingOrder.id,
+      totalAmount: Number(existingOrder.total_amount),
+      status: existingOrder.status,
+      paymentStatus: existingOrder.payment_status,
+      deliveryOtp: existingOrder.delivery_otp,
+      alreadyExists: true,
+    };
+  }
+
   // Validate customer_id against public.customers table if provided
   let validCustomerId: string | null = null;
   if (input.customerId) {
@@ -203,6 +221,7 @@ export async function merchantAcceptOrder(orderId: string, prepTimeMinutes = 20)
 
 /**
  * Merchant marks food / items as prepared and ready for rider pickup.
+ * Actively summons the closest online rider via proximity cascading radar!
  */
 export async function merchantMarkFoodReady(orderId: string) {
   if (!isValidHyperlocalOrderId(orderId)) throw new Error("Invalid order ID.");
@@ -220,7 +239,14 @@ export async function merchantMarkFoodReady(orderId: string) {
     .eq("id", orderId);
 
   if (error) throw new Error(error.message);
-  return { success: true };
+
+  // Actively summon closest rider via cascading radar
+  let dispatchResult = null;
+  try {
+    dispatchResult = await dispatchCascadingRadar(orderId);
+  } catch {}
+
+  return { success: true, dispatch: dispatchResult };
 }
 
 /**

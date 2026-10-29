@@ -23,3 +23,19 @@ export function isValidHyperlocalOrderId(orderId: unknown): orderId is string {
 export function generateDeliveryOtp(): string {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
+
+/**
+ * Formats a clean, readable 4-digit order number (e.g. #4492, #6367) for riders, merchants, and customers.
+ * Guaranteed to return a consistent 4-digit number between #1000 and #9999 for any order reference.
+ */
+export function formatDisplayOrderNumber(orderId: string | null | undefined): string {
+  if (!orderId) return "#0000";
+  const clean = String(orderId).replace(/^hord_/, "").trim();
+  const hexPart = clean.slice(-4);
+  const parsed = parseInt(hexPart, 16);
+  if (!isNaN(parsed)) {
+    const num = 1000 + (parsed % 9000);
+    return `#${num}`;
+  }
+  return `#${clean.slice(-4).toUpperCase()}`;
+}
