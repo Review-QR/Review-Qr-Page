@@ -5,7 +5,7 @@ export const dynamic = "force-dynamic";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { orderId, amount, businessId, customerName, customerPhone, customerEmail, returnUrl } = body;
+    const { orderId, amount, businessId, businessName, customerName, customerPhone, customerEmail, returnUrl } = body;
 
     if (!orderId || !amount || !businessId) {
       return Response.json(
@@ -18,6 +18,7 @@ export async function POST(request: Request) {
       orderId,
       amount: Number(amount),
       businessId,
+      businessName,
       customerName,
       customerPhone,
       customerEmail,

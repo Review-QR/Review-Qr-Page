@@ -12,6 +12,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const result = await createHyperlocalOrder({
       orderId: body.orderId,
+      customerId: body.customerId,
       businessId: body.businessId,
       orderType: body.orderType || "food_delivery",
       customerName: body.customerName,
@@ -78,6 +79,7 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const businessId = searchParams.get("businessId");
   const phone = searchParams.get("phone");
+  const customerId = searchParams.get("customerId");
   const orderId = searchParams.get("orderId");
 
   const admin = createSupabaseAdminClient();
@@ -99,9 +101,14 @@ export async function GET(request: Request) {
     query = query
       .eq("business_id", businessId)
       .or("payment_status.eq.paid,payment_mode.eq.cod");
+  } else if (customerId) {
+    query = query.eq("customer_id", customerId);
+  } else if (phone) {
+    const clean = phone.replace(/\D/g, "").slice(-10);
+    query = query.or(`customer_phone.eq.${clean},customer_phone.eq.+91${clean}`);
+  } else {
+    query = query.limit(20);
   }
-  else if (phone) query = query.eq("customer_phone", phone);
-  else query = query.limit(20);
 
   const { data, error } = await query;
   if (error) {

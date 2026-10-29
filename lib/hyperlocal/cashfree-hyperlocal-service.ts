@@ -9,6 +9,7 @@ export interface CreateHyperlocalPaymentOrderInput {
   orderId: string;
   amount: number;
   businessId: string;
+  businessName?: string;
   customerName?: string;
   customerPhone?: string;
   customerEmail?: string;
@@ -113,6 +114,9 @@ export async function createCashfreeHyperlocalPaymentOrder(
     order_tags: {
       order_type: "hyperlocal_food",
       business_id: input.businessId,
+      ...(input.businessName
+        ? { business_name: input.businessName.replace(/[^a-zA-Z0-9_\s-]/g, "").slice(0, 40) }
+        : {}),
     },
   };
 

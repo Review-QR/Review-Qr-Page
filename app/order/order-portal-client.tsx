@@ -109,6 +109,32 @@ export type ActiveHyperlocalOrder = {
   created_at: string;
   businesses?: { name: string; city: string; address: string | null; phone?: string | null };
   delivery_riders?: { id: string; full_name: string; phone: string; vehicle_number?: string } | null;
+  hyperlocal_order_items?: Array<{
+    id?: string;
+    item_name: string;
+    quantity: number;
+    unit_price: number;
+    is_veg?: boolean;
+    notes?: string | null;
+  }>;
+};
+
+export type CustomerSavedAddress = {
+  id: string;
+  customerId?: string;
+  label?: "Home" | "Work" | "Other" | string;
+  tag?: "Home" | "Work" | "Other" | string;
+  street: string;
+  landmark?: string | null;
+  city?: string;
+  pincode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  isDefault?: boolean;
+  houseNo?: string;
+  mohalla?: string;
+  road?: string;
+  district?: string;
 };
 
 export type ActiveServiceToken = {
@@ -154,10 +180,13 @@ export default function CustomerSuperAppClient({
   const [selectedCity, setSelectedCity] = useState<string>("Bahraich");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Customer Profile stored in local storage
+  // Customer Identity & Auth state
+  const [customerId, setCustomerId] = useState<string>("");
+  const [customerEmail, setCustomerEmail] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [customerAddress, setCustomerAddress] = useState<string>("");
+
   // Structured Address Fields (Point 4)
   const [addrHouseNo, setAddrHouseNo] = useState<string>("");
   const [addrMohalla, setAddrMohalla] = useState<string>("");
@@ -168,31 +197,32 @@ export default function CustomerSuperAppClient({
   const buildAddressString = (h: string, m: string, r: string, p: string, d: string) => {
     return [h.trim(), m.trim(), r.trim(), p.trim() ? `Pin: ${p.trim()}` : "", d.trim() || "Bahraich"].filter(Boolean).join(", ");
   };
+
+  // OTP Login Flow & State
   const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
+  const [loginStep, setLoginStep] = useState<"email" | "otp">("email");
+  const [loginEmail, setLoginEmail] = useState<string>("");
+  const [loginOtp, setLoginOtp] = useState<string>("");
+  const [loginOtpCountdown, setLoginOtpCountdown] = useState<number>(0);
+  const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState<boolean>(false);
+  const [otpError, setOtpError] = useState<string>("");
+  const [otpNotice, setOtpNotice] = useState<string>("");
+
   const [isDetectingGps, setIsDetectingGps] = useState(false);
   const [loginInputName, setLoginInputName] = useState<string>("");
   const [loginInputPhone, setLoginInputPhone] = useState<string>("");
   const [loginInputAddress, setLoginInputAddress] = useState<string>("");
   const [isCustomerEditing, setIsCustomerEditing] = useState<boolean>(false);
 
-  const handleOpenCustomerLogin = () => {
-    setLoginInputName(customerName);
-    setLoginInputPhone(customerPhone.length === 10 ? customerPhone : "");
-    setLoginInputAddress(customerAddress);
-    setIsCustomerEditing(false);
-    setIsCustomerLoginOpen(true);
-  };
+  // Customer Profile View (2 Tabs: Addresses & Orders)
+  const [profileTab, setProfileTab] = useState<"addresses" | "orders">("addresses");
+  const [customerPastOrders, setCustomerPastOrders] = useState<ActiveHyperlocalOrder[]>([]);
+  const [isLoadingPastOrders, setIsLoadingPastOrders] = useState<boolean>(false);
 
-  // Address Book & Multi-Address Management (Image 3 Benchmark)
-  type CustomerSavedAddress = {
-    id: string;
-    tag: "Home" | "Work" | "Other";
-    houseNo: string;
-    mohalla: string;
-    road: string;
-    pincode: string;
-    district: string;
-  };
+  // Fast Payment Gateway Zero-Lag Launcher State
+  const [isPaymentLaunching, setIsPaymentLaunching] = useState<boolean>(false);
+
   const [savedAddresses, setSavedAddresses] = useState<CustomerSavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -245,12 +275,57 @@ export default function CustomerSuperAppClient({
   const [isSubmitting, startTransition] = useTransition();
   const [bookingSuccessNotice, setBookingSuccessNotice] = useState<string | null>(null);
 
-  // Load customer info from localStorage
+  // Preload Cashfree JS SDK in background so checkout is instant (<400ms) with zero lag
+  useEffect(() => {
+    loadCashfreeSdk().catch(() => {});
+  }, []);
+
+  // Countdown timer for Email OTP resend
+  useEffect(() => {
+    if (loginOtpCountdown <= 0) return;
+    const timer = setInterval(() => {
+      setLoginOtpCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [loginOtpCountdown]);
+
+  // Fetch Customer Past Orders
+  const fetchCustomerOrders = async (cId?: string, phone?: string) => {
+    const targetId = cId || customerId;
+    const targetPhone = phone || customerPhone;
+    if (!targetId && !targetPhone) return;
+    setIsLoadingPastOrders(true);
+    try {
+      const url = targetId
+        ? `/api/hyperlocal/orders?customerId=${encodeURIComponent(targetId)}`
+        : `/api/hyperlocal/orders?phone=${encodeURIComponent(targetPhone)}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        const orders = data.orders || [];
+        setCustomerPastOrders(orders);
+        setActiveOrders(orders);
+      }
+    } catch {
+      // Ignore network errors
+    } finally {
+      setIsLoadingPastOrders(false);
+    }
+  };
+
+  // Load customer info from localStorage & DB
   useEffect(() => {
     try {
+      const savedId = localStorage.getItem("trustit_cust_id");
+      const savedEmail = localStorage.getItem("trustit_cust_email");
       const savedName = localStorage.getItem("trustit_cust_name");
       const savedPhone = localStorage.getItem("trustit_cust_phone");
       const savedAddr = localStorage.getItem("trustit_cust_addr");
+      if (savedId) setCustomerId(savedId);
+      if (savedEmail) {
+        setCustomerEmail(savedEmail);
+        setLoginEmail(savedEmail);
+      }
       if (savedName) {
         setCustomerName(savedName);
         setLoginInputName(savedName);
@@ -290,15 +365,50 @@ export default function CustomerSuperAppClient({
       } else if (sH || sM) {
         const initialAddr: CustomerSavedAddress = {
           id: "addr_default",
+          label: "Home",
           tag: "Home",
+          street: buildAddressString(sH || "", sM || "", sR || "", sP || "271801", sD || "Bahraich"),
           houseNo: sH || "",
           mohalla: sM || "",
           road: sR || "",
           pincode: sP || "271801",
           district: sD || "Bahraich",
+          isDefault: true,
         };
         setSavedAddresses([initialAddr]);
         setSelectedAddressId("addr_default");
+      }
+
+      if (savedId) {
+        fetch(`/api/customer/addresses?customerId=${encodeURIComponent(savedId)}`)
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => {
+            if (d && Array.isArray(d.addresses) && d.addresses.length > 0) {
+              const formatted: CustomerSavedAddress[] = d.addresses.map((a: any) => ({
+                id: a.id,
+                customerId: a.customer_id,
+                label: a.label || "Home",
+                tag: a.label || "Home",
+                street: a.street,
+                landmark: a.landmark,
+                city: a.city || "Bahraich",
+                pincode: a.pincode || "271801",
+                isDefault: Boolean(a.is_default),
+              }));
+              setSavedAddresses(formatted);
+              const def = formatted.find((a) => a.isDefault) || formatted[0];
+              if (def) {
+                setSelectedAddressId(def.id);
+                setCustomerAddress(def.street);
+              }
+              try {
+                localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(formatted));
+              } catch {}
+            }
+          })
+          .catch(() => {});
+
+        fetchCustomerOrders(savedId, savedPhone || undefined);
       }
     } catch {
       // Ignore localStorage availability
@@ -310,19 +420,254 @@ export default function CustomerSuperAppClient({
     name: string,
     phone: string,
     address: string,
+    emailOrStruct?: string | { house?: string; mohalla?: string; road?: string; pin?: string; dist?: string },
+    id?: string,
     struct?: { house?: string; mohalla?: string; road?: string; pin?: string; dist?: string }
   ) => {
     try {
-      localStorage.setItem("trustit_cust_name", name);
-      localStorage.setItem("trustit_cust_phone", phone);
-      localStorage.setItem("trustit_cust_addr", address);
-      if (struct) {
-        if (struct.house) localStorage.setItem("trustit_cust_house", struct.house);
-        if (struct.mohalla) localStorage.setItem("trustit_cust_mohalla", struct.mohalla);
-        if (struct.road) localStorage.setItem("trustit_cust_road", struct.road);
-        if (struct.pin) localStorage.setItem("trustit_cust_pin", struct.pin);
-        if (struct.dist) localStorage.setItem("trustit_cust_dist", struct.dist);
+      if (name) localStorage.setItem("trustit_cust_name", name);
+      if (phone) localStorage.setItem("trustit_cust_phone", phone);
+      if (address) localStorage.setItem("trustit_cust_addr", address);
+
+      const emailVal = typeof emailOrStruct === "string" ? emailOrStruct : "";
+      const structVal = typeof emailOrStruct === "object" ? emailOrStruct : struct;
+
+      if (emailVal) localStorage.setItem("trustit_cust_email", emailVal);
+      if (id) localStorage.setItem("trustit_cust_id", id);
+      if (structVal) {
+        if (structVal.house) localStorage.setItem("trustit_cust_house", structVal.house);
+        if (structVal.mohalla) localStorage.setItem("trustit_cust_mohalla", structVal.mohalla);
+        if (structVal.road) localStorage.setItem("trustit_cust_road", structVal.road);
+        if (structVal.pin) localStorage.setItem("trustit_cust_pin", structVal.pin);
+        if (structVal.dist) localStorage.setItem("trustit_cust_dist", structVal.dist);
       }
+    } catch {}
+  };
+
+  const handleOpenCustomerLogin = () => {
+    setLoginInputName(customerName);
+    setLoginInputPhone(customerPhone.length === 10 ? customerPhone : "");
+    setLoginInputAddress(customerAddress);
+    setLoginEmail(customerEmail);
+    setOtpError("");
+    setOtpNotice("");
+    setLoginOtp("");
+    setLoginStep("email");
+    setIsCustomerEditing(false);
+    setIsCustomerLoginOpen(true);
+    if (customerId || customerPhone) {
+      fetchCustomerOrders(customerId, customerPhone);
+    }
+  };
+
+  const handleSendOtp = async (overrideEmail?: string) => {
+    const targetEmail = (overrideEmail || loginEmail || "").trim().toLowerCase();
+    if (!targetEmail || !targetEmail.includes("@") || !targetEmail.includes(".")) {
+      setOtpError("Please enter a valid email address (e.g. name@gmail.com)");
+      return;
+    }
+    setOtpError("");
+    setOtpNotice("");
+    setIsSendingOtp(true);
+    try {
+      const res = await fetch("/api/customer/auth/send-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: targetEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setOtpError(data.message || "Could not send verification code. Please try again.");
+        return;
+      }
+      setLoginEmail(targetEmail);
+      setLoginStep("otp");
+      setLoginOtpCountdown(30);
+      setOtpNotice(data.message || `Verification code sent to ${targetEmail}`);
+    } catch {
+      setOtpError("Network error. Please check your connection and try again.");
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const code = loginOtp.trim();
+    if (code.length !== 6) {
+      setOtpError("Please enter the 6-digit code received on your email.");
+      return;
+    }
+    setOtpError("");
+    setIsVerifyingOtp(true);
+    try {
+      const res = await fetch("/api/customer/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: loginEmail,
+          otp: code,
+          fullName: loginInputName || undefined,
+          phone: loginInputPhone || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setOtpError(data.message || "Invalid or expired verification code.");
+        return;
+      }
+
+      const cust = data.customer;
+      if (cust) {
+        setCustomerId(cust.id);
+        setCustomerEmail(cust.email);
+        const nameToUse = cust.fullName || loginInputName || "Customer";
+        setCustomerName(nameToUse);
+        setLoginInputName(nameToUse);
+        if (cust.phone) {
+          setCustomerPhone(cust.phone);
+          setLoginInputPhone(cust.phone);
+        }
+        saveCustomerProfile(
+          nameToUse,
+          cust.phone || loginInputPhone || "",
+          customerAddress,
+          cust.email,
+          cust.id,
+        );
+      }
+
+      if (Array.isArray(data.addresses) && data.addresses.length > 0) {
+        const formatted: CustomerSavedAddress[] = data.addresses.map((a: any) => ({
+          id: a.id,
+          customerId: a.customerId,
+          label: a.label || "Home",
+          tag: a.label || "Home",
+          street: a.street,
+          landmark: a.landmark,
+          city: a.city || "Bahraich",
+          pincode: a.pincode || "271801",
+          isDefault: Boolean(a.isDefault),
+        }));
+        setSavedAddresses(formatted);
+        const def = formatted.find((a) => a.isDefault) || formatted[0];
+        if (def) {
+          setSelectedAddressId(def.id);
+          setCustomerAddress(def.street);
+        }
+        try {
+          localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(formatted));
+        } catch {}
+      }
+
+      if (cust?.id || cust?.phone) {
+        fetchCustomerOrders(cust.id, cust.phone);
+      }
+
+      setOtpNotice("Logged in successfully! Welcome to Trustit.");
+      setLoginOtp("");
+      setProfileTab("addresses");
+      setIsCustomerEditing(false);
+    } catch {
+      setOtpError("Network error verifying code. Please try again.");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleSignOut = () => {
+    try {
+      localStorage.removeItem("trustit_cust_name");
+      localStorage.removeItem("trustit_cust_phone");
+      localStorage.removeItem("trustit_cust_email");
+      localStorage.removeItem("trustit_cust_id");
+      localStorage.removeItem("trustit_cust_addr");
+      localStorage.removeItem("trustit_saved_addresses_v1");
+    } catch {}
+    setCustomerId("");
+    setCustomerEmail("");
+    setCustomerName("");
+    setCustomerPhone("");
+    setCustomerAddress("");
+    setSavedAddresses([]);
+    setCustomerPastOrders([]);
+    setActiveOrders([]);
+    setActiveTokens([]);
+    setActiveParchas([]);
+    setLoginStep("email");
+    setLoginEmail("");
+    setLoginOtp("");
+    setOtpNotice("");
+    setOtpError("");
+    setIsCustomerLoginOpen(false);
+  };
+
+  const handleReorder = (order: ActiveHyperlocalOrder) => {
+    const store = businesses.find((b) => b.id === order.business_id);
+    if (!store) {
+      alert("This restaurant is not currently available in Bahraich catalog.");
+      return;
+    }
+
+    const items = order.hyperlocal_order_items || [];
+    if (items.length === 0) {
+      setActiveStoreModal(store);
+      setIsCustomerLoginOpen(false);
+      return;
+    }
+
+    const newCart: { [cartKey: string]: CartLineItem } = {};
+    items.forEach((item, index) => {
+      const catItem: SuperAppCatalogItem = catalogItems.find(
+        (c) => c.business_id === order.business_id && c.name.toLowerCase() === item.item_name.toLowerCase(),
+      ) || {
+        id: `reorder_${item.id || index}_${Date.now()}`,
+        business_id: order.business_id,
+        category: "Food",
+        name: item.item_name,
+        price: item.unit_price,
+        item_type: (item.is_veg ? "veg" : "non_veg") as "veg" | "non_veg",
+        is_available: true,
+        image_url: null,
+        description: null,
+      };
+
+      const cartKey = `${catItem.id}_reorder`;
+      newCart[cartKey] = {
+        cartKey,
+        item: catItem,
+        quantity: item.quantity || 1,
+        itemUnitPrice: item.unit_price || catItem.price,
+      };
+    });
+
+    setCart(newCart);
+    setActiveStoreModal(store);
+    setIsCustomerLoginOpen(false);
+    setIsCheckoutOpen(true);
+  };
+
+  const handleDeleteAddress = async (addressId: string) => {
+    if (!confirm("Remove this address from your saved address book?")) return;
+    if (customerId) {
+      try {
+        await fetch(
+          `/api/customer/addresses?customerId=${encodeURIComponent(customerId)}&addressId=${encodeURIComponent(addressId)}`,
+          { method: "DELETE" },
+        );
+      } catch {}
+    }
+    const updated = savedAddresses.filter((a) => a.id !== addressId);
+    setSavedAddresses(updated);
+    if (selectedAddressId === addressId) {
+      if (updated.length > 0) {
+        setSelectedAddressId(updated[0].id);
+        setCustomerAddress(updated[0].street || "");
+      } else {
+        setSelectedAddressId("");
+      }
+    }
+    try {
+      localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(updated));
     } catch {}
   };
 
@@ -600,6 +945,7 @@ export default function CustomerSuperAppClient({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             businessId: targetBizId,
+            customerId: customerId || undefined,
             orderType: "food_delivery",
             customerName,
             customerPhone,
@@ -655,9 +1001,10 @@ export default function CustomerSuperAppClient({
 
   // ── Place Order & Open Cashfree Modal (Dynamic UPI QR, PhonePe, GPay, Cards, NetBanking) ──
   const handleInitiateCashfreeGateway = (targetBizId: string, existingOrderId?: string) => {
+    setIsPaymentLaunching(true);
     startTransition(async () => {
       try {
-        saveCustomerProfile(customerName, customerPhone, customerAddress, {
+        saveCustomerProfile(customerName, customerPhone, customerAddress, customerEmail, customerId, {
           house: addrHouseNo,
           mohalla: addrMohalla,
           road: addrRoad,
@@ -675,6 +1022,7 @@ export default function CustomerSuperAppClient({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               businessId: targetBizId,
+              customerId: customerId || undefined,
               orderType: "food_delivery",
               customerName,
               customerPhone,
@@ -707,6 +1055,7 @@ export default function CustomerSuperAppClient({
 
           const orderData = await resOrder.json();
           if (!orderData.success) {
+            setIsPaymentLaunching(false);
             alert(`Order initialization failed: ${orderData.error || "Please try again."}`);
             return;
           }
@@ -720,6 +1069,7 @@ export default function CustomerSuperAppClient({
         }
 
         // 2. Create Real Cashfree PG Payment Session
+        const targetBizName = businesses.find((b) => b.id === targetBizId)?.name;
         const resSession = await fetch("/api/hyperlocal/payment/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -727,19 +1077,24 @@ export default function CustomerSuperAppClient({
             orderId: currentOrderId,
             amount: cartGrandTotal,
             businessId: targetBizId,
+            businessName: targetBizName,
             customerName,
             customerPhone,
+            customerEmail: customerEmail || undefined,
           }),
         });
 
         const sessionData = await resSession.json();
         if (!sessionData.success || !sessionData.paymentSessionId) {
+          setIsPaymentLaunching(false);
           alert(`Cashfree session failed: ${sessionData.error || "Please try again."}`);
           return;
         }
 
         // 3. Load Cashfree Official JS SDK & Launch Modal (Dynamic UPI QR, PhonePe, Cards)
         await loadCashfreeSdk();
+        setIsPaymentLaunching(false);
+
         if (window.Cashfree) {
           const cashfree = window.Cashfree({ mode: sessionData.checkoutMode || "sandbox" });
           await cashfree.checkout({
@@ -762,6 +1117,7 @@ export default function CustomerSuperAppClient({
           );
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
+          fetchCustomerOrders(customerId, customerPhone);
         } else {
           setIsCheckoutOpen(false);
           setBookingSuccessNotice(
@@ -769,9 +1125,13 @@ export default function CustomerSuperAppClient({
           );
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
+          fetchCustomerOrders(customerId, customerPhone);
         }
       } catch {
+        setIsPaymentLaunching(false);
         alert("Error launching Cashfree payment gateway.");
+      } finally {
+        setIsPaymentLaunching(false);
       }
     });
   };
@@ -985,8 +1345,8 @@ export default function CustomerSuperAppClient({
               className="flex items-center gap-1 rounded-lg bg-slate-900 px-2 py-1 text-[10px] font-bold text-white shadow-2xs hover:bg-slate-800 transition"
             >
               <span className="text-[10px]">👤</span>
-              <span className="max-w-[60px] truncate">
-                {customerPhone ? (customerName ? customerName.split(" ")[0] : "Account") : "Log In"}
+              <span className="max-w-[70px] truncate">
+                {customerEmail || customerPhone ? (customerName ? customerName.split(" ")[0] : "Account") : "Log In"}
               </span>
             </button>
           </div>
@@ -1381,7 +1741,7 @@ export default function CustomerSuperAppClient({
               className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900"
             >
               <span className="text-base leading-none">👤</span>
-              <span className="text-[10px] mt-0.5">{customerPhone ? "Account" : "Log In"}</span>
+              <span className="text-[10px] mt-0.5">{customerEmail || customerPhone ? "Account" : "Log In"}</span>
             </button>
           </div>
         </nav>
@@ -1783,19 +2143,21 @@ export default function CustomerSuperAppClient({
                   <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
                     {savedAddresses.map((addr) => {
                       const isSel = selectedAddressId === addr.id;
+                      const label = addr.label || addr.tag || "Home";
+                      const icon = label === "Home" ? "🏠" : label === "Work" ? "🏢" : "📍";
+                      const displayStreet = addr.street || buildAddressString(addr.houseNo || "", addr.mohalla || "", addr.road || "", addr.pincode || "", addr.district || "Bahraich");
                       return (
                         <button
                           key={addr.id}
                           type="button"
                           onClick={() => {
                             setSelectedAddressId(addr.id);
-                            setAddrHouseNo(addr.houseNo);
-                            setAddrMohalla(addr.mohalla);
-                            setAddrRoad(addr.road);
-                            setAddrPincode(addr.pincode);
-                            setAddrDistrict(addr.district);
-                            const full = buildAddressString(addr.houseNo, addr.mohalla, addr.road, addr.pincode, addr.district);
-                            setCustomerAddress(full);
+                            if (addr.houseNo) setAddrHouseNo(addr.houseNo);
+                            if (addr.mohalla) setAddrMohalla(addr.mohalla);
+                            if (addr.road) setAddrRoad(addr.road);
+                            if (addr.pincode) setAddrPincode(addr.pincode);
+                            if (addr.district) setAddrDistrict(addr.district);
+                            setCustomerAddress(displayStreet);
                           }}
                           className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 border text-[10px] font-bold shrink-0 transition ${
                             isSel
@@ -1803,9 +2165,11 @@ export default function CustomerSuperAppClient({
                               : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                           }`}
                         >
-                          <span>{addr.tag === "Home" ? "🏠" : addr.tag === "Work" ? "💼" : "📍"}</span>
-                          <span>{addr.tag}</span>
-                          <span className="text-[9px] text-slate-400 font-normal truncate max-w-[80px]">({addr.mohalla || addr.houseNo})</span>
+                          <span>{icon}</span>
+                          <span>{label}</span>
+                          <span className="text-[9px] text-slate-400 font-normal truncate max-w-[100px]">
+                            ({addr.mohalla || displayStreet.slice(0, 16)})
+                          </span>
                         </button>
                       );
                     })}
@@ -2558,20 +2922,47 @@ export default function CustomerSuperAppClient({
         </div>
       )}
 
-      {/* ── Customer Account & Login Modal ── */}
+      {/* ── Instant Cashfree Launcher Modal (Eliminates Perceived Lag) ── */}
+      {isPaymentLaunching && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-2xl space-y-3 animate-in fade-in zoom-in-95">
+            <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-emerald-100 text-2xl text-emerald-800">
+              ⚡
+            </div>
+            <div>
+              <h4 className="text-sm font-black text-slate-900">Connecting to Cashfree</h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">Opening instant UPI &amp; card payment rails...</p>
+            </div>
+            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-500 rounded-full animate-pulse w-3/4" />
+            </div>
+            <p className="text-[10px] text-slate-400">100% RBI Compliant &amp; Bank-Grade Encrypted</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── Customer Account & Login Modal (Email OTP + 2-Tab Profile) ── */}
       {isCustomerLoginOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-3.5 sm:p-4 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div>
-                <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[9px] font-black uppercase text-blue-800">
-                  Customer Profile
+          <div className="w-full max-w-md max-h-[88vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 bg-slate-50/70 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="grid h-7 w-7 place-items-center rounded-lg bg-orange-100 text-orange-800 text-xs font-black">
+                  👤
                 </span>
-                <h3 className="text-sm font-extrabold text-slate-900 mt-0.5">
-                  {customerPhone && customerPhone.length === 10 && !isCustomerEditing
-                    ? "My Customer Account"
-                    : "Sign In to Super-App"}
-                </h3>
+                <div>
+                  <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
+                    {customerEmail || customerPhone
+                      ? (customerName ? `${customerName}'s Account` : "My Customer Account")
+                      : "Sign In to Super-App"}
+                  </h3>
+                  <p className="text-[10px] text-slate-500">
+                    {customerEmail || customerPhone
+                      ? (customerEmail || `+91 ${customerPhone}`)
+                      : "Login with Email OTP for saved addresses & past orders"}
+                  </p>
+                </div>
               </div>
               <button
                 type="button"
@@ -2579,211 +2970,451 @@ export default function CustomerSuperAppClient({
                   setIsCustomerEditing(false);
                   setIsCustomerLoginOpen(false);
                 }}
-                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
+                className="grid h-6 w-6 place-items-center rounded-full bg-slate-200 text-slate-600 text-xs hover:bg-slate-300"
               >
                 ✕
               </button>
             </div>
 
-            {customerPhone && customerPhone.length === 10 && !isCustomerEditing ? (
-              <div className="mt-3 space-y-3">
-                <div className="rounded-xl bg-blue-50/70 border border-blue-100 p-3 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-900">{customerName || "Customer"}</span>
-                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.2 rounded-full">
-                      Active Account
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 font-mono">📱 +91 {customerPhone}</p>
-                  {customerAddress && (
-                    <p className="text-[10px] text-slate-500 pt-0.5 truncate">📍 {customerAddress}</p>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsCustomerLoginOpen(false);
-                      setIsMyBookingsOpen(true);
-                    }}
-                    className="w-full rounded-xl bg-slate-900 py-2 text-xs font-bold text-white shadow-xs hover:bg-slate-800 transition"
-                  >
-                    View My Bookings & Passes →
-                  </button>
-                  <div className="flex gap-2">
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {/* If Logged In: 2-Tab Navigation (Saved Addresses & Past Orders) */}
+              {(customerEmail || customerPhone) && !isCustomerEditing ? (
+                <div className="space-y-3">
+                  {/* Account Summary Banner */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-2.5 flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-extrabold text-slate-900">{customerName || "Customer"}</span>
+                        {customerEmail && (
+                          <span className="rounded-full bg-emerald-100 px-1.5 py-0.2 text-[8px] font-black text-emerald-800">
+                            Verified Email ✓
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-mono">
+                        {customerEmail} {customerPhone ? `• +91 ${customerPhone}` : ""}
+                      </p>
+                    </div>
                     <button
                       type="button"
-                      onClick={() => {
-                        setLoginInputName(customerName);
-                        setLoginInputPhone(customerPhone);
-                        setLoginInputAddress(customerAddress);
-                        setIsCustomerEditing(true);
-                      }}
-                      className="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition"
-                    >
-                      ✏️ Edit Details
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        try {
-                          localStorage.removeItem("trustit_cust_name");
-                          localStorage.removeItem("trustit_cust_phone");
-                          localStorage.removeItem("trustit_cust_addr");
-                        } catch {}
-                        setCustomerName("");
-                        setCustomerPhone("");
-                        setCustomerAddress("");
-                        setLoginInputName("");
-                        setLoginInputPhone("");
-                        setLoginInputAddress("");
-                        setActiveOrders([]);
-                        setActiveTokens([]);
-                        setActiveParchas([]);
-                        setIsCustomerEditing(false);
-                        setIsCustomerLoginOpen(false);
-                      }}
-                      className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+                      onClick={handleSignOut}
+                      className="rounded-lg border border-rose-200 bg-rose-50 px-2 py-1 text-[10px] font-bold text-rose-700 hover:bg-rose-100 transition"
                     >
                       Sign Out
                     </button>
                   </div>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-3 space-y-2.5">
-                <p className="text-[11px] text-slate-500 leading-tight">
-                  Enter your mobile number to sync your food orders, salon queue tokens, and kirana parchas automatically.
-                </p>
 
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-600 mb-0.5">Your Full Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Ramesh Kumar"
-                    value={loginInputName}
-                    onChange={(e) => setLoginInputName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
-                    Mobile Number (10 digits)
-                  </label>
-                  <div className="flex rounded-xl border border-slate-200 overflow-hidden focus-within:ring-1 focus-within:ring-blue-500">
-                    <span className="px-2.5 py-1.5 bg-slate-50 text-xs font-bold text-slate-500 border-r border-slate-200">
-                      +91
-                    </span>
-                    <input
-                      type="tel"
-                      placeholder="e.g. 9876543210"
-                      maxLength={10}
-                      value={loginInputPhone}
-                      onChange={(e) => setLoginInputPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                      className="w-full px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none font-mono"
-                    />
+                  {/* 2 Tabs */}
+                  <div className="flex rounded-xl bg-slate-100 p-1">
+                    <button
+                      type="button"
+                      onClick={() => setProfileTab("addresses")}
+                      className={`flex-1 rounded-lg py-1.5 text-center text-xs font-bold transition ${
+                        profileTab === "addresses"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      🏠 Saved Addresses ({savedAddresses.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setProfileTab("orders");
+                        fetchCustomerOrders(customerId, customerPhone);
+                      }}
+                      className={`flex-1 rounded-lg py-1.5 text-center text-xs font-bold transition ${
+                        profileTab === "orders"
+                          ? "bg-white text-slate-900 shadow-xs"
+                          : "text-slate-500 hover:text-slate-800"
+                      }`}
+                    >
+                      📋 Past Orders ({customerPastOrders.length})
+                    </button>
                   </div>
-                  {loginInputPhone && loginInputPhone.length < 10 && (
-                    <span className="text-[9px] text-amber-600 font-medium mt-0.5 block">
-                      Enter {10 - loginInputPhone.length} more digits
-                    </span>
+
+                  {/* Tab 1: Saved Addresses Book */}
+                  {profileTab === "addresses" && (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black text-slate-700">Saved Address Book</span>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddressModalOpen(true)}
+                          className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-0.5"
+                        >
+                          + Add New Address
+                        </button>
+                      </div>
+
+                      {savedAddresses.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center">
+                          <p className="text-xs font-semibold text-slate-600">No saved addresses yet.</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            Save your Home or Work address for 1-tap checkout.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => setIsAddressModalOpen(true)}
+                            className="mt-2 rounded-lg bg-slate-900 px-3 py-1 text-[10px] font-bold text-white hover:bg-slate-800"
+                          >
+                            + Add Home / Work Address
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {savedAddresses.map((addr) => {
+                            const isDefault = addr.isDefault || selectedAddressId === addr.id;
+                            const label = addr.label || addr.tag || "Home";
+                            const icon = label === "Home" ? "🏠" : label === "Work" ? "🏢" : "📍";
+                            const streetText = addr.street || buildAddressString(addr.houseNo || "", addr.mohalla || "", addr.road || "", addr.pincode || "", addr.district || "Bahraich");
+
+                            return (
+                              <div
+                                key={addr.id}
+                                className={`rounded-xl border p-2.5 transition ${
+                                  isDefault
+                                    ? "border-orange-400 bg-orange-50/50 ring-1 ring-orange-300"
+                                    : "border-slate-200 bg-white"
+                                }`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-xs">{icon}</span>
+                                    <span className="text-xs font-black text-slate-900">{label}</span>
+                                    {isDefault && (
+                                      <span className="rounded bg-orange-100 px-1.5 py-0.2 text-[8px] font-black text-orange-800">
+                                        Default
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    {!isDefault && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setSelectedAddressId(addr.id);
+                                          setCustomerAddress(streetText);
+                                        }}
+                                        className="rounded px-2 py-0.5 text-[9px] font-bold text-blue-600 hover:bg-blue-50"
+                                      >
+                                        Use Default
+                                      </button>
+                                    )}
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeleteAddress(addr.id)}
+                                      className="rounded px-1.5 py-0.5 text-[9px] font-bold text-rose-500 hover:bg-rose-50"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                </div>
+                                <p className="text-[11px] text-slate-600 mt-1 line-clamp-2">
+                                  {streetText}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Tab 2: Past Orders & Payment Breakdown */}
+                  {profileTab === "orders" && (
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-black text-slate-700">Past Orders &amp; Receipts</span>
+                        <button
+                          type="button"
+                          onClick={() => fetchCustomerOrders(customerId, customerPhone)}
+                          className="text-[10px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-0.5"
+                        >
+                          {isLoadingPastOrders ? "↻ Refreshing..." : "↻ Refresh"}
+                        </button>
+                      </div>
+
+                      {customerPastOrders.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4 text-center">
+                          <p className="text-xs font-semibold text-slate-600">No past orders found.</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">
+                            Browse restaurants in Bahraich and place your first delicious order!
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="space-y-2">
+                          {customerPastOrders.map((ord) => {
+                            const isOnline = ord.payment_mode === "online_cashfree";
+                            const isPaid = ord.payment_status === "paid";
+                            const dateStr = new Date(ord.created_at).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            });
+
+                            return (
+                              <div
+                                key={ord.id}
+                                className="rounded-xl border border-slate-200 bg-white p-3 space-y-2 shadow-2xs hover:border-slate-300 transition"
+                              >
+                                <div className="flex items-start justify-between gap-2">
+                                  <div>
+                                    <h4 className="text-xs font-black text-slate-900 leading-tight">
+                                      {ord.businesses?.name || "Local Restaurant"}
+                                    </h4>
+                                    <p className="text-[9.5px] text-slate-400 mt-0.5">
+                                      #{ord.id.slice(-8)} • {dateStr}
+                                    </p>
+                                  </div>
+                                  <span
+                                    className={`rounded-md px-1.5 py-0.5 text-[8.5px] font-black shrink-0 ${
+                                      ord.status === "delivered"
+                                        ? "bg-emerald-100 text-emerald-800"
+                                        : ord.status === "picked_up"
+                                          ? "bg-purple-100 text-purple-800"
+                                          : ord.status === "merchant_accepted"
+                                            ? "bg-indigo-100 text-indigo-800"
+                                            : ord.status === "rejected" || ord.status === "cancelled"
+                                              ? "bg-rose-100 text-rose-800"
+                                              : "bg-amber-100 text-amber-800"
+                                    }`}
+                                  >
+                                    {ord.status === "delivered"
+                                      ? "Delivered ✅"
+                                      : ord.status === "picked_up"
+                                        ? "On the Way 🛵"
+                                        : ord.status === "merchant_accepted"
+                                          ? "In Kitchen 👨‍🍳"
+                                          : ord.status === "food_ready"
+                                            ? "Food Ready 🥡"
+                                            : ord.status === "placed"
+                                              ? "Placed ⏳"
+                                              : ord.status}
+                                  </span>
+                                </div>
+
+                                {/* Items List */}
+                                <div className="text-[11px] text-slate-600 bg-slate-50/80 rounded-lg p-2 border border-slate-100">
+                                  {ord.hyperlocal_order_items && ord.hyperlocal_order_items.length > 0 ? (
+                                    ord.hyperlocal_order_items.map((i, idx) => (
+                                      <div key={idx} className="flex justify-between">
+                                        <span>
+                                          {i.quantity}x {i.item_name}
+                                        </span>
+                                        <span className="font-mono">₹{i.quantity * i.unit_price}</span>
+                                      </div>
+                                    ))
+                                  ) : (
+                                    <p className="italic text-slate-400">Order items summary</p>
+                                  )}
+                                </div>
+
+                                {/* Payment Breakdown & Reorder Action */}
+                                <div className="flex items-center justify-between border-t border-slate-100 pt-2">
+                                  <div>
+                                    <span className="text-xs font-black text-slate-900">₹{ord.total_amount}</span>
+                                    <p className="text-[9px] text-slate-500">
+                                      {isOnline
+                                        ? `💳 Cashfree Online (${isPaid ? "Paid ✅" : "Pending ⏳"})`
+                                        : "💵 Cash on Delivery"}
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleReorder(ord)}
+                                    className="flex items-center gap-1 rounded-lg bg-orange-500 hover:bg-orange-600 px-3 py-1 text-[10px] font-black text-white shadow-xs transition"
+                                  >
+                                    <span>🔄</span>
+                                    <span>Reorder</span>
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
+              ) : (
+                /* When NOT Logged In: Email OTP Flow */
+                <div className="space-y-3">
+                  {otpNotice && (
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-800">
+                      {otpNotice}
+                    </div>
+                  )}
+                  {otpError && (
+                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-800">
+                      {otpError}
+                    </div>
+                  )}
 
-                <div>
-                  <div className="flex items-center justify-between mb-0.5">
-                    <label className="text-[10px] font-bold text-slate-600">Delivery Address</label>
-                    <button
-                      type="button"
-                      onClick={handleDetectGps}
-                      className="text-[9px] font-bold text-blue-600 hover:underline"
-                    >
-                      📍 {isDetectingGps ? "Detecting..." : "GPS Auto"}
-                    </button>
-                  </div>
-                  <textarea
-                    rows={2}
-                    placeholder="House/Shop No., Mohalla, Landmark, Bahraich"
-                    value={loginInputAddress}
-                    onChange={(e) => setLoginInputAddress(e.target.value)}
-                    className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
+                  {loginStep === "email" ? (
+                    <div className="space-y-3">
+                      <div>
+                        <label className="block text-[11px] font-bold text-slate-700 mb-0.5">
+                          Email Address (for 6-Digit OTP)
+                        </label>
+                        <div className="flex items-center rounded-xl border border-slate-200 px-2.5 py-1.5 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
+                          <span className="text-slate-400 text-xs mr-2">✉️</span>
+                          <input
+                            type="email"
+                            placeholder="e.g. yourname@gmail.com"
+                            value={loginEmail}
+                            onChange={(e) => setLoginEmail(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleSendOtp();
+                            }}
+                            className="w-full text-xs text-slate-900 outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                            Full Name (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            placeholder="e.g. Ramesh Kumar"
+                            value={loginInputName}
+                            onChange={(e) => setLoginInputName(e.target.value)}
+                            className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-orange-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-600 mb-0.5">
+                            Mobile No (Optional)
+                          </label>
+                          <input
+                            type="tel"
+                            maxLength={10}
+                            placeholder="e.g. 9876543210"
+                            value={loginInputPhone}
+                            onChange={(e) => setLoginInputPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                            className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-orange-500 font-mono"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={isSendingOtp || !loginEmail.trim()}
+                        onClick={() => handleSendOtp()}
+                        className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2.5 text-xs font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
+                      >
+                        {isSendingOtp ? "Sending Verification Code..." : "Send 6-Digit Verification Code →"}
+                      </button>
+
+                      {/* 1-Tap Quick Demo Profiles */}
+                      <div className="border-t border-slate-100 pt-2.5">
+                        <span className="block text-[10px] font-semibold text-slate-400 mb-1.5">
+                          ⚡ Quick 1-Tap Demo Profiles:
+                        </span>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const email = "customer@trustitreview.com";
+                              const name = "Ramesh Kumar";
+                              setLoginEmail(email);
+                              setLoginInputName(name);
+                              handleSendOtp(email);
+                            }}
+                            className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-left hover:border-orange-400 hover:bg-orange-50/50 transition"
+                          >
+                            <div className="text-[11px] font-black text-slate-900">Ramesh Kumar</div>
+                            <div className="text-[9px] text-slate-500 font-mono">customer@trustitreview.com</div>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const email = "demo@trustitreview.com";
+                              const name = "Priya Sharma";
+                              setLoginEmail(email);
+                              setLoginInputName(name);
+                              handleSendOtp(email);
+                            }}
+                            className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-left hover:border-orange-400 hover:bg-orange-50/50 transition"
+                          >
+                            <div className="text-[11px] font-black text-slate-900">Priya Sharma</div>
+                            <div className="text-[9px] text-slate-500 font-mono">demo@trustitreview.com</div>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Step 2: 6-Digit OTP Entry */
+                    <div className="space-y-3">
+                      <div className="text-center space-y-1">
+                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-black uppercase text-orange-800">
+                          Step 2 of 2
+                        </span>
+                        <h4 className="text-sm font-extrabold text-slate-900">Enter 6-Digit Code</h4>
+                        <p className="text-[11px] text-slate-500">
+                          Code sent to <span className="font-semibold text-slate-800">{loginEmail}</span>
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLoginStep("email");
+                            setOtpError("");
+                            setOtpNotice("");
+                          }}
+                          className="text-[10px] text-orange-600 hover:underline font-bold"
+                        >
+                          ← Change Email
+                        </button>
+                      </div>
+
+                      <div>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={6}
+                          placeholder="• • • • • •"
+                          value={loginOtp}
+                          onChange={(e) => setLoginOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && loginOtp.length === 6) handleVerifyOtp();
+                          }}
+                          className="w-full rounded-xl border border-slate-300 py-2.5 text-center font-mono text-2xl font-black tracking-[0.35em] text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none"
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400">Didn&apos;t receive code?</span>
+                        {loginOtpCountdown > 0 ? (
+                          <span className="text-slate-400 font-mono">Resend in {loginOtpCountdown}s</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSendOtp()}
+                            className="font-bold text-orange-600 hover:underline"
+                          >
+                            ↻ Resend Code
+                          </button>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={isVerifyingOtp || loginOtp.length !== 6}
+                        onClick={handleVerifyOtp}
+                        className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2.5 text-xs font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
+                      >
+                        {isVerifyingOtp ? "Verifying Code..." : "Verify & Open Profile →"}
+                      </button>
+                    </div>
+                  )}
                 </div>
-
-                {/* 1-Tap Quick Select Pills */}
-                <div>
-                  <span className="block text-[10px] font-semibold text-slate-400 mb-1">
-                    ⚡ Quick 1-Tap Test Profiles:
-                  </span>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const name = "Ramesh Kumar";
-                        const phone = "9876543210";
-                        const addr = "Civil Lines, Near KDC Chauraha, Bahraich";
-                        setLoginInputName(name);
-                        setLoginInputPhone(phone);
-                        setLoginInputAddress(addr);
-                        setCustomerName(name);
-                        setCustomerPhone(phone);
-                        setCustomerAddress(addr);
-                        saveCustomerProfile(name, phone, addr);
-                        fetchActiveBookings(phone);
-                        setIsCustomerEditing(false);
-                        setIsCustomerLoginOpen(false);
-                      }}
-                      className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-left hover:border-blue-400 hover:bg-blue-50 transition"
-                    >
-                      <div className="text-[11px] font-bold text-slate-900">Ramesh Kumar</div>
-                      <div className="text-[9px] text-slate-500 font-mono">+91 98765 43210</div>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const name = "Priya Sharma";
-                        const phone = "9876543211";
-                        const addr = "Hospital Road, Salarganj, Bahraich";
-                        setLoginInputName(name);
-                        setLoginInputPhone(phone);
-                        setLoginInputAddress(addr);
-                        setCustomerName(name);
-                        setCustomerPhone(phone);
-                        setCustomerAddress(addr);
-                        saveCustomerProfile(name, phone, addr);
-                        fetchActiveBookings(phone);
-                        setIsCustomerEditing(false);
-                        setIsCustomerLoginOpen(false);
-                      }}
-                      className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-left hover:border-blue-400 hover:bg-blue-50 transition"
-                    >
-                      <div className="text-[11px] font-bold text-slate-900">Priya Sharma</div>
-                      <div className="text-[9px] text-slate-500 font-mono">+91 98765 43211</div>
-                    </button>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  disabled={loginInputPhone.length < 10}
-                  onClick={() => {
-                    const finalName = loginInputName.trim() || "Customer";
-                    setCustomerName(finalName);
-                    setCustomerPhone(loginInputPhone);
-                    setCustomerAddress(loginInputAddress);
-                    saveCustomerProfile(finalName, loginInputPhone, loginInputAddress);
-                    fetchActiveBookings(loginInputPhone);
-                    setIsCustomerEditing(false);
-                    setIsCustomerLoginOpen(false);
-                  }}
-                  className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 py-2.5 text-xs font-bold text-white shadow-md hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50 transition"
-                >
-                  Save &amp; Log In →
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -2888,18 +3519,64 @@ export default function CustomerSuperAppClient({
 
             <button
               type="button"
-              onClick={() => {
+              onClick={async () => {
                 const full = buildAddressString(addrHouseNo, addrMohalla, addrRoad, addrPincode, addrDistrict);
                 setCustomerAddress(full);
+
+                if (customerId) {
+                  try {
+                    const res = await fetch("/api/customer/addresses", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        customerId,
+                        address: {
+                          label: newAddressTag,
+                          street: full,
+                          city: addrDistrict || "Bahraich",
+                          pincode: addrPincode || "271801",
+                          isDefault: true,
+                        },
+                      }),
+                    });
+                    const d = await res.json();
+                    if (d.success && d.address) {
+                      const newEntry: CustomerSavedAddress = {
+                        id: d.address.id,
+                        customerId: d.address.customerId,
+                        label: d.address.label,
+                        tag: d.address.label,
+                        street: d.address.street,
+                        city: d.address.city,
+                        pincode: d.address.pincode,
+                        isDefault: true,
+                      };
+                      const updated = [newEntry, ...savedAddresses.filter((a) => a.id !== newEntry.id).map((a) => ({ ...a, isDefault: false }))];
+                      setSavedAddresses(updated);
+                      setSelectedAddressId(newEntry.id);
+                      try {
+                        localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(updated));
+                        localStorage.setItem("trustit_cust_addr", full);
+                      } catch {}
+                      setIsAddressModalOpen(false);
+                      return;
+                    }
+                  } catch {}
+                }
+
                 const newId = `addr_${Date.now()}`;
                 const newEntry: CustomerSavedAddress = {
                   id: newId,
+                  label: newAddressTag,
                   tag: newAddressTag,
+                  street: full,
                   houseNo: addrHouseNo,
                   mohalla: addrMohalla,
                   road: addrRoad,
                   pincode: addrPincode,
                   district: addrDistrict,
+                  city: addrDistrict || "Bahraich",
+                  isDefault: true,
                 };
                 const updated = [newEntry, ...savedAddresses.filter(a => a.tag !== newAddressTag)];
                 setSavedAddresses(updated);

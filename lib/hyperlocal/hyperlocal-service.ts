@@ -16,6 +16,7 @@ import type {
 
 export interface CreateHyperlocalOrderInput {
   orderId?: string;
+  customerId?: string;
   businessId: string;
   orderType: HyperlocalOrderType;
   customerName: string;
@@ -83,6 +84,7 @@ export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
     .insert({
       id: orderId,
       business_id: input.businessId,
+      customer_id: input.customerId || null,
       customer_name: input.customerName,
       customer_phone: input.customerPhone,
       customer_address: input.customerAddress,
