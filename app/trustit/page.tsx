@@ -5,9 +5,9 @@ import TrustitPublicFooter from "@/app/components/trustit-public-footer";
 import { publicUrl } from "@/lib/public-discovery-seo";
 import { trustitPublicPlans } from "@/lib/trustit-public-info";
 
-const trustitTitle = "Trustit | QR reviews for your business";
+const trustitTitle = "Trustit | Hyperlocal Super-App, Dedicated Delivery Fleet & Business QR";
 const trustitDescription =
-  "Create a simple Trustit QR for your business, help customers reach your Google Review page, and manage scans from one business dashboard.";
+  "Trustit is Bahraich's unified hyperlocal super-app with its own dedicated delivery rider fleet bringing food, groceries, healthcare, and daily essentials straight to your home, alongside smart merchant QR solutions.";
 const trustitCanonical = publicUrl("/trustit");
 
 export const metadata: Metadata = {
@@ -42,6 +42,8 @@ const steps = [
 ] as const;
 
 const features = [
+  ["Dedicated Delivery Rider Fleet", "Our own verified delivery partners deliver food, sweets, groceries, and daily essentials directly to customer doorsteps with care, speed, and hygiene."],
+  ["Hyperlocal Super-App Ordering", "Customers browse live menus, book salon queue tokens, schedule car wash bays, and order grocery essentials with fast 25-35m delivery."],
   ["QR for your business", "A dedicated QR that takes customers to your Trustit review page."],
   ["Customer review journey", "Customers scan, see your business, then continue to your Google Review link."],
   ["QR scan tracking", "View the scan count associated with your business QR."],
@@ -55,7 +57,8 @@ const plans = trustitPublicPlans.map((plan) => ({ ...plan, description: "Trustit
 const planSummary = trustitPublicPlans.map((plan) => `${plan.name} is ₹${plan.price} for ${plan.durationDays} days`).join(", ");
 
 const questions = [
-  ["What is Trustit?", "Trustit gives your business a QR-led path to its Google Review page, with a dashboard for QR and account management."],
+  ["What is Trustit?", "Trustit is Bahraich's unified hyperlocal super-app and smart merchant platform. We operate our own dedicated delivery rider fleet delivering food, sweets, groceries, healthcare, and daily essentials with hygiene and speed, while providing smart QR tools for local merchants."],
+  ["Does Trustit have its own delivery fleet?", "Yes. Trustit has an active, dedicated team of verified delivery riders who pick up orders from local restaurants and stores and deliver them safely to customers' doorsteps."],
   ["How does the Trustit QR work?", "Customers scan the QR to open your Trustit page, where they can continue to your Google Review link."],
   ["How do I register my business?", "Create an account, add your business details and review link, choose a plan, then complete the one-time payment."],
   ["What happens after registration?", "After payment is verified, your business and QR are activated and you can open the merchant dashboard."],
