@@ -120,6 +120,23 @@ export interface DeliveryRider {
   is_verified: boolean;
   created_at: string;
   distanceKm?: number;
+  // Extended KYC, Payout & Performance Analytics
+  profile_image_url?: string | null;
+  residential_address?: string | null;
+  city?: string;
+  pincode?: string;
+  driving_license_number?: string | null;
+  driving_license_image_url?: string | null;
+  bank_account_holder_name?: string | null;
+  bank_account_number?: string | null;
+  bank_ifsc_code?: string | null;
+  bank_name?: string | null;
+  upi_id?: string | null;
+  aadhaar_masked?: string | null;
+  pan_number?: string | null;
+  kyc_status?: "pending" | "approved" | "rejected" | "suspended";
+  total_deliveries_count?: number;
+  total_earnings?: number;
 }
 
 export interface ServiceTokenSlot {
