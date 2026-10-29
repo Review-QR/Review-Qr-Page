@@ -29,6 +29,7 @@ grant select on table
   public.review_special_occasions
 to authenticated;
 
+drop policy if exists review_sessions_select_active_admin on public.review_sessions;
 create policy review_sessions_select_active_admin
   on public.review_sessions for select to authenticated
   using (exists (
@@ -36,6 +37,7 @@ create policy review_sessions_select_active_admin
     where admin.user_id = (select auth.uid()) and admin.is_active = true
   ));
 
+drop policy if exists review_session_experiences_select_active_admin on public.review_session_experiences;
 create policy review_session_experiences_select_active_admin
   on public.review_session_experiences for select to authenticated
   using (exists (
@@ -43,6 +45,7 @@ create policy review_session_experiences_select_active_admin
     where admin.user_id = (select auth.uid()) and admin.is_active = true
   ));
 
+drop policy if exists review_generations_select_active_admin on public.review_generations;
 create policy review_generations_select_active_admin
   on public.review_generations for select to authenticated
   using (exists (
@@ -50,6 +53,7 @@ create policy review_generations_select_active_admin
     where admin.user_id = (select auth.uid()) and admin.is_active = true
   ));
 
+drop policy if exists trustit_reviews_select_active_admin on public.trustit_reviews;
 create policy trustit_reviews_select_active_admin
   on public.trustit_reviews for select to authenticated
   using (exists (
@@ -57,6 +61,7 @@ create policy trustit_reviews_select_active_admin
     where admin.user_id = (select auth.uid()) and admin.is_active = true
   ));
 
+drop policy if exists review_customer_profiles_select_active_admin on public.review_customer_profiles;
 create policy review_customer_profiles_select_active_admin
   on public.review_customer_profiles for select to authenticated
   using (exists (
@@ -64,6 +69,7 @@ create policy review_customer_profiles_select_active_admin
     where admin.user_id = (select auth.uid()) and admin.is_active = true
   ));
 
+drop policy if exists review_family_members_select_active_admin on public.review_family_members;
 create policy review_family_members_select_active_admin
   on public.review_family_members for select to authenticated
   using (exists (
@@ -71,6 +77,7 @@ create policy review_family_members_select_active_admin
     where admin.user_id = (select auth.uid()) and admin.is_active = true
   ));
 
+drop policy if exists review_special_occasions_select_active_admin on public.review_special_occasions;
 create policy review_special_occasions_select_active_admin
   on public.review_special_occasions for select to authenticated
   using (exists (

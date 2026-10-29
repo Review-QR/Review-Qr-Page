@@ -107,6 +107,7 @@ alter table public.merchant_bank_change_requests enable row level security;
 alter table public.merchant_settlement_batches enable row level security;
 
 -- Merchant read their own bank account
+drop policy if exists merchant_bank_accounts_select_own on public.merchant_bank_accounts;
 create policy merchant_bank_accounts_select_own on public.merchant_bank_accounts
   for select using (exists (
     select 1 from public.merchant_accounts ma
@@ -115,6 +116,7 @@ create policy merchant_bank_accounts_select_own on public.merchant_bank_accounts
   ));
 
 -- Merchant insert their bank account if none exists
+drop policy if exists merchant_bank_accounts_insert_own on public.merchant_bank_accounts;
 create policy merchant_bank_accounts_insert_own on public.merchant_bank_accounts
   for insert with check (exists (
     select 1 from public.merchant_accounts ma
@@ -123,10 +125,12 @@ create policy merchant_bank_accounts_insert_own on public.merchant_bank_accounts
   ));
 
 -- Service role / Admin full access to bank accounts
+drop policy if exists merchant_bank_accounts_admin_all on public.merchant_bank_accounts;
 create policy merchant_bank_accounts_admin_all on public.merchant_bank_accounts
   for all using (true) with check (true);
 
 -- Merchant KYC documents policies
+drop policy if exists merchant_kyc_select_own on public.merchant_kyc_documents;
 create policy merchant_kyc_select_own on public.merchant_kyc_documents
   for select using (exists (
     select 1 from public.merchant_accounts ma
@@ -134,6 +138,7 @@ create policy merchant_kyc_select_own on public.merchant_kyc_documents
       and ma.user_id = (select auth.uid())
   ));
 
+drop policy if exists merchant_kyc_insert_own on public.merchant_kyc_documents;
 create policy merchant_kyc_insert_own on public.merchant_kyc_documents
   for insert with check (exists (
     select 1 from public.merchant_accounts ma
@@ -141,10 +146,12 @@ create policy merchant_kyc_insert_own on public.merchant_kyc_documents
       and ma.user_id = (select auth.uid())
   ));
 
+drop policy if exists merchant_kyc_admin_all on public.merchant_kyc_documents;
 create policy merchant_kyc_admin_all on public.merchant_kyc_documents
   for all using (true) with check (true);
 
 -- Bank change requests policies
+drop policy if exists bank_change_requests_select_own on public.merchant_bank_change_requests;
 create policy bank_change_requests_select_own on public.merchant_bank_change_requests
   for select using (exists (
     select 1 from public.merchant_accounts ma
@@ -152,6 +159,7 @@ create policy bank_change_requests_select_own on public.merchant_bank_change_req
       and ma.user_id = (select auth.uid())
   ));
 
+drop policy if exists bank_change_requests_insert_own on public.merchant_bank_change_requests;
 create policy bank_change_requests_insert_own on public.merchant_bank_change_requests
   for insert with check (exists (
     select 1 from public.merchant_accounts ma
@@ -159,10 +167,12 @@ create policy bank_change_requests_insert_own on public.merchant_bank_change_req
       and ma.user_id = (select auth.uid())
   ));
 
+drop policy if exists bank_change_requests_admin_all on public.merchant_bank_change_requests;
 create policy bank_change_requests_admin_all on public.merchant_bank_change_requests
   for all using (true) with check (true);
 
 -- Settlement batches policies
+drop policy if exists settlement_batches_select_own on public.merchant_settlement_batches;
 create policy settlement_batches_select_own on public.merchant_settlement_batches
   for select using (exists (
     select 1 from public.merchant_accounts ma
@@ -170,5 +180,6 @@ create policy settlement_batches_select_own on public.merchant_settlement_batche
       and ma.user_id = (select auth.uid())
   ));
 
+drop policy if exists settlement_batches_admin_all on public.merchant_settlement_batches;
 create policy settlement_batches_admin_all on public.merchant_settlement_batches
   for all using (true) with check (true);

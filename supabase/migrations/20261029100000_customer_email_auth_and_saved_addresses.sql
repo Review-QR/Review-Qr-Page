@@ -57,12 +57,15 @@ alter table public.customer_addresses enable row level security;
 alter table public.customer_auth_codes enable row level security;
 
 -- Permissive service role access
+drop policy if exists "service_role_all_customers" on public.customers;
 create policy "service_role_all_customers" on public.customers
   for all using (true) with check (true);
 
+drop policy if exists "service_role_all_addresses" on public.customer_addresses;
 create policy "service_role_all_addresses" on public.customer_addresses
   for all using (true) with check (true);
 
+drop policy if exists "service_role_all_auth_codes" on public.customer_auth_codes;
 create policy "service_role_all_auth_codes" on public.customer_auth_codes
   for all using (true) with check (true);
 
