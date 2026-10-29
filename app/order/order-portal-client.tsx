@@ -200,14 +200,25 @@ type ActiveParchaOrder = {
 export default function CustomerSuperAppClient({
   businesses,
   catalogItems,
+  initialSearchQuery = "",
+  initialStoreName = "",
 }: {
   businesses: SuperAppBusiness[];
   catalogItems: SuperAppCatalogItem[];
+  initialSearchQuery?: string;
+  initialStoreName?: string;
 }) {
   // Navigation & Category Tab
   const [activeTab, setActiveTab] = useState<"food" | "dairy" | "kirana" | "medical" | "car_wash" | "salon">("food");
   const [selectedCity, setSelectedCity] = useState<string>("Bahraich");
-  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState<string>(initialSearchQuery || initialStoreName);
+
+  // Auto-resolve initial store if store or restaurant parameter is passed in URL
+  const initialStore = useMemo(() => {
+    if (!initialStoreName && !initialSearchQuery) return null;
+    const target = (initialStoreName || initialSearchQuery).trim().toLowerCase();
+    return businesses.find((b) => b.name.toLowerCase().includes(target)) || null;
+  }, [businesses, initialStoreName, initialSearchQuery]);
 
   // Customer Identity & Auth state
   const [customerId, setCustomerId] = useState<string>("");
@@ -268,7 +279,7 @@ export default function CustomerSuperAppClient({
 
   // Cart for Food & Sweets
   const [cart, setCart] = useState<{ [cartKey: string]: CartLineItem }>({});
-  const [activeStoreModal, setActiveStoreModal] = useState<SuperAppBusiness | null>(null);
+  const [activeStoreModal, setActiveStoreModal] = useState<SuperAppBusiness | null>(initialStore);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [paymentMethodChoice, setPaymentMethodChoice] = useState<
     "online_cashfree" | "cod"
