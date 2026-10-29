@@ -88,7 +88,7 @@ export async function GET(request: Request) {
     .select(`
       *,
       hyperlocal_order_items (*),
-      delivery_riders (id, full_name, phone, vehicle_type, vehicle_number, rating),
+      delivery_riders:hyperlocal_orders_rider_id_fkey (id, full_name, phone, vehicle_type, vehicle_number, rating),
       businesses (name, city, phone, address, location_latitude, location_longitude)
     `)
     .order("created_at", { ascending: false });
