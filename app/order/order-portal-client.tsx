@@ -1660,12 +1660,12 @@ export default function CustomerSuperAppClient({
 
       {/* ── Main Listings Content (High-Density Multi-Column Grid on Tablet/Desktop) ── */}
       <main className="max-w-5xl mx-auto px-2.5 sm:px-4 pt-2">
-        {/* Micro Promotional Ribbon */}
+        {/* Micro Promotional Ribbon (SEO & Trust Guarantee) */}
         <div className="mb-2 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-2.5 py-1 flex items-center justify-between text-[10px] text-amber-900 shadow-2xs">
           <div className="flex items-center gap-1.5 min-w-0">
             <span className="text-xs">⚡</span>
             <span className="font-bold truncate">
-              {activeTab === "food" && "Free Delivery above ₹499 · 25-35m Express"}
+              {activeTab === "food" && "Trusted Food & Express Home Delivery in Bahraich · 25-35m Doorstep"}
               {activeTab === "salon" && "Live Token · Bina dukan me baithe number lagayein"}
               {activeTab === "car_wash" && "Bay 1 / Bay 2 Live Availability · No waiting"}
               {activeTab === "kirana" && "Parcha photo bhejein · Dukan se direct delivery"}
@@ -1674,7 +1674,7 @@ export default function CustomerSuperAppClient({
             </span>
           </div>
           <span className="text-[8px] font-black uppercase text-amber-800 bg-amber-200/90 px-1.5 py-0.2 rounded shrink-0">
-            LIVE UP
+            TRUSTED ORDER
           </span>
         </div>
 
