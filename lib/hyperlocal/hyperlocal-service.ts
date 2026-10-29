@@ -569,7 +569,7 @@ export async function adminCancelOrderDoorstepRefusal(
   const now = new Date().toISOString();
 
   // 1. Mark order cancelled
-  await admin
+  const { error: updateOrderErr } = await admin
     .from("hyperlocal_orders")
     .update({
       status: "cancelled",
@@ -580,6 +580,8 @@ export async function adminCancelOrderDoorstepRefusal(
       updated_at: now,
     })
     .eq("id", orderId);
+
+  if (updateOrderErr) throw new Error(updateOrderErr.message);
 
   // 2. Compensate rider ₹35 if rider was assigned/picked up
   let riderPayout = 0;
@@ -602,7 +604,7 @@ export async function adminCancelOrderDoorstepRefusal(
     const currentDeliveries = Number(rider?.total_deliveries_count || 0);
     const currentTotalEarnings = Number(rider?.total_earnings || 0);
 
-    await admin
+    const { error: riderUpdateErr } = await admin
       .from("delivery_riders")
       .update({
         wallet_balance: currentWallet + Number(riderPayout),
@@ -612,6 +614,8 @@ export async function adminCancelOrderDoorstepRefusal(
         updated_at: now,
       })
       .eq("id", order.rider_id);
+
+    if (riderUpdateErr) throw new Error(riderUpdateErr.message);
 
     // Mark payout split settled
     await admin
