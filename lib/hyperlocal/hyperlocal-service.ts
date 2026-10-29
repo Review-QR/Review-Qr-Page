@@ -51,11 +51,21 @@ export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
     throw new Error("Business not found.");
   }
 
-  // 2. Calculate order financial subtotal
+  // 2. Fetch business catalog to enforce tamper-proof menu pricing
+  const { data: catalogItems } = await admin
+    .from("business_catalog_items")
+    .select("name, price, is_available")
+    .eq("business_id", input.businessId);
+
+  const catalogPriceMap = new Map((catalogItems || []).map((ci) => [ci.name.trim().toLowerCase(), Number(ci.price)]));
+
+  // 3. Calculate order financial subtotal with verified pricing
   let subtotal = 0;
   const lineItems = input.items.map((item) => {
     const qty = Math.max(1, Math.floor(item.quantity));
-    const price = Math.max(0, item.unit_price);
+    // Enforce official catalog price if item exists in business catalog
+    const catalogPrice = catalogPriceMap.get(item.item_name.trim().toLowerCase());
+    const price = typeof catalogPrice === "number" && catalogPrice > 0 ? catalogPrice : Math.max(0, item.unit_price);
     const total = Math.round(qty * price * 100) / 100;
     subtotal += total;
     return {
@@ -301,28 +311,58 @@ export async function riderCompleteDeliveryWithOtp(
 
   const { data: order, error } = await admin
     .from("hyperlocal_orders")
-    .select("id, delivery_otp, total_amount, payment_mode, rider_id, status")
+    .select("id, delivery_otp, total_amount, payment_mode, rider_id, status, otp_attempts")
     .eq("id", orderId)
     .maybeSingle();
 
   if (error || !order) throw new Error("Order not found.");
 
+  if (order.status === "delivered" || order.status === "completed") {
+    throw new Error("Order has already been delivered.");
+  }
+  if (order.status === "cancelled") {
+    throw new Error("Cannot deliver an already cancelled order.");
+  }
+
+  // Brute-force OTP Protection: Limit to 5 attempts
+  const attempts = Number(order.otp_attempts || 0);
+  if (attempts >= 5) {
+    throw new Error("Too many incorrect OTP attempts. Delivery verification locked for security. Please contact Admin support.");
+  }
+
   if (order.delivery_otp !== enteredOtp.trim()) {
-    throw new Error("Invalid 4-digit OTP. Please ask the customer for the correct code.");
+    await admin
+      .from("hyperlocal_orders")
+      .update({
+        otp_attempts: attempts + 1,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", orderId);
+
+    const remaining = 5 - (attempts + 1);
+    throw new Error(`Invalid 4-digit OTP. Please ask customer for correct code. ${remaining > 0 ? `(${remaining} attempts left)` : "(Order locked)"}`);
   }
 
   const now = new Date().toISOString();
 
-  // 1. Mark order delivered
-  await admin
+  // 1. Atomic status transition: only mark delivered if status != 'delivered'
+  const { data: updatedOrder, error: updateOrderErr } = await admin
     .from("hyperlocal_orders")
     .update({
       status: "delivered",
       delivered_at: now,
       updated_at: now,
       payment_status: order.payment_mode === "cod" ? "cod_collected" : "paid",
+      otp_attempts: 0,
     })
-    .eq("id", orderId);
+    .eq("id", orderId)
+    .neq("status", "delivered")
+    .select("id")
+    .maybeSingle();
+
+  if (updateOrderErr || !updatedOrder) {
+    throw new Error("Order has already been delivered.");
+  }
 
   // 2. Fetch payout split details
   const { data: split } = await admin

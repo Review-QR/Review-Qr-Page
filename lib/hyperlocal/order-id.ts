@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, randomInt } from "node:crypto";
 
 export const HYPERLOCAL_ORDER_ID_PREFIX = "hord_";
 export const HYPERLOCAL_ORDER_ID_PATTERN = /^hord_[a-f0-9]{24,36}$/;
@@ -18,10 +18,10 @@ export function isValidHyperlocalOrderId(orderId: unknown): orderId is string {
 }
 
 /**
- * Generates a 4-digit numeric OTP for delivery handover verification.
+ * Generates a cryptographically secure 4-digit numeric OTP for delivery handover verification.
  */
 export function generateDeliveryOtp(): string {
-  return String(Math.floor(1000 + Math.random() * 9000));
+  return String(randomInt(1000, 10000));
 }
 
 /**

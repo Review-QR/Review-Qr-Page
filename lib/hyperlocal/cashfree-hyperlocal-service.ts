@@ -76,6 +76,25 @@ export async function createCashfreeHyperlocalPaymentOrder(
   const customerName = input.customerName?.trim() || "Trustit Customer";
   const customerEmail = input.customerEmail?.trim() || `customer_${validPhone}@trustitreview.com`;
 
+  // 1. Authoritative DB verification to prevent client-side price parameter tampering
+  const admin = createSupabaseAdminClient();
+  const { data: dbOrder } = await admin
+    .from("hyperlocal_orders")
+    .select("total_amount, payment_status, business_id")
+    .eq("id", input.orderId)
+    .maybeSingle();
+
+  if (dbOrder && dbOrder.payment_status === "paid") {
+    return {
+      success: false,
+      error: "This order has already been paid.",
+      httpStatus: 400,
+    };
+  }
+
+  // Use authoritative database amount if available
+  const authoritativeAmount = dbOrder?.total_amount ? Number(dbOrder.total_amount) : Math.round(input.amount * 100) / 100;
+
   // Note: All online payments are handled directly via Cashfree Payment Gateway rails.
   const upiString = "";
 
@@ -101,7 +120,7 @@ export async function createCashfreeHyperlocalPaymentOrder(
   const idempotencyKey = randomUUID();
   const requestBody = {
     order_id: input.orderId,
-    order_amount: Math.round(input.amount * 100) / 100,
+    order_amount: authoritativeAmount,
     order_currency: "INR",
     customer_details: {
       customer_id: `cust_${validPhone}`,
@@ -282,6 +301,18 @@ export async function verifyCashfreeHyperlocalPayment(
       return {
         status: mapped,
         reason: `Cashfree reports order status as ${orderData.order_status || "UNKNOWN"}`,
+      };
+    }
+
+    // Anti-Tampering Check: Verify that the amount paid to Cashfree matches the database total
+    const expectedAmount = Number(order.total_amount);
+    const gatewayAmount = typeof orderData.order_amount === "number" ? Number(orderData.order_amount) : expectedAmount;
+
+    if (Math.abs(gatewayAmount - expectedAmount) > 0.01) {
+      return {
+        status: "FAILED",
+        reason: `Payment amount mismatch: Gateway charged ₹${gatewayAmount}, but order total is ₹${expectedAmount}. Rejected for security.`,
+        httpStatus: 400,
       };
     }
 

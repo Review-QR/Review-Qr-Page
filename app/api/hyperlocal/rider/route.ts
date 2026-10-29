@@ -12,6 +12,7 @@ import {
   sendRiderEmailOtp,
   verifyRiderEmailOtp,
 } from "@/lib/auth/email-service";
+import { signRiderSessionToken, verifyRiderSessionToken } from "@/lib/hyperlocal/rider-session";
 
 export const dynamic = "force-dynamic";
 
@@ -360,7 +361,11 @@ export async function POST(request: Request) {
         return Response.json({ success: false, error: regError.message }, { status: 400 });
       }
 
-      return Response.json({ success: true, rider: newRider });
+      return Response.json({
+        success: true,
+        rider: newRider,
+        riderToken: signRiderSessionToken(newRider.id),
+      });
     }
 
     // ── 4. QUICK 1-TAP LOGIN / PHONE LOOKUP ──
@@ -390,7 +395,11 @@ export async function POST(request: Request) {
         );
       }
 
-      return Response.json({ success: true, rider });
+      return Response.json({
+        success: true,
+        rider,
+        riderToken: signRiderSessionToken(rider.id),
+      });
     }
 
     // ── 5. LEGACY QUICK REGISTER ──
@@ -422,7 +431,11 @@ export async function POST(request: Request) {
         return Response.json({ success: false, error: regError.message }, { status: 400 });
       }
 
-      return Response.json({ success: true, rider: newRider });
+      return Response.json({
+        success: true,
+        rider: newRider,
+        riderToken: signRiderSessionToken(newRider.id),
+      });
     }
 
     // ── 6. UPDATE PROFILE / SETTINGS ──
