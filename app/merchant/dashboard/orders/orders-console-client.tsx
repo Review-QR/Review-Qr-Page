@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { HyperlocalOrder, ServiceTokenSlot } from "@/lib/hyperlocal/types";
+import { formatDisplayOrderNumber } from "@/lib/hyperlocal/order-id";
 
 interface Props {
   business: {
@@ -328,7 +329,9 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono font-bold text-sm text-slate-900">{order.id}</span>
+                      <span className="font-mono font-black text-sm text-slate-950 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-300">
+                        {formatDisplayOrderNumber(order.id)}
+                      </span>
                       <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
                         isNewPlaced ? "bg-amber-500 text-white animate-pulse" : "bg-emerald-100 text-emerald-800"
                       }`}>
@@ -518,7 +521,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                       Kitchen Alert · Incoming Confirmed Order
                     </span>
                     <h3 className="text-base sm:text-lg font-black leading-tight">
-                      New Order Received!
+                      New Order {formatDisplayOrderNumber(incomingOrderModal.id)} Received!
                     </h3>
                   </div>
                 </div>
@@ -721,7 +724,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
               <h3 className="text-sm font-black text-slate-900 tracking-tight">{business.name}</h3>
               <p className="text-[9px] text-slate-500 uppercase tracking-widest mt-0.5">KITCHEN ORDER TICKET (KOT)</p>
               <div className="mt-1.5 flex justify-between text-[9px] text-slate-600">
-                <span>Token: #{kotOrderModal.id.slice(-6)}</span>
+                <span className="font-bold text-slate-900 text-xs">Order: {formatDisplayOrderNumber(kotOrderModal.id)}</span>
                 <span>{new Date(kotOrderModal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             </div>

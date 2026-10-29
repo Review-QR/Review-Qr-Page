@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import type { DeliveryRider, HyperlocalOrder } from "@/lib/hyperlocal/types";
+import { formatDisplayOrderNumber } from "@/lib/hyperlocal/order-id";
 
 interface RiderScorecard {
   todayEarnings: number;
@@ -1213,7 +1214,7 @@ export default function RiderAppPage() {
           <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-slate-900 to-indigo-950/60 p-3.5 space-y-3 shadow-lg">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <span className="rounded-md bg-indigo-600 px-2 py-0.5 text-[10px] font-black text-white">
-                ACTIVE #{activeOrder.id.slice(-6)}
+                ACTIVE {formatDisplayOrderNumber(activeOrder.id)}
               </span>
               <span className="text-[10px] font-bold uppercase text-indigo-300">
                 {activeOrder.status.replace(/_/g, " ")}
@@ -1365,6 +1366,76 @@ export default function RiderAppPage() {
           </div>
         )}
 
+        {/* ── AVAILABLE READY ORDERS IN ZONE (1-TAP DIRECT CLAIM) ── */}
+        {!activeOrder && isOnline && availableOrders.length > 0 && (
+          <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-b from-slate-900 to-amber-950/20 p-3 space-y-2.5 shadow-md">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+                <span>📦</span> Ready for Pickup in Your Area ({availableOrders.length})
+              </span>
+              <span className="text-[9px] text-slate-400 font-mono">1-Tap Claim</span>
+            </div>
+
+            <div className="space-y-2">
+              {availableOrders.map((ord) => (
+                <div
+                  key={ord.id}
+                  className="rounded-xl bg-slate-850/90 p-2.5 border border-slate-800 space-y-1.5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5">
+                      <span className="rounded-md bg-amber-400/20 px-2 py-0.5 text-[11px] font-mono font-black text-amber-300">
+                        {formatDisplayOrderNumber(ord.id)}
+                      </span>
+                      <span className="text-xs font-bold text-white">
+                        {ord.business?.name || "Local Merchant"}
+                      </span>
+                    </div>
+                    <span className="text-xs font-black text-emerald-400">+₹35.00</span>
+                  </div>
+
+                  <p className="text-[10px] text-slate-400 line-clamp-1">{ord.business?.address}</p>
+
+                  <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-[10px]">
+                    <span className="text-slate-400">
+                      Bill: ₹{ord.total_amount} · {ord.payment_mode === "cod" ? "💵 COD" : "⚡ Paid Online"}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={isSubmitting}
+                      onClick={async () => {
+                        setIsSubmitting(true);
+                        try {
+                          const res = await fetch("/api/hyperlocal/rider", {
+                            method: "POST",
+                            headers: { "content-type": "application/json" },
+                            body: JSON.stringify({
+                              action: "accept_order",
+                              riderId: rider.id,
+                              orderId: ord.id,
+                            }),
+                          });
+                          const data = await res.json();
+                          if (data.success) {
+                            setActiveOrder(ord);
+                            setToastMessage(`Order ${formatDisplayOrderNumber(ord.id)} Claimed! Proceed to Restaurant.`);
+                            fetchRiderData();
+                          }
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }}
+                      className="rounded-lg bg-emerald-500 px-2.5 py-1 text-[10px] font-bold text-slate-950 hover:bg-emerald-400 transition"
+                    >
+                      {isSubmitting ? "Claiming..." : "Accept Delivery →"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ── RECENT TRIP HISTORY ── */}
         {scorecard?.recentTrips && scorecard.recentTrips.length > 0 && (
           <div className="rounded-xl border border-slate-800 bg-slate-900 p-2.5 space-y-2">
@@ -1378,7 +1449,12 @@ export default function RiderAppPage() {
                   className="flex items-center justify-between rounded-lg bg-slate-850 p-2 text-[11px]"
                 >
                   <div>
-                    <span className="font-bold text-white block">{trip.shopName}</span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-white block">{trip.shopName}</span>
+                      <span className="text-[9px] font-mono text-amber-400">
+                        {formatDisplayOrderNumber(trip.id)}
+                      </span>
+                    </div>
                     <span className="text-[9px] text-slate-400 font-mono">
                       Bill: ₹{trip.billAmount} · {trip.paymentMode.toUpperCase()}
                     </span>
@@ -1431,7 +1507,7 @@ export default function RiderAppPage() {
           <div className="w-full max-w-xs sm:max-w-sm rounded-2xl border-2 border-amber-400 bg-slate-900 p-4 shadow-2xl space-y-3 animate-in slide-in-from-bottom-6">
             <div className="flex items-center justify-between">
               <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-black text-slate-950 animate-pulse">
-                ⚡ INCOMING DISPATCH (RING 1)
+                ⚡ INCOMING DISPATCH ORDER {formatDisplayOrderNumber(incomingOrder.id)}
               </span>
               <span className="font-mono text-sm font-black text-rose-400">{countdown}s</span>
             </div>
