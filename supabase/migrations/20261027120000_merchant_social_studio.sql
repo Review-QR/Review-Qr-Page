@@ -24,6 +24,7 @@ revoke all on public.merchant_social_integrations from public, anon, authenticat
 grant select, insert, update, delete on public.merchant_social_integrations to authenticated;
 grant select, insert, update, delete on public.merchant_social_integrations to service_role;
 
+drop policy if exists merchant_social_integrations_select_own on public.merchant_social_integrations;
 create policy merchant_social_integrations_select_own on public.merchant_social_integrations
   for select to authenticated using (exists (
     select 1 from public.merchant_accounts ma
@@ -32,6 +33,7 @@ create policy merchant_social_integrations_select_own on public.merchant_social_
       and ma.user_id = (select auth.uid()) and b.merchant_status = 'active'
   ));
 
+drop policy if exists merchant_social_integrations_insert_own on public.merchant_social_integrations;
 create policy merchant_social_integrations_insert_own on public.merchant_social_integrations
   for insert to authenticated with check (exists (
     select 1 from public.merchant_accounts ma
@@ -40,6 +42,7 @@ create policy merchant_social_integrations_insert_own on public.merchant_social_
       and ma.user_id = (select auth.uid()) and b.merchant_status = 'active'
   ));
 
+drop policy if exists merchant_social_integrations_update_own on public.merchant_social_integrations;
 create policy merchant_social_integrations_update_own on public.merchant_social_integrations
   for update to authenticated using (exists (
     select 1 from public.merchant_accounts ma
@@ -53,6 +56,7 @@ create policy merchant_social_integrations_update_own on public.merchant_social_
       and ma.user_id = (select auth.uid()) and b.merchant_status = 'active'
   ));
 
+drop policy if exists merchant_social_integrations_delete_own on public.merchant_social_integrations;
 create policy merchant_social_integrations_delete_own on public.merchant_social_integrations
   for delete to authenticated using (exists (
     select 1 from public.merchant_accounts ma

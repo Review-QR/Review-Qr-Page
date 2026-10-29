@@ -171,13 +171,16 @@ alter table public.service_tokens_and_slots enable row level security;
 alter table public.hyperlocal_payout_splits enable row level security;
 
 -- Rider policies: Rider can read and update their own status/location
+drop policy if exists delivery_riders_select_all on public.delivery_riders;
 create policy delivery_riders_select_all on public.delivery_riders
   for select using (true);
 
+drop policy if exists delivery_riders_update_own on public.delivery_riders;
 create policy delivery_riders_update_own on public.delivery_riders
   for update using (true) with check (true);
 
 -- Merchant policies on orders: Merchant can read/update their business's orders
+drop policy if exists hyperlocal_orders_merchant_select on public.hyperlocal_orders;
 create policy hyperlocal_orders_merchant_select on public.hyperlocal_orders
   for select using (exists (
     select 1 from public.merchant_accounts ma
@@ -185,30 +188,39 @@ create policy hyperlocal_orders_merchant_select on public.hyperlocal_orders
       and ma.user_id = (select auth.uid())
   ));
 
+drop policy if exists hyperlocal_orders_public_insert on public.hyperlocal_orders;
 create policy hyperlocal_orders_public_insert on public.hyperlocal_orders
   for insert with check (true);
 
+drop policy if exists hyperlocal_orders_public_select on public.hyperlocal_orders;
 create policy hyperlocal_orders_public_select on public.hyperlocal_orders
   for select using (true);
 
+drop policy if exists hyperlocal_order_items_select on public.hyperlocal_order_items;
 create policy hyperlocal_order_items_select on public.hyperlocal_order_items
   for select using (true);
 
+drop policy if exists hyperlocal_order_items_insert on public.hyperlocal_order_items;
 create policy hyperlocal_order_items_insert on public.hyperlocal_order_items
   for insert with check (true);
 
+drop policy if exists service_tokens_select on public.service_tokens_and_slots;
 create policy service_tokens_select on public.service_tokens_and_slots
   for select using (true);
 
+drop policy if exists service_tokens_insert on public.service_tokens_and_slots;
 create policy service_tokens_insert on public.service_tokens_and_slots
   for insert with check (true);
 
+drop policy if exists service_tokens_update on public.service_tokens_and_slots;
 create policy service_tokens_update on public.service_tokens_and_slots
   for update using (true) with check (true);
 
+drop policy if exists grocery_parcha_orders_select on public.grocery_parcha_orders;
 create policy grocery_parcha_orders_select on public.grocery_parcha_orders
   for select using (true);
 
+drop policy if exists grocery_parcha_orders_insert on public.grocery_parcha_orders;
 create policy grocery_parcha_orders_insert on public.grocery_parcha_orders
   for insert with check (true);
 

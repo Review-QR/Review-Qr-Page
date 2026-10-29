@@ -227,13 +227,16 @@ alter table public.product_order_complaints enable row level security;
 alter table public.product_order_audit_logs enable row level security;
 
 -- Public & Merchant reads on active catalogue
+drop policy if exists qr_products_select_active on public.qr_products;
 create policy qr_products_select_active on public.qr_products
   for select using (is_active = true);
 
+drop policy if exists qr_product_variants_select_active on public.qr_product_variants;
 create policy qr_product_variants_select_active on public.qr_product_variants
   for select using (is_active = true);
 
 -- Merchant permissions on orders (Strictly scoped to merchant's own business)
+drop policy if exists product_orders_select_own on public.product_orders;
 create policy product_orders_select_own on public.product_orders
   for select to authenticated using (exists (
     select 1 from public.merchant_accounts ma
@@ -242,6 +245,7 @@ create policy product_orders_select_own on public.product_orders
       and ma.user_id = (select auth.uid()) and b.merchant_status = 'active'
   ));
 
+drop policy if exists product_orders_insert_own on public.product_orders;
 create policy product_orders_insert_own on public.product_orders
   for insert to authenticated with check (exists (
     select 1 from public.merchant_accounts ma
@@ -250,6 +254,7 @@ create policy product_orders_insert_own on public.product_orders
       and ma.user_id = (select auth.uid()) and b.merchant_status = 'active'
   ));
 
+drop policy if exists product_order_items_select_own on public.product_order_items;
 create policy product_order_items_select_own on public.product_order_items
   for select to authenticated using (exists (
     select 1 from public.product_orders o
@@ -259,6 +264,7 @@ create policy product_order_items_select_own on public.product_order_items
       and ma.user_id = (select auth.uid()) and b.merchant_status = 'active'
   ));
 
+drop policy if exists product_order_items_insert_own on public.product_order_items;
 create policy product_order_items_insert_own on public.product_order_items
   for insert to authenticated with check (exists (
     select 1 from public.product_orders o
@@ -268,6 +274,7 @@ create policy product_order_items_insert_own on public.product_order_items
       and ma.user_id = (select auth.uid()) and b.merchant_status = 'active'
   ));
 
+drop policy if exists product_order_shipments_select_own on public.product_order_shipments;
 create policy product_order_shipments_select_own on public.product_order_shipments
   for select to authenticated using (exists (
     select 1 from public.product_orders o
@@ -277,6 +284,7 @@ create policy product_order_shipments_select_own on public.product_order_shipmen
       and ma.user_id = (select auth.uid()) and b.merchant_status = 'active'
   ));
 
+drop policy if exists product_order_complaints_select_own on public.product_order_complaints;
 create policy product_order_complaints_select_own on public.product_order_complaints
   for select to authenticated using (exists (
     select 1 from public.merchant_accounts ma
@@ -285,6 +293,7 @@ create policy product_order_complaints_select_own on public.product_order_compla
       and ma.user_id = (select auth.uid()) and b.merchant_status = 'active'
   ));
 
+drop policy if exists product_order_complaints_insert_own on public.product_order_complaints;
 create policy product_order_complaints_insert_own on public.product_order_complaints
   for insert to authenticated with check (exists (
     select 1 from public.merchant_accounts ma
