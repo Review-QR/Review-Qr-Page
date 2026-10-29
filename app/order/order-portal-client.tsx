@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { formatDisplayOrderNumber } from "@/lib/hyperlocal/order-id";
+import { formatDisplayOrderNumber, formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
 
 type CashfreeCheckoutSdk = (options: { mode: "sandbox" | "production" }) => {
   checkout: (options: {
@@ -1056,7 +1056,7 @@ export default function CustomerSuperAppClient({
           setIsCheckoutOpen(false);
           setActiveStoreModal(null);
           setBookingSuccessNotice(
-            `💵 Order Placed (Cash on Delivery)! Your Order ID is ${formatDisplayOrderNumber(data.orderId)}. Delivery OTP: ${data.deliveryOtp}`
+            `💵 Order Placed (Cash on Delivery)! Your Order ID is ${formatUnifiedOrderCode(data.orderId, activeStoreModal?.name)}. Delivery OTP: ${data.deliveryOtp}`
           );
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
@@ -1183,7 +1183,7 @@ export default function CustomerSuperAppClient({
           setIsCheckoutOpen(false);
           setActiveStoreModal(null);
           setBookingSuccessNotice(
-            `🎉 Paid Online Successfully via Cashfree! Order Placed ${formatDisplayOrderNumber(currentOrderId)}.${deliveryOtp ? ` Delivery OTP: ${deliveryOtp}` : ""}`
+            `🎉 Paid Online Successfully via Cashfree! Order Placed ${formatUnifiedOrderCode(currentOrderId, activeStoreModal?.name)}.${deliveryOtp ? ` Delivery OTP: ${deliveryOtp}` : ""}`
           );
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
@@ -1191,7 +1191,7 @@ export default function CustomerSuperAppClient({
         } else {
           setIsCheckoutOpen(false);
           setBookingSuccessNotice(
-            `Order ${formatDisplayOrderNumber(currentOrderId)} placed with pending payment.${deliveryOtp ? ` Delivery OTP: ${deliveryOtp}.` : ""} Check Active Bookings to complete.`
+            `Order ${formatUnifiedOrderCode(currentOrderId, activeStoreModal?.name)} placed with pending payment.${deliveryOtp ? ` Delivery OTP: ${deliveryOtp}.` : ""} Check Active Bookings to complete.`
           );
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
@@ -1347,7 +1347,7 @@ export default function CustomerSuperAppClient({
           setParchaImagePreview(null);
           setParchaNotes("");
           setBookingSuccessNotice(
-            `Parcha Sent to Dukandar! Order ${formatDisplayOrderNumber(data.orderId)}. Delivery OTP: ${data.deliveryOtp}. Dukandar will prepare bill and dispatch rider.`,
+            `Parcha Sent to Dukandar! Order ${formatUnifiedOrderCode(data.orderId, "Kirana")}. Delivery OTP: ${data.deliveryOtp}. Dukandar will prepare bill and dispatch rider.`,
           );
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
@@ -2759,7 +2759,7 @@ export default function CustomerSuperAppClient({
                           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                             <div>
                               <span className="text-xs font-mono font-black text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
-                                {formatDisplayOrderNumber(ord.id)}
+                                {formatUnifiedOrderCode(ord.id, ord.businesses?.name)}
                               </span>
                               <h5 className="text-sm font-black text-slate-900 leading-tight">
                                 {ord.businesses?.name || "Restaurant Partner"}
@@ -2944,7 +2944,7 @@ export default function CustomerSuperAppClient({
                       >
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-mono font-black text-purple-900 bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200">
-                            {formatDisplayOrderNumber(parcha.order_id)}
+                            {formatUnifiedOrderCode(parcha.order_id, "Kirana")}
                           </span>
                           <span className="rounded-md bg-purple-200 px-2 py-0.5 text-[10px] font-black text-purple-900 uppercase">
                             {parcha.hyperlocal_orders?.status || "Parcha Sent"}
@@ -3236,7 +3236,7 @@ export default function CustomerSuperAppClient({
                                       {ord.businesses?.name || "Local Restaurant"}
                                     </h4>
                                     <p className="text-[9.5px] text-slate-500 font-mono mt-0.5">
-                                      {formatDisplayOrderNumber(ord.id)} • {dateStr}
+                                      {formatUnifiedOrderCode(ord.id, ord.businesses?.name)} • {dateStr}
                                     </p>
                                   </div>
                                   <span

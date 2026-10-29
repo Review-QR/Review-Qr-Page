@@ -1,0 +1,32 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.trustitreview.rider",
+      "sha256_cert_fingerprints": [
+        "40:22:21:C9:48:11:8F:B4:5C:7D:C7:7D:4F:3C:58:65:CC:A3:BB:FB:E4:7F:09:80:5B:65:0A:12:6D:37:4F:27"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.trustitreview.merchant",
+      "sha256_cert_fingerprints": [
+        "73:4F:35:B8:E3:75:AA:09:7B:82:25:4A:12:1F:7D:75:24:88:57:B3:A0:38:EE:6C:68:8F:AD:99:15:9F:79:71"
+      ]
+    }
+  },
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.trustitreview.customer",
+      "sha256_cert_fingerprints": [
+        "4A:CB:D4:ED:04:70:05:81:29:A3:7F:52:11:3C:DD:5F:7E:09:64:B4:57:2C:06:DB:61:D2:DE:16:83:C1:53:BE"
+      ]
+    }
+  }
+]

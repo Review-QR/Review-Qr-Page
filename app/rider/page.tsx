@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import type { DeliveryRider, HyperlocalOrder } from "@/lib/hyperlocal/types";
-import { formatDisplayOrderNumber } from "@/lib/hyperlocal/order-id";
+import { formatDisplayOrderNumber, formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
+import { resolveBahraichArea } from "@/lib/hyperlocal/location-resolver";
 
 interface RiderScorecard {
   todayEarnings: number;
@@ -32,6 +33,7 @@ export default function RiderAppPage() {
   const [isOnline, setIsOnline] = useState(true);
   const [locationStatus, setLocationStatus] = useState("Acquiring GPS...");
   const [currentCoords, setCurrentCoords] = useState<{ lat: number; lon: number } | null>(null);
+  const [isGpsPromptOpen, setIsGpsPromptOpen] = useState(false);
   const [shiftSeconds, setShiftSeconds] = useState(0);
 
   // Auth & Email OTP State
@@ -90,21 +92,37 @@ export default function RiderAppPage() {
       if (ctx.state === "suspended") ctx.resume();
 
       const osc = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
       const gain = ctx.createGain();
 
       osc.type = "sawtooth";
+      osc2.type = "square";
+
+      // Piercing alternating frequencies: 880Hz (A5) -> 587Hz (D5) -> 880Hz (A5)
       osc.frequency.setValueAtTime(880, ctx.currentTime);
-      osc.frequency.setValueAtTime(440, ctx.currentTime + 0.15);
+      osc.frequency.setValueAtTime(587, ctx.currentTime + 0.15);
       osc.frequency.setValueAtTime(880, ctx.currentTime + 0.3);
 
-      gain.gain.setValueAtTime(0.25, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.45);
+      osc2.frequency.setValueAtTime(440, ctx.currentTime);
+      osc2.frequency.setValueAtTime(330, ctx.currentTime + 0.15);
+      osc2.frequency.setValueAtTime(440, ctx.currentTime + 0.3);
+
+      // Max Volume (0.95)
+      gain.gain.setValueAtTime(0.95, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
 
       osc.connect(gain);
+      osc2.connect(gain);
       gain.connect(ctx.destination);
 
       osc.start();
-      osc.stop(ctx.currentTime + 0.45);
+      osc2.start();
+      osc.stop(ctx.currentTime + 0.6);
+      osc2.stop(ctx.currentTime + 0.6);
+
+      try {
+        navigator.vibrate?.([600, 200, 600, 200, 800]);
+      } catch {}
     } catch {}
   }
 
@@ -214,7 +232,8 @@ export default function RiderAppPage() {
           const lat = pos.coords.latitude;
           const lon = pos.coords.longitude;
           setCurrentCoords({ lat, lon });
-          setLocationStatus(`${lat.toFixed(4)}, ${lon.toFixed(4)}`);
+          setLocationStatus(resolveBahraichArea(lat, lon));
+          setIsGpsPromptOpen(false);
 
           fetch("/api/hyperlocal/rider", {
             method: "POST",
@@ -228,7 +247,8 @@ export default function RiderAppPage() {
           }).catch(() => {});
         },
         () => {
-          setLocationStatus("27.5745, 81.5965");
+          setIsGpsPromptOpen(true);
+          setLocationStatus("Bahraich City Center");
           setCurrentCoords({ lat: 27.5745, lon: 81.5965 });
         },
         { enableHighAccuracy: true },
@@ -240,6 +260,26 @@ export default function RiderAppPage() {
       if (watchId) navigator.geolocation.clearWatch(watchId);
     };
   }, [rider?.id, isOnline]);
+
+  // Screen WakeLock: Keep rider phone awake during duty shifts so audio alerts never miss
+  useEffect(() => {
+    let wakeLockSentinel: any = null;
+    async function requestWakeLock() {
+      try {
+        if ("wakeLock" in navigator && isOnline) {
+          wakeLockSentinel = await (navigator as any).wakeLock.request("screen");
+        }
+      } catch {}
+    }
+    if (isOnline) {
+      requestWakeLock();
+    }
+    return () => {
+      try {
+        wakeLockSentinel?.release?.();
+      } catch {}
+    };
+  }, [isOnline]);
 
   // Countdown timer for incoming order popup with 30s waterfall escalation
   useEffect(() => {
@@ -523,6 +563,13 @@ export default function RiderAppPage() {
   }
 
   function handleRiderLogout() {
+    if (activeOrder) {
+      alert(`⚠️ Active Order in Progress! You cannot log out while carrying active order #${activeOrder.id.slice(-4)}. Please complete delivery to the customer first.`);
+      return;
+    }
+    if (!window.confirm("क्या आप वाकई अपनी ड्यूटी बंद करके लॉगआउट करना चाहते हैं?")) {
+      return;
+    }
     localStorage.removeItem("trustit_rider_id");
     setRider(null);
     setActiveOrder(null);
@@ -1008,7 +1055,10 @@ export default function RiderAppPage() {
   // ── SCREEN 2: RIDER PRO DASHBOARD (COMPLETE ECOSYSTEM) ──
   // ═════════════════════════════════════════════════════════════════
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 px-3.5 py-3 max-w-sm mx-auto flex flex-col justify-between font-sans">
+    <div
+      style={{ overscrollBehaviorY: "contain" }}
+      className="min-h-screen bg-slate-950 text-slate-100 px-3.5 py-3 max-w-sm mx-auto flex flex-col justify-between font-sans overscroll-contain touch-pan-y"
+    >
       <div className="space-y-3">
         {/* Top Header: Rider Profile Bar */}
         <div className="flex items-center justify-between pb-2.5 border-b border-slate-800/90">
@@ -1078,26 +1128,17 @@ export default function RiderAppPage() {
               ⚙️
             </button>
 
-            {/* Logout */}
-            <button
-              type="button"
-              onClick={handleRiderLogout}
-              title="Logout"
-              className="grid h-6 w-6 place-items-center rounded-lg bg-slate-800 text-[10px] text-slate-400 hover:text-white"
-            >
-              ✕
-            </button>
           </div>
         </div>
 
         {/* Live GPS & Shift Timer Bar */}
         <div className="flex items-center justify-between rounded-xl bg-slate-900 px-2.5 py-1.5 border border-slate-800 text-[10px]">
-          <div className="flex items-center gap-1.5">
-            <span className="relative flex h-2 w-2">
+          <div className="flex items-center gap-1.5 min-w-0 pr-2">
+            <span className="relative flex h-2 w-2 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="text-slate-300 font-mono">GPS: {locationStatus}</span>
+            <span className="text-slate-300 font-medium truncate">📍 {locationStatus}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -1214,7 +1255,7 @@ export default function RiderAppPage() {
           <div className="rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-slate-900 to-indigo-950/60 p-3.5 space-y-3 shadow-lg">
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <span className="rounded-md bg-indigo-600 px-2 py-0.5 text-[10px] font-black text-white">
-                ACTIVE {formatDisplayOrderNumber(activeOrder.id)}
+                ACTIVE {formatUnifiedOrderCode(activeOrder.id, activeOrder.business?.name)}
               </span>
               <span className="text-[10px] font-bold uppercase text-indigo-300">
                 {activeOrder.status.replace(/_/g, " ")}
@@ -1385,7 +1426,7 @@ export default function RiderAppPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <span className="rounded-md bg-amber-400/20 px-2 py-0.5 text-[11px] font-mono font-black text-amber-300">
-                        {formatDisplayOrderNumber(ord.id)}
+                        {formatUnifiedOrderCode(ord.id, ord.business?.name)}
                       </span>
                       <span className="text-xs font-bold text-white">
                         {ord.business?.name || "Local Merchant"}
@@ -1452,7 +1493,7 @@ export default function RiderAppPage() {
                     <div className="flex items-center gap-1.5">
                       <span className="font-bold text-white block">{trip.shopName}</span>
                       <span className="text-[9px] font-mono text-amber-400">
-                        {formatDisplayOrderNumber(trip.id)}
+                        {formatUnifiedOrderCode(trip.id, trip.shopName)}
                       </span>
                     </div>
                     <span className="text-[9px] text-slate-400 font-mono">
@@ -1507,7 +1548,7 @@ export default function RiderAppPage() {
           <div className="w-full max-w-xs sm:max-w-sm rounded-2xl border-2 border-amber-400 bg-slate-900 p-4 shadow-2xl space-y-3 animate-in slide-in-from-bottom-6">
             <div className="flex items-center justify-between">
               <span className="rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-black text-slate-950 animate-pulse">
-                ⚡ INCOMING DISPATCH ORDER {formatDisplayOrderNumber(incomingOrder.id)}
+                ⚡ INCOMING DISPATCH ORDER {formatUnifiedOrderCode(incomingOrder.id, incomingOrder.business?.name)}
               </span>
               <span className="font-mono text-sm font-black text-rose-400">{countdown}s</span>
             </div>
@@ -1662,12 +1703,69 @@ export default function RiderAppPage() {
               </div>
             </div>
 
+            <div className="pt-2 border-t border-slate-800 space-y-2">
+              {activeOrder ? (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 text-center text-[10px] text-amber-300">
+                  🔒 Running order in progress. Complete delivery before ending shift.
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSettingsOpen(false);
+                    handleRiderLogout();
+                  }}
+                  className="w-full rounded-xl border border-rose-500/30 bg-rose-500/10 py-2 text-xs font-bold text-rose-400 hover:bg-rose-500/20 transition"
+                >
+                  🚪 End Shift & Logout
+                </button>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setIsSettingsOpen(false)}
+                className="w-full rounded-xl bg-slate-800 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Forceful GPS Enable Prompt Modal */}
+      {isGpsPromptOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
+          <div className="w-full max-w-xs rounded-2xl border-2 border-rose-500 bg-slate-900 p-5 shadow-2xl space-y-4 text-center">
+            <div className="grid h-12 w-12 mx-auto place-items-center rounded-2xl bg-rose-500/20 text-2xl animate-bounce">
+              📡
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">GPS Location Required</h3>
+              <p className="mt-1 text-[11px] text-slate-300 leading-relaxed">
+                नजदीकी ऑर्डर्स प्राप्त करने और दूरी मापने के लिए फ़ोन की लोकेशन (GPS) ऑन होना आवश्यक है।
+              </p>
+            </div>
             <button
               type="button"
-              onClick={() => setIsSettingsOpen(false)}
-              className="w-full rounded-xl bg-slate-800 py-2 text-xs font-bold text-slate-200 hover:bg-slate-700"
+              onClick={() => {
+                setIsGpsPromptOpen(false);
+                if (navigator.geolocation) {
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      const lat = pos.coords.latitude;
+                      const lon = pos.coords.longitude;
+                      setCurrentCoords({ lat, lon });
+                      setLocationStatus(resolveBahraichArea(lat, lon));
+                    },
+                    () => setLocationStatus("Bahraich City Center"),
+                    { enableHighAccuracy: true }
+                  );
+                }
+              }}
+              className="w-full rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 py-2.5 text-xs font-black text-slate-950 shadow-md transition hover:from-amber-300 hover:to-amber-400"
             >
-              Close
+              Allow GPS / Retry Location
             </button>
           </div>
         </div>
