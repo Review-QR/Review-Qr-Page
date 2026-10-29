@@ -70,6 +70,8 @@ export interface HyperlocalOrder {
   tax_amount: number;
   total_amount: number;
   delivery_otp: string;
+  otp_attempts?: number;
+  otp_locked_until?: string | null;
   rider_id?: string | null;
   dispatch_target_rider_id?: string | null;
   dispatch_expires_at?: string | null;

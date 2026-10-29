@@ -63,6 +63,20 @@ export async function POST(request: Request): Promise<Response> {
       const isSuccess = paymentStatus === "SUCCESS" || eventType === "PAYMENT_SUCCESS_WEBHOOK";
 
       if (isSuccess) {
+        // Anti-tampering check: ensure webhook amount matches order total in database
+        const { data: dbOrder } = await admin
+          .from("hyperlocal_orders")
+          .select("total_amount")
+          .eq("id", orderId)
+          .maybeSingle();
+
+        const webhookOrderAmount = payload?.data?.order?.order_amount ?? payload?.data?.payment?.payment_amount;
+        if (dbOrder && typeof webhookOrderAmount === "number") {
+          if (Math.abs(Number(webhookOrderAmount) - Number(dbOrder.total_amount)) > 0.01) {
+            return Response.json({ result: "tampered_amount_rejected" }, { status: 400 });
+          }
+        }
+
         const cfPaymentId = payload?.data?.payment?.cf_payment_id
           ? String(payload.data.payment.cf_payment_id)
           : null;

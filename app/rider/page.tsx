@@ -507,6 +507,9 @@ export default function RiderAppPage() {
         setRider(data.rider);
         setIsOnline(true);
         localStorage.setItem("trustit_rider_id", data.rider.id);
+        if (data.riderToken) {
+          localStorage.setItem("trustit_rider_token", data.riderToken);
+        }
         setIsKycModalOpen(false);
         setToastMessage("Partner Profile & KYC Verified! You are now ONLINE.");
       } else {
@@ -534,6 +537,9 @@ export default function RiderAppPage() {
         setRider(data.rider);
         setIsOnline(data.rider.is_online);
         localStorage.setItem("trustit_rider_id", data.rider.id);
+        if (data.riderToken) {
+          localStorage.setItem("trustit_rider_token", data.riderToken);
+        }
         setToastMessage(`Switched to ${data.rider.full_name}`);
       }
     } catch {
@@ -559,6 +565,7 @@ export default function RiderAppPage() {
           action: "request_payout",
           riderId: rider.id,
           destinationUpi: upiTarget,
+          riderToken: typeof window !== "undefined" ? localStorage.getItem("trustit_rider_token") || undefined : undefined,
         }),
       });
       const data = await res.json();
