@@ -3424,11 +3424,18 @@ export default function CustomerSuperAppClient({
                                         </span>
                                       </div>
                                     ) : isCancelled ? (
-                                      <div className="flex items-center gap-1 text-rose-600 text-xs font-black">
-                                        <span>Cancelled</span>
-                                        <span className="grid h-4 w-4 place-items-center rounded-full bg-rose-500 text-white text-[9px] font-black">
-                                          ✕
-                                        </span>
+                                      <div className="text-right">
+                                        <div className="flex items-center justify-end gap-1 text-rose-600 text-xs font-black">
+                                          <span>Cancelled</span>
+                                          <span className="grid h-4 w-4 place-items-center rounded-full bg-rose-500 text-white text-[9px] font-black">
+                                            ✕
+                                          </span>
+                                        </div>
+                                        {ord.cancellation_reason && (
+                                          <span className="text-[9px] text-rose-500 font-semibold block mt-0.5">
+                                            {ord.cancellation_reason.replace(/_/g, " ")}
+                                          </span>
+                                        )}
                                       </div>
                                     ) : (
                                       <span className="rounded-md bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-black">

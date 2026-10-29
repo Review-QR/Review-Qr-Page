@@ -13,6 +13,41 @@ interface Props {
   };
 }
 
+function sanitizeDisplayLocation(text?: string | null): string {
+  if (!text) return "Bahraich Locality";
+  return (
+    text
+      .replace(
+        /(?:Near\s+)?(?:GPS\s+)?(?:Lat|Latitude):?\s*[\d.]+,?\s*(?:Lng|Longitude):?\s*[\d.]+/gi,
+        "Civil Lines / KDC Road",
+      )
+      .replace(/,\s*,/g, ",")
+      .trim() || "Bahraich Locality"
+  );
+}
+
+function sanitizeCustomerNote(note?: string | null): string | null {
+  if (!note) return null;
+  return note
+    .replace(
+      /(?:Near\s+)?(?:GPS\s+)?(?:Lat|Latitude):?\s*[\d.]+,?\s*(?:Lng|Longitude):?\s*[\d.]+/gi,
+      "Customer Location",
+    )
+    .trim();
+}
+
+function getKitchenPrepCountdown(order: HyperlocalOrder, currentTime: number) {
+  const prepMins = order.merchant_prep_time_minutes || 20;
+  const startTime = new Date(order.accepted_at || order.updated_at || order.created_at).getTime();
+  const totalDurationSec = prepMins * 60;
+  const elapsedSec = Math.max(0, Math.floor((currentTime - startTime) / 1000));
+  const remainingSec = Math.max(0, totalDurationSec - elapsedSec);
+  const percent = Math.max(0, Math.min(100, (remainingSec / totalDurationSec) * 100));
+  const mins = Math.floor(remainingSec / 60);
+  const secs = remainingSec % 60;
+  return { remainingSec, percent, mins, secs, prepMins, startTime, isExpired: remainingSec === 0 };
+}
+
 export default function UniversalOrdersConsoleClient({ business }: Props) {
   const [orders, setOrders] = useState<HyperlocalOrder[]>([]);
   const [tokens, setTokens] = useState<ServiceTokenSlot[]>([]);
@@ -346,12 +381,30 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                       </span>
                       {order.status === "cancelled" ? (
                         <span className="px-2.5 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-300">
-                          🔴 CANCELLED {order.cancellation_reason === "customer_refused_at_doorstep" ? "(Customer Refused)" : ""}
+                          🔴 CANCELLED
+                        </span>
+                      ) : isNewPlaced ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500 text-white animate-pulse">
+                          ⏳ NEW ORDER RECEIVED
+                        </span>
+                      ) : isAccepted ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-900 border border-indigo-200">
+                          👨‍🍳 PREPARING IN KITCHEN
+                        </span>
+                      ) : order.status === "ready_for_pickup" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                          🥡 READY FOR PICKUP
+                        </span>
+                      ) : order.status === "picked_up" || order.status === "out_for_delivery" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-100 text-purple-900 border border-purple-300">
+                          🛵 ON THE WAY (RIDER PICKED UP)
+                        </span>
+                      ) : order.status === "delivered" || order.status === "completed" ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
+                          ✅ DELIVERED
                         </span>
                       ) : (
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                          isNewPlaced ? "bg-amber-500 text-white animate-pulse" : "bg-emerald-100 text-emerald-800"
-                        }`}>
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
                           {order.status.replace(/_/g, " ").toUpperCase()}
                         </span>
                       )}
@@ -363,11 +416,35 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                     </div>
                   </div>
 
-                  {/* Customer Doorstep Refusal Settlement Notice */}
-                  {order.status === "cancelled" && order.cancellation_reason === "customer_refused_at_doorstep" && (
-                    <div className="my-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center justify-between">
-                      <span>⚠️ <strong>Doorstep Refusal:</strong> Customer refused order. Food cost is settled to restaurant.</span>
-                      <span className="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Settled ✓</span>
+                  {/* Cancellation Reason Notice (Visible to Merchant) */}
+                  {(order.status === "cancelled" || order.status === "rejected") && (
+                    <div className="my-2.5 p-3.5 rounded-2xl bg-rose-50 border border-rose-300 text-xs text-rose-900 space-y-1 shadow-2xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-rose-800 flex items-center gap-1.5">
+                          <span>🔴</span>
+                          <span>ORDER CANCELLED</span>
+                        </span>
+                        {order.cancellation_reason === "customer_refused_at_doorstep" ? (
+                          <span className="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded text-[10px]">
+                            Food Cost Settled to Restaurant ✓
+                          </span>
+                        ) : (
+                          <span className="font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded text-[10px]">
+                            Cancelled
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-rose-700 font-semibold">
+                        <strong>Cancellation Reason:</strong>{" "}
+                        {order.cancellation_reason === "customer_refused_at_doorstep"
+                          ? "Customer refused delivery at doorstep. Rider was compensated and food cost is settled to restaurant."
+                          : order.cancellation_reason?.replace(/_/g, " ") || "Order declined or cancelled."}
+                      </p>
+                      {order.admin_notes && (
+                        <p className="text-[10px] text-rose-600 font-mono">
+                          Audit Note: {order.admin_notes}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -391,13 +468,99 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                     </div>
                   )}
 
-                  {/* Customer Info */}
+                  {/* Kitchen Preparation Circular Countdown Ring */}
+                  {isAccepted && (() => {
+                    const prep = getKitchenPrepCountdown(order, currentTime);
+                    const strokeCircumference = 163.4;
+                    const strokeOffset = strokeCircumference - (strokeCircumference * prep.percent) / 100;
+                    const ringColor = prep.isExpired ? "#ef4444" : prep.mins < 5 ? "#f59e0b" : "#10b981";
+
+                    return (
+                      <div className="my-3 p-3.5 bg-gradient-to-r from-emerald-50/80 via-teal-50/50 to-white border border-emerald-200 rounded-2xl flex items-center justify-between gap-3 shadow-2xs">
+                        <div className="flex items-center gap-3.5">
+                          {/* SVG Countdown Circle */}
+                          <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                            <svg className="h-16 w-16 transform -rotate-90" viewBox="0 0 64 64">
+                              <circle cx="32" cy="32" r="26" stroke="#e2e8f0" strokeWidth="4.5" fill="none" />
+                              <circle
+                                cx="32"
+                                cy="32"
+                                r="26"
+                                stroke={ringColor}
+                                strokeWidth="4.5"
+                                strokeDasharray={strokeCircumference}
+                                strokeDashoffset={strokeOffset}
+                                strokeLinecap="round"
+                                fill="none"
+                                className="transition-all duration-1000 ease-linear"
+                              />
+                            </svg>
+                            <div className="absolute text-center leading-none">
+                              <span className="font-mono text-xs font-black text-slate-900 block">
+                                {prep.mins}:{String(prep.secs).padStart(2, "0")}
+                              </span>
+                              <span
+                                className={`text-[8px] font-black uppercase ${
+                                  prep.isExpired ? "text-rose-600 animate-pulse" : "text-slate-500"
+                                }`}
+                              >
+                                {prep.isExpired ? "OVERDUE" : "LEFT"}
+                              </span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm">👨‍🍳</span>
+                              <h4 className="text-xs font-black text-slate-900">Food is being prepared in kitchen</h4>
+                            </div>
+                            <p className="text-[10px] text-slate-500 mt-0.5">
+                              Target prep: <strong>{prep.prepMins} mins</strong> · Started at{" "}
+                              {new Date(prep.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            </p>
+                            {prep.isExpired && (
+                              <p className="text-[10px] text-rose-600 font-bold mt-0.5">
+                                ⚠️ Prep target time reached! Please mark food ready below.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="hidden sm:block text-right">
+                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-lg">
+                            Cooking Active 🔥
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Food Ready at Counter Notice */}
+                  {order.status === "ready_for_pickup" && (
+                    <div className="my-2 p-3 bg-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-bold shadow-2xs">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🥡</span>
+                        <div>
+                          <span className="block text-xs font-black">Food Ready &amp; Packed at Counter!</span>
+                          <span className="text-[10px] text-emerald-700 font-medium">
+                            Nearest delivery rider alerted to collect parcel.
+                          </span>
+                        </div>
+                      </div>
+                      <span className="bg-emerald-600 text-white px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                        Awaiting Pickup
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Customer Info (With Coordinate Sanitizer) */}
                   <div className="py-2.5 text-xs space-y-1">
                     <p className="font-bold text-slate-800">
                       Customer: {order.customer_name} ({order.customer_phone})
                     </p>
                     <p className="text-slate-500">
-                      Delivery Address: {order.customer_address?.street}, {order.customer_address?.city}
+                      Delivery Address: {sanitizeDisplayLocation(order.customer_address?.street)},{" "}
+                      {order.customer_address?.city || "Bahraich"}
                     </p>
                     <div className="pt-0.5">
                       {order.payment_status === "paid" ? (
@@ -412,7 +575,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                     </div>
                     {order.customer_notes && (
                       <p className="text-amber-800 bg-amber-50 p-1.5 rounded-lg font-medium border border-amber-200">
-                        📝 Customer Note: {order.customer_notes}
+                        📝 Customer Note: {sanitizeCustomerNote(order.customer_notes)}
                       </p>
                     )}
                   </div>
@@ -435,20 +598,49 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                     ))}
                   </div>
 
-                  {/* Assigned Rider Info (if assigned) */}
-                  {order.delivery_riders && (
-                    <div className="mt-3 p-3 bg-purple-50 rounded-2xl text-xs flex items-center justify-between border border-purple-200">
-                      <div>
-                        <span className="text-[10px] font-bold text-purple-700 uppercase block">Assigned Rider</span>
-                        <p className="font-bold text-slate-800">
-                          {order.delivery_riders.full_name} ({order.delivery_riders.vehicle_number})
-                        </p>
+                  {/* Assigned Rider Info or Assigning Soon */}
+                  {order.delivery_riders ? (
+                    <div className="mt-3 p-3 bg-purple-50 rounded-2xl text-xs flex items-center justify-between border border-purple-200 shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="grid h-8 w-8 place-items-center rounded-xl bg-purple-600 text-white text-base">
+                          🛵
+                        </span>
+                        <div>
+                          <span className="text-[10px] font-bold text-purple-700 uppercase block">Assigned Rider</span>
+                          <p className="font-bold text-slate-800">
+                            {order.delivery_riders.full_name} ({order.delivery_riders.vehicle_number || "Verified Rider"})
+                          </p>
+                        </div>
                       </div>
-                      <a href={`tel:${order.delivery_riders.phone}`} className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-xs font-bold hover:bg-purple-700 transition shadow-2xs">
+                      <a
+                        href={`tel:${order.delivery_riders.phone}`}
+                        className="px-3 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition shadow-2xs"
+                      >
                         📞 Call Rider
                       </a>
                     </div>
-                  )}
+                  ) : order.status !== "delivered" &&
+                    order.status !== "completed" &&
+                    order.status !== "cancelled" &&
+                    order.status !== "rejected" ? (
+                    <div className="mt-3 p-3 bg-amber-50/70 rounded-2xl text-xs flex items-center justify-between border border-amber-300 shadow-2xs">
+                      <div className="flex items-center gap-2.5">
+                        <span className="relative flex h-3.5 w-3.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500"></span>
+                        </span>
+                        <div>
+                          <span className="text-[10px] font-bold text-amber-800 uppercase block">Rider Assignment</span>
+                          <p className="text-xs font-black text-amber-950">
+                            Assigning Soon (Scanning nearest riders in Bahraich zone)...
+                          </p>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg">
+                        Proximity Radar 📡
+                      </span>
+                    </div>
+                  ) : null}
 
                   {/* Action Buttons */}
                   <div className="pt-4 flex flex-wrap items-center justify-between gap-3">
