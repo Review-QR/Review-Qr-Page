@@ -530,3 +530,103 @@ export async function updateParchaMerchantQuote(input: {
     totalAmount,
   };
 }
+
+/**
+ * Admin Doorstep Refusal Cancellation:
+ * When customer refuses delivery at doorstep, Admin verifies and cancels the order.
+ * - Order is marked cancelled with cancellation_reason = 'customer_refused_at_doorstep', cancelled_by = 'admin'.
+ * - Rider is awarded their full trip fee (₹35) so they don't lose income.
+ * - Rider's status is reset to is_available = true so active delivery lockout is removed.
+ * - Merchant food cost is settled (since food was prepared).
+ * - Customer is NOT refunded for frivolous doorstep refusal.
+ */
+export async function adminCancelOrderDoorstepRefusal(
+  orderId: string,
+  options?: {
+    adminNotes?: string;
+    cancelledBy?: string;
+  }
+) {
+  if (!isValidHyperlocalOrderId(orderId)) throw new Error("Invalid order ID.");
+
+  const admin = createSupabaseAdminClient();
+
+  const { data: order, error } = await admin
+    .from("hyperlocal_orders")
+    .select("id, status, rider_id, business_id, payment_mode, total_amount")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  if (error || !order) throw new Error("Order not found.");
+
+  if (order.status === "delivered" || order.status === "completed") {
+    throw new Error("Cannot cancel an already delivered order.");
+  }
+  if (order.status === "cancelled") {
+    throw new Error("Order is already cancelled.");
+  }
+
+  const now = new Date().toISOString();
+
+  // 1. Mark order cancelled
+  await admin
+    .from("hyperlocal_orders")
+    .update({
+      status: "cancelled",
+      cancellation_reason: "customer_refused_at_doorstep",
+      cancelled_by: options?.cancelledBy || "admin",
+      dispute_status: "resolved",
+      admin_notes: options?.adminNotes || "Order cancelled by Admin after customer refused delivery at doorstep",
+      updated_at: now,
+    })
+    .eq("id", orderId);
+
+  // 2. Compensate rider ₹35 if rider was assigned/picked up
+  let riderPayout = 0;
+  if (order.rider_id) {
+    const { data: split } = await admin
+      .from("hyperlocal_payout_splits")
+      .select("rider_payout")
+      .eq("order_id", orderId)
+      .maybeSingle();
+
+    riderPayout = split?.rider_payout || 35;
+
+    const { data: rider } = await admin
+      .from("delivery_riders")
+      .select("wallet_balance, total_deliveries_count, total_earnings")
+      .eq("id", order.rider_id)
+      .maybeSingle();
+
+    const currentWallet = Number(rider?.wallet_balance || 0);
+    const currentDeliveries = Number(rider?.total_deliveries_count || 0);
+    const currentTotalEarnings = Number(rider?.total_earnings || 0);
+
+    await admin
+      .from("delivery_riders")
+      .update({
+        wallet_balance: currentWallet + Number(riderPayout),
+        total_deliveries_count: currentDeliveries + 1,
+        total_earnings: currentTotalEarnings + Number(riderPayout),
+        is_available: true, // Rider becomes free immediately!
+        updated_at: now,
+      })
+      .eq("id", order.rider_id);
+
+    // Mark payout split settled
+    await admin
+      .from("hyperlocal_payout_splits")
+      .update({
+        settlement_status: "settled_split",
+        settled_at: now,
+      })
+      .eq("order_id", orderId);
+  }
+
+  return {
+    success: true,
+    orderId,
+    riderCompensated: riderPayout,
+    status: "cancelled",
+  };
+}

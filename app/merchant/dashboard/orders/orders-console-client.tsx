@@ -344,11 +344,17 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                       <span className="font-mono font-black text-sm text-slate-950 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-300">
                         {formatUnifiedOrderCode(order.id, business.name)}
                       </span>
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                        isNewPlaced ? "bg-amber-500 text-white animate-pulse" : "bg-emerald-100 text-emerald-800"
-                      }`}>
-                        {order.status.replace(/_/g, " ").toUpperCase()}
-                      </span>
+                      {order.status === "cancelled" ? (
+                        <span className="px-2.5 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-300">
+                          🔴 CANCELLED {order.cancellation_reason === "customer_refused_at_doorstep" ? "(Customer Refused)" : ""}
+                        </span>
+                      ) : (
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                          isNewPlaced ? "bg-amber-500 text-white animate-pulse" : "bg-emerald-100 text-emerald-800"
+                        }`}>
+                          {order.status.replace(/_/g, " ").toUpperCase()}
+                        </span>
+                      )}
                     </div>
 
                     <div className="text-right">
@@ -356,6 +362,14 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                       <span className="text-base font-extrabold text-slate-900">₹{order.total_amount}</span>
                     </div>
                   </div>
+
+                  {/* Customer Doorstep Refusal Settlement Notice */}
+                  {order.status === "cancelled" && order.cancellation_reason === "customer_refused_at_doorstep" && (
+                    <div className="my-2 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-center justify-between">
+                      <span>⚠️ <strong>Doorstep Refusal:</strong> Customer refused order. Food cost is settled to restaurant.</span>
+                      <span className="font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">Settled ✓</span>
+                    </div>
+                  )}
 
                   {/* 180s Auto-Reject Countdown Bar */}
                   {isNewPlaced && (

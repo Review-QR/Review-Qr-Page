@@ -80,6 +80,11 @@ export interface HyperlocalOrder {
   merchant_prep_time_minutes?: number;
   customer_notes?: string | null;
   cancellation_reason?: string | null;
+  dispute_status?: "none" | "customer_refused" | "customer_unreachable" | "wrong_address" | "resolved" | null;
+  dispute_reported_at?: string | null;
+  dispute_notes?: string | null;
+  cancelled_by?: string | null;
+  admin_notes?: string | null;
   created_at: string;
   updated_at: string;
   accepted_at?: string | null;
