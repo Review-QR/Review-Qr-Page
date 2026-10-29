@@ -70,6 +70,7 @@ export default function RiderAppPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [payoutLoading, setPayoutLoading] = useState(false);
+  const [customUpiId, setCustomUpiId] = useState("");
   const [payoutResult, setPayoutResult] = useState<{ success: boolean; message: string } | null>(null);
 
   // Incoming Order Modal & Radar Buzzer
@@ -548,6 +549,8 @@ export default function RiderAppPage() {
     setPayoutLoading(true);
     setPayoutResult(null);
 
+    const upiTarget = customUpiId.trim() || rider.upi_id || "luckyshukla@oksbi";
+
     try {
       const res = await fetch("/api/hyperlocal/rider", {
         method: "POST",
@@ -555,6 +558,7 @@ export default function RiderAppPage() {
         body: JSON.stringify({
           action: "request_payout",
           riderId: rider.id,
+          destinationUpi: upiTarget,
         }),
       });
       const data = await res.json();
@@ -1783,17 +1787,24 @@ export default function RiderAppPage() {
               </button>
             </div>
 
-            <div className="text-center py-2">
+            <div className="text-center py-1">
               <span className="text-[10px] text-slate-400 uppercase font-bold block">Available Balance</span>
               <span className="text-2xl font-black text-emerald-400">
                 ₹{scorecard?.walletBalance ?? Number(rider.wallet_balance || 0)}
               </span>
-              <p className="text-[10px] text-slate-400 mt-1">
-                Withdrawal Destination:{" "}
-                <span className="text-white font-mono font-semibold">
-                  {rider.upi_id || rider.bank_account_number || "Linked Bank Account"}
-                </span>
-              </p>
+            </div>
+
+            <div className="space-y-1 text-left">
+              <label className="text-[10px] text-slate-400 font-bold uppercase block">
+                Destination UPI ID (PhonePe / GPay / Paytm)
+              </label>
+              <input
+                type="text"
+                value={customUpiId || rider.upi_id || ""}
+                onChange={(e) => setCustomUpiId(e.target.value)}
+                placeholder="e.g. luckyshukla@oksbi or 9118643415@paytm"
+                className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs font-mono text-emerald-400 placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
+              />
             </div>
 
             {payoutResult && (
