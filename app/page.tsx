@@ -254,12 +254,12 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
 
             {/* Feature 3 */}
             <div className="rounded-3xl border border-slate-200/90 bg-white p-7 shadow-sm">
-              <span className="grid size-12 place-items-center rounded-2xl bg-blue-100 text-2xl text-blue-800">
-                ⚡
+              <span className="grid size-12 place-items-center rounded-2xl bg-amber-100 text-2xl text-amber-800">
+                🛵
               </span>
-              <h3 className="mt-5 text-lg font-bold text-slate-900">Direct WhatsApp & Maps Connect</h3>
+              <h3 className="mt-5 text-lg font-bold text-slate-900">Dedicated 25-35m Delivery Rider Fleet</h3>
               <p className="mt-2 text-xs leading-relaxed text-slate-600">
-                Reach the shop owner directly on WhatsApp, get one-click Google Maps driving navigation, or write a real review in seconds.
+                Trustit operates its own dedicated, verified delivery rider fleet (like Swiggy, Zomato &amp; Blinkit). Our riders pick up food, groceries, and medicines directly from stores and deliver straight to your doorstep with 4-digit OTP handover.
               </p>
             </div>
           </div>
