@@ -212,38 +212,47 @@ export async function POST(request: Request) {
       }
 
       // Check if rider already exists
-      const { data: existing } = await admin
-        .from("delivery_riders")
-        .select("id")
-        .or(`email.eq.${cleanEmail},phone.eq.+91${cleanPhone}`)
-        .maybeSingle();
+      let existingQuery = admin.from("delivery_riders").select("id");
+      if (cleanEmail && cleanEmail.includes("@")) {
+        existingQuery = existingQuery.or(`email.eq.${cleanEmail},phone.eq.+91${cleanPhone}`);
+      } else {
+        existingQuery = existingQuery.eq("phone", `+91${cleanPhone}`);
+      }
+      const { data: existing } = await existingQuery.maybeSingle();
 
       if (existing) {
+        const updatePayload: Record<string, unknown> = {
+          full_name: fullName.trim(),
+          phone: `+91${cleanPhone}`,
+          residential_address: residentialAddress || null,
+          city: city || "Bahraich",
+          pincode: pincode || "271801",
+          vehicle_type: vehicleType || "bike",
+          vehicle_number: (vehicleNumber || "UP-40-TEMP").toUpperCase().trim(),
+          driving_license_number: drivingLicenseNumber || null,
+          bank_account_holder_name: bankAccountHolderName || fullName.trim(),
+          bank_account_number: bankAccountNumber || null,
+          bank_ifsc_code: (bankIfscCode || "").toUpperCase().trim() || null,
+          bank_name: bankName || null,
+          upi_id: upiId || null,
+          pan_number: (panNumber || "").toUpperCase().trim() || null,
+          kyc_status: "approved",
+          is_verified: true,
+          is_online: true,
+          is_available: true,
+          updated_at: new Date().toISOString(),
+        };
+
+        if (cleanEmail && cleanEmail.includes("@")) {
+          updatePayload.email = cleanEmail;
+        }
+        if (profileImageUrl) {
+          updatePayload.profile_image_url = profileImageUrl;
+        }
+
         const { data: updatedRider, error: updateErr } = await admin
           .from("delivery_riders")
-          .update({
-            full_name: fullName.trim(),
-            email: cleanEmail,
-            phone: `+91${cleanPhone}`,
-            profile_image_url: profileImageUrl || null,
-            residential_address: residentialAddress || null,
-            city: city || "Bahraich",
-            pincode: pincode || "271801",
-            vehicle_type: vehicleType || "bike",
-            vehicle_number: (vehicleNumber || "UP-40-TEMP").toUpperCase().trim(),
-            driving_license_number: drivingLicenseNumber || null,
-            bank_account_holder_name: bankAccountHolderName || fullName.trim(),
-            bank_account_number: bankAccountNumber || null,
-            bank_ifsc_code: (bankIfscCode || "").toUpperCase().trim() || null,
-            bank_name: bankName || null,
-            upi_id: upiId || null,
-            pan_number: (panNumber || "").toUpperCase().trim() || null,
-            kyc_status: "approved",
-            is_verified: true,
-            is_online: true,
-            is_available: true,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updatePayload)
           .eq("id", existing.id)
           .select()
           .single();
@@ -258,7 +267,7 @@ export async function POST(request: Request) {
         .from("delivery_riders")
         .insert({
           full_name: fullName.trim(),
-          email: cleanEmail,
+          email: cleanEmail && cleanEmail.includes("@") ? cleanEmail : null,
           phone: `+91${cleanPhone}`,
           profile_image_url: profileImageUrl || null,
           residential_address: residentialAddress || null,
