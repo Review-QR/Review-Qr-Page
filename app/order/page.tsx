@@ -42,7 +42,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function CustomerOrderPortalPage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function CustomerOrderPortalPage({
+  searchParams,
+}: {
+  searchParams?: SearchParams;
+} = {}) {
+  const query = searchParams ? await searchParams : {};
+  const qVal = query.q || query.dish || query.search;
+  const storeVal = query.store || query.restaurant || query.cafe;
+  const initialSearchQuery = typeof qVal === "string" ? qVal.trim() : Array.isArray(qVal) ? qVal[0] ?? "" : "";
+  const initialStoreName = typeof storeVal === "string" ? storeVal.trim() : Array.isArray(storeVal) ? storeVal[0] ?? "" : "";
+
   const admin = createSupabaseAdminClient();
 
   // 1. Fetch active businesses across all 4 super-app verticals
@@ -82,6 +94,11 @@ export default async function CustomerOrderPortalPage() {
   }));
 
   return (
-    <CustomerSuperAppClient businesses={businesses} catalogItems={catalogItems} />
+    <CustomerSuperAppClient
+      businesses={businesses}
+      catalogItems={catalogItems}
+      initialSearchQuery={initialSearchQuery}
+      initialStoreName={initialStoreName}
+    />
   );
 }

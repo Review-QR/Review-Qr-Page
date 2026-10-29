@@ -26,6 +26,7 @@ export const metadata: Metadata = {
 };
 
 const navigation = [
+  ["🛵 Order Food", "/order"],
   ["Home", "#home"],
   ["How it works", "#how-it-works"],
   ["Features", "#features"],
@@ -96,17 +97,17 @@ function ProductPreview() {
       <div className="absolute -right-2 bottom-5 h-32 w-32 rounded-full bg-blue-100 blur-2xl" />
       <div className="relative rounded-[2rem] border border-slate-200 bg-white p-4 shadow-[0_28px_80px_-35px_rgba(15,35,75,0.35)] sm:p-6">
         <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-          <div className="flex items-center gap-3"><Image src="/trustit-icon.svg" alt="" width={34} height={34} className="rounded-xl" /><div><p className="text-sm font-semibold text-slate-900">Trustit QR journey</p><p className="text-xs text-slate-500">Product preview</p></div></div>
-          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">Simple setup</span>
+          <div className="flex items-center gap-3"><Image src="/trustit-icon.svg" alt="" width={34} height={34} className="rounded-xl" /><div><p className="text-sm font-semibold text-slate-900">Trustit Super-App &amp; QR</p><p className="text-xs text-slate-500">Live Delivery &amp; Reviews</p></div></div>
+          <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-800">Verified Local</span>
         </div>
         <div className="grid gap-3 py-5 sm:grid-cols-[1fr_auto_1fr_auto_1fr] sm:items-center">
-          <div className="rounded-2xl bg-slate-50 p-4 text-center"><div className="mx-auto grid h-24 w-24 grid-cols-7 gap-1 rounded-xl bg-white p-2" aria-hidden="true">{Array.from({ length: 49 }, (_, index) => <span key={index} className={`rounded-[2px] ${[0,1,2,7,9,14,15,16,4,5,6,11,13,18,20,21,22,28,30,32,34,35,36,40,42,43,44,46,48].includes(index) ? "bg-slate-900" : "bg-slate-100"}`} />)}</div><p className="mt-3 text-sm font-semibold text-slate-900">Your business QR</p><p className="mt-1 text-xs text-slate-500">Ready to display</p></div>
-          <span className="hidden text-xl text-blue-500 sm:block" aria-hidden="true">→</span>
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-col sm:text-center"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-blue-50 text-xl text-blue-800" aria-hidden="true">⌕</span><div><p className="text-sm font-semibold text-slate-900">Customer scans</p><p className="mt-1 text-xs leading-5 text-slate-500">The Trustit page opens</p></div></div>
-          <span className="hidden text-xl text-blue-500 sm:block" aria-hidden="true">→</span>
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-col sm:text-center"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-lg text-emerald-800" aria-hidden="true">↗</span><div><p className="text-sm font-semibold text-slate-900">Review link</p><p className="mt-1 text-xs leading-5 text-slate-500">Customer continues to Google</p></div></div>
+          <div className="rounded-2xl bg-slate-50 p-4 text-center"><div className="mx-auto grid h-24 w-24 grid-cols-7 gap-1 rounded-xl bg-white p-2" aria-hidden="true">{Array.from({ length: 49 }, (_, index) => <span key={index} className={`rounded-[2px] ${[0,1,2,7,9,14,15,16,4,5,6,11,13,18,20,21,22,28,30,32,34,35,36,40,42,43,44,46,48].includes(index) ? "bg-slate-900" : "bg-slate-100"}`} />)}</div><p className="mt-3 text-sm font-semibold text-slate-900">Store QR</p><p className="mt-1 text-xs text-slate-500">Scan to Review</p></div>
+          <span className="hidden text-xl text-blue-500 sm:block" aria-hidden="true">&rarr;</span>
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-col sm:text-center"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-amber-50 text-xl text-amber-800" aria-hidden="true">🛵</span><div><p className="text-sm font-semibold text-slate-900">Food &amp; Grocery</p><p className="mt-1 text-xs leading-5 text-slate-500">Delivered in 25-35m</p></div></div>
+          <span className="hidden text-xl text-blue-500 sm:block" aria-hidden="true">&rarr;</span>
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-col sm:text-center"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-emerald-50 text-lg text-emerald-800" aria-hidden="true">✓</span><div><p className="text-sm font-semibold text-slate-900">Verified Handover</p><p className="mt-1 text-xs leading-5 text-slate-500">Secure 4-Digit OTP</p></div></div>
         </div>
-        <p className="rounded-xl bg-slate-50 px-4 py-3 text-center text-xs leading-5 text-slate-500">Illustrative product preview · no customer or review figures shown</p>
+        <p className="rounded-xl bg-slate-50 px-4 py-3 text-center text-xs leading-5 text-slate-500">Trustit Super-App &amp; Local Business Ecosystem</p>
       </div>
     </div>
   );
@@ -118,13 +119,41 @@ export default function TrustitPage() {
       <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
           <Brand />
-          <nav aria-label="Main navigation" className="hidden items-center gap-6 lg:flex">{navigation.map(([label, href]) => <a key={label} href={href} className="rounded py-2 text-sm font-medium text-slate-600 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700">{label}</a>)}</nav>
-          <div className="hidden items-center gap-3 sm:flex"><SecondaryLink>Business Login</SecondaryLink><PrimaryLink>Register Your Business</PrimaryLink></div>
+          <nav aria-label="Main navigation" className="hidden items-center gap-6 lg:flex">
+            {navigation.map(([label, href]) => (
+              <a
+                key={label}
+                href={href}
+                className="rounded py-2 text-sm font-medium text-slate-600 hover:text-blue-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"
+              >
+                {label}
+              </a>
+            ))}
+          </nav>
+          <div className="hidden items-center gap-2.5 sm:flex">
+            <Link
+              href="/order"
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3.5 py-2.5 text-xs font-black text-white shadow-sm shadow-orange-500/25 transition hover:from-amber-600 hover:to-orange-600"
+            >
+              <span>🛵 Order Food Online</span>
+            </Link>
+            <SecondaryLink>Business Login</SecondaryLink>
+            <PrimaryLink>Register Your Business</PrimaryLink>
+          </div>
           <details className="relative sm:hidden">
             <summary className="grid h-11 w-11 cursor-pointer list-none place-items-center rounded-xl border border-slate-300 text-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700" aria-label="Open navigation"><span className="text-xl" aria-hidden="true">☰</span></summary>
             <div className="absolute right-0 top-14 z-40 w-[min(19rem,calc(100vw-2rem))] rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
               <nav aria-label="Mobile navigation" className="grid">{navigation.map(([label, href]) => <a key={label} href={href} className="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">{label}</a>)}</nav>
-              <div className="mt-2 grid gap-2 border-t border-slate-100 pt-3"><SecondaryLink>Business Login</SecondaryLink><PrimaryLink>Register Your Business</PrimaryLink></div>
+              <div className="mt-2 grid gap-2 border-t border-slate-100 pt-3">
+                <Link
+                  href="/order"
+                  className="flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3.5 py-2.5 text-xs font-black text-white shadow-sm"
+                >
+                  <span>🛵 Order Food &amp; Super-App</span>
+                </Link>
+                <SecondaryLink>Business Login</SecondaryLink>
+                <PrimaryLink>Register Your Business</PrimaryLink>
+              </div>
             </div>
           </details>
         </div>
@@ -132,7 +161,36 @@ export default function TrustitPage() {
 
       <section className="relative isolate border-b border-slate-100 bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_58%,#eff6ff_100%)]">
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-16 sm:px-6 sm:py-20 lg:grid-cols-[0.95fr_1.05fr] lg:px-8 lg:py-24">
-          <div><p className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1.5 text-xs font-semibold text-blue-800 shadow-sm"><span className="h-2 w-2 rounded-full bg-blue-600" />QR-powered review journey</p><h1 className="mt-6 max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-slate-950 sm:text-5xl lg:text-[3.65rem]">Make it easier for customers to review your business.</h1><p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">Give customers one simple QR to find your business and continue to its Google Review page. Manage the QR and scan activity from your Trustit dashboard.</p><div className="mt-8 flex flex-col gap-3 min-[420px]:flex-row"><PrimaryLink>Register Your Business</PrimaryLink><SecondaryLink>Business Login</SecondaryLink></div><p className="mt-4 text-xs text-slate-500">Simple setup · One-time 30-day plans · No AutoPay</p></div>
+          <div>
+            <div className="mb-4 inline-flex flex-wrap items-center gap-2 rounded-xl border border-amber-200 bg-amber-50/90 px-3 py-1.5 text-xs text-amber-900 shadow-2xs">
+              <span>⚡</span>
+              <span className="font-semibold">Looking for Deliciated Cafe, Madhuram or Food Delivery?</span>
+              <Link href="/order" className="font-black text-amber-800 underline hover:text-amber-950">
+                Open Super-App Storefront &rarr;
+              </Link>
+            </div>
+            <p className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1.5 text-xs font-semibold text-blue-800 shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-blue-600" />
+              QR-powered review journey &amp; Dedicated Delivery Fleet
+            </p>
+            <h1 className="mt-6 max-w-xl text-4xl font-semibold leading-[1.08] tracking-tight text-slate-950 sm:text-5xl lg:text-[3.65rem]">
+              Local Food Delivery, Grocery &amp; Smart Business Reviews.
+            </h1>
+            <p className="mt-6 max-w-xl text-base leading-7 text-slate-600 sm:text-lg">
+              Order from top restaurants in Bahraich with 25-35 minute doorstep delivery by our verified riders, or give your store a simple QR to connect customers with Google Reviews.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 min-[420px]:flex-row">
+              <Link
+                href="/order"
+                className="inline-flex min-h-12 items-center justify-center rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 px-5 py-3 text-sm font-black text-white shadow-md shadow-orange-500/25 transition hover:brightness-105"
+              >
+                🛵 Order Food &amp; Sweets Now &rarr;
+              </Link>
+              <PrimaryLink>Register Your Business</PrimaryLink>
+              <SecondaryLink>Business Login</SecondaryLink>
+            </div>
+            <p className="mt-4 text-xs text-slate-500">25-35m Express Delivery · Dedicated Rider Fleet · Smart Merchant Standees</p>
+          </div>
           <ProductPreview />
         </div>
       </section>
@@ -149,7 +207,7 @@ export default function TrustitPage() {
 
       <section className="px-4 py-20 sm:px-6 lg:px-8 lg:py-24"><div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">A thoughtful customer experience</p><h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Make the next step easy for your customers.</h2><p className="mt-4 text-base leading-7 text-slate-600">A visible QR helps customers find your review page when they are ready. Trustit supports an easy path; reviews remain honest and entirely the customer’s choice.</p><ul className="mt-7 space-y-4">{["One scan opens your business review journey", "Share the QR where it is useful in your business", "Manage your QR and account from one dashboard"].map(item => <li key={item} className="flex gap-3 text-sm leading-6 text-slate-700"><span className="mt-0.5 text-blue-700" aria-hidden="true">✓</span>{item}</li>)}</ul></div><div id="faq" className="scroll-mt-24"><p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">FAQ</p><h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">Good to know</h2><div className="mt-5 divide-y divide-slate-200 border-y border-slate-200">{questions.map(([question, answer]) => <details key={question} className="group py-4"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm font-semibold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-700"><span>{question}</span><span className="text-lg text-blue-700 transition group-open:rotate-45" aria-hidden="true">+</span></summary><p className="max-w-prose pt-3 text-sm leading-6 text-slate-600">{answer}</p></details>)}</div></div></div></section>
 
-        <section className="px-4 pb-20 sm:px-6 lg:px-8"><div className="mx-auto flex max-w-7xl flex-col gap-6 rounded-[1.75rem] bg-blue-50 px-6 py-10 sm:px-10 sm:py-12 md:flex-row md:items-center md:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Get started with Trustit</p><h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Ready to create your business profile?</h2><p className="mt-2 text-sm text-slate-600">Set up your business, choose a plan and activate your QR after verified payment.</p></div><div className="flex flex-col gap-3 min-[420px]:flex-row"><PrimaryLink>Register Your Business</PrimaryLink><SecondaryLink>Business Login</SecondaryLink></div></div></section>
+        <section className="px-4 pb-20 sm:px-6 lg:px-8"><div className="mx-auto flex max-w-7xl flex-col gap-6 rounded-[1.75rem] bg-blue-50 px-6 py-10 sm:px-10 sm:py-12 md:flex-row md:items-center md:justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Get started with Trustit</p><h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Ready to order food or list your business?</h2><p className="mt-2 text-sm text-slate-600">Order from top Bahraich restaurants or set up your merchant QR with ease.</p></div><div className="flex flex-col gap-3 min-[420px]:flex-row"><Link href="/order" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-orange-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-orange-700">🛵 Order Food Now</Link><PrimaryLink>Register Your Business</PrimaryLink><SecondaryLink>Business Login</SecondaryLink></div></div></section>
 
       <TrustitPublicFooter />
     </main>
