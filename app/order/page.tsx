@@ -8,9 +8,32 @@ import CustomerSuperAppClient, {
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Trustit Super-App | Food Delivery, Salon Queue Token, Car Wash Bay & Kirana Parcha",
+  title: "Trustit | Trusted Food & Fastest Home Delivery in Bahraich",
   description:
-    "Order food & sweets, book live salon digital queue passes, schedule car wash bays, and send handwritten grocery parchas across Bahraich and Uttar Pradesh.",
+    "Order trusted food, sweets, biryani, groceries & essentials with fast doorstep delivery in Bahraich. Cash on Delivery & online payment available on Trustit Super-App.",
+  keywords: [
+    "Trusted Food",
+    "Trusted Home Delivery",
+    "Trusted Order",
+    "Trustit Food Delivery",
+    "Food Delivery Bahraich",
+    "Online Food Order Bahraich",
+    "Fast Home Delivery Bahraich",
+    "Pure Veg Food Delivery Bahraich",
+    "Best Biryani Delivery Bahraich",
+    "Sweets Delivery Bahraich",
+    "Trustit Super App Bahraich",
+  ],
+  robots: { index: true, follow: true },
+  alternates: { canonical: "https://trustitreview.com/order" },
+  openGraph: {
+    type: "website",
+    url: "https://trustitreview.com/order",
+    title: "Trustit | Trusted Food & Fastest Home Delivery in Bahraich",
+    description:
+      "Order trusted food, sweets, biryani, groceries & essentials with fast doorstep delivery in Bahraich.",
+    siteName: "Trustit",
+  },
   manifest: "/api/manifest/customer",
   appleWebApp: {
     capable: true,
