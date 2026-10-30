@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-const steps = ["Account", "Business", "Plan", "Payment"] as const;
+const steps = ["Account", "Business Address", "Plan", "Payment"] as const;
 
 function ModernPhonePreview() {
   return (

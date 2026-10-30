@@ -1,14 +1,14 @@
 .trustit-merchant-app {
-  --merchant-ink: #0f172a;
-  --merchant-muted: #64748b;
-  --merchant-line: #e2e8f0;
+  --merchant-ink: #1c1917;
+  --merchant-muted: #78716c;
+  --merchant-line: #ede6dd;
   --merchant-card-bg: #ffffff;
-  --merchant-blue: #2563eb;
-  --merchant-blue-hover: #1d4ed8;
+  --merchant-blue: #85583f;
+  --merchant-blue-hover: #6e4631;
   display: flex;
   min-height: 100vh;
   color: var(--merchant-ink);
-  background: #f8fafc;
+  background: #faf7f2;
   font-family: Inter, "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
@@ -24,8 +24,8 @@
   flex: 0 0 252px;
   flex-direction: column;
   padding: 20px 16px 16px;
-  border-right: 1px solid #e2e8f0;
-  background: #ffffff;
+  border-right: 1px solid #ede6dd;
+  background: #f7f3ec;
 }
 
 .merchant-brand { display: flex; align-items: center; gap: 11px; min-width: 0; color: #0f172a; }
@@ -67,17 +67,17 @@
 
 .merchant-nav { display: grid; gap: 4px; }
 .merchant-nav-item { position: relative; min-width: 0; }
-.merchant-nav__link { display: flex; min-height: 42px; align-items: center; gap: 12px; padding: 0 12px; border-radius: 10px; color: #475569; font-size: 13px; font-weight: 500; transition: background .15s ease, color .15s ease; }
-.merchant-nav__link:hover { color: #0f172a; background: #f1f5f9; }
-.merchant-nav__link.is-active { color: #1d4ed8; background: #eff6ff; font-weight: 600; box-shadow: inset 3px 0 #2563eb; }
-.merchant-nav__icon { width: 19px; height: 19px; flex: 0 0 auto; color: #64748b; }
-.merchant-nav__link.is-active .merchant-nav__icon { color: #2563eb; }
-.merchant-sidebar__footer { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 12px; border: 1px solid #e2e8f0; border-radius: 14px; background: #f8fafc; }
-.merchant-help-icon { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: white; background: #2563eb; font-size: 16px; font-weight: 700; }
+.merchant-nav__link { display: flex; min-height: 42px; align-items: center; gap: 12px; padding: 0 12px; border-radius: 12px; color: #44403c; font-size: 13px; font-weight: 600; transition: background .15s ease, color .15s ease; }
+.merchant-nav__link:hover { color: #1c1917; background: #ede6dd; }
+.merchant-nav__link.is-active { color: #ffffff; background: #85583f; font-weight: 700; box-shadow: 0 2px 5px rgba(133,88,63,0.3); }
+.merchant-nav__icon { width: 19px; height: 19px; flex: 0 0 auto; color: #78716c; }
+.merchant-nav__link.is-active .merchant-nav__icon { color: #ffffff; }
+.merchant-sidebar__footer { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 12px; border: 1px solid #ede6dd; border-radius: 14px; background: #ede6dd/60; }
+.merchant-help-icon { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: white; background: #85583f; font-size: 16px; font-weight: 700; }
 .merchant-sidebar__footer span { display: grid; min-width: 0; gap: 2px; }
-.merchant-sidebar__footer strong { color: #0f172a; font-size: 11px; font-weight: 600; }
-.merchant-sidebar__footer small { color: #64748b; font-size: 10px; line-height: 1.35; }
-.merchant-sidebar__footer a { margin-left: auto; color: #2563eb; font-size: 20px; line-height: 1; }
+.merchant-sidebar__footer strong { color: #1c1917; font-size: 11px; font-weight: 700; }
+.merchant-sidebar__footer small { color: #78716c; font-size: 10px; line-height: 1.35; }
+.merchant-sidebar__footer a { margin-left: auto; color: #85583f; font-size: 20px; line-height: 1; }
 .merchant-logout-form { margin-top: 10px; }
 .merchant-logout-form button, .merchant-mobile-header form button { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 12px; color: #475569; background: #ffffff; font-size: 12px; font-weight: 600; transition: background .15s ease; }
 .merchant-logout-form button:hover, .merchant-mobile-header form button:hover { border-color: #cbd5e1; color: #0f172a; background: #f8fafc; }

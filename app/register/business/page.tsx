@@ -15,5 +15,5 @@ export default async function RegisterBusinessPage() {
   if (resume.current_step === "payment") redirect("/register/payment");
   if (resume.current_step === "complete") redirect("/merchant/dashboard");
   const categories = await getSelectableBusinessCategoryData().catch(() => []);
-  return <RegisterShell currentStep={2} title="Tell us about your business" description="Add the details customers will see. Your QR stays inactive until payment is verified."><BusinessForm categories={categories} /></RegisterShell>;
+  return <RegisterShell currentStep={2} title="Business Address & Category Setup" description="Add your verified shop address, landmark, and GPS coordinates for delivery riders."><BusinessForm categories={categories} /></RegisterShell>;
 }

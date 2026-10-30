@@ -9,6 +9,7 @@ import ScanAnalytics from "./scan-analytics";
 import { getPersistedBusinessQrDesignAssets } from "@/lib/trustit-ai/qr-design-assets.server";
 import { qrTemplates } from "./qr/templates";
 import ReviewCard from "./review-card";
+import MerchantConsoleClient from "./merchant-console-client";
 
 export const dynamic = "force-dynamic";
 
@@ -325,6 +326,33 @@ export default async function MerchantDashboardPage() {
       </section>
 
       {!statsResult.error && !stats ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 mb-4" role="status">Dashboard analytics are not available for this merchant account.</p> : null}
+
+      {/* Interactive Vertical Module Console & Dynamic Workspace */}
+      <section className="mb-6">
+        <MerchantConsoleClient
+          merchant={{
+            businessId: merchant.businessId,
+            businessName: merchant.businessName,
+            businessType: merchant.businessType,
+            ownerName: merchant.ownerName,
+            plan: merchant.plan,
+            locality: merchant.locality,
+            city: merchant.city,
+            pincode: merchant.pincode,
+            reviewLink: merchant.reviewLink,
+            merchantStatus: merchant.merchantStatus,
+          }}
+          stats={{
+            totalScans: count(stats?.total_scans),
+            totalCustomers: Math.max(1, Math.round(count(stats?.total_scans) * 0.6)),
+            totalReviews: totalReviews,
+            averageRating: average,
+          }}
+          activity={activity ?? []}
+          reviews={reviews ?? []}
+          subscriptionStatus={subscriptionStatus}
+        />
+      </section>
 
       <div className="merchant-workspace">
         <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} designAssets={designAssets} initialDesignError={designAssetError} />
