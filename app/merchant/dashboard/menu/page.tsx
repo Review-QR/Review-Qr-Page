@@ -86,7 +86,11 @@ export default async function MerchantMenuPage() {
 
   return (
     <div className="space-y-6">
-      <MenuManager initialItems={items} businessName={merchant.businessName} />
+      <MenuManager
+        initialItems={items}
+        businessName={merchant.businessName}
+        businessType={merchant.businessType}
+      />
     </div>
   );
 }
