@@ -132,6 +132,47 @@ export default function MerchantConsoleClient({
         </div>
       )}
 
+      {/* FULL-WIDTH HORIZONTAL MODULE SELECTOR STRIP (MATCHING RED BOX IN USER ANNOTATION) */}
+      <div className="lg:col-span-12 bg-white border border-[#ede6dd] rounded-2xl p-2.5 shadow-2xs">
+        <div className="flex items-center justify-between px-1.5 pb-2 mb-1.5 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+              <span>⚡</span> Merchant Operational Consoles
+            </span>
+            <span className="text-[10px] font-bold bg-[#85583f] text-white px-2 py-0.5 rounded-full">
+              All 13 Modules Active
+            </span>
+          </div>
+          <span className="text-[11px] text-slate-400 font-medium hidden sm:inline">
+            Click any module to switch workspace view below
+          </span>
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-0.5 scroll-smooth">
+          {moduleItems.map((item) => {
+            const isActive = selectedModule === item.id;
+            return (
+              <button
+                key={`h-${item.id}`}
+                type="button"
+                onClick={() => setSelectedModule(item.id)}
+                className={`whitespace-nowrap flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shrink-0 ${
+                  isActive
+                    ? "bg-[#85583f] text-white shadow-xs"
+                    : "text-slate-700 bg-slate-50 hover:bg-[#ede6dd] border border-slate-200/70"
+                }`}
+              >
+                <span>{item.icon}</span>
+                <span>{item.label}</span>
+                {item.live && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse ml-0.5" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* LEFT: VERTICAL MODULES BUTTON LIST (13 ACTIVE BUTTONS) */}
       <div className="lg:col-span-3 bg-[#f7f3ec] border border-[#ede6dd] rounded-2xl p-3 shadow-2xs">
         <div className="px-2 py-1 mb-2 flex items-center justify-between">
