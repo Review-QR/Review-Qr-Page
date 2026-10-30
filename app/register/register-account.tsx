@@ -30,7 +30,7 @@ export default function RegisterAccount({
 }) {
   const router = useRouter();
 
-  // Form inputs
+  // Form inputs - strictly blank by default with NO pre-fillers
   const [businessName, setBusinessName] = useState("");
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -94,19 +94,19 @@ export default function RegisterAccount({
     const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanBiz) {
-      setGeneralError("कृपया पहले दुकान / प्रतिष्ठान का नाम दर्ज करें (Business Name is required).");
+      setGeneralError("Please enter your business name.");
       return;
     }
     if (!cleanName) {
-      setGeneralError("कृपया मालिक / संचालक का नाम दर्ज करें (Owner Name is required).");
+      setGeneralError("Please enter the business owner's name.");
       return;
     }
     if (cleanPhone.length < 10) {
-      setGeneralError("कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें (Enter valid 10-digit mobile).");
+      setGeneralError("Please enter a valid 10-digit mobile number.");
       return;
     }
     if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
-      setGeneralError("कृपया मान्य ईमेल ID दर्ज करें (Enter a valid email address).");
+      setGeneralError("Please enter a valid email address for verification.");
       return;
     }
 
@@ -130,7 +130,7 @@ export default function RegisterAccount({
       setOtpSuccessMessage("OTP sent successfully to your email");
       setResendCooldown(30);
     } catch {
-      setGeneralError("ईमेल OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।");
+      setGeneralError("Failed to send email verification OTP. Please try again.");
     } finally {
       setGetOtpBusy(false);
     }
@@ -143,7 +143,7 @@ export default function RegisterAccount({
     const cleanEmail = email.trim().toLowerCase();
 
     if (cleanOtp.length !== 6) {
-      setOtpError("कृपया ईमेल पर आया 6-अंकों का OTP कोड दर्ज करें।");
+      setOtpError("Please enter the 6-digit code sent to your email.");
       return;
     }
 
@@ -155,7 +155,7 @@ export default function RegisterAccount({
       });
 
       if (!result.success) {
-        setOtpError(result.message || "गलत OTP कोड। कृपया पुनः प्रयास करें।");
+        setOtpError(result.message || "Invalid verification code. Please try again.");
         return;
       }
 
@@ -163,24 +163,24 @@ export default function RegisterAccount({
       setVerificationToken(result.verificationToken || null);
       setOtpSuccessMessage("Email verified successfully! ✓");
     } catch {
-      setOtpError("OTP वेरिफिकेशन में समस्या हुई। कृपया पुनः प्रयास करें।");
+      setOtpError("Verification failed. Please check your code and try again.");
     } finally {
       setVerifyOtpBusy(false);
     }
   }
 
-  // 3. Final Step: Submit Registration & Continue
+  // 3. Final Step: Submit Registration & Continue to Business Address
   async function handleSubmitRegistration(e: React.FormEvent) {
     e.preventDefault();
     setGeneralError("");
 
     if (!isEmailVerified) {
-      setGeneralError("कृपया आगे बढ़ने के लिए पहले ईमेल OTP वेरिफाई करें।");
+      setGeneralError("Please verify your email with OTP before continuing.");
       return;
     }
 
     if (!isPasswordValid(password)) {
-      setGeneralError("पासवर्ड 6–16 अक्षरों का होना चाहिए जिसमें कम से कम 1 अक्षर और 1 नंबर हो।");
+      setGeneralError("Password must be 6–16 characters with at least one letter and one number.");
       return;
     }
 
@@ -206,7 +206,7 @@ export default function RegisterAccount({
       router.push("/register/business");
       router.refresh();
     } catch {
-      setGeneralError("अकाउंट तैयार नहीं हो सका। कृपया पुनः प्रयास करें।");
+      setGeneralError("Could not create merchant account. Please try again.");
     } finally {
       setSubmitBusy(false);
     }
@@ -218,10 +218,10 @@ export default function RegisterAccount({
       <div className="mt-4 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-xs">
         <div className="flex items-center gap-2">
           <span className="text-lg">⚠️</span>
-          <p className="text-xs font-bold text-slate-900">एक मर्चेंट खाता पहले से लॉगिन है।</p>
+          <p className="text-xs font-bold text-slate-900">An active merchant account is currently signed in.</p>
         </div>
         <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
-          नया बिज़नेस रजिस्टर करने से पहले पुराने सेशन से साइन आउट करें। आपका पुराना खाता सुरक्षित रहेगा।
+          Sign out of the previous session to register a new business. Your existing data remains safe.
         </p>
         <button
           type="button"
@@ -229,7 +229,7 @@ export default function RegisterAccount({
           onClick={logoutAndStartNewAccount}
           className="mt-3 flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
         >
-          {submitBusy ? "साइन आउट हो रहा है…" : "पुराने खाते से साइन आउट करें व नया खाता बनाएं"}
+          {submitBusy ? "Signing out…" : "Sign out & Create New Account"}
         </button>
         {generalError && (
           <p role="alert" className="mt-2 text-[11px] font-semibold text-rose-800">
@@ -249,75 +249,91 @@ export default function RegisterAccount({
 
   return (
     <div className="mt-4">
-      <form onSubmit={handleSubmitRegistration} className="space-y-3 text-left">
-        {/* No. 1: Business Name */}
+      <form onSubmit={handleSubmitRegistration} className="space-y-3.5 text-left">
+        
+        {/* 1. Business Name with Leading Icon Box */}
         <div>
-          <label htmlFor="businessNameField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
-            1. Business Name (दुकान / प्रतिष्ठान का नाम) <span className="text-rose-500">*</span>
+          <label htmlFor="businessNameField" className="block text-xs font-bold text-slate-700">
+            1. Business Name <span className="text-rose-500">*</span>
           </label>
-          <input
-            id="businessNameField"
-            autoComplete="organization"
-            maxLength={160}
-            placeholder="उदा. Jamal Saloon, गुप्ता किराना, श्याम स्वीट्स..."
-            value={businessName}
-            onChange={(e) => setBusinessName(e.target.value)}
-            disabled={isEmailVerified || submitBusy}
-            className="mt-1 h-9 sm:h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-600"
-            required
-          />
+          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+              🏪
+            </div>
+            <input
+              id="businessNameField"
+              type="text"
+              autoComplete="organization"
+              maxLength={160}
+              placeholder=""
+              value={businessName}
+              onChange={(e) => setBusinessName(e.target.value)}
+              disabled={isEmailVerified || submitBusy}
+              className="h-10 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              required
+            />
+          </div>
         </div>
 
-        {/* No. 2: Owner Name */}
+        {/* 2. Owner Name with Leading Icon Box */}
         <div>
-          <label htmlFor="ownerNameField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
-            2. Owner Name (मालिक / संचालक का नाम) <span className="text-rose-500">*</span>
+          <label htmlFor="ownerNameField" className="block text-xs font-bold text-slate-700">
+            2. Owner Name <span className="text-rose-500">*</span>
           </label>
-          <input
-            id="ownerNameField"
-            autoComplete="name"
-            maxLength={160}
-            placeholder="उदा. Jamal, राहुल वर्मा..."
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={isEmailVerified || submitBusy}
-            className="mt-1 h-9 sm:h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-600"
-            required
-          />
+          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+              👤
+            </div>
+            <input
+              id="ownerNameField"
+              type="text"
+              autoComplete="name"
+              maxLength={160}
+              placeholder=""
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={isEmailVerified || submitBusy}
+              className="h-10 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              required
+            />
+          </div>
         </div>
 
-        {/* No. 3: Mobile Number */}
+        {/* 3. Mobile Number with Leading Icon Box & Country Code */}
         <div>
-          <label htmlFor="mobileField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
-            3. Mobile Number (दुकान का संपर्क नंबर) <span className="text-rose-500">*</span>
+          <label htmlFor="mobileField" className="block text-xs font-bold text-slate-700">
+            3. Mobile Number <span className="text-rose-500">*</span>
           </label>
-          <div className="mt-1 flex h-9 sm:h-10 overflow-hidden rounded-xl border border-slate-200 bg-white transition focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100">
-            <span className="flex items-center border-r border-slate-200 bg-slate-50 px-2.5 text-xs font-bold text-slate-700 select-none">
-              🇮🇳 +91
-            </span>
+          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+              📞
+            </div>
+            <div className="flex items-center border-r border-slate-200 bg-slate-50 px-2.5 h-10 text-xs font-bold text-slate-700 shrink-0 select-none">
+              🇮🇳 +91 ▾
+            </div>
             <input
               id="mobileField"
               type="tel"
               inputMode="numeric"
               maxLength={10}
-              placeholder="10-अंकों का मोबाइल नंबर (उदा. 8545965845)"
+              placeholder=""
               value={mobile}
               onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
               disabled={isEmailVerified || submitBusy}
-              className="w-full px-3 text-xs sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              className="h-10 w-full px-3 text-xs sm:text-sm font-semibold text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
           </div>
-          <p className="mt-1 text-[10px] text-slate-500">
-            दुकान प्रोफाइल व डिलीवरी ऑर्डर्स के संपर्क हेतु।
+          <p className="mt-1 text-[11px] text-slate-500">
+            Used for order updates &amp; delivery coordination.
           </p>
         </div>
 
-        {/* No. 4: Email ID with Inline Get OTP Button */}
+        {/* 4. Email ID with Leading Icon Box & Full-Width Get OTP Button */}
         <div>
           <div className="flex items-center justify-between">
-            <label htmlFor="emailField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
-              4. Email ID (OTP वेरिफिकेशन हेतु ईमेल) <span className="text-rose-500">*</span>
+            <label htmlFor="emailField" className="block text-xs font-bold text-slate-700">
+              4. Email ID <span className="text-rose-500">*</span>
             </label>
             {isEmailVerified && (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-black text-emerald-700">
@@ -326,13 +342,16 @@ export default function RegisterAccount({
             )}
           </div>
 
-          <div className="mt-1 flex gap-2">
+          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+              ✉️
+            </div>
             <input
               id="emailField"
               type="email"
               inputMode="email"
               autoComplete="email"
-              placeholder="उदा. jamal@gmail.com या owner@business.com"
+              placeholder=""
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
@@ -342,38 +361,43 @@ export default function RegisterAccount({
                 }
               }}
               disabled={isEmailVerified || submitBusy}
-              className="h-9 sm:h-10 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-600"
+              className="h-10 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
-            {!isEmailVerified && (
-              <button
-                type="button"
-                disabled={
-                  getOtpBusy ||
-                  resendCooldown > 0 ||
-                  !email.includes("@") ||
-                  !businessName.trim() ||
-                  !name.trim() ||
-                  mobile.replace(/\D/g, "").length < 10
-                }
-                onClick={handleGetOtp}
-                className="h-9 sm:h-10 shrink-0 rounded-xl bg-blue-600 px-3.5 text-xs font-bold text-white shadow-2xs transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
-              >
-                {getOtpBusy
-                  ? "भेज रहे हैं..."
-                  : resendCooldown > 0
-                  ? `पुनः भेजें (${resendCooldown}s)`
-                  : otpSent
-                  ? "Resend OTP"
-                  : "Get OTP"}
-              </button>
-            )}
           </div>
 
-          {/* Inline OTP Section immediately below Email ID */}
+          {/* Full-width soft-blue Get OTP Button */}
+          {!isEmailVerified && (
+            <button
+              type="button"
+              disabled={
+                getOtpBusy ||
+                resendCooldown > 0 ||
+                !email.includes("@") ||
+                !businessName.trim() ||
+                !name.trim() ||
+                mobile.replace(/\D/g, "").length < 10
+              }
+              onClick={handleGetOtp}
+              className="mt-2 w-full py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition border border-blue-200 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {getOtpBusy
+                ? "Sending OTP..."
+                : resendCooldown > 0
+                ? `Resend OTP (${resendCooldown}s)`
+                : otpSent
+                ? "Resend OTP"
+                : "Get OTP"}
+            </button>
+          )}
+
+          <p className="mt-1 text-[11px] text-slate-500">
+            ℹ️ We will send an OTP to this email for verification.
+          </p>
+
+          {/* Inline OTP Section revealed immediately underneath email */}
           {otpSent && (
-            <div className="mt-2 rounded-xl border border-blue-200/90 bg-blue-50/70 p-2.5 space-y-2">
-              {/* Status line */}
+            <div className="mt-2.5 rounded-xl border border-blue-200/90 bg-blue-50/70 p-3 space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <p className="flex items-center gap-1.5 font-bold text-blue-900 text-[11px] sm:text-xs">
                   <span className="text-emerald-600 font-black">✓</span>
@@ -381,15 +405,15 @@ export default function RegisterAccount({
                 </p>
                 {previewOtp && (
                   <span className="rounded-md border border-blue-300 bg-white px-2 py-0.5 font-mono text-[10px] font-black text-blue-800 shadow-2xs">
-                    ⚡ Quick Test OTP: {previewOtp}
+                    Quick Test OTP: {previewOtp}
                   </span>
                 )}
               </div>
 
               {!isEmailVerified && (
                 <>
-                  <p className="text-[10px] text-blue-800">
-                    कृपया <strong>{email}</strong> का इनबॉक्स या स्पैम (Spam) फोल्डर देखें और 6-अंकों का कोड दर्ज करें:
+                  <p className="text-[11px] text-blue-800">
+                    Check your inbox or spam folder for <strong>{email}</strong> and enter the 6-digit code:
                   </p>
                   <div className="flex items-center gap-2 pt-0.5">
                     <input
@@ -397,18 +421,18 @@ export default function RegisterAccount({
                       type="text"
                       inputMode="numeric"
                       maxLength={6}
-                      placeholder="6-अंकों का OTP"
+                      placeholder="Enter 6-digit OTP"
                       value={otp}
                       onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                      className="h-8.5 sm:h-9 w-36 sm:w-40 rounded-xl border border-slate-300 bg-white px-2.5 text-center font-mono text-sm font-bold tracking-widest text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                      className="h-9 w-40 rounded-xl border border-slate-300 bg-white px-2.5 text-center font-mono text-sm font-bold tracking-widest text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
                     />
                     <button
                       type="button"
                       disabled={verifyOtpBusy || otp.trim().length !== 6}
                       onClick={handleVerifyOtp}
-                      className="h-8.5 sm:h-9 rounded-xl bg-emerald-600 px-3.5 text-xs font-bold text-white shadow-2xs transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="h-9 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-2xs transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {verifyOtpBusy ? "जांच रहे हैं..." : "Verify OTP"}
+                      {verifyOtpBusy ? "Verifying..." : "Verify OTP"}
                     </button>
                   </div>
                 </>
@@ -423,51 +447,56 @@ export default function RegisterAccount({
               {isEmailVerified && (
                 <p className="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
                   <span>✓</span>
-                  <span>ईमेल वेरिफाई हो गया है! अब पासवर्ड बनाकर आगे बढ़ें।</span>
+                  <span>Email verified successfully! Now create your password.</span>
                 </p>
               )}
             </div>
           )}
         </div>
 
-        {/* No. 5: Password Field */}
+        {/* 5. Create Your Password with Leading Icon Box & Show/Hide Toggle */}
         <div>
           <div className="flex items-center justify-between">
-            <label htmlFor="passwordField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
-              5. Create Your Password (लॉगिन पासवर्ड) <span className="text-rose-500">*</span>
+            <label htmlFor="passwordField" className="block text-xs font-bold text-slate-700">
+              5. Create Your Password <span className="text-rose-500">*</span>
             </label>
+          </div>
+          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+              🔒
+            </div>
+            <input
+              id="passwordField"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              minLength={6}
+              maxLength={16}
+              placeholder=""
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              disabled={submitBusy}
+              className="h-10 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              required
+            />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-[11px] font-bold text-blue-700 hover:text-blue-900 transition"
+              className="px-3.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition shrink-0 select-none"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
-          <input
-            id="passwordField"
-            type={showPassword ? "text" : "password"}
-            autoComplete="new-password"
-            minLength={6}
-            maxLength={16}
-            placeholder="•••••••• (6-16 अक्षर, कम से कम 1 अक्षर व 1 नंबर)"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            disabled={submitBusy}
-            className="mt-1 h-9 sm:h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-600"
-            required
-          />
-          <p className="mt-1 text-[10px] text-slate-500">
-            भविष्य में मर्चेंट पोर्टल लॉगिन के लिए सुरक्षित पासवर्ड रखें।
+          <p className="mt-1 text-[11px] text-slate-400">
+            Password must be 6–16 characters, with at least one letter and one number.
           </p>
         </div>
 
-        {/* Action Button: Disabled until Email is Verified! */}
+        {/* Action Button: Next: Business Address (Disabled until Email OTP is Verified) */}
         <div className="pt-2">
           <button
             type="submit"
             disabled={!isFormReadyForNext || submitBusy}
-            className={`flex min-h-10 sm:min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs ${
+            className={`flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs ${
               isFormReadyForNext
                 ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)] hover:from-blue-700 hover:to-indigo-800 cursor-pointer"
                 : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75"
@@ -479,21 +508,21 @@ export default function RegisterAccount({
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                <span>खाता तैयार हो रहा है...</span>
+                <span>Creating Account…</span>
               </>
             ) : isEmailVerified ? (
               <>
-                <span>बिज़नेस सेटअप पर आगे बढ़ें (Continue to Business Setup)</span>
+                <span>Next: Business Address</span>
                 <span>→</span>
               </>
             ) : (
-              <span>ईमेल OTP वेरिफाई करने के बाद यह बटन सक्रिय होगा 🔒</span>
+              <span>Next: Business Address (Verify Email to Unlock) 🔒</span>
             )}
           </button>
 
           {!isEmailVerified && (
-            <p className="mt-1.5 text-center text-[10px] text-amber-700 font-medium">
-              ℹ️ स्टेप 4 में Email ID के सामने <strong>Get OTP</strong> दबाकर ईमेल वेरिफाई करें ताकि यह बटन चालू हो सके।
+            <p className="mt-1.5 text-center text-[10px] text-slate-400 font-medium">
+              Verify Email OTP above to unlock the next step.
             </p>
           )}
         </div>
@@ -514,7 +543,7 @@ export default function RegisterAccount({
                 href="/merchant/login"
                 className="mt-1.5 inline-flex items-center gap-1 font-bold text-blue-700 underline underline-offset-2"
               >
-                <span>मर्चेंट लॉगिन पर जाएँ</span>
+                <span>Go to Merchant Login</span>
                 <span>→</span>
               </Link>
             )}

@@ -43,8 +43,8 @@ export default async function RegisterPage({
   return (
     <RegisterShell
       currentStep={1}
-      title="Trustit par apna Business add karein"
-      description="Apne customers se genuine Google Reviews paaye aur 25–35m hyperlocal delivery shuru karein."
+      title="Add Your Business on Trustit"
+      description="Get genuine customer reviews and 25–35m hyperlocal delivery with Trustit."
     >
       <RegisterAccount
         skipPhoneOtp={isTrustitPhoneOtpBypassEnabled()}
