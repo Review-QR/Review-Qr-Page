@@ -320,6 +320,22 @@ export default function CustomerSuperAppClient({
   const [isSubmitting, startTransition] = useTransition();
   const [bookingSuccessNotice, setBookingSuccessNotice] = useState<string | null>(null);
 
+  // Smart Parcha Auto-Resolver (Finds Nearest Verified Kirana)
+  const handleOpenSmartParcha = () => {
+    const kiranaStore =
+      businesses.find(
+        (b) =>
+          b.type?.toLowerCase().includes("kirana") ||
+          b.type?.toLowerCase().includes("grocery") ||
+          b.name.toLowerCase().includes("kirana")
+      ) ||
+      businesses.find((b) => b.id === "bhr-groc-01") ||
+      businesses[0];
+    if (kiranaStore) {
+      setKiranaModal(kiranaStore);
+    }
+  };
+
   // Preload Cashfree JS SDK in background so checkout is instant (<400ms) with zero lag
   useEffect(() => {
     loadCashfreeSdk().catch(() => {});
@@ -1672,6 +1688,40 @@ export default function CustomerSuperAppClient({
 
       {/* ── Main Listings Content (High-Density Multi-Column Grid on Tablet/Desktop) ── */}
       <main className="max-w-5xl mx-auto px-2.5 sm:px-4 pt-2">
+        {/* Stitch Screen 1: Kinetic Trust Super-App Hero Card */}
+        <div className="mb-2.5 rounded-2xl border border-orange-200/90 bg-gradient-to-br from-amber-50 via-orange-50/70 to-white p-3 sm:p-4 shadow-xs">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-orange-600 px-2 py-0.5 text-[9px] font-black uppercase text-white shadow-2xs">
+                  ⚡ 25–35 Min Delivery
+                </span>
+                <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  100% Genuine Local Stores
+                </span>
+              </div>
+              <h2 className="mt-1 text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
+                Order Food, Fresh Dairy &amp; Handwritten Kirana Parcha in Bahraich
+              </h2>
+              <p className="mt-0.5 text-[10.5px] text-slate-600">
+                Fast doorstep delivery by verified riders. Pay online with Cashfree UPI or Cash on Delivery.
+              </p>
+            </div>
+
+            {/* Smart Parcha Instant Action Button */}
+            <button
+              type="button"
+              onClick={handleOpenSmartParcha}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 px-3.5 py-2 text-xs font-black text-white shadow-sm transition hover:shadow-md shrink-0 select-none cursor-pointer"
+            >
+              <span className="text-base leading-none">📸</span>
+              <span>Upload Smart Parcha</span>
+              <span className="rounded-full bg-white/20 px-1.5 py-0.2 text-[9px]">5 Min Quote</span>
+            </button>
+          </div>
+        </div>
+
         {/* Micro Promotional Ribbon (SEO & Trust Guarantee) */}
         <div className="mb-2 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-2.5 py-1 flex items-center justify-between text-[10px] text-amber-900 shadow-2xs">
           <div className="flex items-center gap-1.5 min-w-0">
@@ -1827,56 +1877,77 @@ export default function CustomerSuperAppClient({
         </div>
       )}
 
-      {/* ── Native Sticky Bottom Navigation Bar (Zomato/Blinkit Mobile Scale) ── */}
+      {/* ── Google Stitch 5-Tab Mobile Navigation Bar ── */}
       {cartItemsList.length === 0 && (
         <nav
           aria-label="Bottom Navigation"
-          className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-slate-200 py-1 px-2 shadow-lg sm:hidden"
+          className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-slate-200 py-1 px-1 shadow-lg sm:hidden"
         >
-          <div className="max-w-md mx-auto grid grid-cols-4 text-center">
+          <div className="max-w-md mx-auto grid grid-cols-5 text-center items-center">
+            {/* 1. Home */}
             <button
               type="button"
               onClick={() => setActiveTab("food")}
-              className={`flex flex-col items-center justify-center py-1 ${
-                activeTab === "food" ? "text-orange-600 font-bold" : "text-slate-500"
+              className={`flex flex-col items-center justify-center py-1 transition ${
+                activeTab === "food" ? "text-orange-600 font-bold" : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <span className="text-base leading-none">🍔</span>
-              <span className="text-[10px] mt-0.5">Food</span>
+              <span className="text-base leading-none">🏠</span>
+              <span className="text-[9.5px] mt-0.5">Home</span>
             </button>
 
+            {/* 2. Categories */}
             <button
               type="button"
-              onClick={() => setActiveTab("salon")}
-              className={`flex flex-col items-center justify-center py-1 ${
-                activeTab === "salon" ? "text-emerald-600 font-bold" : "text-slate-500"
+              onClick={() => {
+                const nextTab = activeTab === "food" ? "kirana" : activeTab === "kirana" ? "dairy" : "food";
+                setActiveTab(nextTab);
+              }}
+              className={`flex flex-col items-center justify-center py-1 transition ${
+                activeTab !== "food" ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              <span className="text-base leading-none">✂️</span>
-              <span className="text-[10px] mt-0.5">Salon Queue</span>
+              <span className="text-base leading-none">🍱</span>
+              <span className="text-[9.5px] mt-0.5">Categories</span>
             </button>
 
+            {/* 3. Center Elevated Smart Parcha Button */}
+            <button
+              type="button"
+              onClick={handleOpenSmartParcha}
+              className="flex flex-col items-center justify-center py-0.5 -mt-3 group"
+            >
+              <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-700 text-white shadow-md group-hover:scale-105 transition">
+                <span className="text-lg leading-none">📸</span>
+              </div>
+              <span className="text-[9px] font-black text-purple-700 mt-0.5">Parcha</span>
+            </button>
+
+            {/* 4. Bookings & Orders */}
             <button
               type="button"
               onClick={() => setIsMyBookingsOpen(true)}
-              className="relative flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900"
+              className="relative flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900 transition"
             >
               <span className="text-base leading-none">📋</span>
-              <span className="text-[10px] mt-0.5">Bookings</span>
+              <span className="text-[9.5px] mt-0.5">Orders</span>
               {totalActiveCount > 0 && (
-                <span className="absolute top-0 right-5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-amber-500 px-0.5 text-[8px] font-black text-slate-950">
+                <span className="absolute top-0 right-3 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-amber-500 px-0.5 text-[8px] font-black text-slate-950 animate-pulse">
                   {totalActiveCount}
                 </span>
               )}
             </button>
 
+            {/* 5. Account */}
             <button
               type="button"
               onClick={handleOpenCustomerLogin}
-              className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900"
+              className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900 transition"
             >
               <span className="text-base leading-none">👤</span>
-              <span className="text-[10px] mt-0.5">{customerEmail || customerPhone ? "Account" : "Log In"}</span>
+              <span className="text-[9.5px] mt-0.5 truncate max-w-[55px]">
+                {customerName ? customerName.split(" ")[0] : (customerEmail || customerPhone ? "Profile" : "Log In")}
+              </span>
             </button>
           </div>
         </nav>
@@ -2702,6 +2773,29 @@ export default function CustomerSuperAppClient({
                   onChange={(e) => setParchaText(e.target.value)}
                   className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
                 />
+                {/* Stitch Screen 2: Quick Daily Essentials Presets */}
+                <div className="mt-1.5 flex flex-wrap gap-1">
+                  {[
+                    "5kg Aashirvaad Atta",
+                    "1L Fortune Mustard Oil",
+                    "2kg Sugar",
+                    "1kg Tata Salt",
+                    "500g Amul Butter",
+                    "250g Taj Mahal Tea",
+                    "1kg Arhar Dal",
+                  ].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => {
+                        setParchaText((prev) => (prev ? `${prev}, ${preset}` : preset));
+                      }}
+                      className="rounded-md border border-purple-200 bg-purple-50/70 px-1.5 py-0.5 text-[9.5px] font-bold text-purple-800 hover:bg-purple-100 transition"
+                    >
+                      + {preset}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
