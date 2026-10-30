@@ -822,13 +822,14 @@ export default function CustomerSuperAppClient({
         const myParchas = (data.parchas || []).filter(
           (p: any) => p.hyperlocal_orders?.customer_phone === phone,
         );
-        // Only show parchas that are still pending dukandar bill quote (not yet in active delivery)
-        const unbilledParchas = myParchas.filter(
-          (p: any) =>
-            !p.hyperlocal_orders?.status ||
-            p.hyperlocal_orders?.status === "placed" ||
-            !p.merchant_quote_amount,
-        );
+        // Only show parchas that are genuinely active and pending dukandar bill quote (never cancelled, rejected or completed)
+        const unbilledParchas = myParchas.filter((p: any) => {
+          const status = String(p.hyperlocal_orders?.status || "").toLowerCase();
+          if (["cancelled", "rejected", "delivered", "completed"].includes(status)) {
+            return false;
+          }
+          return !status || status === "placed" || !p.merchant_quote_amount;
+        });
         setActiveParchas(unbilledParchas);
       }
     } catch {
