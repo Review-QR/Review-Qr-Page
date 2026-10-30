@@ -227,56 +227,70 @@ export default async function MerchantDashboardPage() {
   return (
     <div className="merchant-dashboard-page">
       <section className={`merchant-hero${isPremium ? " merchant-hero--premium" : sweetsBusiness ? " merchant-hero--sweets" : ""}`}>
-        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border-[40px] border-white/5" /><div aria-hidden="true" className="pointer-events-none absolute -bottom-28 left-1/2 h-72 w-72 rounded-full bg-blue-400/10 blur-3xl" />
-        <div className="relative flex min-w-0 flex-wrap items-start justify-between gap-5">
-          <div className="min-w-0">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur">
-              <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
-              {greeting()} · Merchant Dashboard
+        <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full border-[40px] border-[#85583f]/5" />
+        <div aria-hidden="true" className="pointer-events-none absolute -bottom-28 left-1/2 h-72 w-72 rounded-full bg-amber-400/10 blur-3xl" />
+        
+        <div className="relative z-10 flex min-w-0 flex-1 flex-col md:flex-row items-start md:items-center justify-between gap-5">
+          <div className="flex items-start sm:items-center gap-4 min-w-0">
+            <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-white border border-[#ecdcc8] text-[#85583f] flex items-center justify-center text-3xl sm:text-4xl shadow-xs shrink-0">
+              {categoryEmoji}
             </div>
-            <h1 className="mt-3 inline-flex flex-wrap items-center gap-2.5 break-words text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-              <span>{merchant.businessName}</span>
-              {isPremium && (
-                <span
-                  className="premium-gold-badge inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-gradient-to-r from-amber-500/25 via-yellow-400/20 to-amber-600/25 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-200 shadow-[0_0_15px_rgba(245,158,11,0.25)] backdrop-blur-md"
-                  title="Trustit VIP Merchant"
-                >
-                  <span aria-hidden="true" className="text-sm">👑</span>
-                  <span>VIP Merchant</span>
+
+            <div className="min-w-0">
+              <h1 className="inline-flex flex-wrap items-center gap-2.5 break-words text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 leading-tight">
+                <span>{greeting()}, {merchant.businessName}!</span>
+                {isPremium && (
+                  <span
+                    className="premium-gold-badge inline-flex items-center gap-1.5 rounded-full border border-amber-400/50 bg-gradient-to-r from-amber-500/25 via-yellow-400/20 to-amber-600/25 px-3 py-1 text-xs font-black uppercase tracking-wider text-amber-900 shadow-[0_0_15px_rgba(245,158,11,0.25)] backdrop-blur-md"
+                    title="Trustit VIP Merchant"
+                  >
+                    <span aria-hidden="true" className="text-sm">👑</span>
+                    <span>VIP Merchant</span>
+                  </span>
+                )}
+              </h1>
+              
+              <p className="mt-1 text-xs sm:text-sm font-medium text-slate-600">
+                Keep growing with Trustit. Here’s how your business and QR scans are performing today.
+              </p>
+
+              <div className="mt-3 flex flex-wrap items-center gap-2 text-xs font-bold">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-300 px-3 py-1 text-emerald-800 shadow-2xs">
+                  <span aria-hidden="true" className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="capitalize">{merchant.merchantStatus} Merchant</span>
                 </span>
-              )}
-            </h1>
-            <p className="mt-2 text-sm text-slate-200">Here’s how your business and QR scans are performing.</p>
-            <div className="mt-4 flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 px-3 py-1.5 text-xs font-semibold capitalize text-emerald-100">
-                <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                {merchant.merchantStatus}
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 border border-white/20 px-3 py-1.5 text-xs font-medium text-white">
-                <span>{categoryEmoji}</span>
-                <span>{merchant.businessType || "Business"}</span>
-              </span>
-              {isPremium ? (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-amber-500/30 to-yellow-500/30 border border-amber-400/50 px-3 py-1.5 text-xs font-bold text-amber-200 shadow-[0_0_12px_rgba(245,158,11,0.2)]">
-                  <span>👑</span> Premium Plan
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-300 px-3 py-1 text-amber-800 shadow-2xs">
+                  <span>👑</span>
+                  <span>{isPremium ? "VIP Pro Plan" : merchant.plan ? `${merchant.plan} Plan` : "Standard Plan"}</span>
                 </span>
-              ) : (
-                <span className="rounded-full bg-blue-500/25 border border-blue-400/30 px-3 py-1.5 text-xs font-semibold text-blue-100">
-                  {merchant.plan || "Standard"} Plan
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#ede6dd] px-3 py-1 text-slate-700 shadow-2xs">
+                  <span>{categoryEmoji}</span>
+                  <span>{merchant.businessType || "Retail Store"}</span>
                 </span>
-              )}
+                {merchant.city && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-[#ede6dd] px-3 py-1 text-slate-600 shadow-2xs">
+                    <span>📍</span>
+                    <span>{merchant.city}</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-          <div className="merchant-profile">
-            <span className="merchant-profile__bell" aria-hidden="true">
-              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-              <i />
-            </span>
-            <span className="merchant-profile__avatar">{ownerInitials}</span>
-            <span className="merchant-profile__copy">
-              <strong>{ownerName}</strong>
-              <small>Merchant</small>
-            </span>
+
+          {/* Motivational Accent & Profile Details */}
+          <div className="hidden lg:flex items-center gap-4 bg-white/80 border border-[#ecdcc8] rounded-2xl px-5 py-3.5 shadow-2xs backdrop-blur-sm shrink-0">
+            <div className="text-right">
+              <p className="text-[11px] font-black text-[#85583f] uppercase tracking-wider">More Reviews ↗</p>
+              <p className="text-[11px] font-black text-[#85583f] uppercase tracking-wider">More Customers ↗</p>
+              <p className="text-[11px] font-black text-[#85583f] uppercase tracking-wider">More Growth ↗</p>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-[#85583f] to-[#b07d5b] text-white flex items-center justify-center text-lg font-black shadow-xs">
+              ▲
+            </div>
+            <div className="pl-3 border-l border-[#ede6dd] text-left">
+              <span className="block text-xs font-extrabold text-slate-900 leading-tight">{ownerName}</span>
+              <span className="block text-[10px] font-semibold text-slate-500">Merchant</span>
+            </div>
           </div>
         </div>
       </section>
