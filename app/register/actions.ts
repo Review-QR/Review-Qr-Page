@@ -21,6 +21,7 @@ import {
   verifyCashfreeMerchantOrderBySignedContext,
 } from "@/lib/cashfree";
 import { logTrustitCheckoutStage } from "@/lib/trustit-checkout-diagnostics";
+import { sendMerchantEmailOtp, verifyMerchantEmailOtp } from "@/lib/auth/email-service";
 
 export type ActionResult = { success: true; value?: string } | { success: false; message: string; code?: "duplicate_mobile" };
 
@@ -317,6 +318,185 @@ export async function createTrustitAccountWithoutOtp(input: {
     if (admin && createdUserId) await discardIncompleteTrustitUser(admin, createdUserId, merchantClient);
     return safeActionError();
   }
+}
+
+
+export type EmailOtpResult = {
+  success: boolean;
+  message: string;
+  previewOtp?: string;
+  code?: "duplicate_mobile" | "duplicate_email";
+};
+
+export async function requestMerchantEmailOtpAction(input: {
+  businessName: string;
+  fullName: string;
+  mobile: string;
+  email: string;
+}): Promise<EmailOtpResult> {
+  const businessName = typeof input?.businessName === "string" ? input.businessName.trim() : "";
+  const fullName = typeof input?.fullName === "string" ? input.fullName.trim() : "";
+  const phone = normalizeTrustitPhone(input?.mobile);
+  const cleanEmail = typeof input?.email === "string" ? input.email.trim().toLowerCase() : "";
+
+  if (!businessName || businessName.length > 160) {
+    return { success: false, message: "Please enter a valid business name." };
+  }
+  if (!fullName || fullName.length > 160) {
+    return { success: false, message: "Please enter the business owner's name." };
+  }
+  if (!phone) {
+    return { success: false, message: "Please enter a valid 10-digit mobile number." };
+  }
+  if (!cleanEmail || !cleanEmail.includes("@") || !cleanEmail.includes(".")) {
+    return { success: false, message: "Please enter a valid email address for verification." };
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  // 1. Check if an active business already has this phone
+  const { data: existingBiz } = await admin
+    .from("businesses")
+    .select("id, name")
+    .eq("phone", phone)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (existingBiz) {
+    return {
+      success: false,
+      code: "duplicate_mobile",
+      message: `Mobile number is already registered with "${existingBiz.name}". Please sign in or use a different number.`,
+    };
+  }
+
+  // 2. Check if an active merchant profile already has this email
+  const { data: existingProf } = await admin
+    .from("merchant_profiles")
+    .select("user_id")
+    .eq("email", cleanEmail)
+    .maybeSingle();
+
+  if (existingProf) {
+    return {
+      success: false,
+      code: "duplicate_email",
+      message: "This email address is already registered. Please sign in or use another email.",
+    };
+  }
+
+  // 3. Send 6-digit OTP to merchant's email
+  const otpRes = await sendMerchantEmailOtp(cleanEmail, businessName);
+
+  return {
+    success: otpRes.success,
+    message: otpRes.message,
+    previewOtp: otpRes.previewOtp,
+  };
+}
+
+export async function completeMerchantEmailRegistrationAction(input: {
+  businessName: string;
+  fullName: string;
+  mobile: string;
+  email: string;
+  otp: string;
+  password: string;
+}): Promise<ActionResult> {
+  const businessName = typeof input?.businessName === "string" ? input.businessName.trim() : "";
+  const fullName = typeof input?.fullName === "string" ? input.fullName.trim() : "";
+  const phone = normalizeTrustitPhone(input?.mobile);
+  const cleanEmail = typeof input?.email === "string" ? input.email.trim().toLowerCase() : "";
+  const otp = typeof input?.otp === "string" ? input.otp.trim() : "";
+  const password = typeof input?.password === "string" ? input.password : "";
+
+  if (!businessName || !fullName || !phone || !cleanEmail) {
+    return { success: false, message: "Please fill in all required details." };
+  }
+  if (!isValidTrustitPassword(password, password)) {
+    return { success: false, message: "Password must be 6–16 characters and include a letter and a number." };
+  }
+
+  // 1. Verify Email OTP
+  const verifyRes = await verifyMerchantEmailOtp(cleanEmail, otp);
+  if (!verifyRes.success) {
+    return { success: false, message: verifyRes.message };
+  }
+
+  const admin = createSupabaseAdminClient();
+  const signupMerchantClient = await createMerchantActionClient();
+
+  // 2. Sign out any existing session so it doesn't cross-contaminate
+  try {
+    await signupMerchantClient.auth.signOut();
+  } catch {}
+
+  // 3. Clean up any orphaned ghost auth users that have this email or phone but no active business
+  try {
+    const { data: userList } = await admin.auth.admin.listUsers();
+    const ghosts = userList?.users?.filter(
+      (u) => (u.email && u.email.toLowerCase() === cleanEmail) || (u.phone && normalizeTrustitPhone(u.phone) === phone)
+    );
+    if (ghosts && ghosts.length > 0) {
+      for (const ghost of ghosts) {
+        const { data: hasBiz } = await admin
+          .from("merchant_accounts")
+          .select("business_id")
+          .eq("user_id", ghost.id)
+          .maybeSingle();
+        if (!hasBiz) {
+          await admin.auth.admin.deleteUser(ghost.id);
+        }
+      }
+    }
+  } catch {}
+
+  // 4. Create the verified Auth user
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email: cleanEmail,
+    email_confirm: true,
+    phone,
+    phone_confirm: true,
+    password,
+    app_metadata: {
+      [trustitBypassMetadataKeys.signup]: true,
+      [trustitBypassMetadataKeys.passwordComplete]: true,
+    },
+    user_metadata: { full_name: fullName },
+  });
+
+  if (createError || !created?.user) {
+    if (createError?.code === "phone_exists") {
+      return { success: false, code: "duplicate_mobile", message: "This mobile number is already registered." };
+    }
+    if (createError?.code === "email_exists") {
+      return { success: false, message: "This email is already registered." };
+    }
+    return { success: false, message: createError?.message || "Could not create merchant account. Please try again." };
+  }
+
+  const userId = created.user.id;
+
+  // 5. Sign in with the newly created credentials to set the session cookie
+  const { error: signInError } = await signupMerchantClient.auth.signInWithPassword({
+    email: cleanEmail,
+    password,
+  });
+
+  if (signInError) {
+    return { success: false, message: "Account created but sign-in failed. Please use Merchant Login." };
+  }
+
+  // 6. Complete profile in merchant_profiles table and onboarding_sessions
+  const profile = await completeTemporaryTrustitProfile(userId, fullName);
+  if (!profile.success) {
+    return profile;
+  }
+
+  // Update email in merchant_profiles
+  await admin.from("merchant_profiles").update({ email: cleanEmail }).eq("user_id", userId);
+
+  return { success: true };
 }
 
 export async function completeTrustitBypassPassword(input: {

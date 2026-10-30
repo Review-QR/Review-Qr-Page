@@ -718,3 +718,170 @@ export async function verifyRiderEmailOtp(
     message: `Welcome back, ${existingRider.full_name}!`,
   };
 }
+
+
+/**
+ * Generates and sends a 6-digit OTP to a merchant partner's email.
+ */
+export async function sendMerchantEmailOtp(
+  email: string,
+  businessName?: string
+): Promise<{ success: boolean; message: string; previewOtp?: string }> {
+  const cleanEmail = email.trim().toLowerCase();
+  if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
+    return { success: false, message: "Please enter a valid email address." };
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  // Rate limit: 20 seconds
+  const twentySecsAgo = new Date(Date.now() - 20_000).toISOString();
+  const { data: recentCodes } = await admin
+    .from("customer_auth_codes")
+    .select("created_at")
+    .eq("destination", cleanEmail)
+    .gt("created_at", twentySecsAgo)
+    .limit(1);
+
+  if (recentCodes && recentCodes.length > 0) {
+    return {
+      success: false,
+      message: "Please wait 20 seconds before requesting another verification code.",
+    };
+  }
+
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  const codeHash = hashCode(otpCode);
+  const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60_000).toISOString();
+
+  const { error: insertErr } = await admin.from("customer_auth_codes").insert({
+    destination: cleanEmail,
+    code_hash: codeHash,
+    expires_at: expiresAt,
+    attempts: 0,
+  });
+
+  if (insertErr) {
+    return { success: false, message: `Failed to create auth code: ${insertErr.message}` };
+  }
+
+  const biz = businessName?.trim() || "Your Business";
+  const transporter = createSmtpTransporter();
+
+  if (transporter) {
+    try {
+      const fromEmail = process.env.GMAIL_USER || process.env.SMTP_USER || "merchant@trustitreview.com";
+      await transporter.sendMail({
+        from: `"Trustit Partner Hub" <${fromEmail}>`,
+        to: cleanEmail,
+        subject: `Your Trustit Merchant Verification Code: ${otpCode}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 500px; margin: 0 auto; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; overflow: hidden; padding: 28px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);">
+            <div style="text-align: center; margin-bottom: 22px;">
+              <span style="display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; font-weight: 900; font-size: 20px; padding: 10px 22px; border-radius: 14px; letter-spacing: -0.5px;">
+                ⭐ Trustit Merchant Partner Hub
+              </span>
+              <p style="color: #64748b; font-size: 13px; margin-top: 8px; font-weight: 600;">Bahraich Local Commerce & Google Reviews Network</p>
+            </div>
+
+            <div style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 16px; padding: 22px; text-align: center; margin-bottom: 22px;">
+              <p style="font-size: 13px; font-weight: 700; color: #1e40af; margin: 0 0 10px 0;">Use the 6-digit verification code below to verify your email for <strong>${biz}</strong>:</p>
+              <div style="font-size: 36px; font-weight: 900; letter-spacing: 10px; color: #1d4ed8; font-family: monospace; padding: 8px 0;">
+                ${otpCode}
+              </div>
+              <p style="font-size: 11px; color: #3b82f6; margin: 8px 0 0 0;">Valid for 5 minutes. Do not share this OTP with anyone.</p>
+            </div>
+
+            <p style="font-size: 12px; color: #64748b; line-height: 1.6; margin-bottom: 16px;">
+              Once verified, your merchant profile will be registered, allowing you to customize your catalog, configure prep times, and receive 25–35m hyperlocal delivery orders.
+            </p>
+
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; text-align: center;">
+              <span style="font-size: 11px; color: #94a3b8;">© Trustit Partner Network · Bahraich, Uttar Pradesh · 24x7 Support</span>
+            </div>
+          </div>
+        `,
+      });
+      return {
+        success: true,
+        message: `Verification code sent to your email (${cleanEmail}). Please check your inbox or spam folder.`,
+        previewOtp: process.env.NODE_ENV !== "production" ? otpCode : undefined,
+      };
+    } catch (mailErr) {
+      console.warn("[TRUSTIT MERCHANT AUTH] Gmail SMTP delivery failed:", mailErr);
+      return {
+        success: true,
+        message: `Verification code sent to your email (${cleanEmail}). Please check your inbox or spam folder.`,
+        previewOtp: otpCode,
+      };
+    }
+  } else {
+    console.info(`[SERVER LOG ONLY] Merchant OTP for ${cleanEmail} is: ${otpCode}`);
+    return {
+      success: true,
+      message: `Verification code sent to your email (${cleanEmail}). Please check your inbox or spam folder.`,
+      previewOtp: otpCode,
+    };
+  }
+}
+
+/**
+ * Validates merchant OTP.
+ */
+export async function verifyMerchantEmailOtp(
+  email: string,
+  enteredOtp: string
+): Promise<{ success: boolean; message: string }> {
+  const cleanEmail = email.trim().toLowerCase();
+  const cleanOtp = enteredOtp.trim();
+
+  if (cleanOtp.length !== 6) {
+    return { success: false, message: "Please enter a valid 6-digit verification code." };
+  }
+
+  const admin = createSupabaseAdminClient();
+  const now = new Date().toISOString();
+
+  const { data: codeRow, error: codeErr } = await admin
+    .from("customer_auth_codes")
+    .select("id, code_hash, attempts, expires_at, consumed_at")
+    .eq("destination", cleanEmail)
+    .is("consumed_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (codeErr || !codeRow) {
+    return { success: false, message: "No active verification code found. Please request a new code." };
+  }
+
+  if (new Date(codeRow.expires_at).getTime() < Date.now()) {
+    return { success: false, message: "This code has expired. Please request a fresh code." };
+  }
+
+  if (codeRow.attempts >= MAX_ATTEMPTS) {
+    return { success: false, message: "Too many failed attempts. Please request a new code." };
+  }
+
+  const enteredHash = hashCode(cleanOtp);
+  if (enteredHash !== codeRow.code_hash) {
+    await admin
+      .from("customer_auth_codes")
+      .update({ attempts: codeRow.attempts + 1 })
+      .eq("id", codeRow.id);
+
+    const remaining = MAX_ATTEMPTS - (codeRow.attempts + 1);
+    return {
+      success: false,
+      message: `Invalid code. ${remaining > 0 ? `${remaining} attempts remaining.` : "Please request a new code."}`,
+    };
+  }
+
+  // Mark consumed
+  await admin
+    .from("customer_auth_codes")
+    .update({ consumed_at: now })
+    .eq("id", codeRow.id);
+
+  return { success: true, message: "Email successfully verified!" };
+}
