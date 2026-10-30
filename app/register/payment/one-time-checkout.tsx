@@ -208,13 +208,16 @@ export default function OneTimeCheckout({
   }
 
   return (
-    <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-5">
-      <h3 className="font-bold text-slate-900">Pay Once</h3>
-      <p className="mt-1 text-sm text-slate-600">Pay for 30 days of service. Your business and QR activate after the payment is verified.</p>
-      {orderId && <label className="mt-4 block text-sm font-medium">Payment reference<input className="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 font-mono text-sm shadow-sm" value={orderId} readOnly /></label>}
+    <div className="mt-4 rounded-2xl border border-blue-200/90 bg-gradient-to-br from-blue-50/70 to-white p-4 sm:p-5 shadow-2xs">
+      <div className="flex items-center gap-2">
+        <span className="text-xl">💳</span>
+        <h3 className="text-sm sm:text-base font-bold text-slate-900">One-Time Activation Payment</h3>
+      </div>
+      <p className="mt-1 text-xs text-slate-600 leading-relaxed">Pay for 30 days of service. Your verified business profile and QR standee activate after the payment is verified.</p>
+      {orderId && <label className="mt-3 block text-xs font-bold text-slate-700">Payment Reference ID<input className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-xs font-bold text-slate-800 shadow-2xs" value={orderId} readOnly /></label>}
       <div className="mt-4 flex flex-wrap gap-3">
-        <button type="button" disabled={busy} onClick={() => void start()} className="rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3 font-bold text-white shadow-[0_12px_24px_-14px_rgba(37,99,235,0.35)] disabled:opacity-50">{busy ? "Please wait…" : "Continue to Cashfree"}</button>
-        {orderId && <button type="button" disabled={busy} onClick={() => void recover()} className="rounded-2xl border border-slate-200 bg-white px-5 py-3 font-bold text-slate-700 shadow-sm disabled:opacity-50">Recover &amp; Check</button>}
+        <button type="button" disabled={busy} onClick={() => void start()} className="rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50">{busy ? "Please wait…" : "Pay via Cashfree (UPI / Cards) →"}</button>
+        {orderId && <button type="button" disabled={busy} onClick={() => void recover()} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-700 shadow-2xs hover:bg-slate-50 disabled:opacity-50">Recover &amp; Check</button>}
       </div>
       {verificationState === "checking" && (
         <div role="status" aria-live="polite" className="mt-5 flex gap-3 rounded-xl border border-blue-200 bg-white p-4 text-sm text-slate-700">

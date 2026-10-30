@@ -6,11 +6,9 @@ import { useRouter } from "next/navigation";
 import {
   logoutTrustitMerchantSession,
   requestMerchantEmailOtpAction,
+  verifyMerchantEmailOtpAction,
   completeMerchantEmailRegistrationAction,
 } from "./actions";
-
-const inputClass =
-  "mt-1.5 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold text-slate-900 shadow-2xs outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-100";
 
 function isPasswordValid(password: string) {
   return (
@@ -31,6 +29,8 @@ export default function RegisterAccount({
   hasBlockingSession: boolean;
 }) {
   const router = useRouter();
+
+  // Form inputs
   const [businessName, setBusinessName] = useState("");
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
@@ -38,14 +38,24 @@ export default function RegisterAccount({
   const [otp, setOtp] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [previewOtp, setPreviewOtp] = useState<string | undefined>(undefined);
 
-  const [stage, setStage] = useState<"details" | "otp">("details");
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
+  // OTP flow states
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpSuccessMessage, setOtpSuccessMessage] = useState("");
+  const [previewOtp, setPreviewOtp] = useState<string | undefined>(undefined);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verificationToken, setVerificationToken] = useState<string | null>(null);
+
+  // Loading & status states
+  const [getOtpBusy, setGetOtpBusy] = useState(false);
+  const [verifyOtpBusy, setVerifyOtpBusy] = useState(false);
+  const [submitBusy, setSubmitBusy] = useState(false);
+  const [generalError, setGeneralError] = useState("");
+  const [otpError, setOtpError] = useState("");
   const [duplicateMobile, setDuplicateMobile] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
+  // Resend countdown timer
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = setInterval(() => {
@@ -54,27 +64,28 @@ export default function RegisterAccount({
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
+  // Sign out blocking session if needed
   async function logoutAndStartNewAccount() {
-    setBusy(true);
-    setMessage("");
+    setSubmitBusy(true);
+    setGeneralError("");
     try {
       const result = await logoutTrustitMerchantSession();
       if (!result.success) {
-        setMessage(result.message);
+        setGeneralError(result.message);
         return;
       }
       router.refresh();
     } catch {
-      setMessage("Could not sign out. Please try again.");
+      setGeneralError("Could not sign out. Please try again.");
     } finally {
-      setBusy(false);
+      setSubmitBusy(false);
     }
   }
 
-  // 1. Request Email OTP
-  async function handleSendEmailOtp(event: React.FormEvent) {
-    event.preventDefault();
-    setMessage("");
+  // 1. Get OTP Button Click
+  async function handleGetOtp() {
+    setGeneralError("");
+    setOtpError("");
     setDuplicateMobile(false);
 
     const cleanBiz = businessName.trim();
@@ -83,27 +94,23 @@ export default function RegisterAccount({
     const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanBiz) {
-      setMessage("कृपया दुकान / प्रतिष्ठान का नाम दर्ज करें (Business Name is required).");
+      setGeneralError("कृपया पहले दुकान / प्रतिष्ठान का नाम दर्ज करें (Business Name is required).");
       return;
     }
     if (!cleanName) {
-      setMessage("कृपया मालिक का नाम दर्ज करें (Owner Name is required).");
+      setGeneralError("कृपया मालिक / संचालक का नाम दर्ज करें (Owner Name is required).");
       return;
     }
     if (cleanPhone.length < 10) {
-      setMessage("कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें (Enter valid 10-digit mobile).");
+      setGeneralError("कृपया 10 अंकों का मान्य मोबाइल नंबर दर्ज करें (Enter valid 10-digit mobile).");
       return;
     }
     if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
-      setMessage("कृपया मान्य ईमेल ID दर्ज करें (Enter a valid email address for OTP).");
-      return;
-    }
-    if (!isPasswordValid(password)) {
-      setMessage("पासवर्ड 6–16 अक्षरों का होना चाहिए जिसमें कम से कम 1 अक्षर और 1 नंबर हो।");
+      setGeneralError("कृपया मान्य ईमेल ID दर्ज करें (Enter a valid email address).");
       return;
     }
 
-    setBusy(true);
+    setGetOtpBusy(true);
     try {
       const result = await requestMerchantEmailOtpAction({
         businessName: cleanBiz,
@@ -114,46 +121,84 @@ export default function RegisterAccount({
 
       if (!result.success) {
         setDuplicateMobile(result.code === "duplicate_mobile");
-        setMessage(result.message);
+        setGeneralError(result.message);
         return;
       }
 
+      setOtpSent(true);
       setPreviewOtp(result.previewOtp);
-      setStage("otp");
+      setOtpSuccessMessage("OTP sent successfully to your email");
       setResendCooldown(30);
-      setMessage(result.message || `वेरिफिकेशन कोड ${cleanEmail} पर भेज दिया गया है।`);
     } catch {
-      setMessage("ईमेल OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।");
+      setGeneralError("ईमेल OTP भेजने में समस्या हुई। कृपया पुनः प्रयास करें।");
     } finally {
-      setBusy(false);
+      setGetOtpBusy(false);
     }
   }
 
-  // 2. Verify OTP & Create Account
-  async function handleVerifyOtpAndCreate(event: React.FormEvent) {
-    event.preventDefault();
-    setMessage("");
-
+  // 2. Verify OTP Button Click
+  async function handleVerifyOtp() {
+    setOtpError("");
     const cleanOtp = otp.trim();
+    const cleanEmail = email.trim().toLowerCase();
+
     if (cleanOtp.length !== 6) {
-      setMessage("कृपया ईमेल पर आया 6-अंकों का वेरिफिकेशन कोड दर्ज करें।");
+      setOtpError("कृपया ईमेल पर आया 6-अंकों का OTP कोड दर्ज करें।");
       return;
     }
 
-    setBusy(true);
+    setVerifyOtpBusy(true);
+    try {
+      const result = await verifyMerchantEmailOtpAction({
+        email: cleanEmail,
+        otp: cleanOtp,
+      });
+
+      if (!result.success) {
+        setOtpError(result.message || "गलत OTP कोड। कृपया पुनः प्रयास करें।");
+        return;
+      }
+
+      setIsEmailVerified(true);
+      setVerificationToken(result.verificationToken || null);
+      setOtpSuccessMessage("Email verified successfully! ✓");
+    } catch {
+      setOtpError("OTP वेरिफिकेशन में समस्या हुई। कृपया पुनः प्रयास करें।");
+    } finally {
+      setVerifyOtpBusy(false);
+    }
+  }
+
+  // 3. Final Step: Submit Registration & Continue
+  async function handleSubmitRegistration(e: React.FormEvent) {
+    e.preventDefault();
+    setGeneralError("");
+
+    if (!isEmailVerified) {
+      setGeneralError("कृपया आगे बढ़ने के लिए पहले ईमेल OTP वेरिफाई करें।");
+      return;
+    }
+
+    if (!isPasswordValid(password)) {
+      setGeneralError("पासवर्ड 6–16 अक्षरों का होना चाहिए जिसमें कम से कम 1 अक्षर और 1 नंबर हो।");
+      return;
+    }
+
+    setSubmitBusy(true);
     try {
       const result = await completeMerchantEmailRegistrationAction({
         businessName: businessName.trim(),
         fullName: name.trim(),
         mobile: mobile.replace(/\D/g, ""),
         email: email.trim().toLowerCase(),
-        otp: cleanOtp,
+        verificationToken: verificationToken || undefined,
+        otp: otp.trim(),
         password,
       });
 
       if (!result.success) {
         setDuplicateMobile(result.code === "duplicate_mobile");
-        setMessage(result.message);
+        setGeneralError(result.message);
         return;
       }
 
@@ -161,300 +206,331 @@ export default function RegisterAccount({
       router.push("/register/business");
       router.refresh();
     } catch {
-      setMessage("अकाउंट तैयार नहीं हो सका। कृपया पुनः प्रयास करें।");
+      setGeneralError("अकाउंट तैयार नहीं हो सका। कृपया पुनः प्रयास करें।");
     } finally {
-      setBusy(false);
+      setSubmitBusy(false);
     }
   }
 
+  // Blocking session card
   if (hasBlockingSession) {
     return (
-      <div className="mt-8 rounded-3xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-6 shadow-sm">
+      <div className="mt-4 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-4 shadow-xs">
         <div className="flex items-center gap-2">
-          <span className="text-xl">⚠️</span>
-          <p className="text-sm font-bold text-slate-900">एक मर्चेंट खाता पहले से लॉगिन है।</p>
+          <span className="text-lg">⚠️</span>
+          <p className="text-xs font-bold text-slate-900">एक मर्चेंट खाता पहले से लॉगिन है।</p>
         </div>
-        <p className="mt-1 text-xs leading-5 text-slate-600">
+        <p className="mt-1 text-[11px] leading-relaxed text-slate-600">
           नया बिज़नेस रजिस्टर करने से पहले पुराने सेशन से साइन आउट करें। आपका पुराना खाता सुरक्षित रहेगा।
         </p>
         <button
           type="button"
-          disabled={busy}
+          disabled={submitBusy}
           onClick={logoutAndStartNewAccount}
-          className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-5 py-3 text-xs font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
+          className="mt-3 flex min-h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white transition hover:bg-blue-700 disabled:opacity-50"
         >
-          {busy ? "साइन आउट हो रहा है…" : "पुराने खाते से साइन आउट करें व नया खाता बनाएं"}
+          {submitBusy ? "साइन आउट हो रहा है…" : "पुराने खाते से साइन आउट करें व नया खाता बनाएं"}
         </button>
-        {message && <p role="alert" className="mt-3 text-xs font-semibold text-rose-800">{message}</p>}
+        {generalError && (
+          <p role="alert" className="mt-2 text-[11px] font-semibold text-rose-800">
+            {generalError}
+          </p>
+        )}
       </div>
     );
   }
 
+  const isFormReadyForNext =
+    isEmailVerified &&
+    businessName.trim().length > 0 &&
+    name.trim().length > 0 &&
+    mobile.replace(/\D/g, "").length >= 10 &&
+    isPasswordValid(password);
+
   return (
-    <div className="mt-8">
-      {stage === "details" ? (
-        <form onSubmit={handleSendEmailOtp} className="space-y-4 text-left">
-          {/* Business Name */}
-          <div>
-            <label htmlFor="businessNameField" className="block text-xs font-bold text-slate-800">
-              Business Name (दुकान / प्रतिष्ठान का नाम) *
-            </label>
+    <div className="mt-4">
+      <form onSubmit={handleSubmitRegistration} className="space-y-3 text-left">
+        {/* No. 1: Business Name */}
+        <div>
+          <label htmlFor="businessNameField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
+            1. Business Name (दुकान / प्रतिष्ठान का नाम) <span className="text-rose-500">*</span>
+          </label>
+          <input
+            id="businessNameField"
+            autoComplete="organization"
+            maxLength={160}
+            placeholder="उदा. Jamal Saloon, गुप्ता किराना, श्याम स्वीट्स..."
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            disabled={isEmailVerified || submitBusy}
+            className="mt-1 h-9 sm:h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-600"
+            required
+          />
+        </div>
+
+        {/* No. 2: Owner Name */}
+        <div>
+          <label htmlFor="ownerNameField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
+            2. Owner Name (मालिक / संचालक का नाम) <span className="text-rose-500">*</span>
+          </label>
+          <input
+            id="ownerNameField"
+            autoComplete="name"
+            maxLength={160}
+            placeholder="उदा. Jamal, राहुल वर्मा..."
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            disabled={isEmailVerified || submitBusy}
+            className="mt-1 h-9 sm:h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-600"
+            required
+          />
+        </div>
+
+        {/* No. 3: Mobile Number */}
+        <div>
+          <label htmlFor="mobileField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
+            3. Mobile Number (दुकान का संपर्क नंबर) <span className="text-rose-500">*</span>
+          </label>
+          <div className="mt-1 flex h-9 sm:h-10 overflow-hidden rounded-xl border border-slate-200 bg-white transition focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100">
+            <span className="flex items-center border-r border-slate-200 bg-slate-50 px-2.5 text-xs font-bold text-slate-700 select-none">
+              🇮🇳 +91
+            </span>
             <input
-              id="businessNameField"
-              className={inputClass}
-              autoComplete="organization"
-              maxLength={160}
-              placeholder="उदा. Jamal Saloon, गुप्ता किराना, श्याम दूध भंडार..."
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
+              id="mobileField"
+              type="tel"
+              inputMode="numeric"
+              maxLength={10}
+              placeholder="10-अंकों का मोबाइल नंबर (उदा. 8545965845)"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
+              disabled={isEmailVerified || submitBusy}
+              className="w-full px-3 text-xs sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
           </div>
+          <p className="mt-1 text-[10px] text-slate-500">
+            दुकान प्रोफाइल व डिलीवरी ऑर्डर्स के संपर्क हेतु।
+          </p>
+        </div>
 
-          {/* Owner Name */}
-          <div>
-            <label htmlFor="ownerNameField" className="block text-xs font-bold text-slate-800">
-              Owner Name (मालिक / संचालक का नाम) *
+        {/* No. 4: Email ID with Inline Get OTP Button */}
+        <div>
+          <div className="flex items-center justify-between">
+            <label htmlFor="emailField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
+              4. Email ID (OTP वेरिफिकेशन हेतु ईमेल) <span className="text-rose-500">*</span>
             </label>
-            <input
-              id="ownerNameField"
-              className={inputClass}
-              autoComplete="name"
-              maxLength={160}
-              placeholder="उदा. Jamal, राहुल वर्मा..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
+            {isEmailVerified && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-black text-emerald-700">
+                ✓ Verified
+              </span>
+            )}
           </div>
 
-          {/* Mobile Number with +91 indicator */}
-          <div>
-            <label htmlFor="mobileField" className="block text-xs font-bold text-slate-800">
-              Mobile Number (दुकान का संपर्क नंबर) *
-            </label>
-            <div className="relative mt-1.5 flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-100 transition">
-              <span className="flex items-center border-r border-slate-200 bg-slate-50 px-3.5 text-xs font-black text-slate-700 select-none">
-                🇮🇳 +91
-              </span>
-              <input
-                id="mobileField"
-                type="tel"
-                inputMode="numeric"
-                maxLength={10}
-                placeholder="10-अंकों का मोबाइल नंबर (उदा. 8545965845)"
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-                className="w-full px-4 py-3.5 text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none"
-                required
-              />
-            </div>
-            <p className="mt-1 text-[11px] text-slate-500">
-              यह नंबर आपके बिज़नेस प्रोफाइल व डिलीवरी आर्डर्स के संपर्क के लिए उपयोग होगा।
-            </p>
-          </div>
-
-          {/* Email ID for OTP Verification */}
-          <div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="emailField" className="block text-xs font-bold text-slate-800">
-                Email Address (OTP वेरिफिकेशन हेतु ईमेल) *
-              </label>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full">
-                Email OTP
-              </span>
-            </div>
+          <div className="mt-1 flex gap-2">
             <input
               id="emailField"
               type="email"
               inputMode="email"
               autoComplete="email"
-              className={inputClass}
               placeholder="उदा. jamal@gmail.com या owner@business.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (otpSent && !isEmailVerified) {
+                  setOtpSent(false);
+                  setOtpSuccessMessage("");
+                }
+              }}
+              disabled={isEmailVerified || submitBusy}
+              className="h-9 sm:h-10 flex-1 rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
-            <p className="mt-1 text-[11px] text-slate-500">
-              इस ईमेल पर तुरंत 6-अंकों का वेरिफिकेशन कोड भेजा जाएगा।
-            </p>
-          </div>
-
-          {/* Password */}
-          <div>
-            <div className="flex items-center justify-between">
-              <label htmlFor="passwordField" className="block text-xs font-bold text-slate-800">
-                Create Your Password (लॉगिन पासवर्ड) *
-              </label>
+            {!isEmailVerified && (
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="text-xs font-bold text-blue-700 hover:text-blue-900 transition"
+                disabled={
+                  getOtpBusy ||
+                  resendCooldown > 0 ||
+                  !email.includes("@") ||
+                  !businessName.trim() ||
+                  !name.trim() ||
+                  mobile.replace(/\D/g, "").length < 10
+                }
+                onClick={handleGetOtp}
+                className="h-9 sm:h-10 shrink-0 rounded-xl bg-blue-600 px-3.5 text-xs font-bold text-white shadow-2xs transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-200 disabled:text-slate-400"
               >
-                {showPassword ? "Hide" : "Show"}
+                {getOtpBusy
+                  ? "भेज रहे हैं..."
+                  : resendCooldown > 0
+                  ? `पुनः भेजें (${resendCooldown}s)`
+                  : otpSent
+                  ? "Resend OTP"
+                  : "Get OTP"}
               </button>
-            </div>
-            <input
-              id="passwordField"
-              className={inputClass}
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              minLength={6}
-              maxLength={16}
-              placeholder="•••••••• (6-16 अक्षर, कम से कम 1 अक्षर व 1 नंबर)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            )}
           </div>
 
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={busy || !businessName.trim() || !name.trim() || mobile.length < 10 || !email.includes("@")}
-            className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-5 py-3.5 text-sm font-black text-white shadow-[0_12px_24px_-14px_rgba(37,99,235,0.4)] transition hover:from-blue-700 hover:to-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {busy ? (
-              <>
-                <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                </svg>
-                <span>ईमेल OTP भेजा जा रहा है...</span>
-              </>
-            ) : (
-              <>
-                <span>ईमेल OTP भेजें व आगे बढ़ें (Send Email OTP)</span>
-                <span>→</span>
-              </>
-            )}
-          </button>
+          {/* Inline OTP Section immediately below Email ID */}
+          {otpSent && (
+            <div className="mt-2 rounded-xl border border-blue-200/90 bg-blue-50/70 p-2.5 space-y-2">
+              {/* Status line */}
+              <div className="flex items-center justify-between text-xs">
+                <p className="flex items-center gap-1.5 font-bold text-blue-900 text-[11px] sm:text-xs">
+                  <span className="text-emerald-600 font-black">✓</span>
+                  <span>{otpSuccessMessage || "OTP sent successfully to your email"}</span>
+                </p>
+                {previewOtp && (
+                  <span className="rounded-md border border-blue-300 bg-white px-2 py-0.5 font-mono text-[10px] font-black text-blue-800 shadow-2xs">
+                    ⚡ Quick Test OTP: {previewOtp}
+                  </span>
+                )}
+              </div>
 
-          {message && (
-            <div
-              role={duplicateMobile ? "alert" : "status"}
-              className={`rounded-2xl p-4 text-xs font-semibold leading-relaxed ${
-                duplicateMobile
-                  ? "border border-amber-200 bg-amber-50 text-amber-950"
-                  : "border border-rose-200 bg-rose-50 text-rose-800"
-              }`}
-            >
-              <p>{message}</p>
-              {duplicateMobile && (
-                <Link
-                  href="/merchant/login"
-                  className="mt-2 inline-flex items-center gap-1 font-bold text-blue-700 underline underline-offset-2"
-                >
-                  <span>मर्चेंट लॉगिन पर जाएँ</span>
-                  <span>→</span>
-                </Link>
+              {!isEmailVerified && (
+                <>
+                  <p className="text-[10px] text-blue-800">
+                    कृपया <strong>{email}</strong> का इनबॉक्स या स्पैम (Spam) फोल्डर देखें और 6-अंकों का कोड दर्ज करें:
+                  </p>
+                  <div className="flex items-center gap-2 pt-0.5">
+                    <input
+                      id="inlineOtpBox"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="6-अंकों का OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                      className="h-8.5 sm:h-9 w-36 sm:w-40 rounded-xl border border-slate-300 bg-white px-2.5 text-center font-mono text-sm font-bold tracking-widest text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                    />
+                    <button
+                      type="button"
+                      disabled={verifyOtpBusy || otp.trim().length !== 6}
+                      onClick={handleVerifyOtp}
+                      className="h-8.5 sm:h-9 rounded-xl bg-emerald-600 px-3.5 text-xs font-bold text-white shadow-2xs transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {verifyOtpBusy ? "जांच रहे हैं..." : "Verify OTP"}
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {otpError && (
+                <p role="alert" className="text-[11px] font-bold text-rose-700">
+                  {otpError}
+                </p>
+              )}
+
+              {isEmailVerified && (
+                <p className="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
+                  <span>✓</span>
+                  <span>ईमेल वेरिफाई हो गया है! अब पासवर्ड बनाकर आगे बढ़ें।</span>
+                </p>
               )}
             </div>
           )}
+        </div>
 
-          <div className="border-t border-slate-100 pt-4 text-center">
-            <p className="text-xs text-slate-600">
-              Already have an account?{" "}
-              <Link href="/merchant/login" className="font-bold text-blue-700 hover:underline">
-                Merchant Login →
-              </Link>
-            </p>
-          </div>
-        </form>
-      ) : (
-        /* Stage 2: OTP Verification Mode */
-        <form onSubmit={handleVerifyOtpAndCreate} className="space-y-5 text-left">
-          <div className="rounded-2xl border border-blue-200 bg-blue-50/70 p-4">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">📩</span>
-              <div>
-                <h3 className="text-xs font-bold text-blue-950">वेरिफिकेशन कोड भेजा गया</h3>
-                <p className="mt-0.5 text-xs text-blue-800">
-                  हमने <strong>{email}</strong> पर 6-अंकों का OTP भेजा है। कृपया अपना इनबॉक्स या स्पैम फोल्डर देखें।
-                </p>
-                {previewOtp && (
-                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-mono font-black text-blue-900 border border-blue-300">
-                    <span>⚡ Quick Test OTP:</span>
-                    <span>{previewOtp}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <label htmlFor="otpField" className="block text-xs font-bold text-slate-800">
-              6-Digit Email Verification Code *
+        {/* No. 5: Password Field */}
+        <div>
+          <div className="flex items-center justify-between">
+            <label htmlFor="passwordField" className="block text-[11px] sm:text-xs font-bold text-slate-700">
+              5. Create Your Password (लॉगिन पासवर्ड) <span className="text-rose-500">*</span>
             </label>
-            <input
-              id="otpField"
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              autoComplete="one-time-code"
-              placeholder="123456"
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-              className="mt-1.5 w-full rounded-2xl border border-slate-200 bg-white px-4 py-4 text-center font-mono text-2xl font-black tracking-[8px] text-slate-900 shadow-2xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-              required
-              autoFocus
-            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="text-[11px] font-bold text-blue-700 hover:text-blue-900 transition"
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
           </div>
+          <input
+            id="passwordField"
+            type={showPassword ? "text" : "password"}
+            autoComplete="new-password"
+            minLength={6}
+            maxLength={16}
+            placeholder="•••••••• (6-16 अक्षर, कम से कम 1 अक्षर व 1 नंबर)"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            disabled={submitBusy}
+            className="mt-1 h-9 sm:h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50 disabled:text-slate-600"
+            required
+          />
+          <p className="mt-1 text-[10px] text-slate-500">
+            भविष्य में मर्चेंट पोर्टल लॉगिन के लिए सुरक्षित पासवर्ड रखें।
+          </p>
+        </div>
 
+        {/* Action Button: Disabled until Email is Verified! */}
+        <div className="pt-2">
           <button
             type="submit"
-            disabled={busy || otp.trim().length !== 6}
-            className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-700 px-5 py-3.5 text-sm font-black text-white shadow-[0_12px_24px_-14px_rgba(5,150,105,0.4)] transition hover:from-emerald-700 hover:to-teal-800 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!isFormReadyForNext || submitBusy}
+            className={`flex min-h-10 sm:min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs ${
+              isFormReadyForNext
+                ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)] hover:from-blue-700 hover:to-indigo-800 cursor-pointer"
+                : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75"
+            }`}
           >
-            {busy ? (
+            {submitBusy ? (
               <>
                 <svg className="h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                <span>वेरिफाई किया जा रहा है...</span>
+                <span>खाता तैयार हो रहा है...</span>
               </>
-            ) : (
+            ) : isEmailVerified ? (
               <>
-                <span>वेरिफाई करें व बिज़नेस सेटअप पर चलें (Verify & Continue)</span>
+                <span>बिज़नेस सेटअप पर आगे बढ़ें (Continue to Business Setup)</span>
                 <span>→</span>
               </>
+            ) : (
+              <span>ईमेल OTP वेरिफाई करने के बाद यह बटन सक्रिय होगा 🔒</span>
             )}
           </button>
 
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-600 pt-1">
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setStage("details");
-                setMessage("");
-              }}
-              className="text-slate-600 hover:text-slate-900 hover:underline"
-            >
-              ← ईमेल या विवरण बदलें
-            </button>
-
-            <button
-              type="button"
-              disabled={busy || resendCooldown > 0}
-              onClick={handleSendEmailOtp}
-              className="text-blue-700 hover:underline disabled:text-slate-400 disabled:no-underline"
-            >
-              {resendCooldown > 0 ? `पुनः OTP भेजें (${resendCooldown}s)` : "OTP फिर से भेजें (Resend)"}
-            </button>
-          </div>
-
-          {message && (
-            <div
-              role="alert"
-              className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs font-semibold text-rose-800"
-            >
-              {message}
-            </div>
+          {!isEmailVerified && (
+            <p className="mt-1.5 text-center text-[10px] text-amber-700 font-medium">
+              ℹ️ स्टेप 4 में Email ID के सामने <strong>Get OTP</strong> दबाकर ईमेल वेरिफाई करें ताकि यह बटन चालू हो सके।
+            </p>
           )}
-        </form>
-      )}
+        </div>
+
+        {/* Error / Alert Messages */}
+        {generalError && (
+          <div
+            role={duplicateMobile ? "alert" : "status"}
+            className={`rounded-xl p-3 text-xs font-semibold leading-relaxed ${
+              duplicateMobile
+                ? "border border-amber-200 bg-amber-50 text-amber-950"
+                : "border border-rose-200 bg-rose-50 text-rose-800"
+            }`}
+          >
+            <p>{generalError}</p>
+            {duplicateMobile && (
+              <Link
+                href="/merchant/login"
+                className="mt-1.5 inline-flex items-center gap-1 font-bold text-blue-700 underline underline-offset-2"
+              >
+                <span>मर्चेंट लॉगिन पर जाएँ</span>
+                <span>→</span>
+              </Link>
+            )}
+          </div>
+        )}
+
+        {/* Footer Link to Merchant Login */}
+        <div className="border-t border-slate-100 pt-3 text-center">
+          <p className="text-[11px] text-slate-600">
+            Already have an account?{" "}
+            <Link href="/merchant/login" className="font-bold text-blue-700 hover:underline">
+              Merchant Login →
+            </Link>
+          </p>
+        </div>
+      </form>
     </div>
   );
 }
