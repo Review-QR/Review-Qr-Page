@@ -48,6 +48,7 @@ export default async function HomePage() {
     const { data, error } = await supabase
       .from("businesses")
       .select("*")
+      .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -286,28 +287,6 @@ export default async function HomePage() {
         ))}
       </section>
 
-      <section className="dashboard-panel plans-panel">
-        <div className="section-heading">
-          <div>
-            <p className="section-kicker">SUBSCRIPTIONS</p>
-            <h2>Plan-wise businesses</h2>
-          </div>
-          <span className="section-caption">Business distribution by plan</span>
-        </div>
-        <div className="plans-grid">
-          {plans.map((plan) => (
-            <div className={`plan-card plan-card--${plan.tone}`} key={plan.name}>
-              <span className="plan-dot" />
-              <div>
-                <p>{plan.name}</p>
-                <strong>{plan.count}</strong>
-              </div>
-              <span className="plan-card-caption">businesses</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
       <section className="dashboard-panel actions-panel">
         <div className="section-heading">
           <div>
@@ -330,6 +309,28 @@ export default async function HomePage() {
               </span>
               <span className="action-arrow" aria-hidden="true">↗</span>
             </Link>
+          ))}
+        </div>
+      </section>
+
+      <section className="dashboard-panel plans-panel">
+        <div className="section-heading">
+          <div>
+            <p className="section-kicker">SUBSCRIPTIONS</p>
+            <h2>Plan-wise businesses</h2>
+          </div>
+          <span className="section-caption">Business distribution by plan</span>
+        </div>
+        <div className="plans-grid">
+          {plans.map((plan) => (
+            <div className={`plan-card plan-card--${plan.tone}`} key={plan.name}>
+              <span className="plan-dot" />
+              <div>
+                <p>{plan.name}</p>
+                <strong>{plan.count}</strong>
+              </div>
+              <span className="plan-card-caption">businesses</span>
+            </div>
           ))}
         </div>
       </section>
