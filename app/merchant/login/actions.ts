@@ -22,6 +22,26 @@ async function resolveMerchantIdentity(identifier: string): Promise<ResolvedMerc
     return null;
   }
 
+    if (identifier.includes("@")) {
+    const cleanEmail = identifier.trim().toLowerCase();
+    const { data: prof } = await adminClient
+      .from("merchant_profiles")
+      .select("user_id")
+      .eq("email", cleanEmail)
+      .maybeSingle();
+
+    if (prof) {
+      const { data: mapping } = await adminClient
+        .from("merchant_accounts")
+        .select("business_id")
+        .eq("user_id", prof.user_id)
+        .maybeSingle();
+      if (mapping) {
+        return { businessId: mapping.business_id, userId: prof.user_id, email: cleanEmail };
+      }
+    }
+  }
+
   const normalizedMobile = normalizeTrustitPhone(identifier);
 
   if (normalizedMobile) {
