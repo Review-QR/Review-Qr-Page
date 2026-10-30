@@ -39,19 +39,42 @@ function NavigationIcon({ name }: { name: string }) {
   return <svg aria-hidden="true" viewBox="0 0 24 24" className="merchant-nav__icon" {...common}>{paths[name]}</svg>;
 }
 
+function getCategoryLabels(businessType: string | null) {
+  const norm = String(businessType || "").toLowerCase();
+  if (/(salon|barber|parlour|grooming|hair|spa)/.test(norm)) {
+    return { menu: "Services & Rates", orders: "Salon Queue & Tokens" };
+  }
+  if (/(car|wash|automobile|auto|garage|detailing|bike)/.test(norm)) {
+    return { menu: "Wash Packages & Bays", orders: "Bay Booking Queue" };
+  }
+  if (/(kirana|grocery|supermarket|mart|ration|provision)/.test(norm)) {
+    return { menu: "Kirana Master Rates", orders: "Parchas & Grocery Orders" };
+  }
+  if (/(dairy|milk|paneer|dudh)/.test(norm)) {
+    return { menu: "Dairy Products & Rates", orders: "Live Dairy Orders" };
+  }
+  if (/(medical|pharmacy|chemist|medicine)/.test(norm)) {
+    return { menu: "Chemist Store Info", orders: "Prescription (Rx) Orders" };
+  }
+  return { menu: "Menu & Items", orders: "Live Orders & KOT" };
+}
+
 export default function MerchantNavigation({
   mobile = false,
   hasUnreadNotifications = false,
   isPremium = false,
   plan = null,
+  businessType = null,
 }: {
   mobile?: boolean;
   hasUnreadNotifications?: boolean;
   isPremium?: boolean;
   plan?: string | null;
+  businessType?: string | null;
 }) {
   const pathname = usePathname();
   const [hash, setHash] = useState("");
+  const categoryLabels = getCategoryLabels(businessType);
 
   useEffect(() => {
     const updateHash = () => setHash(window.location.hash);
@@ -61,7 +84,7 @@ export default function MerchantNavigation({
   }, []);
 
   const isBasic = !plan || normalizePlanTier(plan) === "basic";
-  const visibleItems = isBasic
+  const visibleItems = (isBasic
     ? items.filter(
         (item) =>
           item.href !== "/merchant/dashboard/orders" &&
@@ -69,7 +92,16 @@ export default function MerchantNavigation({
           item.href !== "/merchant/dashboard/messages" &&
           !item.href.includes("#scan-analytics"),
       )
-    : items;
+    : items
+  ).map((item) => {
+    if (item.href === "/merchant/dashboard/menu") {
+      return { ...item, label: categoryLabels.menu };
+    }
+    if (item.href === "/merchant/dashboard/orders") {
+      return { ...item, label: categoryLabels.orders };
+    }
+    return item;
+  });
 
   return (
     <nav aria-label="Merchant navigation" className={mobile ? "merchant-mobile-nav" : "merchant-nav"}>

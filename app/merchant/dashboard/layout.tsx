@@ -58,7 +58,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
           </span>
         </div>
 
-        <MerchantNavigation hasUnreadNotifications={hasUnreadNotifications} isPremium={isPremium} plan={merchant.plan} />
+        <MerchantNavigation hasUnreadNotifications={hasUnreadNotifications} isPremium={isPremium} plan={merchant.plan} businessType={merchant.businessType} />
 
         <div className="merchant-sidebar__footer">
           <div className="merchant-help-icon" aria-hidden="true">?</div>
@@ -78,7 +78,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
           </Link>
           <form action={merchantSignOutAction}><button type="submit">Log out</button></form>
         </div>
-        <MerchantNavigation mobile hasUnreadNotifications={hasUnreadNotifications} isPremium={isPremium} plan={merchant.plan} />
+        <MerchantNavigation mobile hasUnreadNotifications={hasUnreadNotifications} isPremium={isPremium} plan={merchant.plan} businessType={merchant.businessType} />
         <main className="merchant-content">{children}</main>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { revalidatePath } from "next/cache";
+import { getMasterCatalogForCategory } from "@/lib/hyperlocal/master-catalog-templates";
 
 export type CatalogItemInput = {
   id?: string;
@@ -142,4 +143,86 @@ export async function toggleItemAvailabilityAction(
 
   revalidatePath("/merchant/dashboard/menu");
   return { success: true };
+}
+
+export async function seedCategoryTemplatesAction(): Promise<ActionResponse & { insertedCount?: number }> {
+  const merchant = await requireActiveMerchant();
+  const client = createSupabaseAdminClient();
+
+  const { data: biz } = await client
+    .from("businesses")
+    .select("type")
+    .eq("id", merchant.businessId)
+    .maybeSingle();
+
+  const templateItems = getMasterCatalogForCategory(biz?.type || "");
+  if (!templateItems.length) {
+    return { success: false, message: "No standard templates available for this business category." };
+  }
+
+  const { data: existing } = await client
+    .from("business_catalog_items")
+    .select("name")
+    .eq("business_id", merchant.businessId);
+
+  const existingNames = new Set((existing || []).map((e) => e.name));
+  const toInsert = templateItems
+    .filter((item) => !existingNames.has(item.name))
+    .map((item) => ({
+      business_id: merchant.businessId,
+      name: item.name,
+      category: item.category,
+      price: item.defaultPrice || 0,
+      unit: item.unit,
+      item_type: item.itemType,
+      description: item.description,
+      is_available: false, // Draft until merchant enters rate!
+    }));
+
+  if (toInsert.length > 0) {
+    const { error } = await client.from("business_catalog_items").insert(toInsert);
+    if (error) {
+      console.error("Failed to seed master templates:", error);
+      return { success: false, message: "Failed to load templates." };
+    }
+  }
+
+  revalidatePath("/merchant/dashboard/menu");
+  return {
+    success: true,
+    message: toInsert.length > 0 ? `Loaded ${toInsert.length} standard items to your catalog!` : "All standard items already exist in your catalog.",
+    insertedCount: toInsert.length,
+  };
+}
+
+export async function quickUpdateRateAction(
+  id: string,
+  price: number,
+  isAvailable: boolean
+): Promise<ActionResponse> {
+  const merchant = await requireActiveMerchant();
+  if (!id) return { success: false, message: "Item ID is required." };
+
+  const parsedPrice = Number(price);
+  if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+    return { success: false, message: "Invalid price." };
+  }
+
+  const client = createSupabaseAdminClient();
+  const { error } = await client
+    .from("business_catalog_items")
+    .update({
+      price: parsedPrice,
+      is_available: Boolean(isAvailable),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id)
+    .eq("business_id", merchant.businessId);
+
+  if (error) {
+    return { success: false, message: "Failed to update rate." };
+  }
+
+  revalidatePath("/merchant/dashboard/menu");
+  return { success: true, message: "Rate updated successfully!" };
 }
