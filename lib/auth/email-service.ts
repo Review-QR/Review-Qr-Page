@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash, createHmac } from "crypto";
 import nodemailer from "nodemailer";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
@@ -884,4 +884,48 @@ export async function verifyMerchantEmailOtp(
     .eq("id", codeRow.id);
 
   return { success: true, message: "Email successfully verified!" };
+}
+
+const VERIFICATION_SECRET = process.env.SUPABASE_SERVICE_ROLE_KEY || "trustit-merchant-verify-secret-key-2026";
+
+export function createVerificationToken(email: string): string {
+  const expiresAt = Date.now() + 20 * 60 * 1000; // 20 mins validity
+  const payload = `${email.trim().toLowerCase()}:${expiresAt}`;
+  const sig = createHmac("sha256", VERIFICATION_SECRET).update(payload).digest("hex");
+  return `${Buffer.from(payload).toString("base64url")}.${sig}`;
+}
+
+export function isValidVerificationToken(email: string, token: string): boolean {
+  try {
+    const [payloadB64, sig] = token.split(".");
+    if (!payloadB64 || !sig) return false;
+    const payload = Buffer.from(payloadB64, "base64url").toString("utf8");
+    const [tokenEmail, expiresAtStr] = payload.split(":");
+    if (tokenEmail !== email.trim().toLowerCase()) return false;
+    const expiresAt = Number(expiresAtStr);
+    if (!expiresAt || expiresAt < Date.now()) return false;
+    const expectedSig = createHmac("sha256", VERIFICATION_SECRET).update(payload).digest("hex");
+    return sig === expectedSig;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validates merchant OTP inline and returns a signed verification token.
+ */
+export async function verifyMerchantEmailOtpOnly(
+  email: string,
+  enteredOtp: string
+): Promise<{ success: boolean; message: string; verificationToken?: string }> {
+  const verifyRes = await verifyMerchantEmailOtp(email, enteredOtp);
+  if (!verifyRes.success) {
+    return verifyRes;
+  }
+  const token = createVerificationToken(email);
+  return {
+    success: true,
+    message: "Email verified successfully!",
+    verificationToken: token,
+  };
 }

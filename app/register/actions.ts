@@ -21,7 +21,12 @@ import {
   verifyCashfreeMerchantOrderBySignedContext,
 } from "@/lib/cashfree";
 import { logTrustitCheckoutStage } from "@/lib/trustit-checkout-diagnostics";
-import { sendMerchantEmailOtp, verifyMerchantEmailOtp } from "@/lib/auth/email-service";
+import {
+  sendMerchantEmailOtp,
+  verifyMerchantEmailOtp,
+  verifyMerchantEmailOtpOnly,
+  isValidVerificationToken,
+} from "@/lib/auth/email-service";
 
 export type ActionResult = { success: true; value?: string } | { success: false; message: string; code?: "duplicate_mobile" };
 
@@ -395,12 +400,30 @@ export async function requestMerchantEmailOtpAction(input: {
   };
 }
 
+export async function verifyMerchantEmailOtpAction(input: {
+  email: string;
+  otp: string;
+}): Promise<{ success: boolean; message: string; verificationToken?: string }> {
+  const cleanEmail = typeof input?.email === "string" ? input.email.trim().toLowerCase() : "";
+  const cleanOtp = typeof input?.otp === "string" ? input.otp.trim() : "";
+
+  if (!cleanEmail || !cleanEmail.includes("@") || !cleanEmail.includes(".")) {
+    return { success: false, message: "Please enter a valid email address." };
+  }
+  if (cleanOtp.length !== 6) {
+    return { success: false, message: "Please enter the 6-digit OTP code." };
+  }
+
+  return verifyMerchantEmailOtpOnly(cleanEmail, cleanOtp);
+}
+
 export async function completeMerchantEmailRegistrationAction(input: {
   businessName: string;
   fullName: string;
   mobile: string;
   email: string;
-  otp: string;
+  otp?: string;
+  verificationToken?: string;
   password: string;
 }): Promise<ActionResult> {
   const businessName = typeof input?.businessName === "string" ? input.businessName.trim() : "";
@@ -408,6 +431,7 @@ export async function completeMerchantEmailRegistrationAction(input: {
   const phone = normalizeTrustitPhone(input?.mobile);
   const cleanEmail = typeof input?.email === "string" ? input.email.trim().toLowerCase() : "";
   const otp = typeof input?.otp === "string" ? input.otp.trim() : "";
+  const verificationToken = typeof input?.verificationToken === "string" ? input.verificationToken.trim() : "";
   const password = typeof input?.password === "string" ? input.password : "";
 
   if (!businessName || !fullName || !phone || !cleanEmail) {
@@ -417,10 +441,19 @@ export async function completeMerchantEmailRegistrationAction(input: {
     return { success: false, message: "Password must be 6–16 characters and include a letter and a number." };
   }
 
-  // 1. Verify Email OTP
-  const verifyRes = await verifyMerchantEmailOtp(cleanEmail, otp);
-  if (!verifyRes.success) {
-    return { success: false, message: verifyRes.message };
+  // 1. Verify Email OTP or Verification Token
+  if (verificationToken) {
+    const isTokenValid = isValidVerificationToken(cleanEmail, verificationToken);
+    if (!isTokenValid) {
+      return { success: false, message: "Email verification session has expired. Please verify OTP again." };
+    }
+  } else if (otp) {
+    const verifyRes = await verifyMerchantEmailOtp(cleanEmail, otp);
+    if (!verifyRes.success) {
+      return { success: false, message: verifyRes.message };
+    }
+  } else {
+    return { success: false, message: "Please verify your email with OTP first." };
   }
 
   const admin = createSupabaseAdminClient();

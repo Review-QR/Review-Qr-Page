@@ -7,7 +7,7 @@ import { saveTrustitBusiness } from "./actions";
 import type { UnifiedBusinessCategory } from "@/lib/business-category-catalog";
 
 const cls =
-  "mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3.5 text-sm font-semibold shadow-xs outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100";
+  "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs sm:text-sm font-medium shadow-2xs outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-100";
 
 interface VisualCategory {
   id: string;
@@ -507,7 +507,7 @@ export default function BusinessForm({
       <button
         type="submit"
         disabled={busy || !businessName.trim() || !address.trim()}
-        className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 px-5 py-3.5 text-sm font-extrabold text-white shadow-[0_12px_24px_-14px_rgba(37,99,235,0.35)] transition hover:from-blue-700 hover:to-blue-800 disabled:opacity-50"
+        className="flex min-h-10 sm:min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-4 py-2.5 text-xs sm:text-sm font-bold text-white shadow-xs transition hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50"
       >
         {busy ? (
           <>
