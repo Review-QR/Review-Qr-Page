@@ -60,6 +60,87 @@ function greeting() {
   return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 }
 
+
+function getCategoryLauncher(type: string | null | undefined) {
+  const norm = (type || '').toLowerCase();
+  if (norm.includes('restaurant') || norm.includes('cafe') || norm.includes('food') || norm.includes('sweet')) {
+    return {
+      emoji: '🍔',
+      badge: 'KITCHEN KOT & FOOD MENU',
+      title: 'Manage Restaurant Menu & Kitchen KOT',
+      subtitle: 'Add dishes, update cooking prep times, and receive loud audio alerts on new orders.',
+      cta: 'Open Menu & KOT Console →',
+      href: '/merchant/dashboard/menu',
+      gradient: 'from-orange-500/10 via-amber-500/5 to-white',
+      borderColor: 'border-orange-200',
+      btnClass: 'bg-orange-600 hover:bg-orange-700 text-white',
+    };
+  }
+  if (norm.includes('grocery') || norm.includes('kirana') || norm.includes('supermarket')) {
+    return {
+      emoji: '🛒',
+      badge: 'KIRANA MASTER RATES & PARCHA',
+      title: 'Master Rates Editor & Smart Parcha Hub',
+      subtitle: '50+ daily essentials loaded. Enter your rates to set items live, and quote customer grocery parchis in 1 click.',
+      cta: 'Open Kirana Rates Editor →',
+      href: '/merchant/dashboard/menu',
+      gradient: 'from-emerald-500/10 via-teal-500/5 to-white',
+      borderColor: 'border-emerald-200',
+      btnClass: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+    };
+  }
+  if (norm.includes('dairy') || norm.includes('milk')) {
+    return {
+      emoji: '🥛',
+      badge: 'DAIRY PRODUCTS & SLOTS',
+      title: 'Manage Pure Milk, Paneer & Delivery Slots',
+      subtitle: 'Update daily fresh milk and paneer rates, and check morning and evening dispatch schedules.',
+      cta: 'Open Dairy Pricing & Slots →',
+      href: '/merchant/dashboard/menu',
+      gradient: 'from-sky-500/10 via-blue-500/5 to-white',
+      borderColor: 'border-sky-200',
+      btnClass: 'bg-sky-600 hover:bg-sky-700 text-white',
+    };
+  }
+  if (norm.includes('salon') || norm.includes('barber') || norm.includes('beauty') || norm.includes('spa')) {
+    return {
+      emoji: '✂️',
+      badge: 'SALON QUEUE & TOKEN PASS',
+      title: 'Manage Salon Services, Rates & Live Queue',
+      subtitle: 'Set haircut and grooming charges, manage stylist chairs, and monitor live customer queue passes.',
+      cta: 'Open Salon Console →',
+      href: '/merchant/dashboard/menu',
+      gradient: 'from-purple-500/10 via-indigo-500/5 to-white',
+      borderColor: 'border-purple-200',
+      btnClass: 'bg-purple-600 hover:bg-purple-700 text-white',
+    };
+  }
+  if (norm.includes('car') || norm.includes('wash') || norm.includes('auto')) {
+    return {
+      emoji: '🚗',
+      badge: 'WASH PACKAGES & BAY QUEUE',
+      title: 'Manage Wash Packages, Detailing & Bays',
+      subtitle: 'Update foam wash and detailing rates, and control live bay availability.',
+      cta: 'Open Wash Packages →',
+      href: '/merchant/dashboard/menu',
+      gradient: 'from-indigo-500/10 via-blue-500/5 to-white',
+      borderColor: 'border-indigo-200',
+      btnClass: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+    };
+  }
+  return {
+    emoji: '⚡',
+    badge: 'HYPERLOCAL WORKSPACE',
+    title: 'Category Catalog & Live Operations',
+    subtitle: 'Manage your rates, live availability, and hyperlocal customer requests.',
+    cta: 'Manage Catalog & Rates →',
+    href: '/merchant/dashboard/menu',
+    gradient: 'from-blue-500/10 via-indigo-500/5 to-white',
+    borderColor: 'border-blue-200',
+    btnClass: 'bg-blue-600 hover:bg-blue-700 text-white',
+  };
+}
+
 function infoField(label: string, value: string | null | undefined) {
   return <div key={label} className="merchant-data-field"><dt>{label}</dt><dd>{value?.trim() || "—"}</dd></div>;
 }
@@ -85,6 +166,7 @@ const actions = [
 export default async function MerchantDashboardPage() {
   const merchant = await requireActiveMerchant();
   const isPremium = normalizePlanTier(merchant.plan) === "premium";
+  const launcher = getCategoryLauncher(merchant.businessType);
   let designAssets: Awaited<ReturnType<typeof getPersistedBusinessQrDesignAssets>> | undefined;
   let designAssetError: string | undefined;
   try {
@@ -199,6 +281,41 @@ export default async function MerchantDashboardPage() {
       </section>
 
       {!publicLocationComplete ? <section aria-labelledby="complete-public-location-title" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 mb-4"><div><p className="text-xs font-bold uppercase tracking-wider text-blue-800">Get discovered locally</p><h2 id="complete-public-location-title" className="mt-1 text-lg font-bold text-slate-950">Complete Public Profile</h2><p className="mt-1 text-sm text-slate-700">Complete your public location to appear in Trustit local search. This does not affect your QR or review features.</p></div><Link href="/merchant/dashboard/business#public-discovery-location" className="inline-flex min-h-11 items-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800">Complete Location</Link></section> : null}
+
+      
+      {/* Category-Adaptive Operational Launch Banner */}
+      <section className={`relative overflow-hidden rounded-3xl border ${launcher.borderColor} bg-gradient-to-r ${launcher.gradient} p-5 sm:p-6 mb-4 shadow-sm`}>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-start gap-3.5">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-2xl shadow-xs border border-slate-100">
+              {launcher.emoji}
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-slate-900 px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white">
+                  {launcher.badge}
+                </span>
+                <span className="text-[11px] font-semibold text-emerald-600 flex items-center gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Live Operational Console
+                </span>
+              </div>
+              <h2 className="mt-1 text-base font-extrabold text-slate-900 sm:text-lg">
+                {launcher.title}
+              </h2>
+              <p className="mt-0.5 max-w-xl text-xs text-slate-600 sm:text-sm">
+                {launcher.subtitle}
+              </p>
+            </div>
+          </div>
+          <Link
+            href={launcher.href}
+            className={`inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-xs font-extrabold shadow-sm transition hover:shadow-md ${launcher.btnClass}`}
+          >
+            <span>{launcher.cta}</span>
+          </Link>
+        </div>
+      </section>
 
       <section aria-label="Merchant statistics" className="merchant-stats">
         <StatCard tone="green" icon="qr" label="Total Scans" value={stats ? count(stats.total_scans).toLocaleString("en-IN") : "—"} detail="All-time QR scans" />

@@ -54,7 +54,7 @@ export default function RegisterShell({
             <Image src="/trustit-icon.svg" alt="" width={42} height={42} priority className="rounded-xl shadow-sm" />
             <span>
               <span className="block text-xl font-black tracking-tight">Trustit</span>
-              <span className="block text-[9px] font-semibold text-slate-500">Get More Google Reviews</span>
+              <span className="block text-[9px] font-semibold text-slate-500">Local Commerce & Google Reviews</span>
             </span>
           </Link>
           <Link href="/merchant/login" className="rounded-full bg-white px-4 py-2.5 text-xs font-extrabold text-blue-700 shadow-sm ring-1 ring-slate-200 transition hover:ring-blue-200 sm:px-5 sm:text-sm">Business Login <span aria-hidden="true">→</span></Link>
@@ -86,15 +86,16 @@ export default function RegisterShell({
             <aside className="border-t border-slate-100 bg-gradient-to-br from-blue-50/80 via-white to-orange-50/70 p-5 sm:p-7 md:border-l md:border-t-0">
               <GrowthIllustration />
               <div className="mt-6 text-center md:text-left">
-                <h2 className="text-xl font-black leading-tight">Turn Customer Feedback<br className="hidden lg:block" /> Into Business Growth</h2>
+                <h2 className="text-xl font-black leading-tight">Turn Local Trust<br className="hidden lg:block" /> Into Business Growth</h2>
                 <div className="mt-4 space-y-2.5 text-sm font-semibold text-slate-600">
-                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> More Google Reviews</p>
-                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Build Customer Trust</p>
-                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> Grow Your Business</p>
+                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> 🛵 25–35m Dedicated Rider Fleet</p>
+                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> ⚡ Category-Tailored Tools (KOT / Parcha / Tokens)</p>
+                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> ⭐ Genuine Google Reviews & Trust</p>
+                  <p className="flex items-center gap-2"><span className="text-emerald-500">✓</span> 🔔 Real-Time Sound & Order Alerts</p>
                 </div>
               </div>
               <div className="mt-5 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-xs leading-5 text-rose-900">
-                <strong>“Trusted by local businesses across India”</strong>
+                <strong>“Empowering Bahraich’s verified local businesses”</strong>
               </div>
             </aside>
           </div>
