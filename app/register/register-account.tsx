@@ -248,16 +248,16 @@ export default function RegisterAccount({
     isPasswordValid(password);
 
   return (
-    <div className="mt-4">
-      <form onSubmit={handleSubmitRegistration} className="space-y-3.5 text-left">
+    <div className="mt-2.5">
+      <form onSubmit={handleSubmitRegistration} className="space-y-2.5 text-left">
         
         {/* 1. Business Name with Leading Icon Box */}
         <div>
           <label htmlFor="businessNameField" className="block text-xs font-bold text-slate-700">
             1. Business Name <span className="text-rose-500">*</span>
           </label>
-          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
-            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+          <div className="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-9 w-9 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
               🏪
             </div>
             <input
@@ -269,7 +269,7 @@ export default function RegisterAccount({
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
               disabled={isEmailVerified || submitBusy}
-              className="h-10 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              className="h-9 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
           </div>
@@ -280,8 +280,8 @@ export default function RegisterAccount({
           <label htmlFor="ownerNameField" className="block text-xs font-bold text-slate-700">
             2. Owner Name <span className="text-rose-500">*</span>
           </label>
-          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
-            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+          <div className="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-9 w-9 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
               👤
             </div>
             <input
@@ -293,7 +293,7 @@ export default function RegisterAccount({
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={isEmailVerified || submitBusy}
-              className="h-10 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              className="h-9 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
           </div>
@@ -304,11 +304,11 @@ export default function RegisterAccount({
           <label htmlFor="mobileField" className="block text-xs font-bold text-slate-700">
             3. Mobile Number <span className="text-rose-500">*</span>
           </label>
-          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
-            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+          <div className="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-9 w-9 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
               📞
             </div>
-            <div className="flex items-center border-r border-slate-200 bg-slate-50 px-2.5 h-10 text-xs font-bold text-slate-700 shrink-0 select-none">
+            <div className="flex items-center border-r border-slate-200 bg-slate-50 px-2 h-9 text-xs font-bold text-slate-700 shrink-0 select-none">
               🇮🇳 +91 ▾
             </div>
             <input
@@ -320,11 +320,11 @@ export default function RegisterAccount({
               value={mobile}
               onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
               disabled={isEmailVerified || submitBusy}
-              className="h-10 w-full px-3 text-xs sm:text-sm font-semibold text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              className="h-9 w-full px-3 text-xs sm:text-sm font-semibold text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
           </div>
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[10px] text-slate-500">
             Used for order updates &amp; delivery coordination.
           </p>
         </div>
@@ -342,8 +342,8 @@ export default function RegisterAccount({
             )}
           </div>
 
-          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
-            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+          <div className="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-9 w-9 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
               ✉️
             </div>
             <input
@@ -361,7 +361,7 @@ export default function RegisterAccount({
                 }
               }}
               disabled={isEmailVerified || submitBusy}
-              className="h-10 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              className="h-9 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
           </div>
@@ -379,7 +379,7 @@ export default function RegisterAccount({
                 mobile.replace(/\D/g, "").length < 10
               }
               onClick={handleGetOtp}
-              className="mt-2 w-full py-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition border border-blue-200 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-1.5 w-full py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition border border-blue-200 shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {getOtpBusy
                 ? "Sending OTP..."
@@ -391,13 +391,13 @@ export default function RegisterAccount({
             </button>
           )}
 
-          <p className="mt-1 text-[11px] text-slate-500">
+          <p className="mt-0.5 text-[10px] text-slate-500">
             ℹ️ We will send an OTP to this email for verification.
           </p>
 
           {/* Inline OTP Section revealed immediately underneath email */}
           {otpSent && (
-            <div className="mt-2.5 rounded-xl border border-blue-200/90 bg-blue-50/70 p-3 space-y-2">
+            <div className="mt-2 rounded-xl border border-blue-200/90 bg-blue-50/70 p-2.5 space-y-1.5">
               <div className="flex items-center justify-between text-xs">
                 <p className="flex items-center gap-1.5 font-bold text-blue-900 text-[11px] sm:text-xs">
                   <span className="text-emerald-600 font-black">✓</span>
@@ -461,8 +461,8 @@ export default function RegisterAccount({
               5. Create Your Password <span className="text-rose-500">*</span>
             </label>
           </div>
-          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
-            <div className="h-10 w-10 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+          <div className="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+            <div className="h-9 w-9 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
               🔒
             </div>
             <input
@@ -475,28 +475,28 @@ export default function RegisterAccount({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               disabled={submitBusy}
-              className="h-10 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              className="h-9 w-full px-3 text-xs sm:text-sm font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="px-3.5 text-xs font-bold text-blue-600 hover:text-blue-800 transition shrink-0 select-none"
+              className="px-3 text-xs font-bold text-blue-600 hover:text-blue-800 transition shrink-0 select-none"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
           </div>
-          <p className="mt-1 text-[11px] text-slate-400">
+          <p className="mt-0.5 text-[10px] text-slate-400">
             Password must be 6–16 characters, with at least one letter and one number.
           </p>
         </div>
 
-        {/* Action Button: Next: Business Address (Disabled until Email OTP is Verified) */}
+        {/* Action Button: Next: Business Address (Clean Label Always) */}
         <div className="pt-2">
           <button
             type="submit"
             disabled={!isFormReadyForNext || submitBusy}
-            className={`flex min-h-11 w-full items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs ${
+            className={`flex min-h-10 w-full items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs ${
               isFormReadyForNext
                 ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white shadow-[0_10px_20px_-10px_rgba(37,99,235,0.4)] hover:from-blue-700 hover:to-indigo-800 cursor-pointer"
                 : "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed opacity-75"
@@ -510,18 +510,16 @@ export default function RegisterAccount({
                 </svg>
                 <span>Creating Account…</span>
               </>
-            ) : isEmailVerified ? (
+            ) : (
               <>
                 <span>Next: Business Address</span>
                 <span>→</span>
               </>
-            ) : (
-              <span>Next: Business Address (Verify Email to Unlock) 🔒</span>
             )}
           </button>
 
           {!isEmailVerified && (
-            <p className="mt-1.5 text-center text-[10px] text-slate-400 font-medium">
+            <p className="mt-1 text-center text-[10px] text-slate-400 font-medium">
               Verify Email OTP above to unlock the next step.
             </p>
           )}
