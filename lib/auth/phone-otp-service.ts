@@ -33,7 +33,26 @@ async function dispatchSmsOtp(phone10: string, otp: string, businessName?: strin
 
   if (fast2SmsKey) {
     try {
-      // 1. Try Quick SMS (route: 'q') — Active on the account, delivers to DND and non-DND numbers instantly
+      // 1. Try dedicated official OTP Route first (with DLT Sender ID FSTSMS - 100% phone delivery)
+      const otpResponse = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+        method: "POST",
+        headers: {
+          authorization: fast2SmsKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          route: "otp",
+          variables_values: otp,
+          numbers: phone10,
+        }),
+      });
+
+      const otpData = await otpResponse.json().catch(() => null);
+      if (otpResponse.ok && otpData?.return === true) {
+        return { success: true, provider: "fast2sms-otp" };
+      }
+
+      // 2. Fallback to Quick SMS (route: 'q') if route: 'otp' requires KYC/Website verification
       const msgText = `Your Trustit OTP is ${otp}. Valid for 5 minutes.`;
       const qResponse = await fetch("https://www.fast2sms.com/dev/bulkV2", {
         method: "POST",
@@ -53,25 +72,6 @@ async function dispatchSmsOtp(phone10: string, otp: string, businessName?: strin
       const qData = await qResponse.json().catch(() => null);
       if (qResponse.ok && qData?.return === true) {
         return { success: true, provider: "fast2sms-quick" };
-      }
-
-      // 2. Fallback to route: 'otp' if route: 'q' fails
-      const otpResponse = await fetch("https://www.fast2sms.com/dev/bulkV2", {
-        method: "POST",
-        headers: {
-          authorization: fast2SmsKey,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          route: "otp",
-          variables_values: otp,
-          numbers: phone10,
-        }),
-      });
-
-      const otpData = await otpResponse.json().catch(() => null);
-      if (otpResponse.ok && otpData?.return === true) {
-        return { success: true, provider: "fast2sms-otp" };
       }
 
       const rawMsg = qData?.message || otpData?.message;
