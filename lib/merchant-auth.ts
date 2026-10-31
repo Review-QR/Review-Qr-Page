@@ -8,6 +8,10 @@ export type MerchantContext = {
   businessName: string;
   ownerName: string | null;
   registeredMobile: string | null;
+  email: string | null;
+  isEmailVerified: boolean;
+  isMobileVerified: boolean;
+  userId: string;
   businessType: string | null;
   address: string | null;
   locality: string | null;
@@ -55,7 +59,26 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
       .maybeSingle();
     if (businessError || !business) return null;
 
+    const { data: profile } = await supabase
+      .from("merchant_profiles")
+      .select("email, mobile, mobile_verified_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const userMetadata = ((claimsData?.claims as Record<string, unknown>)?.user_metadata || {}) as Record<string, unknown>;
+    const isEmailVerified = Boolean(
+      claimsData?.claims.email_verified || userMetadata.email_verified
+    );
+    const isMobileVerified = Boolean(
+      profile?.mobile_verified_at || userMetadata.phone_verified || business.phone
+    );
+    const rawEmail = profile?.email || (typeof claimsData?.claims.email === "string" && !claimsData.claims.email.endsWith(".invalid") ? claimsData.claims.email : null);
+
     return {
+      userId,
+      email: rawEmail,
+      isEmailVerified,
+      isMobileVerified,
       businessId: business.id,
       businessName: business.name,
       ownerName: business.owner,

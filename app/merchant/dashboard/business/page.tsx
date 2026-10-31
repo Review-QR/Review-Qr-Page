@@ -57,6 +57,9 @@ export default async function MerchantBusinessPage() {
           owner={merchant.ownerName}
           address={merchant.address}
           phone={merchant.registeredMobile}
+          email={merchant.email}
+          isMobileVerified={merchant.isMobileVerified}
+          isEmailVerified={merchant.isEmailVerified}
         />
       </section>
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
