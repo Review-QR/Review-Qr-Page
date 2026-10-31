@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-primary-container":"#a1bbff","on-surface-variant":"#434652","surface-tint":"#2b5bb5","on-tertiary":"#ffffff","on-secondary-fixed-variant":"#004f58","on-background":"#131b2e","tertiary-fixed":"#8df7c1","on-primary":"#ffffff","surface-container-lowest":"#ffffff","secondary":"#006875","on-surface":"#131b2e","on-tertiary-fixed-variant":"#005235","error-container":"#ffdad6","on-primary-fixed":"#001945","surface-container":"#eaedff","surface-container-highest":"#dae2fd","background":"#faf8ff","primary":"#003178","error":"#ba1a1a","on-primary-fixed-variant":"#00429c","tertiary":"#003d27","on-error-container":"#93000a","surface":"#faf8ff","surface-dim":"#d2d9f4","on-secondary-container":"#00616d","on-tertiary-fixed":"#002113","secondary-container":"#00e3fd","secondary-fixed":"#9cf0ff","secondary-fixed-dim":"#00daf3","primary-fixed":"#d9e2ff","tertiary-container":"#005739","inverse-on-surface":"#eef0ff","outline":"#737783","outline-variant":"#c3c6d4","primary-container":"#0d47a1","surface-container-high":"#e2e7ff","on-error":"#ffffff","inverse-surface":"#283044","surface-variant":"#dae2fd","tertiary-fixed-dim":"#71dba6","primary-fixed-dim":"#b0c6ff","on-secondary-fixed":"#001f24","on-tertiary-container":"#66d09c","surface-container-low":"#f2f3ff","surface-bright":"#faf8ff","on-secondary":"#ffffff","inverse-primary":"#b0c6ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-sm":"0.5rem","gutter-desktop":"1.5rem","space-xs":"0.25rem","space-xl":"1.5rem","margin-tablet":"1.5rem","space-md":"0.75rem","space-lg":"1rem","gutter":"1rem","margin":"1rem","space-2xl":"2rem","margin-desktop":"2rem"},"fontFamily":{"code-metric":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"title":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"display":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"]},"fontSize":{"code-metric":["14px",{"lineHeight":"20px","fontWeight":"700"}],"label-md":["13px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"title":["16px",{"lineHeight":"22px","fontWeight":"600"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"display":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">shield_with_heart</span></div><div class="flex flex-col"><span class="font-title text-title text-primary tracking-tight font-bold">TRUSTIT</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Merchant Hub</span></div></div><span class="font-label-sm text-label-sm bg-surface-container text-on-surface px-space-xs py-0.5 rounded">PRO</span></div><div class="px-space-md py-space-sm"><div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><div class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-2 ring-tertiary-container animate-pulse"></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface truncate">Sri Krishna Gourmet</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Indiranagar BLR • LIVE</span></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer">unfold_more</span></div></div><nav class="flex-1 px-space-md py-space-xs space-y-space-md" data-active-classes="bg-primary-container text-on-primary font-title rounded-lg shadow-sm"><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Operations</div><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">grid_view</span><span class="font-body-md text-body-md">Overview</span></a><a class="flex items-center justify-between px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="orders" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[20px]">receipt_long</span><span class="font-body-md text-body-md">Orders</span></div><span class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed px-space-xs rounded-full">14</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="products-and-inventory" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">inventory_2</span><span class="font-body-md text-body-md">Products &amp; Inventory</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="store-management" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">store</span><span class="font-body-md text-body-md">Store Management</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="delivery" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">local_shipping</span><span class="font-body-md text-body-md">Delivery</span></a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Finance &amp; Growth</div><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="payments-and-settlements" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">account_balance_wallet</span><span class="font-body-md text-body-md">Payments &amp; Settlements</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">loyalty</span><span class="font-body-md text-body-md">Subscriptions</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="qr-and-reviews" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">qr_code_2</span><span class="font-body-md text-body-md">QR &amp; Reviews</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="physical-products" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">point_of_sale</span><span class="font-body-md text-body-md">Physical Products</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">query_stats</span><span class="font-body-md text-body-md">Analytics</span></a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">System</div><a class="flex items-center justify-between px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="notifications" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[20px]">notifications</span><span class="font-body-md text-body-md">Notifications</span></div><span class="font-label-sm text-label-sm bg-surface-container-highest text-on-surface px-space-xs rounded-full">3</span></a><a class="flex items-center justify-between px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="help-and-support-center" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[20px]">help</span><span class="font-body-md text-body-md">Support</span></div><span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold px-space-xs py-0.5 rounded-full">LIVE</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">settings</span><span class="font-body-md text-body-md">Settings</span></a></div></nav></div><div class="p-space-md bg-surface-container-low mx-space-md mb-space-md rounded-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[20px]">speaker_phone</span></div><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface">SoundBox 4G</span><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span><span class="font-label-sm text-label-sm text-on-surface-variant">Synced • 98%</span></div></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer hover:text-on-surface">sync</span></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-xl"><div class="w-full flex items-center gap-space-sm bg-surface-container-low px-space-md py-2 rounded-lg"><span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span><input class="w-full bg-transparent border-0 outline-none font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant" placeholder="Search orders, settlement ID, tickets, or SKU..." type="text"/><kbd class="hidden sm:inline-block font-code-metric text-code-metric text-on-surface-variant bg-surface-container px-space-xs py-0.5 rounded text-[11px]">&amp;#8984;K</kbd></div></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low"><span class="material-symbols-outlined text-tertiary text-[18px]">verified</span><span class="font-label-sm text-label-sm text-on-surface-variant">GSTIN:</span><span class="font-code-metric text-code-metric text-on-surface">29AABCS1429B1ZB</span></div><button class="flex items-center gap-space-xs bg-secondary-container text-on-secondary-fixed font-title text-body-sm px-space-md py-2 rounded-lg hover:bg-secondary-fixed transition-colors shadow-sm" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span>Instant Settle</span></button><div class="h-6 w-px bg-outline-variant"></div><button class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">support_agent</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden lg:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Raghavendra Rao</span><span class="font-label-sm text-label-sm text-on-surface-variant">Master Admin</span></div><span class="material-symbols-outlined text-on-surface-variant text-[16px]">expand_more</span></div></div></header><main class="w-full pt-16 bg-surface px-space-xl pb-space-2xl min-h-screen"><div class="flex flex-col w-full">
+<!-- BREADCRUMBS & TOP CONTEXT BAR -->
+<div class="flex flex-wrap items-center justify-between gap-space-md mb-space-lg">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+<span>System</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Support</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">Help &amp; Support Dashboard</span>
+</div>
+<div class="flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1.5 rounded-lg shadow-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim animate-ping"></span>
+<span class="w-2 h-2 rounded-full bg-tertiary -ml-3"></span>
+<span class="font-label-md text-label-md text-on-surface">Merchant Desk Status: <strong class="text-tertiary font-bold">All Gateway Services Operative</strong></span>
+<span class="text-on-surface-variant text-[12px]">• Refreshed 12s ago</span>
+</div>
+</div>
+<!-- HEADER BLOCK -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg mb-space-xl bg-gradient-to-r from-surface-container-low via-surface-container-lowest to-surface-container-low p-space-xl rounded-xl shadow-sm relative overflow-hidden">
+<div class="absolute -right-8 -top-12 w-64 h-64 bg-primary-fixed/30 rounded-full blur-3xl pointer-events-none"></div>
+<div class="flex flex-col max-w-2xl relative z-10">
+<div class="inline-flex items-center gap-space-xs bg-primary-container/10 text-primary-container px-space-sm py-1 rounded w-max mb-space-sm font-label-sm text-label-sm uppercase">
+<span class="material-symbols-outlined text-[16px]">headset_mic</span>
+        24x7 Priority Support Desk
+      </div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Merchant Help Desk &amp; Operational Support Hub</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+        Resolve operational tickets, track grievances across Orders, Settlements, 3PL Fleet, Hardware, and access instant SOP guides.
+      </p>
+</div>
+<div class="flex flex-wrap items-center gap-space-md relative z-10">
+<button class="flex items-center gap-space-xs bg-primary-container hover:bg-primary text-on-primary font-title text-body-sm px-space-lg py-2.5 rounded-lg shadow-sm transition-all duration-200" onclick="document.getElementById('ticket-modal').classList.remove('hidden')" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>+ Raise New Support Ticket</span>
+</button>
+<button class="flex items-center gap-space-sm bg-surface-container-lowest text-on-surface hover:bg-surface-container-high font-title text-body-sm px-space-lg py-2.5 rounded-lg shadow-sm transition-all duration-200" type="button">
+<span class="relative flex h-2.5 w-2.5">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-tertiary"></span>
+</span>
+<span>Start Live Agent Chat</span>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded">ETA &lt; 2m</span>
+</button>
+</div>
+</div>
+<!-- TOP KPI METRICS RIBBON (4 CARDS) -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-lg mb-space-2xl">
+<!-- KPI 1 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Active Tickets</span>
+<div class="font-headline-md text-headline-md text-on-surface mt-space-xs flex items-baseline gap-space-xs">
+<span>03</span>
+<span class="font-title text-body-sm text-on-surface-variant">In Progress</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">confirmation_number</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex flex-col gap-1.5">
+<div class="flex items-center justify-between font-label-sm text-label-sm">
+<span class="text-error font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span> 1 Critical SLA
+          </span>
+<span class="text-on-surface-variant">2 Normal</span>
+</div>
+<div class="inline-flex items-center gap-1 bg-surface-container-low text-primary px-space-xs py-0.5 rounded font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">timer</span>
+<span>Avg First Response: 8.4 mins</span>
+</div>
+</div>
+</div>
+<!-- KPI 2 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Resolution SLA Rate</span>
+<div class="font-headline-md text-headline-md text-on-surface mt-space-xs flex items-baseline gap-space-xs">
+<span>98.6%</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold bg-tertiary-fixed/40 px-1 rounded">+1.2%</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[22px]">verified_user</span>
+</div>
+</div>
+<div class="mt-space-md">
+<div class="w-full bg-surface-container-low h-2 rounded-full overflow-hidden">
+<div class="bg-tertiary h-full rounded-full" style="width: 98.6%;"></div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-space-xs">42 of 43 resolved within SLA this month</p>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Escrow &amp; Financial Inquiries</span>
+<div class="font-headline-md text-headline-md text-on-surface mt-space-xs flex items-baseline gap-space-xs">
+<span>₹0</span>
+<span class="font-title text-body-sm text-tertiary font-semibold">Disputed</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[22px]">account_balance</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center gap-1.5 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-tertiary text-[18px]">check_circle</span>
+<span>All settlements cleared cleanly with Nodal Bank</span>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Merchant CSAT Score</span>
+<div class="font-headline-md text-headline-md text-on-surface mt-space-xs flex items-baseline gap-space-xs">
+<span>4.9</span>
+<span class="font-title text-body-sm text-on-surface-variant">/ 5.0</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary-container text-on-secondary-fixed">
+<span class="material-symbols-outlined text-[22px]">grade</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Based on 38 rated support interactions</span>
+<div class="flex text-amber-500">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star_half</span>
+</div>
+</div>
+</div>
+</div>
+<!-- KNOWLEDGE SEARCH AND QUICK TAGS BAR -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm mb-space-2xl">
+<div class="max-w-3xl mx-auto flex flex-col items-center text-center">
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-widest mb-1">Self-Service Intelligence Base</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-space-md">Search Knowledge Base &amp; Frequently Asked Questions</h2>
+<div class="w-full relative flex items-center mb-space-md">
+<span class="material-symbols-outlined absolute left-4 text-on-surface-variant text-[22px]">search</span>
+<input class="w-full pl-12 pr-28 py-3.5 bg-surface-container-low rounded-xl font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant outline-none shadow-inner" id="faq-search" placeholder="Type symptoms e.g., 'SoundBox blinking yellow', 'KOT refund', 'Rider late', 'UTR missing'..." type="text"/>
+<button class="absolute right-2 px-space-md py-2 bg-primary-container text-on-primary rounded-lg font-title text-label-md hover:bg-primary transition-all" type="button">Search</button>
+</div>
+<div class="flex flex-wrap items-center justify-center gap-space-xs text-left">
+<span class="font-label-sm text-label-sm text-on-surface-variant mr-1">Trending Hot Topics:</span>
+<button class="font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface px-space-sm py-1 rounded-full transition-colors flex items-center gap-1" onclick="document.getElementById('faq-search').value='Order Cancellation'" type="button">
+<span class="material-symbols-outlined text-[14px]">bolt</span>Order Cancellation
+        </button>
+<button class="font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface px-space-sm py-1 rounded-full transition-colors flex items-center gap-1" onclick="document.getElementById('faq-search').value='EasySplit Nodal Disbursal'" type="button">
+<span class="material-symbols-outlined text-[14px]">bolt</span>EasySplit Nodal Disbursal
+        </button>
+<button class="font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface px-space-sm py-1 rounded-full transition-colors flex items-center gap-1" onclick="document.getElementById('faq-search').value='SoundBox 4G Pairing'" type="button">
+<span class="material-symbols-outlined text-[14px]">bolt</span>SoundBox 4G Pairing
+        </button>
+<button class="font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface px-space-sm py-1 rounded-full transition-colors flex items-center gap-1" onclick="document.getElementById('faq-search').value='3PL Rider Reassignment'" type="button">
+<span class="material-symbols-outlined text-[14px]">bolt</span>3PL Rider Reassignment
+        </button>
+<button class="font-label-sm text-label-sm bg-surface-container hover:bg-surface-container-high text-on-surface px-space-sm py-1 rounded-full transition-colors flex items-center gap-1" onclick="document.getElementById('faq-search').value='FSSAI Renewal'" type="button">
+<span class="material-symbols-outlined text-[14px]">bolt</span>FSSAI Renewal
+        </button>
+</div>
+</div>
+</div>
+<!-- CATEGORY DISPUTE QUICK-ACCESS GRID (6 CARDS) -->
+<div class="mb-space-2xl">
+<div class="flex items-center justify-between mb-space-lg">
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Category Grievance &amp; Direct Escalation Queues</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Instant routing to dedicated domain specialized resolution leads</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-space-sm py-1 rounded">6 Active Desks</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-space-lg">
+<!-- Category 1 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow relative flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">soup_kitchen</span>
+</div>
+<span class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed px-space-xs py-0.5 rounded-full font-bold">1 Active Ticket</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-semibold mb-space-xs">Order &amp; Kitchen Fulfilment</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+            KOT disputes, auto-cancellations, customer doorstep mismatch, item unavailable refunds.
+          </p>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-primary font-bold">Avg ETA: 15 mins</span>
+<button class="font-label-md text-label-md text-primary flex items-center gap-0.5 hover:underline" type="button">
+            File Dispute <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Category 2 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow relative flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">payments</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-space-xs py-0.5 rounded-full">0 Active</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-semibold mb-space-xs">Payments &amp; Nodal Settlements</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+            Cashfree gateway reconciliation, UTR delays, GST TDS deduction questions.
+          </p>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-tertiary font-bold">Automated Reconciled</span>
+<button class="font-label-md text-label-md text-primary flex items-center gap-0.5 hover:underline" type="button">
+            Request Audit <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Category 3 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow relative flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">moped</span>
+</div>
+<span class="font-label-sm text-label-sm bg-error-container text-on-error-container px-space-xs py-0.5 rounded-full font-bold">1 Active (P1)</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-semibold mb-space-xs">Delivery &amp; 3PL Fleet Dispatch</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+            Shadowfax/Dunzo courier breakdown, rider no-show, surge fee verification, geofence radius.
+          </p>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-error font-bold">Live Dispatch SLA</span>
+<button class="font-label-md text-label-md text-primary flex items-center gap-0.5 hover:underline" type="button">
+            Rider SOS <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Category 4 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow relative flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">speaker_phone</span>
+</div>
+<span class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed px-space-xs py-0.5 rounded-full font-bold">1 In Diagnostic</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-semibold mb-space-xs">SoundBox &amp; Hardware Support</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+            Soundbox 4G sim connectivity, acrylic standee replacements, thermal paper refills.
+          </p>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant font-bold">Free Replacement Under Warranty</span>
+<button class="font-label-md text-label-md text-primary flex items-center gap-0.5 hover:underline" type="button">
+            Test Audio <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Category 5 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow relative flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">receipt</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-space-xs py-0.5 rounded-full">0 Active</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-semibold mb-space-xs">Subscription &amp; Invoicing</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+            Pro plan e-Mandate auto-debit, tax invoice GSTR-2B discrepancy.
+          </p>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-tertiary font-bold">Invoices GST Compliant</span>
+<button class="font-label-md text-label-md text-primary flex items-center gap-0.5 hover:underline" type="button">
+            View Ledger <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Category 6 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm hover:shadow-md transition-shadow relative flex flex-col justify-between group">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">verified</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-space-xs py-0.5 rounded-full">0 Active</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-semibold mb-space-xs">KYC, FSSAI &amp; Store Compliance</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md line-clamp-2">
+            Bank change approval, license update escalation, geofence adjustment.
+          </p>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-tertiary font-bold">FSSAI Valid till 2026</span>
+<button class="font-label-md text-label-md text-primary flex items-center gap-0.5 hover:underline" type="button">
+            Update Records <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- RECENT TICKETS LEDGER & STATUS SNAPSHOT -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mb-space-2xl">
+<div class="p-space-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Recent Tickets Ledger &amp; Status Snapshot</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Live audit trail of raised grievances with bound operational SLAs</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors" type="button">All Tickets (4)</button>
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors" type="button">Critical (1)</button>
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-low text-on-surface-variant font-label-md text-label-md hover:bg-surface-container transition-colors" type="button">Resolved (1)</button>
+</div>
+</div>
+<!-- TABLE -->
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-md text-body-md">
+<thead class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<tr>
+<th class="py-space-md px-space-lg">Ticket ID</th>
+<th class="py-space-md px-space-lg">Category</th>
+<th class="py-space-md px-space-lg">Subject</th>
+<th class="py-space-md px-space-lg">Priority</th>
+<th class="py-space-md px-space-lg">Assigned Executive</th>
+<th class="py-space-md px-space-lg">SLA Countdown</th>
+<th class="py-space-md px-space-lg">Status</th>
+<th class="py-space-md px-space-lg text-right">Action</th>
+</tr>
+</thead>
+<tbody class="text-on-surface">
+<!-- Row 1: P1 Critical -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<td class="py-3.5 px-space-lg font-code-metric text-code-metric text-primary">#TKT-88412</td>
+<td class="py-3.5 px-space-lg font-label-md text-label-md text-on-surface-variant">Delivery &amp; 3PL Fleet</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-title text-body-sm text-on-surface font-semibold block">Rider no-show for Order #ORD-99120 (Dunzo Fleet)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">Customer waiting 24 mins. Food prepared &amp; ready.</span>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-error-container text-on-error-container px-2 py-0.5 rounded font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+                P1 Critical
+              </span>
+</td>
+<td class="py-3.5 px-space-lg">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-[11px]">RK</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface leading-tight">Rahul K.</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[11px]">3PL Logistics Desk</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-lg">
+<div class="inline-flex items-center gap-1 font-code-metric text-code-metric text-error bg-error-container/40 px-2 py-0.5 rounded">
+<span class="material-symbols-outlined text-[14px]">alarm</span>
+                18 mins left
+              </div>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed px-2 py-0.5 rounded-full font-bold">
+                In Progress
+              </span>
+</td>
+<td class="py-3.5 px-space-lg text-right">
+<button class="font-label-md text-label-md text-primary bg-surface-container hover:bg-surface-container-high px-space-md py-1.5 rounded-lg transition-colors" type="button">
+                View Conversation
+              </button>
+</td>
+</tr>
+<!-- Row 2: P2 High -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<td class="py-3.5 px-space-lg font-code-metric text-code-metric text-primary">#TKT-88390</td>
+<td class="py-3.5 px-space-lg font-label-md text-label-md text-on-surface-variant">Order &amp; Fulfilment</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-title text-body-sm text-on-surface font-semibold block">Customer claims missing Ghee Podi Idli box</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">KOT CCTV footage packet seal confirmed dispatched.</span>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container text-on-surface-variant px-2 py-0.5 rounded font-bold">
+                P2 High
+              </span>
+</td>
+<td class="py-3.5 px-space-lg">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-secondary text-on-secondary flex items-center justify-center font-bold text-[11px]">PV</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface leading-tight">Pooja V.</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[11px]">Merchant Priority Specialist</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-code-metric text-code-metric text-on-surface-variant">1h 42m</span>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-label-sm text-label-sm bg-surface-container-high text-on-surface px-2 py-0.5 rounded-full font-semibold">
+                Awaiting Merchant Response
+              </span>
+</td>
+<td class="py-3.5 px-space-lg text-right">
+<button class="font-label-md text-label-md text-primary bg-surface-container hover:bg-surface-container-high px-space-md py-1.5 rounded-lg transition-colors" type="button">
+                View Conversation
+              </button>
+</td>
+</tr>
+<!-- Row 3: P3 Medium -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<td class="py-3.5 px-space-lg font-code-metric text-code-metric text-primary">#TKT-88210</td>
+<td class="py-3.5 px-space-lg font-label-md text-label-md text-on-surface-variant">Hardware &amp; SoundBox</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-title text-body-sm text-on-surface font-semibold block">SoundBox 4G speaker volume distortion at 100%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">Jio eSIM telemetry diagnostic auto-triggered.</span>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant px-2 py-0.5 rounded font-bold">
+                P3 Medium
+              </span>
+</td>
+<td class="py-3.5 px-space-lg">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-surface-container-highest text-on-surface flex items-center justify-center font-bold text-[11px]">DS</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface leading-tight">Device Support</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[11px]">IoT Remote Ops</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-code-metric text-code-metric text-on-surface-variant">3h 15m</span>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed px-2 py-0.5 rounded-full font-bold">
+                In Progress
+              </span>
+</td>
+<td class="py-3.5 px-space-lg text-right">
+<button class="font-label-md text-label-md text-primary bg-surface-container hover:bg-surface-container-high px-space-md py-1.5 rounded-lg transition-colors" type="button">
+                View Conversation
+              </button>
+</td>
+</tr>
+<!-- Row 4: Resolved -->
+<tr class="hover:bg-surface-container-low transition-colors bg-surface-container-lowest">
+<td class="py-3.5 px-space-lg font-code-metric text-code-metric text-primary">#TKT-87944</td>
+<td class="py-3.5 px-space-lg font-label-md text-label-md text-on-surface-variant">Settlements</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-title text-body-sm text-on-surface font-semibold block">UTR acknowledgement for batch #DISB-44019</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">₹48,220 credited via HDFC Nodal gateway.</span>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm bg-surface-container-low text-on-surface-variant px-2 py-0.5 rounded font-bold">
+                P3 Medium
+              </span>
+</td>
+<td class="py-3.5 px-space-lg">
+<div class="flex items-center gap-2">
+<div class="w-7 h-7 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center font-bold text-[11px]">FB</div>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface leading-tight">FinBot Engine</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant text-[11px]">Automated Nodal Check</span>
+</div>
+</div>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-code-metric text-code-metric text-tertiary">Met • 4m</span>
+</td>
+<td class="py-3.5 px-space-lg">
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded-full font-bold flex items-center gap-1 w-max">
+<span class="material-symbols-outlined text-[12px]">check</span>
+                Resolved &amp; Closed
+              </span>
+</td>
+<td class="py-3.5 px-space-lg text-right">
+<button class="font-label-md text-label-md text-on-surface-variant hover:text-on-surface bg-surface-container hover:bg-surface-container-high px-space-md py-1.5 rounded-lg transition-colors" type="button">
+                View Archive
+              </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- SEARCHABLE FAQ & INTERACTIVE SOP KNOWLEDGE ACCORDION -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-xl mb-space-2xl">
+<!-- Left 2 Cols: FAQs Accordion -->
+<div class="lg:col-span-2 bg-surface-container-lowest p-space-xl rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-space-lg">
+<div>
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Instant SOP Database</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Top Merchant Solutions &amp; Operational Guides</h2>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container px-space-sm py-1 rounded">4 Verified Guides</span>
+</div>
+<div class="space-y-space-md" id="faq-accordion">
+<!-- FAQ Item 1 -->
+<details class="group bg-surface-container-low rounded-lg p-space-md transition-all cursor-pointer open:bg-surface-container-high/40">
+<summary class="flex items-center justify-between list-none font-title text-title text-on-surface font-semibold select-none">
+<span class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">account_tree</span>
+              How does EasySplit automatically pay 3PL couriers without touching escrow?
+            </span>
+<span class="material-symbols-outlined text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="mt-space-md pt-space-sm font-body-md text-body-md text-on-surface-variant space-y-2">
+<p>
+              Under RBI Intermediary Directions and TRUSTIT Escrow architecture, when a delivery order confirms checkout, the total order amount splits instantly at payment authorization:
+            </p>
+<ul class="list-disc pl-5 space-y-1 font-body-sm text-body-sm text-on-surface">
+<li><strong>Merchant Food/Item Net:</strong> Direct route to Sri Krishna Gourmet Virtual Account (VA) ledger.</li>
+<li><strong>3PL Delivery Fee + Surge:</strong> Programmatically locked and disbursed directly to the assigned logistics partner (Dunzo / Shadowfax) immediately after OTP verification at customer doorstep.</li>
+<li><strong>GST TDS / TCS Deductions:</strong> Segregated into the statutory government nodal withholding pool for automated monthly Form 27EQ and GSTR-8 matching.</li>
+</ul>
+<div class="mt-space-sm bg-surface-container-lowest p-space-sm rounded font-label-sm text-label-sm text-tertiary flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+              100% Escrow Compliant • Non-commingled funds transfer guarantee.
+            </div>
+</div>
+</details>
+<!-- FAQ Item 2 -->
+<details class="group bg-surface-container-low rounded-lg p-space-md transition-all cursor-pointer open:bg-surface-container-high/40">
+<summary class="flex items-center justify-between list-none font-title text-title text-on-surface font-semibold select-none">
+<span class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">receipt_long</span>
+              What happens if a customer claims non-delivery after KOT handover?
+            </span>
+<span class="material-symbols-outlined text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="mt-space-md pt-space-sm font-body-md text-body-md text-on-surface-variant space-y-2">
+<p>
+              TRUSTIT enforces a <strong>Zero Merchant Liability</strong> protocol once hand-off occurs. Here is the dispute resolution workflow:
+            </p>
+<ol class="list-decimal pl-5 space-y-1 font-body-sm text-body-sm text-on-surface">
+<li>When the 3PL rider scans the dispatch QR or enters the 4-digit POS token, merchant custody terminates.</li>
+<li>If the consumer flags non-receipt, the Rider GPS trajectory and customer doorstep geo-timestamp are audited automatically.</li>
+<li>The payout to your restaurant remains 100% protected and credited. Any customer refund is underwritten by the courier partner's transit insurance guarantee.</li>
+</ol>
+</div>
+</details>
+<!-- FAQ Item 3 -->
+<details class="group bg-surface-container-low rounded-lg p-space-md transition-all cursor-pointer open:bg-surface-container-high/40">
+<summary class="flex items-center justify-between list-none font-title text-title text-on-surface font-semibold select-none">
+<span class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">wifi_tethering_error</span>
+              SoundBox 4G is showing a yellow blinking LED: Step-by-step diagnostic
+            </span>
+<span class="material-symbols-outlined text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="mt-space-md pt-space-sm font-body-md text-body-md text-on-surface-variant space-y-2">
+<p>
+              A yellow blinking LED indicates SIM network handshake latency or tower handoff failure:
+            </p>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 my-2">
+<div class="p-2.5 bg-surface-container-lowest rounded text-center">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Step 1</span>
+<p class="text-[12px] text-on-surface-variant mt-1">Hold Power button for 8s to force reboot.</p>
+</div>
+<div class="p-2.5 bg-surface-container-lowest rounded text-center">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Step 2</span>
+<p class="text-[12px] text-on-surface-variant mt-1">Wait for audio chime: "Connecting to Jio 4G".</p>
+</div>
+<div class="p-2.5 bg-surface-container-lowest rounded text-center">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Step 3</span>
+<p class="text-[12px] text-on-surface-variant mt-1">If still yellow, trigger Remote Ping from Portal.</p>
+</div>
+</div>
+<p class="font-body-sm text-body-sm">
+              If yellow persists over 15 minutes, click <strong>"Raise Hardware Replacement"</strong> to receive an immediate courier dispatch of a pre-configured SoundBox unit within 24 hours.
+            </p>
+</div>
+</details>
+<!-- FAQ Item 4 -->
+<details class="group bg-surface-container-low rounded-lg p-space-md transition-all cursor-pointer open:bg-surface-container-high/40">
+<summary class="flex items-center justify-between list-none font-title text-title text-on-surface font-semibold select-none">
+<span class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">gavel</span>
+              Statutory escalation hierarchy under TRUSTIT Merchant Ombudsman Guidelines
+            </span>
+<span class="material-symbols-outlined text-on-surface-variant group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="mt-space-md pt-space-sm font-body-md text-body-md text-on-surface-variant space-y-2">
+<p>
+              In compliance with the Consumer Protection (E-Commerce) Rules and RBI Master Directions on Grievance Redressal:
+            </p>
+<div class="space-y-1.5 font-body-sm text-body-sm">
+<div class="flex items-start gap-2">
+<span class="font-code-metric text-code-metric text-primary">Level 1:</span>
+<span>Automated AI Bot &amp; Support Desk Executive (Response &lt; 15 mins)</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="font-code-metric text-code-metric text-primary">Level 2:</span>
+<span>Nodal Grievance Officer (<code class="bg-surface-container px-1 rounded text-primary">nodal.merchant@trustit.in</code> • SLA 24 hours)</span>
+</div>
+<div class="flex items-start gap-2">
+<span class="font-code-metric text-code-metric text-primary">Level 3:</span>
+<span>Independent Merchant Ombudsman Committee review (Max resolution turnaround: 7 working days)</span>
+</div>
+</div>
+</div>
+</details>
+</div>
+</div>
+<!-- Right 1 Col: Quick Help Assets & Direct Hotline Box -->
+<div class="flex flex-col gap-space-lg">
+<!-- Direct Contact Card -->
+<div class="bg-primary text-on-primary p-space-xl rounded-xl shadow-md flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-12 -bottom-12 w-48 h-48 bg-primary-container/40 rounded-full blur-2xl"></div>
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<span class="font-label-sm text-label-sm bg-surface-container-highest/20 text-on-primary px-space-sm py-1 rounded">Priority Toll-Free</span>
+<span class="material-symbols-outlined text-secondary-container text-[24px]">call</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold mb-space-xs">Merchant Hotline</h3>
+<p class="font-body-sm text-body-sm text-primary-fixed mb-space-lg">Dedicated telephone escalation for active kitchen dispatch blocks and payment freezes.</p>
+<div class="bg-surface-container-lowest/10 backdrop-blur-md p-space-md rounded-lg mb-space-lg">
+<span class="font-label-sm text-label-sm text-primary-fixed uppercase tracking-wider block">Direct Line (Dial from registered mobile)</span>
+<span class="font-headline-md text-headline-md font-bold tracking-tight text-on-primary">1800-202-9900</span>
+<span class="font-body-sm text-body-sm text-primary-fixed-dim block mt-0.5">PIN: 4819 (Sri Krishna Gourmet)</span>
+</div>
+</div>
+<div class="flex flex-col gap-space-xs font-label-sm text-label-sm text-primary-fixed">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed">check_circle</span>
+<span>English, Hindi, Kannada, Tamil, Telugu</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed">check_circle</span>
+<span>Average queue hold time: 34 seconds</span>
+</div>
+</div>
+</div>
+<!-- Quick Document Download Widget -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col gap-space-md">
+<h3 class="font-title text-title text-on-surface font-bold flex items-center gap-1.5">
+<span class="material-symbols-outlined text-primary text-[20px]">download</span>
+          Manuals &amp; Guides Download
+        </h3>
+<div class="space-y-space-xs">
+<a class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container transition-colors group" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">picture_as_pdf</span>
+<span class="font-body-sm text-body-sm text-on-surface">SoundBox 4G Setup &amp; LED Manual</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">1.4 MB</span>
+</a>
+<a class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container transition-colors group" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">picture_as_pdf</span>
+<span class="font-body-sm text-body-sm text-on-surface">3PL Handover Dispute SOP v2.4</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">820 KB</span>
+</a>
+<a class="flex items-center justify-between p-2 rounded-lg hover:bg-surface-container transition-colors group" href="#">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">picture_as_pdf</span>
+<span class="font-body-sm text-body-sm text-on-surface">GST TDS Reconciliation Cheatsheet</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">510 KB</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+<!-- REGULATORY SEAL & COMPLIANCE FOOTER CARD -->
+<div class="bg-surface-container-low p-space-xl rounded-xl shadow-sm flex flex-col md:flex-row items-center justify-between gap-space-lg">
+<div class="flex items-center gap-space-lg">
+<div class="w-14 h-14 rounded-full bg-surface-container flex items-center justify-center text-primary shrink-0 shadow-inner">
+<span class="material-symbols-outlined text-[32px]">security</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-sm mb-0.5">
+<span class="font-title text-title text-on-surface font-bold">DPDP Act 2023 &amp; RBI Payment Intermediary Certified</span>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded font-bold">COMPLIANT</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-3xl">
+          All ticket communications, customer order logs, and bank statement attachments are encrypted under AES-256 bit protocols and processed in accordance with the Digital Personal Data Protection Act and Information Technology (Intermediary Guidelines) Rules.
+        </p>
+</div>
+</div>
+<div class="flex items-center gap-space-md shrink-0">
+<div class="text-right hidden xl:block">
+<span class="font-label-sm text-label-sm text-on-surface-variant block uppercase">Chief Grievance Officer</span>
+<span class="font-body-sm text-body-sm font-bold text-on-surface">grievance-officer@trustit.in</span>
+</div>
+<button class="px-space-md py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg font-label-md text-label-md transition-colors" type="button">
+        Read Policy
+      </button>
+</div>
+</div>
+<!-- INTERACTIVE RAISE TICKET MODAL -->
+<div class="hidden fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-sm p-space-md" id="ticket-modal">
+<div class="bg-surface-container-lowest max-w-xl w-full rounded-2xl shadow-xl p-space-xl relative flex flex-col max-h-[921px] overflow-y-auto">
+<div class="flex items-center justify-between pb-space-md mb-space-md">
+<div>
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Fast-Track Resolution</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Raise New Operational Ticket</h2>
+</div>
+<button class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface" onclick="document.getElementById('ticket-modal').classList.add('hidden')" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<form class="flex flex-col gap-space-md" onsubmit="event.preventDefault(); alert('Ticket submitted successfully! Assigned SLA: 15 minutes.'); document.getElementById('ticket-modal').classList.add('hidden');">
+<div>
+<label class="font-label-md text-label-md text-on-surface block mb-1">Select Dispute Category</label>
+<select class="w-full bg-surface-container-low px-space-md py-2.5 rounded-lg font-body-md text-body-md text-on-surface outline-none">
+<option>Delivery &amp; 3PL Fleet Dispatch (Dunzo / Shadowfax)</option>
+<option>Order &amp; Kitchen Fulfilment (KOT / Item mismatch)</option>
+<option>Payments &amp; Nodal Settlements (UTR / Escrow)</option>
+<option>SoundBox &amp; Hardware Support</option>
+<option>Subscription &amp; Invoicing</option>
+<option>KYC, FSSAI &amp; Store Compliance</option>
+</select>
+</div>
+<div>
+<label class="font-label-md text-label-md text-on-surface block mb-1">Priority Level</label>
+<div class="grid grid-cols-3 gap-space-sm">
+<label class="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container">
+<input checked="" class="accent-primary" name="priority" type="radio" value="p3"/>
+<span class="font-label-md text-label-md text-on-surface">P3 - Medium</span>
+</label>
+<label class="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-surface-container-low cursor-pointer hover:bg-surface-container">
+<input class="accent-primary" name="priority" type="radio" value="p2"/>
+<span class="font-label-md text-label-md text-on-surface">P2 - High</span>
+</label>
+<label class="flex items-center justify-center gap-1.5 p-2 rounded-lg bg-error-container/30 cursor-pointer hover:bg-error-container/50">
+<input class="accent-error" name="priority" type="radio" value="p1"/>
+<span class="font-label-md text-label-md text-error font-bold">P1 - Critical SLA</span>
+</label>
+</div>
+</div>
+<div>
+<label class="font-label-md text-label-md text-on-surface block mb-1">Associated Order ID / Reference / UTR</label>
+<input class="w-full bg-surface-container-low px-space-md py-2 rounded-lg font-body-md text-body-md text-on-surface outline-none placeholder:text-on-surface-variant" placeholder="e.g. #ORD-99120 or UTR-HDFC-991823" type="text"/>
+</div>
+<div>
+<label class="font-label-md text-label-md text-on-surface block mb-1">Issue Description &amp; Remarks</label>
+<textarea class="w-full bg-surface-container-low px-space-md py-2 rounded-lg font-body-md text-body-md text-on-surface outline-none placeholder:text-on-surface-variant resize-none" placeholder="Provide accurate details so our executive can resolve immediately..." rows="3"></textarea>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">attach_file</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Attach CCTV footage, bill photo or screenshot</span>
+</div>
+<button class="font-label-md text-label-md text-primary hover:underline" type="button">Browse File</button>
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-space-md mt-space-sm">
+<button class="px-space-lg py-2 rounded-lg bg-surface-container text-on-surface font-title text-body-sm hover:bg-surface-container-high transition-colors" onclick="document.getElementById('ticket-modal').classList.add('hidden')" type="button">Cancel</button>
+<button class="px-space-xl py-2 rounded-lg bg-primary-container text-on-primary font-title text-body-sm hover:bg-primary transition-colors shadow-sm" type="submit">Submit Ticket</button>
+</div>
+</form>
+</div>
+</div>
+</div></main></div></body></html>

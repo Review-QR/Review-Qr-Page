@@ -1,7 +1,8 @@
 import "server-only";
 
 import { createHash } from "node:crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { checkRateLimit } from "@/lib/rate-limiter";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   localReviewDraftProvider,
@@ -71,6 +72,19 @@ export async function setReviewSessionCookie(businessId: string, sessionId: stri
     path: "/",
     maxAge: 30 * 60,
   });
+}
+
+async function getClientIp(): Promise<string> {
+  try {
+    const headerList = await headers();
+    const forwarded = headerList.get("x-forwarded-for");
+    if (forwarded) {
+      return forwarded.split(",")[0].trim();
+    }
+    return headerList.get("x-real-ip") || "unknown_ip";
+  } catch {
+    return "unknown_ip";
+  }
 }
 
 function isValidBusinessId(businessId: unknown): businessId is string {
@@ -216,6 +230,19 @@ export async function createReviewSessionForBusiness(
   }
 
   try {
+    // Spam protection: Max 10 review sessions per 10 minutes per device/IP
+    const clientIp = await getClientIp();
+    const rateLimit = checkRateLimit(`qr_session:${clientIp}`, {
+      maxRequests: 10,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!rateLimit.success) {
+      return {
+        ok: false,
+        message: "Too many attempts from this device. Please wait a few minutes before trying again.",
+      };
+    }
+
     // Re-resolve the server-bound route business through the restricted QR RPC.
     const business = await resolveQrBusiness(businessId);
     if (!business) {
@@ -688,6 +715,19 @@ export async function submitTrustitReviewForBusiness(
     return { ok: false, message: TRUSTIT_SUBMIT_FAILURE };
   }
   try {
+    // Spam protection: Max 4 review submissions per 10 minutes per device/IP
+    const clientIp = await getClientIp();
+    const rateLimit = checkRateLimit(`qr_submit:${clientIp}`, {
+      maxRequests: 4,
+      windowMs: 10 * 60 * 1000,
+    });
+    if (!rateLimit.success) {
+      return {
+        ok: false,
+        message: "Too many submissions from this device. Please wait a few minutes before submitting another review.",
+      };
+    }
+
     const business = await resolveQrBusiness(businessId);
     if (!business) return { ok: false, message: "This QR code is unavailable. Please scan it again." };
     const admin = createSupabaseAdminClient();

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"tertiary":"#003d27","on-tertiary-fixed":"#002113","surface-container":"#eaedff","inverse-primary":"#b0c6ff","primary-fixed":"#d9e2ff","surface-container-highest":"#dae2fd","on-tertiary-container":"#66d09c","on-tertiary":"#ffffff","surface-container-low":"#f2f3ff","on-surface":"#131b2e","on-primary":"#ffffff","outline-variant":"#c3c6d4","surface-container-lowest":"#ffffff","error":"#ba1a1a","on-primary-fixed":"#001945","on-secondary":"#ffffff","on-primary-fixed-variant":"#00429c","secondary-container":"#00e3fd","outline":"#737783","on-background":"#131b2e","background":"#faf8ff","tertiary-fixed":"#8df7c1","on-error-container":"#93000a","primary-container":"#0d47a1","tertiary-container":"#005739","on-tertiary-fixed-variant":"#005235","surface-variant":"#dae2fd","primary":"#003178","secondary-fixed":"#9cf0ff","inverse-on-surface":"#eef0ff","on-surface-variant":"#434652","tertiary-fixed-dim":"#71dba6","primary-fixed-dim":"#b0c6ff","on-secondary-fixed":"#001f24","surface-bright":"#faf8ff","surface-dim":"#d2d9f4","surface-tint":"#2b5bb5","surface":"#faf8ff","on-primary-container":"#a1bbff","inverse-surface":"#283044","secondary-fixed-dim":"#00daf3","on-error":"#ffffff","secondary":"#006875","surface-container-high":"#e2e7ff","on-secondary-container":"#00616d","on-secondary-fixed-variant":"#004f58","error-container":"#ffdad6"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin-desktop":"2rem","space-md":"0.75rem","margin":"1rem","gutter-desktop":"1.5rem","space-lg":"1rem","space-2xl":"2rem","space-xs":"0.25rem","gutter":"1rem","space-sm":"0.5rem","margin-tablet":"1.5rem","space-xl":"1.5rem"},"fontFamily":{"title":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"code-metric":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"display":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"]},"fontSize":{"title":["16px",{"lineHeight":"22px","fontWeight":"600"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"code-metric":["14px",{"lineHeight":"20px","fontWeight":"700"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}],"display":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">shield_with_heart</span></div><div class="flex flex-col"><span class="font-title text-title text-primary tracking-tight font-bold">TRUSTIT</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Merchant Hub</span></div></div><span class="font-label-sm text-label-sm bg-surface-container text-on-surface px-space-xs py-0.5 rounded">PRO</span></div><div class="px-space-md py-space-sm"><div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><div class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-2 ring-tertiary-container animate-pulse"></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface truncate">Sri Krishna Gourmet</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Indiranagar BLR • LIVE</span></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer">unfold_more</span></div></div><nav class="flex-1 px-space-md py-space-xs space-y-space-md" data-active-classes="bg-primary-container text-on-primary font-title rounded-lg shadow-sm"><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Operations</div><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="overview" href="#">Overview</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="orders" href="#">Orders</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="products-and-inventory" href="#">Products &amp; Inventory</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="store-management" href="#">Store Management</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="delivery-partner-and-3pl-fleet-complaint-center" href="#">Delivery Complaints &amp; 3PL Fleet</a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Finance &amp; Growth</div><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="payments-and-settlements" href="#">Payments &amp; Settlements</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="subscriptions" href="#">Subscriptions</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="qr-and-reviews" href="#">QR &amp; Reviews</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="physical-products" href="#">Physical Products</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="analytics" href="#">Analytics</a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">System</div><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="notifications" href="#">Notifications</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="support" href="#">Support</a><div class="ml-space-md pl-space-sm border-l-2 border-surface-container-high space-y-1 py-1"><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="qr-and-merchandise-support" href="#">QR &amp; Merchandise Support</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="subscriptions-and-billing-support" href="#">Subscriptions &amp; Billing Support</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="kyc-and-compliance-support" href="#">KYC &amp; Compliance Support</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="refunds-and-cancellations-desk" href="#">Refunds &amp; Cancellations Desk</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="knowledge-base-and-faq-hub" href="#">Knowledge Base &amp; FAQ Hub</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="ticket-resolution-and-closure-feedback" href="#">Ticket Resolution &amp; Closure Feedback</a></div><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="settings" href="#">Settings</a></div></nav></div><div class="p-space-md bg-surface-container-low mx-space-md mb-space-md rounded-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[20px]">speaker_phone</span></div><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface">SoundBox 4G</span><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span><span class="font-label-sm text-label-sm text-on-surface-variant">Synced • 98%</span></div></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer hover:text-on-surface">sync</span></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-xl"><div class="w-full flex items-center gap-space-sm bg-surface-container-low px-space-md py-2 rounded-lg"><span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span><input class="w-full bg-transparent border-0 outline-none font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant" placeholder="Search orders, settlement ID, tickets, or SKU..." type="text"/><kbd class="hidden sm:inline-block font-code-metric text-code-metric text-on-surface-variant bg-surface-container px-space-xs py-0.5 rounded text-[11px]">⌘K</kbd></div></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low"><span class="material-symbols-outlined text-tertiary text-[18px]">verified</span><span class="font-label-sm text-label-sm text-on-surface-variant">GSTIN:</span><span class="font-code-metric text-code-metric text-on-surface">29AABCS1429B1ZB</span></div><button class="flex items-center gap-space-xs bg-secondary-container text-on-secondary-fixed font-title text-body-sm px-space-md py-2 rounded-lg hover:bg-secondary-fixed transition-colors shadow-sm" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span>Instant Settle</span></button><div class="h-6 w-px bg-outline-variant"></div><button class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">support_agent</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden lg:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Raghavendra Rao</span><span class="font-label-sm text-label-sm text-on-surface-variant">Master Admin</span></div><span class="material-symbols-outlined text-on-surface-variant text-[16px]">expand_more</span></div></div></header><main class="w-full pt-16 bg-surface px-space-xl pb-space-2xl min-h-screen"><div class="flex flex-col w-full">
+<!-- Sub-Header / Breadcrumb Navigation -->
+<div class="flex flex-wrap items-center justify-between gap-space-md pb-space-lg">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span>System</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Support</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-semibold">Knowledge Base &amp; FAQ Hub</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Merchant Knowledge Base &amp; Self-Serve SOP Hub</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+        Search hundreds of verified operational guides, explore step-by-step video tutorials, download compliance manuals, and troubleshoot hardware &amp; financial issues instantly.
+      </p>
+</div>
+<!-- Quick Merchant Status Indicator Badge -->
+<div class="flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-2 rounded-lg shadow-sm">
+<div class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim animate-pulse"></div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">SOP Compliance Rating</span>
+<span class="font-code-metric text-code-metric text-on-surface">Tier-1 Verified Merchant (99.8%)</span>
+</div>
+<span class="material-symbols-outlined text-primary text-[20px] ml-space-xs">verified</span>
+</div>
+</div>
+<!-- Hero Search & Trending Chips Container -->
+<div class="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary-container via-primary to-primary-container p-space-2xl text-on-primary shadow-md mb-space-2xl">
+<div class="relative z-10 max-w-3xl flex flex-col gap-space-md">
+<div class="flex items-center gap-space-xs bg-surface-container-lowest/15 backdrop-blur-md px-space-md py-1 rounded-full w-fit">
+<span class="material-symbols-outlined text-secondary-container text-[18px]">verified_user</span>
+<span class="font-label-sm text-label-sm text-secondary-container uppercase tracking-wide">Official TRUSTIT Standard Operating Procedures</span>
+</div>
+<h2 class="font-display text-display font-bold tracking-tight text-on-primary">
+        How can we resolve your store blocker today?
+      </h2>
+<!-- Big Search Field -->
+<div class="relative w-full flex items-center bg-surface-container-lowest rounded-lg shadow-lg">
+<span class="material-symbols-outlined text-on-surface-variant text-[24px] ml-space-lg">search</span>
+<input class="w-full bg-transparent px-space-md py-space-lg font-body-lg text-body-lg text-on-surface placeholder:text-on-surface-variant outline-none" id="kbSearchInput" placeholder="Search solutions, e.g. 'SoundBox blinking yellow', 'How to claim 3PL spillage', 'GSTR-2B filing', 'Instant Settle cutoff'..." type="text"/>
+<div class="flex items-center gap-space-xs pr-space-md">
+<kbd class="hidden sm:inline-block font-code-metric text-code-metric text-on-surface-variant bg-surface-container px-space-sm py-1 rounded text-xs">ESC to clear</kbd>
+<button class="bg-primary hover:bg-primary-container transition-colors text-on-primary px-space-lg py-2.5 rounded font-title text-body-sm flex items-center gap-1 shadow-sm">
+<span>Search</span>
+<span class="material-symbols-outlined text-[18px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Trending Keywords -->
+<div class="flex flex-wrap items-center gap-space-sm pt-space-xs">
+<span class="font-label-sm text-label-sm uppercase text-on-primary/75 tracking-wider">Trending SOPs:</span>
+<button class="bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 backdrop-blur-sm text-on-primary px-space-md py-1 rounded font-code-metric text-code-metric text-xs transition-colors" onclick="setQuery('#SoundBoxPairing')">
+          #SoundBoxPairing
+        </button>
+<button class="bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 backdrop-blur-sm text-on-primary px-space-md py-1 rounded font-code-metric text-code-metric text-xs transition-colors" onclick="setQuery('#InstantSettlement')">
+          #InstantSettlement
+        </button>
+<button class="bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 backdrop-blur-sm text-on-primary px-space-md py-1 rounded font-code-metric text-code-metric text-xs transition-colors" onclick="setQuery('#FSSAIAmendment')">
+          #FSSAIAmendment
+        </button>
+<button class="bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 backdrop-blur-sm text-on-primary px-space-md py-1 rounded font-code-metric text-code-metric text-xs transition-colors" onclick="setQuery('#EasySplit3PL')">
+          #EasySplit3PL
+        </button>
+<button class="bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 backdrop-blur-sm text-on-primary px-space-md py-1 rounded font-code-metric text-code-metric text-xs transition-colors" onclick="setQuery('#KOTPrinterSetup')">
+          #KOTPrinterSetup
+        </button>
+<button class="bg-surface-container-lowest/15 hover:bg-surface-container-lowest/25 backdrop-blur-sm text-on-primary px-space-md py-1 rounded font-code-metric text-code-metric text-xs transition-colors" onclick="setQuery('#TableQRCodes')">
+          #TableQRCodes
+        </button>
+</div>
+</div>
+<!-- Ambient Decorative Geometric Accent -->
+<div class="absolute -right-12 -bottom-16 w-80 h-80 rounded-full bg-secondary-container/20 blur-3xl pointer-events-none"></div>
+<div class="absolute right-12 top-6 opacity-10 pointer-events-none">
+<span class="material-symbols-outlined text-[190px]">menu_book</span>
+</div>
+</div>
+<!-- Main 2-Column Split Layout -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-2xl w-full">
+<!-- LEFT COLUMN (~70%): Domains, Featured SOP Card, Interactive FAQ Accordion -->
+<div class="xl:col-span-8 flex flex-col gap-space-2xl">
+<!-- 1. Browse Help by Operational Domain Section -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">category</span>
+<h3 class="font-headline-md text-headline-md text-on-surface tracking-tight">Browse Help by Operational Domain</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">95 Total SOPs Published</span>
+</div>
+<!-- 6 Domain Cards Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-space-lg">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">restaurant</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container px-2 py-0.5 rounded text-on-surface-variant">18 Articles</span>
+</div>
+<h4 class="font-title text-title text-on-surface group-hover:text-primary transition-colors mb-1">Order &amp; Kitchen Fulfilment</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">POS ticket splitting, modifier swaps, kitchen prep time pacing.</p>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-0.5">Top Merchant Guide</span>
+<p class="font-label-md text-label-md text-on-surface truncate">"How to handle KOT modifications during active dinner rush"</p>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">account_balance</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container px-2 py-0.5 rounded text-on-surface-variant">24 Articles</span>
+</div>
+<h4 class="font-title text-title text-on-surface group-hover:text-primary transition-colors mb-1">Payments, Nodal Escrow &amp; Taxes</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Cashfree gateway sync, GSTR-1 matching, MDR calculation breakdowns.</p>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-0.5">Top Merchant Guide</span>
+<p class="font-label-md text-label-md text-on-surface truncate">"Reconciling EasySplit multi-vendor 3PL deductions on Cashfree"</p>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">two_wheeler</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container px-2 py-0.5 rounded text-on-surface-variant">16 Articles</span>
+</div>
+<h4 class="font-title text-title text-on-surface group-hover:text-primary transition-colors mb-1">Delivery Logistics &amp; Fleet SLAs</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Dunzo, Shadowfax, Borzo rider auto-dispatching &amp; GPS geofences.</p>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-0.5">Top Merchant Guide</span>
+<p class="font-label-md text-label-md text-on-surface truncate">"What to do when assigned 3PL rider doesn't arrive within 10 mins"</p>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">qr_code_2</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container px-2 py-0.5 rounded text-on-surface-variant">12 Articles</span>
+</div>
+<h4 class="font-title text-title text-on-surface group-hover:text-primary transition-colors mb-1">Store QR Codes &amp; Merchandise</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">SoundBox stands, table ordering acrylic QR codes &amp; billing counters.</p>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-0.5">Top Merchant Guide</span>
+<p class="font-label-md text-label-md text-on-surface truncate">"Setting up geofenced table QR standees with dynamic UPI routing"</p>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">speaker_phone</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container px-2 py-0.5 rounded text-on-surface-variant">14 Articles</span>
+</div>
+<h4 class="font-title text-title text-on-surface group-hover:text-primary transition-colors mb-1">Hardware, SoundBox 4G &amp; POS</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">SIM swaps, dual voice alerts, Bluetooth thermal receipt printers.</p>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-0.5">Top Merchant Guide</span>
+<p class="font-label-md text-label-md text-on-surface truncate">"Diagnosing SoundBox 4G connectivity: LED indicator color codes"</p>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="bg-surface-container-lowest p-space-lg rounded-lg shadow-sm hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer">
+<div>
+<div class="flex items-center justify-between mb-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined text-[22px]">policy</span>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container px-2 py-0.5 rounded text-on-surface-variant">11 Articles</span>
+</div>
+<h4 class="font-title text-title text-on-surface group-hover:text-primary transition-colors mb-1">KYC, Licenses &amp; Compliance</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">Annual FSSAI verification, GSTIN e-invoicing &amp; Bank Penny-drop audits.</p>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded">
+<span class="font-label-sm text-label-sm uppercase text-on-surface-variant block mb-0.5">Top Merchant Guide</span>
+<p class="font-label-md text-label-md text-on-surface truncate">"Step-by-step renewal submission for state FSSAI food licenses"</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. Featured Step-by-Step Operational SOPs -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">assignment_turned_in</span>
+<h3 class="font-headline-md text-headline-md text-on-surface tracking-tight">Featured Operational SOP</h3>
+</div>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-space-sm py-1 rounded font-bold">DISPUTE PROTOCOL V3.2</span>
+</div>
+<!-- Expanded Guide Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-lg">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div>
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Merchant Protection Guarantee</span>
+<h4 class="font-headline-sm text-headline-sm text-on-surface mt-1">SOP: Disputing an Unjustified Customer Complaint via CCTV &amp; Weigh Scale Dossier</h4>
+</div>
+<div class="flex items-center gap-space-md text-on-surface-variant">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px]">timer</span>
+<span class="font-body-sm text-body-sm">4 mins read</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-tertiary">task_alt</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold uppercase">Ombudsman Backed</span>
+</div>
+</div>
+</div>
+<!-- Step-by-step interactive checklist -->
+<div class="space-y-space-md">
+<!-- Step 1 -->
+<div class="flex items-start gap-space-md p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-code-metric text-xs shrink-0 mt-0.5">1</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">Navigate to ‘Order Complaints’ and locate linked Order ID</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Portal Step</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  Open the left sidebar under <span class="font-code-metric text-primary">Delivery Complaints &amp; 3PL Fleet</span>. Filter by the specific Order ID flagged within 2 hours of customer delivery.
+                </p>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="flex items-start gap-space-md p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-code-metric text-xs shrink-0 mt-0.5">2</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">Ensure KOT packing photograph shows the intact blue tamper seal</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Visual Proof</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  Your kitchen packing station image must clearly show the official serialized <span class="font-code-metric text-primary">TRUSTIT Tamper-Evident Tape</span> applied across the primary paper or plastic container seams.
+                </p>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="flex items-start gap-space-md p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-code-metric text-xs shrink-0 mt-0.5">3</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">Attach the calibrated weight slip from your Bluetooth IoT scale</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Telemetry Evidence</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  The automated scale record captures the exact net dispatch weight (±5 grams tolerance). If customer claims ‘items missing’, this IoT timestamp serves as conclusive legal proof.
+                </p>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="flex items-start gap-space-md p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="w-7 h-7 rounded-full bg-primary text-on-primary flex items-center justify-center font-code-metric text-xs shrink-0 mt-0.5">4</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">Submit to Ombudsman Desk — Escrow safeguards payout within 60 minutes</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold uppercase">Final Resolution</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                  Click ‘Dispatch Dispute Dossier’. The platform freeze on the settlement amount is instantly unlocked, and 100% funds route to your merchant bank account without clawbacks.
+                </p>
+</div>
+</div>
+</div>
+<!-- Helpful Feedback Widget -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-md pt-space-md bg-surface-container-low/50 p-space-md rounded-lg">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">thumb_up</span>
+<span class="font-body-md text-body-md text-on-surface font-semibold">Was this operational article helpful?</span>
+</div>
+<div class="flex items-center gap-space-sm" id="feedbackWidget">
+<button class="flex items-center gap-1 bg-surface-container-lowest hover:bg-surface-container px-space-md py-1.5 rounded-lg text-on-surface text-body-sm font-title shadow-sm transition-all" id="btnThumbUp" onclick="handleFeedback('up')">
+<span class="material-symbols-outlined text-tertiary text-[18px]">thumb_up</span>
+<span>Yes (<span id="upCount">342</span>)</span>
+</button>
+<button class="flex items-center gap-1 bg-surface-container-lowest hover:bg-surface-container px-space-md py-1.5 rounded-lg text-on-surface text-body-sm font-title shadow-sm transition-all" id="btnThumbDown" onclick="handleFeedback('down')">
+<span class="material-symbols-outlined text-error text-[18px]">thumb_down</span>
+<span>No (<span id="downCount">8</span>)</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. Frequently Asked Questions (Interactive Accordion) -->
+<section class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">quiz</span>
+<h3 class="font-headline-md text-headline-md text-on-surface tracking-tight">Frequently Asked Questions</h3>
+</div>
+<button class="font-label-md text-label-md text-primary hover:underline flex items-center gap-1" onclick="expandAllFaq()">
+<span>Toggle All</span>
+<span class="material-symbols-outlined text-[16px]">unfold_more</span>
+</button>
+</div>
+<div class="space-y-space-sm" id="faqAccordionContainer">
+<!-- Accordion Item 1 -->
+<div class="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden">
+<button class="w-full p-space-lg flex items-center justify-between text-left hover:bg-surface-container-low transition-colors" onclick="toggleFaq(1)">
+<div class="flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[18px]">bolt</span>
+</div>
+<span class="font-title text-title text-on-surface">When does the Instant Settle T+0 amount hit my HDFC Current Account?</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform" id="faq-icon-1">expand_more</span>
+</button>
+<div class="hidden px-space-lg pb-space-lg pt-0" id="faq-body-1">
+<div class="p-space-md bg-surface-container-low rounded-lg text-body-md text-on-surface-variant">
+                Immediately upon clicking <span class="font-semibold text-primary">‘Instant Settle’</span> in the header or settlements panel, the funds are processed directly via <span class="font-semibold text-on-surface">IMPS banking rails within 120 seconds</span>. The transfer is subject to a daily merchant limit of ₹2,00,000 without weekend or bank holiday holdbacks. Transaction reference UTR numbers are generated instantaneously.
+              </div>
+</div>
+</div>
+<!-- Accordion Item 2 -->
+<div class="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden">
+<button class="w-full p-space-lg flex items-center justify-between text-left hover:bg-surface-container-low transition-colors" onclick="toggleFaq(2)">
+<div class="flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[18px]">qr_code</span>
+</div>
+<span class="font-title text-title text-on-surface">Can I replace my damaged acrylic standee for free?</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform" id="faq-icon-2">expand_more</span>
+</button>
+<div class="hidden px-space-lg pb-space-lg pt-0" id="faq-body-2">
+<div class="p-space-md bg-surface-container-low rounded-lg text-body-md text-on-surface-variant">
+<span class="font-semibold text-on-surface">Yes.</span> All official TRUSTIT physical QR merchandise includes a 1-year complimentary hardware and standee replacement warranty against accidental shop-floor damage, liquid spills, or sun fading. Simply submit a photo of the cracked standee via the <span class="font-semibold text-primary">QR &amp; Merchandise Support</span> tab, and an automated blue dispatch order will be routed to your store within 48 hours.
+              </div>
+</div>
+</div>
+<!-- Accordion Item 3 -->
+<div class="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden">
+<button class="w-full p-space-lg flex items-center justify-between text-left hover:bg-surface-container-low transition-colors" onclick="toggleFaq(3)">
+<div class="flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[18px]">rate_review</span>
+</div>
+<span class="font-title text-title text-on-surface">How does TRUSTIT ensure my customer reviews cannot be fabricated?</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform" id="faq-icon-3">expand_more</span>
+</button>
+<div class="hidden px-space-lg pb-space-lg pt-0" id="faq-body-3">
+<div class="p-space-md bg-surface-container-low rounded-lg text-body-md text-on-surface-variant">
+                We employ a strict zero-spoofing cryptographic model. Public ratings and reviews only unlock for customers after an authentic transaction event: either a validated delivery delivery OTP handover or an authenticated in-store transaction at your geofenced dynamic UPI QR standee. Bot accounts, external non-buyers, and competitors are strictly blocked from posting reviews on your merchant profile.
+              </div>
+</div>
+</div>
+<!-- Accordion Item 4 -->
+<div class="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden">
+<button class="w-full p-space-lg flex items-center justify-between text-left hover:bg-surface-container-low transition-colors" onclick="toggleFaq(4)">
+<div class="flex items-center gap-space-md">
+<div class="w-8 h-8 rounded-full bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[18px]">soup_kitchen</span>
+</div>
+<span class="font-title text-title text-on-surface">What happens if a 3PL courier spills food during transit?</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant transition-transform" id="faq-icon-4">expand_more</span>
+</button>
+<div class="hidden px-space-lg pb-space-lg pt-0" id="faq-body-4">
+<div class="p-space-md bg-surface-container-low rounded-lg text-body-md text-on-surface-variant">
+                Our <span class="font-semibold text-tertiary">Zero Merchant Deduction Guarantee</span> explicitly shields your revenue. Once transit damage is reported and validated by the rider or recipient photo, the partner 3PL fleet provider (Dunzo / Shadowfax / Borzo) automatically absorbs 100% of the cost. Your merchant payout remains fully intact and un-penalized.
+              </div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- RIGHT COLUMN (~30%): Downloadable Manuals, Video Walkthroughs, Live Specialist Escalation -->
+<div class="xl:col-span-4 flex flex-col gap-space-2xl">
+<!-- 1. Downloadable Official Manuals & Cheatsheets -->
+<section class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[22px]">download_for_offline</span>
+<h3 class="font-title text-title text-on-surface">Official Manuals &amp; PDFs</h3>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Print Ready</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Download certified handbooks for kitchen staff, billing operators, and accounting teams.</p>
+<!-- Resource items list -->
+<div class="space-y-space-sm">
+<!-- Manual 1 -->
+<div class="p-space-md bg-surface-container-low rounded-lg flex items-center justify-between hover:bg-surface-container transition-colors group">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface truncate group-hover:text-primary transition-colors">SoundBox 4G LED Manual</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">PDF • 2.4 MB • Updated v4</span>
+</div>
+</div>
+<a class="w-8 h-8 rounded bg-surface-container-lowest hover:bg-primary hover:text-on-primary flex items-center justify-center text-on-surface-variant shadow-sm transition-colors" download="" href="#">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</a>
+</div>
+<!-- Manual 2 -->
+<div class="p-space-md bg-surface-container-low rounded-lg flex items-center justify-between hover:bg-surface-container transition-colors group">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface truncate group-hover:text-primary transition-colors">Merchant Escrow Policy Charter</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">PDF • 1.8 MB • RBI Compliant</span>
+</div>
+</div>
+<a class="w-8 h-8 rounded bg-surface-container-lowest hover:bg-primary hover:text-on-primary flex items-center justify-center text-on-surface-variant shadow-sm transition-colors" download="" href="#">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</a>
+</div>
+<!-- Manual 3 -->
+<div class="p-space-md bg-surface-container-low rounded-lg flex items-center justify-between hover:bg-surface-container transition-colors group">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface truncate group-hover:text-primary transition-colors">3PL Spill Dispute SOP</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">PDF • 820 KB • Fleet SLAs</span>
+</div>
+</div>
+<a class="w-8 h-8 rounded bg-surface-container-lowest hover:bg-primary hover:text-on-primary flex items-center justify-center text-on-surface-variant shadow-sm transition-colors" download="" href="#">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</a>
+</div>
+<!-- Manual 4 -->
+<div class="p-space-md bg-surface-container-low rounded-lg flex items-center justify-between hover:bg-surface-container transition-colors group">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">receipt_long</span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md text-on-surface truncate group-hover:text-primary transition-colors">FY24-25 GST &amp; TDS Guide</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">PDF • 510 KB • Sec 194-O</span>
+</div>
+</div>
+<a class="w-8 h-8 rounded bg-surface-container-lowest hover:bg-primary hover:text-on-primary flex items-center justify-center text-on-surface-variant shadow-sm transition-colors" download="" href="#">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</a>
+</div>
+</div>
+</section>
+<!-- 2. Video Tutorials & Visual Walkthroughs -->
+<section class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[22px]">play_circle</span>
+<h3 class="font-title text-title text-on-surface">Video Tutorials</h3>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-semibold cursor-pointer hover:underline">View All (14)</span>
+</div>
+<div class="space-y-space-md">
+<!-- Video Card 1 -->
+<div class="group cursor-pointer flex flex-col gap-2">
+<div class="relative w-full h-36 rounded-lg overflow-hidden bg-surface-container shadow-inner">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A modern Indian restaurant billing counter with an engineer demonstrating dual language voice announcements on an IoT Soundbox speaker, warm indoor lighting, sleek corporate aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAKetOkSYBwtdqAnpT8tWQ-6pJDuYLC44bdJcW-2aGPEe-QginU3NFu-V7mN2BHMO0NMNvxaYnwaXhTJV0jymAM4ukc5rF1JAIdQgGps1VeYsxDDYUJAXnQhyxsdYbzywgojiv_ZV8_9Kkfc1vbKtjD9l03mNeQv6D312bbtLSKZ6B_0LGh5DR7n4o-5zydKIHiwlElvd_mlCyPaNV35TmQFodLxZxBR8Redam8gMo"/>
+<div class="absolute inset-0 bg-primary-container/30 group-hover:bg-primary-container/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest/90 backdrop-blur text-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]">play_arrow</span>
+</div>
+</div>
+<div class="absolute bottom-2 right-2 bg-on-surface/80 backdrop-blur text-surface-bright px-1.5 py-0.5 rounded font-code-metric text-[11px]">
+                3:45 mins
+              </div>
+</div>
+<div>
+<h5 class="font-title text-body-md text-on-surface group-hover:text-primary transition-colors">Configuring SoundBox 4G Dual Language Voice Alerts</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Learn Hindi, Kannada, Tamil &amp; English bilingual setup.</p>
+</div>
+</div>
+<!-- Video Card 2 -->
+<div class="group cursor-pointer flex flex-col gap-2">
+<div class="relative w-full h-36 rounded-lg overflow-hidden bg-surface-container shadow-inner">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Hands of a merchant using a high-density tablet POS screen to tag restaurant food menu items with organic nutritional stickers and FSSAI hygiene numbers, modern kitchen background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXHuLQhHOOjjR3g3Pr7WiuSfjRYV8ng5EHQrvYp98pasCYT_dhyu-JtgctVhCG1f9ebOBKyJWK97f22fBrlxEGobng8IPL-EMB_AS-IeqdSLTSYICHp8QJNR-XrXxOJw0a-XCYjO46t3vuRmbb8QahR2ILaCPdo4yzZTs7cwpC3RYKhm5NNbKgEprwSNzC0b7q8ibLHip6Tw79HBSu4E8_FE6p0oSY7VpL6IqB6_0"/>
+<div class="absolute inset-0 bg-primary-container/30 group-hover:bg-primary-container/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest/90 backdrop-blur text-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]">play_arrow</span>
+</div>
+</div>
+<div class="absolute bottom-2 right-2 bg-on-surface/80 backdrop-blur text-surface-bright px-1.5 py-0.5 rounded font-code-metric text-[11px]">
+                5:12 mins
+              </div>
+</div>
+<div>
+<h5 class="font-title text-body-md text-on-surface group-hover:text-primary transition-colors">Adding Products with Variants &amp; FSSAI Nutritional Tags</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Step-by-step catalogue configuration for dietary labels.</p>
+</div>
+</div>
+<!-- Video Card 3 -->
+<div class="group cursor-pointer flex flex-col gap-2">
+<div class="relative w-full h-36 rounded-lg overflow-hidden bg-surface-container shadow-inner">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="Financial analyst examining digital reconciliation ledgers and bank settlement statements on a sleek dual-monitor setup in an Indian fintech corporate office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDxMQys8bLwFHxcUXxr755fN7w2eRdlBwiC6xT7ggDKwdl84w-RsaeUYTxZYKs1P16ReWUcFQDvQ87RSLwiALoUmQVmR2eFWlRpewYwC12Xkc2sMUCId3hpcvPQDjip-0L0r05AqEtP16ssGNsbJMta1XGgXeV1SFZ2g0mvqUIegsfQq5xrwGqpho0BexuUm-C_Oa00IIlP6ljqdSM7x4C3xGHD3z18RZuPMvLmjAE"/>
+<div class="absolute inset-0 bg-primary-container/30 group-hover:bg-primary-container/10 transition-colors flex items-center justify-center">
+<div class="w-10 h-10 rounded-full bg-surface-container-lowest/90 backdrop-blur text-primary flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[24px]">play_arrow</span>
+</div>
+</div>
+<div class="absolute bottom-2 right-2 bg-on-surface/80 backdrop-blur text-surface-bright px-1.5 py-0.5 rounded font-code-metric text-[11px]">
+                4:10 mins
+              </div>
+</div>
+<div>
+<h5 class="font-title text-body-md text-on-surface group-hover:text-primary transition-colors">How to Reconcile Nodal Settlements in 5 Minutes</h5>
+<p class="font-body-sm text-body-sm text-on-surface-variant">End-of-day bank payout exports and tax matching.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. Still Need Help? Escalate to Live Specialist -->
+<section class="bg-gradient-to-br from-surface-container-lowest to-surface-container-low p-space-xl rounded-xl shadow-md flex flex-col gap-space-md relative overflow-hidden">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs text-primary">
+<span class="material-symbols-outlined text-[22px]">headset_mic</span>
+<h3 class="font-title text-title text-on-surface">Still Need Live Help?</h3>
+</div>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded font-bold uppercase">Online</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          If SOP guides do not resolve your hardware or gateway glitch, connect directly to an assigned Indian Merchant Operations Lead.
+        </p>
+<!-- Specialist Avatar & Live Queue Card -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg flex items-center justify-between shadow-sm">
+<div class="flex items-center gap-space-md">
+<div class="relative">
+<div class="w-12 h-12 rounded-full overflow-hidden bg-primary-container">
+<img class="w-full h-full object-cover" data-alt="Professional portrait of Pooja Verma, an experienced female merchant support specialist with an audio headset smiling cordially in a tech operations office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAC1Ses4ak7YfiNQHUOHVnJMOqv1YDS-zZQp1xf8hkvnKBXLRYO1lq_qfmbbQdLWXOFfxN3zHdVXwweV--f86zsxAGhG5GxJ6n7mOK8dMe8W_V4E0sJTm2K0P5zgDtRr8aSuvVcPczU5qUjabLCDItRov7dBwy19Ko8CouV3D0r1KoWjY_9zDSnW5-oLJ1fmI20dUnTjQfi-OQplsQvuA616qE7hKCiDve4PvYWypw"/>
+</div>
+<span class="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full bg-tertiary-fixed-dim ring-2 ring-surface-container-lowest"></span>
+</div>
+<div class="flex flex-col">
+<span class="font-title text-body-md text-on-surface">Pooja Verma</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Senior Desk Officer • Bengaluru</span>
+</div>
+</div>
+<div class="flex flex-col text-right">
+<span class="font-label-sm text-label-sm text-tertiary font-bold">0 Waiting</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Instant Connect</span>
+</div>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-primary hover:bg-primary-container text-on-primary py-3 rounded-lg font-title text-body-md flex items-center justify-center gap-space-xs shadow-sm transition-colors">
+<span class="material-symbols-outlined text-[20px]">chat</span>
+<span>Start Live Support Chat</span>
+</button>
+<!-- Operating Hours Footnote -->
+<div class="flex items-center justify-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">schedule</span>
+<span>24/7 Helpline: 1800-209-9080 (Toll-Free PAN India)</span>
+</div>
+</section>
+</div>
+</div>
+<!-- Inline Vanilla Script for Micro-Interactions -->
+<script>
+    function toggleFaq(id) {
+      const body = document.getElementById('faq-body-' + id);
+      const icon = document.getElementById('faq-icon-' + id);
+      if (body.classList.contains('hidden')) {
+        body.classList.remove('hidden');
+        icon.innerText = 'expand_less';
+      } else {
+        body.classList.add('hidden');
+        icon.innerText = 'expand_more';
+      }
+    }
+
+    let allExpanded = false;
+    function expandAllFaq() {
+      allExpanded = !allExpanded;
+      for (let i = 1; i <= 4; i++) {
+        const body = document.getElementById('faq-body-' + i);
+        const icon = document.getElementById('faq-icon-' + i);
+        if (allExpanded) {
+          body.classList.remove('hidden');
+          icon.innerText = 'expand_less';
+        } else {
+          body.classList.add('hidden');
+          icon.innerText = 'expand_more';
+        }
+      }
+    }
+
+    function setQuery(query) {
+      const input = document.getElementById('kbSearchInput');
+      input.value = query;
+      input.focus();
+    }
+
+    let hasVoted = false;
+    function handleFeedback(type) {
+      if (hasVoted) return;
+      hasVoted = true;
+      const up = document.getElementById('upCount');
+      const down = document.getElementById('downCount');
+      const btnUp = document.getElementById('btnThumbUp');
+      const btnDown = document.getElementById('btnThumbDown');
+      
+      if (type === 'up') {
+        up.innerText = parseInt(up.innerText) + 1;
+        btnUp.classList.add('bg-tertiary-fixed', 'text-on-tertiary-fixed');
+      } else {
+        down.innerText = parseInt(down.innerText) + 1;
+        btnDown.classList.add('bg-error-container', 'text-on-error-container');
+      }
+      btnUp.disabled = true;
+      btnDown.disabled = true;
+    }
+  </script>
+</div></main></div></body></html>

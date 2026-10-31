@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"tertiary-container":"#005739","surface-variant":"#dae2fd","on-primary-fixed":"#001945","secondary-fixed-dim":"#00daf3","background":"#faf8ff","on-error-container":"#93000a","primary":"#003178","on-primary-fixed-variant":"#00429c","on-tertiary-container":"#66d09c","on-secondary":"#ffffff","on-primary":"#ffffff","surface-bright":"#faf8ff","on-secondary-fixed":"#001f24","surface-container-low":"#f2f3ff","error-container":"#ffdad6","surface-dim":"#d2d9f4","on-error":"#ffffff","on-tertiary-fixed-variant":"#005235","primary-fixed-dim":"#b0c6ff","on-secondary-container":"#00616d","on-background":"#131b2e","surface-container-high":"#e2e7ff","on-primary-container":"#a1bbff","on-tertiary":"#ffffff","on-secondary-fixed-variant":"#004f58","primary-container":"#0d47a1","on-surface":"#131b2e","surface-tint":"#2b5bb5","tertiary-fixed-dim":"#71dba6","surface-container-lowest":"#ffffff","surface":"#faf8ff","secondary":"#006875","surface-container-highest":"#dae2fd","on-surface-variant":"#434652","error":"#ba1a1a","surface-container":"#eaedff","primary-fixed":"#d9e2ff","inverse-on-surface":"#eef0ff","on-tertiary-fixed":"#002113","outline-variant":"#c3c6d4","tertiary":"#003d27","inverse-surface":"#283044","secondary-fixed":"#9cf0ff","tertiary-fixed":"#8df7c1","outline":"#737783","secondary-container":"#00e3fd","inverse-primary":"#b0c6ff"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"margin-tablet":"1.5rem","margin":"1rem","margin-desktop":"2rem","space-xl":"1.5rem","space-2xl":"2rem","space-xs":"0.25rem","space-lg":"1rem","space-sm":"0.5rem","space-md":"0.75rem","gutter":"1rem","gutter-desktop":"1.5rem"},fontFamily:{"display":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"code-metric":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"title":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"]},fontSize:{"display":["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"700"}],"code-metric":["14px",{lineHeight:"20px",fontWeight:"700"}],"body-sm":["13px",{lineHeight:"18px",fontWeight:"400"}],"title":["16px",{lineHeight:"22px",fontWeight:"600"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}],"headline-sm":["18px",{lineHeight:"24px",fontWeight:"600"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-md":["13px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"600"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">shield_locked</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary leading-tight font-bold tracking-tight">TRUSTIT</span><span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Merchant Hub</span></div></div><span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface-variant font-semibold">v2.4</span></div><nav class="px-space-md py-space-sm space-y-space-md" data-active-classes="bg-primary-container text-on-primary font-title"><div class="space-y-1"><p class="px-space-md py-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">Operations</p><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-body-md text-body-md">Overview</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="orders" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span class="font-body-md text-body-md">Orders</span></div><span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-secondary text-on-secondary">12</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="products-inventory" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span class="font-body-md text-body-md">Products &amp; Inventory</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="store-management" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span class="font-body-md text-body-md">Store Management</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="delivery" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span class="font-body-md text-body-md">Delivery</span></a></div><div class="space-y-1"><p class="px-space-md py-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">Finance &amp; Growth</p><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="payments-settlements" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span class="font-body-md text-body-md">Payments &amp; Settlements</span></div><span class="font-code-metric text-code-metric px-space-xs py-0.5 rounded bg-tertiary-container text-on-tertiary-container">₹</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="material-symbols-outlined text-[20px]">loyalty</span><span class="font-body-md text-body-md">Subscriptions</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="qr-reviews" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span class="font-body-md text-body-md">QR &amp; Reviews</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="physical-products" href="#"><span class="material-symbols-outlined text-[20px]">point_of_sale</span><span class="font-body-md text-body-md">Physical Products</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">insights</span><span class="font-body-md text-body-md">Analytics</span></a></div><div class="space-y-1"><p class="px-space-md py-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">System</p><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="notifications" href="#"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="font-body-md text-body-md">Notifications</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="support" href="#"><span class="material-symbols-outlined text-[20px]">support_agent</span><span class="font-body-md text-body-md">Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span class="font-body-md text-body-md">Settings</span></a></div></nav></div><div class="p-space-md bg-surface-container-low m-space-md rounded-xl space-y-space-sm"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wider">Compliance Status</span><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified_user</span></div><div class="space-y-space-xs"><div class="flex items-center justify-between bg-surface-container-lowest px-space-sm py-space-xs rounded"><span class="font-label-sm text-label-sm text-on-surface-variant">GSTIN</span><span class="font-label-sm text-label-sm text-tertiary-container font-bold flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">check_circle</span> VERIFIED</span></div><div class="flex items-center justify-between bg-surface-container-lowest px-space-sm py-space-xs rounded"><span class="font-label-sm text-label-sm text-on-surface-variant">FSSAI</span><span class="font-label-sm text-label-sm text-tertiary-container font-bold flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">check_circle</span> VERIFIED</span></div></div><div class="flex items-center justify-between pt-space-xs"><span class="font-label-sm text-label-sm text-outline">Merchant ID</span><span class="font-code-metric text-code-metric text-primary font-bold">TR-883921</span></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-space-xs rounded-lg"><span class="material-symbols-outlined text-secondary text-[20px]">store</span><div class="flex items-center gap-space-sm"><span class="font-title text-title text-on-surface font-semibold">Sri Krishna Gourmet, Indiranagar BLR</span><span class="px-space-xs py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container animate-pulse"></span> LIVE</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span></div><div class="hidden xl:flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1.5 rounded-full shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><span class="material-symbols-outlined text-secondary text-[18px]">speaker_phone</span><span class="font-label-sm text-label-sm text-on-surface font-semibold">SoundBox 4G</span><span class="w-2 h-2 rounded-full bg-tertiary-container"></span><span class="font-label-sm text-label-sm text-tertiary-container font-bold">SYNCED</span></div></div><div class="flex items-center gap-space-md"><div class="relative hidden lg:block w-64"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span><input class="w-full bg-surface-container-low rounded-lg pl-9 pr-space-md py-1.5 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-colors" placeholder="Search UTR, Order ID, UPI..." type="text"/></div><button class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors"><span class="material-symbols-outlined text-[18px]">download</span><span class="font-label-md text-label-md font-semibold">Settlement</span></button><button class="w-9 h-9 rounded-lg bg-surface-container-low hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">help_outline</span></button><div class="flex items-center gap-space-sm pl-space-sm"><div class="flex flex-col text-right hidden sm:block"><span class="font-title text-title text-on-surface font-semibold">Rajesh Sharma</span><span class="font-label-sm text-label-sm text-outline">Store Owner</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Dynamic View Toggle & Breadcrumb Subheader -->
+<div class="px-space-desktop pt-space-xl pb-space-lg flex flex-col md:flex-row md:items-center justify-between gap-space-md bg-surface">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">
+<span>Operations</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Finance &amp; Growth</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">Subscriptions &amp; Store Merchandise</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">Merchant SaaS Subscriptions &amp; Physical Merchandise Hub</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+        Dedicated billing management for TRUSTIT software subscription plans and hardware store merchandise (QR stands, SoundBox, printers). Completely segregated from order settlement accounts.
+      </p>
+</div>
+<!-- Segmented Module View Controller -->
+<div class="flex items-center self-start md:self-auto bg-surface-container-high p-1 rounded-xl shadow-inner">
+<button class="module-tab-btn px-space-md py-space-sm rounded-lg font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs" id="tab-all-btn" onclick="switchView('all')">
+<span class="material-symbols-outlined text-[18px]">dashboard</span>
+<span>Unified Hub</span>
+</button>
+<button class="module-tab-btn px-space-md py-space-sm rounded-lg font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface flex items-center gap-space-xs" id="tab-saas-btn" onclick="switchView('saas')">
+<span class="material-symbols-outlined text-[18px]">loyalty</span>
+<span>Module B: SaaS Plans</span>
+</button>
+<button class="module-tab-btn px-space-md py-space-sm rounded-lg font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface flex items-center gap-space-xs" id="tab-merch-btn" onclick="switchView('merch')">
+<span class="material-symbols-outlined text-[18px]">point_of_sale</span>
+<span>Module C: Hardware Kits</span>
+</button>
+</div>
+</div>
+<div class="px-space-desktop pb-space-2xl space-y-space-xl">
+<!-- CRITICAL STRICT ACCOUNTING SEPARATION BANNER -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest shadow-md p-space-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-space-lg">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary-container"></div>
+<div class="flex items-start gap-space-md pl-space-xs">
+<div class="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 text-primary">
+<span class="material-symbols-outlined text-[28px]">account_balance</span>
+</div>
+<div class="space-y-0.5">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wider px-space-xs py-0.5 rounded bg-surface-variant text-primary font-bold">Regulatory Banking Compliance</span>
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-tertiary-container font-bold">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-ping"></span>
+              SEPARATE ESCROW CHANNEL
+            </span>
+</div>
+<h2 class="font-title text-title text-on-surface font-bold">Strict Accounting Separation Protocol</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+            Subscription fees and physical merchandise orders are billed independently. They are <strong class="text-on-surface font-semibold">NEVER deducted or commingled</strong> with your customer food/grocery order settlement payouts. Nodal bank payouts remain 100% net of customer cart flows.
+          </p>
+</div>
+</div>
+<div class="shrink-0 flex items-center gap-space-sm self-end md:self-auto bg-surface-container-low px-space-md py-space-sm rounded-lg">
+<span class="material-symbols-outlined text-secondary text-[20px]">verified</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">Merchant Escrow Nodal ID</span>
+<span class="font-code-metric text-code-metric text-primary font-bold">YES-NODAL-BLR-0941</span>
+</div>
+</div>
+</div>
+<!-- SECTION 1: MODULE B – MERCHANT SUBSCRIPTION PLANS -->
+<section class="space-y-space-lg transition-all duration-300" id="module-saas-section">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[20px]">layers</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Core Software Tier</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">MODULE B – Merchant Subscription Plans</h2>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-sm text-label-sm bg-tertiary-container text-on-tertiary-container px-space-sm py-1 rounded font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">auto_mode</span>
+            E-MANDATE ACTIVE
+          </span>
+<span class="font-body-sm text-body-sm text-outline">Cycle: Monthly 12th</span>
+</div>
+</div>
+<!-- Current Active Tier Spotlight Card (Bento Style) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<div class="lg:col-span-8 bg-surface-container-lowest rounded-xl shadow-md p-space-xl flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -right-8 -top-8 w-40 h-40 bg-surface-variant/40 rounded-full blur-3xl pointer-events-none"></div>
+<div>
+<div class="flex flex-wrap items-center justify-between gap-space-sm pb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="px-space-sm py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm uppercase font-bold tracking-wider">Current Running Tier</span>
+<span class="font-label-sm text-label-sm text-tertiary-container font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span> Active (Next renewal: 12 Nov 2024)
+                </span>
+</div>
+<span class="font-code-metric text-code-metric px-space-sm py-0.5 rounded bg-surface-container text-primary font-bold">AUTOPAY VIA UPI / e-NACH</span>
+</div>
+<div class="flex flex-col sm:flex-row sm:items-baseline gap-space-sm sm:gap-space-md mb-space-md">
+<h3 class="font-headline-lg text-headline-lg text-primary font-bold tracking-tight">TRUSTIT Pro Merchant</h3>
+<div class="flex items-baseline gap-1">
+<span class="font-display text-display text-on-surface font-bold">₹49</span>
+<span class="font-body-md text-body-md text-on-surface-variant font-normal">/ month + 18% GST</span>
+</div>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-space-lg">
+              Enterprise grade automated omnichannel engine configured for your Indiranagar multi-service gourmet hub with real-time 3PL delivery orchestration.
+            </p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md pt-space-xs">
+<div class="flex items-center gap-space-sm bg-surface-container-low p-space-sm rounded-lg">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">category</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Multi-Category Catalogue</span>
+<span class="font-label-sm text-label-sm text-outline">Grocery, Pharmacy &amp; Gourmet ready</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm bg-surface-container-low p-space-sm rounded-lg">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">volume_up</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">SoundBox 4G Audio Alerts</span>
+<span class="font-label-sm text-label-sm text-outline">Realtime Indian multilingual voice feedback</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm bg-surface-container-low p-space-sm rounded-lg">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">call_split</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">EasySplit Nodal Settlement</span>
+<span class="font-label-sm text-label-sm text-outline">Automated vendor split payouts</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm bg-surface-container-low p-space-sm rounded-lg">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">two_wheeler</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">3PL Broadcast Integration</span>
+<span class="font-label-sm text-label-sm text-outline">Auto-dispatch Dunzo / Shadowfax / Porter</span>
+</div>
+</div>
+</div>
+</div>
+<div class="pt-space-lg flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[22px]">badge</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold">Includes 5 Operational Staff Accounts (4 Used)</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-colors">Manage Staff Limits</button>
+<button class="px-space-md py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md font-semibold hover:bg-primary transition-colors">Billing Settings</button>
+</div>
+</div>
+</div>
+<!-- Mandate & Auto-Debit Specs -->
+<div class="lg:col-span-4 bg-surface-container-lowest rounded-xl shadow-md p-space-xl flex flex-col justify-between">
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wider">Recurring Mandate Spec</span>
+<span class="material-symbols-outlined text-primary text-[20px]">credit_card</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-xl space-y-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline">Authorized Bank</span>
+<span class="font-body-sm text-body-sm text-on-surface font-bold">HDFC Bank Limited</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline">Linked Account</span>
+<span class="font-code-metric text-code-metric text-on-surface">•••• 8729 (Current A/c)</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline">e-Mandate UMN / Auth</span>
+<span class="font-code-metric text-code-metric text-primary font-bold">MANDATE-99214</span>
+</div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline">Debit Frequency</span>
+<span class="font-body-sm text-body-sm text-on-surface">Monthly Recurring</span>
+</div>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[18px] shrink-0 mt-0.5">info</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Next invoice deduction of ₹57.82 (incl. 18% GST) will be auto-debited on 12 Nov 2024 via NPCI e-NACH rails.</span>
+</div>
+</div>
+<div class="pt-space-md flex flex-col gap-2">
+<button class="w-full py-2 px-space-md rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md font-semibold text-center transition-colors">
+              Update Mandate Payment Mode
+            </button>
+<span class="font-label-sm text-label-sm text-outline text-center">RBI e-Mandate Framework Compliant</span>
+</div>
+</div>
+</div>
+<!-- Subscription Tier Cards Comparison -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-lg pt-space-xs">
+<!-- Starter Plan -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg flex flex-col justify-between hover:shadow-lg transition-all duration-200">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-title text-title text-on-surface font-bold">Starter Plan</span>
+<span class="font-label-sm text-label-sm text-outline px-space-xs py-0.5 rounded bg-surface-container">Tier 1</span>
+</div>
+<div class="flex items-baseline gap-1 mb-space-md">
+<span class="font-display text-display text-on-surface font-bold">₹29</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ month + GST</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-lg">
+              Designed for boutique individual counters with focused retail inventory and standard fulfillment.
+            </p>
+<ul class="space-y-space-sm font-body-sm text-body-sm text-on-surface-variant mb-space-xl">
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-outline text-[18px]">check</span>
+<span>Single category store setup</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-outline text-[18px]">check</span>
+<span>Standard T+1 24h settlement batch</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-outline text-[18px]">check</span>
+<span>Manual KOT printing &amp; slips</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-outline text-[18px]">check</span>
+<span>1 Store Staff login account</span>
+</li>
+<li class="flex items-center gap-space-xs text-outline line-through opacity-60">
+<span class="material-symbols-outlined text-[18px]">close</span>
+<span>SoundBox 4G automation</span>
+</li>
+</ul>
+</div>
+<button class="w-full py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-colors">
+            Downgrade Plan
+          </button>
+</div>
+<!-- Growth / Pro Plan (Active) -->
+<div class="bg-surface-container-lowest rounded-xl shadow-xl p-space-lg flex flex-col justify-between relative ring-2 ring-primary-container">
+<div class="absolute -top-3 left-1/2 -translate-x-1/2 px-space-md py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm uppercase font-bold tracking-widest shadow-sm">
+            Current Active Plan
+          </div>
+<div>
+<div class="flex items-center justify-between mb-space-sm pt-space-xs">
+<span class="font-title text-title text-primary font-bold">Growth / Pro Plan</span>
+<span class="font-label-sm text-label-sm text-on-primary bg-primary rounded px-space-xs py-0.5 font-bold">Tier 2</span>
+</div>
+<div class="flex items-baseline gap-1 mb-space-md">
+<span class="font-display text-display text-primary font-bold">₹49</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ month + GST</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-lg">
+              Full hyper-growth toolkit for modern Indian retail, quick-service eateries, and high-frequency delivery.
+            </p>
+<ul class="space-y-space-sm font-body-sm text-body-sm text-on-surface mb-space-xl">
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check_circle</span>
+<span class="font-medium">Multi-category catalogue sync</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check_circle</span>
+<span class="font-medium">SoundBox 4G cloud integration</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check_circle</span>
+<span class="font-medium">EasySplit instant nodal routing</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check_circle</span>
+<span class="font-medium">3PL automated surge failover</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check_circle</span>
+<span class="font-medium">Up to 5 Store Staff logins</span>
+</li>
+</ul>
+</div>
+<button class="w-full py-2.5 rounded-lg bg-surface-container-high text-on-surface-variant font-label-md text-label-md font-bold cursor-default flex items-center justify-center gap-space-xs" disabled="">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+            Active Subscription
+          </button>
+</div>
+<!-- Enterprise Hyperlocal -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg flex flex-col justify-between hover:shadow-lg transition-all duration-200">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-title text-title text-on-surface font-bold">Enterprise Hyperlocal</span>
+<span class="font-label-sm text-label-sm text-secondary px-space-xs py-0.5 rounded bg-surface-container font-bold">Tier 3</span>
+</div>
+<div class="flex items-baseline gap-1 mb-space-md">
+<span class="font-display text-display text-on-surface font-bold">₹99</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ month + GST</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-lg">
+              For scaling retail brands, supermarket franchises, and chain dark stores across city corridors.
+            </p>
+<ul class="space-y-space-sm font-body-sm text-body-sm text-on-surface-variant mb-space-xl">
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check</span>
+<span class="text-on-surface font-medium">Multi-branch command (up to 5 outlets)</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check</span>
+<span class="text-on-surface font-medium">Dedicated Priority Account Manager</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check</span>
+<span>Priority 3PL broadcast radius surge</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check</span>
+<span>Automated GST e-invoicing export</span>
+</li>
+<li class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">check</span>
+<span>Unlimited Staff accounts &amp; RBAC</span>
+</li>
+</ul>
+</div>
+<button class="w-full py-2.5 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md font-bold transition-colors shadow-sm">
+            Upgrade to Enterprise
+          </button>
+</div>
+</div>
+<!-- Subscription Payment History Table -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-md gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">history</span>
+<h3 class="font-title text-title text-on-surface font-bold">Subscription Payment History &amp; Tax Invoices</h3>
+</div>
+<span class="font-label-sm text-label-sm text-outline">SAC Code: 998313 (IT &amp; Software SaaS Services)</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-low font-label-sm text-label-sm text-outline uppercase tracking-wider">
+<tr>
+<th class="py-2.5 px-space-md rounded-l-lg">Invoice Number</th>
+<th class="py-2.5 px-space-md">Date</th>
+<th class="py-2.5 px-space-md">Base Amount</th>
+<th class="py-2.5 px-space-md">GST (18%)</th>
+<th class="py-2.5 px-space-md">Total Paid</th>
+<th class="py-2.5 px-space-md">Billing Mode</th>
+<th class="py-2.5 px-space-md">Status</th>
+<th class="py-2.5 px-space-md text-right rounded-r-lg">Tax Receipt</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-space-md px-space-md font-code-metric text-code-metric text-primary font-bold">#SUB-2024-10</td>
+<td class="py-space-md px-space-md text-on-surface">12 Oct 2024</td>
+<td class="py-space-md px-space-md font-semibold text-on-surface">₹49.00</td>
+<td class="py-space-md px-space-md text-on-surface-variant">₹8.82</td>
+<td class="py-space-md px-space-md font-bold text-on-surface">₹57.82</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container text-on-surface">
+<span class="material-symbols-outlined text-[14px]">bolt</span> UPI Autopay
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-tertiary-container text-on-tertiary-container font-bold flex items-center gap-1 w-fit">
+<span class="material-symbols-outlined text-[14px]">check</span> Paid
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="inline-flex items-center gap-1 font-label-md text-label-md text-primary font-semibold hover:underline">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span> Download Tax Invoice
+                  </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-space-md px-space-md font-code-metric text-code-metric text-primary font-bold">#SUB-2024-09</td>
+<td class="py-space-md px-space-md text-on-surface">12 Sep 2024</td>
+<td class="py-space-md px-space-md font-semibold text-on-surface">₹49.00</td>
+<td class="py-space-md px-space-md text-on-surface-variant">₹8.82</td>
+<td class="py-space-md px-space-md font-bold text-on-surface">₹57.82</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container text-on-surface">
+<span class="material-symbols-outlined text-[14px]">bolt</span> UPI Autopay
+                  </span>
+</td>
+<td class="py-space-md px-space-md">
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-tertiary-container text-on-tertiary-container font-bold flex items-center gap-1 w-fit">
+<span class="material-symbols-outlined text-[14px]">check</span> Paid
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="inline-flex items-center gap-1 font-label-md text-label-md text-primary font-semibold hover:underline">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span> Download Tax Invoice
+                  </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- SECTION 2: MODULE C – PHYSICAL MERCHANDISE & STORE HARDWARE ORDERS -->
+<section class="space-y-space-lg pt-space-md transition-all duration-300" id="module-merch-section">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-secondary text-on-secondary flex items-center justify-center font-bold">
+<span class="material-symbols-outlined text-[20px]">storefront</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Store Hardware Procurement</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">MODULE C – Physical Merchandise &amp; Store Hardware Orders</h2>
+</div>
+</div>
+<span class="font-label-sm text-label-sm px-space-sm py-1 rounded bg-surface-container font-bold text-on-surface">
+          HSN Chapter: 8471 (POS Terminals &amp; QR Peripherals)
+        </span>
+</div>
+<!-- Active Hardware in Store Overview Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg">
+<div class="flex flex-wrap items-center justify-between pb-space-md border-b border-surface-container gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary-container text-[22px]">devices</span>
+<h3 class="font-title text-title text-on-surface font-bold">Active Deployed Hardware in Store</h3>
+</div>
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-tertiary-fixed-dim text-on-tertiary-fixed font-bold">
+            All 4 Units Operational
+          </span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md pt-space-md">
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">speaker_phone</span>
+</div>
+<div>
+<span class="font-body-md text-body-md font-bold text-on-surface">1x 4G SoundBox</span>
+<p class="font-label-sm text-label-sm text-outline">IMEI: 864902188421 • Synced</p>
+</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container"></span>
+</div>
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">qr_code_scanner</span>
+</div>
+<div>
+<span class="font-body-md text-body-md font-bold text-on-surface">2x Dynamic QR Standees</span>
+<p class="font-label-sm text-label-sm text-outline">Counter 1 &amp; Dining A • Acrylic</p>
+</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container"></span>
+</div>
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-xl">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">print</span>
+</div>
+<div>
+<span class="font-body-md text-body-md font-bold text-on-surface">1x Bluetooth KOT Printer</span>
+<p class="font-label-sm text-label-sm text-outline">2-Inch Thermal • Kitchen Stn</p>
+</div>
+</div>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container"></span>
+</div>
+</div>
+</div>
+<!-- Order New Hardware / Physical Kit Section (Catalogue Cards) -->
+<div>
+<div class="pb-space-sm">
+<h3 class="font-title text-title text-on-surface font-bold">Order New Store Hardware &amp; Operational Kits</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Billed separately via Instant UPI / Cards with GST ITC tax invoice issued to your business entity.</p>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg pt-space-xs">
+<!-- Item 1: SoundBox -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col justify-between hover:shadow-lg transition-all duration-200">
+<div class="relative h-44 bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Modern 4G audio soundbox payment terminal with compact teal and navy casing sitting on a clean retail wooden counter with soft studio lighting and crisp typography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDa-KybTuGjtGV9ir2xGSjSt1Tr0g5dqM2zQARQROt1Na5IcZg5RHPsheoIrsJHr3TN6hTz8BrrrCVhNR5elKwE6lC2eIcPKEzm-zrHtaVq3sBOex-aH-sLdJnAh41q5A2ykXnu9c_8-Nxo5b1ro-UnOnDDft5dVqOEOgxSNKB6iITq0AtmeQq-75GkcSUesNw27r7WAPxzK931HlVP9nAkYl83MwF0tEsiwoWwYoY"/>
+<span class="absolute top-2 left-2 px-space-xs py-0.5 rounded bg-primary text-on-primary font-label-sm text-label-sm font-bold uppercase">4G Dual SIM</span>
+</div>
+<div class="p-space-md flex flex-col justify-between flex-1">
+<div>
+<h4 class="font-title text-title text-on-surface font-bold mb-1">TRUSTIT 4G Voice SoundBox</h4>
+<div class="flex items-baseline gap-1 mb-space-xs">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">₹999.00</span>
+<span class="font-label-sm text-label-sm text-outline">one-time</span>
+</div>
+<p class="font-label-sm text-label-sm text-tertiary-container font-bold mb-space-sm">₹0 Monthly Rental • Life Long Audio</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+                  Includes pre-loaded multilingual voice sim (Airtel/Jio) with 5-day battery standby and instant settlement chime.
+                </p>
+</div>
+<button class="w-full py-2 rounded-lg bg-primary-container hover:bg-primary text-on-primary font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">shopping_cart</span> Order Replacement
+              </button>
+</div>
+</div>
+<!-- Item 2: Wooden Standee -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col justify-between hover:shadow-lg transition-all duration-200">
+<div class="relative h-44 bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Premium engraved oak wood QR code payment standee on a polished stone tabletop with elegant restaurant background and warm ambient lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAShAo50LZExzkDuxY1y76P98ATiFpCM5yyOoCTH7K8uZoMdvYPtlwepKHhGxzF_zGxX-qGcfn7Uezcdr0L2lkB6xwA2UJdQ5cfLvo89waztMrVAk7usDg9oa_fM9t6ANIctCsNPIol6XCOEUwh3bfs6295LoQV3FRp5kISfX6ig9VXsIicPvtTmbcIJvDY8WQCoc4zAXlVLS6G5-23LZso0HAc8FmsvsMoaB-QFb0"/>
+<span class="absolute top-2 left-2 px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface font-label-sm text-label-sm font-bold uppercase">Eco Wood</span>
+</div>
+<div class="p-space-md flex flex-col justify-between flex-1">
+<div>
+<h4 class="font-title text-title text-on-surface font-bold mb-1">Custom Laser-Engraved Wooden QR Standee</h4>
+<div class="flex items-baseline gap-1 mb-space-xs">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">₹249.00</span>
+<span class="font-label-sm text-label-sm text-outline">per unit</span>
+</div>
+<p class="font-label-sm text-label-sm text-secondary font-bold mb-space-sm">Water-resistant • Tamper-proof</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+                  Handcrafted oak finish with precision laser-etched dynamic store QR code and custom merchant logo plate.
+                </p>
+</div>
+<button class="w-full py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">add_shopping_cart</span> Order Pack of 5 (₹999)
+              </button>
+</div>
+</div>
+<!-- Item 3: Acrylic Display -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col justify-between hover:shadow-lg transition-all duration-200">
+<div class="relative h-44 bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="High quality clear acrylic payment stand with cyan trust badge and QR code on a supermarket billing counter under crisp bright indoor lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDiqZhyNUyS7auAunPXbpQOGjF1ph7yavrUuRd0VjbrOfWuHu77EGn8i2P6p6CdP9mR-6PRRvDUolBxzgGTtu3oupSXEWSGsIKQJ4aMhGgoFRRsvjzvdo2nFqF_diRzsZ0nfqTm1h2KaWpn0LKAEAcvCbW8V1A7IU5BWygpeGXh09ymvDqQJhqkAK4RUS0BcSPyq7ZwWd0-EKtmqeQg8JpqbA9_VJDNG00rRirl2is"/>
+<span class="absolute top-2 left-2 px-space-xs py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm font-bold uppercase">Heavy Duty</span>
+</div>
+<div class="p-space-md flex flex-col justify-between flex-1">
+<div>
+<h4 class="font-title text-title text-on-surface font-bold mb-1">Heavy-Duty Acrylic Counter QR Display</h4>
+<div class="flex items-baseline gap-1 mb-space-xs">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">₹149.00</span>
+<span class="font-label-sm text-label-sm text-outline">per unit</span>
+</div>
+<p class="font-label-sm text-label-sm text-primary font-bold mb-space-sm">High-Visibility Counter Placement</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+                  Scratch-resistant polycarbonate casing angled at 45 degrees for swift customer phone scanner focus.
+                </p>
+</div>
+<button class="w-full py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">add_shopping_cart</span> Order More
+              </button>
+</div>
+</div>
+<!-- Item 4: Thermal Paper Rolls -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md overflow-hidden flex flex-col justify-between hover:shadow-lg transition-all duration-200">
+<div class="relative h-44 bg-surface-container overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Box of high quality white thermal printer paper rolls for point of sale billing machine in clean warehouse commercial lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqdyBMke7fCrmxpkKqL96Cqz6VFOM8ehasSgaqA-pVvdF9ivYX-vbydwGPZEHZb6E_OemfhLIa48Ak_fX1MVY3mDDOllunfyduWS_e9XsgLknJcy9uOweQsqqEGOaIdbasKU7p8XCglbyRZJoxhHBOMxlnqB5jM6Y0cpDod6yY3_WE8Ha8zSMw_gu43ixHYjfB0sCHAn1t1MVkzsGRMWV6d65ruQQHCgRV3nZ8wl8"/>
+<span class="absolute top-2 left-2 px-space-xs py-0.5 rounded bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm font-bold uppercase">Box of 24</span>
+</div>
+<div class="p-space-md flex flex-col justify-between flex-1">
+<div>
+<h4 class="font-title text-title text-on-surface font-bold mb-1">Thermal Receipt Rolls (80mm x 50m)</h4>
+<div class="flex items-baseline gap-1 mb-space-xs">
+<span class="font-headline-sm text-headline-sm text-primary font-bold">₹450.00</span>
+<span class="font-label-sm text-label-sm text-outline">/ 24 Rolls</span>
+</div>
+<p class="font-label-sm text-label-sm text-tertiary-container font-bold mb-space-sm">BPA-Free Premium Grade Paper</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+                  Crisp dark thermal printout compatible with standard 2-inch and 3-inch Bluetooth KOT store printers.
+                </p>
+</div>
+<button class="w-full py-2 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span> Re-order Rolls
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Physical Merchandise Order History Ledger -->
+<div class="bg-surface-container-lowest rounded-xl shadow-md p-space-lg">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between pb-space-md gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[22px]">local_shipping</span>
+<h3 class="font-title text-title text-on-surface font-bold">Store Hardware Order History &amp; Dispatch Tracking</h3>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Logistics Partner: BlueDart / Delhivery Surface</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="bg-surface-container-low font-label-sm text-label-sm text-outline uppercase tracking-wider">
+<tr>
+<th class="py-2.5 px-space-md rounded-l-lg">Order ID</th>
+<th class="py-2.5 px-space-md">Date</th>
+<th class="py-2.5 px-space-md">Hardware Items Ordered</th>
+<th class="py-2.5 px-space-md">Total Paid</th>
+<th class="py-2.5 px-space-md">Courier AWB / Tracking</th>
+<th class="py-2.5 px-space-md">Fulfillment Status</th>
+<th class="py-2.5 px-space-md text-right rounded-r-lg">Hardware Tax Invoice</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-space-md px-space-md font-code-metric text-code-metric text-primary font-bold">#MERCH-8821</td>
+<td class="py-space-md px-space-md text-on-surface">15 Oct 2024</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">4G Voice SoundBox + 2 QR Standees</span>
+<span class="font-label-sm text-label-sm text-outline">Paid via Razorpay / Corporate Card</span>
+</div>
+</td>
+<td class="py-space-md px-space-md font-bold text-on-surface">₹1,299.00</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-1 font-code-metric text-code-metric text-secondary font-semibold">
+<span class="material-symbols-outlined text-[16px]">local_shipping</span>
+<span>BlueDart: #BD8892104</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-tertiary-container text-on-tertiary-container font-bold flex items-center gap-1 w-fit">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Delivered &amp; Configured
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="inline-flex items-center gap-1 font-label-md text-label-md text-primary font-semibold hover:underline">
+<span class="material-symbols-outlined text-[16px]">download</span> Download Hardware GST Invoice
+                  </button>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-low/50 transition-colors">
+<td class="py-space-md px-space-md font-code-metric text-code-metric text-primary font-bold">#MERCH-7410</td>
+<td class="py-space-md px-space-md text-on-surface">28 Aug 2024</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="font-semibold text-on-surface">Pack of 10 Acrylic QR Standees</span>
+<span class="font-label-sm text-label-sm text-outline">Paid via UPI Intent</span>
+</div>
+</td>
+<td class="py-space-md px-space-md font-bold text-on-surface">₹990.00</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-1 font-code-metric text-code-metric text-on-surface-variant">
+<span>Delhivery: #DLH994012</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface font-semibold flex items-center gap-1 w-fit">
+<span class="material-symbols-outlined text-[14px]">done_all</span> Delivered
+                  </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="inline-flex items-center gap-1 font-label-md text-label-md text-primary font-semibold hover:underline">
+<span class="material-symbols-outlined text-[16px]">download</span> Download Invoice
+                  </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Bottom Statutory & GST Input Tax Credit Compliance Note -->
+<div class="rounded-xl bg-surface-container-low p-space-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center shrink-0 text-primary shadow-sm">
+<span class="material-symbols-outlined text-[24px]">verified_user</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-bold">100% Tax Credit Eligible Under Indian GST Laws</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant max-w-4xl pt-0.5">
+            All hardware and SaaS subscription transactions are processed with official GST Tax Invoices under SAC / HSN codes (<strong class="text-on-surface font-semibold">SAC 998313</strong> for SaaS software licensing, <strong class="text-on-surface font-semibold">HSN 8471</strong> for Physical Store Hardware) with 100% merchant Input Tax Credit (ITC) eligibility reflected in your monthly GSTR-2B.
+          </p>
+</div>
+</div>
+<div class="flex items-center gap-space-md self-end md:self-auto shrink-0">
+<div class="flex flex-col text-right">
+<span class="font-label-sm text-label-sm text-outline">Verified Merchant GSTIN</span>
+<span class="font-code-metric text-code-metric text-tertiary-container font-bold">29ABCDE1234F1Z5</span>
+</div>
+<button class="px-space-md py-2 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md font-semibold shadow-sm hover:bg-surface-container transition-colors">
+          GSTIN Filing Help
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function switchView(tab) {
+    const saasSection = document.getElementById('module-saas-section');
+    const merchSection = document.getElementById('module-merch-section');
+    const tabAll = document.getElementById('tab-all-btn');
+    const tabSaas = document.getElementById('tab-saas-btn');
+    const tabMerch = document.getElementById('tab-merch-btn');
+
+    const resetButtons = () => {
+      [tabAll, tabSaas, tabMerch].forEach(btn => {
+        btn.className = 'module-tab-btn px-space-md py-space-sm rounded-lg font-label-md text-label-md transition-all duration-200 text-on-surface-variant hover:text-on-surface flex items-center gap-space-xs';
+      });
+    };
+
+    resetButtons();
+
+    if (tab === 'all') {
+      saasSection.classList.remove('hidden');
+      merchSection.classList.remove('hidden');
+      tabAll.className = 'module-tab-btn px-space-md py-space-sm rounded-lg font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs';
+    } else if (tab === 'saas') {
+      saasSection.classList.remove('hidden');
+      merchSection.classList.add('hidden');
+      tabSaas.className = 'module-tab-btn px-space-md py-space-sm rounded-lg font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs';
+    } else if (tab === 'merch') {
+      saasSection.classList.add('hidden');
+      merchSection.classList.remove('hidden');
+      tabMerch.className = 'module-tab-btn px-space-md py-space-sm rounded-lg font-label-md text-label-md transition-all duration-200 bg-surface-container-lowest text-primary shadow-sm font-bold flex items-center gap-space-xs';
+    }
+  }
+</script></main></div></body></html>

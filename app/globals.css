@@ -1,5 +1,51 @@
 @import "tailwindcss";
 
+@theme {
+  --color-primary: #003178;
+  --color-primary-container: #0d47a1;
+  --color-on-primary: #ffffff;
+  --color-on-primary-container: #a1bbff;
+  --color-primary-fixed: #d9e2ff;
+  --color-primary-fixed-dim: #b0c6ff;
+  --color-on-primary-fixed: #001945;
+  --color-on-primary-fixed-variant: #00429c;
+
+  --color-secondary: #006875;
+  --color-secondary-container: #00e3fd;
+  --color-on-secondary: #ffffff;
+  --color-on-secondary-container: #00616d;
+  --color-secondary-fixed: #9cf0ff;
+  --color-secondary-fixed-dim: #00daf3;
+
+  --color-tertiary: #003d27;
+  --color-tertiary-container: #005739;
+  --color-on-tertiary: #ffffff;
+  --color-on-tertiary-container: #66d09c;
+  --color-tertiary-fixed: #8df7c1;
+  --color-tertiary-fixed-dim: #71dba6;
+  --color-on-tertiary-fixed: #002113;
+
+  --color-surface: #faf8ff;
+  --color-surface-dim: #d2d9f4;
+  --color-surface-bright: #faf8ff;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f2f3ff;
+  --color-surface-container: #eaedff;
+  --color-surface-container-high: #e2e7ff;
+  --color-surface-container-highest: #dae2fd;
+  --color-on-surface: #131b2e;
+  --color-on-surface-variant: #434652;
+  --color-outline: #737783;
+  --color-outline-variant: #c3c6d4;
+
+  --color-error: #ba1a1a;
+  --color-error-container: #ffdad6;
+  --color-on-error: #ffffff;
+  --color-on-error-container: #93000a;
+
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -12,9 +58,9 @@ body {
 }
 
 body {
-  background: #f8fafc;
-  color: #0f172a;
-  font-family: Arial, Helvetica, sans-serif;
+  background: #faf8ff;
+  color: #131b2e;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 a {
@@ -286,7 +332,7 @@ button {
 .action-card--orange .action-icon { color: #da7b19; background: #fff4e8; }
 
 .dashboard-lower-grid { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(310px, .9fr); gap: 20px; align-items: start; }
-.count-badge { padding: 6px 10px; border: 1px solid #e5eaf1; border-radius: 999px; color: #758399; background: #f8fafc; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.count-badge { padding: 6px 10px; border: 1px solid #e5eaf1; border-radius: 999px; color: #758399; background: #faf8ff; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .business-list { display: grid; }
 .business-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-width: 0; padding: 13px 2px; border-top: 1px solid #edf0f4; }
 .business-row:first-child { border-top: 0; }

@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"background":"#faf8ff","on-background":"#131b2e","tertiary":"#003d27","error":"#ba1a1a","on-tertiary-container":"#66d09c","outline":"#737783","secondary-container":"#00e3fd","on-primary":"#ffffff","surface-container-lowest":"#ffffff","on-surface-variant":"#434652","on-secondary-fixed":"#001f24","on-tertiary-fixed-variant":"#005235","on-tertiary-fixed":"#002113","tertiary-fixed-dim":"#71dba6","on-secondary":"#ffffff","on-primary-container":"#a1bbff","surface-container":"#eaedff","on-secondary-fixed-variant":"#004f58","tertiary-fixed":"#8df7c1","inverse-on-surface":"#eef0ff","surface-tint":"#2b5bb5","error-container":"#ffdad6","on-primary-fixed-variant":"#00429c","primary":"#003178","surface-container-low":"#f2f3ff","surface":"#faf8ff","secondary-fixed-dim":"#00daf3","secondary":"#006875","primary-fixed":"#d9e2ff","primary-fixed-dim":"#b0c6ff","on-error-container":"#93000a","on-surface":"#131b2e","on-tertiary":"#ffffff","secondary-fixed":"#9cf0ff","surface-bright":"#faf8ff","on-primary-fixed":"#001945","surface-dim":"#d2d9f4","tertiary-container":"#005739","primary-container":"#0d47a1","inverse-primary":"#b0c6ff","on-secondary-container":"#00616d","surface-variant":"#dae2fd","outline-variant":"#c3c6d4","on-error":"#ffffff","surface-container-highest":"#dae2fd","inverse-surface":"#283044","surface-container-high":"#e2e7ff"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-2xl":"2rem","space-xs":"0.25rem","space-xl":"1.5rem","margin-tablet":"1.5rem","margin-desktop":"2rem","gutter-desktop":"1.5rem","space-md":"0.75rem","margin":"1rem","space-lg":"1rem","space-sm":"0.5rem","gutter":"1rem"},fontFamily:{"label-sm":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"code-metric":["Plus Jakarta Sans"],"title":["Plus Jakarta Sans"],"display":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"]},fontSize:{"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"700"}],"headline-sm":["18px",{lineHeight:"24px",fontWeight:"600"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"700"}],"code-metric":["14px",{lineHeight:"20px",fontWeight:"700"}],"title":["16px",{lineHeight:"22px",fontWeight:"600"}],"display":["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],"body-sm":["13px",{lineHeight:"18px",fontWeight:"400"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"label-md":["13px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"600"}]}}}};</script></head><body class="bg-surface font-body-md text-body-md text-on-surface"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">verified_user</span></div><div class="flex flex-col"><span class="font-title text-title text-primary tracking-tight">TRUSTIT</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Merchant Portal</span></div></div><div class="px-space-xs py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm">MSME</div></div><nav class="flex flex-col gap-0.5 px-space-md py-space-sm" data-active-classes="bg-primary text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">dashboard</span><span class="font-title text-title">Overview</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="orders" href="#"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span class="font-title text-title">Orders</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="products-inventory" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span class="font-title text-title">Products &amp; Inventory</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="store-management" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span class="font-title text-title">Store Management</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="delivery" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span class="font-title text-title">Delivery</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="payments-settlements" href="#"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span class="font-title text-title">Payments &amp; Settlements</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="subscriptions" href="#"><span class="material-symbols-outlined text-[20px]">loyalty</span><span class="font-title text-title">Subscriptions</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="qr-reviews" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span class="font-title text-title">QR &amp; Reviews</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="physical-products" href="#"><span class="material-symbols-outlined text-[20px]">point_of_sale</span><span class="font-title text-title">Physical Products</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">monitoring</span><span class="font-title text-title">Analytics</span></a></nav></div><div class="p-space-md flex flex-col gap-0.5 bg-surface-container-low"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="notifications" href="#"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="font-title text-title">Notifications</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="support" href="#"><span class="material-symbols-outlined text-[20px]">contact_support</span><span class="font-title text-title">Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-all" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span class="font-title text-title">Settings</span></a></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-margin-desktop"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-space-xs rounded-lg shadow-[0_1px_3px_rgba(15,23,42,0.06)]"><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Active Store</span><span class="font-title text-title text-on-surface font-semibold">Sri Krishna Gourmet (Indiranagar, BLR)</span></div><span class="inline-flex items-center gap-1 bg-tertiary-fixed text-on-tertiary-fixed px-space-xs py-0.5 rounded font-label-sm text-label-sm"><span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>Live</span><span class="material-symbols-outlined text-on-surface-variant text-[20px]">expand_more</span></div></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-space-xs rounded-lg text-on-surface-variant"><span class="material-symbols-outlined text-[18px]">search</span><span class="font-body-sm text-body-sm">Search orders, SKUs, settlements...</span><kbd class="font-code-metric text-code-metric bg-surface-container px-1.5 py-0.5 rounded text-on-surface-variant">⌘K</kbd></div><div class="flex items-center gap-space-sm"><button class="p-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><button class="flex items-center gap-space-xs px-space-sm py-space-xs rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[20px]">support_agent</span><span class="font-label-md text-label-md">Helpdesk</span></button></div><div class="flex items-center gap-space-sm pl-space-md"><div class="flex flex-col text-right"><div class="flex items-center gap-1 justify-end"><span class="font-title text-title text-on-surface font-semibold">Rajesh Sharma</span><span class="material-symbols-outlined text-tertiary text-[16px]">verified</span></div><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Managing Partner</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="w-full pt-16 px-margin-desktop bg-surface"><div class="flex flex-col w-full pb-space-2xl">
+<!-- Top Banner: Amber Status Alert with solid left accent -->
+<section class="mt-space-lg mb-space-xl bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between p-space-lg gap-space-md relative">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-[#B45309]"></div>
+<div class="flex items-center gap-space-md pl-space-xs">
+<div class="w-10 h-10 rounded-lg bg-[#FFFBEB] flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[#B45309] text-[24px]">pending_actions</span>
+</div>
+<div class="flex flex-col">
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="font-title text-title text-on-surface">Bank Change Request Pending Admin Approval</span>
+<span class="inline-flex items-center px-space-xs py-0.5 rounded font-code-metric text-code-metric bg-surface-container text-on-surface-variant">REF #BCR-2024-0914</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+          Old account remains active for daily payouts until switchover. Zero downtime on settlement cycle.
+        </p>
+</div>
+</div>
+<div class="flex items-center gap-space-sm pl-space-xs self-stretch md:self-auto justify-end">
+<span class="inline-flex items-center gap-1.5 bg-[#FFFBEB] text-[#B45309] px-space-md py-1 rounded font-label-sm text-label-sm uppercase tracking-wider">
+<span class="w-2 h-2 rounded-full bg-[#B45309] animate-pulse"></span>
+        Audit in Progress (SLA: &lt; 4 Hours)
+      </span>
+</div>
+</section>
+<!-- Title & Context Overline -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-space-xl gap-space-md">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs mb-1">
+<a class="font-label-sm text-label-sm text-on-surface-variant hover:text-primary uppercase tracking-wider" href="#">Payments &amp; Settlements</a>
+<span class="material-symbols-outlined text-on-surface-variant text-[14px]">chevron_right</span>
+<span class="font-label-sm text-label-sm text-primary uppercase tracking-wider">Settlement Routing</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Bank Account Alteration Under Review</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+        A change request was submitted to replace the existing primary nodal settlement account. Institutional compliance verification is ongoing.
+      </p>
+</div>
+<div class="flex items-center gap-space-sm shrink-0">
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">help_outline</span>
+<span class="font-label-md text-label-md">Settlement Policy FAQ</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container transition-all shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">headset_mic</span>
+<span class="font-label-md text-label-md">Priority Desk</span>
+</button>
+</div>
+</div>
+<!-- Main Grid: 12-Column Responsive Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-desktop items-start">
+<!-- Left Column: Timeline & Audit Details (7 Cols) -->
+<div class="lg:col-span-7 flex flex-col gap-space-xl">
+<!-- Timeline Tracker Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm">
+<div class="flex items-center justify-between pb-space-lg mb-space-lg bg-surface-container-low/40 -mx-space-xl -mt-space-xl px-space-xl pt-space-lg rounded-t-xl">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">alt_route</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Verification Lifecycle</span>
+</div>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-space-xs py-0.5 rounded uppercase">Step 3 of 4 Active</span>
+</div>
+<!-- Vertical Stepper -->
+<div class="relative pl-6 space-y-space-xl">
+<!-- Step 1: Completed -->
+<div class="relative flex items-start gap-space-md">
+<div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<div class="absolute -left-[15px] top-8 bottom-[-24px] w-0.5 bg-tertiary-fixed-dim"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">Request Initiated by Director</span>
+<span class="font-code-metric text-code-metric text-on-surface-variant">24 Oct, 11:20 IST</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Authorized signatory Rajesh Sharma completed PAN biometric and corporate resolution upload.
+              </p>
+<div class="mt-2 inline-flex items-center gap-1.5 px-space-xs py-0.5 bg-surface-container-low rounded text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">fingerprint</span>
+                Aadhaar e-Sign Token: #ESIGN-8839-IND
+              </div>
+</div>
+</div>
+<!-- Step 2: Completed -->
+<div class="relative flex items-start gap-space-md">
+<div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[18px]">check</span>
+</div>
+<div class="absolute -left-[15px] top-8 bottom-[-24px] w-0.5 bg-primary"></div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">Instant ₹1 Penny Drop Verification</span>
+<span class="font-code-metric text-code-metric text-on-surface-variant">24 Oct, 11:22 IST</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Automated NPCI IMPS reverse test executed on destination ICICI account.
+              </p>
+<div class="mt-2 flex flex-wrap gap-space-xs">
+<span class="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#00875A] px-space-xs py-0.5 rounded font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                  ₹1.00 Credited &amp; Confirmed
+                </span>
+<span class="inline-flex items-center gap-1 bg-surface-container px-space-xs py-0.5 rounded font-label-sm text-label-sm text-on-surface">
+                  RRN: 429810938472
+                </span>
+<span class="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#00875A] px-space-xs py-0.5 rounded font-label-sm text-label-sm">
+                  Beneficiary: SRI KRISHNA GOURMET LLP (100% Match)
+                </span>
+</div>
+</div>
+</div>
+<!-- Step 3: In Progress -->
+<div class="relative flex items-start gap-space-md">
+<div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center shadow-md animate-pulse">
+<span class="material-symbols-outlined text-[18px]">shield</span>
+</div>
+<div class="absolute -left-[15px] top-8 bottom-[-24px] w-0.5 bg-surface-variant"></div>
+<div class="flex-1 bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-title text-primary">Admin Risk &amp; Dual-Signatory Review</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded font-label-sm text-label-sm bg-[#FFFBEB] text-[#B45309]">Queue Position #3</span>
+</div>
+<span class="font-code-metric text-code-metric text-[#B45309]">ETA ~140 Mins</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                TRUSTIT Senior Compliance Officer inspecting scanned cancelled cheque, GSTIN return certificate matching, and partnership deed signatories.
+              </p>
+<div class="mt-space-sm flex items-center gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-primary text-[16px]">hourglass_top</span>
+                Assigned to: Settlement Risk Officer Team 2 (Bengaluru Hub)
+              </div>
+</div>
+</div>
+<!-- Step 4: Pending -->
+<div class="relative flex items-start gap-space-md">
+<div class="absolute -left-[30px] top-0 w-8 h-8 rounded-full bg-surface-container text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">sync_alt</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface-variant">Account Switchover &amp; Ledger Re-mapping</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Pending Step 3</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Automated redirection of live daily settlement T+1 batch files and generation of revised banking mandate certificate.
+              </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Admin Audit Live Checklist Preview -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-[20px]">fact_check</span>
+</div>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Admin Audit Inspection Ledger</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Automated validation metrics evaluated by Trustit Risk Engine v4.2</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#00875A] px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase">
+            Confidence: 99.8%
+          </span>
+</div>
+<div class="space-y-space-sm mt-space-md">
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-lg">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-[#00875A] text-[20px]">verified</span>
+<div>
+<span class="font-title text-title text-on-surface block">Beneficiary Name Fuzzy Match</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Target Bank: SRI KRISHNA GOURMET LLP vs Registered Entity: SRI KRISHNA GOURMET LLP</span>
+</div>
+</div>
+<span class="font-code-metric text-code-metric text-[#00875A] bg-[#ECFDF5] px-space-sm py-1 rounded">99.8% Matched</span>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-lg">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-[#00875A] text-[20px]">verified</span>
+<div>
+<span class="font-title text-title text-on-surface block">Cheque Scanned Seal Check</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Document: CANCELLED_CHEQUE_ICICI_2024.PDF (IFSC ICIC0000047 detected)</span>
+</div>
+</div>
+<span class="font-code-metric text-code-metric text-[#00875A] bg-[#ECFDF5] px-space-sm py-1 rounded">Verified (OCR)</span>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-lg">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-[#00875A] text-[20px]">verified</span>
+<div>
+<span class="font-title text-title text-on-surface block">Multi-Factor Signatory Consent</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Validated via Registered Mobile OTP (+91 98450 •••••) &amp; PAN Biometric Auth</span>
+</div>
+</div>
+<span class="font-code-metric text-code-metric text-[#00875A] bg-[#ECFDF5] px-space-sm py-1 rounded">OTP Authenticated</span>
+</div>
+<!-- Item 4 -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-low rounded-lg">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-[#B45309] text-[20px]">schedule</span>
+<div>
+<span class="font-title text-title text-on-surface block">Final Dual-Signatory Nodal Signoff</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Manual clearance by Compliance Lead (Queue #3)</span>
+</div>
+</div>
+<span class="font-code-metric text-code-metric text-[#B45309] bg-[#FFFBEB] px-space-sm py-1 rounded">In Review</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Dual Account Comparison & Security Controls (5 Cols) -->
+<div class="lg:col-span-5 flex flex-col gap-space-xl">
+<!-- Account Comparison Dual Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-xl shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">compare_arrows</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Dual-Account Status</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Payout Routing</span>
+</div>
+<!-- Current Payout Account -->
+<div class="bg-surface-container-low p-space-lg rounded-xl flex flex-col gap-space-md relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container-lowest flex items-center justify-center font-title text-title text-primary shadow-sm font-bold">
+                HDFC
+              </div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Current Active Account</span>
+<span class="font-title text-title text-on-surface">HDFC Bank ••••8729</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-mono">HDFC0000184 • Current A/C</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 bg-[#ECFDF5] text-[#00875A] px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-[#00875A]"></span>
+              Active Payouts
+            </span>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-lg flex items-center justify-between text-body-sm">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Today's Accumulated</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">₹2,84,910.40</span>
+</div>
+<div class="text-right">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Next Auto-Sweep</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold block">Tonight @ 23:30 IST</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant italic">
+            * All daily merchant sales will seamlessly settle into this HDFC account until the exact instant of switchover approval.
+          </p>
+</div>
+<!-- Target Switchover Account -->
+<div class="bg-surface-container-high/40 p-space-lg rounded-xl flex flex-col gap-space-md relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-lg bg-surface-container-lowest flex items-center justify-center font-title text-title text-[#B45309] shadow-sm font-bold">
+                ICICI
+              </div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-[#B45309] uppercase font-bold">Target Payout Destination</span>
+<span class="font-title text-title text-on-surface">ICICI Bank ••••4410</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant font-mono">ICIC0000047 • Corporate Current A/C</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 bg-[#FFFBEB] text-[#B45309] px-space-xs py-0.5 rounded font-label-sm text-label-sm uppercase">
+              Penny Confirmed
+            </span>
+</div>
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Beneficiary</span>
+<span class="font-body-sm text-body-sm text-on-surface font-semibold truncate">SRI KRISHNA GOURMET</span>
+</div>
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Penny RRN Status</span>
+<span class="font-body-sm text-body-sm text-[#00875A] font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check</span> Validated
+              </span>
+</div>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant font-body-sm text-body-sm bg-surface-container-lowest/60 p-space-sm rounded-lg">
+<span class="material-symbols-outlined text-primary text-[18px]">info</span>
+<span>Zero transactions will be routed to this account until dual-signatory audit completes.</span>
+</div>
+</div>
+<!-- Cancellation & Security Action Box -->
+<div class="bg-surface-container-low p-space-md rounded-xl flex flex-col gap-space-sm">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px] shrink-0 mt-0.5">lock_reset</span>
+<div class="flex flex-col">
+<span class="font-title text-title text-on-surface">Need to cancel this alteration request?</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                You can safely retract this request anytime before final admin signoff. Immediate retraction will cancel the pending nodal switch and retain HDFC Bank indefinitely.
+              </p>
+</div>
+</div>
+<!-- Buttons Group -->
+<div class="flex flex-col sm:flex-row items-center gap-space-sm pt-space-sm">
+<button class="w-full sm:w-1/2 flex items-center justify-center gap-space-xs px-space-md py-2.5 rounded-lg bg-surface-container-lowest text-error hover:bg-error-container hover:text-on-error-container font-label-md text-label-md transition-all shadow-sm" onclick="confirmRetractModal()" type="button">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+              Retract Request
+            </button>
+<button class="w-full sm:w-1/2 flex items-center justify-center gap-space-xs px-space-md py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-all shadow-sm" onclick="toggleAuditDrawer()" type="button">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+              View Audit Log
+            </button>
+</div>
+</div>
+</div>
+<!-- Regulatory Disclaimer Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex items-start gap-space-md">
+<span class="material-symbols-outlined text-primary text-[24px] shrink-0">policy</span>
+<div class="flex flex-col gap-1">
+<span class="font-title text-title text-on-surface">RBI Hyperlocal Merchant Settlement Safeguard</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Per Reserve Bank of India (RBI) Payment Aggregator Master Directives (2020), nodal escrow account changes require automated penny-drop validation followed by multi-signatory fraud screening prior to routing payout balances.
+          </p>
+<div class="flex items-center gap-space-md pt-space-xs">
+<span class="font-code-metric text-code-metric text-on-surface-variant">UID: MSME-29-BLR-00481</span>
+<span class="font-label-sm text-label-sm text-primary uppercase">Regulated by NPCI &amp; RBI</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Retract Request Confirmation Modal Dialog -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-inverse-surface/40 backdrop-blur-sm hidden" id="retractModal">
+<div class="bg-surface-container-lowest rounded-xl p-space-xl max-w-lg w-full mx-space-md shadow-xl flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">warning</span>
+</div>
+<span class="font-headline-sm text-headline-sm text-on-surface">Retract Bank Alteration?</span>
+</div>
+<button class="text-on-surface-variant hover:text-on-surface" onclick="closeRetractModal()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+        Are you sure you want to cancel request <strong class="text-on-surface font-code-metric">#BCR-2024-0914</strong>? The pending switch to ICICI Bank ••••4410 will be aborted immediately. Your payouts will continue uninterrupted to HDFC Bank ••••8729.
+      </p>
+<div class="bg-surface-container-low p-space-md rounded-lg flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Cancellation Policy</span>
+<span class="font-body-sm text-body-sm text-on-surface">A fresh request with new penny-drop verification will be required if you wish to change accounts later.</span>
+</div>
+<div class="flex items-center justify-end gap-space-sm pt-space-sm">
+<button class="px-space-md py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-all" onclick="closeRetractModal()" type="button">
+          Keep Request Active
+        </button>
+<button class="px-space-md py-2 rounded-lg bg-error text-on-error hover:opacity-90 font-label-md text-label-md transition-all" onclick="executeRetract()" type="button">
+          Confirm Retract
+        </button>
+</div>
+</div>
+</div>
+<!-- Detailed Audit Drawer / Slideout -->
+<div class="fixed inset-0 z-50 flex justify-end bg-inverse-surface/40 backdrop-blur-sm hidden" id="auditDrawer">
+<div class="bg-surface-container-lowest w-full max-w-md h-full shadow-xl flex flex-col p-space-xl overflow-y-auto">
+<div class="flex items-center justify-between pb-space-lg mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">history</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Detailed Audit Log</span>
+</div>
+<button class="p-space-xs text-on-surface-variant hover:text-on-surface" onclick="toggleAuditDrawer()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="space-y-space-md flex-1">
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">Admin Review Enqueued</span>
+<span class="font-code-metric text-code-metric text-on-surface-variant">11:23 IST</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Placed in Risk Queue #3. Priority auto-escalated for Tier-1 MSME partner.</p>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">IMPS Penny Drop Success</span>
+<span class="font-code-metric text-code-metric text-[#00875A]">11:22 IST</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Response code: 00 (Success). Bank Name: ICICI BANK LIMITED. Acc: ••••4410.</p>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">OCR Cheque Scan Passed</span>
+<span class="font-code-metric text-code-metric text-[#00875A]">11:21 IST</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Cheque MICR 560229003 match. Signatory stamp detected.</p>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">OTP Authenticated</span>
+<span class="font-code-metric text-code-metric text-[#00875A]">11:20 IST</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Signatory OTP validated from IP 49.37.19.102 (Bengaluru, KA).</p>
+</div>
+</div>
+<div class="pt-space-lg">
+<button class="w-full py-2.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high font-label-md text-label-md" onclick="toggleAuditDrawer()" type="button">
+          Close Audit Window
+        </button>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function confirmRetractModal() {
+    const modal = document.getElementById('retractModal');
+    if (modal) modal.classList.remove('hidden');
+  }
+
+  function closeRetractModal() {
+    const modal = document.getElementById('retractModal');
+    if (modal) modal.classList.add('hidden');
+  }
+
+  function executeRetract() {
+    alert('Bank Change Request #BCR-2024-0914 has been retracted successfully. Settlements remain uninterrupted with HDFC Bank.');
+    closeRetractModal();
+  }
+
+  function toggleAuditDrawer() {
+    const drawer = document.getElementById('auditDrawer');
+    if (drawer) {
+      drawer.classList.toggle('hidden');
+    }
+  }
+</script></main></div></body></html>

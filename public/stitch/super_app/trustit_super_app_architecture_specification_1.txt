@@ -1,0 +1,632 @@
+# TRUSTIT Super App — Comprehensive Frontend Developer Handoff Specification (v2.0 Production Ready)
+
+**Product Ecosystem**: TRUSTIT — India's Hyper-Local Multi-Service Trust & Commerce Super App  
+**Architecture Target**: Multi-App Monorepo / Next.js (App Router), Supabase Auth & Database, Cashfree Payments, Deployed on Vercel  
+**Design System**: Kinetic Trust (Plus Jakarta Sans, `#0d47a1` Primary, Light Surface Palette, 8px Roundness)  
+**Date**: October 2026  
+**Document Classification**: Frontend Engineering & Architecture Handoff  
+
+---
+
+## 1. Executive Architecture & Tech Stack Alignments
+
+This handoff specification upgrades the TRUSTIT design architecture into actionable engineering contracts for engineering teams. All frontend codebases must align with the production stack:
+
+- **Framework**: Next.js 15+ (App Router, Server Components where applicable, Client Components for interactive workflows, Turbopack)
+- **Deployment & Hosting**: Vercel (Edge Middleware for auth/geo-routing, Vercel Blob/Edge Functions)
+- **Authentication & Database**: Supabase (Supabase Auth with Phone OTP & RLS-enforced PostgreSQL tables, Supabase Realtime for order tracking & chat)
+- **Payment Gateway**: Cashfree Payments SDK (Cashfree PG Web/React SDK, UPI Intent, Webhook reconciliations)
+- **Styling & Design Tokens**: Tailwind CSS v3.4+ mapped to `Kinetic Trust` CSS variables
+- **State Management & Data Fetching**: TanStack Query (React Query) v5 for server-state caching, optimistic updates, and offline sync; Zustand for client-side ephemeral state (cart, active filters, location session).
+
+> **Architectural Guardrail**: Do not invent private database schemas or internal backend signatures. Unknown schema fields, tables, endpoints, and RPC procedures are explicitly flagged as `[NEEDS CODEBASE VERIFICATION]`.
+
+---
+
+## 2. Shared Trustit Design System & Token Contracts
+
+### 2.1 CSS Variables & Tailwind Theme Mapping
+Tokens defined in `DESIGN.md` under `Kinetic Trust` map directly to Tailwind configuration:
+
+```css
+:root {
+  /* Brand Primitives */
+  --color-primary: #0d47a1;          /* Trust Navy */
+  --color-primary-hover: #082d68;
+  --color-secondary: #00b4d8;        /* Electric Cyan / SpeedPass */
+  --color-accent-emerald: #00875a;   /* Verified Emerald / KYC & Success */
+  --color-accent-crimson: #dc2626;   /* Alert Crimson / Errors & Declines */
+  --color-accent-amber: #f59e0b;     /* Warning Saffron / Slot Warnings */
+
+  /* Neutral & Surface Tokens */
+  --surface-canvas: #faf8ff;
+  --surface-card: #ffffff;
+  --surface-container-low: #f2f3ff;
+  --surface-container-dim: #d2d9f4;
+  --border-subtle: #e2e8f0;
+  --border-strong: #cbd5e1;
+
+  /* Text & Content Hierarchy */
+  --text-primary: #0f172a;           /* Slate 900 */
+  --text-secondary: #475569;         /* Slate 600 */
+  --text-muted: #94a3b8;             /* Slate 400 */
+  --text-inverse: #ffffff;
+
+  /* Elevation & Geometry */
+  --radius-sm: 4px;
+  --radius-md: 8px;                  /* Standard Roundness */
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  --shadow-card: 0 4px 6px -1px rgba(13, 71, 161, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+  --shadow-floating: 0 10px 15px -3px rgba(13, 71, 161, 0.1);
+}
+```
+
+### 2.2 Typography Scale & Font Rules
+- **Font Family**: `'Plus Jakarta Sans', system-ui, -apple-system, sans-serif`
+- **Headings (H1/H2)**: Extrabold `800` (`font-extrabold`), tracking tight (`tracking-tight`)
+- **Subheads & Section Titles**: Bold `700` (`font-bold`)
+- **Interactive UI, Buttons, Tabs**: SemiBold `600` (`font-semibold`)
+- **Body & Captions**: Medium `500` / Regular `400` (`leading-relaxed`)
+
+### 2.3 Responsive & Viewport Rules
+- **Customer Mobile App**: Viewport target `390px` width (max-w-md container centered on wider viewports with responsive padding).
+- **Rider Application**: Mobile-first portrait `390px` with large hit targets (min 48px × 48px) for one-handed outdoor operation.
+- **Merchant Dashboard**: Responsive tablet/desktop layout (`md: 768px`, `lg: 1024px`, `xl: 1280px`) with collapsible sidebar and dual-column order POS.
+- **Admin Web Portal**: Desktop-first layout (`1280px` – `1920px`) with dense data grids, sticky filter rails, and modal audit drawers.
+
+---
+
+## 3. Monorepo Navigation & Routing Maps
+
+### 3.1 Customer App (Mobile Viewport)
+```
+/ (Splash / Auth Check via Supabase Middleware)
+├── /login (Mobile Login & OTP Verification)
+├── /(tabs) [BottomNavigation5Tab Persistent Chrome]
+│   ├── /home (Customer Home Hub)
+│   ├── /explore (Explore & Search Hub)
+│   ├── /orders (Orders & Account Hub)
+│   ├── /activity (Trustit Verified Reviews & Visits)
+│   └── /profile (Customer Profile & Settings)
+├── /storefront/[merchantId] (Merchant Storefront & Menu)
+│   └── /storefront/[merchantId]/customize/[itemId] (Customization Modal)
+├── /pharmacy/[merchantId] (Pharmacy & Prescription Hub)
+├── /services/[serviceId] (Service Booking & Slot Selection)
+├── /checkout (Cart & Checkout Flow)
+├── /order-success/[orderId] (Payment Success & Handover PIN)
+├── /payment-failed/[orderId] (Payment Failure Diagnostics & Retry)
+├── /order-tracking/[orderId] (Realtime Rider Map & Verification)
+├── /refund-tracker/[refundId] (Refund Timeline & NPCI UTR)
+├── /addresses (Saved Delivery Addresses & Geofence Picker)
+├── /support (24x7 Help, Orders Triage & Grievance Officer)
+└── /notifications (Notification Centre & Segmented Feeds)
+```
+
+### 3.2 Merchant Dashboard (Responsive Web / Desktop)
+```
+/merchant/auth/login (Merchant Partner Login)
+/merchant/dashboard (Live Overview & Business Health)
+├── /merchant/orders/live (Live Order KDS / Prep Stepper)
+├── /merchant/menu (Menu & Stock Inventory Management)
+├── /merchant/settlements (Daily Cashfree Settlements & Bank UTRs)
+├── /merchant/reviews (Verified Customer Feedback & Ratings)
+└── /merchant/settings (Store Hours, FSSAI Details & Geofence Radius)
+```
+
+### 3.3 Admin Web Portal (Desktop Portal)
+```
+/admin/login (Privileged Multi-Factor Admin Auth)
+/admin/dashboard (System-wide GMV, Transaction Velocity & Alerts)
+├── /admin/merchants (Merchant KYC & FSSAI Verification Desk)
+├── /admin/disputes (Escrow, Refund Escalations & Grievance Tickets)
+├── /admin/pharmacy-audit (Schedule H/H1 Prescription Audit Desk)
+├── /admin/riders (Delivery Partner Onboarding & Police Verification)
+└── /admin/compliance (DPDP Audit Logs, Data Export & Deletion Requests)
+```
+
+### 3.4 Rider Partner App (Mobile Viewport)
+```
+/rider/login (Rider Phone Auth & Session Handshake)
+/rider/duty-status (Online/Offline Toggle & Fleet Allocation)
+├── /rider/orders/available (Active Hyperlocal Order Radar & Bidding)
+├── /rider/orders/active (Turn-by-turn Navigation & Pickup Handshake)
+├── /rider/orders/delivery (Doorstep Customer OTP Handover Verification)
+├── /rider/earnings (Daily Payouts, Tips & TrustCash Incentives)
+└── /rider/profile (Police Clearance Status, Vehicle Docs & Hygiene Badges)
+```
+
+---
+
+## 4. Role-Based Access Control (RBAC) Specification
+
+| User Role | Permitted Routes & Surfaces | Auth Provider & Verification | Supabase RLS Policy Concept |
+|---|---|---|---|
+| **Customer** | `/(tabs)/*`, `/checkout`, `/order-*`, `/addresses`, `/support`, `/notifications` | Supabase Phone Auth OTP (`+91`) | Reads public catalogs, reads/updates only own `user_id` orders, addresses, and reviews. |
+| **Merchant Admin** | `/merchant/*` | Supabase Auth (Email + Mobile OTP) with role claim `merchant_admin` | Reads/writes only data matching `merchant_id` foreign key. Restricted from user payment credentials. |
+| **Rider / Technician** | `/rider/*` | Supabase Auth (Rider Mobile) with role claim `rider_partner` | Assigned orders read/write state transitions (`ACCEPTED`, `ARRIVED_STORE`, `OUT_FOR_DELIVERY`, `DELIVERED`). |
+| **Platform Ops Admin** | `/admin/*` | Supabase Auth with Hardware MFA / TOTP and role claim `super_admin` or `compliance_auditor` | Full system audit capabilities across escrow, merchant KYC, and dispute resolution. |
+
+---
+
+## 5. Detailed Screen Inventory by Interface
+
+### 5.1 Customer Mobile Application (18 Production Screens)
+
+#### C-01: Customer Home Hub
+- **User Role**: Customer
+- **Purpose**: Multi-vertical hyper-local launchpad, SpeedPass membership promotion, instant re-order tray, verified merchant discovery.
+- **Reusable Components**: `BottomNavigation5Tab`, `CategoryGridTile`, `SpeedPassBannerCard`, `ReorderCarousel`, `TrustBadge`, `SearchBarWidget`.
+- **Required Data**: User profile snippet, user latitude/longitude, available hyper-local categories, active banner promotions, past 3 orders for reorder.
+- **User Actions**: Tap category tile, initiate search, tap reorder item, tap SpeedPass membership card, navigate to notifications.
+- **Expected API Interaction**: Supabase RPC `get_nearby_categories(lat, lng)`, Supabase query `orders` where `status = 'DELIVERED'`, Cashfree wallet balance check `[NEEDS CODEBASE VERIFICATION]`.
+- **Navigation Destination**: `/storefront/[merchantId]`, `/pharmacy/[merchantId]`, `/services/[serviceId]`, `/notifications`, `/explore`.
+- **Permission Requirements**: Location permission (`navigator.geolocation`) recommended.
+
+#### C-02: Mobile Login & OTP Verification
+- **User Role**: Customer / Guest
+- **Purpose**: Authenticate user via Indian mobile number with DPDP Act 2023 compliance, auto-read SMS passkey, and WhatsApp fallback.
+- **Reusable Components**: `PhoneInputPrefix`, `OTPInputMatrix` (6 digits), `TimerCountdown`, `TrustBadge` (DPDP compliance, 256-bit encryption).
+- **Required Data**: Mobile number input, 6-digit OTP code, resend timer cooldown, client platform metadata.
+- **User Actions**: Enter 10-digit number, edit number, enter OTP digits, trigger resend via SMS, trigger fallback via WhatsApp, submit verification.
+- **Expected API Interaction**: `supabase.auth.signInWithOtp({ phone: '+91...' })`, `supabase.auth.verifyOtp({ phone, token, type: 'sms' })`.
+- **Navigation Destination**: `/(tabs)/home` on success; redirect to previous route if intercepted by auth guard.
+- **Permission Requirements**: Public access; SMS WebOTP API (`navigator.credentials.get({ otp: ... })`).
+
+#### C-03: Explore & Search Hub
+- **User Role**: Customer
+- **Purpose**: Unified global multi-vertical search, recent searches, voice input, QR scanner, faceted filters, distance/rating sorting.
+- **Reusable Components**: `SearchBarWithVoiceAndQR`, `FilterChipGroup`, `MerchantListingCard`, `EmptySearchPerimeterCard`.
+- **Required Data**: Search query string, search history in local storage, active filter state (radius, rating, veg/non-veg, open now), paginated merchant results.
+- **User Actions**: Enter search text, clear search, tap recent search chip, toggle filter chips, change sort order, tap merchant card, tap expand radius (5km).
+- **Expected API Interaction**: Supabase RPC `search_merchants_and_products(query, lat, lng, filters)` `[NEEDS CODEBASE VERIFICATION]`.
+- **Navigation Destination**: `/storefront/[merchantId]`, `/pharmacy/[merchantId]`, `/services/[serviceId]`.
+- **Permission Requirements**: Location permission requested for accurate distance calculations.
+
+#### C-04: Merchant Storefront & Menu (e.g., Meghana Foods)
+- **User Role**: Customer
+- **Purpose**: Display restaurant header, FSSAI verification license, category pills, food items with add/quantity steppers, floating cart dock.
+- **Reusable Components**: `MerchantHeaderBanner`, `FSSAILicenseBadge`, `VegNonVegIndicator`, `MenuItemCard`, `QuantityStepper`, `FloatingCartSummaryBar`.
+- **Required Data**: Merchant details, operating hours, delivery ETA, active menu categorized into sections, current cart state.
+- **User Actions**: Scroll categories, search dish, tap "Add" button, increment/decrement quantity, tap item with options to trigger customization sheet, tap floating cart bar.
+- **Expected API Interaction**: Supabase query on `merchants` and `menu_items` where `merchant_id = :id` and `is_available = true`.
+- **Navigation Destination**: `/storefront/[merchantId]/customize/[itemId]`, `/checkout`.
+- **Permission Requirements**: Public read; cart stored in local Zustand store.
+
+#### C-05: Product Customization & Add-ons Sheet
+- **User Role**: Customer
+- **Purpose**: Enforce mandatory choices (portion size, spice level), optional accompaniments (gravy, boiled eggs), and chef notes.
+- **Reusable Components**: `RadioGroupItem`, `CheckboxAddonItem`, `ChefInstructionsTextarea`, `BottomSheetWrapper`, `StickyCartActionFooter`.
+- **Required Data**: Selected product ID, variant options, modifiers list with incremental pricing, maximum selections allowed.
+- **User Actions**: Select radio portion, select spice level, toggle add-on checkboxes, input cooking notes, update total quantity, tap "Add Item to Cart".
+- **Expected API Interaction**: Client-side cart state mutation in Zustand; validates modifier compatibility before adding to cart.
+- **Navigation Destination**: Dismisses bottom sheet back to `/storefront/[merchantId]`.
+- **Permission Requirements**: Customer session active or guest cart allowed.
+
+#### C-06: Pharmacy & Prescription Hub (e.g., Apollo 24|7)
+- **User Role**: Customer
+- **Purpose**: Regulated pharmacy storefront adhering to Drugs & Cosmetics Act, prescription upload desk, Dr. Ramesh Rao pharmacist status card, OTC vs Rx catalog.
+- **Reusable Components**: `CDSCOScheduleHAlertBanner`, `FileUploadDesk`, `PharmacistVerificationBadge`, `MedicineItemCard`, `RxLockedCTA`.
+- **Required Data**: Pharmacy merchant metadata, active prescription records for user, list of Schedule H/H1 medicines requiring prescription, OTC products.
+- **User Actions**: Upload prescription image/PDF, view previous saved prescriptions, request pharmacist callback, add OTC medicines, click upload Rx for restricted meds.
+- **Expected API Interaction**: Upload file to Supabase Storage bucket `prescriptions`, insert row into `prescriptions` table `[NEEDS CODEBASE VERIFICATION]`.
+- **Navigation Destination**: `/checkout` (once Rx is attached or for OTC items).
+- **Permission Requirements**: File access / Camera permission (`image/*`, `application/pdf`).
+
+#### C-07: Service Booking & Slot Selection (e.g., SparkleWheels Auto Spa)
+- **User Role**: Customer
+- **Purpose**: Doorstep automobile detailing and home service booking, vehicle type selection, utility toggles (power/water), 3-day slot matrix, technician guarantee.
+- **Reusable Components**: `VehicleTypeSelector`, `ServicePackageCard`, `SlotDatePickerMatrix`, `TechnicianPoliceBadge`, `UtilityToggleCard`.
+- **Required Data**: Service categories, vehicle tier pricing, technician roster, slot availability calendar (Morning/Afternoon/Evening slots).
+- **User Actions**: Select vehicle type (Hatchback/Sedan/SUV), select package, toggle water/electricity available, pick date and time slot, tap Confirm Slot.
+- **Expected API Interaction**: Supabase query on `service_slots` where `merchant_id = :id` and `slot_time >= NOW()`.
+- **Navigation Destination**: `/checkout`.
+- **Permission Requirements**: Authenticated user.
+
+#### C-08: Cart & Checkout
+- **User Role**: Customer
+- **Purpose**: Itemized GST and fee calculation, delivery address selection, gate delivery instructions, driver tip picker, Cashfree payment initiation.
+- **Reusable Components**: `OrderSteppedHeader`, `DeliveryAddressSelectorCard`, `InstructionPillGroup`, `ItemizedBillBreakdown`, `CashfreePaymentSelector`, `PrimaryActionSlideButton`.
+- **Required Data**: User active cart items, selected delivery address, itemized charges (base, packaging, platform fee, GST, delivery fee, tip), Cashfree payment modes.
+- **User Actions**: Select address, select delivery instruction chip, select tip amount, choose UPI/Card, tap "Place Order & Pay".
+- **Expected API Interaction**: Next.js Server Action `/api/checkout/create-order` invoking Cashfree PG Create Order API with idempotency key `[NEEDS CODEBASE VERIFICATION]`.
+- **Navigation Destination**: `/order-success/[orderId]` on authorization, `/payment-failed/[orderId]` on drop-off.
+- **Permission Requirements**: Authenticated Customer; valid token.
+
+#### C-09: Order Placed & Payment Success
+- **User Role**: Customer
+- **Purpose**: Order confirmation, celebration UI, generation of Doorstep Handover PIN (`4821`), prep tracker, GST tax invoice download.
+- **Reusable Components**: `SuccessCelebrationBadge`, `DoorstepPINDisplayCard`, `KitchenPrepStepper`, `GuaranteeBadgeCard`, `InvoiceDownloadButton`.
+- **Required Data**: Order ID, Cashfree transaction reference, estimated delivery time, Doorstep Handover PIN, item summary, merchant location.
+- **User Actions**: Copy Handover PIN, tap Track Live Order, download GST tax invoice PDF.
+- **Expected API Interaction**: Supabase query on `orders` where `id = :orderId`, verify Cashfree payment status is `PAID`.
+- **Navigation Destination**: `/order-tracking/[orderId]`, `/orders`.
+- **Permission Requirements**: Authenticated user; order owner.
+
+#### C-10: Payment Failed & Retry
+- **User Role**: Customer
+- **Purpose**: Transparent diagnosis of payment gateway or bank timeout, inventory reservation countdown (08:42 mins), RBI escrow reassurance, 1-tap failover UPI retry.
+- **Reusable Components**: `ErrorDiagnosticBanner`, `CountdownTimerBadge`, `NPCIEscrowGuaranteeCard`, `FailoverPaymentSelector`, `RetryCTAButton`.
+- **Required Data**: Order ID, Cashfree error code (`ERR_NPCI_TIMEOUT_104`), inventory expiration timestamp, alternate payment methods.
+- **User Actions**: Select alternate payment mode (Google Pay, PhonePe, Regalia Card, Cash on Delivery), tap Retry Payment Now, contact support.
+- **Expected API Interaction**: Next.js Server Action to initiate new Cashfree payment session for existing order ID before reservation timer lapses.
+- **Navigation Destination**: `/order-success/[orderId]` on retry success, `/support`.
+- **Permission Requirements**: Authenticated user.
+
+#### C-11: Live Order Tracking
+- **User Role**: Customer
+- **Purpose**: Real-time GPS rider route tracking in Bengaluru, delivery ETA countdown, rider details (Rajesh Kumar), hygienic vaccine badge, call/chat actions, Handover OTP lock.
+- **Reusable Components**: `LiveMapViewPort`, `RiderProfileCard`, `ContactActionGroup` (masked call/chat), `DoorstepOTPLockCard`, `DeliveryStepIndicator`.
+- **Required Data**: Order ID, rider live latitude/longitude, delivery coordinates, estimated arrival duration, rider phone mask token.
+- **User Actions**: Pan/zoom map, tap call rider (triggers VoIP/masked bridge), tap chat, view Handover OTP.
+- **Expected API Interaction**: Supabase Realtime channel subscription `orders:order_id` listening for `UPDATE` events on driver coordinates.
+- **Navigation Destination**: `/activity` (post-delivery review), `/support`.
+- **Permission Requirements**: Authenticated order owner.
+
+#### C-12: Cancellation & Instant Refund Tracker
+- **User Role**: Customer
+- **Purpose**: Merchant stock-out or user cancellation refund tracing, 3-stage reversal timeline, NPCI Bank Reference UTR (`3291884102`), zero penalty breakdown, ₹50 credit.
+- **Reusable Components**: `CancellationReasonHeader`, `RefundReversalStepper`, `NPCIUTRDisplayCard`, `FeeBreakdownCard`, `WalletCreditNotice`.
+- **Required Data**: Cancellation timestamp, original amount paid, refund status (`INITIATED`, `PROCESSING`, `CREDITED`), Cashfree refund UTR, goodwill credit amount.
+- **User Actions**: Copy Bank UTR, download settlement slip, tap "Browse Nearby Alternatives", tap "Back to Orders".
+- **Expected API Interaction**: Supabase query on `refunds` table, Cashfree Refund Status API webhook ingestion listener `[NEEDS CODEBASE VERIFICATION]`.
+- **Navigation Destination**: `/(tabs)/orders`, `/(tabs)/home`.
+- **Permission Requirements**: Authenticated user.
+
+#### C-13: Trustit Verified Reviews & Visits
+- **User Role**: Customer
+- **Purpose**: Proof-of-commerce gatekept review submission, offline store beacon check-in, review history, tamper-proof rating.
+- **Reusable Components**: `ProofOfCommerceBadge`, `PendingReviewCard`, `StarRatingPicker`, `OfflineBeaconScannerCTA`, `ReviewHistoryFeed`.
+- **Required Data**: Eligible verified orders awaiting review, merchant details, completed transaction receipts, previous published reviews.
+- **User Actions**: Rate 1-5 stars, write review text, upload visit photo, scan merchant counter QR code, submit feedback.
+- **Expected API Interaction**: Next.js API `/api/reviews/submit-verified` validating `order_id` or physical beacon hash before saving to `reviews` table.
+- **Navigation Destination**: `/(tabs)/profile`, `/storefront/[merchantId]`.
+- **Permission Requirements**: Customer must possess completed `order_id` or authenticated physical beacon scan.
+
+#### C-14: Orders & Account Hub
+- **User Role**: Customer
+- **Purpose**: Tab 3 landing screen, unified multi-category lifecycle: active live food delivery, upcoming car spa service appointment, past pharmacy order, refunded orders.
+- **Reusable Components**: `BottomNavigation5Tab`, `SegmentedOrderTabs`, `ActiveOrderTrackerCard`, `ScheduledServiceCard`, `PastOrderFulfillmentCard`.
+- **Required Data**: List of user orders grouped by state (`ACTIVE`, `SCHEDULED`, `COMPLETED`, `CANCELLED`), order timestamps, merchant avatars.
+- **User Actions**: Tap Track Live Order, tap Reschedule / Cancel appointment, tap Repeat Order, tap Download Tax Invoice, tap view refund.
+- **Expected API Interaction**: Supabase query `orders` where `user_id = auth.uid()` ordered by `created_at DESC`.
+- **Navigation Destination**: `/order-tracking/[orderId]`, `/refund-tracker/[refundId]`, `/storefront/[merchantId]`.
+- **Permission Requirements**: Authenticated user.
+
+#### C-15: Saved Addresses Management
+- **User Role**: Customer
+- **Purpose**: Geocoded address book (Home, Work, Parents), interactive map preview, gate arrival instructions, default address toggles.
+- **Reusable Components**: `AddressCard`, `GeocodedMapThumbnail`, `LabelBadge` (Home/Work/Other), `GateNoteCard`, `AddAddressCTA`.
+- **Required Data**: User saved addresses list, primary/default address flag, geocoded coordinates, contact recipient details.
+- **User Actions**: Select address for active checkout, set default address, edit address details, delete address, click Add New Address.
+- **Expected API Interaction**: Supabase CRUD operations on `user_addresses` table where `user_id = auth.uid()`.
+- **Navigation Destination**: Returns to `/checkout` or `/(tabs)/profile`.
+- **Permission Requirements**: Authenticated user.
+
+#### C-16: Customer Profile & Settings
+- **User Role**: Customer
+- **Purpose**: Tab 5 landing screen, user identity, DigiLocker KYC verified badge, SpeedPass Gold tracker, TrustCash wallet balance (`₹280`), biometric toggle, DPDP data export.
+- **Reusable Components**: `BottomNavigation5Tab`, `ProfileHeaderCard`, `DigiLockerKYCBadge`, `SpeedPassStatusCard`, `WalletBalanceTile`, `SettingRowItem`, `LogoutButton`.
+- **Required Data**: Customer name, phone, email, DigiLocker verification state, SpeedPass validity date, TrustCash balance, security preferences.
+- **User Actions**: Toggle biometric security, change app language, export personal data under DPDP Act, manage notifications, tap Log Out.
+- **Expected API Interaction**: Supabase `auth.getUser()`, query on `user_profiles`, `supabase.auth.signOut()`.
+- **Navigation Destination**: `/addresses`, `/support`, `/login`.
+- **Permission Requirements**: Authenticated user.
+
+#### C-17: 24x7 Help & Support Center
+- **User Role**: Customer
+- **Purpose**: Active order triage (Meghana Foods delivery query), self-service UTR/Rx tools, expandable FAQs, priority chat launcher, statutory Grievance Officer details.
+- **Reusable Components**: `ActiveTriageCard`, `SelfServeGridButton`, `FAQAccordion`, `PriorityChatButton`, `StatutoryGrievanceCard`.
+- **Required Data**: Active order ID needing assistance, common FAQ categories, Grievance Officer contact information under Rule 5(9) of E-Commerce Rules.
+- **User Actions**: Tap Chat with Support Team, tap Delivery Query, tap self-serve refund trace, expand FAQ accordions, email Grievance Officer.
+- **Expected API Interaction**: Supabase query on `support_tickets`, initiate realtime chat session via Supabase Realtime channel `support_chat:ticket_id`.
+- **Navigation Destination**: Opens live support modal, back to `/orders`.
+- **Permission Requirements**: Public read for FAQs; authenticated for ticket creation.
+
+#### C-18: Notification Centre & Alerts
+- **User Role**: Customer
+- **Purpose**: Segmented filter pills (All, Orders & Live, Offers & SpeedPass), delivery countdown alert, verified review unlock alert, pharmacist approved alert, UTR credit alert.
+- **Reusable Components**: `NotificationFilterTabs`, `NotificationItemCard`, `DoorstepPINMaskNotice`, `MarkAllAsReadButton`, `DPDPPolicyCard`.
+- **Required Data**: Notification list, read/unread flags, deep-link routing data, action payload tokens.
+- **User Actions**: Filter by category, tap notification card to deep-link, tap Mark All as Read, tap Notification Settings.
+- **Expected API Interaction**: Supabase query on `notifications` table where `user_id = auth.uid()`, RPC `mark_notifications_read()`.
+- **Navigation Destination**: Deep-links to `/order-tracking/[orderId]`, `/pharmacy/[merchantId]`, or `/activity`.
+- **Permission Requirements**: Authenticated user.
+
+---
+
+### 5.2 Merchant Dashboard (Web / Desktop Interface)
+
+#### M-01: Merchant Auth & Store Switcher
+- **User Role**: Merchant Admin / Store Staff
+- **Purpose**: Secure authentication for store owners, multi-branch store selector (e.g., Meghana Foods Indiranagar vs. Koramangala).
+- **Reusable Components**: `StaffLoginCard`, `StoreBranchDropdown`, `SessionStatusBadge`.
+- **Required Data**: Store staff credentials, list of authorized merchant branch IDs.
+- **User Actions**: Enter email/mobile, verify credentials, select active branch.
+- **Expected API Interaction**: Supabase Auth with custom claims `merchant_id`.
+- **Navigation Destination**: `/merchant/dashboard`.
+- **Permission Requirements**: Verified merchant partner credentials.
+
+#### M-02: Live Order KDS (Kitchen / Prep Display System)
+- **User Role**: Merchant Kitchen Staff / Manager
+- **Purpose**: Real-time incoming order queue, accept/reject buttons with preparation time estimator, food prep stepper, rider arrival coordination.
+- **Reusable Components**: `AudioAlertBanner`, `KDSOrderColumnGroup`, `OrderTicketCard` (itemized mods, spice levels), `StatusTransitionButton`.
+- **Required Data**: Realtime stream of orders where `merchant_id = :id` and `status IN ('PLACED', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP')`.
+- **User Actions**: Accept order, set prep time (e.g. 20 mins), mark order as "Ready for Rider Handover", report item out-of-stock.
+- **Expected API Interaction**: Supabase Realtime subscription `orders:merchant_id`, mutation updating `order_status`.
+- **Navigation Destination**: `/merchant/orders/live`.
+- **Permission Requirements**: Kitchen staff role.
+
+#### M-03: Menu, Stock & Catalog Management
+- **User Role**: Merchant Manager
+- **Purpose**: Instant inventory control, out-of-stock toggle switch for dishes/ingredients, pricing update, schedule H Rx flag for pharmacies.
+- **Reusable Components**: `ItemInventoryTable`, `StockToggleSwitch`, `PriceEditInlineInput`, `CategoryFilterBar`.
+- **Required Data**: Merchant menu catalog, stock availability status, variant configuration.
+- **User Actions**: Toggle item in/out of stock, change item price, add new item description, upload dish photo.
+- **Expected API Interaction**: Supabase mutations on `menu_items` table.
+- **Navigation Destination**: `/merchant/menu`.
+- **Permission Requirements**: Merchant manager role.
+
+#### M-04: Daily Settlements & Cashfree Payouts
+- **User Role**: Merchant Finance Admin
+- **Purpose**: Breakdown of daily gross orders, commission deductions, GST invoicing, automated Cashfree settlement batch UTRs.
+- **Reusable Components**: `SettlementMetricCards`, `BatchPayoutTable`, `UTRReferenceChip`, `GSTInvoiceDownloadButton`.
+- **Required Data**: Daily settlement totals, Cashfree payout batch IDs, NPCI bank UTRs, net settlement balance.
+- **User Actions**: Filter by date range, export CSV of transactions, download consolidated GST tax report.
+- **Expected API Interaction**: Cashfree Payouts API integration / Supabase query on `merchant_settlements` `[NEEDS CODEBASE VERIFICATION]`.
+- **Navigation Destination**: `/merchant/settlements`.
+- **Permission Requirements**: Merchant finance admin.
+
+---
+
+### 5.3 Admin Web Portal (Desktop Portal)
+
+#### A-01: Executive Operations Dashboard
+- **User Role**: Platform Super Admin / Ops Lead
+- **Purpose**: High-velocity operations monitoring across Bengaluru: live GMV, active order count, rider fleet utilization, gateway success rates, dispute alerts.
+- **Reusable Components**: `StatTrendMetricCard`, `LiveGeofenceHeatmap`, `GatewayHealthMeter`, `AlertNotificationDrawer`.
+- **Required Data**: System aggregated metrics (orders/sec, Cashfree success %, active riders online, open tickets).
+- **User Actions**: Toggle city/cluster filters, inspect gateway latency spikes, drill into dispute alerts.
+- **Expected API Interaction**: Next.js Server Components fetching real-time materialized views via Supabase.
+- **Navigation Destination**: `/admin/dashboard`.
+- **Permission Requirements**: `super_admin` role.
+
+#### A-02: Merchant Verification & FSSAI / CDSCO Compliance Desk
+- **User Role**: Compliance Auditor / Onboarding Specialist
+- **Purpose**: Review newly registered restaurants and pharmacies, verify FSSAI licenses, validate drug licenses (`#DL-2023-KA-991`), approve storefronts.
+- **Reusable Components**: `DocumentPreviewSplitPane`, `VerificationChecklist`, `ApprovalRejectCTA`, `ComplianceAuditHistory`.
+- **Required Data**: Merchant registration dossier, FSSAI certificate PDF, CDSCO license image, bank account verification.
+- **User Actions**: Approve merchant, reject with specific statutory non-compliance reason, request license re-upload.
+- **Expected API Interaction**: Supabase mutation on `merchants` table setting `verification_status = 'VERIFIED'`.
+- **Navigation Destination**: `/admin/merchants`.
+- **Permission Requirements**: `compliance_auditor` role.
+
+#### A-03: Dispute, Escrow & Refund Resolution Desk
+- **User Role**: Grievance Officer / Support Admin
+- **Purpose**: Handle customer escalations, review merchant stock-out cancellations, trigger manual reverse UPI refunds, enforce Consumer Protection Rule 5(9).
+- **Reusable Components**: `DisputeTimelineView`, `TransactionAuditLog`, `TriggerRefundModal`, `GrievanceOfficerSignoff`.
+- **Required Data**: Order transaction log, customer chat transcript, rider delivery logs, Cashfree payment intent status.
+- **User Actions**: Authorize full refund, credit goodwill TrustCash, assign ticket to merchant supervisor, log resolution.
+- **Expected API Interaction**: Next.js Server Action invoking Cashfree Refund API with Admin Auth token `[NEEDS CODEBASE VERIFICATION]`.
+- **Navigation Destination**: `/admin/disputes`.
+- **Permission Requirements**: Authorized Support Lead / Grievance Officer.
+
+---
+
+### 5.4 Rider Partner Mobile Application (Mobile Interface)
+
+#### R-01: Duty Status & Hyperlocal Radar
+- **User Role**: Rider Partner / Doorstep Technician
+- **Purpose**: Toggle shift online/offline, view nearby order demand hotspots, receive new order dispatch alerts with payout preview.
+- **Reusable Components**: `DutyToggleSwitch`, `DispatchOfferModal`, `EarningsPillBadge`, `RadarMapRadius`.
+- **Required Data**: Rider battery status, live GPS coordinates, order offer payload (pickup distance, delivery distance, guaranteed payout in INR).
+- **User Actions**: Toggle Online, Accept Order (within 30s countdown), Reject Order.
+- **Expected API Interaction**: Supabase Realtime channel `fleet_dispatch:rider_id`, geolocation broadcast via `navigator.geolocation.watchPosition`.
+- **Navigation Destination**: `/rider/orders/active`.
+- **Permission Requirements**: Geolocation `ALWAYS_ALLOW`, background service worker enabled.
+
+#### R-02: Turn-by-Turn Pickup & Merchant Handshake
+- **User Role**: Rider Partner
+- **Purpose**: Navigate to merchant (e.g. Meghana Foods 100ft Road), inspect order item checklist, confirm package tamper seal attached.
+- **Reusable Components**: `NavigationMapRoute`, `MerchantContactButton`, `OrderItemInspectionList`, `PickupConfirmationSlider`.
+- **Required Data**: Merchant address, navigation polyline, order item summary, merchant phone mask bridge.
+- **User Actions**: Open Google Maps / Apple Maps route, tap "Arrived at Store", confirm items verified, slide "Picked Up & En Route".
+- **Expected API Interaction**: Supabase mutation on `orders` updating state to `OUT_FOR_DELIVERY`.
+- **Navigation Destination**: `/rider/orders/delivery`.
+- **Permission Requirements**: Authenticated rider.
+
+#### R-03: Doorstep Customer Handover & OTP Verification
+- **User Role**: Rider Partner
+- **Purpose**: Navigate to customer delivery address (Sai Residency, Flat 402), read gate arrival notes, verify 4-digit Doorstep Handover PIN (`4821`).
+- **Reusable Components**: `CustomerAddressDetailsCard`, `GateNoteAlert`, `HandoverOTPInputMatrix`, `OrderCompletedSuccessModal`.
+- **Required Data**: Customer destination address, delivery instructions, recipient name, encrypted verification hash for Handover OTP.
+- **User Actions**: View gate instructions ("Leave with security guard / Don't ring doorbell"), input customer-provided 4-digit PIN, complete delivery.
+- **Expected API Interaction**: Supabase RPC `verify_delivery_handover_otp(order_id, pin_code)` `[NEEDS CODEBASE VERIFICATION]`.
+- **Navigation Destination**: `/rider/earnings`, `/rider/duty-status`.
+- **Permission Requirements**: Camera / Keypad entry; authenticated rider.
+
+---
+
+## 6. Frontend Component Architecture & Reusable Specifications
+
+```
+src/
+├── components/
+│   ├── shared/
+│   │   ├── TrustBadge.tsx              # Renders verification shield with dynamic badges
+│   │   ├── IndianCurrencyPrice.tsx     # Formats INR (₹) with strike-through and discount
+│   │   ├── SteppedProgressBar.tsx      # Multi-step progress (Checkout, Kitchen, Reversals)
+│   │   ├── DeliveryInstructionChip.tsx # Quick instruction selector chips
+│   │   ├── NPCIDiagnosticsCard.tsx     # Standardized banking error & UTR card
+│   │   └── BottomNavigation5Tab.tsx    # 5-item mobile navigation chrome
+│   ├── customer/
+│   │   ├── CategoryGrid.tsx
+│   │   ├── MenuItemCard.tsx
+│   │   ├── LiveMapWidget.tsx
+│   │   └── DoorstepPINCard.tsx
+│   ├── merchant/
+│   │   ├── KDSOrderCard.tsx
+│   │   └── StockToggle.tsx
+│   ├── admin/
+│   │   ├── GeofenceMap.tsx
+│   │   └── DisputeAuditTable.tsx
+│   └── rider/
+│       ├── DispatchRadarModal.tsx
+│       └── HandoverPINInput.tsx
+├── hooks/
+│   ├── useSupabaseAuth.ts              # Session and role claim helpers
+│   ├── useCashfreeCheckout.ts          # Cashfree SDK loader and event listener
+│   ├── useRealtimeOrder.ts             # Supabase Realtime order status listener
+│   └── useGeofenceRadius.ts            # Client geolocation tracking
+├── lib/
+│   ├── supabase/
+│   │   ├── client.ts                   # createBrowserClient()
+│   │   └── server.ts                   # createServerClient() with cookies
+│   ├── cashfree.ts                     # Cashfree SDK initialization
+│   └── formatters.ts                   # Currency and timestamp helpers
+└── stores/
+    ├── useCartStore.ts                 # Ephemeral cart & modifier state
+    └── useLocationStore.ts             # Active delivery address session
+```
+
+### 6.1 Component API Contracts
+
+#### Component: `<TrustBadge />`
+```typescript
+interface TrustBadgeProps {
+  variant: 'digilocker' | 'fssai' | 'cdsco' | 'police' | 'escrow';
+  licenseNumber?: string;
+  verificationDate?: string;
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+}
+```
+
+#### Component: `<IndianCurrencyPrice />`
+```typescript
+interface IndianCurrencyPriceProps {
+  amountInINR: number;
+  originalMRP?: number;
+  showDiscountPercent?: boolean;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+}
+```
+
+#### Component: `<SteppedProgressBar />`
+```typescript
+interface StepItem {
+  id: string;
+  label: string;
+  timestamp?: string;
+  description?: string;
+}
+
+interface SteppedProgressBarProps {
+  steps: StepItem[];
+  currentStepIndex: number;
+  status: 'in_progress' | 'completed' | 'failed' | 'cancelled';
+  activeColor?: string;
+}
+```
+
+---
+
+## 7. State Handling Matrix
+
+| State Type | Customer Mobile App | Merchant Dashboard | Rider App | Admin Portal |
+|---|---|---|---|---|
+| **Loading** | Shimmer skeleton cards (`animate-pulse`) matching card height. | Table row skeleton placeholders; disabled action buttons. | Fullscreen centered spinner with "Locating dispatch server...". | Data grid skeleton overlay with persistent filter rail. |
+| **Empty** | "No merchants within 3km" illustration with `Expand to 5km` button. | "All caught up! Zero incoming orders" kitchen idle illustration. | "No delivery orders currently near you. Relocate to Indiranagar hotspot." | "Zero open dispute escalations requiring review." |
+| **Error** | `NPCIDiagnosticsCard` displaying error code + 1-tap failover retry. | Toast notification with retry CTA; red border highlighting failed field. | High-contrast alert banner with audio tone for network drop. | Modal error drawer with raw API error trace copy button. |
+| **Offline** | Floating bottom bar: "Connection lost. Using cached offline catalog." | Audio warning: "KDS Offline. Reconnecting to order stream...". | High-priority modal: "GPS / Data signal interrupted. Handshake paused." | Read-only banner: "Offline mode active. Mutations disabled." |
+
+---
+
+## 8. Cashfree Payment & Order Lifecycle State Machine
+
+```
+[ ORDER CREATED ] (Idempotency Key Generated)
+       │
+       ▼
+[ PAYMENT INITIATED ] (Cashfree Web / Intent SDK Handshake)
+       │
+       ├─────────────────────────────────┐
+       ▼ (Gateway Error / Drop-off)      ▼ (Bank Authorization Succeeded)
+[ PAYMENT FAILED ]                 [ AUTHORIZED / ESCROW HELD ]
+ (Inventory locked 08:42 mins)           │
+       │                                 ▼
+ (Failover Gateway / Retry)        [ ORDER ACCEPTED BY MERCHANT ]
+                                         │
+                                         ▼
+                                   [ PREPARING ORDER ]
+                                         │
+                                         ▼
+                                   [ OUT FOR DELIVERY ] (Rider Assigned)
+                                         │
+                                         ▼
+                                   [ DOORSTEP HANDOVER OTP ] (PIN: 4821)
+                                         │
+                                         ▼
+                                   [ ORDER COMPLETED & SETTLED ]
+                                         │
+                                         ▼
+                                   [ VERIFIED REVIEW UNLOCKED ]
+```
+
+### Refund State Machine:
+```
+[ CANCELLATION TRIGGERED ] (Merchant Out of Stock / User Valid Cancel)
+       │
+       ▼
+[ REFUND INITIATED ] (FastRail UPI Reverse Webhook Invoked)
+       │
+       ▼
+[ PROCESSING AT BANK SWITCH ] (NPCI IMPS Switch Handshake)
+       │
+       ▼
+[ REFUND COMPLETED ] (Settled to Source Bank + 10-Digit NPCI UTR Logged)
+       │
+       ▼
+[ GOODWILL COMPENSATION ] (₹50 TrustCash Auto-Credited to Wallet)
+```
+
+---
+
+## 9. Security, Compliance & DPDP Act 2023 Implementation
+
+1. **OTP & Doorstep PIN Masking**:
+   - The Doorstep Handover PIN (`4821`) must **never** be included in push notification preview payloads or open metadata.
+   - PIN is stored hashed or encrypted on client and decoded only when the customer views the active tracking view.
+2. **Phone Number Masking**:
+   - Customer and rider phone numbers must be routed through telephony bridge proxies. Raw telephone numbers are omitted from client-side JSON payloads.
+3. **DPDP Act 2023 Compliance**:
+   - Every customer retains the right to data portability and complete account deletion via `/profile`.
+   - Explicit consent toggles for WhatsApp transaction pings and location tracking are persisted in `user_consents` table `[NEEDS CODEBASE VERIFICATION]`.
+4. **Schedule H/H1 CDSCO Compliance**:
+   - Prescription images stored in Supabase Storage must use private signed URLs with maximum 15-minute expiration.
+   - Orders containing Schedule H medications are locked from fulfillment until a registered pharmacist signs off via Admin/Merchant desk.
+
+---
+
+## 10. Accessibility (a11y) & Performance Engineering
+
+- **Touch Targets**: Min 48px × 48px touch targets across all mobile apps (especially Rider App for outdoor use).
+- **Color Contrast**: 4.5:1 minimum contrast ratio for text elements against light surface `#faf8ff`.
+- **Screen Reader Support**: All icons must have descriptive `aria-label` tags (e.g. `aria-label="Verified FSSAI License"`).
+- **Core Web Vitals**: Target LCP < 1.8s on 4G networks; dynamic image imports using Next.js `<Image />` with AVIF/WebP formats and responsive `sizes` attribute.
+
+---
+
+## 11. Testing & QA Acceptance Checklist
+
+- [ ] **Auth Flow**: Supabase phone OTP successfully triggers SMS and authenticates valid +91 Indian numbers.
+- [ ] **Idempotent Checkout**: Repeated taps on "Pay" button do not trigger duplicate Cashfree order IDs.
+- [ ] **Payment Drop-off & Timer**: Declining payment correctly routes to `SCREEN_10` and initializes synchronized 08:42 countdown timer.
+- [ ] **Realtime Order Updates**: Status transitions initiated on Merchant KDS update the Customer Live Tracking view within 1.5 seconds without page reload.
+- [ ] **Doorstep OTP Handshake**: Rider app rejects incorrect 4-digit PIN and completes order only upon matching customer's confidential PIN (`4821`).
+- [ ] **Proof of Commerce Gate**: Verified review rating cannot be submitted without an authentic `order_id` in `DELIVERED` status.
+- [ ] **Offline Handling**: Disconnecting network displays the offline state banner and preserves active cart state in local storage.
+- [ ] **Statutory Compliance**: Grievance Officer details and FSSAI license numbers render correctly on all appropriate surfaces.

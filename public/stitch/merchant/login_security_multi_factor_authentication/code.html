@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-surface-variant": "#434652", "on-tertiary": "#ffffff", "inverse-primary": "#b0c6ff", "tertiary-container": "#005739", "tertiary-fixed-dim": "#71dba6", "tertiary-fixed": "#8df7c1", "on-tertiary-container": "#66d09c", "primary-fixed": "#d9e2ff", "on-primary-fixed": "#001945", "surface-bright": "#faf8ff", "on-primary-fixed-variant": "#00429c", "surface-dim": "#d2d9f4", "primary-fixed-dim": "#b0c6ff", "background": "#faf8ff", "secondary-fixed": "#9cf0ff", "on-surface": "#131b2e", "inverse-surface": "#283044", "on-error-container": "#93000a", "outline-variant": "#c3c6d4", "secondary-fixed-dim": "#00daf3", "surface-container-high": "#e2e7ff", "on-secondary-fixed": "#001f24", "on-secondary": "#ffffff", "outline": "#737783", "inverse-on-surface": "#eef0ff", "on-background": "#131b2e", "on-primary": "#ffffff", "surface-container-highest": "#dae2fd", "on-error": "#ffffff", "tertiary": "#003d27", "secondary": "#006875", "surface-tint": "#2b5bb5", "on-tertiary-fixed-variant": "#005235", "primary-container": "#0d47a1", "on-tertiary-fixed": "#002113", "secondary-container": "#00e3fd", "on-secondary-fixed-variant": "#004f58", "surface-container": "#eaedff", "on-primary-container": "#a1bbff", "surface-container-low": "#f2f3ff", "surface-container-lowest": "#ffffff", "error-container": "#ffdad6", "primary": "#003178", "surface-variant": "#dae2fd", "on-secondary-container": "#00616d", "surface": "#faf8ff", "error": "#ba1a1a" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "margin": "1rem", "margin-desktop": "2rem", "gutter-desktop": "1.5rem", "space-xl": "1.5rem", "space-md": "0.75rem", "gutter": "1rem", "margin-tablet": "1.5rem", "space-2xl": "2rem", "space-sm": "0.5rem", "space-lg": "1rem" }, "fontFamily": { "label-md": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "display": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "code-metric": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "title": ["Plus Jakarta Sans"] }, "fontSize": { "label-md": ["13px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "code-metric": ["14px", { "lineHeight": "20px", "fontWeight": "700" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "title": ["16px", { "lineHeight": "22px", "fontWeight": "600" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center gap-space-sm bg-surface-container"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-sm font-bold">T</div><div class="flex flex-col"><span class="font-title text-title text-primary tracking-tight">TRUSTIT</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Merchant Hub</span></div></div><div class="px-space-md py-space-sm"><div class="px-space-md py-space-sm rounded-lg bg-surface-container-lowest flex items-center justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span><span class="font-label-sm text-label-sm text-on-surface">SoundBox 4G</span></div><span class="font-label-sm text-label-sm text-tertiary font-semibold">LIVE SYNC</span></div></div><div class="px-space-lg py-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">Operations</span></div><nav class="px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">dashboard</span><span>Overview</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="orders" href="#"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span>Orders</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="products-inventory" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span>Products &amp; Inventory</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="store-management" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span>Store Management</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="delivery" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span>Delivery</span></a></nav><div class="px-space-lg pt-space-md py-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">Finance &amp; Growth</span></div><nav class="px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="payments-settlements" href="#"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span>Payments &amp; Settlements</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="material-symbols-outlined text-[20px]">loyalty</span><span>Subscriptions</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="qr-reviews" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span>QR &amp; Reviews</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="physical-products" href="#"><span class="material-symbols-outlined text-[20px]">point_of_sale</span><span>Physical Products</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">monitoring</span><span>Analytics</span></a></nav><div class="px-space-lg pt-space-md py-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">System</span></div><nav class="px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="notifications" href="#"><span class="material-symbols-outlined text-[20px]">notifications</span><span>Notifications</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="support" href="#"><span class="material-symbols-outlined text-[20px]">support_agent</span><span>Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings-security" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span>Settings</span></a></nav></div><div class="p-space-md m-space-md rounded-lg bg-surface-container flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">KYC Compliance</span><div class="flex items-center justify-between"><span class="font-body-sm text-body-sm text-on-surface font-semibold">Level 2 Verified</span><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span></div><div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden"><div class="bg-tertiary-container h-full w-full"></div></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="flex items-center gap-space-sm px-space-md py-space-xs rounded-lg bg-surface-container-low cursor-pointer"><span class="material-symbols-outlined text-primary text-[20px]">store</span><div class="flex flex-col"><span class="font-title text-body-sm text-on-surface font-semibold truncate max-w-[200px]">Sri Krishna Gourmet</span><span class="font-label-sm text-label-sm text-on-surface-variant">Indiranagar BLR</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span></div><div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded bg-surface-container-low"><span class="font-label-sm text-label-sm text-outline uppercase">GSTIN:</span><span class="font-code-metric text-code-metric text-on-surface">29AABCS1429B1ZB</span><span class="material-symbols-outlined text-tertiary-container text-[16px]">verified_user</span></div><div class="flex-1 flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container"><span class="material-symbols-outlined text-outline text-[18px]">search</span><input class="bg-transparent border-0 outline-none w-full font-body-sm text-body-sm text-on-surface placeholder:text-outline" placeholder="Search orders, SKU, settlements (Ctrl+K)..." type="text"/></div></div><div class="flex items-center gap-space-md"><button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-secondary-container text-on-secondary-fixed font-title text-body-sm shadow-[0_1px_8px_rgba(0,0,0,0.04)] hover:bg-secondary-fixed-dim transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span>Instant Settle</span></button><div class="relative flex items-center justify-center p-space-xs rounded-lg hover:bg-surface-container cursor-pointer"><span class="material-symbols-outlined text-on-surface-variant text-[22px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span></div><div class="h-6 w-px bg-outline-variant"></div><div class="flex items-center gap-space-sm cursor-pointer"><div class="flex flex-col text-right"><span class="font-title text-body-sm text-on-surface font-semibold leading-tight">Raghavendra Rao</span><span class="font-label-sm text-label-sm text-primary uppercase">Master Admin</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 w-full px-space-xl bg-background"><div class="flex flex-col w-full pb-space-2xl">
+<!-- Breadcrumb & Page Header Section -->
+<div class="flex flex-col gap-space-sm pt-space-lg pb-space-xl">
+<div class="flex items-center gap-space-xs text-on-surface-variant">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline">Settings</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-semibold">Login Security &amp; MFA</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-tertiary-container font-semibold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container"></span>
+        Zero-Trust Enforced
+      </span>
+</div>
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="flex flex-col max-w-4xl">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Login Security, 2FA &amp; Hardware Authentication</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">
+          Protect your merchant enterprise with zero-trust multi-factor authentication, biometric passkeys, FIDO2 physical keys, and continuous risk-based telemetry.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm self-start lg:self-auto">
+<div class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container-high shadow-sm">
+<span class="material-symbols-outlined text-primary text-[18px]">admin_panel_settings</span>
+<span class="font-label-md text-label-md text-on-surface">SOC2 Type II Active</span>
+</div>
+<button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container-lowest text-on-surface font-title text-body-sm shadow-sm hover:bg-surface-container transition-all" type="button">
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">history</span>
+<span>Security Audit Log</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Hero Visual & Security Posture Scorecard Banner -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-xl mb-space-2xl">
+<!-- Main Scorecard Card -->
+<div class="xl:col-span-8 rounded-xl bg-surface-container-lowest p-space-xl shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-tertiary-fixed/30 blur-3xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col gap-space-lg">
+<div class="flex flex-wrap items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-tertiary-container flex items-center justify-center text-on-tertiary shadow-sm">
+<span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">verified_user</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase text-outline tracking-wider">Zero-Trust Enterprise Guard</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">Security Posture: EXCELLENT</span>
+<span class="px-space-sm py-0.5 rounded text-label-sm font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold uppercase tracking-wide">96 / 100</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded bg-surface-container">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-ping"></span>
+<span class="font-code-metric text-code-metric text-on-surface">Auto-reconciliation Live</span>
+</div>
+</div>
+<!-- Metric Score Breakdown Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-space-md pt-space-xs">
+<div class="flex flex-col p-space-md rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">key</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">+25 pts</span>
+</div>
+<span class="font-title text-body-sm text-on-surface mt-2 font-semibold">FIDO2 Hardware Key</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Configured for transfers</span>
+</div>
+<div class="flex flex-col p-space-md rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">groups</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">+25 pts</span>
+</div>
+<span class="font-title text-body-sm text-on-surface mt-2 font-semibold">Mandatory 2FA</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">100% staff compliant</span>
+</div>
+<div class="flex flex-col p-space-md rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">timer</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">+25 pts</span>
+</div>
+<span class="font-title text-body-sm text-on-surface mt-2 font-semibold">Session Idle: 30m</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Strictest threshold</span>
+</div>
+<div class="flex flex-col p-space-md rounded-lg bg-surface-container-low">
+<div class="flex items-center justify-between">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">distance</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">+21 pts</span>
+</div>
+<span class="font-title text-body-sm text-on-surface mt-2 font-semibold">Geo-Fenced Perimeter</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">BLR Urban perimeter active</span>
+</div>
+</div>
+<!-- Progress Bar Strip -->
+<div class="flex flex-col gap-1.5 pt-space-xs">
+<div class="flex justify-between items-center font-label-sm text-label-sm text-on-surface-variant">
+<span>Enterprise Compliance Benchmark (Reserve Bank of India Master Direction for Digital Payment Security)</span>
+<span class="font-code-metric text-code-metric text-on-surface">Target: 90 / Actual: 96</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full overflow-hidden flex">
+<div class="bg-tertiary-container h-full" style="width: 96%;"></div>
+<div class="bg-error-container h-full" style="width: 4%;"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Quick Telemetry & Trust Score Visual Element -->
+<div class="xl:col-span-4 rounded-xl bg-primary text-on-primary p-space-xl shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="absolute -left-10 -bottom-10 w-44 h-44 rounded-full bg-primary-container blur-2xl opacity-60 pointer-events-none"></div>
+<div class="relative z-10 flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary-fixed-dim">Real-Time Threat Shield</span>
+<span class="px-space-xs py-0.5 rounded text-label-sm font-label-sm bg-tertiary-container text-on-tertiary">ARMED</span>
+</div>
+<div class="font-headline-md text-headline-md tracking-tight leading-snug">
+          Zero Suspicious Sign-ins in Past 30 Days
+        </div>
+<p class="font-body-sm text-body-sm text-primary-fixed">
+          All settlement payout authorizations and sensitive staff additions require biometric or physical FIDO2 key affirmation.
+        </p>
+</div>
+<div class="relative z-10 pt-space-md flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-primary-fixed-dim">Registered Enterprise ID</span>
+<span class="font-code-metric text-code-metric text-on-primary">TR-9941-BLR-ENT</span>
+</div>
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container-lowest text-primary font-title text-body-sm shadow-sm hover:bg-surface-container-high transition-colors" type="button">
+          Download Report
+        </button>
+</div>
+</div>
+</div>
+<!-- Multi-Factor Authentication Methods (The Primary Workspace) -->
+<div class="flex flex-col gap-space-lg mb-space-2xl">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-xs">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Configured Authentication Factors</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Step-up authentication tiers arranged in hierarchy of cryptographic protection.</p>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant text-body-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary-container">shield</span>
+<span class="font-label-sm text-label-sm">Hardware-level cryptography strongly prioritized</span>
+</div>
+</div>
+<!-- Factor Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+<!-- 1. Passkeys & Biometrics -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">fingerprint</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-title text-on-surface">Passkeys &amp; Biometric Auth</span>
+<span class="px-space-xs py-0.5 rounded text-label-sm font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold">2 ACTIVE</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">WebAuthn, Apple Touch ID, Face ID, Windows Hello</span>
+</div>
+</div>
+<button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-primary text-on-primary font-title text-body-sm shadow-sm hover:bg-primary-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span>Register Passkey</span>
+</button>
+</div>
+<div class="flex flex-col gap-space-xs mt-space-xs">
+<!-- Passkey Item 1 -->
+<div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">laptop_mac</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">MacBook Pro Raghavendra Rao (Touch ID)</span>
+<span class="font-label-sm text-label-sm text-outline">Registered 12 Oct 2024 • Chrome 129 • Bangalore Office</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-sm text-label-sm text-tertiary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> synced
+                </span>
+<button class="text-on-surface-variant hover:text-error transition-colors" title="Remove device" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+<!-- Passkey Item 2 -->
+<div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">phone_android</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Pixel 8 Pro (Biometric Unlock)</span>
+<span class="font-label-sm text-label-sm text-outline">Registered 18 Oct 2024 • Chrome Mobile • Personal Device</span>
+</div>
+</div>
+<div class="flex items-center gap-space-md">
+<span class="font-label-sm text-label-sm text-tertiary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> synced
+                </span>
+<button class="text-on-surface-variant hover:text-error transition-colors" title="Remove device" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm">Supports FIDO Alliance passwordless protocol.</span>
+<a class="font-label-sm text-label-sm text-primary font-semibold hover:underline" href="#">How passkeys work</a>
+</div>
+</div>
+<!-- 2. Hardware Security Key (FIDO2 / YubiKey) -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">usb</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-title text-on-surface">Hardware Security Key (FIDO2)</span>
+<span class="px-space-xs py-0.5 rounded text-label-sm font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold">1 CONFIGURED</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Phishing-resistant physical hardware authentication</span>
+</div>
+</div>
+<button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container-high text-on-surface font-title text-body-sm shadow-sm hover:bg-surface-container-highest transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+<span>Add Key</span>
+</button>
+</div>
+<!-- YubiKey Details Box -->
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">YubiKey 5C NFC</span>
+<span class="font-code-metric text-code-metric text-on-surface-variant">Serial #••••••••9210</span>
+</div>
+</div>
+<span class="px-space-sm py-0.5 rounded bg-tertiary-container text-on-tertiary font-label-sm text-label-sm">PRIMARY SETTLEMENT KEY</span>
+</div>
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs text-on-surface-variant">
+<div class="flex items-center gap-1 font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px] text-tertiary-container">done</span>
+                Enforced for Instant Settlement (&gt;₹50,000)
+              </div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px] text-tertiary-container">done</span>
+                PIN + NFC Presence Verified
+              </div>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm">Recommended for owner-level withdrawal privileges.</span>
+<button class="font-label-sm text-label-sm text-primary font-semibold hover:underline" type="button">Test Key Presence</button>
+</div>
+</div>
+<!-- 3. Authenticator App (TOTP) -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">phonelink_lock</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-title text-on-surface">Authenticator App (TOTP)</span>
+<span class="px-space-xs py-0.5 rounded text-label-sm font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold">ACTIVE</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Google Authenticator, Microsoft Authenticator, or Bitwarden</span>
+</div>
+</div>
+<button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container-high text-on-surface font-title text-body-sm shadow-sm hover:bg-surface-container-highest transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">sync</span>
+<span>Reconfigure</span>
+</button>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col gap-1">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Verified on 24 Sep 2024, 14:32 IST</span>
+<span class="font-label-sm text-label-sm text-outline">Time-based one-time code refreshed every 30 seconds</span>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="flex flex-col text-right">
+<span class="font-code-metric text-code-metric text-on-surface font-bold">8 Codes</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Remaining</span>
+</div>
+<button class="px-space-sm py-space-xs rounded bg-surface-container text-primary font-label-md text-label-md hover:bg-primary-fixed transition-colors" type="button">
+                Regenerate Vault Codes
+              </button>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm">Offline code generator works without cell service.</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">lock</span> Vault encrypted
+          </span>
+</div>
+</div>
+<!-- 4. SMS & WhatsApp OTP -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">sms</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-title text-on-surface">SMS &amp; WhatsApp OTP (Fallback)</span>
+<span class="px-space-xs py-0.5 rounded text-label-sm font-label-sm bg-surface-container-highest text-on-surface-variant font-bold">LOW PRIORITY</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Telecom-routed single-use dynamic codes</span>
+</div>
+</div>
+<div class="flex items-center">
+<span class="px-space-sm py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">Configured</span>
+</div>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-code-metric text-code-metric text-on-surface font-semibold">+91 98450 •••••</span>
+<span class="px-space-xs py-0.2 rounded text-[10px] font-label-sm bg-tertiary-fixed text-on-tertiary-fixed">DLT VERIFIED</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Airtel Telecom Gateway</span>
+</div>
+<!-- Policy Warning / Callout -->
+<div class="p-space-xs px-space-sm rounded bg-surface-container text-on-surface-variant flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[16px]">info</span>
+<span class="font-label-sm text-label-sm">Hardware key or TOTP is strictly prioritized for bank account changes and payouts over SMS.</span>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between text-on-surface-variant">
+<span class="font-label-sm text-label-sm">Vulnerable to SIM-swap attacks; used solely as tertiary backup.</span>
+<button class="font-label-sm text-label-sm text-outline hover:text-on-surface" type="button">Update Phone</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Adaptive Risk-Based Authentication & Organization Policies (Split Bento) -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-xl mb-space-2xl">
+<!-- Adaptive Risk Controls (Col 7) -->
+<div class="xl:col-span-7 rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">tune</span>
+<div class="flex flex-col">
+<h3 class="font-title text-title text-on-surface">Adaptive Risk-Based Controls</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Zero-Trust perimeter heuristics applied dynamically to every session token.</p>
+</div>
+</div>
+<span class="px-space-sm py-0.5 rounded text-label-sm font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold">ALL ACTIVE</span>
+</div>
+<div class="flex flex-col gap-space-md pt-space-xs">
+<!-- Toggle Row 1: Geo-Fencing -->
+<div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-start gap-space-md max-w-lg">
+<div class="p-space-xs rounded bg-surface-container-high text-primary mt-1">
+<span class="material-symbols-outlined text-[20px]">location_searching</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Geo-Fencing Login Restrictions</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+                  Automatically challenge with step-up FIDO2 prompt if sign-in originates &gt;50 km outside Bengaluru Urban metropolitan perimeter.
+                </span>
+<span class="font-label-sm text-label-sm text-tertiary font-semibold mt-1">Current Anchor: Indiranagar 100ft Rd [12.9716° N, 77.5946° E]</span>
+</div>
+</div>
+<!-- Switch UI -->
+<button aria-checked="true" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full bg-primary-container p-0.5 transition-colors focus:outline-none" role="switch" type="button">
+<span class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-on-primary shadow-sm transition duration-200 ease-in-out"></span>
+</button>
+</div>
+<!-- Toggle Row 2: Off-Hours Alert -->
+<div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-start gap-space-md max-w-lg">
+<div class="p-space-xs rounded bg-surface-container-high text-primary mt-1">
+<span class="material-symbols-outlined text-[20px]">bedtime</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Off-Hours Login Verification</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+                  Trigger instant WhatsApp &amp; push alert notifications for merchant console logins occurring between 23:30 IST and 06:00 IST.
+                </span>
+<span class="font-label-sm text-label-sm text-outline mt-1">Audit log flagged: 0 anomalous attempts recorded</span>
+</div>
+</div>
+<!-- Switch UI -->
+<button aria-checked="true" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full bg-primary-container p-0.5 transition-colors focus:outline-none" role="switch" type="button">
+<span class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-on-primary shadow-sm transition duration-200 ease-in-out"></span>
+</button>
+</div>
+<!-- Toggle Row 3: Concurrent Sessions -->
+<div class="flex items-center justify-between p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<div class="flex items-start gap-space-md max-w-lg">
+<div class="p-space-xs rounded bg-surface-container-high text-primary mt-1">
+<span class="material-symbols-outlined text-[20px]">devices</span>
+</div>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Concurrent Desktop Session Caps</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+                  Limit to maximum 2 concurrent desktop portal sessions per master credentials. Older active tokens automatically terminated.
+                </span>
+<span class="font-label-sm text-label-sm text-primary font-semibold mt-1">Active Now: 1 Session (This terminal)</span>
+</div>
+</div>
+<!-- Switch UI -->
+<button aria-checked="true" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full bg-primary-container p-0.5 transition-colors focus:outline-none" role="switch" type="button">
+<span class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-on-primary shadow-sm transition duration-200 ease-in-out"></span>
+</button>
+</div>
+</div>
+</div>
+<div class="pt-space-md flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm">Heuristics powered by TRUSTIT Enterprise Threat Matrix v4.2</span>
+<button class="text-primary font-label-md text-label-md hover:underline" type="button">Configure Custom Radius</button>
+</div>
+</div>
+<!-- Staff Enforcement & Recovery Vault (Col 5) -->
+<div class="xl:col-span-5 flex flex-col gap-space-xl">
+<!-- Staff 2FA Policy Box -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-md">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-primary-fixed flex items-center justify-center text-primary font-bold">
+<span class="material-symbols-outlined text-[22px]">corporate_fare</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-title text-title text-on-surface">Store Staff 2FA Policy</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Global Merchant Hierarchy</span>
+</div>
+</div>
+<span class="px-space-xs py-0.5 rounded text-label-sm font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold">100% COMPLIANT</span>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Enforce 2FA for all Store Managers &amp; Cashiers</span>
+<button aria-checked="true" class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full bg-primary-container p-0.5 transition-colors focus:outline-none" role="switch" type="button">
+<span class="translate-x-5 pointer-events-none inline-block h-5 w-5 transform rounded-full bg-on-primary shadow-sm transition duration-200 ease-in-out"></span>
+</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Every staff login on handheld POS terminals or billing counters must confirm secondary prompt via SMS or Authenticator App.
+            </p>
+<div class="flex items-center justify-between pt-space-xs font-label-sm text-label-sm">
+<span class="text-on-surface-variant">Compliant Users: <b class="text-on-surface">14 / 14</b></span>
+<span class="text-on-surface-variant">Grace Period: <b class="text-on-surface">0 Days (Strict)</b></span>
+</div>
+</div>
+</div>
+<div class="pt-space-md flex items-center justify-between">
+<button class="font-label-sm text-label-sm text-primary font-semibold hover:underline" type="button">View Staff 2FA Roster</button>
+<button class="font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" type="button">Export Security Log</button>
+</div>
+</div>
+<!-- Emergency Recovery & Escrow Contacts -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col justify-between">
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">health_and_safety</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-title text-title text-on-surface">Account Recovery Vault</h3>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Break-glass emergency protocols</span>
+</div>
+</div>
+<span class="px-space-xs py-0.5 rounded text-label-sm font-label-sm bg-surface-container text-on-surface-variant font-bold">SECURED</span>
+</div>
+<div class="flex flex-col gap-space-xs pt-space-xs">
+<div class="p-space-sm px-space-md rounded bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[18px]">phone_iphone</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Secondary Partner Phone</span>
+<span class="font-label-sm text-label-sm text-outline">+91 94480 ••••• (Managing Director)</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span>
+</div>
+<div class="p-space-sm px-space-md rounded bg-surface-container-low flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-outline text-[18px]">token</span>
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Physical Escrow Token</span>
+<span class="font-label-sm text-label-sm text-outline">Stored in Bengaluru Bank Locker</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span>
+</div>
+</div>
+</div>
+<div class="pt-space-sm flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Dual-authorization required to recover.</span>
+<button class="font-label-sm text-label-sm text-primary font-semibold hover:underline" type="button">Manage Custodians</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Active Authorized Login Terminals (Desktop Dense Table) -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div class="flex flex-col">
+<h3 class="font-title text-title text-on-surface">Active Merchant Terminal Sessions</h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Real-time authorized hardware tokens with valid bearer certificates.</p>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container text-on-surface font-title text-body-sm hover:bg-surface-container-high transition-colors" type="button">
+          Refresh Heartbeats
+        </button>
+<button class="px-space-md py-space-xs rounded-lg bg-error text-on-error font-title text-body-sm hover:opacity-90 transition-opacity" type="button">
+          Revoke All Other Sessions
+        </button>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container-low text-outline font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-space-sm px-space-md rounded-l">Device &amp; Operating System</th>
+<th class="py-space-sm px-space-md">Auth Method Used</th>
+<th class="py-space-sm px-space-md">Location &amp; IP</th>
+<th class="py-space-sm px-space-md">Session Started</th>
+<th class="py-space-sm px-space-md">Status</th>
+<th class="py-space-sm px-space-md text-right rounded-r">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y-0">
+<!-- Row 1: Current Active Device -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">laptop_mac</span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface font-semibold flex items-center gap-1.5">
+                    MacBook Pro (M3 Max)
+                    <span class="px-1.5 py-0.2 rounded text-[10px] font-label-sm bg-primary-fixed text-on-primary-fixed">THIS DEVICE</span>
+</span>
+<span class="font-label-sm text-label-sm text-outline">macOS Sonoma • Chrome 129.0</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-1 text-tertiary font-semibold">
+<span class="material-symbols-outlined text-[16px]">fingerprint</span>
+<span>WebAuthn Passkey</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="text-on-surface">Indiranagar, Bangalore</span>
+<span class="font-code-metric text-code-metric text-outline">49.207.214.18 (ACT Fibernet)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="text-on-surface">Today, 08:30 IST</span>
+<span class="font-label-sm text-label-sm text-outline">Expires in 28 mins</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full text-label-sm font-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span>
+                ACTIVE NOW
+              </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<span class="font-label-sm text-label-sm text-outline italic">Master Terminal</span>
+</td>
+</tr>
+<!-- Row 2: POS Billing Terminal -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">point_of_sale</span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface font-semibold">Sunmi V2 Pro (Billing Counter 1)</span>
+<span class="font-label-sm text-label-sm text-outline">Android 12 • TrustPOS App v3.4</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-1 text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-primary">pin</span>
+<span>Manager PIN + 2FA SMS</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="text-on-surface">Gourmet Storefront, Indiranagar</span>
+<span class="font-code-metric text-code-metric text-outline">103.115.198.4 (Store Wi-Fi)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="text-on-surface">Today, 06:15 IST</span>
+<span class="font-label-sm text-label-sm text-outline">Shift active for 8h</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container-high text-on-surface font-semibold">
+                COUNTER ACTIVE
+              </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="text-on-surface-variant hover:text-error transition-colors font-label-md text-label-md" type="button">
+                Terminate
+              </button>
+</td>
+</tr>
+<!-- Row 3: Handheld Tablet -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-on-surface-variant text-[20px]">tablet_mac</span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface font-semibold">iPad Air (Kitchen Display &amp; KOT)</span>
+<span class="font-label-sm text-label-sm text-outline">iPadOS 17 • Safari POS Web</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex items-center gap-1 text-on-surface">
+<span class="material-symbols-outlined text-[16px] text-tertiary-container">verified</span>
+<span>FIDO2 Token Pair</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="text-on-surface">Indiranagar Kitchen</span>
+<span class="font-code-metric text-code-metric text-outline">103.115.198.4 (Store Wi-Fi)</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<div class="flex flex-col">
+<span class="text-on-surface">Yesterday, 19:40 IST</span>
+<span class="font-label-sm text-label-sm text-outline">Idle for 45m</span>
+</div>
+</td>
+<td class="py-space-md px-space-md">
+<span class="inline-flex items-center gap-1 px-space-sm py-0.5 rounded-full text-label-sm font-label-sm bg-surface-container-high text-on-surface-variant font-semibold">
+                STANDBY
+              </span>
+</td>
+<td class="py-space-md px-space-md text-right">
+<button class="text-on-surface-variant hover:text-error transition-colors font-label-md text-label-md" type="button">
+                Terminate
+              </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Bottom Helper / Security Banner -->
+<div class="mt-space-xl p-space-lg rounded-xl bg-surface-container-low flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center text-primary flex-shrink-0">
+<span class="material-symbols-outlined text-[22px]">contact_support</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface font-semibold">Lost your hardware key or phone?</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Contact our dedicated 24x7 Enterprise Merchant Risk Desk to initiate identity re-verification with video KYC.</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<a class="px-space-md py-space-xs rounded-lg bg-surface-container-lowest text-primary font-title text-body-sm shadow-sm hover:bg-surface-container transition-colors" href="#">
+        Call Merchant Concierge (1800-419-8989)
+      </a>
+</div>
+</div>
+</div></main></div></body></html>

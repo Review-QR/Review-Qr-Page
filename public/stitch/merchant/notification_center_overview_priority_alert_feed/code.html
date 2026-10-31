@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"tertiary-container":"#005739","surface-variant":"#dae2fd","on-primary-fixed":"#001945","secondary-fixed-dim":"#00daf3","background":"#faf8ff","on-error-container":"#93000a","primary":"#003178","on-primary-fixed-variant":"#00429c","on-tertiary-container":"#66d09c","on-secondary":"#ffffff","on-primary":"#ffffff","surface-bright":"#faf8ff","on-secondary-fixed":"#001f24","surface-container-low":"#f2f3ff","error-container":"#ffdad6","surface-dim":"#d2d9f4","on-error":"#ffffff","on-tertiary-fixed-variant":"#005235","primary-fixed-dim":"#b0c6ff","on-secondary-container":"#00616d","on-background":"#131b2e","surface-container-high":"#e2e7ff","on-primary-container":"#a1bbff","on-tertiary":"#ffffff","on-secondary-fixed-variant":"#004f58","primary-container":"#0d47a1","on-surface":"#131b2e","surface-tint":"#2b5bb5","tertiary-fixed-dim":"#71dba6","surface-container-lowest":"#ffffff","surface":"#faf8ff","secondary":"#006875","surface-container-highest":"#dae2fd","on-surface-variant":"#434652","error":"#ba1a1a","surface-container":"#eaedff","primary-fixed":"#d9e2ff","inverse-on-surface":"#eef0ff","on-tertiary-fixed":"#002113","outline-variant":"#c3c6d4","tertiary":"#003d27","inverse-surface":"#283044","secondary-fixed":"#9cf0ff","tertiary-fixed":"#8df7c1","outline":"#737783","secondary-container":"#00e3fd","inverse-primary":"#b0c6ff"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"margin-tablet":"1.5rem","margin":"1rem","margin-desktop":"2rem","space-xl":"1.5rem","space-2xl":"2rem","space-xs":"0.25rem","space-lg":"1rem","space-sm":"0.5rem","space-md":"0.75rem","gutter":"1rem","gutter-desktop":"1.5rem"},fontFamily:{"display":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"code-metric":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"title":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"]},fontSize:{"display":["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"700"}],"code-metric":["14px",{lineHeight:"20px",fontWeight:"700"}],"body-sm":["13px",{lineHeight:"18px",fontWeight:"400"}],"title":["16px",{lineHeight:"22px",fontWeight:"600"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}],"headline-sm":["18px",{lineHeight:"24px",fontWeight:"600"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-md":["13px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"600"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">shield_locked</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary leading-tight font-bold tracking-tight">TRUSTIT</span><span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Merchant Hub</span></div></div><span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface-variant font-semibold">v2.4</span></div><nav class="px-space-md py-space-sm space-y-space-md" data-active-classes="bg-primary-container text-on-primary font-title"><div class="space-y-1"><p class="px-space-md py-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">Operations</p><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="font-body-md text-body-md">Overview</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="orders" href="#"><span class="font-body-md text-body-md">Orders</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="products-inventory" href="#"><span class="font-body-md text-body-md">Products &amp; Inventory</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="store-management" href="#"><span class="font-body-md text-body-md">Store Management</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="delivery-operations-fleet-sla-analytics" href="#"><span class="font-body-md text-body-md">Delivery</span></a></div><div class="space-y-1"><p class="px-space-md py-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">Finance &amp; Growth</p><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="payments-settlements" href="#"><span class="font-body-md text-body-md">Payments &amp; Settlements</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="font-body-md text-body-md">Subscriptions</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="qr-reviews" href="#"><span class="font-body-md text-body-md">QR &amp; Reviews</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="physical-products" href="#"><span class="font-body-md text-body-md">Physical Products</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="font-body-md text-body-md">Analytics</span></a></div><div class="space-y-1"><p class="px-space-md py-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">System</p><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg bg-primary-container text-on-primary font-title transition-colors" data-path="notifications-overview-feed" href="#"><span class="font-body-md text-body-md">Notifications</span><span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-secondary-container text-on-secondary-container font-bold">5</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors pl-space-xl" data-path="communication-preferences-channels" href="#"><span class="font-body-sm text-body-sm">Channels &amp; Sound</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors pl-space-xl" data-path="announcements-audit-history" href="#"><span class="font-body-sm text-body-sm">Broadcasts &amp; Audit</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="support" href="#"><span class="font-body-md text-body-md">Support</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="font-body-md text-body-md">Settings</span></a></div></nav></div><div class="p-space-md bg-surface-container-low m-space-md rounded-xl space-y-space-sm"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wider">Compliance Status</span><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified_user</span></div><div class="space-y-space-xs"><div class="flex items-center justify-between bg-surface-container-lowest px-space-sm py-space-xs rounded"><span class="font-label-sm text-label-sm text-on-surface-variant">GSTIN</span><span class="font-label-sm text-label-sm text-tertiary-container font-bold flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">check_circle</span> VERIFIED</span></div><div class="flex items-center justify-between bg-surface-container-lowest px-space-sm py-space-xs rounded"><span class="font-label-sm text-label-sm text-on-surface-variant">FSSAI</span><span class="font-label-sm text-label-sm text-tertiary-container font-bold flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">check_circle</span> VERIFIED</span></div></div><div class="flex items-center justify-between pt-space-xs"><span class="font-label-sm text-label-sm text-outline">Merchant ID</span><span class="font-code-metric text-code-metric text-primary font-bold">TR-883921</span></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-space-xs rounded-lg"><span class="material-symbols-outlined text-secondary text-[20px]">store</span><div class="flex items-center gap-space-sm"><span class="font-title text-title text-on-surface font-semibold">Sri Krishna Gourmet, Indiranagar BLR</span><span class="px-space-xs py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container animate-pulse"></span> LIVE</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span></div><div class="hidden xl:flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1.5 rounded-full shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><span class="material-symbols-outlined text-secondary text-[18px]">speaker_phone</span><span class="font-label-sm text-label-sm text-on-surface font-semibold">SoundBox 4G</span><span class="w-2 h-2 rounded-full bg-tertiary-container"></span><span class="font-label-sm text-label-sm text-tertiary-container font-bold">SYNCED</span></div></div><div class="flex items-center gap-space-md"><div class="relative hidden lg:block w-64"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span><input class="w-full bg-surface-container-low rounded-lg pl-9 pr-space-md py-1.5 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-colors" placeholder="Search UTR, Order ID, UPI..." type="text"/></div><button class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors"><span class="material-symbols-outlined text-[18px]">download</span><span class="font-label-md text-label-md font-semibold">Settlement</span></button><button class="w-9 h-9 rounded-lg bg-surface-container-low hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">help_outline</span></button><div class="flex items-center gap-space-sm pl-space-sm"><div class="flex flex-col text-right hidden sm:block"><span class="font-title text-title text-on-surface font-semibold">Rajesh Sharma</span><span class="font-label-sm text-label-sm text-outline">Store Owner</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Main Canvas Container -->
+<div class="w-full px-space-xl py-space-lg max-w-[1600px] mx-auto space-y-space-lg">
+<!-- Breadcrumb & Page Meta Ribbon -->
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm pb-space-xs">
+<div class="flex flex-col gap-0.5">
+<nav class="flex items-center gap-space-xs font-label-sm text-label-sm tracking-widest text-outline uppercase">
+<span>System</span>
+<span class="material-symbols-outlined text-[13px] text-outline-variant">chevron_right</span>
+<span>Notifications</span>
+<span class="material-symbols-outlined text-[13px] text-outline-variant">chevron_right</span>
+<span class="text-primary font-bold">Notification Overview &amp; Feed</span>
+</nav>
+<div class="flex items-center gap-space-md mt-0.5">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight font-bold">
+            Triage Desk &amp; Operational Alerts
+          </h1>
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm font-bold">
+<span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+            ACTIVE SOCKET: 120ms
+          </span>
+</div>
+</div>
+<!-- Quick Global Feed Control -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<div class="flex items-center gap-2 px-space-md py-1.5 rounded-lg bg-surface-container-lowest shadow-sm">
+<span class="material-symbols-outlined text-secondary text-[18px]">volume_up</span>
+<span class="font-label-md text-label-md text-on-surface">SoundBox 4G + Portal Beep</span>
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+</div>
+<button class="flex items-center gap-1.5 px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface shadow-sm font-label-md text-label-md font-semibold transition-all" id="btn-mark-all">
+<span class="material-symbols-outlined text-[16px] text-outline">done_all</span>
+          Mark All as Read
+        </button>
+<a class="flex items-center gap-1 px-space-md py-2 rounded-lg bg-primary hover:bg-primary-container text-on-primary shadow-sm font-label-md text-label-md font-semibold transition-all" data-path="communication-preferences-channels" href="#">
+<span class="material-symbols-outlined text-[16px]">tune</span>
+          Preferences
+        </a>
+</div>
+</div>
+<!-- Triage Metric Stat Ribbon (Bento Micro-Cards) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-md">
+<!-- Unread Critical Card -->
+<div class="relative overflow-hidden p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between group">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-error-container/40 pointer-events-none transition-transform group-hover:scale-125"></div>
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-bold">Priority Triage</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display text-display text-error leading-none">03</span>
+<span class="font-label-sm text-label-sm text-error font-bold uppercase">SLA Imminent</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">warning</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm pt-space-xs">
+<span>Requires dispatch/statutory fix</span>
+<span class="font-code-metric text-code-metric text-error font-bold">&lt; 15 min SLA</span>
+</div>
+</div>
+<!-- Operational Alerts Card -->
+<div class="relative overflow-hidden p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between group">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-surface-container-high/60 pointer-events-none transition-transform group-hover:scale-125"></div>
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-bold">Operational Events Today</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display text-display text-primary leading-none">18</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container-high text-primary font-bold">+6 vs Y’day</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">storefront</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm pt-space-xs">
+<span>Orders, 3PL riders &amp; QR taps</span>
+<span class="font-code-metric text-code-metric text-primary font-bold">99.4% on time</span>
+</div>
+</div>
+<!-- Settlements & Payouts Card -->
+<div class="relative overflow-hidden p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between group">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-secondary-container/20 pointer-events-none transition-transform group-hover:scale-125"></div>
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-bold">Cashfree Nodal Disbursals</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display text-display text-secondary leading-none">₹26.6k</span>
+<span class="font-label-sm text-label-sm text-secondary font-bold">4 batches</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-high text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">account_balance</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm pt-space-xs">
+<span>HDFC Current A/C ****8729</span>
+<span class="font-code-metric text-code-metric text-secondary font-bold">T+0 Active</span>
+</div>
+</div>
+<!-- Compliance Health Card -->
+<div class="relative overflow-hidden p-space-lg rounded-xl bg-surface-container-lowest shadow-sm flex flex-col justify-between group">
+<div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full bg-tertiary-fixed/30 pointer-events-none transition-transform group-hover:scale-125"></div>
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-outline font-bold">Compliance &amp; Vault Health</span>
+<div class="flex items-baseline gap-2">
+<span class="font-display text-display text-tertiary-container leading-none">100%</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container text-tertiary-container font-bold">Locked</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container text-tertiary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">verified_user</span>
+</div>
+</div>
+<div class="mt-space-md flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm pt-space-xs">
+<span>KYC, 2FA, GSTIN Verified</span>
+<span class="font-code-metric text-code-metric text-tertiary-container font-bold">Zero Breach</span>
+</div>
+</div>
+</div>
+<!-- Main Content Workspace Grid (9 cols Feed + 3 cols Quick Triage Panel) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
+<!-- Feed Stream Left Column -->
+<div class="lg:col-span-8 xl:col-span-9 space-y-space-md">
+<!-- Filter Tabs & State Controls -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm space-y-space-sm">
+<!-- Module Category Tabs -->
+<div class="flex items-center gap-1.5 overflow-x-auto pb-1 text-nowrap scrollbar-none" id="feed-category-tabs">
+<button class="filter-tab px-space-md py-1.5 rounded-lg bg-primary text-on-primary font-label-md text-label-md font-bold transition-all shadow-sm" data-filter="all">
+              All Notifications <span class="ml-1 opacity-90 text-[11px] px-1.5 py-0.2 bg-white/20 rounded-full">24</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md font-semibold transition-all" data-filter="orders">
+              New Orders <span class="ml-1 text-[11px] px-1.5 py-0.2 bg-surface-container-highest rounded-full">6</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md font-semibold transition-all" data-filter="payments">
+              Payments &amp; Settlements <span class="ml-1 text-[11px] px-1.5 py-0.2 bg-surface-container-highest rounded-full">4</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md font-semibold transition-all" data-filter="delivery">
+              Delivery &amp; Fleet <span class="ml-1 text-[11px] px-1.5 py-0.2 bg-surface-container-highest rounded-full">5</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md font-semibold transition-all" data-filter="reviews">
+              Reviews &amp; Reputation <span class="ml-1 text-[11px] px-1.5 py-0.2 bg-surface-container-highest rounded-full">3</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md font-semibold transition-all" data-filter="compliance">
+              Security &amp; Compliance <span class="ml-1 text-[11px] px-1.5 py-0.2 bg-surface-container-highest rounded-full">2</span>
+</button>
+<button class="filter-tab px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md font-semibold transition-all" data-filter="merchandise">
+              Subscriptions &amp; QR <span class="ml-1 text-[11px] px-1.5 py-0.2 bg-surface-container-highest rounded-full">4</span>
+</button>
+</div>
+<!-- Secondary Sub-filter Filter Bar -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs bg-surface-container-low px-space-md py-space-xs rounded-lg">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wider">Status:</span>
+<button class="px-space-sm py-1 rounded bg-secondary-container text-on-secondary-container font-label-sm text-label-sm font-bold flex items-center gap-1 shadow-sm" id="filter-unread-toggle">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Unread Only (5)
+              </button>
+<button class="px-space-sm py-1 rounded hover:bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-semibold">
+                All Alerts
+              </button>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wider">Priority:</span>
+<span class="px-space-xs py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm font-bold">Critical (1)</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-primary font-label-sm text-label-sm font-bold">High (2)</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-medium">Normal (21)</span>
+</div>
+</div>
+</div>
+<!-- Feed List Items Stream -->
+<div class="space-y-space-sm" id="notifications-feed-container">
+<!-- 1. CRITICAL / COMPLIANCE: FSSAI License Renewal Reminder -->
+<article class="feed-item unread relative p-space-lg rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col md:flex-row gap-space-md justify-between items-start" data-category="compliance" data-priority="critical">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-error"></div>
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">policy</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="px-space-xs py-0.5 rounded bg-error text-on-error font-label-sm text-label-sm font-bold tracking-wider">CRITICAL COMPLIANCE</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-semibold">REGULATORY SLA</span>
+<span class="font-label-sm text-label-sm text-outline">12m ago • 14:18 IST</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                  FSSAI License Renewal Reminder — 14 Days Remaining
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl leading-relaxed">
+                  Food Business Operating License <span class="font-code-metric text-code-metric text-on-surface font-bold bg-surface-container px-1 py-0.5 rounded">#11221334000492</span> under Sri Krishna Gourmet is set to expire on <strong class="text-on-surface font-semibold">Nov 8, 2024</strong>. Hyperlocal food delivery listings will be automatically de-listed on day zero without active compliance.
+                </p>
+<div class="flex items-center gap-space-md pt-space-xs">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-tertiary-container">verified</span>
+                    Pre-filled Form-B Generated
+                  </span>
+<span class="font-label-sm text-label-sm text-error font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">timer</span>
+                    Auto-suspension in 336 hrs
+                  </span>
+</div>
+</div>
+</div>
+<!-- Item Actions -->
+<div class="flex md:flex-col items-center md:items-end gap-space-xs shrink-0 w-full md:w-auto pt-space-sm md:pt-0">
+<button class="w-full md:w-auto px-space-md py-2 rounded-lg bg-error text-on-error hover:bg-error-container hover:text-on-error-container font-label-md text-label-md font-bold transition-all shadow-sm flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">upload_file</span>
+                Upload Renewed License
+              </button>
+<button class="w-full md:w-auto px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-all">
+                Dismiss Notice
+              </button>
+</div>
+</article>
+<!-- 2. HIGH PRIORITY / ORDER ALERT: High Value Order Received -->
+<article class="feed-item unread relative p-space-lg rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col md:flex-row gap-space-md justify-between items-start" data-category="orders" data-priority="high">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-primary-container"></div>
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">shopping_bag</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="px-space-xs py-0.5 rounded bg-primary-container text-on-primary font-label-sm text-label-sm font-bold">ACTION REQUIRED</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm font-bold">MULTI-CATEGORY BASKET</span>
+<span class="font-label-sm text-label-sm text-outline">4m ago • 14:26 IST</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                  New High-Value Multi-Category Order #TR-90230 Received
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl leading-relaxed">
+                  Basket Value: <strong class="text-on-surface font-bold">₹1,480.00</strong> (Includes Pure Ghee Mysore Pak 500g + Cold-Chain Probiotics). Thermal Kitchen KOT auto-printed on POS-01. Shadowfax 3PL courier auto-assigned and en route to store.
+                </p>
+<div class="flex items-center gap-space-md pt-space-xs flex-wrap">
+<span class="font-code-metric text-code-metric text-primary font-bold bg-surface-container px-2 py-0.5 rounded">
+                    Prep SLA: 18 min
+                  </span>
+<span class="font-label-sm text-label-sm text-secondary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">two_wheeler</span>
+                    Rider SLA: ETA 7 mins
+                  </span>
+<span class="font-label-sm text-label-sm text-tertiary-container font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">done</span>
+                    UPI Pre-paid Verified
+                  </span>
+</div>
+</div>
+</div>
+<!-- Item Actions -->
+<div class="flex md:flex-col items-center md:items-end gap-space-xs shrink-0 w-full md:w-auto pt-space-sm md:pt-0">
+<button class="w-full md:w-auto px-space-md py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-label-md text-label-md font-bold transition-all shadow-sm flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">visibility</span>
+                Accept &amp; View Order #TR-90230
+              </button>
+<button class="w-full md:w-auto px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-all">
+                Acknowledge KOT
+              </button>
+</div>
+</article>
+<!-- 3. HIGH PRIORITY / DELIVERY ALERT: 3PL Rider Delay -->
+<article class="feed-item unread relative p-space-lg rounded-xl bg-surface-container-lowest shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col md:flex-row gap-space-md justify-between items-start" data-category="delivery" data-priority="high">
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-secondary-container"></div>
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container-high text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">minor_crash</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-secondary font-label-sm text-label-sm font-bold">DELIVERY DELAY</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-semibold">3PL LOGISTICS</span>
+<span class="font-label-sm text-label-sm text-outline">18m ago • 14:12 IST</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                  3PL Rider Mechanical Delay Flagged for Order #TR-90219
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl leading-relaxed">
+                  Assigned rider <strong class="text-on-surface">Farooq Ahmed</strong> reported a bike chain breakdown near HAL Stage 2. Automated dispatch recalculation predicts <strong class="text-error font-bold">+12 mins delay</strong>. Customer in Indiranagar notified via SMS live-tracker.
+                </p>
+<div class="flex items-center gap-space-md pt-space-xs">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">navigation</span>
+                    1.4 km from destination
+                  </span>
+<span class="font-label-sm text-label-sm text-secondary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px]">swap_horiz</span>
+                    Backup pool: 2 nearby couriers available
+                  </span>
+</div>
+</div>
+</div>
+<!-- Item Actions -->
+<div class="flex md:flex-col items-center md:items-end gap-space-xs shrink-0 w-full md:w-auto pt-space-sm md:pt-0">
+<button class="w-full md:w-auto px-space-md py-2 rounded-lg bg-surface-container-high text-primary hover:bg-primary hover:text-on-primary font-label-md text-label-md font-bold transition-all shadow-sm flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">support_agent</span>
+                Open Exception Desk
+              </button>
+<button class="w-full md:w-auto px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold transition-all">
+                Reassign 3PL Rider
+              </button>
+</div>
+</article>
+<!-- 4. PAYMENTS & SETTLEMENTS: Nodal Batch Initiated -->
+<article class="feed-item read relative p-space-lg rounded-xl bg-surface-container-lowest/80 opacity-95 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col md:flex-row gap-space-md justify-between items-start" data-category="payments" data-priority="normal">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">payments</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm font-bold">FINANCE &amp; NODAL</span>
+<span class="px-space-xs py-0.5 rounded bg-tertiary-container/10 text-tertiary-container font-label-sm text-label-sm font-bold">BATCH PROCESSING</span>
+<span class="font-label-sm text-label-sm text-outline">1h ago • 13:30 IST</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                  Nodal Settlement Batch #SET-1024A Initiated
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl leading-relaxed">
+                  Net payout amount <strong class="text-on-surface font-bold">₹26,610.00</strong> queued for interbank NEFT transfer to your verified HDFC Bank Account (Ending ****8729). Cashfree automated gateway clearing UTR sequence will be emitted before 18:30 IST.
+                </p>
+<div class="flex items-center gap-space-md pt-space-xs">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-tertiary-container">receipt_long</span>
+                    Gross: ₹27,390.00 • MDR + GST: ₹780.00
+                  </span>
+<span class="font-code-metric text-code-metric text-on-surface font-bold">
+                    Ref: CF-NOD-20241024-912
+                  </span>
+</div>
+</div>
+</div>
+<!-- Item Actions -->
+<div class="flex md:flex-col items-center md:items-end gap-space-xs shrink-0 w-full md:w-auto pt-space-sm md:pt-0">
+<button class="w-full md:w-auto px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-all flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">download</span>
+                View Settlement Slip
+              </button>
+<button class="w-full md:w-auto px-space-md py-1.5 rounded-lg text-outline hover:text-on-surface font-label-sm text-label-sm font-semibold transition-all">
+                UTR Tracking
+              </button>
+</div>
+</article>
+<!-- 5. REVIEWS & REPUTATION: 5-Star Patron Review -->
+<article class="feed-item read relative p-space-lg rounded-xl bg-surface-container-lowest/80 opacity-95 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col md:flex-row gap-space-md justify-between items-start" data-category="reviews" data-priority="normal">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container text-tertiary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">hotel_class</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-tertiary-container font-label-sm text-label-sm font-bold">REPUTATION &amp; NPS</span>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-primary font-label-sm text-label-sm font-semibold">GOLD PATRON</span>
+<span class="font-label-sm text-label-sm text-outline">2h ago • 12:15 IST</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                  New 5-Star Verified Review from Gold Patron Ananya S.
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl leading-relaxed">
+                  Review attached to settled Order #TR-90214: “The Mysore Pak texture was immaculate, and packaging was airtight without any oil leakage! Standard maintained consistently.” Ethics-compliant auto-acknowledgement published on TRUSTIT public directory.
+                </p>
+<div class="flex items-center gap-space-xs pt-space-xs text-secondary">
+<span class="material-symbols-outlined text-[16px] text-secondary">star</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">star</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">star</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">star</span>
+<span class="material-symbols-outlined text-[16px] text-secondary">star</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface ml-1">5.0 / 5.0 (Store Rating: 4.88)</span>
+</div>
+</div>
+</div>
+<!-- Item Actions -->
+<div class="flex md:flex-col items-center md:items-end gap-space-xs shrink-0 w-full md:w-auto pt-space-sm md:pt-0">
+<button class="w-full md:w-auto px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-all flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">reviews</span>
+                View in Review Hub
+              </button>
+</div>
+</article>
+<!-- 6. SECURITY ALERT: Staff Terminal Login -->
+<article class="feed-item read relative p-space-lg rounded-xl bg-surface-container-lowest/80 opacity-95 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col md:flex-row gap-space-md justify-between items-start" data-category="compliance" data-priority="normal">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">point_of_sale</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-bold">STORE ACCESS &amp; AUDIT</span>
+<span class="font-label-sm text-label-sm text-outline">3h ago • 11:04 IST</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                  New Staff Login from Registered Store Terminal #POS-02
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl leading-relaxed">
+                  Cashier <strong class="text-on-surface">Farhan K.</strong> authenticated session on the Indiranagar store floor POS device. Location IP 103.21.144.10 passed geo-fence token validation. Session cookie active for standard 8-hour shift.
+                </p>
+<div class="flex items-center gap-space-md pt-space-xs">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-tertiary-container">security</span>
+                    Device Fingerprint: PINPAD-SUNMI-T2S
+                  </span>
+</div>
+</div>
+</div>
+<!-- Item Actions -->
+<div class="flex md:flex-col items-center md:items-end gap-space-xs shrink-0 w-full md:w-auto pt-space-sm md:pt-0">
+<button class="w-full md:w-auto px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-all">
+                Audit Session Logs
+              </button>
+</div>
+</article>
+<!-- 7. SUBSCRIPTION / BILLING: Pro Plan Auto-Renewal -->
+<article class="feed-item read relative p-space-lg rounded-xl bg-surface-container-lowest/80 opacity-95 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col md:flex-row gap-space-md justify-between items-start" data-category="merchandise" data-priority="normal">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container text-on-surface-variant flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">calendar_month</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm font-bold">SUBSCRIPTION / MANDATE</span>
+<span class="font-label-sm text-label-sm text-outline">5h ago • 09:30 IST</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                  Monthly Pro Plan Auto-Renewal Scheduled for Nov 12
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl leading-relaxed">
+                  Scheduled plan renewal for TRUSTIT Pro Merchant Suite (<strong class="text-on-surface">₹499 + 18% GST</strong>) will be cleared via RBI compliant e-Mandate registered on HDFC Bank NetBanking. Invoice with GST input credit will be generated instantly.
+                </p>
+<div class="flex items-center gap-space-md pt-space-xs">
+<span class="font-label-sm text-label-sm text-outline">
+                    Mandate UMRN: HDFC00029381029410
+                  </span>
+</div>
+</div>
+</div>
+<!-- Item Actions -->
+<div class="flex md:flex-col items-center md:items-end gap-space-xs shrink-0 w-full md:w-auto pt-space-sm md:pt-0">
+<button class="w-full md:w-auto px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-all">
+                Manage Mandate
+              </button>
+</div>
+</article>
+<!-- 8. PHYSICAL MERCHANDISE: Acrylic Standees Dispatched -->
+<article class="feed-item read relative p-space-lg rounded-xl bg-surface-container-lowest/80 opacity-95 shadow-sm hover:shadow-md transition-all overflow-hidden flex flex-col md:flex-row gap-space-md justify-between items-start" data-category="merchandise" data-priority="normal">
+<div class="flex items-start gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-surface-container text-secondary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">local_shipping</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-space-xs flex-wrap">
+<span class="px-space-xs py-0.5 rounded bg-surface-container text-secondary font-label-sm text-label-sm font-bold">QR MERCHANDISE</span>
+<span class="font-label-sm text-label-sm text-outline">6h ago • 08:15 IST</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                  2x Heavy-Duty Acrylic QR Standees Dispatched
+                </h2>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-3xl leading-relaxed">
+                  Your customized high-density counter standees with tamper-proof Dynamic UPI QR + Google Review tags have left the Hub. Courier Partner: <strong class="text-on-surface">BlueDart Express AWB #BD8892104</strong>. Estimated delivery: Tomorrow by 2:00 PM.
+                </p>
+<div class="flex items-center gap-space-md pt-space-xs">
+<span class="font-label-sm text-label-sm text-outline flex items-center gap-1">
+<span class="material-symbols-outlined text-[15px] text-tertiary-container">package_2</span>
+                    Includes 4x NFC Contactless Tap Stickers
+                  </span>
+</div>
+</div>
+</div>
+<!-- Item Actions -->
+<div class="flex md:flex-col items-center md:items-end gap-space-xs shrink-0 w-full md:w-auto pt-space-sm md:pt-0">
+<button class="w-full md:w-auto px-space-md py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-semibold transition-all flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">location_searching</span>
+                Track Shipment
+              </button>
+</div>
+</article>
+</div>
+<!-- Feed Pagination / Load More Footer -->
+<div class="p-space-md rounded-xl bg-surface-container-lowest flex items-center justify-between shadow-sm">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Showing 8 of 24 alerts recorded today (Oct 24, 2024)</span>
+<div class="flex items-center gap-2">
+<button class="px-space-md py-1.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">Previous</button>
+<button class="px-space-md py-1.5 rounded bg-primary text-on-primary font-label-sm text-label-sm font-semibold">1</button>
+<button class="px-space-md py-1.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">2</button>
+<button class="px-space-md py-1.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">3</button>
+<button class="px-space-md py-1.5 rounded bg-surface-container hover:bg-surface-container-high text-on-surface font-label-sm text-label-sm font-semibold">Next</button>
+</div>
+</div>
+</div>
+<!-- Right Column: Quick Triage & Hardware Sync Panel -->
+<div class="lg:col-span-4 xl:col-span-3 space-y-space-md">
+<!-- Live SoundBox & Audio Broadcast Status -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-md bg-surface-container-high text-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">speaker_phone</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-bold">SoundBox 4G Sync</h3>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded-full bg-surface-container text-tertiary-container font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-container animate-pulse"></span>
+              ONLINE
+            </span>
+</div>
+<div class="space-y-space-xs bg-surface-container-low p-space-md rounded-lg">
+<div class="flex justify-between items-center text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Speaker Volume</span>
+<span class="font-code-metric text-code-metric text-on-surface font-bold" id="volume-val">80%</span>
+</div>
+<input class="w-full h-1.5 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-primary" max="100" min="0" oninput="document.getElementById('volume-val').innerText = this.value + '%'" type="range" value="80"/>
+<div class="flex justify-between text-[11px] text-outline pt-1">
+<span>Mute</span>
+<span>Loud (Store Floor)</span>
+</div>
+</div>
+<div class="space-y-space-xs">
+<div class="flex justify-between text-body-sm font-body-sm">
+<span class="text-on-surface-variant">Audio Announcement Languages:</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="px-2 py-1 rounded bg-surface-container text-primary font-label-sm text-label-sm font-bold">English (IN)</span>
+<span class="px-2 py-1 rounded bg-surface-container text-primary font-label-sm text-label-sm font-bold">Kannada (ಕನ್ನಡ)</span>
+</div>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm pt-space-xs bg-surface-container-lowest">
+<span class="text-outline">Portal Audio Ping Latency</span>
+<span class="font-code-metric text-code-metric text-secondary font-bold">~120ms (Ultra-Low)</span>
+</div>
+<button class="w-full py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-md text-label-md font-bold transition-colors flex items-center justify-center gap-2" id="test-chime-btn">
+<span class="material-symbols-outlined text-[16px]">play_circle</span>
+            Test SoundBox &amp; Portal Chime
+          </button>
+</div>
+<!-- Escalation SLA Watch -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-md bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">acute</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-bold">Escalation SLA Watch</h3>
+</div>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-error text-on-error font-bold">2 PENDING</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Unaddressed alerts older than 15 minutes are escalated to TrustIt Merchant Territory Lead for manual dispatch check.
+          </p>
+<div class="space-y-space-xs">
+<div class="p-space-sm rounded bg-surface-container-low flex items-center justify-between">
+<div class="space-y-0.5">
+<p class="font-label-md text-label-md text-on-surface font-semibold">FSSAI Renewal Expire SLA</p>
+<p class="font-label-sm text-label-sm text-outline">Compliance Legal Desk</p>
+</div>
+<span class="font-code-metric text-code-metric text-error font-bold">T-Minus 14d</span>
+</div>
+<div class="p-space-sm rounded bg-surface-container-low flex items-center justify-between">
+<div class="space-y-0.5">
+<p class="font-label-md text-label-md text-on-surface font-semibold">Rider Breakdown TR-90219</p>
+<p class="font-label-sm text-label-sm text-outline">Shadowfax Auto-Escalate</p>
+</div>
+<span class="font-code-metric text-code-metric text-error font-bold">+18 min delay</span>
+</div>
+</div>
+</div>
+<!-- Quick Focus Mode / Rush Hour Mute -->
+<div class="p-space-lg rounded-xl bg-surface-container-lowest shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<div class="w-7 h-7 rounded-md bg-surface-container text-on-surface-variant flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">bedtime</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-bold">Rush Hour Focus Mode</h3>
+</div>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-bold">AUTOMATION</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Pause non-critical system audio alerts during store peak rush hours while retaining High &amp; Critical Order alarms.
+          </p>
+<div class="flex items-center justify-between p-space-sm rounded bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Lunch Rush Smart Filter</span>
+<span class="font-label-sm text-label-sm text-outline">12:30 PM – 14:00 PM IST</span>
+</div>
+<label class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Indian Regulatory Compliance Assurance Card -->
+<div class="p-space-md rounded-xl bg-surface-container-low space-y-space-xs text-on-surface-variant">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">verified_user</span>
+<span class="font-label-sm text-label-sm font-bold text-on-surface uppercase tracking-wider">Regulatory Compliance Notice</span>
+</div>
+<p class="font-body-sm text-body-sm leading-relaxed text-outline">
+            All alert communications comply with the Digital Personal Data Protection Act (DPDP Act 2023) and RBI Master Direction on Intermediary Electronic Settlements. Communications logs are tamper-proof and retained for statutory audits.
+          </p>
+<div class="pt-1 flex items-center justify-between font-label-sm text-label-sm text-primary font-bold">
+<span>Audit Trail Log: Enforced</span>
+<span>Version: v2.4 IND</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function () {
+    // Interactive Tab Filtering
+    const tabs = document.querySelectorAll('.filter-tab');
+    const items = document.querySelectorAll('.feed-item');
+    const unreadToggle = document.getElementById('filter-unread-toggle');
+    let showingUnreadOnly = false;
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => {
+          t.classList.remove('bg-primary', 'text-on-primary', 'shadow-sm');
+          t.classList.add('bg-surface-container', 'text-on-surface-variant');
+        });
+        tab.classList.add('bg-primary', 'text-on-primary', 'shadow-sm');
+        tab.classList.remove('bg-surface-container', 'text-on-surface-variant');
+
+        const filter = tab.getAttribute('data-filter');
+        applyFilters(filter);
+      });
+    });
+
+    if (unreadToggle) {
+      unreadToggle.addEventListener('click', () => {
+        showingUnreadOnly = !showingUnreadOnly;
+        if (showingUnreadOnly) {
+          unreadToggle.classList.add('bg-primary', 'text-on-primary');
+          unreadToggle.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+        } else {
+          unreadToggle.classList.remove('bg-primary', 'text-on-primary');
+          unreadToggle.classList.add('bg-secondary-container', 'text-on-secondary-container');
+        }
+        const activeTab = document.querySelector('.filter-tab.bg-primary');
+        const filter = activeTab ? activeTab.getAttribute('data-filter') : 'all';
+        applyFilters(filter);
+      });
+    }
+
+    function applyFilters(category) {
+      items.forEach(item => {
+        const itemCat = item.getAttribute('data-category');
+        const isUnread = item.classList.contains('unread');
+
+        const matchesCat = (category === 'all' || itemCat === category);
+        const matchesUnread = !showingUnreadOnly || isUnread;
+
+        if (matchesCat && matchesUnread) {
+          item.classList.remove('hidden');
+        } else {
+          item.classList.add('hidden');
+        }
+      });
+    }
+
+    // Mark all as read micro-interaction
+    const markAllBtn = document.getElementById('btn-mark-all');
+    if (markAllBtn) {
+      markAllBtn.addEventListener('click', () => {
+        const unreadItems = document.querySelectorAll('.feed-item.unread');
+        unreadItems.forEach(item => {
+          item.classList.remove('unread');
+          item.classList.add('read', 'opacity-95');
+          const pip = item.querySelector('.bg-error, .bg-secondary-container, .bg-secondary');
+          if (pip && pip.classList.contains('rounded-full')) {
+            pip.remove();
+          }
+        });
+        markAllBtn.innerHTML = '<span class="material-symbols-outlined text-[16px] text-tertiary-container">done</span> All Caught Up';
+      });
+    }
+
+    // Chime Preview micro-interaction
+    const testChimeBtn = document.getElementById('test-chime-btn');
+    if (testChimeBtn) {
+      testChimeBtn.addEventListener('click', () => {
+        const originalText = testChimeBtn.innerHTML;
+        testChimeBtn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Chime Emitted via SoundBox 4G...';
+        testChimeBtn.classList.add('bg-surface-container-high');
+        setTimeout(() => {
+          testChimeBtn.innerHTML = '<span class="material-symbols-outlined text-[16px] text-tertiary-container">check_circle</span> Chime Confirmed (120ms)';
+          setTimeout(() => {
+            testChimeBtn.innerHTML = originalText;
+            testChimeBtn.classList.remove('bg-surface-container-high');
+          }, 1800);
+        }, 1200);
+      });
+    }
+  })();
+</script></main></div></body></html>

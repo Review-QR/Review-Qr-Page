@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-primary-container":"#a1bbff","on-surface-variant":"#434652","surface-tint":"#2b5bb5","on-tertiary":"#ffffff","on-secondary-fixed-variant":"#004f58","on-background":"#131b2e","tertiary-fixed":"#8df7c1","on-primary":"#ffffff","surface-container-lowest":"#ffffff","secondary":"#006875","on-surface":"#131b2e","on-tertiary-fixed-variant":"#005235","error-container":"#ffdad6","on-primary-fixed":"#001945","surface-container":"#eaedff","surface-container-highest":"#dae2fd","background":"#faf8ff","primary":"#003178","error":"#ba1a1a","on-primary-fixed-variant":"#00429c","tertiary":"#003d27","on-error-container":"#93000a","surface":"#faf8ff","surface-dim":"#d2d9f4","on-secondary-container":"#00616d","on-tertiary-fixed":"#002113","secondary-container":"#00e3fd","secondary-fixed":"#9cf0ff","secondary-fixed-dim":"#00daf3","primary-fixed":"#d9e2ff","tertiary-container":"#005739","inverse-on-surface":"#eef0ff","outline":"#737783","outline-variant":"#c3c6d4","primary-container":"#0d47a1","surface-container-high":"#e2e7ff","on-error":"#ffffff","inverse-surface":"#283044","surface-variant":"#dae2fd","tertiary-fixed-dim":"#71dba6","primary-fixed-dim":"#b0c6ff","on-secondary-fixed":"#001f24","on-tertiary-container":"#66d09c","surface-container-low":"#f2f3ff","surface-bright":"#faf8ff","on-secondary":"#ffffff","inverse-primary":"#b0c6ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-sm":"0.5rem","gutter-desktop":"1.5rem","space-xs":"0.25rem","space-xl":"1.5rem","margin-tablet":"1.5rem","space-md":"0.75rem","space-lg":"1rem","gutter":"1rem","margin":"1rem","space-2xl":"2rem","margin-desktop":"2rem"},"fontFamily":{"code-metric":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"title":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"display":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"]},"fontSize":{"code-metric":["14px",{"lineHeight":"20px","fontWeight":"700"}],"label-md":["13px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"title":["16px",{"lineHeight":"22px","fontWeight":"600"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"display":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">shield_with_heart</span></div><div class="flex flex-col"><span class="font-title text-title text-primary tracking-tight font-bold">TRUSTIT</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Merchant Hub</span></div></div><span class="font-label-sm text-label-sm bg-surface-container text-on-surface px-space-xs py-0.5 rounded">PRO</span></div><div class="px-space-md py-space-sm"><div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><div class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-2 ring-tertiary-container animate-pulse"></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface truncate">Sri Krishna Gourmet</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Indiranagar BLR • LIVE</span></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer">unfold_more</span></div></div><nav class="flex-1 px-space-md py-space-xs space-y-space-md" data-active-classes="bg-primary-container text-on-primary font-title rounded-lg shadow-sm"><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Operations</div><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">grid_view</span><span class="font-body-md text-body-md">Overview</span></a><a class="flex items-center justify-between px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="orders" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[20px]">receipt_long</span><span class="font-body-md text-body-md">Orders</span></div><span class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed px-space-xs rounded-full">14</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="products-and-inventory" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">inventory_2</span><span class="font-body-md text-body-md">Products &amp; Inventory</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="store-management" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">store</span><span class="font-body-md text-body-md">Store Management</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="delivery" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">local_shipping</span><span class="font-body-md text-body-md">Delivery</span></a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Finance &amp; Growth</div><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="payments-and-settlements" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">account_balance_wallet</span><span class="font-body-md text-body-md">Payments &amp; Settlements</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">loyalty</span><span class="font-body-md text-body-md">Subscriptions</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="qr-and-reviews" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">qr_code_2</span><span class="font-body-md text-body-md">QR &amp; Reviews</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="physical-products" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">point_of_sale</span><span class="font-body-md text-body-md">Physical Products</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">query_stats</span><span class="font-body-md text-body-md">Analytics</span></a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">System</div><a class="flex items-center justify-between px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="notifications" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[20px]">notifications</span><span class="font-body-md text-body-md">Notifications</span></div><span class="font-label-sm text-label-sm bg-surface-container-highest text-on-surface px-space-xs rounded-full">3</span></a><a class="flex items-center justify-between px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="help-and-support-center" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[20px]">help</span><span class="font-body-md text-body-md">Support</span></div><span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold px-space-xs py-0.5 rounded-full">LIVE</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">settings</span><span class="font-body-md text-body-md">Settings</span></a></div></nav></div><div class="p-space-md bg-surface-container-low mx-space-md mb-space-md rounded-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[20px]">speaker_phone</span></div><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface">SoundBox 4G</span><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span><span class="font-label-sm text-label-sm text-on-surface-variant">Synced • 98%</span></div></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer hover:text-on-surface">sync</span></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-xl"><div class="w-full flex items-center gap-space-sm bg-surface-container-low px-space-md py-2 rounded-lg"><span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span><input class="w-full bg-transparent border-0 outline-none font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant" placeholder="Search orders, settlement ID, tickets, or SKU..." type="text"/><kbd class="hidden sm:inline-block font-code-metric text-code-metric text-on-surface-variant bg-surface-container px-space-xs py-0.5 rounded text-[11px]">&amp;#8984;K</kbd></div></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low"><span class="material-symbols-outlined text-tertiary text-[18px]">verified</span><span class="font-label-sm text-label-sm text-on-surface-variant">GSTIN:</span><span class="font-code-metric text-code-metric text-on-surface">29AABCS1429B1ZB</span></div><button class="flex items-center gap-space-xs bg-secondary-container text-on-secondary-fixed font-title text-body-sm px-space-md py-2 rounded-lg hover:bg-secondary-fixed transition-colors shadow-sm" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span>Instant Settle</span></button><div class="h-6 w-px bg-outline-variant"></div><button class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">support_agent</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden lg:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Raghavendra Rao</span><span class="font-label-sm text-label-sm text-on-surface-variant">Master Admin</span></div><span class="material-symbols-outlined text-on-surface-variant text-[16px]">expand_more</span></div></div></header><main class="w-full pt-16 bg-surface px-space-xl pb-space-2xl min-h-screen"><div class="flex flex-col w-full">
+<!-- Breadcrumbs & Quick Utility Ribbon -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm py-space-sm mb-space-xs">
+<nav class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+<span class="hover:text-primary cursor-pointer transition-colors">SYSTEM</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">SUPPORT</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-primary cursor-pointer transition-colors">MY TICKETS</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">TICKET #TKT-88412</span>
+</nav>
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-1.5 px-space-sm py-1 bg-surface-container-high rounded-full">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-error opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-error"></span>
+</span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase">Live Incident Link</span>
+</div>
+<span class="font-code-metric text-code-metric text-on-surface-variant text-[12px] bg-surface-container px-space-xs py-0.5 rounded">NODE: BLR-EAST-PRIORITY</span>
+</div>
+</div>
+<!-- Primary Incident Header -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm mb-space-md">
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-md">
+<div class="space-y-1">
+<div class="flex flex-wrap items-center gap-space-sm">
+<h1 class="font-headline-md text-headline-md text-on-surface tracking-tight">
+            Ticket #TKT-88412: 3PL Rider Breakdown &amp; Order Reassignment Escalation
+          </h1>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Live triage desk handling mission-critical rider dispatch failures and hot food spoilage protection.
+        </p>
+</div>
+<div class="flex items-center gap-space-xs flex-wrap self-start lg:self-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-error-container text-on-error-container font-label-sm text-label-sm tracking-wide">
+<span class="material-symbols-outlined text-[15px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+          P1 - CRITICAL
+        </span>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-secondary-fixed text-on-secondary-fixed font-label-sm text-label-sm tracking-wide">
+<span class="material-symbols-outlined text-[15px] animate-spin">sync</span>
+          IN PROGRESS (DISPATCHED)
+        </span>
+<button class="w-8 h-8 rounded bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors" title="Print Docket" type="button">
+<span class="material-symbols-outlined text-[18px]">print</span>
+</button>
+</div>
+</div>
+<!-- Metadata Strip -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md pt-space-md bg-surface-container-low/70 rounded-lg p-space-md">
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">local_shipping</span>
+</div>
+<div class="min-w-0">
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Category &amp; Source</div>
+<div class="font-title text-body-md text-on-surface truncate">Delivery &amp; 3PL Logistics</div>
+<div class="font-body-sm text-[12px] text-on-surface-variant">Today, 14:28 IST (22m ago)</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">timer</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-center mb-0.5">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Response SLA</span>
+<span class="font-code-metric text-code-metric text-error text-[12px]">&lt; 4m remaining</span>
+</div>
+<div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+<div class="bg-error h-full rounded-full transition-all duration-500" style="width: 82%;"></div>
+</div>
+<span class="font-label-sm text-[11px] text-tertiary-container font-semibold">Tier-1 Guaranteed Resolution</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="relative shrink-0">
+<img class="w-9 h-9 rounded-lg object-cover bg-surface-container-highest" data-alt="Close up professional portrait photo of Pooja Verma, customer success lead, smiling warmly wearing an enterprise corporate ID badge in a bright modern tech support operations office." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBD_onVgI_9K5ktX4dBnTNE2pW0Z4pd6EqtjXrkC4PuH3TTqnUoaoO_Dob9p66T0_BTxK2hDVeo2fn4Ra4ObzasUBT4RuvO8I7g8NHd6T9DpGU076MWb_nmf88-f1IdToyh_1SCPioXyGUokoLRuXDBWI9qweAb5Sza4oOsCutgB_jIAnFoAk5F9EGllhw3xHttd__Fah2EjwKbEf7p1UqSsGPOtH6u9dAvOwK55gU"/>
+<span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-tertiary-fixed-dim rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[10px] text-on-tertiary-fixed" style="font-variation-settings: 'FILL' 1;">check</span>
+</span>
+</div>
+<div class="min-w-0">
+<div class="flex items-center gap-1">
+<span class="font-title text-body-md text-on-surface font-semibold truncate">Pooja Verma</span>
+<span class="material-symbols-outlined text-primary text-[15px]" style="font-variation-settings: 'FILL' 1;" title="Trustit Verified Specialist">verified</span>
+</div>
+<div class="font-body-sm text-[12px] text-on-surface-variant truncate">Lead Success Specialist (L2)</div>
+<div class="font-label-sm text-[11px] text-secondary font-medium">Desk ID: #BLR-DESK-42</div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm min-w-0">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest text-on-surface flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">receipt</span>
+</div>
+<div class="min-w-0">
+<div class="font-label-sm text-label-sm text-on-surface-variant uppercase">Linked Commerce Asset</div>
+<div class="flex items-center gap-1 font-code-metric text-code-metric text-primary truncate">
+<span class="cursor-pointer hover:underline">Order #TR-90230</span>
+<span class="text-on-surface font-semibold">(₹1,480.00)</span>
+</div>
+<div class="font-body-sm text-[12px] text-on-surface-variant truncate">Shadowfax • Indiranagar Hub</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Split Canvas: Left 65% / Right 35% -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
+<!-- LEFT PANEL: Conversation Stream & Dispatcher Console (lg:col-span-8 ~ 66.6%) -->
+<div class="lg:col-span-8 flex flex-col gap-space-md">
+<!-- Live Incident Context Banner -->
+<div class="bg-gradient-to-r from-secondary/10 via-secondary-container/20 to-transparent p-space-md rounded-xl flex items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-full bg-secondary-fixed flex items-center justify-center text-on-secondary-fixed shrink-0">
+<span class="material-symbols-outlined text-[18px]">alt_route</span>
+</div>
+<div>
+<div class="font-title text-body-md text-on-surface font-bold">Rider Failover Active: Dunzo Express Assigned</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Rider Santosh Gowda (+91 98452 11840) verified pickup at 14:40 IST</div>
+</div>
+</div>
+<div class="hidden sm:flex items-center gap-1 bg-surface-container-lowest px-space-sm py-1 rounded-lg text-primary font-code-metric text-label-md shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-tertiary">lock</span>
+<span>OTP: 4821</span>
+</div>
+</div>
+<!-- Scrollable Message Stream Container -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm flex flex-col overflow-hidden">
+<!-- Stream Top Status Bar -->
+<div class="bg-surface-container-low px-space-lg py-space-sm flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="font-label-sm text-label-sm text-on-surface uppercase tracking-wider">Encrypted Merchant Channel</span>
+<span class="text-on-surface-variant font-label-sm text-[11px]">• ISO/IEC 27001</span>
+</div>
+<div class="flex items-center gap-space-sm text-on-surface-variant font-label-sm text-label-sm">
+<span>6 Messages</span>
+<span>•</span>
+<span class="text-tertiary flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">done_all</span> All Delivered
+            </span>
+</div>
+</div>
+<!-- Chat Stream Body -->
+<div class="p-space-lg space-y-space-lg max-h-[580px] overflow-y-auto" id="chat-stream">
+<!-- Event 1: System Event -->
+<div class="flex justify-center my-space-xs">
+<div class="bg-surface-container-low text-on-surface-variant px-space-md py-1.5 rounded-full font-label-sm text-label-sm flex items-center gap-1.5 max-w-xl text-center shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">flag</span>
+<span>14:28 IST • Ticket opened by Merchant Rajesh Sharma via Rapid Complaint Studio. Order #TR-90230 linked with P1 Critical priority.</span>
+</div>
+</div>
+<!-- Message 2: Merchant Rajesh Sharma -->
+<div class="flex items-start gap-space-sm group">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest text-primary font-bold flex items-center justify-center shrink-0 shadow-sm">
+              RS
+            </div>
+<div class="flex-1 max-w-2xl space-y-1">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-body-md text-on-surface font-semibold">Rajesh Sharma</span>
+<span class="font-label-sm text-[11px] bg-surface-container px-1.5 py-0.2 rounded text-on-surface-variant">Merchant (Owner)</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant ml-1">14:29 IST</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-2xl rounded-tl-none text-on-surface font-body-md text-body-md space-y-space-sm shadow-sm">
+<p>
+                  Shadowfax rider Farooq called mentioning flat tire at HAL 2nd Stage. Sweets and hot tiffin already packed in thermal bag. Need urgent courier reassignment before food gets cold. Customer has anniversary celebration at 15:15 IST.
+                </p>
+<!-- Attachment Card -->
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex items-center justify-between gap-space-sm w-fit max-w-sm">
+<div class="flex items-center gap-space-sm">
+<img class="w-12 h-12 rounded object-cover" data-alt="Overhead photo of fresh Indian sweets and freshly packaged South Indian food containers sealed in insulated thermal packaging with Trustit security tamper evident tape in a clean restaurant counter." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFWabaFBt02TkW2VenapT5GttjKxsCihge2KHvt8hod8t8OaTGnmVmezVsYQv3YCi4ShPD3PeM--gOxmfy4cnDuKIDyBiI8DTqIFkAbzVxfkjEwjZjlE82kxSJ8XACkk7um365LgElZoHwI123LQEL2YRH9IETJjGZrFgbgEoVBrxb0YdAlfofK74c8lR3WvnvyAz6ph7yUKhccoOySiIR9y5sg4r0z-DryaBp0fo"/>
+<div class="min-w-0">
+<div class="font-label-md text-label-md text-on-surface truncate">kitchen_pack_photo_tr90230.jpg</div>
+<div class="font-body-sm text-[12px] text-on-surface-variant">1.8 MB • Tamper seal verified</div>
+</div>
+</div>
+<button class="text-primary hover:text-on-primary-fixed-variant p-1" type="button">
+<span class="material-symbols-outlined text-[20px]">download</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Event 3: System Bot Telemetry -->
+<div class="flex items-start gap-space-sm justify-center">
+<div class="bg-surface-container-high/60 text-on-surface px-space-md py-space-xs rounded-xl flex items-center gap-space-sm text-body-sm font-body-sm max-w-lg shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-secondary">satellite_alt</span>
+<div class="flex-1">
+<span class="font-code-metric text-code-metric text-[12px] text-secondary font-bold">TELEMETRY_BOT:</span>
+<span>Auto-telemetry matched. Rider stationary for 9 minutes at 12.9647° N, 77.6433° E. Fleet supervisor alerted. Failover trigger arming.</span>
+</div>
+<span class="font-code-metric text-[11px] text-on-surface-variant">14:29 IST</span>
+</div>
+</div>
+<!-- Message 4: Agent Pooja Verma -->
+<div class="flex items-start gap-space-sm flex-row-reverse group">
+<div class="relative shrink-0">
+<img class="w-9 h-9 rounded-lg object-cover bg-surface-container-highest shadow-sm" data-alt="Portrait of specialist Pooja Verma wearing customer service headset in professional corporate office workstation backdrop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdBeNwDSMRLahQntMaTvlmG7PzMp_i06HfjrL6o0dZA3Wha3ccivWPcUtuYyAPbk3rDXUIjLoqeRWzKqIfv_g-izfu1IXU45V75NG3cw8-NRSsnaI5rluReC18Ztt2VxYEE7MuTm9LgDTq8fndwSEswoqY8NjDBokQdnIwJVql-k0Nt7GrgjwMZn4ueUYjtZbow-sTeBcGFIHFypjBftbXX3erKGfNwGVpGyZJHgM"/>
+<span class="absolute -bottom-1 -left-1 w-3.5 h-3.5 bg-primary-container rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[10px] text-on-primary" style="font-variation-settings: 'FILL' 1;">support_agent</span>
+</span>
+</div>
+<div class="flex-1 max-w-2xl space-y-1 text-right">
+<div class="flex items-center gap-space-xs justify-end">
+<span class="font-body-sm text-[12px] text-on-surface-variant mr-1">14:34 IST</span>
+<span class="font-label-sm text-[11px] bg-primary text-on-primary px-1.5 py-0.2 rounded font-semibold">Support Lead</span>
+<span class="font-title text-body-md text-on-surface font-semibold">Pooja Verma</span>
+</div>
+<div class="bg-primary text-on-primary p-space-md rounded-2xl rounded-tr-none text-left font-body-md text-body-md space-y-space-xs shadow-md">
+<p>
+                  Hello Rajesh ji! I've intercepted the order immediately. I have initiated an instant failover to our Dunzo Express backup pool. Courier Santosh Gowda is 650m away from your Indiranagar counter and accepting the pickup now. ETA to store: <strong>4 minutes</strong>.
+                </p>
+<div class="bg-on-primary/10 rounded-lg p-space-xs flex items-center gap-space-xs text-[12px]">
+<span class="material-symbols-outlined text-[16px]">moped</span>
+<span>Santosh Gowda • Bajaj Pulsar KA-03-HL-9921 • 99.8% On-Time Score</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Message 5: Merchant Rajesh Sharma -->
+<div class="flex items-start gap-space-sm group">
+<div class="w-9 h-9 rounded-lg bg-surface-container-highest text-primary font-bold flex items-center justify-center shrink-0 shadow-sm">
+              RS
+            </div>
+<div class="flex-1 max-w-2xl space-y-1">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-body-md text-on-surface font-semibold">Rajesh Sharma</span>
+<span class="font-body-sm text-[12px] text-on-surface-variant ml-1">14:36 IST</span>
+</div>
+<div class="bg-surface-container-low p-space-md rounded-2xl rounded-tl-none text-on-surface font-body-md text-body-md shadow-sm">
+<p>
+                  Thank you Pooja! Will hand over the tamper-evident sealed package to Santosh once OTP matches.
+                </p>
+</div>
+</div>
+</div>
+<!-- Message 6: Agent Pooja Verma -->
+<div class="flex items-start gap-space-sm flex-row-reverse group">
+<div class="relative shrink-0">
+<img class="w-9 h-9 rounded-lg object-cover bg-surface-container-highest shadow-sm" data-alt="Pooja Verma support specialist smiling avatar in office environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBe3-YGPtvb41xIZ4__Gad2YuRFm2MUFSpLyohP_B-pGZ0mAkC9Tox1hx7quUa2Tb3e6-VYpcn0EZ9grZeEGFR1RqWdpGRP3r1picGOh-N0da5GGdzTU_SI1R_JOlGvY_42CC_Aw-Z1J51G6YvugLHNkYOlpyULjFujgLulyXCrZV5hrWUlewKwNU0UBcMU9dW_sg_CHl8R9vDnWudHwqERZAem3aLa1YZvXhwK6t0"/>
+<span class="absolute -bottom-1 -left-1 w-3.5 h-3.5 bg-primary-container rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[10px] text-on-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+</span>
+</div>
+<div class="flex-1 max-w-2xl space-y-1 text-right">
+<div class="flex items-center gap-space-xs justify-end">
+<span class="font-body-sm text-[12px] text-on-surface-variant mr-1">14:40 IST</span>
+<span class="font-label-sm text-[11px] bg-primary text-on-primary px-1.5 py-0.2 rounded font-semibold">Support Lead</span>
+<span class="font-title text-body-md text-on-surface font-semibold">Pooja Verma</span>
+</div>
+<div class="bg-primary text-on-primary p-space-md rounded-2xl rounded-tr-none text-left font-body-md text-body-md space-y-space-sm shadow-md">
+<p>
+                  Santosh has verified counter pickup OTP <strong>4821</strong>. Spoilage insurance guarantee applied in case of customer transit complaint. I am keeping this ticket open until doorstep delivery is verified.
+                </p>
+<div class="bg-surface-container-lowest/15 backdrop-blur-sm p-space-xs rounded-lg flex items-center justify-between text-[12px]">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary-fixed">verified_user</span>
+                    Transit Assurance Policy #SAF-98102
+                  </span>
+<span class="font-code-metric text-[11px] text-tertiary-fixed">Coverage: ₹2,000 max</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Reply Composer Section -->
+<div class="bg-surface-container-low p-space-md space-y-space-sm">
+<!-- Quick Response Chips -->
+<div class="flex items-center gap-space-xs overflow-x-auto pb-1">
+<span class="font-label-sm text-[11px] text-on-surface-variant uppercase whitespace-nowrap pr-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">bolt</span> Quick:
+            </span>
+<button class="px-space-sm py-1 bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-[12px] rounded-full whitespace-nowrap transition-colors shadow-sm" onclick="insertSnippet('Rider reached counter and verified handover.')" type="button">
+              Rider reached counter
+            </button>
+<button class="px-space-sm py-1 bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-[12px] rounded-full whitespace-nowrap transition-colors shadow-sm" onclick="insertSnippet('Customer called directly inquiring about delivery timeline.')" type="button">
+              Customer called directly
+            </button>
+<button class="px-space-sm py-1 bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-[12px] rounded-full whitespace-nowrap transition-colors shadow-sm" onclick="insertSnippet('Package handed over with thermal wrap intact.')" type="button">
+              Package handed over
+            </button>
+<button class="px-space-sm py-1 bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-[12px] rounded-full whitespace-nowrap transition-colors shadow-sm text-secondary font-semibold" onclick="insertSnippet('Requesting immediate direct phone callback to discuss billing impact.')" type="button">
+              Request phone callback
+            </button>
+</div>
+<!-- Rich Text Composer Box -->
+<div class="bg-surface-container-lowest rounded-xl p-space-sm shadow-sm flex flex-col gap-space-sm focus-within:shadow-md transition-shadow">
+<textarea class="w-full bg-transparent border-0 outline-none font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant resize-none" id="reply-input" placeholder="Type your message or attach photo evidence/invoices for Pooja..." rows="3"></textarea>
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs">
+<div class="flex items-center gap-space-xs">
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" title="Attach Document/Photo" type="button">
+<span class="material-symbols-outlined text-[20px]">attach_file</span>
+</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" title="Add Order Tag" type="button">
+<span class="material-symbols-outlined text-[20px]">sell</span>
+</button>
+<button class="w-8 h-8 rounded-lg hover:bg-surface-container text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors" title="CCTV Snapshot Sync" type="button">
+<span class="material-symbols-outlined text-[20px]">photo_camera</span>
+</button>
+<div class="h-4 w-px bg-outline-variant mx-1"></div>
+<button class="flex items-center gap-1 text-on-surface-variant hover:text-error font-label-md text-[12px] px-2 py-1 rounded transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px]">priority_high</span>
+<span>Escalate to Operations Lead</span>
+</button>
+</div>
+<div class="flex items-center gap-space-sm">
+<span class="hidden sm:inline font-code-metric text-[11px] text-on-surface-variant">Press ↵ to send</span>
+<button class="flex items-center gap-space-xs bg-primary-container text-on-primary font-title text-body-sm px-space-md py-2 rounded-lg hover:bg-primary transition-colors shadow-sm" id="send-button" type="button">
+<span>Send Message</span>
+<span class="material-symbols-outlined text-[18px]">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Live Telemetry Mini-Card: Reassigned Rider Live Track -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[22px]">navigation</span>
+<div>
+<div class="font-title text-body-md text-on-surface font-semibold">Active Reassigned Transit GPS</div>
+<div class="font-body-sm text-[12px] text-on-surface-variant">Dunzo Express Pool • Rider ID: #DUN-488219</div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded font-bold">EN ROUTE TO DESTINATION</span>
+</div>
+<div class="w-full h-36 rounded-lg bg-surface-container flex items-end p-space-md relative overflow-hidden bg-cover bg-center" data-location="Indiranagar 100ft Road, Bangalore, Karnataka, India" style="">
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 via-primary/30 to-transparent"></div>
+<div class="relative z-10 text-on-primary flex justify-between items-end w-full">
+<div>
+<div class="font-label-sm text-label-sm uppercase opacity-80">Current Coordinates</div>
+<div class="font-title text-body-md font-bold">CMH Road • 1.4 km to customer doorstep</div>
+</div>
+<div class="bg-surface-container-lowest text-on-surface px-space-md py-1 rounded-lg font-code-metric text-code-metric shadow-sm">
+              ETA: 14:51 IST (11 mins)
+            </div>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT PANEL: Ticket Docket, Audit Timeline & Action Center (lg:col-span-4 ~ 33.3%) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md">
+<!-- Card 1: Assigned Specialist Card -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Assigned Specialist</span>
+<div class="flex items-center gap-1.5 bg-tertiary-fixed/40 text-on-tertiary-fixed px-2 py-0.5 rounded-full font-label-sm text-[11px]">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span>Online on Chat Desk</span>
+</div>
+</div>
+<div class="flex items-start gap-space-md">
+<div class="relative shrink-0">
+<img class="w-14 h-14 rounded-xl object-cover bg-surface-container shadow" data-alt="High resolution studio photo of Indian female customer experience manager Pooja Verma with warm smile and corporate navy blazer." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpujOj_ofsUVExtaXBcHfwSG9UNPAZlYkmWM3_D5b3BPUzZB6JzAW9K5RZ4hZ1L5iMu6kFaxR52xcvAfN9VTo8ynJNlDF1KUwBF1OIBgZeMWmx8txQUx66MXw6iGCfTRSXj2yxKOUEGy6wKyPUBm7cSbjtKHlPOBs0Z-v0LlEVJKWznGDwA5tpkmovUuT206k-t7vO5j6NbjbvItcyvzAoqgj249boRJ7d9XvI_TU"/>
+<span class="material-symbols-outlined absolute -top-1.5 -right-1.5 text-primary bg-surface-container-lowest rounded-full text-[18px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="space-y-0.5">
+<h2 class="font-title text-title text-on-surface">Pooja Verma</h2>
+<div class="font-body-sm text-[13px] text-on-surface-variant">Merchant Success Specialist (Level 2)</div>
+<div class="flex items-center gap-space-sm pt-1">
+<span class="flex items-center text-amber-600 font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+                4.9/5.0
+              </span>
+<span class="text-on-surface-variant">•</span>
+<span class="font-label-md text-label-md text-tertiary font-semibold">99.2% Res. Rate</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg flex items-center justify-between text-body-sm">
+<span class="text-on-surface-variant">Avg. First Reply:</span>
+<span class="font-code-metric text-code-metric text-on-surface">1 min 40 secs</span>
+</div>
+<button class="w-full flex items-center justify-center gap-space-xs bg-surface-container-low hover:bg-surface-container text-on-surface font-title text-body-sm py-2.5 rounded-lg transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-secondary text-[20px]">phone_in_talk</span>
+<span>Request Immediate Call Back</span>
+</button>
+</div>
+<!-- Card 2: Audit Trail & SLA Milestones -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm space-y-space-md">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Audit Trail &amp; Milestones</span>
+<span class="font-label-sm text-[11px] text-tertiary bg-tertiary-fixed/30 px-2 py-0.5 rounded font-bold">SLA ACTIVE</span>
+</div>
+<div class="relative pl-6 space-y-space-md">
+<!-- Timeline Vertical Bar -->
+<div class="absolute left-2.5 top-2 bottom-3 w-0.5 bg-surface-container-high"></div>
+<!-- Milestone 1 -->
+<div class="relative">
+<span class="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center text-[12px] shadow-sm">
+<span class="material-symbols-outlined text-[13px]">check</span>
+</span>
+<div class="space-y-0.5">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">Step 1: Ticket Logged</span>
+<span class="font-code-metric text-[12px] text-on-surface-variant">14:28 IST</span>
+</div>
+<p class="font-body-sm text-[12px] text-on-surface-variant">Initiated via POS Alert trigger. Priority tagged P1.</p>
+</div>
+</div>
+<!-- Milestone 2 -->
+<div class="relative">
+<span class="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center text-[12px] shadow-sm">
+<span class="material-symbols-outlined text-[13px]">check</span>
+</span>
+<div class="space-y-0.5">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">Step 2: Agent Handshake &amp; Triage</span>
+<span class="font-code-metric text-[12px] text-on-surface-variant">14:32 IST</span>
+</div>
+<p class="font-body-sm text-[12px] text-tertiary font-semibold">&lt;5m SLA Met (Responded in 3m 48s)</p>
+</div>
+</div>
+<!-- Milestone 3 -->
+<div class="relative">
+<span class="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center text-[12px] shadow-sm">
+<span class="material-symbols-outlined text-[13px]">check</span>
+</span>
+<div class="space-y-0.5">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">Step 3: 3PL Auto-Reassigned</span>
+<span class="font-code-metric text-[12px] text-on-surface-variant">14:35 IST</span>
+</div>
+<p class="font-body-sm text-[12px] text-on-surface-variant">Shadowfax swapped → Dunzo Express Pool</p>
+</div>
+</div>
+<!-- Milestone 4 -->
+<div class="relative">
+<span class="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-tertiary text-on-tertiary flex items-center justify-center text-[12px] shadow-sm">
+<span class="material-symbols-outlined text-[13px]">check</span>
+</span>
+<div class="space-y-0.5">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-on-surface">Step 4: Counter Handover Verified</span>
+<span class="font-code-metric text-[12px] text-on-surface-variant">14:40 IST</span>
+</div>
+<p class="font-body-sm text-[12px] text-on-surface-variant">OTP 4821 matched at Sri Krishna Indiranagar</p>
+</div>
+</div>
+<!-- Milestone 5 (Active/Pending) -->
+<div class="relative">
+<span class="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center text-[12px] shadow-sm animate-pulse">
+<span class="material-symbols-outlined text-[13px]">pending</span>
+</span>
+<div class="space-y-0.5">
+<div class="flex items-center justify-between">
+<span class="font-label-md text-label-md text-secondary font-bold">Step 5: Doorstep Delivery &amp; Close</span>
+<span class="font-code-metric text-[12px] text-secondary">ETA 14:52</span>
+</div>
+<p class="font-body-sm text-[12px] text-on-surface-variant">Customer confirmation pending. Auto-settles post delivery.</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 3: Escrow Protection Safeguard Banner -->
+<div class="bg-gradient-to-br from-tertiary/10 via-surface-container-low to-tertiary-fixed/20 rounded-xl p-space-md shadow-sm relative overflow-hidden">
+<div class="flex items-start gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-tertiary text-on-tertiary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">shield_lock</span>
+</div>
+<div class="space-y-1">
+<div class="font-title text-body-md text-on-surface font-bold">Escrow Protection Safeguard</div>
+<p class="font-body-sm text-[12px] text-on-surface-variant leading-relaxed">
+<strong>100% Payout Guaranteed.</strong> In-transit delays caused by 3PL mechanical faults or flat tires do not impact merchant settlement. ₹1,480.00 is locked in guaranteed escrow.
+            </p>
+<div class="pt-1 flex items-center gap-space-sm font-label-sm text-[11px] text-tertiary-container font-semibold">
+<span class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">done</span> Zero Penalty
+              </span>
+<span>•</span>
+<span class="flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[14px]">done</span> Rating Shielded
+              </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Card 4: Escalation & Grievance Actions -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm space-y-space-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Resolution &amp; Ombudsman Desk</span>
+<div class="space-y-space-xs">
+<button class="w-full flex items-center justify-between p-space-sm bg-surface-container-low hover:bg-surface-container rounded-lg text-left transition-colors" type="button">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary text-[20px]">task_alt</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface">Mark as Resolved</div>
+<div class="font-body-sm text-[11px] text-on-surface-variant">Submit rating &amp; close incident</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-space-sm bg-surface-container-low hover:bg-surface-container rounded-lg text-left transition-colors group" type="button">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">account_balance</span>
+<div>
+<div class="font-label-md text-label-md text-on-surface group-hover:text-primary transition-colors">Escalate to Ombudsman</div>
+<div class="font-body-sm text-[11px] text-on-surface-variant">Direct appeal to Grievance Officer</div>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">gavel</span>
+</button>
+</div>
+<div class="pt-space-xs text-center">
+<span class="font-label-sm text-[11px] text-on-surface-variant">Trustit Support Hotline: 1800-419-7080 (Toll Free)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function insertSnippet(text) {
+    const textarea = document.getElementById('reply-input');
+    if (textarea) {
+      if (textarea.value.trim().length > 0) {
+        textarea.value += ' ' + text;
+      } else {
+        textarea.value = text;
+      }
+      textarea.focus();
+    }
+  }
+
+  const sendBtn = document.getElementById('send-button');
+  const chatStream = document.getElementById('chat-stream');
+  const replyInput = document.getElementById('reply-input');
+
+  if (sendBtn && chatStream && replyInput) {
+    const handleSend = () => {
+      const msg = replyInput.value.trim();
+      if (!msg) return;
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false }) + ' IST';
+
+      const msgDiv = document.createElement('div');
+      msgDiv.className = 'flex items-start gap-space-sm group';
+      msgDiv.innerHTML = `
+        <div class="w-9 h-9 rounded-lg bg-surface-container-highest text-primary font-bold flex items-center justify-center shrink-0 shadow-sm">
+          RS
+        </div>
+        <div class="flex-1 max-w-2xl space-y-1">
+          <div class="flex items-center gap-space-xs">
+            <span class="font-title text-body-md text-on-surface font-semibold">Rajesh Sharma</span>
+            <span class="font-label-sm text-[11px] bg-surface-container px-1.5 py-0.2 rounded text-on-surface-variant">Merchant (Owner)</span>
+            <span class="font-body-sm text-[12px] text-on-surface-variant ml-1">${timeStr}</span>
+          </div>
+          <div class="bg-surface-container-low p-space-md rounded-2xl rounded-tl-none text-on-surface font-body-md text-body-md shadow-sm">
+            <p>${msg.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</p>
+          </div>
+        </div>
+      `;
+
+      chatStream.appendChild(msgDiv);
+      replyInput.value = '';
+      chatStream.scrollTop = chatStream.scrollHeight;
+    };
+
+    sendBtn.addEventListener('click', handleSend);
+    replyInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+  }
+</script></main></div></body></html>

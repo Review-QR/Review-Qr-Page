@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-surface-variant": "#434652", "on-tertiary": "#ffffff", "inverse-primary": "#b0c6ff", "tertiary-container": "#005739", "tertiary-fixed-dim": "#71dba6", "tertiary-fixed": "#8df7c1", "on-tertiary-container": "#66d09c", "primary-fixed": "#d9e2ff", "on-primary-fixed": "#001945", "surface-bright": "#faf8ff", "on-primary-fixed-variant": "#00429c", "surface-dim": "#d2d9f4", "primary-fixed-dim": "#b0c6ff", "background": "#faf8ff", "secondary-fixed": "#9cf0ff", "on-surface": "#131b2e", "inverse-surface": "#283044", "on-error-container": "#93000a", "outline-variant": "#c3c6d4", "secondary-fixed-dim": "#00daf3", "surface-container-high": "#e2e7ff", "on-secondary-fixed": "#001f24", "on-secondary": "#ffffff", "outline": "#737783", "inverse-on-surface": "#eef0ff", "on-background": "#131b2e", "on-primary": "#ffffff", "surface-container-highest": "#dae2fd", "on-error": "#ffffff", "tertiary": "#003d27", "secondary": "#006875", "surface-tint": "#2b5bb5", "on-tertiary-fixed-variant": "#005235", "primary-container": "#0d47a1", "on-tertiary-fixed": "#002113", "secondary-container": "#00e3fd", "on-secondary-fixed-variant": "#004f58", "surface-container": "#eaedff", "on-primary-container": "#a1bbff", "surface-container-low": "#f2f3ff", "surface-container-lowest": "#ffffff", "error-container": "#ffdad6", "primary": "#003178", "surface-variant": "#dae2fd", "on-secondary-container": "#00616d", "surface": "#faf8ff", "error": "#ba1a1a" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "margin": "1rem", "margin-desktop": "2rem", "gutter-desktop": "1.5rem", "space-xl": "1.5rem", "space-md": "0.75rem", "gutter": "1rem", "margin-tablet": "1.5rem", "space-2xl": "2rem", "space-sm": "0.5rem", "space-lg": "1rem" }, "fontFamily": { "label-md": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "display": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "code-metric": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "title": ["Plus Jakarta Sans"] }, "fontSize": { "label-md": ["13px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "code-metric": ["14px", { "lineHeight": "20px", "fontWeight": "700" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "title": ["16px", { "lineHeight": "22px", "fontWeight": "600" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center gap-space-sm bg-surface-container"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-sm font-bold">T</div><div class="flex flex-col"><span class="font-title text-title text-primary tracking-tight">TRUSTIT</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Merchant Hub</span></div></div><div class="px-space-md py-space-sm"><div class="px-space-md py-space-sm rounded-lg bg-surface-container-lowest flex items-center justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span><span class="font-label-sm text-label-sm text-on-surface">SoundBox 4G</span></div><span class="font-label-sm text-label-sm text-tertiary font-semibold">LIVE SYNC</span></div></div><div class="px-space-lg py-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">Operations</span></div><nav class="px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">dashboard</span><span>Overview</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="orders" href="#"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span>Orders</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="products-inventory" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span>Products &amp; Inventory</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="store-management" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span>Store Management</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="delivery" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span>Delivery</span></a></nav><div class="px-space-lg pt-space-md py-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">Finance &amp; Growth</span></div><nav class="px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="payments-settlements" href="#"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span>Payments &amp; Settlements</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="material-symbols-outlined text-[20px]">loyalty</span><span>Subscriptions</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="qr-reviews" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span>QR &amp; Reviews</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="physical-products" href="#"><span class="material-symbols-outlined text-[20px]">point_of_sale</span><span>Physical Products</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">monitoring</span><span>Analytics</span></a></nav><div class="px-space-lg pt-space-md py-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">System</span></div><nav class="px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="notifications" href="#"><span class="material-symbols-outlined text-[20px]">notifications</span><span>Notifications</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="support" href="#"><span class="material-symbols-outlined text-[20px]">support_agent</span><span>Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings-security" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span>Settings</span></a></nav></div><div class="p-space-md m-space-md rounded-lg bg-surface-container flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">KYC Compliance</span><div class="flex items-center justify-between"><span class="font-body-sm text-body-sm text-on-surface font-semibold">Level 2 Verified</span><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span></div><div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden"><div class="bg-tertiary-container h-full w-full"></div></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="flex items-center gap-space-sm px-space-md py-space-xs rounded-lg bg-surface-container-low cursor-pointer"><span class="material-symbols-outlined text-primary text-[20px]">store</span><div class="flex flex-col"><span class="font-title text-body-sm text-on-surface font-semibold truncate max-w-[200px]">Sri Krishna Gourmet</span><span class="font-label-sm text-label-sm text-on-surface-variant">Indiranagar BLR</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span></div><div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded bg-surface-container-low"><span class="font-label-sm text-label-sm text-outline uppercase">GSTIN:</span><span class="font-code-metric text-code-metric text-on-surface">29AABCS1429B1ZB</span><span class="material-symbols-outlined text-tertiary-container text-[16px]">verified_user</span></div><div class="flex-1 flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container"><span class="material-symbols-outlined text-outline text-[18px]">search</span><input class="bg-transparent border-0 outline-none w-full font-body-sm text-body-sm text-on-surface placeholder:text-outline" placeholder="Search orders, SKU, settlements (Ctrl+K)..." type="text"/></div></div><div class="flex items-center gap-space-md"><button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-secondary-container text-on-secondary-fixed font-title text-body-sm shadow-[0_1px_8px_rgba(0,0,0,0.04)] hover:bg-secondary-fixed-dim transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span>Instant Settle</span></button><div class="relative flex items-center justify-center p-space-xs rounded-lg hover:bg-surface-container cursor-pointer"><span class="material-symbols-outlined text-on-surface-variant text-[22px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span></div><div class="h-6 w-px bg-outline-variant"></div><div class="flex items-center gap-space-sm cursor-pointer"><div class="flex flex-col text-right"><span class="font-title text-body-sm text-on-surface font-semibold leading-tight">Raghavendra Rao</span><span class="font-label-sm text-label-sm text-primary uppercase">Master Admin</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 w-full px-space-xl bg-background"><div class="flex flex-col w-full pb-16">
+<!-- Breadcrumb & Page Subheader -->
+<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between py-space-lg gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm uppercase tracking-wider">
+<span>Settings &amp; Security</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">API Keys, Webhooks &amp; POS Integration Hub</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">API Credentials &amp; Realtime Webhooks</h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+        Manage secure developer credentials, RESTful endpoints, HMAC SHA-256 signatures, and automated event listeners for ERP synchronization, kitchen display units (KDS), and billing hardware.
+      </p>
+</div>
+<!-- Quick Environment Toggle & Documentation Link -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<a class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container text-primary font-label-md text-label-md hover:bg-surface-container-high transition-colors shadow-sm" href="#docs">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span>Developer Docs</span>
+</a>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-all shadow-md" onclick="openKeyModal()" type="button">
+<span class="material-symbols-outlined text-[18px]">add_moderator</span>
+<span>Generate New Secret Key</span>
+</button>
+</div>
+</div>
+<!-- Developer Environment & Telemetry Quota Bar (Bento Metrics) -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-xl">
+<!-- Card 1: Environment Context -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Active Environment</span>
+<span class="inline-flex items-center gap-1 px-space-xs py-0.5 rounded bg-tertiary/10 text-on-tertiary-container text-label-sm font-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary-fixed animate-ping"></span>
+          LIVE NODAL
+        </span>
+</div>
+<div>
+<div class="font-headline-md text-headline-md text-on-surface flex items-center gap-2">
+<span>PRODUCTION</span>
+<span class="material-symbols-outlined text-primary text-[20px]">verified</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Direct Settlement &amp; POS Relay active via Axis Nodal Node #401</p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>TLS 1.3 Strict Cipher</span>
+<span class="font-code-metric text-on-surface">Mutual SSL (mTLS)</span>
+</div>
+</div>
+<!-- Card 2: Quota & Rate Limit -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Monthly API Quota</span>
+<span class="font-code-metric text-label-sm text-primary font-bold">28.5% USED</span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">142,890</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">/ 500,000 reqs</span>
+</div>
+<!-- Segmented Quota Bar -->
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden mt-3 flex">
+<div class="bg-primary-container h-full rounded-full transition-all duration-500" style="width: 28.5%"></div>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Burst Limit: 1,200 req/min</span>
+<span class="text-tertiary font-semibold">Healthy Flow</span>
+</div>
+</div>
+<!-- Card 3: Webhook Delivery Success -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Webhook Health</span>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-code-metric text-label-sm">99.98% SLA</span>
+</div>
+<div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-md text-headline-md text-on-surface">114 ms</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">avg ack latency</span>
+</div>
+<!-- Sparkline Trend Chart -->
+<div class="h-6 w-full mt-2 flex items-end gap-1">
+<span class="h-3 w-full bg-surface-container-highest rounded-t hover:bg-secondary-fixed transition-all" title="120ms"></span>
+<span class="h-4 w-full bg-surface-container-highest rounded-t hover:bg-secondary-fixed transition-all" title="118ms"></span>
+<span class="h-3.5 w-full bg-surface-container-highest rounded-t hover:bg-secondary-fixed transition-all" title="115ms"></span>
+<span class="h-5 w-full bg-surface-container-highest rounded-t hover:bg-secondary-fixed transition-all" title="122ms"></span>
+<span class="h-2.5 w-full bg-secondary-container rounded-t hover:bg-secondary-fixed transition-all" title="94ms"></span>
+<span class="h-3.5 w-full bg-surface-container-highest rounded-t hover:bg-secondary-fixed transition-all" title="112ms"></span>
+<span class="h-4 w-full bg-surface-container-highest rounded-t hover:bg-secondary-fixed transition-all" title="114ms"></span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between text-outline font-label-sm text-label-sm">
+<span>Failed Deliveries (24h)</span>
+<span class="font-code-metric text-on-surface font-semibold">2 retried &amp; resolved</span>
+</div>
+</div>
+<!-- Card 4: Quick Developer Context Banner -->
+<div class="rounded-xl bg-gradient-to-br from-primary-container to-primary text-on-primary p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-primary-container uppercase tracking-wider">KOT Engine</span>
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]">sync</span>
+</div>
+<div class="font-title text-title text-on-primary mt-2">Zero-Drop POS Sync</div>
+<p class="font-body-sm text-body-sm text-primary-fixed mt-1">Websockets fall back to polling during high-load weekend rushes automatically.</p>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-secondary-fixed uppercase font-bold">API v3.4 Active</span>
+<button class="text-on-primary hover:text-secondary-fixed text-label-sm font-label-sm flex items-center gap-1" type="button">
+<span>Changelog</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Section 1: API Authentication Credentials Table -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm mb-space-xl overflow-hidden">
+<div class="p-space-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-md bg-surface-container-lowest">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">key</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">API Credentials &amp; Access Keys</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Bearer tokens must be kept confidential. Never check secrets into public GitHub repositories.</p>
+</div>
+<div class="flex items-center gap-space-xs">
+<span class="inline-flex items-center gap-1.5 px-space-sm py-1 rounded-full bg-surface-container font-label-sm text-label-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+          Auto-Rotation Alert: 60 Days
+        </span>
+</div>
+</div>
+<!-- Responsive Dense Credentials Table -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left font-body-sm text-body-sm border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-space-md px-space-lg">Key Identity &amp; Scope</th>
+<th class="py-space-md px-space-lg">Public Key Prefix &amp; Hash</th>
+<th class="py-space-md px-space-lg">IP / Geofence Security</th>
+<th class="py-space-md px-space-lg">Created / Last Used</th>
+<th class="py-space-md px-space-lg text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y-0">
+<!-- Row 1: Production Primary -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-space-lg px-space-lg">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-body-sm text-on-surface font-semibold">Production Primary API Key</span>
+<span class="px-1.5 py-0.5 rounded bg-primary-fixed text-on-primary-fixed-variant font-label-sm text-label-sm font-bold">FULL STORE</span>
+</div>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant text-body-sm">
+<span>Perms: Read/Write Orders, Inventory Sync</span>
+<span class="w-1 h-1 rounded-full bg-outline"></span>
+<span class="text-error font-medium text-label-sm">Instant Settle: Disabled</span>
+</div>
+</div>
+</td>
+<td class="py-space-lg px-space-lg">
+<div class="flex items-center gap-space-sm">
+<div class="px-space-sm py-1 rounded bg-inverse-surface text-inverse-on-surface font-code-metric text-code-metric tracking-wider select-all">
+                  pk_live_89a2bc••••••••••••••••34ef
+                </div>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" onclick="copyToast('pk_live_89a2bc7190f84a821e29384734ef')" title="Copy Raw Key" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</td>
+<td class="py-space-lg px-space-lg">
+<span class="inline-flex items-center gap-1 text-on-surface font-code-metric text-body-sm">
+<span class="material-symbols-outlined text-outline text-[16px]">public</span>
+                Any Authorized IP (mTLS Required)
+              </span>
+</td>
+<td class="py-space-lg px-space-lg">
+<div class="flex flex-col">
+<span class="text-on-surface font-medium">12 Jan 2024</span>
+<span class="text-label-sm text-outline">Last ping: 2 mins ago</span>
+</div>
+</td>
+<td class="py-space-lg px-space-lg text-right">
+<div class="inline-flex items-center gap-space-xs">
+<button class="px-space-sm py-1 rounded text-primary hover:bg-surface-container font-label-md text-label-md transition-colors" type="button">
+                  Roll Key
+                </button>
+<button class="px-space-sm py-1 rounded text-error hover:bg-error-container/30 font-label-md text-label-md transition-colors" type="button">
+                  Revoke
+                </button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Production Restricted Kitchen POS -->
+<tr class="hover:bg-surface-container-low/60 transition-colors bg-surface-container-lowest">
+<td class="py-space-lg px-space-lg">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-body-sm text-on-surface font-semibold">Kitchen Display &amp; KOT Station</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm font-bold">KDS SCOPE</span>
+</div>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant text-body-sm">
+<span>Perms: Orders &amp; KOT status only</span>
+</div>
+</div>
+</td>
+<td class="py-space-lg px-space-lg">
+<div class="flex items-center gap-space-sm">
+<div class="px-space-sm py-1 rounded bg-inverse-surface text-inverse-on-surface font-code-metric text-code-metric tracking-wider select-all">
+                  pk_live_41ff09••••••••••••••••99ab
+                </div>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" onclick="copyToast('pk_live_41ff09102837bc991a29384799ab')" title="Copy Raw Key" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</td>
+<td class="py-space-lg px-space-lg">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary text-[16px]">lock</span>
+<span class="font-code-metric text-body-sm text-on-surface">103.115.198.4</span>
+<span class="px-1 py-0.2 rounded bg-tertiary-fixed text-on-tertiary-fixed text-label-sm font-bold">PINNED</span>
+</div>
+</td>
+<td class="py-space-lg px-space-lg">
+<div class="flex flex-col">
+<span class="text-on-surface font-medium">04 Mar 2024</span>
+<span class="text-label-sm text-outline">Last ping: 18 secs ago</span>
+</div>
+</td>
+<td class="py-space-lg px-space-lg text-right">
+<div class="inline-flex items-center gap-space-xs">
+<button class="px-space-sm py-1 rounded text-primary hover:bg-surface-container font-label-md text-label-md transition-colors" type="button">
+                  Roll Key
+                </button>
+<button class="px-space-sm py-1 rounded text-error hover:bg-error-container/30 font-label-md text-label-md transition-colors" type="button">
+                  Revoke
+                </button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Sandbox Test Key -->
+<tr class="hover:bg-surface-container-low/60 transition-colors">
+<td class="py-space-lg px-space-lg">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-body-sm text-on-surface font-semibold">Sandbox Test Mock Key</span>
+<span class="px-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-bold">SANDBOX</span>
+</div>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant text-body-sm">
+<span>Perms: Mock Catalog &amp; Faux Instant Settlement simulation</span>
+</div>
+</div>
+</td>
+<td class="py-space-lg px-space-lg">
+<div class="flex items-center gap-space-sm">
+<div class="px-space-sm py-1 rounded bg-inverse-surface/80 text-inverse-on-surface font-code-metric text-code-metric tracking-wider select-all">
+                  pk_test_90cc11••••••••••••••••12aa
+                </div>
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-primary transition-colors" onclick="copyToast('pk_test_90cc11234981adbbff91028312aa')" title="Copy Raw Key" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
+</button>
+</div>
+</td>
+<td class="py-space-lg px-space-lg">
+<span class="inline-flex items-center gap-1 text-outline font-body-sm">
+<span class="material-symbols-outlined text-[16px]">public_off</span>
+                Unrestricted Test Mode
+              </span>
+</td>
+<td class="py-space-lg px-space-lg">
+<div class="flex flex-col">
+<span class="text-on-surface font-medium">18 Nov 2023</span>
+<span class="text-label-sm text-outline">Last ping: Yesterday</span>
+</div>
+</td>
+<td class="py-space-lg px-space-lg text-right">
+<div class="inline-flex items-center gap-space-xs">
+<button class="px-space-sm py-1 rounded text-primary hover:bg-surface-container font-label-md text-label-md transition-colors" type="button">
+                  Regenerate
+                </button>
+<button class="px-space-sm py-1 rounded text-error hover:bg-error-container/30 font-label-md text-label-md transition-colors" type="button">
+                  Delete
+                </button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Section 2: Split Layout - Webhooks Management & HMAC Security Guard -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl mb-space-xl">
+<!-- Left Column: Webhooks Listeners & Subscriptions (8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface flex items-center gap-2">
+<span>Webhook Endpoints</span>
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container animate-pulse"></span>
+</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Real-time HTTP POST notifications dispatched upon critical merchant actions.</p>
+</div>
+<button class="flex items-center gap-1.5 px-space-md py-1.5 rounded-lg bg-surface-container text-primary font-label-md text-label-md hover:bg-surface-container-high transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">add_link</span>
+<span>Register Endpoint</span>
+</button>
+</div>
+<!-- Webhook Card 1: Enterprise ERP Gateway -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col gap-space-md transition-all hover:shadow-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="p-2 rounded-lg bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[20px]">webhook</span>
+</span>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title text-title text-on-surface font-bold">Main Enterprise ERP Listener</span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                  HEALTHY (200 OK)
+                </span>
+</div>
+<span class="font-code-metric text-body-sm text-primary select-all">https://erp.krishnagourmet.in/api/v1/trustit-events</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">send</span>
+<span>Test Ping</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+</div>
+<!-- Secret & Event Subscription Badges -->
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Signing Secret:</span>
+<code class="px-2 py-0.5 rounded bg-surface-container-lowest font-code-metric text-body-sm text-on-surface">whsec_88f91040••••••••••••22ad</code>
+<button class="p-1 text-on-surface-variant hover:text-primary" onclick="copyToast('whsec_88f91040a831e784400cba0022ad')" title="Copy Secret" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Last ping received: <strong>4 mins ago</strong></span>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold mr-1">Subscribed Events:</span>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">order.placed</span>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">order.cancelled</span>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">settlement.disbursed</span>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">inventory.threshold_breach</span>
+</div>
+</div>
+<!-- Webhook Card 2: Local Kitchen POS Relay -->
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col gap-space-md transition-all hover:shadow-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<span class="p-2 rounded-lg bg-surface-container text-primary">
+<span class="material-symbols-outlined text-[20px]">router</span>
+</span>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title text-title text-on-surface font-bold">In-Store KOT Dispatch Relay</span>
+<span class="px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                  HEALTHY
+                </span>
+<span class="px-1.5 py-0.2 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm font-bold">LAN RELAY</span>
+</div>
+<span class="font-code-metric text-body-sm text-primary select-all">https://pos.indiranagar.local/webhooks/kot-sync</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[16px]">send</span>
+<span>Test Ping</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</div>
+</div>
+<div class="flex flex-wrap items-center justify-between gap-space-sm pt-space-xs bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Signing Secret:</span>
+<code class="px-2 py-0.5 rounded bg-surface-container-lowest font-code-metric text-body-sm text-on-surface">whsec_local_5902••••••••••••11bc</code>
+<button class="p-1 text-on-surface-variant hover:text-primary" onclick="copyToast('whsec_local_5902a71f00bcaef4390011bc')" title="Copy Secret" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Last ping received: <strong>42 secs ago</strong></span>
+</div>
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold mr-1">Subscribed Events:</span>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">kitchen.kot_fired</span>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">rider.assigned</span>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">delivery.picked_up</span>
+</div>
+</div>
+</div>
+<!-- Right Column: HMAC & Security Whitelisting Safeguards (4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-space-md">
+<div class="rounded-xl bg-surface-container-lowest p-space-lg shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[22px]">shield_lock</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Security &amp; Integrity</h2>
+</div>
+<!-- Toggle: HMAC SHA-256 -->
+<div class="flex items-start justify-between gap-space-sm p-space-md rounded-xl bg-surface-container-low">
+<div class="flex flex-col gap-0.5">
+<span class="font-title text-body-sm text-on-surface font-semibold">HMAC SHA-256 Enforcement</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Reject all payload deliveries lacking a valid computed <code class="font-code-metric text-primary">X-TrustIt-Signature</code> header.</span>
+</div>
+<!-- Native-looking Toggle -->
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0 mt-1">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-outline-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-surface-container-lowest after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Strict IP Geofence Whitelisting -->
+<div class="flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="font-title text-body-sm text-on-surface font-semibold">Strict IP Geofence</span>
+<span class="px-1.5 py-0.2 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm font-bold">3 REGISTERED</span>
+</div>
+<button class="text-primary font-label-md text-label-md hover:underline" type="button">+ Add CIDR</button>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Requests to transaction routes from non-whitelisted IPs will return HTTP 403 Forbidden.</p>
+<!-- List of IP Blocks -->
+<div class="flex flex-col gap-space-xs mt-1">
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container font-code-metric text-body-sm text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<span>103.115.198.0/24</span>
+</div>
+<span class="text-on-surface-variant text-label-sm font-body-sm">ACT Corp Lease</span>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container font-code-metric text-body-sm text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<span>49.207.214.112/32</span>
+</div>
+<span class="text-on-surface-variant text-label-sm font-body-sm">Static POS WAN</span>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container font-code-metric text-body-sm text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary-container"></span>
+<span>13.235.80.0/20</span>
+</div>
+<span class="text-on-surface-variant text-label-sm font-body-sm">AWS ap-south-1 Hub</span>
+</div>
+</div>
+</div>
+<!-- POS Terminal Pairing State -->
+<div class="rounded-xl bg-surface-container p-space-md flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">SoundBox &amp; Thermal POS</span>
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm text-tertiary font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+              SYNCED
+            </span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface">Device ID: <code class="font-code-metric text-primary">SBX-BLR-0941A</code></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Firmware: v2.9-KOT-AES-GCM (Latest patch)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Section 3: Interactive Webhook Event Delivery Logs Table -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="p-space-lg flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">receipt_long</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Recent Event Deliveries &amp; Payloads</h2>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Audit trail of outbound event dispatches. Click inspect to inspect JSON requests and ACK headers.</p>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center gap-1 px-space-md py-1.5 rounded-lg bg-surface-container">
+<span class="material-symbols-outlined text-outline text-[16px]">filter_list</span>
+<select class="bg-transparent font-body-sm text-body-sm text-on-surface border-0 outline-none cursor-pointer">
+<option>All Events (Last 100)</option>
+<option>order.*</option>
+<option>settlement.*</option>
+<option>Errors / 5xx Only</option>
+</select>
+</div>
+<button class="p-2 rounded-lg bg-surface-container text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors" title="Refresh Log Stream" type="button">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+</button>
+</div>
+</div>
+<!-- Logs Table -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left font-body-sm text-body-sm border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-space-md px-space-lg">Delivery ID</th>
+<th class="py-space-md px-space-lg">Event Scope</th>
+<th class="py-space-md px-space-lg">Target URL Destination</th>
+<th class="py-space-md px-space-lg">HTTP Response</th>
+<th class="py-space-md px-space-lg">Latency</th>
+<th class="py-space-md px-space-lg">Dispatched</th>
+<th class="py-space-md px-space-lg text-right">Payload</th>
+</tr>
+</thead>
+<tbody class="divide-y-0">
+<!-- Log 1: Order Dispatched -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="py-space-md px-space-lg">
+<span class="font-code-metric text-on-surface select-all">evt_991823ab49</span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">order.dispatched</span>
+</td>
+<td class="py-space-md px-space-lg max-w-xs truncate">
+<span class="font-code-metric text-on-surface-variant text-body-sm">https://erp.krishnagourmet.in/api/v1...</span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-code-metric text-label-sm font-bold">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                200 OK
+              </span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="font-code-metric text-on-surface">84 ms</span>
+</td>
+<td class="py-space-md px-space-lg text-on-surface-variant font-label-sm text-label-sm">
+              Just now (14:32:02)
+            </td>
+<td class="py-space-md px-space-lg text-right">
+<button class="px-space-md py-1 rounded-lg bg-surface-container text-primary font-label-md text-label-md hover:bg-primary-container hover:text-on-primary transition-all" onclick="showPayloadModal('evt_991823ab49', 'order.dispatched')" type="button">
+                Inspect
+              </button>
+</td>
+</tr>
+<!-- Log 2: Payout Settled -->
+<tr class="hover:bg-surface-container-low/70 transition-colors bg-surface-container-lowest">
+<td class="py-space-md px-space-lg">
+<span class="font-code-metric text-on-surface select-all">evt_991820cc77</span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">payout.settled</span>
+</td>
+<td class="py-space-md px-space-lg max-w-xs truncate">
+<span class="font-code-metric text-on-surface-variant text-body-sm">https://erp.krishnagourmet.in/api/v1...</span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-code-metric text-label-sm font-bold">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                200 OK
+              </span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="font-code-metric text-on-surface">112 ms</span>
+</td>
+<td class="py-space-md px-space-lg text-on-surface-variant font-label-sm text-label-sm">
+              3 mins ago (14:29:10)
+            </td>
+<td class="py-space-md px-space-lg text-right">
+<button class="px-space-md py-1 rounded-lg bg-surface-container text-primary font-label-md text-label-md hover:bg-primary-container hover:text-on-primary transition-all" onclick="showPayloadModal('evt_991820cc77', 'payout.settled')" type="button">
+                Inspect
+              </button>
+</td>
+</tr>
+<!-- Log 3: Kitchen KOT Fired -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="py-space-md px-space-lg">
+<span class="font-code-metric text-on-surface select-all">evt_991819bb10</span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">kitchen.kot_fired</span>
+</td>
+<td class="py-space-md px-space-lg max-w-xs truncate">
+<span class="font-code-metric text-on-surface-variant text-body-sm">https://pos.indiranagar.local/webhooks...</span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-code-metric text-label-sm font-bold">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                200 OK
+              </span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="font-code-metric text-on-surface">32 ms</span>
+</td>
+<td class="py-space-md px-space-lg text-on-surface-variant font-label-sm text-label-sm">
+              6 mins ago (14:26:01)
+            </td>
+<td class="py-space-md px-space-lg text-right">
+<button class="px-space-md py-1 rounded-lg bg-surface-container text-primary font-label-md text-label-md hover:bg-primary-container hover:text-on-primary transition-all" onclick="showPayloadModal('evt_991819bb10', 'kitchen.kot_fired')" type="button">
+                Inspect
+              </button>
+</td>
+</tr>
+<!-- Log 4: Order Placed -->
+<tr class="hover:bg-surface-container-low/70 transition-colors bg-surface-container-lowest">
+<td class="py-space-md px-space-lg">
+<span class="font-code-metric text-on-surface select-all">evt_991812aa04</span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-code-metric text-label-sm font-semibold">order.placed</span>
+</td>
+<td class="py-space-md px-space-lg max-w-xs truncate">
+<span class="font-code-metric text-on-surface-variant text-body-sm">https://erp.krishnagourmet.in/api/v1...</span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-code-metric text-label-sm font-bold">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                200 OK
+              </span>
+</td>
+<td class="py-space-md px-space-lg">
+<span class="font-code-metric text-on-surface">91 ms</span>
+</td>
+<td class="py-space-md px-space-lg text-on-surface-variant font-label-sm text-label-sm">
+              11 mins ago (14:21:40)
+            </td>
+<td class="py-space-md px-space-lg text-right">
+<button class="px-space-md py-1 rounded-lg bg-surface-container text-primary font-label-md text-label-md hover:bg-primary-container hover:text-on-primary transition-all" onclick="showPayloadModal('evt_991812aa04', 'order.placed')" type="button">
+                Inspect
+              </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination Footer -->
+<div class="p-space-md bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm text-on-surface-variant font-body-sm text-body-sm">
+<span>Showing 4 of 1,420 delivery logs recorded today</span>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-sm py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" type="button">Previous</button>
+<button class="px-space-sm py-1 rounded bg-primary-container text-on-primary font-bold" type="button">1</button>
+<button class="px-space-sm py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" type="button">2</button>
+<button class="px-space-sm py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" type="button">3</button>
+<button class="px-space-sm py-1 rounded bg-surface-container hover:bg-surface-container-high text-on-surface transition-colors" type="button">Next</button>
+</div>
+</div>
+</div>
+<!-- Interactive Modal / Inspector Drawer (Hidden by default, triggered via JS) -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-inverse-surface/40 backdrop-blur-sm hidden" id="inspectorDrawer">
+<div class="w-full max-w-2xl bg-surface-container-lowest rounded-xl shadow-2xl flex flex-col overflow-hidden max-h-[921px]">
+<!-- Header -->
+<div class="p-space-lg bg-surface-container flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">code</span>
+<div>
+<h3 class="font-title text-title text-on-surface font-bold" id="drawerTitle">Webhook Delivery Inspector</h3>
+<span class="font-code-metric text-label-sm text-on-surface-variant" id="drawerSubtitle">evt_991823ab49</span>
+</div>
+</div>
+<button class="p-1 rounded-lg hover:bg-surface-container-high text-on-surface-variant" onclick="closeInspector()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Drawer Body: Code JSON -->
+<div class="p-space-lg flex flex-col gap-space-md overflow-y-auto">
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Dispatched Request Headers</span>
+<div class="p-space-md rounded-lg bg-inverse-surface text-inverse-on-surface font-code-metric text-body-sm mt-1">
+<div><span class="text-tertiary-fixed">X-TrustIt-Signature:</span> sha256=9f20e4b85a3c1029da9f1bb763e002a...</div>
+<div><span class="text-tertiary-fixed">X-TrustIt-Delivery-ID:</span> evt_991823ab49</div>
+<div><span class="text-tertiary-fixed">Content-Type:</span> application/json; charset=utf-8</div>
+</div>
+</div>
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold">Dispatched Payload (JSON)</span>
+<button class="text-primary font-label-md text-label-md flex items-center gap-1" onclick="copyToast('payload_json')" type="button">
+<span class="material-symbols-outlined text-[14px]">content_copy</span>
+<span>Copy JSON</span>
+</button>
+</div>
+<pre class="p-space-md rounded-lg bg-inverse-surface text-secondary-fixed font-code-metric text-body-sm overflow-x-auto"><code>{
+  "event": "order.dispatched",
+  "merchant_id": "mer_blrgourmet_8829",
+  "timestamp": 1710234722,
+  "data": {
+    "order_id": "ORD-2024-890123",
+    "status": "DISPATCHED",
+    "delivery_partner": "TRUSTIT_HYPERLOCAL_EXPEDITED",
+    "rider_contact": "+91 98450 11200",
+    "total_inr": 1420.50,
+    "nodal_escrow_hold": true,
+    "kot_id": "KOT-9021"
+  }
+}</code></pre>
+</div>
+</div>
+<!-- Drawer Footer -->
+<div class="p-space-md bg-surface-container flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-tertiary font-semibold">Response: HTTP 200 (ACK confirmed in 84ms)</span>
+<button class="px-space-lg py-1.5 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md" onclick="closeInspector()" type="button">
+          Close Viewer
+        </button>
+</div>
+</div>
+</div>
+<!-- Micro-Notification Toast -->
+<div class="fixed bottom-6 right-6 z-50 px-space-lg py-space-md rounded-lg bg-inverse-surface text-inverse-on-surface shadow-xl flex items-center gap-space-sm transform translate-y-24 opacity-0 transition-all duration-300" id="copyToastAlert">
+<span class="material-symbols-outlined text-secondary-fixed text-[20px]">check_circle</span>
+<span class="font-body-sm text-body-sm" id="toastMessage">Copied to clipboard!</span>
+</div>
+</div>
+<script>
+  function copyToast(text) {
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+    }
+    const toast = document.getElementById('copyToastAlert');
+    const msg = document.getElementById('toastMessage');
+    msg.innerText = 'Copied to clipboard: ' + text.slice(0, 16) + '...';
+    toast.classList.remove('translate-y-24', 'opacity-0');
+    setTimeout(() => {
+      toast.classList.add('translate-y-24', 'opacity-0');
+    }, 2400);
+  }
+
+  function showPayloadModal(id, eventType) {
+    const modal = document.getElementById('inspectorDrawer');
+    document.getElementById('drawerTitle').innerText = 'Payload Inspector: ' + eventType;
+    document.getElementById('drawerSubtitle').innerText = 'Delivery Ref: ' + id;
+    modal.classList.remove('hidden');
+  }
+
+  function closeInspector() {
+    document.getElementById('inspectorDrawer').classList.add('hidden');
+  }
+
+  function openKeyModal() {
+    copyToast('Creating secure key request...');
+  }
+</script></main></div></body></html>

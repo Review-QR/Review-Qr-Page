@@ -17,3 +17,5 @@ pnpm-debug.log*
 
 supabase/.branches/
 supabase/.temp/
+stitch_exports/
+

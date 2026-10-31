@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"inverse-on-surface":"#eef0ff","on-surface-variant":"#434652","on-primary-fixed-variant":"#00429c","surface-container-low":"#f2f3ff","primary-fixed":"#d9e2ff","on-primary":"#ffffff","on-tertiary-fixed-variant":"#005235","secondary-fixed":"#9cf0ff","tertiary":"#003d27","on-tertiary-fixed":"#002113","secondary-container":"#00e3fd","on-tertiary-container":"#66d09c","on-primary-container":"#a1bbff","tertiary-container":"#005739","surface-bright":"#faf8ff","tertiary-fixed-dim":"#71dba6","on-error-container":"#93000a","surface-dim":"#d2d9f4","on-surface":"#131b2e","inverse-primary":"#b0c6ff","on-primary-fixed":"#001945","surface-container-lowest":"#ffffff","surface-container-high":"#e2e7ff","primary":"#003178","on-error":"#ffffff","on-tertiary":"#ffffff","secondary":"#006875","surface-tint":"#2b5bb5","on-background":"#131b2e","surface-container":"#eaedff","on-secondary":"#ffffff","on-secondary-fixed-variant":"#004f58","surface-container-highest":"#dae2fd","outline-variant":"#c3c6d4","surface":"#faf8ff","secondary-fixed-dim":"#00daf3","tertiary-fixed":"#8df7c1","on-secondary-container":"#00616d","primary-container":"#0d47a1","on-secondary-fixed":"#001f24","error-container":"#ffdad6","error":"#ba1a1a","background":"#faf8ff","primary-fixed-dim":"#b0c6ff","surface-variant":"#dae2fd","inverse-surface":"#283044","outline":"#737783"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xl":"1.5rem","space-sm":"0.5rem","margin-tablet":"1.5rem",gutter:"1rem","gutter-desktop":"1.5rem","space-2xl":"2rem","space-lg":"1rem","margin-desktop":"2rem","space-xs":"0.25rem",margin:"1rem","space-md":"0.75rem"},fontFamily:{display:["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"code-metric":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],title:["Plus Jakarta Sans"]},fontSize:{display:["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"700"}],"label-md":["13px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"600"}],"headline-sm":["18px",{lineHeight:"24px",fontWeight:"600"}],"code-metric":["14px",{lineHeight:"20px",fontWeight:"700"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-sm":["13px",{lineHeight:"18px",fontWeight:"400"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],title:["16px",{lineHeight:"22px",fontWeight:"600"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center gap-space-sm bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.02)]"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">verified_user</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary leading-none">TRUSTIT</span><span class="font-label-sm text-label-sm uppercase text-on-surface-variant leading-tight">Partner Portal</span></div></div><div class="p-space-md"><div class="px-space-md py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Operations</div><nav class="flex flex-col gap-1 mt-1" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span>Overview</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="orders" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span>Orders</span></div><span class="bg-secondary-container text-on-secondary-container font-code-metric text-code-metric px-space-xs py-0.5 rounded-full text-xs">14</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="products-and-inventory" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span>Products &amp; Inventory</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="store-management" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span>Store Management</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="delivery" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span>Delivery</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="payments-and-settlements" href="#"><span class="material-symbols-outlined text-[20px]">account_balance</span><span>Payments &amp; Settlements</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="subscriptions" href="#"><span class="material-symbols-outlined text-[20px]">loyalty</span><span>Subscriptions</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="qr-and-reviews" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span>QR &amp; Reviews</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="physical-products" href="#"><span class="material-symbols-outlined text-[20px]">category</span><span>Physical Products</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">insights</span><span>Analytics</span></a></nav><div class="mt-space-lg px-space-md py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">System</div><nav class="flex flex-col gap-1 mt-1" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="notifications" href="#"><span class="material-symbols-outlined text-[20px]">notifications</span><span>Notifications</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="support" href="#"><span class="material-symbols-outlined text-[20px]">contact_support</span><span>Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span>Settings</span></a></nav></div></div><div class="p-space-md"><div class="bg-surface-container p-space-md rounded-lg flex items-center gap-space-sm"><span class="material-symbols-outlined text-tertiary text-[20px]">check_circle</span><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-surface font-bold">GSTIN &amp; FSSAI</span><span class="font-body-sm text-body-sm text-on-surface-variant">KYC Compliant</span></div></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-gutter-desktop"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1.5 rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.02)]"><span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim animate-pulse"></span><span class="font-title text-title text-on-surface font-semibold">Sri Krishna Gourmet (Indiranagar, BLR)</span><span class="bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm px-space-xs py-0.5 rounded uppercase">Live</span></div><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[18px]">search</span><input class="w-80 h-10 pl-9 pr-space-md bg-surface-container-low text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm rounded-lg focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container/20 transition-all" placeholder="Search orders, SKU, customer or UTR..." type="text"/></div></div><div class="flex items-center gap-space-md"><button class="relative w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error"></span></button><button class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">help_center</span></button><div class="h-6 w-px bg-outline-variant"></div><div class="flex items-center gap-space-sm pl-space-xs"><div class="flex flex-col text-right"><span class="font-title text-title text-on-surface leading-tight font-semibold">Rajesh Sharma</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-none">Store Partner</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 bg-background min-h-screen w-full px-gutter-desktop py-space-xl"><div class="flex flex-col w-full">
+<!-- Sub-header Breadcrumb & Operational Timestamp Bar -->
+<div class="flex flex-wrap items-center justify-between gap-space-md mb-space-lg">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-md text-label-md">
+<span>Products &amp; Inventory</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">Inventory &amp; Stock Ledger</span>
+</div>
+<div class="flex items-center gap-space-sm mt-0.5">
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">Stock Command &amp; Audit Desk</h1>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+          Auto-Sync: Live POS
+        </span>
+</div>
+</div>
+<!-- Rapid Actions Toolbar -->
+<div class="flex items-center flex-wrap gap-space-sm">
+<button class="inline-flex items-center gap-space-xs px-3.5 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-title text-title shadow-sm hover:bg-surface-container transition-all" type="button">
+<span class="material-symbols-outlined text-[18px] text-primary">barcode_scanner</span>
+<span>Import Barcode Audit</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-3.5 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-title text-title shadow-sm hover:bg-surface-container transition-all" type="button">
+<span class="material-symbols-outlined text-[18px] text-tertiary">download</span>
+<span>Reconciliation (CSV/XLSX)</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-4 py-2 rounded-lg bg-primary-container text-on-primary font-title text-title shadow-md hover:bg-primary transition-all" onclick="openDrawer('Special Mysore Pak (500g)', 'SKU-KA-7704', 3, 15, 'Boxes')" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>Quick Batch Stock Update</span>
+</button>
+</div>
+</div>
+<!-- KPI Bento Cards Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-space-md mb-space-xl">
+<!-- KPI 1 -->
+<div class="relative overflow-hidden bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">Total Valuation</span>
+<span class="font-headline-lg text-headline-lg text-on-surface font-extrabold mt-1">₹4,82,650</span>
+</div>
+<div class="w-10 h-10 rounded-lg bg-primary-fixed/50 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">account_balance_wallet</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Across <strong class="text-on-surface">184 active SKUs</strong></span>
+<span class="inline-flex items-center gap-1 text-tertiary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>+4.2% wk
+        </span>
+</div>
+<!-- Tiny decorative sparkline -->
+<svg class="w-full h-4 mt-2 text-primary/30" fill="none" viewbox="0 0 100 16">
+<path d="M0 14 Q 25 3, 50 10 T 100 4" stroke="currentColor" stroke-linecap="round" stroke-width="2"></path>
+</svg>
+</div>
+<!-- KPI 2 -->
+<div class="relative overflow-hidden bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-error font-bold">Critical Low Stock</span>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="font-headline-lg text-headline-lg text-error font-extrabold">11</span>
+<span class="font-label-md text-label-md text-on-surface-variant">items require restock</span>
+</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-error-container/40 flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-[22px]">warning</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="inline-flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="w-2 h-2 rounded-full bg-error animate-ping"></span>
+          Below buffer threshold
+        </span>
+<span class="px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm uppercase font-bold">Action Needed</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden mt-2">
+<div class="bg-error h-full rounded-full" style="width: 68%;"></div>
+</div>
+</div>
+<!-- KPI 3 -->
+<div class="relative overflow-hidden bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-bold">Out of Stock / Paused</span>
+<span class="font-headline-lg text-headline-lg text-on-surface font-extrabold mt-1">5</span>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[22px]">visibility_off</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Auto-hidden on Buyer App</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm uppercase font-semibold">Zero Sales Risk</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden mt-2">
+<div class="bg-outline-variant h-full rounded-full" style="width: 25%;"></div>
+</div>
+</div>
+<!-- KPI 4 -->
+<div class="relative overflow-hidden bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary font-bold">Fast-Moving Velocity</span>
+<span class="font-headline-lg text-headline-lg text-on-surface font-extrabold mt-1">24 SKUs</span>
+</div>
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed/50 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[22px]">bolt</span>
+</div>
+</div>
+<div class="flex items-center justify-between mt-space-md pt-space-xs">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Drives <strong>80% daily turnover</strong></span>
+<span class="inline-flex items-center gap-1 text-secondary font-label-md text-label-md font-bold">
+          High Yield
+        </span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden mt-2">
+<div class="bg-secondary-container h-full rounded-full" style="width: 80%;"></div>
+</div>
+</div>
+</div>
+<!-- URGENT: Low-Stock Action Queue Banner Section -->
+<div class="mb-space-xl bg-surface-container-lowest rounded-xl p-space-lg shadow-sm relative overflow-hidden">
+<div class="flex flex-wrap items-center justify-between gap-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-error animate-pulse"></span>
+<span class="font-title text-title font-bold text-on-surface">Urgent Dispatch Buffer Queue (3 Critical Interrupts)</span>
+<span class="bg-error-container text-on-error-container font-label-sm text-label-sm px-2 py-0.5 rounded-full uppercase">Priority Replenishment</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Live sync with ONDC &amp; Storefront catalog limits</span>
+</div>
+<!-- Queue Items Grid with Visual Thumbs and Quick Replenish controls -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-md">
+<!-- Item 1 -->
+<div class="bg-surface-container-low rounded-lg p-space-md shadow-sm flex flex-col justify-between">
+<div class="flex items-start gap-space-md">
+<img class="w-14 h-14 rounded-lg object-cover flex-shrink-0" data-alt="Traditional South Indian pure ghee Mysore Pak sweet confectionary neatly sliced in golden presentation box under bright boutique lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4NnvPaiIsSDkyn1cJ-vzzZpPzqQS50TV4LTtwz857hXi4NZIv4tdqX9wOz4_LluMVyos0qHl6lQEpLnyphjGLVuuuWU-vsdfC4srcGwyT5E2VA-3IJaun2dc-OTelQPPl52lF9qTNxpbDCN83EMC5IyilNKifUi3et9Aiedvg0DauRpBbCuDSvjakC52QZW8t_T490_60XVJEBLX3kScTV_iyUnezGntrWTr7O4U"/>
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-error uppercase">3 Units Left</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Threshold: 15</span>
+</div>
+<h2 class="font-title text-title text-on-surface font-semibold truncate mt-0.5">Special Mysore Pak (500g)</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">SKU-KA-7704 • Sweets &amp; Savouries</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 text-xs font-bold rounded bg-surface-container-lowest text-primary hover:bg-primary-container hover:text-on-primary transition-all" onclick="quickIncrement('SKU-KA-7704', 10)" type="button">+10</button>
+<button class="px-2.5 py-1 text-xs font-bold rounded bg-surface-container-lowest text-primary hover:bg-primary-container hover:text-on-primary transition-all" onclick="quickIncrement('SKU-KA-7704', 25)" type="button">+25</button>
+<button class="px-2.5 py-1 text-xs font-bold rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-all" onclick="openDrawer('Special Mysore Pak (500g)', 'SKU-KA-7704', 3, 15, 'Boxes')" type="button">Custom</button>
+</div>
+<button class="text-xs font-semibold text-error hover:underline px-1 py-1" type="button">Pause SKU</button>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="bg-surface-container-low rounded-lg p-space-md shadow-sm flex flex-col justify-between">
+<div class="flex items-start gap-space-md">
+<img class="w-14 h-14 rounded-lg object-cover flex-shrink-0" data-alt="Artisanal glass bottle of concentrated South Indian filter coffee decoction with chic typography label on marble slab" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCzbuIrgrZYfwFlD1GJ2eUf9k8loXwicA-w0bWErptOguGdm_ysCqvxezT8S9vbwiuyDzIL6hMNShRgF-Mx2OTavVTZoQtHVBZHMJtG9It0rqw-ruJZEY8S3tzZ-KNKA744mLB8PqEIk4MqfRL4noViaVmeyXRTJNYakHSvO789V9jDbUYmAlvQObMTJFEHtDaPnrIiXwv3NhcEdsvfAc8PWG4HwFF1KANt9Oru1lo"/>
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-error uppercase">2 Units Left</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Threshold: 10</span>
+</div>
+<h2 class="font-title text-title text-on-surface font-semibold truncate mt-0.5">Filter Coffee Decoction 500ml</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">SKU-BLR-1092 • Fresh Beverages</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 text-xs font-bold rounded bg-surface-container-lowest text-primary hover:bg-primary-container hover:text-on-primary transition-all" onclick="quickIncrement('SKU-BLR-1092', 10)" type="button">+10</button>
+<button class="px-2.5 py-1 text-xs font-bold rounded bg-surface-container-lowest text-primary hover:bg-primary-container hover:text-on-primary transition-all" onclick="quickIncrement('SKU-BLR-1092', 25)" type="button">+25</button>
+<button class="px-2.5 py-1 text-xs font-bold rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-all" onclick="openDrawer('Filter Coffee Decoction 500ml', 'SKU-BLR-1092', 2, 10, 'Bottles')" type="button">Custom</button>
+</div>
+<button class="text-xs font-semibold text-error hover:underline px-1 py-1" type="button">Pause SKU</button>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="bg-surface-container-low rounded-lg p-space-md shadow-sm flex flex-col justify-between">
+<div class="flex items-start gap-space-md">
+<img class="w-14 h-14 rounded-lg object-cover flex-shrink-0" data-alt="Golden organic A2 Gir cow bilona ghee packed in airtight amber glass container with tamper proof seal" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtWSwz8eWBOYHanrwH8QTblFtVUtEUP1Db803lps5q6d_cKUgLQ7Reh7ET-nNgeyieDnavLqohX80X6YGesjfYMRTdWCnzgOMh04ghuA7ZlDEj6MHMncDADSNwpWVZFzFaX6jZoapJG6xW2ZKs7jtGODD-Ss9Kr4-7CVtAqJfxd4LkWwHbCpKQhg7VkvGtthp9YUip-2tadyWgQPCRY6-pNM6jXKTO7z_9cB9bKa8"/>
+<div class="flex flex-col min-w-0 flex-1">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-error uppercase">1 Unit Left</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Threshold: 8</span>
+</div>
+<h2 class="font-title text-title text-on-surface font-semibold truncate mt-0.5">A2 Cow Bilona Ghee 500ml</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">SKU-DAI-4431 • Dairy &amp; Gourmet</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between gap-space-xs">
+<div class="flex items-center gap-1">
+<button class="px-2.5 py-1 text-xs font-bold rounded bg-surface-container-lowest text-primary hover:bg-primary-container hover:text-on-primary transition-all" onclick="quickIncrement('SKU-DAI-4431', 10)" type="button">+10</button>
+<button class="px-2.5 py-1 text-xs font-bold rounded bg-surface-container-lowest text-primary hover:bg-primary-container hover:text-on-primary transition-all" onclick="quickIncrement('SKU-DAI-4431', 25)" type="button">+25</button>
+<button class="px-2.5 py-1 text-xs font-bold rounded bg-surface-container-lowest text-on-surface hover:bg-surface-container transition-all" onclick="openDrawer('A2 Cow Bilona Ghee 500ml', 'SKU-DAI-4431', 1, 8, 'Jars')" type="button">Custom</button>
+</div>
+<button class="text-xs font-semibold text-error hover:underline px-1 py-1" type="button">Pause SKU</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Real-time Inventory Table Section with Controls -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden mb-space-xl flex flex-col">
+<!-- Filter bar -->
+<div class="p-space-lg flex flex-wrap items-center justify-between gap-space-md bg-surface-container-lowest">
+<div class="flex items-center flex-wrap gap-space-sm">
+<span class="font-title text-title font-bold text-on-surface">Store Catalogue Inventory</span>
+<span class="bg-surface-container-high px-2.5 py-1 rounded text-on-surface font-code-metric text-code-metric">184 Total SKUs</span>
+<!-- Segmented Filter Pills -->
+<div class="flex items-center p-0.5 bg-surface-container rounded-lg ml-2">
+<button class="px-3 py-1 rounded-md text-xs font-bold bg-surface-container-lowest text-primary shadow-sm" type="button">All SKUs</button>
+<button class="px-3 py-1 rounded-md text-xs font-semibold text-on-surface-variant hover:text-on-surface" type="button">Low Stock (11)</button>
+<button class="px-3 py-1 rounded-md text-xs font-semibold text-on-surface-variant hover:text-on-surface" type="button">Out of Stock (5)</button>
+<button class="px-3 py-1 rounded-md text-xs font-semibold text-on-surface-variant hover:text-on-surface" type="button">Velocity Leaders</button>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2.5 top-2 text-on-surface-variant text-[18px]">search</span>
+<input class="pl-8 pr-3 py-1.5 text-xs bg-surface-container-low rounded-lg focus:outline-none focus:bg-surface-container-lowest focus:ring-1 focus:ring-primary w-52" placeholder="Filter item or SKU..." type="text"/>
+</div>
+<select class="text-xs bg-surface-container-low text-on-surface font-semibold px-3 py-2 rounded-lg focus:outline-none">
+<option>All Categories</option>
+<option>Sweets &amp; Savouries</option>
+<option>Beverages</option>
+<option>Spices &amp; Masalas</option>
+<option>Dairy &amp; Oils</option>
+</select>
+</div>
+</div>
+<!-- High Density Enterprise Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="px-space-lg py-3">SKU &amp; Barcode</th>
+<th class="px-space-md py-3">Item &amp; Category</th>
+<th class="px-space-md py-3 text-right">Current Stock</th>
+<th class="px-space-md py-3 text-right">Buffer Threshold</th>
+<th class="px-space-md py-3">UOM</th>
+<th class="px-space-md py-3">Health Status</th>
+<th class="px-space-md py-3">Last Adjusted Audit</th>
+<th class="px-space-lg py-3 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container text-body-md font-body-md text-on-surface">
+<!-- Row 1: Low Stock Item -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="px-space-lg py-3">
+<div class="flex flex-col">
+<span class="font-code-metric text-code-metric text-primary font-bold">SKU-KA-7704</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">8901233004128</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">bakery_dining</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title text-title font-semibold text-on-surface">Special Mysore Pak (500g)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Sweets &amp; Confectionery • GST 5%</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-code-metric text-code-metric font-bold text-error" id="stock-SKU-KA-7704">3</span>
+</td>
+<td class="px-space-md py-3 text-right font-code-metric text-code-metric text-on-surface-variant">15</td>
+<td class="px-space-md py-3">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase">Packets</span>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm uppercase font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                Low Stock
+              </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">10:45 AM (Today)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">POS Checkout (R. Sharma)</span>
+</div>
+</td>
+<td class="px-space-lg py-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-primary hover:bg-primary-fixed transition-colors" onclick="openDrawer('Special Mysore Pak (500g)', 'SKU-KA-7704', 3, 15, 'Packets')" title="Adjust Stock" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" title="View Audit Ledger" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Healthy Fast Moving -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="px-space-lg py-3">
+<div class="flex flex-col">
+<span class="font-code-metric text-code-metric text-primary font-bold">SKU-SPI-9912</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">8901233005510</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">grocery</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title text-title font-semibold text-on-surface">Byadgi Chilli Powder (250g)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Spices &amp; Masalas • GST 0%</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-code-metric text-code-metric font-bold text-tertiary">84</span>
+</td>
+<td class="px-space-md py-3 text-right font-code-metric text-code-metric text-on-surface-variant">20</td>
+<td class="px-space-md py-3">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase">Packets</span>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-tertiary-container/30 text-tertiary font-label-sm text-label-sm uppercase font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+                Healthy
+              </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Yesterday 18:20</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Purchase Inward PO #491</span>
+</div>
+</td>
+<td class="px-space-lg py-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-primary hover:bg-primary-fixed transition-colors" onclick="openDrawer('Byadgi Chilli Powder (250g)', 'SKU-SPI-9912', 84, 20, 'Packets')" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Out of Stock (Depleted) -->
+<tr class="hover:bg-surface-container-low/70 transition-colors bg-surface-container-low/30">
+<td class="px-space-lg py-3">
+<div class="flex flex-col">
+<span class="font-code-metric text-code-metric text-on-surface-variant font-bold">SKU-SNK-1002</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">8901233008891</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm opacity-80">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]">lunch_dining</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title text-title font-semibold text-on-surface">Maddur Vada Crisps (200g)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Namkeen &amp; Snacks • GST 12%</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-code-metric text-code-metric font-bold text-on-surface-variant">0</span>
+</td>
+<td class="px-space-md py-3 text-right font-code-metric text-code-metric text-on-surface-variant">12</td>
+<td class="px-space-md py-3">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase">Units</span>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm uppercase font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-outline"></span>
+                Depleted (Paused)
+              </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">08:15 AM (Today)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Zero Balance Trigger</span>
+</div>
+</td>
+<td class="px-space-lg py-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-primary hover:bg-primary-fixed transition-colors" onclick="openDrawer('Maddur Vada Crisps (200g)', 'SKU-SNK-1002', 0, 12, 'Units')" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Beverage Healthy -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="px-space-lg py-3">
+<div class="flex flex-col">
+<span class="font-code-metric text-code-metric text-primary font-bold">SKU-BLR-1092</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">8901233001099</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">coffee</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title text-title font-semibold text-on-surface">Filter Coffee Decoction 500ml</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Beverages • GST 18%</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-code-metric text-code-metric font-bold text-error" id="stock-SKU-BLR-1092">2</span>
+</td>
+<td class="px-space-md py-3 text-right font-code-metric text-code-metric text-on-surface-variant">10</td>
+<td class="px-space-md py-3">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase">Bottles</span>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm uppercase font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                Low Stock
+              </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">11:10 AM (Today)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Online App Dispatch #4492</span>
+</div>
+</td>
+<td class="px-space-lg py-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-primary hover:bg-primary-fixed transition-colors" onclick="openDrawer('Filter Coffee Decoction 500ml', 'SKU-BLR-1092', 2, 10, 'Bottles')" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 5: Dairy Healthy -->
+<tr class="hover:bg-surface-container-low/70 transition-colors">
+<td class="px-space-lg py-3">
+<div class="flex flex-col">
+<span class="font-code-metric text-code-metric text-primary font-bold">SKU-DAI-4431</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">8901233004431</span>
+</div>
+</td>
+<td class="px-space-md py-3">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[18px]">oil_barrel</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title text-title font-semibold text-on-surface">A2 Cow Bilona Ghee 500ml</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dairy &amp; Gourmet • GST 12%</span>
+</div>
+</div>
+</td>
+<td class="px-space-md py-3 text-right">
+<span class="font-code-metric text-code-metric font-bold text-error" id="stock-SKU-DAI-4431">1</span>
+</td>
+<td class="px-space-md py-3 text-right font-code-metric text-code-metric text-on-surface-variant">8</td>
+<td class="px-space-md py-3">
+<span class="px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm uppercase">Jars</span>
+</td>
+<td class="px-space-md py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-error-container text-on-error-container font-label-sm text-label-sm uppercase font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                Low Stock
+              </span>
+</td>
+<td class="px-space-md py-3">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">09:30 AM (Today)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Counter Sale Batch #12</span>
+</div>
+</td>
+<td class="px-space-lg py-3 text-right">
+<div class="flex items-center justify-end gap-1">
+<button class="p-1.5 rounded-lg text-primary hover:bg-primary-fixed transition-colors" onclick="openDrawer('A2 Cow Bilona Ghee 500ml', 'SKU-DAI-4431', 1, 8, 'Jars')" type="button">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+</button>
+<button class="p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Pagination & Count Footer -->
+<div class="px-space-lg py-3 bg-surface-container-low flex items-center justify-between">
+<span class="font-body-sm text-body-sm text-on-surface-variant">Showing 1 to 5 of 184 SKUs</span>
+<div class="flex items-center gap-space-xs">
+<button class="p-1 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_left</span>
+</button>
+<span class="px-2 py-0.5 rounded bg-primary-container text-on-primary font-code-metric text-code-metric">1</span>
+<button class="px-2 py-0.5 rounded bg-surface-container-lowest text-on-surface font-code-metric text-code-metric hover:bg-surface-container" type="button">2</button>
+<button class="px-2 py-0.5 rounded bg-surface-container-lowest text-on-surface font-code-metric text-code-metric hover:bg-surface-container" type="button">3</button>
+<span class="text-on-surface-variant text-xs">... 37</span>
+<button class="p-1 rounded bg-surface-container-lowest text-on-surface-variant hover:text-on-surface" type="button">
+<span class="material-symbols-outlined text-[16px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Bottom Stock History Ledger Tab Section -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm">
+<div class="flex flex-wrap items-center justify-between gap-space-sm mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">history_edu</span>
+<span class="font-title text-title font-bold text-on-surface">Official Regulatory Stock Ledger (Recent Audit Trail)</span>
+<span class="px-2 py-0.5 rounded bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm uppercase font-bold">GST &amp; FSSAI Rule 18 Compatible</span>
+</div>
+<button class="font-body-sm text-body-sm text-primary font-semibold hover:underline flex items-center gap-1" type="button">
+<span>View Full Historical Ledger (90 Days)</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<!-- Audit Event Log Feed -->
+<div class="flex flex-col gap-2">
+<!-- Log Entry 1 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low hover:bg-surface-container transition-all">
+<div class="flex items-center gap-space-md">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="font-code-metric text-code-metric text-on-surface-variant">14:20 IST</span>
+<div class="flex items-center gap-2">
+<span class="font-title text-title text-on-surface font-semibold">+30 units added</span>
+<span class="text-on-surface-variant font-body-md text-body-md">to <strong class="text-on-surface">Special Mysore Pak (500g)</strong></span>
+</div>
+<span class="px-2 py-0.5 rounded bg-tertiary-fixed-dim/40 text-on-tertiary font-label-sm text-label-sm uppercase">Fresh Batch Prepared</span>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">verified_user</span>
+<span>Auth: <strong>Rajesh Sharma (Partner)</strong></span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded">Ref #BT-2024-881</span>
+</div>
+</div>
+<!-- Log Entry 2 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low hover:bg-surface-container transition-all">
+<div class="flex items-center gap-space-md">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+<span class="font-code-metric text-code-metric text-on-surface-variant">12:05 IST</span>
+<div class="flex items-center gap-2">
+<span class="font-title text-title text-on-surface font-semibold">-2 units adjusted</span>
+<span class="text-on-surface-variant font-body-md text-body-md">from <strong class="text-on-surface">A2 Cow Bilona Ghee 500ml</strong></span>
+</div>
+<span class="px-2 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm uppercase">Broken Seal / Transit Damage</span>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">verified_user</span>
+<span>Auth: <strong>Kavita M. (Inventory Lead)</strong></span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded">Ref #DM-0419</span>
+</div>
+</div>
+<!-- Log Entry 3 -->
+<div class="flex items-center justify-between p-3 rounded-lg bg-surface-container-low hover:bg-surface-container transition-all">
+<div class="flex items-center gap-space-md">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-code-metric text-code-metric text-on-surface-variant">10:15 IST</span>
+<div class="flex items-center gap-2">
+<span class="font-title text-title text-on-surface font-semibold">+50 units inward</span>
+<span class="text-on-surface-variant font-body-md text-body-md">for <strong class="text-on-surface">Byadgi Chilli Powder (250g)</strong></span>
+</div>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed/50 text-on-secondary-container font-label-sm text-label-sm uppercase">Supplier PO Inward</span>
+</div>
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-1 font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px] text-primary">verified_user</span>
+<span>Auth: <strong>Rajesh Sharma (Partner)</strong></span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant bg-surface-container-lowest px-2 py-1 rounded">Challan #CH-8802</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Interactive Slideover / Stock Adjustment Drawer (Hidden by default, triggered via JS) -->
+<div class="fixed inset-0 bg-inverse-surface/40 backdrop-blur-xs z-50 hidden transition-opacity" id="drawer-backdrop" onclick="closeDrawer()"></div>
+<div class="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface-container-lowest shadow-2xl z-50 transform translate-x-full transition-transform duration-300 flex flex-col justify-between" id="stock-drawer">
+<!-- Drawer Header -->
+<div class="p-space-lg bg-surface-container-low flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-primary font-bold">Fast Stock Modification</span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface" id="drawer-title">Special Mysore Pak (500g)</h2>
+<span class="font-code-metric text-code-metric text-on-surface-variant" id="drawer-sku">SKU-KA-7704</span>
+</div>
+<button class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container" onclick="closeDrawer()" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Drawer Form Content -->
+<div class="p-space-lg flex-1 overflow-y-auto flex flex-col gap-space-lg">
+<!-- Current vs Target Stat Box -->
+<div class="grid grid-cols-2 gap-space-md p-space-md bg-surface-container-low rounded-xl">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Current Verified Balance</span>
+<span class="font-headline-md text-headline-md font-bold text-on-surface" id="drawer-current-stock">3 Units</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Projected New Balance</span>
+<span class="font-headline-md text-headline-md font-bold text-tertiary" id="drawer-projected-stock">33 Units</span>
+</div>
+</div>
+<!-- Reason Code Dropdown -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Audit Reason Code *</label>
+<select class="w-full h-10 px-3 rounded-lg bg-surface-container-lowest text-on-surface font-body-md text-body-md focus:outline-none focus:ring-2 focus:ring-primary shadow-sm" id="reason-code">
+<option value="fresh_batch">Fresh Batch Prepared (Kitchen Inward)</option>
+<option value="audit_discrepancy">Physical Audit Discrepancy Correction</option>
+<option value="damaged">Damaged / Expired / Seal Broken</option>
+<option value="internal_return">Customer Return to Shelves</option>
+<option value="vendor_return">Vendor Return / RTV</option>
+</select>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Mandatory for GST Input Tax Credit (ITC) reconciliation ledger.</span>
+</div>
+<!-- Adjustment Operator & Qty -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Adjustment Quantity *</label>
+<div class="flex items-center gap-space-sm">
+<div class="flex bg-surface-container rounded-lg p-0.5">
+<button class="px-3 py-1.5 rounded-md font-code-metric text-code-metric text-on-primary bg-primary shadow-sm" id="btn-mode-add" onclick="setAdjustmentMode('+')" type="button">+ Add</button>
+<button class="px-3 py-1.5 rounded-md font-code-metric text-code-metric text-on-surface-variant hover:text-on-surface" id="btn-mode-sub" onclick="setAdjustmentMode('-')" type="button">- Deduct</button>
+</div>
+<input class="flex-1 h-10 px-3 font-code-metric text-code-metric font-bold bg-surface-container-lowest rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary" id="drawer-qty-input" min="1" oninput="calculateProjectedStock()" type="number" value="30"/>
+<span class="font-label-md text-label-md text-on-surface-variant" id="drawer-unit">Packets</span>
+</div>
+</div>
+<!-- Quick Qty Shortcut Badges -->
+<div class="flex items-center gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Presets:</span>
+<button class="px-2 py-0.5 rounded bg-surface-container text-xs font-semibold text-on-surface hover:bg-surface-container-high" onclick="setQuantityPreset(5)" type="button">+5</button>
+<button class="px-2 py-0.5 rounded bg-surface-container text-xs font-semibold text-on-surface hover:bg-surface-container-high" onclick="setQuantityPreset(15)" type="button">+15</button>
+<button class="px-2 py-0.5 rounded bg-surface-container text-xs font-semibold text-on-surface hover:bg-surface-container-high" onclick="setQuantityPreset(30)" type="button">+30</button>
+<button class="px-2 py-0.5 rounded bg-surface-container text-xs font-semibold text-on-surface hover:bg-surface-container-high" onclick="setQuantityPreset(50)" type="button">+50</button>
+</div>
+<!-- Audit Notes / Staff Remarks -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Staff Notes &amp; Kitchen Batch ID</label>
+<textarea class="w-full p-2.5 rounded-lg bg-surface-container-lowest font-body-sm text-body-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-primary" id="drawer-notes" placeholder="e.g. Morning tray baking completed, verified by Chef Narayanan..." rows="3"></textarea>
+</div>
+<!-- Regulatory Notification Tag -->
+<div class="p-space-md rounded-lg bg-surface-container flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px] mt-0.5">info</span>
+<p class="font-body-sm text-body-sm text-on-surface-variant leading-relaxed">
+          Updating this ledger entry triggers instant catalog stock updates across your direct store web link, Swiggy Minis, Zomato hyperlocal, and ONDC buyer nodes.
+        </p>
+</div>
+</div>
+<!-- Drawer Footer Actions -->
+<div class="p-space-lg bg-surface-container-low flex items-center justify-between gap-space-sm">
+<button class="px-4 py-2.5 rounded-lg bg-surface-container-lowest text-on-surface font-title text-title hover:bg-surface-container transition-all" onclick="closeDrawer()" type="button">
+        Cancel
+      </button>
+<button class="flex-1 px-4 py-2.5 rounded-lg bg-primary text-on-primary font-title text-title shadow-md hover:bg-primary-container transition-all flex items-center justify-center gap-2" onclick="confirmAdjustment()" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Confirm &amp; Broadcast</span>
+</button>
+</div>
+</div>
+<!-- Inline Toast Confirmation (Dynamically Shown) -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 bg-inverse-surface text-inverse-on-surface px-space-lg py-space-md rounded-xl shadow-xl flex items-center gap-space-md" id="toast">
+<span class="material-symbols-outlined text-tertiary-fixed text-[24px]">check_circle</span>
+<div class="flex flex-col">
+<span class="font-title text-title font-bold" id="toast-title">Stock Adjusted Successfully</span>
+<span class="font-body-sm text-body-sm text-inverse-on-surface/80" id="toast-message">Inventory updated across all partner channels.</span>
+</div>
+</div>
+</div>
+<script>
+  let activeSku = 'SKU-KA-7704';
+  let baseStock = 3;
+  let adjustMode = '+';
+
+  function openDrawer(itemName, sku, currentStock, threshold, unit) {
+    activeSku = sku;
+    baseStock = currentStock;
+    adjustMode = '+';
+
+    document.getElementById('drawer-title').innerText = itemName;
+    document.getElementById('drawer-sku').innerText = sku;
+    document.getElementById('drawer-current-stock').innerText = currentStock + ' ' + unit;
+    document.getElementById('drawer-unit').innerText = unit;
+    document.getElementById('drawer-qty-input').value = 30;
+
+    setAdjustmentMode('+');
+    calculateProjectedStock();
+
+    const drawer = document.getElementById('stock-drawer');
+    const backdrop = document.getElementById('drawer-backdrop');
+    backdrop.classList.remove('hidden');
+    setTimeout(() => {
+      drawer.classList.remove('translate-x-full');
+    }, 10);
+  }
+
+  function closeDrawer() {
+    const drawer = document.getElementById('stock-drawer');
+    const backdrop = document.getElementById('drawer-backdrop');
+    drawer.classList.add('translate-x-full');
+    setTimeout(() => {
+      backdrop.classList.add('hidden');
+    }, 300);
+  }
+
+  function setAdjustmentMode(mode) {
+    adjustMode = mode;
+    const addBtn = document.getElementById('btn-mode-add');
+    const subBtn = document.getElementById('btn-mode-sub');
+
+    if (mode === '+') {
+      addBtn.className = 'px-3 py-1.5 rounded-md font-code-metric text-code-metric text-on-primary bg-primary shadow-sm';
+      subBtn.className = 'px-3 py-1.5 rounded-md font-code-metric text-code-metric text-on-surface-variant hover:text-on-surface';
+    } else {
+      subBtn.className = 'px-3 py-1.5 rounded-md font-code-metric text-code-metric text-on-error bg-error shadow-sm';
+      addBtn.className = 'px-3 py-1.5 rounded-md font-code-metric text-code-metric text-on-surface-variant hover:text-on-surface';
+    }
+    calculateProjectedStock();
+  }
+
+  function setQuantityPreset(amount) {
+    document.getElementById('drawer-qty-input').value = amount;
+    calculateProjectedStock();
+  }
+
+  function calculateProjectedStock() {
+    const inputVal = parseInt(document.getElementById('drawer-qty-input').value, 10) || 0;
+    let projected = adjustMode === '+' ? (baseStock + inputVal) : Math.max(0, baseStock - inputVal);
+    const unit = document.getElementById('drawer-unit').innerText;
+    document.getElementById('drawer-projected-stock').innerText = projected + ' ' + unit;
+  }
+
+  function quickIncrement(sku, delta) {
+    const cell = document.getElementById('stock-' + sku);
+    if (cell) {
+      let current = parseInt(cell.innerText, 10) || 0;
+      let updated = current + delta;
+      cell.innerText = updated;
+      cell.classList.remove('text-error');
+      cell.classList.add('text-tertiary');
+    }
+    showToast('Quick Stock Added', `Added +${delta} units to ${sku}`);
+  }
+
+  function confirmAdjustment() {
+    const inputVal = parseInt(document.getElementById('drawer-qty-input').value, 10) || 0;
+    const projected = adjustMode === '+' ? (baseStock + inputVal) : Math.max(0, baseStock - inputVal);
+    const targetCell = document.getElementById('stock-' + activeSku);
+    if (targetCell) {
+      targetCell.innerText = projected;
+      if (projected > 15) {
+        targetCell.classList.remove('text-error');
+        targetCell.classList.add('text-tertiary');
+      }
+    }
+    closeDrawer();
+    showToast('Stock Ledger Updated', `SKU ${activeSku} adjusted to ${projected} units.`);
+  }
+
+  function showToast(title, msg) {
+    const toast = document.getElementById('toast');
+    document.getElementById('toast-title').innerText = title;
+    document.getElementById('toast-message').innerText = msg;
+    toast.classList.remove('translate-y-20', 'opacity-0');
+    setTimeout(() => {
+      toast.classList.add('translate-y-20', 'opacity-0');
+    }, 3500);
+  }
+</script></main></div></body></html>

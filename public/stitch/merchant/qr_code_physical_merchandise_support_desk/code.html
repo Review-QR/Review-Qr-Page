@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"tertiary":"#003d27","on-tertiary-fixed":"#002113","surface-container":"#eaedff","inverse-primary":"#b0c6ff","primary-fixed":"#d9e2ff","surface-container-highest":"#dae2fd","on-tertiary-container":"#66d09c","on-tertiary":"#ffffff","surface-container-low":"#f2f3ff","on-surface":"#131b2e","on-primary":"#ffffff","outline-variant":"#c3c6d4","surface-container-lowest":"#ffffff","error":"#ba1a1a","on-primary-fixed":"#001945","on-secondary":"#ffffff","on-primary-fixed-variant":"#00429c","secondary-container":"#00e3fd","outline":"#737783","on-background":"#131b2e","background":"#faf8ff","tertiary-fixed":"#8df7c1","on-error-container":"#93000a","primary-container":"#0d47a1","tertiary-container":"#005739","on-tertiary-fixed-variant":"#005235","surface-variant":"#dae2fd","primary":"#003178","secondary-fixed":"#9cf0ff","inverse-on-surface":"#eef0ff","on-surface-variant":"#434652","tertiary-fixed-dim":"#71dba6","primary-fixed-dim":"#b0c6ff","on-secondary-fixed":"#001f24","surface-bright":"#faf8ff","surface-dim":"#d2d9f4","surface-tint":"#2b5bb5","surface":"#faf8ff","on-primary-container":"#a1bbff","inverse-surface":"#283044","secondary-fixed-dim":"#00daf3","on-error":"#ffffff","secondary":"#006875","surface-container-high":"#e2e7ff","on-secondary-container":"#00616d","on-secondary-fixed-variant":"#004f58","error-container":"#ffdad6"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"margin-desktop":"2rem","space-md":"0.75rem","margin":"1rem","gutter-desktop":"1.5rem","space-lg":"1rem","space-2xl":"2rem","space-xs":"0.25rem","gutter":"1rem","space-sm":"0.5rem","margin-tablet":"1.5rem","space-xl":"1.5rem"},"fontFamily":{"title":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"code-metric":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"display":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"]},"fontSize":{"title":["16px",{"lineHeight":"22px","fontWeight":"600"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"code-metric":["14px",{"lineHeight":"20px","fontWeight":"700"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}],"display":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">shield_with_heart</span></div><div class="flex flex-col"><span class="font-title text-title text-primary tracking-tight font-bold">TRUSTIT</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Merchant Hub</span></div></div><span class="font-label-sm text-label-sm bg-surface-container text-on-surface px-space-xs py-0.5 rounded">PRO</span></div><div class="px-space-md py-space-sm"><div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><div class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-2 ring-tertiary-container animate-pulse"></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface truncate">Sri Krishna Gourmet</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Indiranagar BLR • LIVE</span></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer">unfold_more</span></div></div><nav class="flex-1 px-space-md py-space-xs space-y-space-md" data-active-classes="bg-primary-container text-on-primary font-title rounded-lg shadow-sm"><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Operations</div><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="overview" href="#">Overview</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="orders" href="#">Orders</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="products-and-inventory" href="#">Products &amp; Inventory</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="store-management" href="#">Store Management</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="delivery-partner-and-3pl-fleet-complaint-center" href="#">Delivery Complaints &amp; 3PL Fleet</a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Finance &amp; Growth</div><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="payments-and-settlements" href="#">Payments &amp; Settlements</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="subscriptions" href="#">Subscriptions</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="qr-and-reviews" href="#">QR &amp; Reviews</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="physical-products" href="#">Physical Products</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="analytics" href="#">Analytics</a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">System</div><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="notifications" href="#">Notifications</a><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="support" href="#">Support</a><div class="ml-space-md pl-space-sm border-l-2 border-surface-container-high space-y-1 py-1"><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="qr-and-merchandise-support" href="#">QR &amp; Merchandise Support</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="subscriptions-and-billing-support" href="#">Subscriptions &amp; Billing Support</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="kyc-and-compliance-support" href="#">KYC &amp; Compliance Support</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="refunds-and-cancellations-desk" href="#">Refunds &amp; Cancellations Desk</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="knowledge-base-and-faq-hub" href="#">Knowledge Base &amp; FAQ Hub</a><a class="block px-space-sm py-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="ticket-resolution-and-closure-feedback" href="#">Ticket Resolution &amp; Closure Feedback</a></div><a class="block px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors font-body-md text-body-md" data-path="settings" href="#">Settings</a></div></nav></div><div class="p-space-md bg-surface-container-low mx-space-md mb-space-md rounded-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[20px]">speaker_phone</span></div><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface">SoundBox 4G</span><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span><span class="font-label-sm text-label-sm text-on-surface-variant">Synced • 98%</span></div></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer hover:text-on-surface">sync</span></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-xl"><div class="w-full flex items-center gap-space-sm bg-surface-container-low px-space-md py-2 rounded-lg"><span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span><input class="w-full bg-transparent border-0 outline-none font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant" placeholder="Search orders, settlement ID, tickets, or SKU..." type="text"/><kbd class="hidden sm:inline-block font-code-metric text-code-metric text-on-surface-variant bg-surface-container px-space-xs py-0.5 rounded text-[11px]">⌘K</kbd></div></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low"><span class="material-symbols-outlined text-tertiary text-[18px]">verified</span><span class="font-label-sm text-label-sm text-on-surface-variant">GSTIN:</span><span class="font-code-metric text-code-metric text-on-surface">29AABCS1429B1ZB</span></div><button class="flex items-center gap-space-xs bg-secondary-container text-on-secondary-fixed font-title text-body-sm px-space-md py-2 rounded-lg hover:bg-secondary-fixed transition-colors shadow-sm" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span>Instant Settle</span></button><div class="h-6 w-px bg-outline-variant"></div><button class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">support_agent</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden lg:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Raghavendra Rao</span><span class="font-label-sm text-label-sm text-on-surface-variant">Master Admin</span></div><span class="material-symbols-outlined text-on-surface-variant text-[16px]">expand_more</span></div></div></header><main class="w-full pt-16 bg-surface px-space-xl pb-space-2xl min-h-screen"><div class="flex flex-col w-full">
+<!-- Sub-Header / Breadcrumb & View Title -->
+<div class="flex flex-col gap-space-sm mb-space-xl">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+<span>System</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Support</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">QR &amp; Physical Merchandise Support</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md">
+<div class="flex flex-col">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">QR Code &amp; Physical Merchandise Hardware Desk</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-0.5">
+          Resolve QR code generation sync errors, order replacements for damaged acrylic/wood standees, resolve print distortion defects, and track BlueDart dispatch shipments.
+        </p>
+</div>
+<div class="flex items-center gap-space-sm self-start md:self-auto">
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors font-title text-body-sm shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span>
+<span>Shipment Logs</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-colors font-title text-body-sm shadow-sm" onclick="document.getElementById('replacement-claim-form').scrollIntoView({behavior:'smooth'})" type="button">
+<span class="material-symbols-outlined text-[18px]">add_box</span>
+<span>Claim Hardware Replacement</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Top Metric Cards (4 in a row) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-lg mb-space-2xl">
+<!-- Card 1: Damaged Standee Claims -->
+<div class="bg-surface-container-lowest rounded-lg p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Damaged Standee Claims</span>
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold mt-1">02 Active</span>
+</div>
+<div class="w-10 h-10 rounded-lg bg-error-container text-on-error-container flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">broken_image</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm bg-surface-container-low -mx-space-lg -mb-space-lg px-space-lg py-2 flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">verified</span>
+<span class="font-label-sm text-label-sm text-tertiary-container font-semibold truncate">Free Replacement (1-Yr Warranty)</span>
+</div>
+</div>
+<!-- Card 2: In-Transit Replacements -->
+<div class="bg-surface-container-lowest rounded-lg p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">In-Transit Shipments</span>
+<span class="font-headline-lg text-headline-lg text-primary font-bold mt-1">01 Dispatched</span>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">local_shipping</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm bg-surface-container-low -mx-space-lg -mb-space-lg px-space-lg py-2 flex items-center justify-between">
+<span class="font-code-metric text-code-metric text-on-surface">BlueDart #BD8892104</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">ETA Tomorrow 2 PM</span>
+</div>
+</div>
+<!-- Card 3: Dynamic QR Sync Health -->
+<div class="bg-surface-container-lowest rounded-lg p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Dynamic QR Health</span>
+<span class="font-headline-lg text-headline-lg text-tertiary-container font-bold mt-1">99.8% Healthy</span>
+</div>
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed text-on-tertiary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">qr_code_2</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm bg-surface-container-low -mx-space-lg -mb-space-lg px-space-lg py-2 flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="font-label-sm text-label-sm text-on-surface-variant truncate">12 Counters • 0 Geofence Drifts</span>
+</div>
+</div>
+<!-- Card 4: Print Kit Dispatches -->
+<div class="bg-surface-container-lowest rounded-lg p-space-lg shadow-sm flex flex-col justify-between relative overflow-hidden">
+<div class="flex items-start justify-between">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Print Dispatches (MTD)</span>
+<span class="font-headline-lg text-headline-lg text-on-surface font-bold mt-1">4 Kits Sent</span>
+</div>
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed text-on-secondary-fixed flex items-center justify-center">
+<span class="material-symbols-outlined text-[22px]">inventory_2</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm bg-surface-container-low -mx-space-lg -mb-space-lg px-space-lg py-2 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Merchant Out-Of-Pocket:</span>
+<span class="font-label-sm text-label-sm text-tertiary-container font-bold">₹0 Covered</span>
+</div>
+</div>
+</div>
+<!-- Main Layout Split (Left ~65%, Right ~35%) -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-space-xl">
+<!-- LEFT COLUMN (Span 8 cols) -->
+<div class="lg:col-span-8 flex flex-col gap-space-xl">
+<!-- 1. Active Merchandise Incident Spotlight Card -->
+<div class="bg-surface-container-lowest rounded-lg p-space-xl shadow-sm relative overflow-hidden">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="w-3 h-3 rounded-full bg-secondary-container"></span>
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-title text-on-surface">Spotlight Incident</span>
+<span class="font-code-metric text-code-metric text-primary bg-primary-fixed px-space-xs py-0.5 rounded">#QR-REP-44910</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs bg-secondary-container/20 text-on-secondary-fixed px-space-sm py-1 rounded">
+<span class="material-symbols-outlined text-[16px] text-secondary">flight_takeoff</span>
+<span class="font-label-sm text-label-sm uppercase font-bold text-secondary">BlueDart Express In-Transit</span>
+</div>
+</div>
+<!-- Incident Metadata Strip -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md p-space-md rounded-lg bg-surface-container-low mt-space-sm">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Linked Asset</span>
+<span class="font-title text-body-md text-on-surface font-semibold truncate">Main Express Counter #01</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">SKU: QR-BLR-CTR01</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Incident Category</span>
+<span class="font-title text-body-md text-error font-semibold">Cracked Acrylic Standee</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Customer beverage impact</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Logged Timestamp</span>
+<span class="font-title text-body-md text-on-surface font-semibold">23 Oct 2024 • 11:30 IST</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">By Farhan K. (Store Mgr)</span>
+</div>
+</div>
+<!-- Investigation & Proof Section -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg mt-space-lg">
+<!-- Proof Thumbnails -->
+<div class="flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Proof Photos Submitted</span>
+<div class="grid grid-cols-2 gap-space-sm">
+<div class="rounded-lg overflow-hidden relative group bg-surface-container">
+<img class="w-full h-24 object-cover" data-alt="High-resolution close-up photo of a cracked heavy acrylic QR standee base on a polished restaurant wooden countertop, with visible structural fracture lines and faint reflection of indoor ambient warm lighting, professional product inspection documentation aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDUA10mVMBt-Um6rd-O8zNCVDQt2T2-PQKA79kOd52xfDRalb8RJlTgyLxArTqRwDsAkIbcLQ1-j91P6LMfgHT81QgMz6bhejyrEmOgq8SnC1kcdpGVlmUsBE5b117-rrUMefAcpoXk4TLjFjC7D2xQx7aTxm08IwCtNN0A5xA4lueMsK6107a17TlO7c8VtHprE9QdmIoiwpF23wuld5_jQV-_0z8zSK6LfI_OPFk"/>
+<div class="absolute inset-0 bg-primary-container/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[20px]">zoom_in</span>
+</div>
+<div class="p-1.5 bg-surface-container-lowest/90 backdrop-blur-sm">
+<p class="font-label-sm text-label-sm text-on-surface truncate">Cracked base photo.jpg</p>
+</div>
+</div>
+<div class="rounded-lg overflow-hidden relative group bg-surface-container">
+<img class="w-full h-24 object-cover" data-alt="Close up Macro view of a damaged QR code print with surface scratches and slight ink smudge across the finder pattern, taken under bright retail LED lighting to demonstrate scanning failure for merchant claims desk." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3QIs4vKXIvrb6rppuX3R3hFpNm6wey8GxI89M8Y6O_IyZcFfDoeQ-KQI9cNhPIwNRtiyT7NymHmHwxlysB4YfQ7EY0eXdh-aRyLOlPVvwdm_a9LMP-_-s2Ny2AcupbtuA91-wulULbvtL_HHKPLY6AnvuHI-nm_EJOZKSyJ-hlJAm5JlaAn0KShmUX9Rsx2Iq-fyhk4Tw2N3E8eKIucW1HPTW6PjLVg1jf83iTZs"/>
+<div class="absolute inset-0 bg-primary-container/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary text-[20px]">zoom_in</span>
+</div>
+<div class="p-1.5 bg-surface-container-lowest/90 backdrop-blur-sm">
+<p class="font-label-sm text-label-sm text-on-surface truncate">Scratched QR matrix.png</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Hardware Guard Approval Note -->
+<div class="flex flex-col justify-between p-space-md rounded-lg bg-surface-container-low">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs text-tertiary-container">
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+<span class="font-label-sm text-label-sm uppercase font-bold">TRUSTIT Hardware Guard Verified</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface leading-relaxed">
+                Hardware triage validated physical stress fracture within the active 365-day warranty perimeter. Zero deduction replacement dispatched automatically.
+              </p>
+</div>
+<div class="mt-space-sm flex items-center justify-between text-on-surface-variant font-code-metric text-code-metric">
+<span>Claim Cost: <strong class="text-tertiary-container">₹0.00</strong></span>
+<span class="text-on-surface-variant">SLA Score: <strong class="text-primary">100%</strong></span>
+</div>
+</div>
+</div>
+<!-- Tracking Timeline -->
+<div class="mt-space-xl pt-space-md">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">local_shipping</span>
+<span class="font-title text-body-md text-on-surface">BlueDart Express Telemetry</span>
+</div>
+<span class="font-code-metric text-code-metric text-primary bg-surface-container px-space-sm py-0.5 rounded">AWB: BD8892104</span>
+</div>
+<div class="relative pl-6 space-y-space-md before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-surface-container-highest">
+<!-- Step 1 -->
+<div class="relative flex flex-col sm:flex-row sm:items-center justify-between">
+<span class="absolute -left-6 top-1.5 w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-2 ring-surface-container-lowest"></span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface">Ticket Logged &amp; Damage Telemetry Verified</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Automated validation via computer vision OCR</span>
+</div>
+<span class="font-code-metric text-code-metric text-on-surface-variant text-[12px] mt-1 sm:mt-0">23 Oct • 14:00 IST</span>
+</div>
+<!-- Step 2 -->
+<div class="relative flex flex-col sm:flex-row sm:items-center justify-between">
+<span class="absolute -left-6 top-1.5 w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-2 ring-surface-container-lowest"></span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface">Replacement Laser-Etched &amp; NFC Encrypted</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Heavy-duty A5 acrylic base produced at Bangalore Micro-Hub</span>
+</div>
+<span class="font-code-metric text-code-metric text-on-surface-variant text-[12px] mt-1 sm:mt-0">23 Oct • 17:30 IST</span>
+</div>
+<!-- Step 3 -->
+<div class="relative flex flex-col sm:flex-row sm:items-center justify-between">
+<span class="absolute -left-6 top-1.5 w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-2 ring-surface-container-lowest"></span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface">Handed to BlueDart Express Fleet</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Consignment bag seal #BD-BLR-0994</span>
+</div>
+<span class="font-code-metric text-code-metric text-on-surface-variant text-[12px] mt-1 sm:mt-0">24 Oct • 09:15 IST</span>
+</div>
+<!-- Step 4 (Current) -->
+<div class="relative flex flex-col sm:flex-row sm:items-center justify-between">
+<span class="absolute -left-6 top-1.5 w-2.5 h-2.5 rounded-full bg-primary-container animate-ping"></span>
+<span class="absolute -left-6 top-1.5 w-2.5 h-2.5 rounded-full bg-primary-container ring-2 ring-surface-container-lowest"></span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-primary font-bold">Koramangala Hub Sort Facility • Out for Delivery</span>
+<span class="font-body-sm text-body-sm text-on-surface">Assigned to courier pilot Ravi Kumar (+91 97412 88401)</span>
+</div>
+<span class="font-label-sm text-label-sm text-primary font-bold mt-1 sm:mt-0">ETA: Tomorrow 14:00 IST</span>
+</div>
+</div>
+</div>
+<!-- Spotlight Action Buttons -->
+<div class="mt-space-xl pt-space-md flex flex-wrap items-center gap-space-sm">
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-colors font-title text-body-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">near_me</span>
+<span>Track Courier Live</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors font-title text-body-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">receipt_long</span>
+<span>Download Replacement Waybill</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container text-primary hover:bg-surface-variant transition-colors font-title text-body-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">print</span>
+<span>Get Emergency Paper QR</span>
+</button>
+</div>
+</div>
+<!-- 2. Request New Replacement or Report Print Flaw Form -->
+<div class="bg-surface-container-lowest rounded-lg p-space-xl shadow-sm relative" id="replacement-claim-form">
+<div class="flex items-center justify-between pb-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-primary-fixed text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">assignment_turned_in</span>
+</div>
+<div class="flex flex-col">
+<span class="font-title text-title text-on-surface">Report Defect or Claim Standee Replacement</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Instant processing for verified storefronts with zero out-of-pocket charges</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-space-sm py-1 rounded font-bold uppercase">Warranty Active</span>
+</div>
+<form class="flex flex-col gap-space-lg mt-space-md" onsubmit="event.preventDefault(); alert('Replacement Claim Logged! Ref #QR-REP-44988. Dispatch dispatched within 24 hours.');">
+<!-- Hardware Point Select & Defect Radio Pills -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-lg">
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface">Select Affected QR Point / Hardware <span class="text-error">*</span></label>
+<select class="w-full bg-surface-container-low text-on-surface rounded-lg px-space-md py-2.5 font-body-sm text-body-sm outline-none focus:bg-surface-container-lowest">
+<option value="CTR01">Main Express Counter #01 (Acrylic Standee)</option>
+<option value="TBL04">Dine-in Table #04 (Laser-Cut Teak Wood Standee)</option>
+<option value="WIN01">Front Store Window (UV-Shield Decal Sticker)</option>
+<option value="SBX01">SoundBox 4G Dual-Screen QR Module</option>
+</select>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Linked to VPA: srikrishna@hdfcbank</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface">Geofence Confirmation Status</label>
+<div class="p-space-sm bg-surface-container-low rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">pin_drop</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">Indiranagar Flagship Hub</span>
+<span class="font-code-metric text-[11px] text-on-surface-variant">12.9716° N, 77.6412° E (Match)</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded font-bold">BOUND</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Hardware will be locked to this store perimeter</span>
+</div>
+</div>
+<!-- Defect Type Radio Pills -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface">Defect / Issue Classification <span class="text-error">*</span></label>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-sm">
+<label class="flex items-center gap-space-xs p-space-sm bg-surface-container-low hover:bg-surface-container-high rounded-lg cursor-pointer transition-colors">
+<input checked="" class="text-primary accent-primary" name="issue_type" type="radio" value="broken"/>
+<span class="font-label-sm text-label-sm text-on-surface">Damaged / Broken Acrylic</span>
+</label>
+<label class="flex items-center gap-space-xs p-space-sm bg-surface-container-low hover:bg-surface-container-high rounded-lg cursor-pointer transition-colors">
+<input class="text-primary accent-primary" name="issue_type" type="radio" value="scan_fail"/>
+<span class="font-label-sm text-label-sm text-on-surface">QR Scan Read Error</span>
+</label>
+<label class="flex items-center gap-space-xs p-space-sm bg-surface-container-low hover:bg-surface-container-high rounded-lg cursor-pointer transition-colors">
+<input class="text-primary accent-primary" name="issue_type" type="radio" value="discolor"/>
+<span class="font-label-sm text-label-sm text-on-surface">Print Distortion / Fade</span>
+</label>
+<label class="flex items-center gap-space-xs p-space-sm bg-surface-container-low hover:bg-surface-container-high rounded-lg cursor-pointer transition-colors">
+<input class="text-primary accent-primary" name="issue_type" type="radio" value="missing"/>
+<span class="font-label-sm text-label-sm text-on-surface">Missing Welcome Kit</span>
+</label>
+</div>
+</div>
+<!-- Photo Proof Dropzone -->
+<div class="flex flex-col gap-space-xs">
+<label class="font-label-md text-label-md text-on-surface">Photo Proof of Damage / Defect <span class="text-error">*</span></label>
+<div class="bg-surface-container-low hover:bg-surface-container-high rounded-lg p-space-lg text-center flex flex-col items-center justify-center cursor-pointer transition-colors">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary mb-space-xs">
+<span class="material-symbols-outlined text-[24px]">cloud_upload</span>
+</div>
+<span class="font-title text-body-sm text-on-surface">Drag &amp; drop damaged merchandise photos</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">Capture acrylic cracks, peeled film, or printed matrix blur (PNG, JPG up to 15MB)</span>
+<button class="mt-space-sm px-space-md py-1.5 rounded-lg bg-surface-container-lowest text-on-surface font-label-md text-label-md shadow-sm" type="button">
+                Browse Store Files
+              </button>
+</div>
+</div>
+<!-- Pre-filled Delivery Address -->
+<div class="p-space-md bg-surface-container-low rounded-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-space-md">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-on-surface-variant text-[22px] mt-0.5">storefront</span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface">Dispatch Destination Address</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Sri Krishna Gourmet Kitchen, #448, 12th Main Rd, HAL 2nd Stage, Indiranagar, Bengaluru, 560038</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold mt-0.5">Recipient: Store Dispatch Desk (+91 98450 71092)</span>
+</div>
+</div>
+<button class="font-label-sm text-label-sm text-primary hover:underline font-bold self-end sm:self-center" type="button">
+              Modify Shipping Phone
+            </button>
+</div>
+<!-- CTAs -->
+<div class="flex flex-col sm:flex-row items-center gap-space-sm pt-space-xs">
+<button class="w-full sm:w-auto flex items-center justify-center gap-space-xs px-space-xl py-3 rounded-lg bg-primary-container text-on-primary hover:bg-primary transition-colors font-title text-body-sm shadow-sm" type="submit">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Submit Replacement Claim (Free under Warranty)</span>
+</button>
+<button class="w-full sm:w-auto flex items-center justify-center gap-space-xs px-space-md py-3 rounded-lg bg-surface-container-high text-on-surface hover:bg-surface-container-highest transition-colors font-title text-body-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+<span>Download Emergency Printable Standee</span>
+</button>
+</div>
+</form>
+</div>
+<!-- 3. Hardware & Merchandise Order Ledger Table -->
+<div class="bg-surface-container-lowest rounded-lg p-space-xl shadow-sm">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">inventory</span>
+<div class="flex flex-col">
+<span class="font-title text-title text-on-surface">Hardware &amp; Merchandise Order Ledger</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Historical view of physical standees, soundbox plates, and decals dispatched to this store</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors" type="button">
+              Filter by Status
+            </button>
+<button class="px-space-sm py-1.5 rounded-lg bg-surface-container-low text-on-surface font-label-md text-label-md hover:bg-surface-container-high transition-colors" type="button">
+              Export CSV
+            </button>
+</div>
+</div>
+<!-- Dense Data Table -->
+<div class="overflow-x-auto mt-space-sm">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm uppercase tracking-wider">
+<th class="py-2.5 px-space-md rounded-l-lg">Order ID</th>
+<th class="py-2.5 px-space-md">Merchandise Item</th>
+<th class="py-2.5 px-space-sm text-center">Qty</th>
+<th class="py-2.5 px-space-md">Status</th>
+<th class="py-2.5 px-space-md">Courier AWB</th>
+<th class="py-2.5 px-space-md">Cost</th>
+<th class="py-2.5 px-space-md rounded-r-lg text-right">Action Slip</th>
+</tr>
+</thead>
+<tbody class="text-on-surface">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-space-md font-code-metric text-code-metric text-primary">#HW-9912</td>
+<td class="py-3 px-space-md">
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface">Heavy-Duty A5 Acrylic Standee</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Matte anti-glare QR plate • Counter #01</span>
+</div>
+</td>
+<td class="py-3 px-space-sm text-center font-bold">1</td>
+<td class="py-3 px-space-md">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                    In Transit
+                  </span>
+</td>
+<td class="py-3 px-space-md font-code-metric text-code-metric">BD8892104</td>
+<td class="py-3 px-space-md">
+<span class="font-label-sm text-label-sm text-tertiary-container bg-tertiary-fixed px-1.5 py-0.5 rounded font-bold">₹0 Warranty</span>
+</td>
+<td class="py-3 px-space-md text-right">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface" title="Download Slip" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-space-md font-code-metric text-code-metric text-primary">#HW-8840</td>
+<td class="py-3 px-space-md">
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface">Laser-Engraved Teak Wood Standee</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Premium finish with brass logo insert</span>
+</div>
+</td>
+<td class="py-3 px-space-sm text-center font-bold">2</td>
+<td class="py-3 px-space-md">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                    Delivered
+                  </span>
+</td>
+<td class="py-3 px-space-md font-code-metric text-code-metric">BD7740112</td>
+<td class="py-3 px-space-md">
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">₹149 Paid</span>
+</td>
+<td class="py-3 px-space-md text-right">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface" title="Download Slip" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-space-md font-code-metric text-code-metric text-primary">#HW-7731</td>
+<td class="py-3 px-space-md">
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface">UV-Protected Window Decal Sticker (Pack of 4)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Weather-resistant adhesive glass prints</span>
+</div>
+</td>
+<td class="py-3 px-space-sm text-center font-bold">4</td>
+<td class="py-3 px-space-md">
+<span class="inline-flex items-center gap-1 font-label-sm text-label-sm px-2 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-bold">
+<span class="material-symbols-outlined text-[14px]">check</span>
+                    Delivered
+                  </span>
+</td>
+<td class="py-3 px-space-md font-code-metric text-code-metric">BD4419980</td>
+<td class="py-3 px-space-md">
+<span class="font-label-sm text-label-sm text-tertiary-container bg-tertiary-fixed px-1.5 py-0.5 rounded font-bold">₹0 Welcome</span>
+</td>
+<td class="py-3 px-space-md text-right">
+<button class="p-1 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface" title="Download Slip" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN (Span 4 cols) -->
+<div class="lg:col-span-4 flex flex-col gap-space-xl">
+<!-- 1. Live QR Standee Digital Twin & Scan Simulator -->
+<div class="bg-surface-container-lowest rounded-lg p-space-xl shadow-sm flex flex-col">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">devices</span>
+<span class="font-title text-title text-on-surface">Standee Digital Twin</span>
+</div>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-1.5 py-0.5 rounded font-bold uppercase">Synced</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+          Real-time mirror of physical Counter #01 QR code layout with encrypted UPI telemetry.
+        </p>
+<!-- Standee Realistic Mock Card -->
+<div class="bg-gradient-to-b from-surface-container-lowest via-surface-container-low to-surface-container p-space-md rounded-xl shadow-md flex flex-col items-center text-center relative overflow-hidden">
+<div class="w-full flex items-center justify-between px-space-xs mb-space-sm">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-primary text-[18px]">shield_with_heart</span>
+<span class="font-title text-label-sm text-primary tracking-tight font-bold">TRUSTIT</span>
+</div>
+<span class="font-label-sm text-[10px] bg-primary text-on-primary px-1.5 py-0.5 rounded uppercase font-bold">BHIM UPI 2.0</span>
+</div>
+<span class="font-title text-body-md text-on-surface font-bold">Sri Krishna Gourmet Kitchen</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Store Terminal ID: 29AABCS1429B1ZB</span>
+<!-- QR Code Realistic Graphic with Center Badge -->
+<div class="my-space-md p-space-md bg-surface-container-lowest rounded-lg shadow-sm flex flex-col items-center relative">
+<svg class="w-40 h-40 text-on-surface" fill="currentColor" viewbox="0 0 100 100">
+<!-- Corner Finder 1 -->
+<rect fill="currentColor" height="26" rx="2" width="26" x="5" y="5"></rect>
+<rect fill="#ffffff" height="18" rx="1" width="18" x="9" y="9"></rect>
+<rect fill="currentColor" height="10" rx="1" width="10" x="13" y="13"></rect>
+<!-- Corner Finder 2 -->
+<rect fill="currentColor" height="26" rx="2" width="26" x="69" y="5"></rect>
+<rect fill="#ffffff" height="18" rx="1" width="18" x="73" y="9"></rect>
+<rect fill="currentColor" height="10" rx="1" width="10" x="77" y="13"></rect>
+<!-- Corner Finder 3 -->
+<rect fill="currentColor" height="26" rx="2" width="26" x="5" y="69"></rect>
+<rect fill="#ffffff" height="18" rx="1" width="18" x="9" y="73"></rect>
+<rect fill="currentColor" height="10" rx="1" width="10" x="13" y="77"></rect>
+<!-- Data Matrix Blocks -->
+<rect fill="currentColor" height="6" width="6" x="36" y="8"></rect>
+<rect fill="currentColor" height="6" width="8" x="46" y="8"></rect>
+<rect fill="currentColor" height="6" width="6" x="58" y="8"></rect>
+<rect fill="currentColor" height="6" width="8" x="36" y="18"></rect>
+<rect fill="currentColor" height="6" width="6" x="48" y="18"></rect>
+<rect fill="currentColor" height="6" width="6" x="58" y="18"></rect>
+<!-- Center Lock Icon Plate -->
+<circle cx="50" cy="50" fill="#ffffff" r="13"></circle>
+<circle cx="50" cy="50" fill="#0d47a1" r="10"></circle>
+<!-- Bottom Data Blocks -->
+<rect fill="currentColor" height="6" width="8" x="36" y="70"></rect>
+<rect fill="currentColor" height="8" width="6" x="48" y="70"></rect>
+<rect fill="currentColor" height="6" width="8" x="58" y="70"></rect>
+<rect fill="currentColor" height="8" width="6" x="70" y="38"></rect>
+<rect fill="currentColor" height="6" width="8" x="80" y="38"></rect>
+<rect fill="currentColor" height="6" width="8" x="70" y="50"></rect>
+<rect fill="currentColor" height="8" width="6" x="82" y="50"></rect>
+<rect fill="currentColor" height="6" width="6" x="70" y="62"></rect>
+<rect fill="currentColor" height="8" width="8" x="80" y="72"></rect>
+<rect fill="currentColor" height="6" width="8" x="8" y="38"></rect>
+<rect fill="currentColor" height="8" width="6" x="18" y="38"></rect>
+<rect fill="currentColor" height="6" width="6" x="8" y="50"></rect>
+<rect fill="currentColor" height="6" width="8" x="18" y="50"></rect>
+</svg>
+<div class="mt-1 flex items-center gap-1 font-label-sm text-[10px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[12px] text-tertiary-container">lock</span>
+<span>UPI Dynamic Router 256-Bit</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold tracking-wide">Scan with Any UPI App to Pay</span>
+<div class="flex items-center justify-center gap-space-sm mt-1 text-on-surface-variant font-label-sm text-[11px]">
+<span>GPay</span> • <span>PhonePe</span> • <span>Paytm</span> • <span>Cred</span> • <span>BHIM</span>
+</div>
+<!-- Standee Acrylic Base Illusion Footprint -->
+<div class="w-3/4 h-2 bg-surface-container-highest rounded-full mt-space-md opacity-80 shadow-inner"></div>
+</div>
+<!-- Scan Test Diagnostic Tool -->
+<div class="mt-space-md p-space-md bg-surface-container-low rounded-lg flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Hardware Scan Test</span>
+<span class="font-code-metric text-code-metric text-tertiary-container">200 OK</span>
+</div>
+<button class="w-full mt-1 flex items-center justify-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-highest text-on-surface hover:bg-surface-container-high font-title text-body-sm transition-colors" onclick="const res = document.getElementById('diag-result'); res.innerText = 'Testing...'; setTimeout(()=&gt;{res.innerText = '200 OK • Routing to Nodal HDFC Account ending 8729';}, 600);" type="button">
+<span class="material-symbols-outlined text-[18px]">cell_tower</span>
+<span>Run Digital Scan Test</span>
+</button>
+<div class="mt-1 flex items-center gap-space-xs text-on-surface font-body-sm text-[12px]">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">check_circle</span>
+<span class="truncate" id="diag-result">Nodal Route: HDFC Current A/c ••8729</span>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-[11px] pt-1">
+<span class="material-symbols-outlined text-primary text-[14px]">fence</span>
+<span>Strict 150m Perimeter Geofence Lock: <strong>ACTIVE</strong></span>
+</div>
+</div>
+</div>
+<!-- 2. Instant Self-Serve Print Kit Generator -->
+<div class="bg-surface-container-lowest rounded-lg p-space-xl shadow-sm flex flex-col">
+<div class="flex items-center gap-space-xs pb-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">download_for_offline</span>
+<span class="font-title text-title text-on-surface">Emergency Print Kit</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mb-space-md">
+          Customer cannot scan due to a shattered standee? Generate a high-DPI paper substitute instantly while BlueDart arrives.
+        </p>
+<div class="space-y-space-sm mb-space-md">
+<div class="p-space-sm bg-surface-container-low rounded-lg flex items-center justify-between cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">picture_as_pdf</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Vector Counter PDF (A4/A5)</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">300 DPI • Anti-blur print lines</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">download</span>
+</div>
+<div class="p-space-sm bg-surface-container-low rounded-lg flex items-center justify-between cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">view_carousel</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Table Tent Card Foldable</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Pre-folded crease guidelines</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">download</span>
+</div>
+<div class="p-space-sm bg-surface-container-low rounded-lg flex items-center justify-between cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">sticky_note_2</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface">Counter Vinyl Sticker Format</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">10x10 cm self-adhesive peel</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[18px]">download</span>
+</div>
+</div>
+<button class="w-full flex items-center justify-center gap-space-xs px-space-md py-2.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-title text-body-sm transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">print</span>
+<span>Download Print-Ready Vector PDF (.PDF)</span>
+</button>
+</div>
+<!-- 3. Warranty & Care Guidelines -->
+<div class="bg-surface-container-lowest rounded-lg p-space-xl shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center gap-space-xs pb-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[20px]">verified</span>
+<span class="font-title text-title text-on-surface">Warranty &amp; Care Policies</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">TRUSTIT Merchant Protection</span>
+<ul class="mt-space-md space-y-space-sm text-body-sm text-on-surface">
+<li class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span><strong>365-Day Free Replacement:</strong> Covers unintended physical cracks, liquid corrosion, and thermal standee base breaks.</span>
+</li>
+<li class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span><strong>UV Anti-Fading Guarantee:</strong> High-grade acrylic stands retain scan readability under direct sunlight for 3 years.</span>
+</li>
+<li class="flex items-start gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px] shrink-0 mt-0.5">check_circle</span>
+<span><strong>Zero-Cost BlueDart Dispatches:</strong> All verified warranty replacements are shipped on express priority at ₹0 expense.</span>
+</li>
+</ul>
+</div>
+<!-- Toll Free Line Box -->
+<div class="mt-space-lg p-space-md bg-surface-container-low rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<div class="w-8 h-8 rounded-lg bg-surface-container text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">support_agent</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Hardware Escalation Line</span>
+<span class="font-code-metric text-body-sm text-on-surface font-bold">1800-202-9900 (Ext 4)</span>
+</div>
+</div>
+<span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed px-2 py-0.5 rounded font-bold">24x7</span>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

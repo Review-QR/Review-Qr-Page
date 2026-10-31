@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"inverse-on-surface":"#eef0ff","on-surface-variant":"#434652","on-primary-fixed-variant":"#00429c","surface-container-low":"#f2f3ff","primary-fixed":"#d9e2ff","on-primary":"#ffffff","on-tertiary-fixed-variant":"#005235","secondary-fixed":"#9cf0ff","tertiary":"#003d27","on-tertiary-fixed":"#002113","secondary-container":"#00e3fd","on-tertiary-container":"#66d09c","on-primary-container":"#a1bbff","tertiary-container":"#005739","surface-bright":"#faf8ff","tertiary-fixed-dim":"#71dba6","on-error-container":"#93000a","surface-dim":"#d2d9f4","on-surface":"#131b2e","inverse-primary":"#b0c6ff","on-primary-fixed":"#001945","surface-container-lowest":"#ffffff","surface-container-high":"#e2e7ff","primary":"#003178","on-error":"#ffffff","on-tertiary":"#ffffff","secondary":"#006875","surface-tint":"#2b5bb5","on-background":"#131b2e","surface-container":"#eaedff","on-secondary":"#ffffff","on-secondary-fixed-variant":"#004f58","surface-container-highest":"#dae2fd","outline-variant":"#c3c6d4","surface":"#faf8ff","secondary-fixed-dim":"#00daf3","tertiary-fixed":"#8df7c1","on-secondary-container":"#00616d","primary-container":"#0d47a1","on-secondary-fixed":"#001f24","error-container":"#ffdad6","error":"#ba1a1a","background":"#faf8ff","primary-fixed-dim":"#b0c6ff","surface-variant":"#dae2fd","inverse-surface":"#283044","outline":"#737783"},borderRadius:{DEFAULT:"0.25rem",lg:"0.5rem",xl:"0.75rem",full:"9999px"},spacing:{"space-xl":"1.5rem","space-sm":"0.5rem","margin-tablet":"1.5rem",gutter:"1rem","gutter-desktop":"1.5rem","space-2xl":"2rem","space-lg":"1rem","margin-desktop":"2rem","space-xs":"0.25rem",margin:"1rem","space-md":"0.75rem"},fontFamily:{display:["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"code-metric":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],title:["Plus Jakarta Sans"]},fontSize:{display:["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"700"}],"label-md":["13px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"600"}],"headline-sm":["18px",{lineHeight:"24px",fontWeight:"600"}],"code-metric":["14px",{lineHeight:"20px",fontWeight:"700"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-sm":["13px",{lineHeight:"18px",fontWeight:"400"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],title:["16px",{lineHeight:"22px",fontWeight:"600"}]}}}};</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-lg flex items-center gap-space-sm bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.02)]"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[20px]">verified_user</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm font-bold tracking-tight text-primary leading-none">TRUSTIT</span><span class="font-label-sm text-label-sm uppercase text-on-surface-variant leading-tight">Partner Portal</span></div></div><div class="p-space-md"><div class="px-space-md py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Operations</div><nav class="flex flex-col gap-1 mt-1" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span>Overview</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="orders" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span>Orders</span></div><span class="bg-secondary-container text-on-secondary-container font-code-metric text-code-metric px-space-xs py-0.5 rounded-full text-xs">14</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="products-and-inventory" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span>Products &amp; Inventory</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="store-management" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span>Store Management</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="delivery" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span>Delivery</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="payments-and-settlements" href="#"><span class="material-symbols-outlined text-[20px]">account_balance</span><span>Payments &amp; Settlements</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="subscriptions" href="#"><span class="material-symbols-outlined text-[20px]">loyalty</span><span>Subscriptions</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="qr-and-reviews" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span>QR &amp; Reviews</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="physical-products" href="#"><span class="material-symbols-outlined text-[20px]">category</span><span>Physical Products</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">insights</span><span>Analytics</span></a></nav><div class="mt-space-lg px-space-md py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">System</div><nav class="flex flex-col gap-1 mt-1" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="notifications" href="#"><span class="material-symbols-outlined text-[20px]">notifications</span><span>Notifications</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="support" href="#"><span class="material-symbols-outlined text-[20px]">contact_support</span><span>Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg font-title text-title text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-all" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span>Settings</span></a></nav></div></div><div class="p-space-md"><div class="bg-surface-container p-space-md rounded-lg flex items-center gap-space-sm"><span class="material-symbols-outlined text-tertiary text-[20px]">check_circle</span><div class="flex flex-col"><span class="font-label-sm text-label-sm text-on-surface font-bold">GSTIN &amp; FSSAI</span><span class="font-body-sm text-body-sm text-on-surface-variant">KYC Compliant</span></div></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-gutter-desktop"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1.5 rounded-lg shadow-[0_1px_8px_rgba(0,0,0,0.02)]"><span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim animate-pulse"></span><span class="font-title text-title text-on-surface font-semibold">Sri Krishna Gourmet (Indiranagar, BLR)</span><span class="bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm px-space-xs py-0.5 rounded uppercase">Live</span></div><div class="relative flex items-center"><span class="material-symbols-outlined absolute left-3 text-on-surface-variant text-[18px]">search</span><input class="w-80 h-10 pl-9 pr-space-md bg-surface-container-low text-on-surface placeholder:text-on-surface-variant font-body-sm text-body-sm rounded-lg focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary-container/20 transition-all" placeholder="Search orders, SKU, customer or UTR..." type="text"/></div></div><div class="flex items-center gap-space-md"><button class="relative w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">notifications</span><span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-error"></span></button><button class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[22px]">help_center</span></button><div class="h-6 w-px bg-outline-variant"></div><div class="flex items-center gap-space-sm pl-space-xs"><div class="flex flex-col text-right"><span class="font-title text-title text-on-surface leading-tight font-semibold">Rajesh Sharma</span><span class="font-label-sm text-label-sm text-on-surface-variant leading-none">Store Partner</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 bg-background min-h-screen w-full px-gutter-desktop py-space-xl"><div class="flex flex-col w-full">
+<!-- Sub-header / Context Breadcrumb Bar -->
+<div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-space-md mb-space-xl">
+<div class="flex flex-col">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-md text-label-md">
+<span>Products &amp; Inventory</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-semibold">Edit Item</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-code-metric text-code-metric">SKU-SWT-88219</span>
+</div>
+<div class="flex items-center gap-space-md mt-1 flex-wrap">
+<h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight">
+          Special Pure Ghee Mysore Pak
+        </h1>
+<span class="inline-flex items-center gap-1.5 px-space-sm py-0.5 rounded-full bg-tertiary-container/30 text-tertiary font-label-sm text-label-sm uppercase font-bold tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+          Active &amp; Live on Consumer App
+        </span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Last synced: Today, 11:30 AM IST</span>
+</div>
+</div>
+<!-- Action Group -->
+<div class="flex items-center gap-space-sm flex-wrap self-stretch md:self-auto justify-end">
+<button class="px-space-md py-2 rounded-lg bg-surface-container-high hover:bg-surface-variant text-on-surface font-label-md text-label-md transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">pause_circle</span>
+        Pause / Mark Out-of-Stock
+      </button>
+<button class="w-9 h-9 rounded-lg bg-surface-container-high hover:bg-error-container text-on-surface-variant hover:text-on-error-container transition-colors flex items-center justify-center" title="Delete Product" type="button">
+<span class="material-symbols-outlined text-[18px]">delete</span>
+</button>
+<button class="px-space-md py-2 rounded-lg bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-label-md shadow-sm transition-colors" type="button">
+        Save Draft
+      </button>
+<button class="px-space-lg py-2 rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary shadow-sm flex items-center gap-1.5 transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">cloud_done</span>
+        Publish Changes
+      </button>
+</div>
+</div>
+<!-- Main 2-Column Split Workspace -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter-desktop items-start">
+<!-- LEFT COLUMN: Comprehensive Form Engine (8 Cols) -->
+<div class="lg:col-span-7 xl:col-span-8 flex flex-col gap-space-xl">
+<!-- 1. Category Switcher Strip -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Merchant Operating Vertical</span>
+<span class="font-body-sm text-body-sm text-primary font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">tune</span> Schema: F&amp;B Recipe Model
+          </span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-space-xs p-1 bg-surface-container-low rounded-lg">
+<button class="flex items-center justify-center gap-1.5 py-2 px-space-xs rounded-md bg-primary text-on-primary font-label-md text-label-md shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">restaurant</span>
+<span>Restaurant / Food</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-space-xs rounded-md hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">local_convenience_store</span>
+<span>Kirana / Grocery</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-space-xs rounded-md hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">medication</span>
+<span>Pharmacy / OTC</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-space-xs rounded-md hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">shopping_bag</span>
+<span>Retail &amp; Fashion</span>
+</button>
+<button class="flex items-center justify-center gap-1.5 py-2 px-space-xs rounded-md hover:bg-surface-container-high text-on-surface-variant font-label-md text-label-md transition-all" type="button">
+<span class="material-symbols-outlined text-[16px]">handyman</span>
+<span>Home Services</span>
+</button>
+</div>
+</div>
+<!-- 2. Basic Information Block -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="w-2 h-5 bg-primary rounded-full"></span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">Basic Product Information</h2>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary bg-tertiary-container/20 px-space-sm py-1 rounded uppercase">FSSAI Master Catalog Linked</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Standard Menu Display Name <span class="text-error">*</span></label>
+<input class="px-space-md py-2.5 bg-surface-container-low rounded-lg text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" id="input-title" type="text" value="Special Pure Ghee Mysore Pak"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Recommended: 20-45 chars for optimal mobile scan</span>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Regional Display Script (Kannada / Hindi)</label>
+<input class="px-space-md py-2.5 bg-surface-container-low rounded-lg text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" type="text" value="ಮೈಸೂರು ಪಾಕ್ / मैसूर पाक"/>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Enables multi-lingual ONDC &amp; TRUSTIT local search</span>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Category Segment <span class="text-error">*</span></label>
+<div class="relative">
+<select class="w-full appearance-none px-space-md py-2.5 bg-surface-container-low rounded-lg text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all">
+<option selected="">Signature Sweets &amp; Ghee Mithai</option>
+<option>Dry Fruit Ladoos &amp; Bites</option>
+<option>Savory Namkeen &amp; Farsan</option>
+<option>Fresh Milk Desserts (Bengali)</option>
+</select>
+<span class="material-symbols-outlined absolute right-3 top-3 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Sub-Classification / Kitchen Station</label>
+<input class="px-space-md py-2.5 bg-surface-container-low rounded-lg text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all" type="text" value="Halwai Section #2 (Hot Confectionery)"/>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<div class="flex items-center justify-between">
+<label class="font-label-md text-label-md text-on-surface font-semibold">Sensory Item Description <span class="text-error">*</span></label>
+<span class="font-label-sm text-label-sm text-on-surface-variant">136 / 300 Chars</span>
+</div>
+<textarea class="px-space-md py-2.5 bg-surface-container-low rounded-lg text-on-surface font-body-md text-body-md focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none" id="input-desc" rows="3">Rich Melt-in-mouth traditional royal dessert made with 100% pure Nandini cow ghee, bespoke chickpea flour, and saffron sugar syrup.</textarea>
+</div>
+</div>
+<!-- 3. Food Classification & Dietary Badges -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm pb-space-xs">
+<span class="w-2 h-5 bg-tertiary rounded-full"></span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">Dietary Classification &amp; Trust Badges</h2>
+</div>
+<!-- Food Habit Radio Selector -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
+<label class="relative flex items-center gap-space-md p-space-md rounded-lg bg-surface-container cursor-pointer transition-all">
+<input checked="" class="accent-tertiary w-4 h-4" name="diet-class" type="radio"/>
+<div class="flex items-center gap-space-xs">
+<span class="w-4 h-4 rounded-sm flex items-center justify-center p-0.5 bg-tertiary-container/30">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-bold">Pure Veg</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">100% Vegetarian</span>
+</div>
+</div>
+</label>
+<label class="relative flex items-center gap-space-md p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-all">
+<input class="accent-secondary w-4 h-4" name="diet-class" type="radio"/>
+<div class="flex items-center gap-space-xs">
+<span class="w-4 h-4 rounded-sm flex items-center justify-center p-0.5 bg-secondary-fixed">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Contains Egg</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Egg-based items</span>
+</div>
+</div>
+</label>
+<label class="relative flex items-center gap-space-md p-space-md rounded-lg bg-surface-container-low hover:bg-surface-container cursor-pointer transition-all">
+<input class="accent-error w-4 h-4" name="diet-class" type="radio"/>
+<div class="flex items-center gap-space-xs">
+<span class="w-4 h-4 rounded-sm flex items-center justify-center p-0.5 bg-error-container">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+</span>
+<div class="flex flex-col">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Non-Veg</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Meat &amp; Seafood</span>
+</div>
+</div>
+</label>
+</div>
+<!-- Merchandising Tags -->
+<div class="flex flex-col gap-space-xs mt-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Consumer Highlight Badges</span>
+<div class="flex items-center gap-space-sm flex-wrap">
+<button class="px-space-md py-1.5 rounded-full bg-surface-container text-on-surface font-label-md text-label-md flex items-center gap-1.5 hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-tertiary">eco</span>
+              Gluten Free
+            </button>
+<button class="px-space-md py-1.5 rounded-full bg-surface-container text-on-surface font-label-md text-label-md flex items-center gap-1.5 hover:bg-surface-container-high transition-colors" type="button">
+<span class="material-symbols-outlined text-[16px] text-on-surface-variant">grain</span>
+              Sugar Free / Diabetic Safe
+            </button>
+<button class="px-space-md py-1.5 rounded-full bg-primary text-on-primary font-label-md text-label-md flex items-center gap-1.5 shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary-fixed">workspace_premium</span>
+              Chef's Special Recommendation
+            </button>
+<button class="px-space-md py-1.5 rounded-full bg-secondary-container text-on-secondary-container font-label-md text-label-md flex items-center gap-1.5 font-bold shadow-sm" type="button">
+<span class="material-symbols-outlined text-[16px]">local_fire_department</span>
+              Store Best Seller #1
+            </button>
+</div>
+</div>
+</div>
+<!-- 4. Variants & Portion Pricing -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="w-2 h-5 bg-primary-container rounded-full"></span>
+<div>
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">Portion Variants &amp; Tiered Pricing</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Configure packaging fees, live inventory stock, and instant POS mapping</p>
+</div>
+</div>
+<span class="font-code-metric text-code-metric text-primary bg-primary-fixed/40 px-space-sm py-1 rounded">3 Active Variants</span>
+</div>
+<!-- Dense Pricing Matrix Table -->
+<div class="overflow-x-auto rounded-lg bg-surface-container-low p-1">
+<table class="w-full text-left font-body-sm text-body-sm">
+<thead class="text-on-surface-variant font-label-sm text-label-sm uppercase bg-surface-container-high/60">
+<tr>
+<th class="py-2.5 px-space-md rounded-l-md">Variant Name</th>
+<th class="py-2.5 px-space-sm">Base MRP (₹)</th>
+<th class="py-2.5 px-space-sm">Offer Price (₹)</th>
+<th class="py-2.5 px-space-sm">Pack Fee (₹)</th>
+<th class="py-2.5 px-space-sm">Units in Stock</th>
+<th class="py-2.5 px-space-sm text-center">Status</th>
+<th class="py-2.5 px-space-sm rounded-r-md text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y-0">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="py-2.5 px-space-md font-semibold text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span>250g Regular Box</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm font-code-metric text-code-metric text-on-surface-variant line-through">₹180</td>
+<td class="py-2.5 px-space-sm font-code-metric text-code-metric font-bold text-primary">₹160</td>
+<td class="py-2.5 px-space-sm text-on-surface">₹10</td>
+<td class="py-2.5 px-space-sm">
+<span class="px-2 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-code-metric text-code-metric text-xs">25 boxes</span>
+</td>
+<td class="py-2.5 px-space-sm text-center">
+<span class="material-symbols-outlined text-tertiary text-[18px]">check_circle</span>
+</td>
+<td class="py-2.5 px-space-sm text-right">
+<button class="p-1 hover:text-primary transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button>
+<button class="p-1 hover:text-error transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</td>
+</tr>
+<!-- Row 2 (Default selection) -->
+<tr class="bg-surface-container-lowest shadow-sm rounded-md">
+<td class="py-2.5 px-space-md font-semibold text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-bold text-primary">500g Classic Family Box</span>
+<span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-primary text-on-primary">DEFAULT</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm font-code-metric text-code-metric text-on-surface-variant line-through">₹350</td>
+<td class="py-2.5 px-space-sm font-code-metric text-code-metric font-bold text-primary text-sm">₹320</td>
+<td class="py-2.5 px-space-sm text-on-surface">₹15</td>
+<td class="py-2.5 px-space-sm">
+<span class="px-2 py-0.5 rounded bg-tertiary-container/30 text-tertiary font-code-metric text-code-metric text-xs">18 boxes</span>
+</td>
+<td class="py-2.5 px-space-sm text-center">
+<span class="material-symbols-outlined text-tertiary text-[18px]">check_circle</span>
+</td>
+<td class="py-2.5 px-space-sm text-right">
+<button class="p-1 hover:text-primary transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button>
+<button class="p-1 hover:text-error transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-lowest transition-colors">
+<td class="py-2.5 px-space-md font-semibold text-on-surface">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span>
+<span>1kg Royal Festive Tin</span>
+</div>
+</td>
+<td class="py-2.5 px-space-sm font-code-metric text-code-metric text-on-surface-variant line-through">₹680</td>
+<td class="py-2.5 px-space-sm font-code-metric text-code-metric font-bold text-primary">₹620</td>
+<td class="py-2.5 px-space-sm text-on-surface">₹25</td>
+<td class="py-2.5 px-space-sm">
+<span class="px-2 py-0.5 rounded bg-secondary-container text-on-secondary-container font-code-metric text-code-metric text-xs font-bold">8 tins left</span>
+</td>
+<td class="py-2.5 px-space-sm text-center">
+<span class="material-symbols-outlined text-tertiary text-[18px]">check_circle</span>
+</td>
+<td class="py-2.5 px-space-sm text-right">
+<button class="p-1 hover:text-primary transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">edit</span></button>
+<button class="p-1 hover:text-error transition-colors" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<button class="self-start px-space-md py-2 rounded-lg bg-surface-container text-primary font-label-md text-label-md hover:bg-surface-container-high transition-colors flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+          Add Another Portion Variant
+        </button>
+</div>
+<!-- 5. Custom Add-ons & Customizations -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="w-2 h-5 bg-secondary rounded-full"></span>
+<div>
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">Custom Add-on Modifier Groups</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Upsell gift wrapping, handwritten greeting notes, and festive packaging</p>
+</div>
+</div>
+<button class="px-space-sm py-1 rounded bg-surface-container text-on-surface font-label-sm text-label-sm hover:bg-surface-container-high transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[14px]">add</span> Add Modifier Group
+          </button>
+</div>
+<!-- Add-on Group 1 -->
+<div class="p-space-md bg-surface-container-low rounded-lg flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md font-bold text-on-surface">Group 1: Luxury Gift Packaging</span>
+<span class="px-2 py-0.5 rounded text-xs bg-surface-container-highest text-on-surface-variant font-label-sm">Optional • Single Choice (Max 1)</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant cursor-pointer">drag_indicator</span>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant cursor-pointer">tune</span>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-sm">
+<div class="flex items-center justify-between p-space-sm bg-surface-container-lowest rounded-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_box</span>
+<span class="font-body-md text-body-md text-on-surface">Silver Foil Festive Box</span>
+</div>
+<span class="font-code-metric text-code-metric font-semibold text-primary">+₹20.00</span>
+</div>
+<div class="flex items-center justify-between p-space-sm bg-surface-container-lowest rounded-md">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-tertiary">check_box</span>
+<span class="font-body-md text-body-md text-on-surface">Wooden Handcrafted Box</span>
+</div>
+<span class="font-code-metric text-code-metric font-semibold text-primary">+₹75.00</span>
+</div>
+</div>
+</div>
+<!-- Add-on Group 2 -->
+<div class="p-space-md bg-surface-container-low rounded-lg flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-label-md text-label-md font-bold text-on-surface">Group 2: Special Message Card</span>
+<span class="px-2 py-0.5 rounded text-xs bg-tertiary-container/30 text-tertiary font-label-sm font-semibold">Complimentary (₹0.00) • Text Input</span>
+</div>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant cursor-pointer">drag_indicator</span>
+</div>
+<div class="p-space-sm bg-surface-container-lowest rounded-md flex items-center justify-between text-on-surface-variant font-body-sm text-body-sm">
+<span>Customer specifies customized note up to 80 characters during checkout</span>
+<span class="text-tertiary font-semibold">Active</span>
+</div>
+</div>
+</div>
+<!-- 6. Kitchen SLA & Operational Rules -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center gap-space-sm pb-space-xs">
+<span class="w-2 h-5 bg-on-secondary-container rounded-full"></span>
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">Kitchen SLAs &amp; Tax Configuration</h2>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md">
+<div class="flex flex-col gap-1 p-space-md bg-surface-container-low rounded-lg">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Prep / Packing SLA</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-[20px] text-secondary">timer</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">8 - 12 mins</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Live delivery queue calculation</span>
+</div>
+<div class="flex flex-col gap-1 p-space-md bg-surface-container-low rounded-lg">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Daily Store Quota Cap</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-[20px] text-primary">inventory</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">50 Orders / day</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Auto-locks when ceiling reached</span>
+</div>
+<div class="flex flex-col gap-1 p-space-md bg-surface-container-low rounded-lg">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">GSTIN Tax Tier</span>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-[20px] text-tertiary">receipt</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">5.0% CGST+SGST</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">HSN 21069099 (Mithai w/o ITC)</span>
+</div>
+</div>
+</div>
+<!-- 7. Media & Product Photography (4 Slots) -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between pb-space-xs">
+<div class="flex items-center gap-space-sm">
+<span class="w-2 h-5 bg-primary rounded-full"></span>
+<div>
+<h2 class="font-headline-sm text-headline-sm font-bold text-on-surface">Product Gallery &amp; Imagery</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">High-fidelity 1:1 square photos increase checkout conversion by 34%</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">1 Primary + 3 Gallery</span>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-md">
+<!-- Primary Image Slot -->
+<div class="relative group rounded-xl overflow-hidden shadow-sm bg-surface-container-high aspect-square flex flex-col items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Traditional Indian dessert Mysore Pak with authentic honeycomb porous texture bathed in rich pure golden desi cow ghee, garnished with delicate strands of Kashmiri saffron and crushed pistachio flakes on a royal brass plate with soft warm studio food lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuALbprIJAQoiJzeNgt3epjUIci7fG92YDyONSFSMsK3XF2AdHG1R4mXEP3beUb88nRTOO9WC_AkUj02gjDwyANH7nY4IwX5nvd2WIta554_3H28xUnQCr5S3RRudmQ5G8ysDoEyyQ0Ja8AIxrXQCKUb9ngd-byJUo2oNm6pdVMH1CIgFE_4WY-Aex3IhxMejM6_mH4nu4McmxroXn7gW6HP1YwgSny_R9Ons_xdCfo"/>
+<span class="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-bold bg-primary text-on-primary uppercase tracking-wide">
+              Cover Image
+            </span>
+<div class="absolute inset-0 bg-inverse-surface/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest text-on-surface flex items-center justify-center hover:scale-105 transition-transform" type="button"><span class="material-symbols-outlined text-[16px]">crop</span></button>
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest text-error flex items-center justify-center hover:scale-105 transition-transform" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+</div>
+<!-- Gallery Slot 2 -->
+<div class="relative group rounded-xl overflow-hidden shadow-sm bg-surface-container-high aspect-square flex flex-col items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Close-up macro culinary view of breaking a piece of golden brown rich ghee Mysore Pak sweet showing internal melt in mouth crumbly airy ghee pores with glistening caramelized sugar sheen." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBV9_-jEl1-SJqsRdkzt5Z1KoYnTR7WU7wvMYnEW5Ga0kFC4tqMvD6Z3YFkDSKpsNM2W-3yEQbP0kZThpNXu7qy4-AyHY6zOISN7p7maDiaP1wCkOnzP6pEwZgr-OV15TScbVxlRCYfwd9oJariQuK9ixmCNMGsDflHGzpAPr8rB7YUPJgnPpN1E8s5C1fgQj3bjT2Ed-Pb8iwxE3fcxg2oK926N_I_5cq0J2u959I"/>
+<div class="absolute inset-0 bg-inverse-surface/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest text-on-surface flex items-center justify-center" type="button"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest text-error flex items-center justify-center" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+</div>
+<!-- Gallery Slot 3 -->
+<div class="relative group rounded-xl overflow-hidden shadow-sm bg-surface-container-high aspect-square flex flex-col items-center justify-center">
+<img class="w-full h-full object-cover" data-alt="Handcrafted festive gift box packaging filled with neat rows of square cut royal ghee Mysore Pak sweets wrapped in transparent butter paper with royal blue silk ribbon." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMEbYeSiG422i1PS80r5uqzoczpyyYuXe6lM3T1HqmbzYcC_Hk_wYxhjhZ2R-0vhZxabI04z7uyX2bJ7TLBngQsActl2j_gW6SmTIfFLUsHIhHH2xQjtNcGnFUJiN15H4vf_6hKMh-G9Cgzx5c9l25u3JDfsBLHp3EJc1kBB-FGnnG_BCRKhwvUrjCaA5zT0hgktHUW3bkJ_xBHbgRR789BbFnM9Fe2KmTq28S7qI"/>
+<div class="absolute inset-0 bg-inverse-surface/40 opacity-0 group-hover:opacity-100 flex items-center justify-center gap-2 transition-opacity">
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest text-on-surface flex items-center justify-center" type="button"><span class="material-symbols-outlined text-[16px]">visibility</span></button>
+<button class="w-8 h-8 rounded-full bg-surface-container-lowest text-error flex items-center justify-center" type="button"><span class="material-symbols-outlined text-[16px]">delete</span></button>
+</div>
+</div>
+<!-- Slot 4: Empty Upload Slot -->
+<div class="rounded-xl border-2 border-dashed border-outline-variant hover:border-primary bg-surface-container-low/60 hover:bg-surface-container cursor-pointer aspect-square flex flex-col items-center justify-center p-space-sm text-center transition-all group">
+<div class="w-10 h-10 rounded-full bg-surface-container-high group-hover:bg-primary-container flex items-center justify-center text-on-surface-variant group-hover:text-on-primary transition-colors mb-1">
+<span class="material-symbols-outlined text-[20px]">add_photo_alternate</span>
+</div>
+<span class="font-label-md text-label-md text-on-surface font-semibold">Upload Photo</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant mt-0.5">PNG, JPG up to 5MB</span>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Sticky Consumer App Live Preview & Compliance Guard (4-5 Cols) -->
+<div class="lg:col-span-5 xl:col-span-4 flex flex-col gap-space-lg lg:sticky lg:top-20">
+<!-- Live Preview Badge Header -->
+<div class="flex items-center justify-between px-space-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">smartphone</span>
+<span class="font-title text-title text-on-surface font-bold">Buyer Viewport Preview</span>
+</div>
+<div class="flex items-center gap-1 bg-surface-container-low px-space-xs py-1 rounded-full text-on-surface-variant font-label-sm text-label-sm">
+<button class="px-2 py-0.5 rounded-full bg-surface-container-lowest font-bold text-on-surface shadow-xs" type="button">App</button>
+<button class="px-2 py-0.5 rounded-full hover:text-on-surface" type="button">QR Table</button>
+</div>
+</div>
+<!-- Smartphone Frame Container -->
+<div class="w-full max-w-[380px] mx-auto bg-inverse-surface rounded-[40px] p-3 shadow-xl relative">
+<!-- Phone Camera Notch -->
+<div class="absolute top-5 left-1/2 -translate-x-1/2 w-28 h-4 bg-inverse-surface rounded-full z-30 flex items-center justify-center">
+<div class="w-2.5 h-2.5 rounded-full bg-on-surface/20 mr-2"></div>
+<div class="w-1.5 h-1.5 rounded-full bg-on-surface/30"></div>
+</div>
+<!-- Phone Inner Screen Display -->
+<div class="w-full bg-surface-bright rounded-[32px] overflow-hidden flex flex-col text-on-surface shadow-inner">
+<!-- Mock Consumer App Header -->
+<div class="pt-6 pb-2 px-space-md bg-surface flex items-center justify-between">
+<span class="material-symbols-outlined text-[20px] text-on-surface">arrow_back</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">Sri Krishna Gourmet</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-on-surface">share</span>
+<span class="material-symbols-outlined text-[18px] text-on-surface">favorite_border</span>
+</div>
+</div>
+<!-- Product Hero Image in Mock -->
+<div class="relative w-full h-48 bg-surface-container">
+<img class="w-full h-full object-cover" data-alt="Close up aesthetic shot of pure desi ghee Mysore Pak sweet pieces stacked artfully on traditional Indian brass tableware with scattered cardamom pods and saffron." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGMHaeznrwGym0RF7mmlo4TQFY6h7VsXBSvEQSiy_6I-q8x2sEBKet3Nu1M2KAAnNcrmb1jslebJ-Z5CMA2YdOVrW5v1k9HmUk3VLv2XXfbNBKFVfrerW9eGY9YwC06vAII6GH2kM1pWfo_au-xhsaiT8mUUmLl5AaT4xVBMqxwIZPz2utWhPY7l_2D570z3gBzOSJUedKg-F9PTgmFEWw8f51hTOLJW14rlt30T8"/>
+<!-- Best Seller Pill -->
+<span class="absolute top-2 left-2 bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-md font-label-sm text-label-sm font-bold shadow-xs">
+              BESTSELLER
+            </span>
+<!-- Carousel Dots -->
+<div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-1 bg-inverse-surface/40 backdrop-blur-md px-2 py-1 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-on-primary"></span>
+<span class="w-1 h-1 rounded-full bg-on-primary/60"></span>
+<span class="w-1 h-1 rounded-full bg-on-primary/60"></span>
+</div>
+</div>
+<!-- Product Details in Mock -->
+<div class="p-space-md flex flex-col gap-space-sm bg-surface">
+<!-- Title & Veg Marker -->
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="w-3.5 h-3.5 rounded-xs flex items-center justify-center p-0.5 bg-tertiary-container/30">
+<span class="w-1.5 h-1.5 rounded-full bg-tertiary"></span>
+</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">100% PURE VEG</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm font-bold text-on-surface leading-tight mt-0.5" id="preview-title">
+                  Special Pure Ghee Mysore Pak
+                </h3>
+</div>
+</div>
+<!-- Price in Mock -->
+<div class="flex items-baseline gap-2">
+<span class="font-headline-md text-headline-md font-bold text-primary">₹320</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant line-through">₹350</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">8% OFF</span>
+</div>
+<!-- Short description in Mock -->
+<p class="font-body-sm text-body-sm text-on-surface-variant line-clamp-2" id="preview-desc">
+              Rich Melt-in-mouth traditional royal dessert made with 100% pure Nandini cow ghee, bespoke chickpea flour...
+            </p>
+<div class="h-px bg-surface-container my-1"></div>
+<!-- Portion Picker Pills in Mock -->
+<div class="flex flex-col gap-1.5">
+<span class="font-label-sm text-label-sm uppercase font-bold text-on-surface tracking-wider">Select Portion Size:</span>
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="px-2.5 py-1 rounded-lg bg-surface-container font-label-sm text-label-sm text-on-surface-variant">250g (₹160)</span>
+<span class="px-2.5 py-1 rounded-lg bg-primary-container text-on-primary font-label-sm text-label-sm font-bold shadow-xs">500g (₹320)</span>
+<span class="px-2.5 py-1 rounded-lg bg-surface-container font-label-sm text-label-sm text-on-surface-variant">1kg (₹620)</span>
+</div>
+</div>
+<!-- Add-on selection in Mock -->
+<div class="flex flex-col gap-1 mt-1 p-2 rounded-lg bg-surface-container-low">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Gift Wrapping (Optional)</span>
+<div class="flex items-center justify-between text-xs text-on-surface-variant">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[14px] text-primary">radio_button_checked</span>
+<span>Silver Foil Festive Box</span>
+</div>
+<span class="font-code-metric text-code-metric font-semibold text-primary">+₹20</span>
+</div>
+</div>
+<!-- Mock Cart Footer Button -->
+<div class="mt-2 pt-2 border-t border-surface-container flex items-center justify-between gap-2">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Total Amount</span>
+<span class="font-headline-sm text-headline-sm font-bold text-on-surface">₹340</span>
+</div>
+<button class="flex-1 py-2.5 px-space-md rounded-xl bg-primary text-on-primary font-label-md text-label-md font-bold flex items-center justify-center gap-1.5 shadow-md" type="button">
+<span class="material-symbols-outlined text-[16px]">shopping_cart</span>
+                ADD TO CART
+              </button>
+</div>
+</div>
+<!-- Bottom Home Indicator -->
+<div class="h-4 bg-surface flex items-center justify-center">
+<div class="w-20 h-1 bg-outline-variant rounded-full"></div>
+</div>
+</div>
+</div>
+<!-- Regulatory Compliance & FSSAI Verification Checklist -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col gap-space-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary text-[18px]">verified_user</span>
+<span class="font-label-md text-label-md font-bold text-on-surface">FSSAI Regulatory Checklist</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">100% COMPLIANT</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low text-xs">
+<span class="text-on-surface font-semibold">Mandatory Allergen Declaration</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-code-metric text-code-metric">Contains Dairy &amp; Nuts</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low text-xs">
+<span class="text-on-surface font-semibold">Energy &amp; Calorie Value</span>
+<span class="px-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-code-metric text-code-metric">540 Kcal / 100g</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded-lg bg-surface-container-low text-xs">
+<span class="text-on-surface font-semibold">FSSAI License Tagged</span>
+<span class="text-tertiary font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check</span> #11221334000492
+            </span>
+</div>
+</div>
+<div class="flex items-center gap-2 p-2 rounded bg-tertiary-container/20 text-tertiary text-xs">
+<span class="material-symbols-outlined text-[16px]">info</span>
+<span>Synced with Central Food Safety Authority India &amp; GSTN Registry</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Inline Micro-interaction Script for Live Form-to-Preview Binding -->
+<script>
+    (function() {
+      const inputTitle = document.getElementById('input-title');
+      const inputDesc = document.getElementById('input-desc');
+      const previewTitle = document.getElementById('preview-title');
+      const previewDesc = document.getElementById('preview-desc');
+
+      if (inputTitle && previewTitle) {
+        inputTitle.addEventListener('input', function(e) {
+          previewTitle.textContent = e.target.value.trim() || 'Product Name';
+        });
+      }
+
+      if (inputDesc && previewDesc) {
+        inputDesc.addEventListener('input', function(e) {
+          previewDesc.textContent = e.target.value.trim() || 'Item description...';
+        });
+      }
+    })();
+  </script>
+</div></main></div></body></html>

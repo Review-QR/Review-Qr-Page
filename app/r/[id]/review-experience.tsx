@@ -72,6 +72,7 @@ export default function ReviewExperience({
   const [step, setStep] = useState<Step>(initialSession?.submitted ? "submitted" : initialSession?.draft ? "review" : initialSession ? "experience" : "rating");
   const [unlockedStage, setUnlockedStage] = useState(initialSession?.submitted ? 4 : initialSession?.draft ? 3 : initialSession ? 1 : 0);
   const [shareDetails, setShareDetails] = useState(false);
+  const [consentAgreed, setConsentAgreed] = useState(true);
   const [customerName, setCustomerName] = useState("");
   const [customerMobile, setCustomerMobile] = useState("");
   const [birthday, setBirthday] = useState<Occasion>(emptyOccasion());
@@ -196,6 +197,9 @@ export default function ReviewExperience({
     if (shareDetails) {
       validateOccasion(birthday, "your birthday"); validateOccasion(anniversary, "your anniversary");
       family.forEach((member, index) => { validateOccasion(member.birthday, `family member ${index + 1} birthday`); validateOccasion(member.anniversary, `family member ${index + 1} anniversary`); });
+      if (!consentAgreed) {
+        issues.push("Please confirm your consent to receive birthday offers & greetings to continue.");
+      }
     }
     setFormErrors(issues);
     if (issues.length || !hasSession || !selectedRating || !draft.trim()) return;
@@ -314,16 +318,118 @@ export default function ReviewExperience({
           <label htmlFor="trustit-customer-name" className="mt-5 block text-sm font-bold text-slate-800">Your Name <span className="text-rose-600">*</span></label>
           <input id="trustit-customer-name" maxLength={160} value={customerName} onChange={(e) => setCustomerName(e.target.value)} autoComplete="name" className="mt-2 min-h-12 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100" placeholder="Enter your name" />
           <p className="mt-2 text-xs leading-5 text-slate-500">A name is shown with your review. Mobile, family and occasion details stay private unless you opt in.</p>
-          <label className="mt-5 flex min-h-12 items-center gap-3 rounded-xl bg-amber-50 px-3 text-sm font-medium text-slate-700"><input type="checkbox" checked={shareDetails} onChange={(e) => { setShareDetails(e.target.checked); if (!e.target.checked) { setCustomerMobile(""); setBirthday(emptyOccasion()); setAnniversary(emptyOccasion()); setFamily([]); } }} />Want to share some personal details?</label>
-          {shareDetails && <div className="mt-3 space-y-4 rounded-2xl border border-slate-200 p-3.5 sm:p-4">
-            <div><label htmlFor="trustit-customer-mobile" className="block text-sm font-bold text-slate-800">Mobile Number <span className="text-rose-600">*</span></label><input id="trustit-customer-mobile" type="tel" maxLength={32} value={customerMobile} onChange={(e) => setCustomerMobile(e.target.value)} autoComplete="tel" className="mt-2 min-h-12 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none focus:border-amber-400 focus:ring-4 focus:ring-amber-100" placeholder="Mobile number" /></div>
-            <div className="rounded-xl border border-slate-100 px-3"><OccasionRow label="Birthday" value={birthday} onChange={setBirthday} /><OccasionRow label="Anniversary" value={anniversary} onChange={setAnniversary} /></div>
-            <details className="rounded-xl border border-slate-100 p-3" open={family.length > 0}><summary className="cursor-pointer list-none text-sm font-bold text-amber-800">＋ Add family members <span className="ml-1 text-xs font-normal text-slate-500">(optional · up to 8)</span></summary>
-              <div className="mt-3 space-y-3">{family.map((member, index) => <fieldset key={index} className="rounded-xl border border-slate-200 p-3"><legend className="px-1 text-sm font-semibold text-slate-700">Family member {index + 1}</legend>
-                <div className="grid gap-2"><input maxLength={160} aria-label="Family member name" placeholder="Name *" value={member.name} onChange={(e) => updateFamily(index, (m) => ({ ...m, name: e.target.value }))} className="min-h-11 rounded-xl border border-slate-200 px-3 text-sm" /><select aria-label="Family member relation" value={member.relation} onChange={(e) => updateFamily(index, (m) => ({ ...m, relation: e.target.value }))} className="min-h-11 rounded-xl border border-slate-200 px-3 text-sm"><option value="">Relation *</option>{relations.map((relation) => <option key={relation} value={relation}>{relation[0].toUpperCase() + relation.slice(1)}</option>)}</select><input type="tel" maxLength={32} aria-label="Family member mobile optional" placeholder="Mobile (optional)" value={member.mobile} onChange={(e) => updateFamily(index, (m) => ({ ...m, mobile: e.target.value }))} className="min-h-11 rounded-xl border border-slate-200 px-3 text-sm" /></div>
-                <div className="mt-2 rounded-xl border border-slate-100 px-2"><OccasionRow label="Birthday" value={member.birthday} onChange={(v) => updateFamily(index, (m) => ({ ...m, birthday: v }))} /><OccasionRow label="Anniversary" value={member.anniversary} onChange={(v) => updateFamily(index, (m) => ({ ...m, anniversary: v }))} /></div><button type="button" onClick={() => setFamily((current) => current.filter((_, i) => i !== index))} className="mt-2 min-h-10 text-sm font-semibold text-rose-700">Remove member</button>
-              </fieldset>)}<button type="button" disabled={family.length >= 8} onClick={() => setFamily((current) => [...current, emptyFamilyMember()])} className="min-h-11 rounded-xl px-2 text-sm font-bold text-amber-800 disabled:opacity-50">＋ Add Family Member</button></div>
+          {/* Value proposition & opt-in toggle */}
+          <div className="mt-5 rounded-2xl border border-amber-200/90 bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white p-4 shadow-xs">
+            <label className="flex items-start gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={shareDetails}
+                onChange={(e) => {
+                  setShareDetails(e.target.checked);
+                  if (!e.target.checked) {
+                    setCustomerMobile("");
+                    setBirthday(emptyOccasion());
+                    setAnniversary(emptyOccasion());
+                    setFamily([]);
+                    setConsentAgreed(true);
+                  }
+                }}
+                className="mt-1 size-5 rounded-md border-amber-300 text-amber-600 focus:ring-amber-400"
+              />
+              <div className="min-w-0 flex-1">
+                <span className="flex items-center gap-1.5 text-sm font-extrabold text-[#10153f]">
+                  <span>🎁</span>
+                  <span>Receive Birthday Surprises &amp; Festive Offers</span>
+                </span>
+                <span className="block text-xs text-slate-600 mt-1 leading-relaxed">
+                  Share your WhatsApp number &amp; special dates to get anniversary discounts, birthday wishes, and festival treats directly from <strong>{businessName}</strong>.
+                </span>
+              </div>
+            </label>
+          </div>
+
+          {shareDetails && <div className="mt-3 space-y-4 rounded-2xl border border-amber-200/80 bg-white p-3.5 sm:p-5 shadow-xs">
+            <div>
+              <label htmlFor="trustit-customer-mobile" className="block text-sm font-bold text-slate-800">
+                WhatsApp Mobile Number <span className="text-rose-600">*</span>
+              </label>
+              <div className="mt-1.5 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-100 transition">
+                <span className="flex items-center border-r border-slate-200 bg-slate-50 px-3 py-3 text-xs font-bold text-slate-700 select-none">
+                  🇮🇳 +91
+                </span>
+                <input
+                  id="trustit-customer-mobile"
+                  type="tel"
+                  inputMode="numeric"
+                  maxLength={10}
+                  value={customerMobile}
+                  onChange={(e) => setCustomerMobile(e.target.value.replace(/\D/g, ""))}
+                  autoComplete="tel"
+                  className="w-full px-3 py-3 text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400"
+                  placeholder="10-digit WhatsApp number"
+                />
+              </div>
+              <p className="mt-1 text-[11px] text-slate-500">
+                Used strictly to deliver personal festival wishes &amp; discount vouchers. No spam.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-2 sm:p-3">
+              <p className="text-xs font-bold text-slate-700 px-1 mb-1">Your Special Dates</p>
+              <OccasionRow label="Birthday" value={birthday} onChange={setBirthday} />
+              <OccasionRow label="Anniversary" value={anniversary} onChange={setAnniversary} />
+            </div>
+
+            <details className="rounded-xl border border-slate-100 p-3" open={family.length > 0}>
+              <summary className="cursor-pointer list-none text-sm font-bold text-amber-800">
+                ＋ Add family members <span className="ml-1 text-xs font-normal text-slate-500">(optional · up to 8)</span>
+              </summary>
+              <div className="mt-3 space-y-3">
+                {family.map((member, index) => (
+                  <fieldset key={index} className="rounded-xl border border-slate-200 p-3">
+                    <legend className="px-1 text-sm font-semibold text-slate-700">Family member {index + 1}</legend>
+                    <div className="grid gap-2">
+                      <input maxLength={160} aria-label="Family member name" placeholder="Name *" value={member.name} onChange={(e) => updateFamily(index, (m) => ({ ...m, name: e.target.value }))} className="min-h-11 rounded-xl border border-slate-200 px-3 text-sm" />
+                      <select aria-label="Family member relation" value={member.relation} onChange={(e) => updateFamily(index, (m) => ({ ...m, relation: e.target.value }))} className="min-h-11 rounded-xl border border-slate-200 px-3 text-sm">
+                        <option value="">Relation *</option>
+                        {relations.map((relation) => <option key={relation} value={relation}>{relation[0].toUpperCase() + relation.slice(1)}</option>)}
+                      </select>
+                      <input type="tel" maxLength={10} aria-label="Family member mobile optional" placeholder="Mobile (optional)" value={member.mobile} onChange={(e) => updateFamily(index, (m) => ({ ...m, mobile: e.target.value.replace(/\D/g, "") }))} className="min-h-11 rounded-xl border border-slate-200 px-3 text-sm" />
+                    </div>
+                    <div className="mt-2 rounded-xl border border-slate-100 px-2">
+                      <OccasionRow label="Birthday" value={member.birthday} onChange={(v) => updateFamily(index, (m) => ({ ...m, birthday: v }))} />
+                      <OccasionRow label="Anniversary" value={member.anniversary} onChange={(v) => updateFamily(index, (m) => ({ ...m, anniversary: v }))} />
+                    </div>
+                    <button type="button" onClick={() => setFamily((current) => current.filter((_, i) => i !== index))} className="mt-2 min-h-10 text-sm font-semibold text-rose-700">Remove member</button>
+                  </fieldset>
+                ))}
+                <button type="button" disabled={family.length >= 8} onClick={() => setFamily((current) => [...current, emptyFamilyMember()])} className="min-h-11 rounded-xl px-2 text-sm font-bold text-amber-800 disabled:opacity-50">＋ Add Family Member</button>
+              </div>
             </details>
+
+            {/* DPDP Act 2023 Explicit Customer Consent Card */}
+            <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50/70 p-3 sm:p-3.5">
+              <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={consentAgreed}
+                  onChange={(e) => setConsentAgreed(e.target.checked)}
+                  className="mt-0.5 size-4 rounded border-amber-300 text-amber-600 focus:ring-amber-400"
+                />
+                <span className="text-xs leading-relaxed text-slate-700">
+                  I consent to receive special birthday treats, festival wishes, and exclusive offers via WhatsApp/SMS from <strong>{businessName}</strong> and Trustit. My contact details will remain private and never be shared with third parties.
+                </span>
+              </label>
+              <div className="mt-2 flex items-center justify-between border-t border-amber-100/90 pt-2 text-[10px] sm:text-[11px] text-slate-500 font-medium">
+                <span className="flex items-center gap-1 text-slate-600">
+                  <span>🔒</span>
+                  <span>DPDP Act 2023 Compliant</span>
+                </span>
+                <span className="text-amber-900 font-bold">
+                  You can opt out anytime
+                </span>
+              </div>
+            </div>
           </div>}
           {formErrors.length > 0 && <ul className="mt-3 list-inside list-disc rounded-xl bg-rose-50 p-3 text-sm leading-6 text-rose-700" role="alert">{formErrors.map((item) => <li key={item}>{item}</li>)}</ul>}
           {error && <p role="alert" className="mt-3 rounded-xl bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}

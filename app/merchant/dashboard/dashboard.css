@@ -1,15 +1,15 @@
 .trustit-merchant-app {
-  --merchant-ink: #1c1917;
-  --merchant-muted: #78716c;
-  --merchant-line: #ede6dd;
+  --merchant-ink: #131b2e;
+  --merchant-muted: #434652;
+  --merchant-line: #eaedff;
   --merchant-card-bg: #ffffff;
-  --merchant-blue: #85583f;
-  --merchant-blue-hover: #6e4631;
+  --merchant-blue: #003178;
+  --merchant-blue-hover: #0d47a1;
   display: flex;
   min-height: 100vh;
   color: var(--merchant-ink);
-  background: #faf7f2;
-  font-family: Inter, "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #faf8ff;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 .merchant-sidebar {
@@ -68,12 +68,12 @@
 .merchant-nav { display: grid; gap: 4px; }
 .merchant-nav-item { position: relative; min-width: 0; }
 .merchant-nav__link { display: flex; min-height: 42px; align-items: center; gap: 12px; padding: 0 12px; border-radius: 12px; color: #44403c; font-size: 13px; font-weight: 600; transition: background .15s ease, color .15s ease; }
-.merchant-nav__link:hover { color: #1c1917; background: #ede6dd; }
-.merchant-nav__link.is-active { color: #ffffff; background: #85583f; font-weight: 700; box-shadow: 0 2px 5px rgba(133,88,63,0.3); }
+.merchant-nav__link:hover { color: #003178; background: #eaedff; }
+.merchant-nav__link.is-active { color: #ffffff; background: #003178; font-weight: 700; box-shadow: 0 2px 6px rgba(0, 49, 120, 0.25); }
 .merchant-nav__icon { width: 19px; height: 19px; flex: 0 0 auto; color: #78716c; }
 .merchant-nav__link.is-active .merchant-nav__icon { color: #ffffff; }
 .merchant-sidebar__footer { display: flex; align-items: center; gap: 10px; margin-top: auto; padding: 12px; border: 1px solid #ede6dd; border-radius: 14px; background: #ede6dd/60; }
-.merchant-help-icon { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: white; background: #85583f; font-size: 16px; font-weight: 700; }
+.merchant-help-icon { display: grid; width: 32px; height: 32px; flex: 0 0 auto; place-items: center; border-radius: 50%; color: white; background: #003178; font-size: 16px; font-weight: 700; }
 .merchant-sidebar__footer span { display: grid; min-width: 0; gap: 2px; }
 .merchant-sidebar__footer strong { color: #1c1917; font-size: 11px; font-weight: 700; }
 .merchant-sidebar__footer small { color: #78716c; font-size: 10px; line-height: 1.35; }
@@ -123,21 +123,22 @@
 .merchant-profile__copy strong { overflow: hidden; color: #0f172a; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .merchant-profile__copy small { color: #78716c; font-size: 10px; }
 
-.merchant-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
-.merchant-stat { display: flex; min-width: 0; min-height: 94px; align-items: center; gap: 14px; padding: 14px 18px; border: 1px solid #e2e8f0; border-radius: 18px; background: #ffffff; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); }
-.merchant-stat--green { border-color: #d1fae5; }
-.merchant-stat--amber { border-color: #fef3c7; }
-.merchant-stat--rose { border-color: #ffe4e6; }
-.merchant-stat--violet { border-color: #ede9fe; }
-.merchant-stat__icon { display: grid; width: 54px; height: 54px; flex: 0 0 auto; place-items: center; border-radius: 16px; color: #059669; background: #ecfdf5; }
-.merchant-stat--amber .merchant-stat__icon { color: #d97706; background: #fffbeb; }
-.merchant-stat--rose .merchant-stat__icon { color: #e11d48; background: #fff1f2; }
-.merchant-stat--violet .merchant-stat__icon { color: #7c3aed; background: #faf5ff; }
-.merchant-stat__icon svg { width: 26px; height: 26px; }
+.merchant-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px; }
+.merchant-stat { display: flex; min-width: 0; min-height: 96px; align-items: center; gap: 14px; padding: 16px 20px; border: 1px solid #eaedff; border-radius: 16px; background: #ffffff; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+.merchant-stat:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 49, 120, 0.06); }
+.merchant-stat--green { border-color: #8df7c1; }
+.merchant-stat--amber { border-color: #9cf0ff; }
+.merchant-stat--rose { border-color: #ffdad6; }
+.merchant-stat--violet { border-color: #d9e2ff; }
+.merchant-stat__icon { display: grid; width: 48px; height: 48px; flex: 0 0 auto; place-items: center; border-radius: 14px; color: #003d27; background: #e7f7ef; border: 1px solid #8df7c1; }
+.merchant-stat--amber .merchant-stat__icon { color: #006875; background: #e0f9fc; border-color: #9cf0ff; }
+.merchant-stat--rose .merchant-stat__icon { color: #ba1a1a; background: #ffdad6/50; border-color: #ffdad6; }
+.merchant-stat--violet .merchant-stat__icon { color: #003178; background: #eaedff; border-color: #b0c6ff; }
+.merchant-stat__icon svg { width: 24px; height: 24px; }
 .merchant-stat__copy { min-width: 0; }
-.merchant-stat__copy p { margin: 0; color: #64748b; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; }
-.merchant-stat__copy strong { display: block; overflow: hidden; margin-top: 4px; color: #0f172a; font-size: clamp(22px, 1.9vw, 28px); font-weight: 800; line-height: 1.1; letter-spacing: -.03em; text-overflow: ellipsis; white-space: nowrap; }
-.merchant-stat__copy small { display: block; margin-top: 4px; color: #94a3b8; font-size: 11px; }
+.merchant-stat__copy p { margin: 0; color: #434652; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+.merchant-stat__copy strong { display: block; overflow: hidden; margin-top: 4px; color: #131b2e; font-size: clamp(22px, 1.9vw, 28px); font-weight: 800; line-height: 1.1; letter-spacing: -.03em; text-overflow: ellipsis; white-space: nowrap; }
+.merchant-stat__copy small { display: block; margin-top: 4px; color: #737783; font-size: 11px; }
 
 /* The Workspace: Self-contained, full width, zero empty space */
 .merchant-workspace { display: block; margin-bottom: 20px; }

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-surface-variant": "#434652", "on-tertiary": "#ffffff", "inverse-primary": "#b0c6ff", "tertiary-container": "#005739", "tertiary-fixed-dim": "#71dba6", "tertiary-fixed": "#8df7c1", "on-tertiary-container": "#66d09c", "primary-fixed": "#d9e2ff", "on-primary-fixed": "#001945", "surface-bright": "#faf8ff", "on-primary-fixed-variant": "#00429c", "surface-dim": "#d2d9f4", "primary-fixed-dim": "#b0c6ff", "background": "#faf8ff", "secondary-fixed": "#9cf0ff", "on-surface": "#131b2e", "inverse-surface": "#283044", "on-error-container": "#93000a", "outline-variant": "#c3c6d4", "secondary-fixed-dim": "#00daf3", "surface-container-high": "#e2e7ff", "on-secondary-fixed": "#001f24", "on-secondary": "#ffffff", "outline": "#737783", "inverse-on-surface": "#eef0ff", "on-background": "#131b2e", "on-primary": "#ffffff", "surface-container-highest": "#dae2fd", "on-error": "#ffffff", "tertiary": "#003d27", "secondary": "#006875", "surface-tint": "#2b5bb5", "on-tertiary-fixed-variant": "#005235", "primary-container": "#0d47a1", "on-tertiary-fixed": "#002113", "secondary-container": "#00e3fd", "on-secondary-fixed-variant": "#004f58", "surface-container": "#eaedff", "on-primary-container": "#a1bbff", "surface-container-low": "#f2f3ff", "surface-container-lowest": "#ffffff", "error-container": "#ffdad6", "primary": "#003178", "surface-variant": "#dae2fd", "on-secondary-container": "#00616d", "surface": "#faf8ff", "error": "#ba1a1a" }, "borderRadius": { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" }, "spacing": { "space-xs": "0.25rem", "margin": "1rem", "margin-desktop": "2rem", "gutter-desktop": "1.5rem", "space-xl": "1.5rem", "space-md": "0.75rem", "gutter": "1rem", "margin-tablet": "1.5rem", "space-2xl": "2rem", "space-sm": "0.5rem", "space-lg": "1rem" }, "fontFamily": { "label-md": ["Plus Jakarta Sans"], "headline-sm": ["Plus Jakarta Sans"], "headline-lg-mobile": ["Plus Jakarta Sans"], "body-md": ["Plus Jakarta Sans"], "display": ["Plus Jakarta Sans"], "label-sm": ["Plus Jakarta Sans"], "body-lg": ["Plus Jakarta Sans"], "code-metric": ["Plus Jakarta Sans"], "headline-lg": ["Plus Jakarta Sans"], "headline-md": ["Plus Jakarta Sans"], "body-sm": ["Plus Jakarta Sans"], "title": ["Plus Jakarta Sans"] }, "fontSize": { "label-md": ["13px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "600" }], "headline-sm": ["18px", { "lineHeight": "24px", "fontWeight": "600" }], "headline-lg-mobile": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "700" }], "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }], "display": ["36px", { "lineHeight": "44px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "700" }], "body-lg": ["15px", { "lineHeight": "22px", "fontWeight": "400" }], "code-metric": ["14px", { "lineHeight": "20px", "fontWeight": "700" }], "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" }], "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }], "title": ["16px", { "lineHeight": "22px", "fontWeight": "600" }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center gap-space-sm bg-surface-container"><div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary font-headline-sm font-bold">T</div><div class="flex flex-col"><span class="font-title text-title text-primary tracking-tight">TRUSTIT</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Merchant Hub</span></div></div><div class="px-space-md py-space-sm"><div class="px-space-md py-space-sm rounded-lg bg-surface-container-lowest flex items-center justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex items-center gap-space-xs"><span class="w-2 h-2 rounded-full bg-tertiary-container animate-pulse"></span><span class="font-label-sm text-label-sm text-on-surface">SoundBox 4G</span></div><span class="font-label-sm text-label-sm text-tertiary font-semibold">LIVE SYNC</span></div></div><div class="px-space-lg py-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">Operations</span></div><nav class="px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">dashboard</span><span>Overview</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="orders" href="#"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span>Orders</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="products-inventory" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span>Products &amp; Inventory</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="store-management" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span>Store Management</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="delivery" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span>Delivery</span></a></nav><div class="px-space-lg pt-space-md py-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">Finance &amp; Growth</span></div><nav class="px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="payments-settlements" href="#"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span>Payments &amp; Settlements</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="material-symbols-outlined text-[20px]">loyalty</span><span>Subscriptions</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="qr-reviews" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span>QR &amp; Reviews</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="physical-products" href="#"><span class="material-symbols-outlined text-[20px]">point_of_sale</span><span>Physical Products</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">monitoring</span><span>Analytics</span></a></nav><div class="px-space-lg pt-space-md py-space-xs"><span class="font-label-sm text-label-sm text-outline uppercase">System</span></div><nav class="px-space-md flex flex-col gap-space-xs" data-active-classes="bg-primary-container text-on-primary font-title"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="notifications" href="#"><span class="material-symbols-outlined text-[20px]">notifications</span><span>Notifications</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="support" href="#"><span class="material-symbols-outlined text-[20px]">support_agent</span><span>Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant font-body-md hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings-security" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span>Settings</span></a></nav></div><div class="p-space-md m-space-md rounded-lg bg-surface-container flex flex-col gap-space-xs"><span class="font-label-sm text-label-sm text-on-surface-variant uppercase">KYC Compliance</span><div class="flex items-center justify-between"><span class="font-body-sm text-body-sm text-on-surface font-semibold">Level 2 Verified</span><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span></div><div class="w-full bg-outline-variant h-1 rounded-full overflow-hidden"><div class="bg-tertiary-container h-full w-full"></div></div></div></aside><div class="pl-64"><header class="fixed top-0 left-64 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-2xl"><div class="flex items-center gap-space-sm px-space-md py-space-xs rounded-lg bg-surface-container-low cursor-pointer"><span class="material-symbols-outlined text-primary text-[20px]">store</span><div class="flex flex-col"><span class="font-title text-body-sm text-on-surface font-semibold truncate max-w-[200px]">Sri Krishna Gourmet</span><span class="font-label-sm text-label-sm text-on-surface-variant">Indiranagar BLR</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span></div><div class="flex items-center gap-space-xs px-space-sm py-space-xs rounded bg-surface-container-low"><span class="font-label-sm text-label-sm text-outline uppercase">GSTIN:</span><span class="font-code-metric text-code-metric text-on-surface">29AABCS1429B1ZB</span><span class="material-symbols-outlined text-tertiary-container text-[16px]">verified_user</span></div><div class="flex-1 flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-surface-container"><span class="material-symbols-outlined text-outline text-[18px]">search</span><input class="bg-transparent border-0 outline-none w-full font-body-sm text-body-sm text-on-surface placeholder:text-outline" placeholder="Search orders, SKU, settlements (Ctrl+K)..." type="text"/></div></div><div class="flex items-center gap-space-md"><button class="flex items-center gap-space-xs px-space-md py-space-xs rounded-lg bg-secondary-container text-on-secondary-fixed font-title text-body-sm shadow-[0_1px_8px_rgba(0,0,0,0.04)] hover:bg-secondary-fixed-dim transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span>Instant Settle</span></button><div class="relative flex items-center justify-center p-space-xs rounded-lg hover:bg-surface-container cursor-pointer"><span class="material-symbols-outlined text-on-surface-variant text-[22px]">notifications</span><span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-error"></span></div><div class="h-6 w-px bg-outline-variant"></div><div class="flex items-center gap-space-sm cursor-pointer"><div class="flex flex-col text-right"><span class="font-title text-body-sm text-on-surface font-semibold leading-tight">Raghavendra Rao</span><span class="font-label-sm text-label-sm text-primary uppercase">Master Admin</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 w-full px-space-xl bg-background"><div class="flex flex-col w-full pb-space-2xl">
+<!-- Top Breadcrumb & Page Headings -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pt-space-lg pb-space-xl">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider">
+<span>Settings &amp; Security</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">DPDP Act 2023 &amp; Consent Management</span>
+</div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">
+        Privacy, DPDP Act 2023 &amp; Consent Management
+      </h1>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+        Manage statutory personal data compliance, patron PII masking policies, data retention schedules, and Data Protection Officer (DPO) filings under the Indian Digital Personal Data Protection Act, 2023.
+      </p>
+</div>
+<!-- Quick Action / Status Badge -->
+<div class="flex items-center gap-space-sm self-start md:self-auto">
+<div class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-surface-container-lowest shadow-sm">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-container animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold uppercase tracking-wide">DPB Registry Node #KA-8941</span>
+</div>
+<button class="flex items-center gap-space-xs px-space-md py-space-sm rounded-lg bg-primary-container text-on-primary font-title text-body-sm shadow-sm hover:bg-primary transition-all" onclick="triggerAuditReport()" type="button">
+<span class="material-symbols-outlined text-[18px]">verified</span>
+<span>Run Compliance Audit</span>
+</button>
+</div>
+</div>
+<!-- 1. DPDP Statutory Compliance Health Banner -->
+<div class="relative overflow-hidden rounded-xl bg-surface-container-lowest p-space-xl shadow-sm mb-space-xl">
+<div class="absolute -right-16 -top-16 w-64 h-64 bg-tertiary-container/5 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute left-0 top-0 bottom-0 w-1.5 bg-tertiary-container"></div>
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-xl">
+<!-- Status Badge & Core Designation -->
+<div class="flex items-start gap-space-lg">
+<div class="w-14 h-14 rounded-xl bg-tertiary-container/10 flex items-center justify-center text-tertiary-container flex-shrink-0">
+<span class="material-symbols-outlined text-[32px]" style="font-variation-settings: 'FILL' 1;">shield_with_heart</span>
+</div>
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-sm flex-wrap">
+<span class="px-space-sm py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm uppercase tracking-wide">
+              Fully Compliant
+            </span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">
+              DPDP Fiduciary ID: <span class="font-code-metric text-code-metric text-on-surface">FID-2024-KA-991204</span>
+</span>
+</div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+            Tier-1 Data Fiduciary Certified
+          </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Audited against statutory Indian Digital Personal Data Protection mandates with automated cryptographic hashing.
+          </p>
+</div>
+</div>
+<!-- Quick Metrics Ribbon -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md lg:min-w-[560px]">
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase">Data Protection Officer</span>
+<span class="font-title text-body-sm text-on-surface font-semibold truncate">Adv. Meenakshi Sundaram</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant text-[12px] truncate">dpo@trustit.in</span>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase">Consent Records</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">14,820</span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold">Active</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Pseudonymized Tokens</span>
+</div>
+<div class="p-space-md rounded-lg bg-surface-container-low flex flex-col gap-space-xs">
+<span class="font-label-sm text-label-sm text-outline uppercase">Pending DSAR</span>
+<div class="flex items-baseline gap-space-xs">
+<span class="font-headline-md text-headline-md text-on-surface font-bold">0</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Queue Empty</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary font-medium">Avg TAT: &lt;48 Hours</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-xl">
+<!-- Left Column (8 cols): Controls, Schedules, Consent Matrix -->
+<div class="xl:col-span-8 flex flex-col gap-space-xl">
+<!-- 2. Patron PII Masking & De-identification Controls -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">visibility_off</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                Patron PII Masking &amp; De-identification
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Enforce privacy-by-design tokenization on consumer touchpoints and point-of-sale hardware.
+              </p>
+</div>
+</div>
+<span class="px-space-sm py-1 rounded bg-surface-container-high text-on-surface-variant font-label-sm text-label-sm uppercase">
+            3 of 3 Active
+          </span>
+</div>
+<div class="flex flex-col gap-space-md">
+<!-- Control 1 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-md transition-all hover:shadow-sm">
+<div class="flex items-start gap-space-md max-w-xl">
+<span class="material-symbols-outlined text-primary text-[22px] mt-0.5">phone_locked</span>
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-title text-on-surface">Delivery Slip Customer Phone Masking</span>
+<span class="px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm uppercase">Enforced</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Replaces patron mobile with virtual IVR relay (e.g. <span class="font-code-metric text-code-metric text-on-surface">+91 ••••• 8912</span>). Third-party riders call through an encrypted proxy tunnel without real number exposure.
+                </p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+<input checked="" class="sr-only peer" id="toggle-phone" type="checkbox"/>
+<div class="w-12 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Control 2 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-md transition-all hover:shadow-sm">
+<div class="flex items-start gap-space-md max-w-xl">
+<span class="material-symbols-outlined text-primary text-[22px] mt-0.5">restaurant</span>
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-title text-on-surface">Kitchen Display (KOT) Name Masking</span>
+<span class="px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm uppercase">Enforced</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Suppresses patron full surname and identifiers on kitchen prep screens. Displays only given name initial and ephemeral alphanumeric order token (<span class="font-code-metric text-code-metric text-on-surface">Rohit S. #TK-482</span>).
+                </p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+<input checked="" class="sr-only peer" id="toggle-kot" type="checkbox"/>
+<div class="w-12 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+<!-- Control 3 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-md transition-all hover:shadow-sm">
+<div class="flex items-start gap-space-md max-w-xl">
+<span class="material-symbols-outlined text-primary text-[22px] mt-0.5">wrong_location</span>
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-title text-on-surface">Post-Handover Address Coordinate Purge</span>
+<span class="px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm uppercase">Auto-Purge</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                  Precision GPS coordinates and residential flat numbers are irrevocably stripped from merchant staff dashboards exactly 2 hours after delivery confirmation.
+                </p>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer flex-shrink-0">
+<input checked="" class="sr-only peer" id="toggle-address" type="checkbox"/>
+<div class="w-12 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-container"></div>
+</label>
+</div>
+</div>
+</div>
+<!-- 3. Data Retention & Automatic Purge Schedules -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between flex-wrap gap-space-sm">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">schedule</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                Data Retention &amp; Automated Purge Schedules
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Statutory TTL (Time-To-Live) lifecycle policies governed by Section 8(7) DPDP Act and RBI guidelines.
+              </p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-outline uppercase tracking-wider">Storage Node: IN-WEST-1</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Schedule Card 1 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-title text-body-sm text-on-surface font-semibold">Kitchen &amp; Dispatch Audio</span>
+<span class="px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface font-code-metric text-code-metric">30 Days</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                CCTV microphone clips and intercom recordings gathered during rush hours.
+              </p>
+</div>
+<div class="flex items-center justify-between pt-space-xs">
+<div class="flex items-center gap-space-xs text-tertiary-container font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">auto_delete</span>
+<span>Auto-Purge Active</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Next: Tonight, 02:00 IST</span>
+</div>
+</div>
+<!-- Schedule Card 2 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-title text-body-sm text-on-surface font-semibold">SoundBox Voice Chime Logs</span>
+<span class="px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface font-code-metric text-code-metric">90 Days</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                4G hardware acoustic telemetry and playback logs preserved for disputed UPI chargebacks.
+              </p>
+</div>
+<div class="flex items-center justify-between pt-space-xs">
+<div class="flex items-center gap-space-xs text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">lock_clock</span>
+<span>NPCI Reconciliation Window</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Rolling Hash Rollout</span>
+</div>
+</div>
+<!-- Schedule Card 3: Locked -->
+<div class="p-space-lg rounded-xl bg-surface-container-high flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="font-title text-body-sm text-on-surface font-semibold">Financial &amp; Tax Ledgers</span>
+<span class="material-symbols-outlined text-[16px] text-error">lock</span>
+</div>
+<span class="px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface font-code-metric text-code-metric font-bold">8 Years</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                GST invoice copies, merchant payout manifests, and e-way billing records.
+              </p>
+</div>
+<div class="flex items-center justify-between pt-space-xs">
+<span class="font-label-sm text-label-sm text-error font-semibold uppercase">Statutory Lock • Non-Modifiable</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Section 44AA ITA</span>
+</div>
+</div>
+<!-- Schedule Card 4 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-title text-body-sm text-on-surface font-semibold">Rider Live Geolocation Logs</span>
+<span class="px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface font-code-metric text-code-metric">14 Days</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Real-time breadcrumbs for store-to-customer dispatched delivery batches.
+              </p>
+</div>
+<div class="flex items-center justify-between pt-space-xs">
+<div class="flex items-center gap-space-xs text-tertiary-container font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[16px]">auto_delete</span>
+<span>Auto-Purge Active</span>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Ephemeral Cache</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 4. Third-Party Data Sharing & Analytics Consent Matrix -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">hub</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+                Third-Party Sharing &amp; Analytics Consent Matrix
+              </h3>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Explicit granular consent toggles for data transmission to external ecosystem processors.
+              </p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-space-md">
+<!-- Item 1 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs max-w-xl">
+<div class="flex items-center gap-space-sm">
+<span class="font-title text-body-sm text-on-surface font-semibold">Anonymized Hyperlocal Benchmarking</span>
+<span class="px-space-sm py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm uppercase">Opted In</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Aggregates non-identifiable basket volumes for Indiranagar sector price analytics, demand curves, and supply availability trends. Zero PII transmitted.
+              </p>
+</div>
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container-highest text-on-surface font-title text-body-sm hover:bg-surface-container transition-colors self-start sm:self-auto" type="button">
+              Revoke Consent
+            </button>
+</div>
+<!-- Item 2 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs max-w-xl">
+<div class="flex items-center gap-space-sm">
+<span class="font-title text-body-sm text-on-surface font-semibold">3PL Logistics Route Optimization</span>
+<span class="px-space-sm py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm uppercase">Consented</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Transmits geofenced drop latitude/longitude to contracted delivery partners (Dunzo, Shadowfax) during the active dispatch window exclusively.
+              </p>
+</div>
+<button class="px-space-md py-space-xs rounded-lg bg-surface-container-highest text-on-surface font-title text-body-sm hover:bg-surface-container transition-colors self-start sm:self-auto" type="button">
+              Configure Scopes
+            </button>
+</div>
+<!-- Item 3 -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col sm:flex-row sm:items-center justify-between gap-space-md">
+<div class="flex flex-col gap-space-xs max-w-xl">
+<div class="flex items-center gap-space-sm">
+<span class="font-title text-body-sm text-on-surface font-semibold">Promotional Partner Analytics &amp; Ad Networks</span>
+<span class="px-space-sm py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm uppercase">Opted Out</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+                Strict freeze on consumer browsing histories, ticket averages, and SKU favorites. Zero merchant or patron data shared with external advertising syndicates.
+              </p>
+</div>
+<button class="px-space-md py-space-xs rounded-lg bg-primary-container text-on-primary font-title text-body-sm hover:bg-primary transition-colors self-start sm:self-auto" type="button">
+              Grant Opt-In
+            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column (4 cols): Data Fiduciary Filing, DPO Contacts, DSAR Queue & Quick Tools -->
+<div class="xl:col-span-4 flex flex-col gap-space-xl">
+<!-- Statutory Data Fiduciary Agreement & Audit Download -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col gap-space-lg">
+<div class="flex items-center gap-space-md">
+<div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[24px]">history_edu</span>
+</div>
+<div class="flex flex-col">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+              Fiduciary Agreements
+            </h3>
+<span class="font-label-sm text-label-sm text-outline uppercase">Statutory Contracts</span>
+</div>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+          Legal covenants governing TRUSTIT India and Sri Krishna Gourmet under Section 6 of DPDP Rules 2023.
+        </p>
+<div class="flex flex-col gap-space-sm">
+<!-- Download DPA Button -->
+<a class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors flex items-center justify-between group" href="#">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-primary text-[24px]">description</span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface font-semibold group-hover:text-primary">Data Processing Addendum</span>
+<span class="font-label-sm text-label-sm text-outline">v2.4 Signed • PDF (2.1 MB)</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary text-[20px]">download</span>
+</a>
+<!-- Download Audit Certificate -->
+<a class="p-space-md rounded-xl bg-surface-container-low hover:bg-surface-container-high transition-colors flex items-center justify-between group" href="#">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-tertiary text-[24px]">verified</span>
+<div class="flex flex-col">
+<span class="font-title text-body-sm text-on-surface font-semibold group-hover:text-tertiary">Annual DPDP Compliance Cert</span>
+<span class="font-label-sm text-label-sm text-outline">Q3 FY24 Audited • PDF (840 KB)</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-tertiary text-[20px]">download</span>
+</a>
+</div>
+<!-- Grievance Redressal Mechanism -->
+<div class="p-space-md rounded-xl bg-surface-container-high flex flex-col gap-space-sm">
+<div class="flex items-center gap-space-xs text-primary font-title text-body-sm font-semibold">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+<span>Data Grievance Board Escalation</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">
+            In compliance with Section 13, unsettled data grievances unresolved within 7 days may be lodged directly with the Data Protection Board of India.
+          </p>
+<button class="w-full mt-space-xs py-space-xs px-space-md rounded-lg bg-surface-container-lowest text-primary font-title text-body-sm hover:bg-surface-bright transition-colors text-center font-semibold" type="button">
+            File Statutory Grievance
+          </button>
+</div>
+</div>
+<!-- Real-Time Tokenization Stream Visualizer -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs font-title text-body-sm text-on-surface font-semibold">
+<span class="material-symbols-outlined text-primary text-[20px]">enhanced_encryption</span>
+<span>Cryptographic De-identification</span>
+</div>
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-ping"></span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant text-[12px]">
+          Sample patron payload transformation during POS settlement:
+        </p>
+<!-- Simulated code block for transparency -->
+<div class="rounded-lg bg-inverse-surface p-space-md text-inverse-on-surface font-code-metric text-[11px] leading-relaxed overflow-x-auto">
+<div class="text-tertiary-fixed">// Inbound POS Transaction</div>
+<div class="text-outline">RAW: "Aditi S., 9880192842, Apt 402"</div>
+<div class="text-secondary-fixed mt-1">// Sha-256 Vault Tokenizer</div>
+<div class="text-inverse-primary truncate">TOKEN: 0x8f7a...3c9e [VAULT_L1]</div>
+<div class="text-on-tertiary-container mt-1">// Staff Display (Masked)</div>
+<div class="text-white">OUT: "Aditi S. | +91 ••••• 2842"</div>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-space-xs">
+<span>Algorithm: AES-GCM-256</span>
+<span class="text-tertiary font-bold">Zero Plaintext Stored</span>
+</div>
+</div>
+<!-- Patron Rights Desk / DSAR Summary -->
+<div class="rounded-xl bg-surface-container-lowest p-space-xl shadow-sm flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<h4 class="font-title text-body-sm text-on-surface font-semibold">Recent Subject Requests (DSAR)</h4>
+<span class="font-label-sm text-label-sm text-primary cursor-pointer hover:underline">View All Log</span>
+</div>
+<div class="flex flex-col gap-space-xs divide-y divide-outline-variant/30">
+<div class="py-space-xs flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Right to Erasure</span>
+<span class="font-label-sm text-label-sm text-outline">Token #TK-9921 • Indiranagar</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm">PURGED (24h)</span>
+</div>
+<div class="py-space-xs flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Right to Correction</span>
+<span class="font-label-sm text-label-sm text-outline">Token #TK-8401 • Phone Update</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm">UPDATED (4h)</span>
+</div>
+<div class="py-space-xs flex items-center justify-between">
+<div class="flex flex-col">
+<span class="font-body-sm text-body-sm text-on-surface font-medium">Right to Access</span>
+<span class="font-label-sm text-label-sm text-outline">Token #TK-7210 • Ledger Export</span>
+</div>
+<span class="px-1.5 py-0.5 rounded bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm">FULFILLED (12h)</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function triggerAuditReport() {
+    alert("DPDP Compliance Audit initiated for Sri Krishna Gourmet (Indiranagar BLR). Cryptographic attestation in progress. Full digest dispatched to dpo@trustit.in.");
+  }
+</script></main></div></body></html>

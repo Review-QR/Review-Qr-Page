@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"tertiary-container":"#005739","surface-variant":"#dae2fd","on-primary-fixed":"#001945","secondary-fixed-dim":"#00daf3","background":"#faf8ff","on-error-container":"#93000a","primary":"#003178","on-primary-fixed-variant":"#00429c","on-tertiary-container":"#66d09c","on-secondary":"#ffffff","on-primary":"#ffffff","surface-bright":"#faf8ff","on-secondary-fixed":"#001f24","surface-container-low":"#f2f3ff","error-container":"#ffdad6","surface-dim":"#d2d9f4","on-error":"#ffffff","on-tertiary-fixed-variant":"#005235","primary-fixed-dim":"#b0c6ff","on-secondary-container":"#00616d","on-background":"#131b2e","surface-container-high":"#e2e7ff","on-primary-container":"#a1bbff","on-tertiary":"#ffffff","on-secondary-fixed-variant":"#004f58","primary-container":"#0d47a1","on-surface":"#131b2e","surface-tint":"#2b5bb5","tertiary-fixed-dim":"#71dba6","surface-container-lowest":"#ffffff","surface":"#faf8ff","secondary":"#006875","surface-container-highest":"#dae2fd","on-surface-variant":"#434652","error":"#ba1a1a","surface-container":"#eaedff","primary-fixed":"#d9e2ff","inverse-on-surface":"#eef0ff","on-tertiary-fixed":"#002113","outline-variant":"#c3c6d4","tertiary":"#003d27","inverse-surface":"#283044","secondary-fixed":"#9cf0ff","tertiary-fixed":"#8df7c1","outline":"#737783","secondary-container":"#00e3fd","inverse-primary":"#b0c6ff"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"margin-tablet":"1.5rem","margin":"1rem","margin-desktop":"2rem","space-xl":"1.5rem","space-2xl":"2rem","space-xs":"0.25rem","space-lg":"1rem","space-sm":"0.5rem","space-md":"0.75rem","gutter":"1rem","gutter-desktop":"1.5rem"},fontFamily:{"display":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"code-metric":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"title":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"]},fontSize:{"display":["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"700"}],"code-metric":["14px",{lineHeight:"20px",fontWeight:"700"}],"body-sm":["13px",{lineHeight:"18px",fontWeight:"400"}],"title":["16px",{lineHeight:"22px",fontWeight:"600"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}],"headline-sm":["18px",{lineHeight:"24px",fontWeight:"600"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"700"}],"label-md":["13px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"600"}],"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">shield_locked</span></div><div class="flex flex-col"><span class="font-headline-sm text-headline-sm text-primary leading-tight font-bold tracking-tight">TRUSTIT</span><span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Merchant Hub</span></div></div><span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded bg-surface-container-high text-on-surface-variant font-semibold">v2.4</span></div><nav class="px-space-md py-space-sm space-y-space-md" data-active-classes="bg-primary-container text-on-primary font-title"><div class="space-y-1"><p class="px-space-md py-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">Operations</p><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined text-[20px]">grid_view</span><span class="font-body-md text-body-md">Overview</span></a><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="orders" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">receipt_long</span><span class="font-body-md text-body-md">Orders</span></div><span class="font-label-sm text-label-sm px-space-xs py-0.5 rounded-full bg-secondary text-on-secondary">12</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="products-inventory" href="#"><span class="material-symbols-outlined text-[20px]">inventory_2</span><span class="font-body-md text-body-md">Products &amp; Inventory</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="store-management" href="#"><span class="material-symbols-outlined text-[20px]">storefront</span><span class="font-body-md text-body-md">Store Management</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="delivery" href="#"><span class="material-symbols-outlined text-[20px]">local_shipping</span><span class="font-body-md text-body-md">Delivery</span></a></div><div class="space-y-1"><p class="px-space-md py-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">Finance &amp; Growth</p><a class="flex items-center justify-between px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="payments-settlements" href="#"><div class="flex items-center gap-space-md"><span class="material-symbols-outlined text-[20px]">account_balance_wallet</span><span class="font-body-md text-body-md">Payments &amp; Settlements</span></div><span class="font-code-metric text-code-metric px-space-xs py-0.5 rounded bg-tertiary-container text-on-tertiary-container">₹</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="material-symbols-outlined text-[20px]">loyalty</span><span class="font-body-md text-body-md">Subscriptions</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="qr-reviews" href="#"><span class="material-symbols-outlined text-[20px]">qr_code_2</span><span class="font-body-md text-body-md">QR &amp; Reviews</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="physical-products" href="#"><span class="material-symbols-outlined text-[20px]">point_of_sale</span><span class="font-body-md text-body-md">Physical Products</span></a><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg transition-colors shadow-sm bg-primary-container text-on-primary font-title" data-path="analytics" href="#"><span class="material-symbols-outlined text-[20px]">insights</span><span class="font-body-md text-body-md font-semibold">Analytics</span></a></div><div class="space-y-1"><p class="px-space-md py-space-xs font-label-sm text-label-sm text-outline uppercase tracking-wider font-bold">System</p><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="notifications" href="#"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="font-body-md text-body-md">Notifications</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="support" href="#"><span class="material-symbols-outlined text-[20px]">support_agent</span><span class="font-body-md text-body-md">Support</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[20px]">settings</span><span class="font-body-md text-body-md">Settings</span></a></div></nav></div><div class="p-space-md bg-surface-container-low m-space-md rounded-xl space-y-space-sm"><div class="flex items-center justify-between"><span class="font-label-sm text-label-sm text-outline uppercase font-bold tracking-wider">Compliance Status</span><span class="material-symbols-outlined text-tertiary-container text-[18px]">verified_user</span></div><div class="space-y-space-xs"><div class="flex items-center justify-between bg-surface-container-lowest px-space-sm py-space-xs rounded"><span class="font-label-sm text-label-sm text-on-surface-variant">GSTIN</span><span class="font-label-sm text-label-sm text-tertiary-container font-bold flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">check_circle</span> VERIFIED</span></div><div class="flex items-center justify-between bg-surface-container-lowest px-space-sm py-space-xs rounded"><span class="font-label-sm text-label-sm text-on-surface-variant">FSSAI</span><span class="font-label-sm text-label-sm text-tertiary-container font-bold flex items-center gap-0.5"><span class="material-symbols-outlined text-[14px]">check_circle</span> VERIFIED</span></div></div><div class="flex items-center justify-between pt-space-xs"><span class="font-label-sm text-label-sm text-outline">Merchant ID</span><span class="font-code-metric text-code-metric text-primary font-bold">TR-883921</span></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm bg-surface-container-low px-space-md py-space-xs rounded-lg"><span class="material-symbols-outlined text-secondary text-[20px]">store</span><div class="flex items-center gap-space-sm"><span class="font-title text-title text-on-surface font-semibold">Sri Krishna Gourmet, Indiranagar BLR</span><span class="px-space-xs py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container animate-pulse"></span> LIVE</span></div><span class="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span></div><div class="hidden xl:flex items-center gap-space-sm bg-surface-container-lowest px-space-md py-1.5 rounded-full shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><span class="material-symbols-outlined text-secondary text-[18px]">speaker_phone</span><span class="font-label-sm text-label-sm text-on-surface font-semibold">SoundBox 4G</span><span class="w-2 h-2 rounded-full bg-tertiary-container"></span><span class="font-label-sm text-label-sm text-tertiary-container font-bold">SYNCED</span></div></div><div class="flex items-center gap-space-md"><div class="relative hidden lg:block w-64"><span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span><input class="w-full bg-surface-container-low rounded-lg pl-9 pr-space-md py-1.5 font-body-sm text-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:bg-surface-container-lowest transition-colors" placeholder="Search UTR, Order ID, UPI..." type="text"/></div><button class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low hover:bg-surface-container hover:text-on-surface text-on-surface-variant transition-colors"><span class="material-symbols-outlined text-[18px]">download</span><span class="font-label-md text-label-md font-semibold">Settlement</span></button><button class="w-9 h-9 rounded-lg bg-surface-container-low hover:bg-surface-container flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors"><span class="material-symbols-outlined text-[20px]">help_outline</span></button><div class="flex items-center gap-space-sm pl-space-sm"><div class="flex flex-col text-right hidden sm:block"><span class="font-title text-title text-on-surface font-semibold">Rajesh Sharma</span><span class="font-label-sm text-label-sm text-outline">Store Owner</span></div><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-16 bg-surface min-h-screen"><div class="flex flex-col w-full">
+<div class="p-margin-desktop space-y-space-xl">
+<!-- Breadcrumb & Control Header -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
+<div class="space-y-space-xs">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm tracking-widest text-outline uppercase font-bold">
+<span>OPERATIONS</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>ANALYTICS</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">DELIVERY &amp; OPERATIONS PERFORMANCE</span>
+</div>
+<div class="flex items-baseline gap-space-md flex-wrap">
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">Delivery SLA, Fleet Velocity &amp; Logistics Audit</h1>
+<span class="px-space-sm py-0.5 rounded-full bg-tertiary-container text-on-tertiary-container font-label-sm text-label-sm font-bold flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container animate-pulse"></span>
+            LIVE RADAR ACTIVE
+          </span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant max-w-4xl">
+          Real-time dispatch bottlenecks, in-house vs 3PL fleet efficiency, kitchen preparation SLAs, and doorstep handover rates.
+        </p>
+</div>
+<!-- Action Buttons -->
+<div class="flex items-center gap-space-sm self-start lg:self-auto flex-wrap">
+<button class="flex items-center gap-space-xs px-space-md py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-title text-title transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[18px] text-primary">tune</span>
+<span>Configure SLA Thresholds</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-2.5 rounded-lg bg-primary-container text-on-primary font-title text-title hover:bg-primary transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">file_download</span>
+<span>Export Run-Sheet (.CSV)</span>
+</button>
+</div>
+</div>
+<!-- Filter & Segment Ribbon -->
+<div class="bg-surface-container-lowest p-space-md rounded-xl shadow-sm flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-space-md">
+<!-- Delivery Model Segmented Switcher -->
+<div class="flex items-center p-1 bg-surface-container-low rounded-lg overflow-x-auto">
+<button class="px-space-md py-2 rounded font-label-md text-label-md font-bold bg-primary text-on-primary shadow-sm whitespace-nowrap transition-colors flex items-center gap-1.5">
+<span>Combined Fleet</span>
+<span class="px-1.5 py-0.5 rounded-full bg-primary-container text-on-primary text-[10px]">2,418 Dispatches</span>
+</button>
+<button class="px-space-md py-2 rounded font-label-md text-label-md font-bold text-on-surface-variant hover:text-on-surface whitespace-nowrap transition-colors flex items-center gap-1.5">
+<span>Merchant In-House</span>
+<span class="px-1.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[10px]">780</span>
+</button>
+<button class="px-space-md py-2 rounded font-label-md text-label-md font-bold text-on-surface-variant hover:text-on-surface whitespace-nowrap transition-colors flex items-center gap-1.5">
+<span>TRUSTIT 3PL Managed Pool</span>
+<span class="px-1.5 py-0.5 rounded-full bg-surface-container-high text-on-surface-variant text-[10px]">1,638</span>
+</button>
+</div>
+<!-- Temporal & Geographic Selectors -->
+<div class="flex items-center gap-space-sm flex-wrap">
+<!-- Date Selector -->
+<div class="flex items-center gap-space-xs bg-surface-container-low px-space-md py-2 rounded-lg text-on-surface">
+<span class="material-symbols-outlined text-outline text-[18px]">calendar_today</span>
+<span class="font-body-sm text-body-sm font-semibold">Month-to-Date (Oct 1 - Oct 24, 2024)</span>
+<span class="material-symbols-outlined text-outline text-[16px]">arrow_drop_down</span>
+</div>
+<!-- Geo Corridor -->
+<div class="flex items-center gap-space-xs bg-surface-container-low px-space-md py-2 rounded-lg text-on-surface">
+<span class="material-symbols-outlined text-secondary text-[18px]">share_location</span>
+<span class="font-body-sm text-body-sm font-semibold">All Zones (Indiranagar, Domlur, HAL, Koramangala)</span>
+<span class="material-symbols-outlined text-outline text-[16px]">arrow_drop_down</span>
+</div>
+<!-- Sync status pill -->
+<div class="hidden sm:flex items-center gap-1 bg-surface-container px-space-sm py-2 rounded-lg text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-secondary text-[16px]">sensors</span>
+<span>4G Telematics Latency: <strong class="text-on-surface font-code-metric">140ms</strong></span>
+</div>
+</div>
+</div>
+<!-- 5 Core KPI Metrics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-space-md">
+<!-- Metric 1: SLA -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-tertiary-container"></div>
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">On-Time Fulfillment</span>
+<span class="material-symbols-outlined text-[20px] text-tertiary-container">timer</span>
+</div>
+<div class="my-space-md space-y-0.5">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display font-bold text-on-surface leading-none tracking-tight">98.4%</span>
+<span class="font-label-sm text-label-sm text-tertiary-container font-bold bg-surface-container px-1 rounded">&lt;30m</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pt-1">2,379 orders within SLA window</p>
+</div>
+<div class="flex items-center gap-1 pt-space-xs text-tertiary-container font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-[16px]">trending_up</span>
+<span>+3.2% vs BLR East Median (95.2%)</span>
+</div>
+</div>
+<!-- Metric 2: Store Prep -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-primary"></div>
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">Kitchen &amp; Store Prep</span>
+<span class="material-symbols-outlined text-[20px] text-primary">skillet</span>
+</div>
+<div class="my-space-md space-y-0.5">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display font-bold text-on-surface leading-none tracking-tight">11m 24s</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pt-1">Store Target: &lt;15 mins threshold</p>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-space-xs">
+<span>Lunch: <strong class="text-on-surface">13m 48s</strong></span>
+<span>Dinner: <strong class="text-on-surface">14m 10s</strong></span>
+</div>
+</div>
+<!-- Metric 3: Handover Delay -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-secondary"></div>
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">Rider Pickup Handover</span>
+<span class="material-symbols-outlined text-[20px] text-secondary">transfer_within_a_station</span>
+</div>
+<div class="my-space-md space-y-0.5">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display font-bold text-on-surface leading-none tracking-tight">3m 42s</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pt-1">KOT Ready to Bag Handover</p>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm pt-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">verified</span>
+<span class="text-on-surface font-semibold">99.8%</span>
+<span>Counter 4-Digit OTP verified</span>
+</div>
+</div>
+<!-- Metric 4: Transit Duration -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-surface-tint"></div>
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">Transit Duration</span>
+<span class="material-symbols-outlined text-[20px] text-surface-tint">electric_moped</span>
+</div>
+<div class="my-space-md space-y-0.5">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display font-bold text-on-surface leading-none tracking-tight">14m 18s</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pt-1">Avg 2.4 km corridor distance</p>
+</div>
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm pt-space-xs">
+<span>Avg Velocity: <strong class="text-on-surface">18.2 km/h</strong></span>
+<span class="text-tertiary-container font-semibold">Optimal</span>
+</div>
+</div>
+<!-- Metric 5: Success Rate -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-tertiary"></div>
+<div class="flex items-center justify-between text-outline">
+<span class="font-label-sm text-label-sm uppercase tracking-wider font-bold">Doorstep Handover Rate</span>
+<span class="material-symbols-outlined text-[20px] text-tertiary-container">task_alt</span>
+</div>
+<div class="my-space-md space-y-0.5">
+<div class="flex items-baseline gap-space-xs">
+<span class="font-display text-display font-bold text-on-surface leading-none tracking-tight">99.1%</span>
+<span class="font-label-sm text-label-sm text-outline font-semibold">22 RTO</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant pt-1">First-attempt doorstep drop</p>
+</div>
+<div class="flex items-center gap-1 text-tertiary-container font-label-sm text-label-sm font-bold pt-space-xs">
+<span class="material-symbols-outlined text-[16px]">shield_person</span>
+<span>0% Merchant Penalty (Escrow Active)</span>
+</div>
+</div>
+</div>
+<!-- Specialized Category Dispatch Protocols Banner -->
+<div class="bg-surface-container-low p-space-lg rounded-xl shadow-sm">
+<div class="flex items-center justify-between mb-space-md">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[22px]">policy</span>
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Category-Specific Dispatch Protocols &amp; Regulatory Checks</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Live enforcement audit per store fulfillment stream under Bangalore jurisdiction</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm font-bold px-space-sm py-1 bg-surface-container-highest text-primary rounded">4 OF 4 MODES COMPLIANT</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-space-md">
+<!-- Resto Protocol -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg flex flex-col justify-between space-y-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[18px]">restaurant</span>
+<span class="font-title text-title text-on-surface font-bold">Restaurant / Cloud</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary-container bg-surface-container px-1.5 py-0.5 rounded font-bold">ACTIVE</span>
+</div>
+<div class="space-y-1 font-body-sm text-body-sm text-on-surface-variant">
+<p class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">check</span>
+              Tamper-evident heat seal verified
+            </p>
+<p class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">check</span>
+              4-digit customer pickup OTP release
+            </p>
+</div>
+<div class="pt-space-xs text-outline font-label-sm text-label-sm flex items-center justify-between">
+<span>Thermal Bag SLA: &gt;62°C</span>
+<strong class="text-tertiary-container font-code-metric">99.6% PASS</strong>
+</div>
+</div>
+<!-- Grocery Protocol -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg flex flex-col justify-between space-y-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[18px]">local_grocery_store</span>
+<span class="font-title text-title text-on-surface font-bold">Kirana &amp; Gourmet</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary-container bg-surface-container px-1.5 py-0.5 rounded font-bold">ACTIVE</span>
+</div>
+<div class="space-y-1 font-body-sm text-body-sm text-on-surface-variant">
+<p class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">check</span>
+              100% digital catch-weight reconciled
+            </p>
+<p class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">check</span>
+              Corrugated multi-crate segregation
+            </p>
+</div>
+<div class="pt-space-xs text-outline font-label-sm text-label-sm flex items-center justify-between">
+<span>Weight Discrepancy Rate</span>
+<strong class="text-tertiary-container font-code-metric">0.08% LOW</strong>
+</div>
+</div>
+<!-- Pharmacy Protocol -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg flex flex-col justify-between space-y-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-error text-[18px]">vaccines</span>
+<span class="font-title text-title text-on-surface font-bold">CDSCO Pharmacy</span>
+</div>
+<span class="font-label-sm text-label-sm text-tertiary-container bg-surface-container px-1.5 py-0.5 rounded font-bold">LOCKED</span>
+</div>
+<div class="space-y-1 font-body-sm text-body-sm text-on-surface-variant">
+<p class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">check</span>
+              Cold-chain logger logged at 4.2°C
+            </p>
+<p class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">check</span>
+              Schedule H Pharmacist PIN approval
+            </p>
+</div>
+<div class="pt-space-xs text-outline font-label-sm text-label-sm flex items-center justify-between">
+<span>Prescription Match SLA</span>
+<strong class="text-tertiary-container font-code-metric">100% AUDITED</strong>
+</div>
+</div>
+<!-- Home Services -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg flex flex-col justify-between space-y-space-sm shadow-sm">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-surface-tint text-[18px]">build</span>
+<span class="font-title text-title text-on-surface font-bold">On-Demand Services</span>
+</div>
+<span class="font-label-sm text-label-sm text-secondary bg-surface-container px-1.5 py-0.5 rounded font-bold">NO-ROUTING</span>
+</div>
+<div class="space-y-1 font-body-sm text-body-sm text-on-surface-variant">
+<p class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">check</span>
+              Technician GPS check-in geo-ring
+            </p>
+<p class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-tertiary-container text-[16px]">check</span>
+              Aadhaar police verification badge
+            </p>
+</div>
+<div class="pt-space-xs text-outline font-label-sm text-label-sm flex items-center justify-between">
+<span>On-Time Arrival Rate</span>
+<strong class="text-primary font-code-metric">97.8% PEAK</strong>
+</div>
+</div>
+</div>
+</div>
+<!-- Dual Fleet Comparative Analysis Console (Bento Grid) -->
+<div class="space-y-space-md">
+<div class="flex items-center justify-between">
+<div class="space-y-0.5">
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">Dual-Fleet Comparative Analysis Console</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Benchmarking Merchant In-House Dedicated Runners against TRUSTIT 3PL On-Demand Pool</p>
+</div>
+<div class="hidden sm:flex items-center gap-space-sm text-outline font-label-sm text-label-sm">
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-primary-container inline-block"></span> In-House</span>
+<span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-secondary inline-block"></span> TRUSTIT 3PL</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+<!-- Fleet Card 1: In-House -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm space-y-space-lg">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]">badge</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">Merchant In-House Fleet</h3>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-primary font-label-sm text-label-sm font-bold">4 RIDERS ACTIVE</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Santosh K. • Anil R. • Farhan S. • Prakash M.</p>
+</div>
+</div>
+<div class="text-right">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">780</span>
+<span class="font-label-sm text-label-sm text-outline block">32.3% of Total Volume</span>
+</div>
+</div>
+<!-- Quick Metrics Bar -->
+<div class="grid grid-cols-3 gap-space-sm p-space-md bg-surface-container-low rounded-lg">
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold block">Delivery Cost</span>
+<span class="font-title text-title text-on-surface font-bold">₹38.40</span>
+<span class="font-label-sm text-label-sm text-outline block">Fuel + Salary basis</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold block">Avg Door Velocity</span>
+<span class="font-title text-title text-tertiary-container font-bold">12.8 mins</span>
+<span class="font-label-sm text-label-sm text-tertiary-container block">2.1m faster than 3PL</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold block">COD Remittance</span>
+<span class="font-title text-title text-on-surface font-bold">100.0%</span>
+<span class="font-label-sm text-label-sm text-tertiary-container font-bold">₹94,200 Balanced</span>
+</div>
+</div>
+<!-- Fleet Operational Breakdown -->
+<div class="space-y-space-sm font-body-sm text-body-sm text-on-surface">
+<div class="flex items-center justify-between py-1">
+<span class="text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">pin_drop</span>
+                Optimal Operating Radius
+              </span>
+<span class="font-semibold">&lt; 1.5 km Hyperlocal (100ft Rd, 12th Main, Defence Colony)</span>
+</div>
+<div class="flex items-center justify-between py-1">
+<span class="text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">groups</span>
+                Repeat Customer Familiarity
+              </span>
+<span class="font-semibold text-tertiary-container">94% Instant gate clearance (No calling delay)</span>
+</div>
+<div class="flex items-center justify-between py-1">
+<span class="text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-primary">rule</span>
+                Packaging Retention &amp; Care
+              </span>
+<span class="font-semibold">0.0% Spillage claims in Oct 2024</span>
+</div>
+</div>
+<div class="p-space-md bg-surface-container rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[20px]">recommend</span>
+<div class="text-on-surface">
+<p class="font-title text-title font-semibold">Strategic Assignment</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Recommended for high-margin hot meals &amp; VIP subscription customers</p>
+</div>
+</div>
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest text-primary hover:bg-surface-container-high font-label-md text-label-md font-bold transition-colors">
+              Manage Staff
+            </button>
+</div>
+</div>
+<!-- Fleet Card 2: 3PL Pool -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm space-y-space-lg">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-space-md">
+<div class="w-12 h-12 rounded-xl bg-secondary text-on-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-[26px]">hub</span>
+</div>
+<div>
+<div class="flex items-center gap-space-xs">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-bold">TRUSTIT 3PL Managed Pool</h3>
+<span class="px-space-xs py-0.5 rounded bg-surface-container-high text-secondary font-label-sm text-label-sm font-bold">DYNAMIC SOURCING</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Dunzo Fleet • Shadowfax Enterprise • TRUSTIT Cloud Couriers</p>
+</div>
+</div>
+<div class="text-right">
+<span class="font-headline-md text-headline-md font-bold text-on-surface">1,638</span>
+<span class="font-label-sm text-label-sm text-outline block">67.7% of Total Volume</span>
+</div>
+</div>
+<!-- Quick Metrics Bar -->
+<div class="grid grid-cols-3 gap-space-sm p-space-md bg-surface-container-low rounded-lg">
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold block">Delivery Fee</span>
+<span class="font-title text-title text-on-surface font-bold">₹25.00</span>
+<span class="font-label-sm text-label-sm text-outline block">Pre-negotiated slab</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold block">Avg Door Velocity</span>
+<span class="font-title text-title text-on-surface font-bold">14.9 mins</span>
+<span class="font-label-sm text-label-sm text-outline block">Avg 3.1 km radius</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-outline uppercase font-semibold block">Rider Auto-Swap</span>
+<span class="font-title text-title text-secondary font-bold">1.2%</span>
+<span class="font-label-sm text-label-sm text-outline block">Auto reassigned &lt;90s</span>
+</div>
+</div>
+<!-- 3PL Operational Breakdown -->
+<div class="space-y-space-sm font-body-sm text-body-sm text-on-surface">
+<div class="flex items-center justify-between py-1">
+<span class="text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">explore</span>
+                Perimeter Expansion
+              </span>
+<span class="font-semibold">Servicing outer radius (2.5 km to 5.8 km)</span>
+</div>
+<div class="flex items-center justify-between py-1">
+<span class="text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">water_drop</span>
+                Monsoon / Rain Spike Surge Absorption
+              </span>
+<span class="font-semibold text-primary">Infinite elasticity during 20:00 dinner rush</span>
+</div>
+<div class="flex items-center justify-between py-1">
+<span class="text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
+                Rider Geofence Compliance
+              </span>
+<span class="font-semibold">99.4% Automated GPS waypoint pings</span>
+</div>
+</div>
+<div class="p-space-md bg-surface-container rounded-lg flex items-center justify-between">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-[20px]">bolt</span>
+<div class="text-on-surface">
+<p class="font-title text-title font-semibold">Automatic Fallback Active</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Switches to 3PL once in-house queue exceeds 3 concurrent active dispatches</p>
+</div>
+</div>
+<button class="px-space-md py-1.5 rounded-lg bg-surface-container-lowest text-secondary hover:bg-surface-container-high font-label-md text-label-md font-bold transition-colors">
+              Pool Rules
+            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Hourly Order Volume & Rider Availability Heatmap Section -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm space-y-space-lg">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface font-bold">24-Hour Fulfillment Load &amp; Courier Availability Distribution</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Temporal correlation between incoming order velocity, store readiness, and corridor rider density</p>
+</div>
+<div class="flex items-center gap-space-md font-label-sm text-label-sm">
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded bg-tertiary-container"></span>
+<span class="text-on-surface font-semibold">Abundant Riders (&gt;15 in zone)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded bg-surface-tint"></span>
+<span class="text-on-surface font-semibold">Balanced (6-14 in zone)</span>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-3 h-3 rounded bg-error"></span>
+<span class="text-on-surface font-semibold">Tight Supply (Surge Active)</span>
+</div>
+</div>
+</div>
+<!-- 24 Hour Visual Density Strip -->
+<div class="space-y-space-xs">
+<div class="grid grid-cols-12 md:grid-cols-24 gap-1">
+<!-- 00 to 05 -->
+<div class="h-14 rounded bg-surface-container-low flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">01h</span>
+<span class="text-[11px] font-bold text-outline">2</span>
+</div>
+<div class="h-14 rounded bg-surface-container-low flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">02h</span>
+<span class="text-[11px] font-bold text-outline">0</span>
+</div>
+<div class="h-14 rounded bg-surface-container-low flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">03h</span>
+<span class="text-[11px] font-bold text-outline">1</span>
+</div>
+<div class="h-14 rounded bg-surface-container-low flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">04h</span>
+<span class="text-[11px] font-bold text-outline">0</span>
+</div>
+<div class="h-14 rounded bg-surface-container-low flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">05h</span>
+<span class="text-[11px] font-bold text-outline">3</span>
+</div>
+<div class="h-14 rounded bg-surface-container-low flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">06h</span>
+<span class="text-[11px] font-bold text-outline">9</span>
+</div>
+<div class="h-14 rounded bg-surface-container-high flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">07h</span>
+<span class="text-[11px] font-bold text-on-surface">18</span>
+</div>
+<!-- Peak 1 Breakfast -->
+<div class="h-14 rounded bg-primary-fixed flex flex-col items-center justify-between p-1 border-t-2 border-primary group">
+<span class="text-[10px] text-primary font-code-metric font-bold">08h</span>
+<span class="text-[11px] font-bold text-primary">38</span>
+</div>
+<div class="h-14 rounded bg-primary-fixed flex flex-col items-center justify-between p-1 border-t-2 border-primary group">
+<span class="text-[10px] text-primary font-code-metric font-bold">09h</span>
+<span class="text-[11px] font-bold text-primary">44</span>
+</div>
+<div class="h-14 rounded bg-primary-fixed flex flex-col items-center justify-between p-1 border-t-2 border-primary group">
+<span class="text-[10px] text-primary font-code-metric font-bold">10h</span>
+<span class="text-[11px] font-bold text-primary">42</span>
+</div>
+<div class="h-14 rounded bg-surface-container-high flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">11h</span>
+<span class="text-[11px] font-bold text-on-surface">26</span>
+</div>
+<!-- Lunch -->
+<div class="h-14 rounded bg-surface-container-highest flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">12h</span>
+<span class="text-[11px] font-bold text-on-surface">36</span>
+</div>
+<div class="h-14 rounded bg-surface-container-highest flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">13h</span>
+<span class="text-[11px] font-bold text-on-surface">39</span>
+</div>
+<div class="h-14 rounded bg-surface-container-high flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">14h</span>
+<span class="text-[11px] font-bold text-on-surface">21</span>
+</div>
+<!-- Low Window (Abundant) -->
+<div class="h-14 rounded bg-surface-container-low flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">15h</span>
+<span class="text-[11px] font-bold text-outline">12</span>
+</div>
+<div class="h-14 rounded bg-surface-container-low flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">16h</span>
+<span class="text-[11px] font-bold text-outline">15</span>
+</div>
+<div class="h-14 rounded bg-surface-container flex flex-col items-center justify-between p-1 group hover:bg-surface-container-high transition-colors">
+<span class="text-[10px] text-outline font-code-metric">17h</span>
+<span class="text-[11px] font-bold text-on-surface">24</span>
+</div>
+<div class="h-14 rounded bg-surface-container-highest flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">18h</span>
+<span class="text-[11px] font-bold text-on-surface">32</span>
+</div>
+<div class="h-14 rounded bg-surface-container-highest flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">19h</span>
+<span class="text-[11px] font-bold text-on-surface">45</span>
+</div>
+<!-- Peak 2 Dinner (Surge) -->
+<div class="h-14 rounded bg-error-container flex flex-col items-center justify-between p-1 border-t-2 border-error group">
+<span class="text-[10px] text-error font-code-metric font-bold">20h</span>
+<span class="text-[11px] font-bold text-error">64</span>
+</div>
+<div class="h-14 rounded bg-error-container flex flex-col items-center justify-between p-1 border-t-2 border-error group">
+<span class="text-[10px] text-error font-code-metric font-bold">21h</span>
+<span class="text-[11px] font-bold text-error">72</span>
+</div>
+<div class="h-14 rounded bg-error-container flex flex-col items-center justify-between p-1 border-t-2 border-error group">
+<span class="text-[10px] text-error font-code-metric font-bold">22h</span>
+<span class="text-[11px] font-bold text-error">58</span>
+</div>
+<div class="h-14 rounded bg-surface-container-high flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">23h</span>
+<span class="text-[11px] font-bold text-on-surface">22</span>
+</div>
+<div class="h-14 rounded bg-surface-container-low flex flex-col items-center justify-between p-1 group hover:bg-surface-container transition-colors">
+<span class="text-[10px] text-outline font-code-metric">24h</span>
+<span class="text-[11px] font-bold text-outline">8</span>
+</div>
+</div>
+</div>
+<!-- Peak Insights Callout Rows -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="p-space-md bg-surface-container-low rounded-lg space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-primary flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+              PEAK 1: 08:00 - 10:30 AM
+            </span>
+<span class="font-code-metric text-code-metric text-on-surface font-bold">42 ord/hr</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+            Fresh Idli batter, tender coconut, &amp; morning dairy groceries surge.
+          </p>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>Rider Pool: <strong class="text-tertiary-container">Balanced</strong></span>
+<span>Prep Median: <strong>9m 40s</strong></span>
+</div>
+</div>
+<div class="p-space-md bg-surface-container-low rounded-lg space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-secondary flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+              MID-DAY SLACK: 02:30 - 05:00 PM
+            </span>
+<span class="font-code-metric text-code-metric text-on-surface font-bold">14 ord/hr</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+            Snack restocking and dry spice prep window. Idle capacity optimized.
+          </p>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>Rider Pool: <strong class="text-tertiary-container">Abundant (&gt;22 couriers)</strong></span>
+<span>Express SLA: <strong>100%</strong></span>
+</div>
+</div>
+<div class="p-space-md bg-surface-container-low rounded-lg space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-label-sm text-label-sm font-bold text-error flex items-center gap-1">
+<span class="w-2 h-2 rounded-full bg-error"></span>
+              PEAK 2: 07:30 - 10:30 PM
+            </span>
+<span class="font-code-metric text-code-metric text-on-surface font-bold">68 ord/hr</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface">
+            Dinner thali, dessert boxes &amp; evening gifting. Auto surge fee added.
+          </p>
+<div class="flex items-center justify-between font-label-sm text-label-sm text-on-surface-variant pt-1">
+<span>Rider Supply: <strong class="text-error">Tight (+₹15 Surge)</strong></span>
+<span>Prep Median: <strong>14m 10s</strong></span>
+</div>
+</div>
+</div>
+</div>
+<!-- Delivery Exception & Root Cause Analytics Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+<!-- Exceptions Visual Breakdown -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm space-y-space-lg">
+<div>
+<div class="flex items-center justify-between">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Exception Breakdown</h2>
+<span class="px-space-xs py-0.5 rounded bg-error-container text-error font-label-sm text-label-sm font-bold">22 / 2,418 ORDERS</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Root-cause classification of non-first-pass fulfillment attempts</p>
+</div>
+<!-- Inline Visual Bar Breakdown -->
+<div class="space-y-space-md">
+<div class="space-y-1">
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface font-semibold flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-primary inline-block"></span>
+                Unresponsive Customer Doorstep
+              </span>
+<span class="font-code-metric text-code-metric font-bold text-on-surface">11 (50%)</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 50%;"></div>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Safe Drop Photo POD triggered or gated RTO</p>
+</div>
+<div class="space-y-1">
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface font-semibold flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary inline-block"></span>
+                3PL Rider Mechanical / Tyre Stall
+              </span>
+<span class="font-code-metric text-code-metric font-bold text-on-surface">6 (27%)</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
+<div class="h-full bg-secondary rounded-full" style="width: 27.2%;"></div>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Auto-reassigned instantly; zero merchant charge</p>
+</div>
+<div class="space-y-1">
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface font-semibold flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-surface-tint inline-block"></span>
+                Waterlogging (100ft Rd / HAL Underpass)
+              </span>
+<span class="font-code-metric text-code-metric font-bold text-on-surface">3 (14%)</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
+<div class="h-full bg-surface-tint rounded-full" style="width: 13.6%;"></div>
+</div>
+<p class="font-label-sm text-label-sm text-outline">SLA timer frozen, live push relay to customer</p>
+</div>
+<div class="space-y-1">
+<div class="flex items-center justify-between font-body-sm text-body-sm">
+<span class="text-on-surface font-semibold flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-outline inline-block"></span>
+                Wrong Pin / Geofence Out-of-Bounds
+              </span>
+<span class="font-code-metric text-code-metric font-bold text-on-surface">2 (9%)</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container overflow-hidden">
+<div class="h-full bg-outline rounded-full" style="width: 9.1%;"></div>
+</div>
+<p class="font-label-sm text-label-sm text-outline">Masked relay bridge routed customer to new geo-pin</p>
+</div>
+</div>
+<div class="p-space-md bg-surface-container-low rounded-lg space-y-1">
+<span class="font-label-sm text-label-sm text-tertiary-container uppercase font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+            TRUSTIT Escrow Protection Guarantee
+          </span>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            All 22 flagged exceptions qualified for zero merchant penalty with 100% item value insurance coverage.
+          </p>
+</div>
+</div>
+<!-- Live Exception Audit Log Table -->
+<div class="lg:col-span-2 bg-surface-container-lowest p-space-xl rounded-xl shadow-sm space-y-space-md flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between mb-space-sm">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Recent Incident Resolution Log</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Real-time telematics and resolution audit for Bangalore East cluster</p>
+</div>
+<button class="text-primary font-label-md text-label-md font-bold hover:underline flex items-center gap-1">
+<span>View All 22 Incidents</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-outline font-label-sm text-label-sm uppercase">
+<th class="py-2.5 px-space-md font-bold">Order ID</th>
+<th class="py-2.5 px-space-md font-bold">Root Cause</th>
+<th class="py-2.5 px-space-md font-bold">Corridor</th>
+<th class="py-2.5 px-space-md font-bold">Fleet Type</th>
+<th class="py-2.5 px-space-md font-bold">Resolution</th>
+<th class="py-2.5 px-space-md font-bold text-right">Merchant Penalty</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 font-body-sm text-body-sm">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-space-md font-code-metric text-code-metric font-bold text-primary">#ORD-94812</td>
+<td class="py-3 px-space-md">
+<span class="font-semibold text-on-surface">Unresponsive Customer</span>
+<span class="block text-outline font-label-sm text-label-sm">5m Doorbell timer elapsed</span>
+</td>
+<td class="py-3 px-space-md text-on-surface-variant">Indiranagar 12th Main</td>
+<td class="py-3 px-space-md">
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold">In-House (Anil)</span>
+</td>
+<td class="py-3 px-space-md">
+<span class="font-semibold text-tertiary-container flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">photo_camera</span>
+                      Safe Drop POD Captured
+                    </span>
+</td>
+<td class="py-3 px-space-md text-right font-code-metric font-bold text-tertiary-container">₹0.00 (Waived)</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-space-md font-code-metric text-code-metric font-bold text-primary">#ORD-94776</td>
+<td class="py-3 px-space-md">
+<span class="font-semibold text-on-surface">3PL Mechanical Puncture</span>
+<span class="block text-outline font-label-sm text-label-sm">Near Domlur Flyover</span>
+</td>
+<td class="py-3 px-space-md text-on-surface-variant">Domlur → HAL 2nd Stage</td>
+<td class="py-3 px-space-md">
+<span class="px-2 py-0.5 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm font-semibold">Dunzo 3PL</span>
+</td>
+<td class="py-3 px-space-md">
+<span class="font-semibold text-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">sync</span>
+                      Auto-Reassigned (78s)
+                    </span>
+</td>
+<td class="py-3 px-space-md text-right font-code-metric font-bold text-tertiary-container">₹0.00 (Waived)</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-space-md font-code-metric text-code-metric font-bold text-primary">#ORD-94690</td>
+<td class="py-3 px-space-md">
+<span class="font-semibold text-on-surface">Flash Monsoon Waterlogging</span>
+<span class="block text-outline font-label-sm text-label-sm">Sony World Junction gridlock</span>
+</td>
+<td class="py-3 px-space-md text-on-surface-variant">Koramangala 4th Block</td>
+<td class="py-3 px-space-md">
+<span class="px-2 py-0.5 rounded-full bg-secondary text-on-secondary font-label-sm text-label-sm font-semibold">Shadowfax 3PL</span>
+</td>
+<td class="py-3 px-space-md">
+<span class="font-semibold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">timer_pause</span>
+                      SLA Frozen + Live Push
+                    </span>
+</td>
+<td class="py-3 px-space-md text-right font-code-metric font-bold text-tertiary-container">₹0.00 (Waived)</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-3 px-space-md font-code-metric text-code-metric font-bold text-primary">#ORD-94611</td>
+<td class="py-3 px-space-md">
+<span class="font-semibold text-on-surface">Geofence Out-of-Bounds</span>
+<span class="block text-outline font-label-sm text-label-sm">Pin placed inside military campus</span>
+</td>
+<td class="py-3 px-space-md text-on-surface-variant">HAL Old Airport Road</td>
+<td class="py-3 px-space-md">
+<span class="px-2 py-0.5 rounded-full bg-primary-container text-on-primary font-label-sm text-label-sm font-semibold">In-House (Santosh)</span>
+</td>
+<td class="py-3 px-space-md">
+<span class="font-semibold text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">phone_in_talk</span>
+                      Masked Relay Handover Gate 3
+                    </span>
+</td>
+<td class="py-3 px-space-md text-right font-code-metric font-bold text-tertiary-container">₹0.00 (Waived)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Telematics Footer Status -->
+<div class="flex items-center justify-between pt-space-sm font-body-sm text-body-sm text-on-surface-variant">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary-container text-[18px]">verified</span>
+<span>Automated Incident Audit synchronized with TRUSTIT Dispute Escalation Engine</span>
+</div>
+<span class="font-code-metric text-code-metric text-outline">LATENCY: 42ms • REGION: AP-SOUTH-1</span>
+</div>
+</div>
+</div>
+<!-- Active Corridor Map & Delivery Velocity Visualization -->
+<div class="bg-surface-container-lowest p-space-xl rounded-xl shadow-sm space-y-space-md">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-sm">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">Bangalore East Corridor Live Dispatch Radar</h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">Active delivery density across Indiranagar, Domlur, HAL, and Koramangala perimeter</p>
+</div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm">
+<span class="px-2 py-1 rounded bg-surface-container font-semibold text-on-surface">Cluster Radius: 5.8 km</span>
+<span class="px-2 py-1 rounded bg-surface-container font-semibold text-on-surface">Active Couriers on Road: 34</span>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-space-md">
+<!-- Map Canvas with Static Fallback styling -->
+<div class="lg:col-span-3 h-80 rounded-xl bg-cover bg-center relative overflow-hidden shadow-inner flex flex-col justify-between p-space-md" data-location="Indiranagar, Bengaluru, Karnataka, India" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBo893cgjt3j_7w6zJSUcOzIQ43Fe1qPXnhMK6-ep1lLhXYGDlWt3uztbgjNKS906ETjB5I3cv7ZFwpdi21eLzFj1Ffxe0pDzkEH2WhCbMqwdXID5jgi6KFlO0qmF4mM9rLimmDyndCIYHdkI29NmceOzvV4s_mTFMb-zrESP2WUCi7fK_6lpRq5qthhcgSgym5Vyz9P46lI7D1cLG_mEcM5E4XQjMfczShD_wgcXA')">
+<!-- Ambient Overlay for UI Legibility -->
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/80 via-inverse-surface/20 to-transparent pointer-events-none"></div>
+<!-- Top floating live badges -->
+<div class="relative z-10 flex items-center justify-between">
+<div class="bg-surface-container-lowest/90 backdrop-blur px-space-md py-1 rounded-full shadow-sm flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary-container animate-ping"></span>
+<span class="font-label-sm text-label-sm text-on-surface font-bold">LIVE TELEMETRY: 34 ACTIVE HOPS</span>
+</div>
+<div class="bg-surface-container-lowest/90 backdrop-blur px-space-md py-1 rounded-full shadow-sm text-on-surface font-label-sm text-label-sm font-bold">
+              GPS ACCURACY: ±3.2 METERS
+            </div>
+</div>
+<!-- Bottom floating quick stats -->
+<div class="relative z-10 grid grid-cols-1 sm:grid-cols-3 gap-space-sm">
+<div class="bg-surface-container-lowest/90 backdrop-blur p-space-sm rounded-lg">
+<span class="font-label-sm text-label-sm text-outline block">Fastest Corridor</span>
+<span class="font-title text-title font-bold text-on-surface">Indiranagar 100ft Rd</span>
+<span class="font-label-sm text-label-sm text-tertiary-container block">11m 40s avg time</span>
+</div>
+<div class="bg-surface-container-lowest/90 backdrop-blur p-space-sm rounded-lg">
+<span class="font-label-sm text-label-sm text-outline block">Congestion Point</span>
+<span class="font-title text-title font-bold text-on-surface">HAL Underpass</span>
+<span class="font-label-sm text-label-sm text-error block">+6m delay detected</span>
+</div>
+<div class="bg-surface-container-lowest/90 backdrop-blur p-space-sm rounded-lg">
+<span class="font-label-sm text-label-sm text-outline block">Active Rerouting</span>
+<span class="font-title text-title font-bold text-on-surface">Auto-Bypass Engaged</span>
+<span class="font-label-sm text-label-sm text-secondary block">via Old Airport Outer Rd</span>
+</div>
+</div>
+</div>
+<!-- Corridor Velocity Leaderboard -->
+<div class="bg-surface-container-low p-space-md rounded-xl space-y-space-md flex flex-col justify-between">
+<div>
+<h3 class="font-title text-title text-on-surface font-bold">Corridor Velocity</h3>
+<p class="font-label-sm text-label-sm text-outline">Real-time transit benchmarks</p>
+</div>
+<div class="space-y-space-sm font-body-sm text-body-sm">
+<div class="p-2 rounded bg-surface-container-lowest space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-bold text-on-surface">Zone A: Indiranagar Central</span>
+<span class="font-code-metric font-bold text-tertiary-container">12.2 min</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container">
+<div class="h-full bg-tertiary-container rounded-full" style="width: 88%;"></div>
+</div>
+<div class="flex items-center justify-between text-outline text-[11px]">
+<span>Radius: 1.2 km</span>
+<span>Speed: 21 km/h</span>
+</div>
+</div>
+<div class="p-2 rounded bg-surface-container-lowest space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-bold text-on-surface">Zone B: Domlur Layout</span>
+<span class="font-code-metric font-bold text-primary">14.1 min</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container">
+<div class="h-full bg-primary rounded-full" style="width: 74%;"></div>
+</div>
+<div class="flex items-center justify-between text-outline text-[11px]">
+<span>Radius: 2.1 km</span>
+<span>Speed: 18 km/h</span>
+</div>
+</div>
+<div class="p-2 rounded bg-surface-container-lowest space-y-1">
+<div class="flex items-center justify-between">
+<span class="font-bold text-on-surface">Zone C: Koramangala 4th</span>
+<span class="font-code-metric font-bold text-secondary">16.8 min</span>
+</div>
+<div class="w-full h-1.5 rounded-full bg-surface-container">
+<div class="h-full bg-secondary rounded-full" style="width: 60%;"></div>
+</div>
+<div class="flex items-center justify-between text-outline text-[11px]">
+<span>Radius: 3.4 km</span>
+<span>Speed: 16 km/h</span>
+</div>
+</div>
+</div>
+<div class="pt-2">
+<button class="w-full py-2 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md font-bold transition-colors flex items-center justify-center gap-1">
+<span class="material-symbols-outlined text-[16px]">map</span>
+<span>Open Fleet GPS View</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

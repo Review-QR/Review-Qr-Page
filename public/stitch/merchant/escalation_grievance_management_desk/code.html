@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"on-primary-container":"#a1bbff","on-surface-variant":"#434652","surface-tint":"#2b5bb5","on-tertiary":"#ffffff","on-secondary-fixed-variant":"#004f58","on-background":"#131b2e","tertiary-fixed":"#8df7c1","on-primary":"#ffffff","surface-container-lowest":"#ffffff","secondary":"#006875","on-surface":"#131b2e","on-tertiary-fixed-variant":"#005235","error-container":"#ffdad6","on-primary-fixed":"#001945","surface-container":"#eaedff","surface-container-highest":"#dae2fd","background":"#faf8ff","primary":"#003178","error":"#ba1a1a","on-primary-fixed-variant":"#00429c","tertiary":"#003d27","on-error-container":"#93000a","surface":"#faf8ff","surface-dim":"#d2d9f4","on-secondary-container":"#00616d","on-tertiary-fixed":"#002113","secondary-container":"#00e3fd","secondary-fixed":"#9cf0ff","secondary-fixed-dim":"#00daf3","primary-fixed":"#d9e2ff","tertiary-container":"#005739","inverse-on-surface":"#eef0ff","outline":"#737783","outline-variant":"#c3c6d4","primary-container":"#0d47a1","surface-container-high":"#e2e7ff","on-error":"#ffffff","inverse-surface":"#283044","surface-variant":"#dae2fd","tertiary-fixed-dim":"#71dba6","primary-fixed-dim":"#b0c6ff","on-secondary-fixed":"#001f24","on-tertiary-container":"#66d09c","surface-container-low":"#f2f3ff","surface-bright":"#faf8ff","on-secondary":"#ffffff","inverse-primary":"#b0c6ff"},"borderRadius":{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},"spacing":{"space-sm":"0.5rem","gutter-desktop":"1.5rem","space-xs":"0.25rem","space-xl":"1.5rem","margin-tablet":"1.5rem","space-md":"0.75rem","space-lg":"1rem","gutter":"1rem","margin":"1rem","space-2xl":"2rem","margin-desktop":"2rem"},"fontFamily":{"code-metric":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"],"body-md":["Plus Jakarta Sans"],"title":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"display":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"]},"fontSize":{"code-metric":["14px",{"lineHeight":"20px","fontWeight":"700"}],"label-md":["13px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"title":["16px",{"lineHeight":"22px","fontWeight":"600"}],"body-lg":["15px",{"lineHeight":"22px","fontWeight":"400"}],"headline-lg":["28px",{"lineHeight":"36px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-md":["22px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-sm":["13px",{"lineHeight":"18px","fontWeight":"400"}],"display":["36px",{"lineHeight":"44px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-lg-mobile":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"700"}],"headline-sm":["18px",{"lineHeight":"24px","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.04em","fontWeight":"700"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-y-auto"><div class="flex flex-col"><div class="h-16 px-space-xl flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[22px]">shield_with_heart</span></div><div class="flex flex-col"><span class="font-title text-title text-primary tracking-tight font-bold">TRUSTIT</span><span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Merchant Hub</span></div></div><span class="font-label-sm text-label-sm bg-surface-container text-on-surface px-space-xs py-0.5 rounded">PRO</span></div><div class="px-space-md py-space-sm"><div class="bg-surface-container-low rounded-lg p-space-sm flex items-center justify-between"><div class="flex items-center gap-space-sm min-w-0"><div class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim ring-2 ring-tertiary-container animate-pulse"></div><div class="flex flex-col min-w-0"><span class="font-label-md text-label-md text-on-surface truncate">Sri Krishna Gourmet</span><span class="font-label-sm text-label-sm text-on-surface-variant truncate">Indiranagar BLR • LIVE</span></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer">unfold_more</span></div></div><nav class="flex-1 px-space-md py-space-xs space-y-space-md" data-active-classes="bg-primary-container text-on-primary font-title rounded-lg shadow-sm"><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Operations</div><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="overview" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">grid_view</span><span class="font-body-md text-body-md">Overview</span></a><a class="flex items-center justify-between px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="orders" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[20px]">receipt_long</span><span class="font-body-md text-body-md">Orders</span></div><span class="font-label-sm text-label-sm bg-secondary-fixed text-on-secondary-fixed px-space-xs rounded-full">14</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="products-and-inventory" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">inventory_2</span><span class="font-body-md text-body-md">Products &amp; Inventory</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="store-management" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">store</span><span class="font-body-md text-body-md">Store Management</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="delivery" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">local_shipping</span><span class="font-body-md text-body-md">Delivery</span></a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Finance &amp; Growth</div><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="payments-and-settlements" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">account_balance_wallet</span><span class="font-body-md text-body-md">Payments &amp; Settlements</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="subscriptions" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">loyalty</span><span class="font-body-md text-body-md">Subscriptions</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="qr-and-reviews" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">qr_code_2</span><span class="font-body-md text-body-md">QR &amp; Reviews</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="physical-products" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">point_of_sale</span><span class="font-body-md text-body-md">Physical Products</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="analytics" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">query_stats</span><span class="font-body-md text-body-md">Analytics</span></a></div><div class="space-y-space-xs"><div class="px-space-sm py-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">System</div><a class="flex items-center justify-between px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="notifications" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[20px]">notifications</span><span class="font-body-md text-body-md">Notifications</span></div><span class="font-label-sm text-label-sm bg-surface-container-highest text-on-surface px-space-xs rounded-full">3</span></a><a class="flex items-center justify-between px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="help-and-support-center" href="#"><div class="flex items-center"><span class="material-symbols-outlined mr-space-md text-[20px]">help</span><span class="font-body-md text-body-md">Support</span></div><span class="font-label-sm text-label-sm bg-tertiary-fixed text-on-tertiary-fixed font-bold px-space-xs py-0.5 rounded-full">LIVE</span></a><a class="flex items-center px-space-md py-2 rounded-lg text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined mr-space-md text-[20px]">settings</span><span class="font-body-md text-body-md">Settings</span></a></div></nav></div><div class="p-space-md bg-surface-container-low mx-space-md mb-space-md rounded-lg flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center"><span class="material-symbols-outlined text-primary text-[20px]">speaker_phone</span></div><div class="flex flex-col"><span class="font-label-md text-label-md text-on-surface">SoundBox 4G</span><div class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim"></span><span class="font-label-sm text-label-sm text-on-surface-variant">Synced • 98%</span></div></div></div><span class="material-symbols-outlined text-on-surface-variant text-[18px] cursor-pointer hover:text-on-surface">sync</span></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-lg flex-1 max-w-xl"><div class="w-full flex items-center gap-space-sm bg-surface-container-low px-space-md py-2 rounded-lg"><span class="material-symbols-outlined text-on-surface-variant text-[20px]">search</span><input class="w-full bg-transparent border-0 outline-none font-body-sm text-body-sm text-on-surface placeholder:text-on-surface-variant" placeholder="Search orders, settlement ID, tickets, or SKU..." type="text"/><kbd class="hidden sm:inline-block font-code-metric text-code-metric text-on-surface-variant bg-surface-container px-space-xs py-0.5 rounded text-[11px]">&amp;#8984;K</kbd></div></div><div class="flex items-center gap-space-md"><div class="hidden md:flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container-low"><span class="material-symbols-outlined text-tertiary text-[18px]">verified</span><span class="font-label-sm text-label-sm text-on-surface-variant">GSTIN:</span><span class="font-code-metric text-code-metric text-on-surface">29AABCS1429B1ZB</span></div><button class="flex items-center gap-space-xs bg-secondary-container text-on-secondary-fixed font-title text-body-sm px-space-md py-2 rounded-lg hover:bg-secondary-fixed transition-colors shadow-sm" type="button"><span class="material-symbols-outlined text-[18px]">bolt</span><span>Instant Settle</span></button><div class="h-6 w-px bg-outline-variant"></div><button class="w-9 h-9 rounded-lg bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:text-on-surface transition-colors relative" type="button"><span class="material-symbols-outlined text-[20px]">support_agent</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button><div class="flex items-center gap-space-sm pl-space-xs cursor-pointer"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><div class="hidden lg:flex flex-col text-left"><span class="font-label-md text-label-md text-on-surface leading-tight">Raghavendra Rao</span><span class="font-label-sm text-label-sm text-on-surface-variant">Master Admin</span></div><span class="material-symbols-outlined text-on-surface-variant text-[16px]">expand_more</span></div></div></header><main class="w-full pt-16 bg-surface px-space-xl pb-space-2xl min-h-screen"><div class="flex flex-col w-full">
+<!-- BREADCRUMBS & COMPLIANCE BADGE -->
+<div class="flex flex-wrap items-center justify-between gap-space-md mb-space-lg">
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">
+<span class="hover:text-primary transition-colors cursor-pointer">System</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="hover:text-primary transition-colors cursor-pointer">Support</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-primary font-bold">Escalations &amp; Grievance Desk</span>
+</div>
+<div class="flex items-center gap-space-sm bg-surface-container-high px-space-md py-1.5 rounded-lg shadow-sm">
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-tertiary-fixed-dim opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-tertiary-container"></span>
+</span>
+<span class="font-code-metric text-code-metric text-on-surface text-[12px]">RBI/DPDP-NODAL: ACT-43A COMPLIANT</span>
+<span class="material-symbols-outlined text-tertiary text-[18px]">verified_user</span>
+</div>
+</div>
+<!-- DESK HEADER BANNER -->
+<div class="relative bg-surface-container-lowest rounded-xl p-space-xl shadow-sm mb-space-xl overflow-hidden">
+<div class="absolute -right-12 -top-12 w-64 h-64 rounded-full bg-primary-fixed/30 blur-2xl pointer-events-none"></div>
+<div class="absolute right-32 bottom-0 w-48 h-48 rounded-full bg-secondary-fixed/20 blur-xl pointer-events-none"></div>
+<div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-space-lg">
+<div class="max-w-3xl">
+<div class="inline-flex items-center gap-space-xs bg-surface-container text-primary font-label-sm text-label-sm px-space-sm py-0.5 rounded uppercase tracking-wider mb-space-xs">
+<span class="material-symbols-outlined text-[14px]">gavel</span>
+          Statutory Ombudsman Jurisdiction
+        </div>
+<h1 class="font-headline-lg text-headline-lg text-on-surface font-bold tracking-tight">
+          Statutory Grievance Redressal &amp; Settlement Dispute Desk
+        </h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-space-xs">
+          Formal escalation tribunal, merchant ombudsman appeals, and post-resolution customer satisfaction audit under Indian IT Intermediary Rules &amp; RBI Nodal Guidelines.
+        </p>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="flex items-center gap-space-xs bg-primary-container text-on-primary font-title text-body-sm px-space-lg py-2.5 rounded-lg shadow-sm hover:bg-primary transition-all" onclick="document.getElementById('lodgement-section').scrollIntoView({behavior: 'smooth'})" type="button">
+<span class="material-symbols-outlined text-[18px]">add_circle</span>
+<span>Lodge Formal Appeal</span>
+</button>
+<button class="flex items-center gap-space-xs bg-surface-container-low text-on-surface font-title text-body-sm px-space-md py-2.5 rounded-lg hover:bg-surface-container transition-all" type="button">
+<span class="material-symbols-outlined text-[18px]">menu_book</span>
+<span>Tribunal Charter</span>
+</button>
+</div>
+</div>
+</div>
+<!-- TOP 4 METRIC STAT CARDS -->
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-space-lg mb-space-xl">
+<!-- Stat 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Formal Grievances Lodged</span>
+<div class="font-headline-md text-headline-md text-on-surface mt-space-xs font-bold">01 Active Appeal</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-[22px]">balance</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between font-body-sm text-body-sm bg-surface-container-low px-space-sm py-1 rounded">
+<span class="font-code-metric text-code-metric text-on-surface-variant">Case #GRV-2024-098</span>
+<span class="font-label-sm text-label-sm text-primary font-bold">Avg Hearing: 24h</span>
+</div>
+</div>
+<!-- Stat 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Dispute Reversal Rate</span>
+<div class="font-headline-md text-headline-md text-tertiary-container mt-space-xs font-bold">94.2% Merchant Favor</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-tertiary-fixed/40 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-[22px]">trending_up</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-tertiary text-[16px]">fingerprint</span>
+<span>Based on cryptographic POS audit logs</span>
+</div>
+</div>
+<!-- Stat 3 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Total Escrow Salvaged</span>
+<div class="font-headline-md text-headline-md text-primary mt-space-xs font-bold">₹42,850.00</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-secondary-fixed/40 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-[22px]">shield</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center gap-space-xs font-body-sm text-body-sm text-on-surface-variant">
+<span class="material-symbols-outlined text-secondary text-[16px]">currency_rupee</span>
+<span class="truncate">Recovered from 3PL lapses &amp; bank drops</span>
+</div>
+</div>
+<!-- Stat 4 -->
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm relative overflow-hidden flex flex-col justify-between">
+<div class="flex items-start justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Merchant Satisfaction (CSAT)</span>
+<div class="font-headline-md text-headline-md text-on-surface mt-space-xs font-bold">96.4%</div>
+</div>
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-[22px]">sentiment_very_satisfied</span>
+</div>
+</div>
+<div class="mt-space-md pt-space-sm flex items-center justify-between font-body-sm text-body-sm">
+<div class="flex text-amber-500">
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="material-symbols-outlined text-[16px]" style="font-variation-settings: 'FILL' 1;">star_half</span>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Post-resolution rating</span>
+</div>
+</div>
+</div>
+<!-- SECTION 1: ACTIVE GRIEVANCE & OMBUDSMAN ESCALATION DOCKET -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm mb-space-xl p-space-xl relative overflow-hidden">
+<!-- Active Docket Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-space-lg gap-space-sm">
+<div class="flex items-center gap-space-sm">
+<div class="w-3 h-8 bg-error rounded-full"></div>
+<div>
+<div class="flex items-center gap-space-xs">
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+              Active Grievance &amp; Ombudsman Escalation Docket
+            </h2>
+<span class="bg-error-container text-on-error-container font-label-sm text-label-sm px-space-xs py-0.5 rounded font-bold">
+              IN TRIBUNAL REVIEW
+            </span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">
+            Under Rule 3(2) of Information Technology (Intermediary Guidelines) Rules, 2021
+          </span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs text-on-surface-variant font-code-metric text-code-metric bg-surface-container-low px-space-md py-1.5 rounded-lg">
+<span class="material-symbols-outlined text-[18px] text-tertiary">lock</span>
+<span>Docket Immutable Hash: SHA-256 Verified</span>
+</div>
+</div>
+<!-- Active Case Card Detail -->
+<div class="bg-surface-container-low rounded-xl p-space-lg flex flex-col gap-space-lg">
+<!-- Title & Badges Bar -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md bg-surface-container-lowest p-space-md rounded-lg shadow-sm">
+<div class="space-y-1">
+<div class="flex flex-wrap items-center gap-space-xs">
+<span class="bg-error-container text-on-error-container font-label-sm text-label-sm px-space-sm py-0.5 rounded font-bold uppercase tracking-wider">
+              Legal &amp; Statutory Dispute (Tier-3 Grievance)
+            </span>
+<span class="font-code-metric text-code-metric text-primary">Case ID: #GRV-2024-098</span>
+<span class="text-on-surface-variant font-label-sm text-label-sm">• Order #TR-88190</span>
+</div>
+<h3 class="font-title text-title text-on-surface font-bold">
+            Appeal Case #GRV-2024-098: Unjustified Customer Chargeback Dispute
+          </h3>
+</div>
+<div class="flex items-center gap-space-sm bg-surface-container px-space-md py-2 rounded-lg">
+<span class="material-symbols-outlined text-primary text-[20px]">hourglass_top</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase">Status</span>
+<span class="font-label-md text-label-md text-primary font-bold">Final Evidence Review (Ruling: Tomorrow, 11:30 IST)</span>
+</div>
+</div>
+</div>
+<!-- Parties and Overview Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Complainant (Merchant)</span>
+<div class="flex items-center gap-space-sm mt-space-xs">
+<div class="w-8 h-8 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-[13px]">
+              RS
+            </div>
+<div>
+<div class="font-title text-body-lg font-bold text-on-surface">Rajesh Sharma</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Sri Krishna Gourmet Kitchen • GSTIN: 29AABCS1429B1ZB</div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Respondent &amp; Review Forum</span>
+<div class="flex items-center gap-space-sm mt-space-xs">
+<div class="w-8 h-8 rounded-full bg-secondary-container text-on-secondary-fixed flex items-center justify-center font-bold text-[13px]">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+</div>
+<div>
+<div class="font-title text-body-lg font-bold text-on-surface">Payment Gateway / Issuer Bank Nodal Officer</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">NPCI &amp; RBI Core Banking Settlement Nodal Desk</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Case Summary -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">description</span> Dispute Incident Summary
+        </span>
+<p class="font-body-md text-body-md text-on-surface mt-space-xs">
+          Customer filed unauthorized transaction claim for <strong class="text-error font-code-metric">₹3,420 Diwali Sweet Hamper</strong> 12 days post delivery, despite Aadhaar-OTP and SoundBox 4G audio chime confirmation at counter. Counter merchant has uploaded non-repudiable biometric POS authorization logs and video evidence.
+        </p>
+</div>
+<!-- Evidentiary Dossier -->
+<div class="bg-surface-container-lowest p-space-md rounded-lg shadow-sm">
+<div class="flex items-center justify-between mb-space-sm">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px] text-tertiary">folder_zip</span> Evidentiary Dossier (Cryptographically Sealed)
+          </span>
+<span class="font-label-sm text-label-sm text-tertiary font-bold bg-tertiary-fixed/30 px-space-xs py-0.5 rounded">4/4 Artifacts Verified</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-space-sm">
+<!-- Evidence 1 -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col justify-between hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">terminal</span>
+<span class="font-label-md text-label-md text-on-surface truncate">POS Audit Hash</span>
+</div>
+<div class="font-code-metric text-code-metric text-[11px] text-on-surface-variant truncate mt-2 bg-surface-container px-1 py-0.5 rounded">
+              sha256:4f8a92...b712
+            </div>
+<span class="font-label-sm text-label-sm text-tertiary flex items-center gap-1 mt-2">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Verified on Ledger
+            </span>
+</div>
+<!-- Evidence 2 -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col justify-between hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-[20px]">videocam</span>
+<span class="font-label-md text-label-md text-on-surface truncate">CCTV Counter Still</span>
+</div>
+<div class="font-code-metric text-code-metric text-[11px] text-on-surface-variant truncate mt-2 bg-surface-container px-1 py-0.5 rounded">
+              CAM-02_14-11-24_19:42.mp4
+            </div>
+<span class="font-label-sm text-label-sm text-tertiary flex items-center gap-1 mt-2">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Visual Match 99.8%
+            </span>
+</div>
+<!-- Evidence 3 -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col justify-between hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary-container text-[20px]">volume_up</span>
+<span class="font-label-md text-label-md text-on-surface truncate">SoundBox Audio Receipt</span>
+</div>
+<div class="font-code-metric text-code-metric text-[11px] text-on-surface-variant truncate mt-2 bg-surface-container px-1 py-0.5 rounded">
+              SB-4G-TXN-99812-ACK
+            </div>
+<span class="font-label-sm text-label-sm text-tertiary flex items-center gap-1 mt-2">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> 4G Chime Delivered
+            </span>
+</div>
+<!-- Evidence 4 -->
+<div class="bg-surface-container-low p-space-sm rounded-lg flex flex-col justify-between hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">draw</span>
+<span class="font-label-md text-label-md text-on-surface truncate">Digital Signature Slip</span>
+</div>
+<div class="font-code-metric text-code-metric text-[11px] text-on-surface-variant truncate mt-2 bg-surface-container px-1 py-0.5 rounded">
+              Aadhaar-E-Sign#7842
+            </div>
+<span class="font-label-sm text-label-sm text-tertiary flex items-center gap-1 mt-2">
+<span class="material-symbols-outlined text-[14px]">check_circle</span> Legally Binding Slip
+            </span>
+</div>
+</div>
+</div>
+<!-- Officer In Charge & Ruling Countdown -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-space-md pt-space-xs">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+</div>
+<div>
+<div class="font-title text-body-md text-on-surface font-bold">
+              Adv. Meenakshi Sundaram
+            </div>
+<div class="font-label-sm text-label-sm text-on-surface-variant">
+              TRUSTIT Statutory Redressal Officer (DPDP &amp; RBI Nodal Nominee)
+            </div>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<button class="px-space-md py-2 bg-surface-container text-on-surface hover:bg-surface-container-high rounded-lg font-title text-body-sm transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[18px]">history</span> Hearing Log
+          </button>
+<button class="px-space-md py-2 bg-primary-container text-on-primary hover:bg-primary rounded-lg font-title text-body-sm transition-colors flex items-center gap-1" type="button">
+<span class="material-symbols-outlined text-[18px]">attachment</span> Add Supplementary Proof
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- SECTION 2 & SECTION 3 (2-COLUMN GRID) -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-xl mb-space-xl" id="lodgement-section">
+<!-- LEFT: SECTION 2 - MULTI-CATEGORY DISPUTE QUICK LODGEMENT (7 COLUMNS) -->
+<div class="xl:col-span-7 bg-surface-container-lowest rounded-xl shadow-sm p-space-xl flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-md">
+<div class="space-y-0.5">
+<span class="font-label-sm text-label-sm text-primary uppercase font-bold tracking-wider">Fast-Track Tribunals</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+              Multi-Category Dispute Lodgement Matrix
+            </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Formal escalation filed straight to banking ombudsman and statutory claim officers.
+            </p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant text-[28px]">speed</span>
+</div>
+<!-- Custom Tab Switcher -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-xs bg-surface-container-low p-1 rounded-lg mt-space-md">
+<button class="px-space-xs py-2 rounded-lg font-title text-[12px] bg-primary-container text-on-primary transition-all text-center" id="tab-btn-0" onclick="switchDisputeTab(0)" type="button">
+            Bank Settlement
+          </button>
+<button class="px-space-xs py-2 rounded-lg font-title text-[12px] text-on-surface-variant hover:text-on-surface transition-all text-center" id="tab-btn-1" onclick="switchDisputeTab(1)" type="button">
+            3PL Logistics
+          </button>
+<button class="px-space-xs py-2 rounded-lg font-title text-[12px] text-on-surface-variant hover:text-on-surface transition-all text-center" id="tab-btn-2" onclick="switchDisputeTab(2)" type="button">
+            Defamatory Review
+          </button>
+<button class="px-space-xs py-2 rounded-lg font-title text-[12px] text-on-surface-variant hover:text-on-surface transition-all text-center" id="tab-btn-3" onclick="switchDisputeTab(3)" type="button">
+            Hardware / SoundBox
+          </button>
+</div>
+<!-- Tab 1 Form Content: Settlement -->
+<div class="mt-space-lg flex flex-col gap-space-md" id="tab-panel-0">
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-center gap-space-md">
+<span class="material-symbols-outlined text-primary text-[28px]">account_balance_wallet</span>
+<div class="flex-1">
+<div class="font-title text-body-md text-on-surface">EasySplit &amp; Penny-Drop Reconciliation Failure</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Instant nodal verification with Cashfree/Razorpay nodal gateway.</div>
+</div>
+<span class="font-code-metric text-code-metric text-tertiary bg-tertiary-fixed/30 px-space-xs py-0.5 rounded">T+0 ESCROW</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Settlement Cycle / UTR Reference</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-code-metric text-code-metric text-on-surface outline-none focus:bg-surface-container" placeholder="e.g. UTR12891902" type="text" value="CMS-IND-2024-99120"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Discrepancy Amount (₹)</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-code-metric text-code-metric text-on-surface outline-none focus:bg-surface-container" placeholder="Enter disputed amount" type="text" value="₹ 450.00"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Reason for Nodal Claim</label>
+<select class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-body-md text-body-md text-on-surface outline-none focus:bg-surface-container">
+<option>EasySplit commission debited twice on Sunday bulk settlement batch</option>
+<option>Penny-drop success but net payout stuck in transit over 48 hours</option>
+<option>Disallowed interchange fee deduction by issuing card partner</option>
+</select>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Upload Bank Statement / UTR Acknowledgement</label>
+<div class="bg-surface-container-low rounded-lg p-space-md flex items-center justify-between border-dashed border-2 border-outline-variant hover:bg-surface-container cursor-pointer transition-colors">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-[24px]">cloud_upload</span>
+<div>
+<div class="font-title text-body-sm text-on-surface">Drag &amp; drop ledger copy or click to browse</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">PDF, CSV, or PNG (Max 15MB, digitally stamped preferred)</div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm bg-surface-container text-on-surface px-space-sm py-1 rounded">BROWSE</span>
+</div>
+</div>
+</div>
+<!-- Tab 2: 3PL Damage -->
+<div class="hidden mt-space-lg flex-col gap-space-md" id="tab-panel-1">
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-center gap-space-md">
+<span class="material-symbols-outlined text-error text-[28px]">local_shipping</span>
+<div class="flex-1">
+<div class="font-title text-body-md text-on-surface">3PL Fleet In-Transit Cargo Spoilage &amp; Delay</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Claims evaluated with Telematics GPS and heat-map audit logs.</div>
+</div>
+<span class="font-code-metric text-code-metric text-error bg-error-container px-space-xs py-0.5 rounded">RIDER LIABILITY</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Rider Trip ID / 3PL Partner</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-code-metric text-code-metric text-on-surface outline-none" placeholder="e.g. SHADOWFAX-BLR-892" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Claim Cost Value (₹)</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-code-metric text-code-metric text-on-surface outline-none" placeholder="₹ Value of spoilt goods" type="text"/>
+</div>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Spill/Damage Description &amp; Geo-stamp Photo</label>
+<textarea class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-body-md text-body-md text-on-surface outline-none" placeholder="Describe the incident (e.g. food seal broken during severe deceleration)..." rows="3"></textarea>
+</div>
+</div>
+<!-- Tab 3: Fake Customer Review -->
+<div class="hidden mt-space-lg flex-col gap-space-md" id="tab-panel-2">
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-center gap-space-md">
+<span class="material-symbols-outlined text-secondary text-[28px]">rate_review</span>
+<div class="flex-1">
+<div class="font-title text-body-md text-on-surface">Malicious Rating &amp; Targeted Defamation Purge</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Section 79 Safe-Harbour protection under IT Act, 2000.</div>
+</div>
+<span class="font-code-metric text-code-metric text-secondary-container bg-surface-container-highest px-space-xs py-0.5 rounded">SAFE HARBOUR</span>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Review URL or Customer Account Hash</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-code-metric text-code-metric text-on-surface outline-none" placeholder="https://trustit.in/review/rev_89178" type="text"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Grounds for Suppression</label>
+<select class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-body-md text-body-md text-on-surface outline-none">
+<option>Customer never placed order (Unverified Purchase)</option>
+<option>Competitor harassment / abusive language</option>
+<option>Wrong outlet targeted for separate brand franchise issue</option>
+</select>
+</div>
+</div>
+<!-- Tab 4: Hardware POS & Soundbox -->
+<div class="hidden mt-space-lg flex-col gap-space-md" id="tab-panel-3">
+<div class="bg-surface-container-low p-space-md rounded-lg flex items-center gap-space-md">
+<span class="material-symbols-outlined text-primary text-[28px]">speaker_phone</span>
+<div class="flex-1">
+<div class="font-title text-body-md text-on-surface">Hardware SoundBox &amp; POS Outage Compensation</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant">Automated SLA compensation for SIM 4G connectivity blackouts.</div>
+</div>
+<span class="font-code-metric text-code-metric text-on-primary bg-primary px-space-xs py-0.5 rounded">SLA CREDITS</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-space-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Device IMEI / Serial Number</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-code-metric text-code-metric text-on-surface outline-none" type="text" value="SB4G-BLR-098871"/>
+</div>
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-1">Total Downtime Duration (Hours)</label>
+<input class="w-full bg-surface-container-low rounded-lg px-space-md py-2 font-code-metric text-code-metric text-on-surface outline-none" type="text" value="4.5 Hours"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Footer for Section 2 -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-space-md pt-space-lg mt-space-lg bg-surface-container-low p-space-md rounded-lg">
+<div class="flex items-center gap-space-xs text-on-surface-variant font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-tertiary text-[18px]">verified</span>
+<span>Automatic acknowledgment slip issued within 120 seconds.</span>
+</div>
+<button class="w-full sm:w-auto bg-primary-container hover:bg-primary text-on-primary font-title text-body-sm px-space-xl py-2.5 rounded-lg shadow-sm transition-all flex items-center justify-center gap-space-xs" type="button">
+<span class="material-symbols-outlined text-[18px]">send</span>
+<span>Submit Statutory Docket</span>
+</button>
+</div>
+</div>
+<!-- RIGHT: SECTION 3 - POST-RESOLUTION AUDIT & CSAT FEEDBACK (5 COLUMNS) -->
+<div class="xl:col-span-5 bg-surface-container-lowest rounded-xl shadow-sm p-space-xl flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-md">
+<div class="space-y-0.5">
+<span class="font-label-sm text-label-sm text-tertiary uppercase font-bold tracking-wider">Statutory Closure Audit</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-bold">
+              Post-Resolution CSAT Desk
+            </h2>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+              Recently closed case compliance review &amp; merchant feedback.
+            </p>
+</div>
+<div class="w-9 h-9 rounded-lg bg-tertiary-fixed/30 text-tertiary flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">task_alt</span>
+</div>
+</div>
+<!-- Resolved Ticket Header Card -->
+<div class="bg-surface-container-low rounded-xl p-space-md flex flex-col gap-space-sm mb-space-md">
+<div class="flex items-center justify-between">
+<span class="font-code-metric text-code-metric text-primary">#TKT-88390</span>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm px-space-xs py-0.5 rounded font-bold">
+              RESOLVED IN 3H
+            </span>
+</div>
+<div class="font-title text-body-md text-on-surface font-bold">
+            Cashfree EasySplit Commission Discrepancy (₹142.50)
+          </div>
+<p class="font-body-sm text-body-sm text-on-surface-variant">
+            Reconciled within 3 hours. <strong class="text-tertiary font-code-metric">₹142.50 credited back</strong> to Nodal Escrow Wallet with UTR <span class="font-code-metric text-on-surface">CMS9912048</span>.
+          </p>
+<!-- Digital Stamp Certificate -->
+<div class="bg-surface-container-lowest p-space-sm rounded-lg flex items-center justify-between mt-1">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-[20px]">verified</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-on-surface font-bold">SHA-256 Digital Resolution Stamp</span>
+<span class="font-code-metric text-[11px] text-on-surface-variant">7d9e830...ec299f18</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-tertiary text-[20px]">lock</span>
+</div>
+</div>
+<!-- Interactive CSAT Component -->
+<div class="space-y-space-md">
+<div>
+<label class="block font-label-md text-label-md text-on-surface mb-2 font-bold">
+              How satisfied are you with resolution speed and support quality?
+            </label>
+<!-- 5 Star Interactive Row -->
+<div class="flex items-center gap-space-xs cursor-pointer select-none" id="star-rating-box">
+<span class="star-icon material-symbols-outlined text-[28px] text-amber-500" onclick="setRating(1)" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="star-icon material-symbols-outlined text-[28px] text-amber-500" onclick="setRating(2)" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="star-icon material-symbols-outlined text-[28px] text-amber-500" onclick="setRating(3)" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="star-icon material-symbols-outlined text-[28px] text-amber-500" onclick="setRating(4)" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="star-icon material-symbols-outlined text-[28px] text-amber-500" onclick="setRating(5)" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="ml-space-sm font-label-md text-label-md text-tertiary font-bold" id="rating-label">5.0 - Exceptional Speed</span>
+</div>
+</div>
+<!-- Evaluation Chips -->
+<div>
+<span class="block font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider mb-2">Merchant Criteria Verification</span>
+<div class="flex flex-wrap gap-space-xs">
+<span class="bg-surface-container text-on-surface font-label-sm text-label-sm px-space-sm py-1 rounded-full flex items-center gap-1 font-bold">
+                Fast Response ★★★★★
+              </span>
+<span class="bg-surface-container text-on-surface font-label-sm text-label-sm px-space-sm py-1 rounded-full flex items-center gap-1 font-bold">
+                Helpful Agent ★★★★★
+              </span>
+<span class="bg-surface-container text-on-surface font-label-sm text-label-sm px-space-sm py-1 rounded-full flex items-center gap-1 font-bold">
+                Escrow Protected ★★★★★
+              </span>
+</div>
+</div>
+<!-- Feedback Quote -->
+<div class="bg-surface-container-low p-space-md rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider">Merchant Endorsement Quote</span>
+<p class="font-body-md text-body-md text-on-surface italic mt-1">
+              “Pooja resolved the UTR deduction immediately. Impressed with the promptness.”
+            </p>
+<div class="flex items-center justify-between mt-2 pt-2 text-on-surface-variant font-label-sm text-label-sm">
+<span>Sri Krishna Gourmet Kitchen</span>
+<span class="font-code-metric">14 Nov 2024 • 16:32</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Buttons Dossier Download -->
+<div class="pt-space-lg flex flex-col sm:flex-row items-center gap-space-sm mt-space-md">
+<button class="w-full flex items-center justify-center gap-space-xs bg-surface-container hover:bg-surface-container-high text-on-surface font-title text-body-sm py-2.5 px-space-md rounded-lg transition-colors" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>Download Dossier (.PDF)</span>
+</button>
+<button class="w-full flex items-center justify-center gap-space-xs bg-secondary-container hover:bg-secondary-fixed text-on-secondary-fixed font-title text-body-sm py-2.5 px-space-md rounded-lg transition-colors shadow-sm" type="button">
+<span class="material-symbols-outlined text-[18px]">print</span>
+<span>Print Certificate</span>
+</button>
+</div>
+</div>
+</div>
+<!-- BOTTOM REGULATORY NOTICE & STATUTORY OFFICER CONTACT -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-space-xl relative overflow-hidden">
+<div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-lg">
+<div class="space-y-space-xs max-w-4xl">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-[20px]">policy</span>
+<h3 class="font-title text-title text-on-surface font-bold">
+            Grievance Officer Contact Details under Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021
+          </h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          In accordance with the IT Rules 2021 and Reserve Bank of India Nodal Circulars, merchants can escalate unresolved issues directly to the designated compliance ombudsman.
+        </p>
+<!-- Officer Info Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-space-md pt-space-xs">
+<div class="bg-surface-container-low p-space-sm rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Appointed Officer</span>
+<span class="font-title text-body-sm text-on-surface font-bold">Smt. M. Sundaram</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">Grievance Redressal Officer</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Jurisdiction &amp; Address</span>
+<span class="font-body-sm text-body-sm text-on-surface">TRUSTIT Commerce Pvt. Ltd.</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">Outer Ring Road, Bangalore - 560103</span>
+</div>
+<div class="bg-surface-container-low p-space-sm rounded-lg">
+<span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider block">Direct Communication &amp; SLA</span>
+<a class="font-code-metric text-code-metric text-primary underline block" href="mailto:grievance-merchant@trustit.in">grievance-merchant@trustit.in</a>
+<span class="font-label-sm text-label-sm text-tertiary font-bold block mt-0.5">24h ACK • 15-Day Statutory Closure</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col items-center gap-space-xs bg-surface-container p-space-md rounded-xl w-full lg:w-auto text-center">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">verified_user</span>
+</div>
+<div class="font-label-md text-label-md text-on-surface font-bold">MeitY Registry</div>
+<div class="font-code-metric text-[11px] text-on-surface-variant">REG: IN-BLR-2024-TRU</div>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm px-space-xs py-0.5 rounded font-bold mt-1">STATUS: CERTIFIED</span>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function switchDisputeTab(index) {
+    for (let i = 0; i < 4; i++) {
+      const panel = document.getElementById('tab-panel-' + i);
+      const btn = document.getElementById('tab-btn-' + i);
+      if (i === index) {
+        panel.classList.remove('hidden');
+        panel.classList.add('flex');
+        btn.className = "px-space-xs py-2 rounded-lg font-title text-[12px] bg-primary-container text-on-primary transition-all text-center";
+      } else {
+        panel.classList.add('hidden');
+        panel.classList.remove('flex');
+        btn.className = "px-space-xs py-2 rounded-lg font-title text-[12px] text-on-surface-variant hover:text-on-surface transition-all text-center";
+      }
+    }
+  }
+
+  function setRating(stars) {
+    const starElements = document.querySelectorAll('.star-icon');
+    const label = document.getElementById('rating-label');
+    const descriptions = [
+      "1.0 - Needs Improvement",
+      "2.0 - Below Expectation",
+      "3.0 - Satisfactory",
+      "4.0 - Very Good",
+      "5.0 - Exceptional Speed"
+    ];
+
+    starElements.forEach((star, idx) => {
+      if (idx < stars) {
+        star.style.fontVariationSettings = "'FILL' 1";
+        star.className = "star-icon material-symbols-outlined text-[28px] text-amber-500 cursor-pointer";
+      } else {
+        star.style.fontVariationSettings = "'FILL' 0";
+        star.className = "star-icon material-symbols-outlined text-[28px] text-outline-variant cursor-pointer";
+      }
+    });
+
+    label.textContent = descriptions[stars - 1];
+  }
+</script></main></div></body></html>

@@ -27,6 +27,10 @@ import {
   verifyMerchantEmailOtpOnly,
   isValidVerificationToken,
 } from "@/lib/auth/email-service";
+import {
+  sendMerchantPhoneOtp,
+  verifyMerchantPhoneOtp,
+} from "@/lib/auth/phone-otp-service";
 
 export type ActionResult = { success: true; value?: string } | { success: false; message: string; code?: "duplicate_mobile" };
 
@@ -417,6 +421,79 @@ export async function verifyMerchantEmailOtpAction(input: {
   return verifyMerchantEmailOtpOnly(cleanEmail, cleanOtp);
 }
 
+export async function requestMerchantPhoneOtpAction(input: {
+  businessName: string;
+  fullName: string;
+  mobile: string;
+}): Promise<EmailOtpResult> {
+  const businessName = typeof input?.businessName === "string" ? input.businessName.trim() : "";
+  const fullName = typeof input?.fullName === "string" ? input.fullName.trim() : "";
+  const phone = normalizeTrustitPhone(input?.mobile);
+
+  if (!businessName || businessName.length > 160) {
+    return { success: false, message: "Please enter a valid business name." };
+  }
+  if (!fullName || fullName.length > 160) {
+    return { success: false, message: "Please enter the business owner's name." };
+  }
+  if (!phone) {
+    return { success: false, message: "Please enter a valid 10-digit mobile number." };
+  }
+
+  const admin = createSupabaseAdminClient();
+
+  // Check if an active business already has this phone
+  const { data: existingBiz } = await admin
+    .from("businesses")
+    .select("id, name")
+    .eq("phone", phone)
+    .is("deleted_at", null)
+    .maybeSingle();
+
+  if (existingBiz) {
+    return {
+      success: false,
+      code: "duplicate_mobile",
+      message: `Mobile number is already registered with "${existingBiz.name}". Please sign in or use a different number.`,
+    };
+  }
+
+  // Dispatch OTP to merchant's mobile phone
+  const otpRes = await sendMerchantPhoneOtp(phone, businessName);
+
+  return {
+    success: otpRes.success,
+    message: otpRes.message,
+    previewOtp: otpRes.previewOtp,
+  };
+}
+
+export async function verifyMerchantPhoneOtpAction(input: {
+  mobile: string;
+  otp: string;
+}): Promise<{ success: boolean; message: string; verificationToken?: string }> {
+  const phone = normalizeTrustitPhone(input?.mobile);
+  const cleanOtp = typeof input?.otp === "string" ? input.otp.trim() : "";
+
+  if (!phone) {
+    return { success: false, message: "Please enter a valid mobile number." };
+  }
+  if (cleanOtp.length !== 6) {
+    return { success: false, message: "Please enter the 6-digit OTP code." };
+  }
+
+  const result = await verifyMerchantPhoneOtp(phone, cleanOtp);
+  if (!result.success) {
+    return { success: false, message: result.message };
+  }
+
+  return {
+    success: true,
+    message: result.message,
+    verificationToken: `phone_verified_${Buffer.from(phone).toString("base64")}`,
+  };
+}
+
 export async function completeMerchantEmailRegistrationAction(input: {
   businessName: string;
   fullName: string;
@@ -441,19 +518,27 @@ export async function completeMerchantEmailRegistrationAction(input: {
     return { success: false, message: "Password must be 6–16 characters and include a letter and a number." };
   }
 
-  // 1. Verify Email OTP or Verification Token
-  if (verificationToken) {
+  // 1. Verify Phone OTP, Email OTP, or Verification Token
+  if (verificationToken?.startsWith("phone_verified_")) {
+    const expectedToken = `phone_verified_${Buffer.from(phone).toString("base64")}`;
+    if (verificationToken !== expectedToken) {
+      return { success: false, message: "Mobile verification session has expired. Please verify OTP again." };
+    }
+  } else if (verificationToken) {
     const isTokenValid = isValidVerificationToken(cleanEmail, verificationToken);
     if (!isTokenValid) {
-      return { success: false, message: "Email verification session has expired. Please verify OTP again." };
+      return { success: false, message: "Verification session has expired. Please verify OTP again." };
     }
   } else if (otp) {
-    const verifyRes = await verifyMerchantEmailOtp(cleanEmail, otp);
-    if (!verifyRes.success) {
-      return { success: false, message: verifyRes.message };
+    const phoneRes = await verifyMerchantPhoneOtp(phone, otp);
+    if (!phoneRes.success) {
+      const emailRes = await verifyMerchantEmailOtp(cleanEmail, otp);
+      if (!emailRes.success) {
+        return { success: false, message: phoneRes.message || emailRes.message };
+      }
     }
   } else {
-    return { success: false, message: "Please verify your email with OTP first." };
+    return { success: false, message: "Please verify your mobile number with OTP first." };
   }
 
   const admin = createSupabaseAdminClient();

@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_blank" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{colors:{"inverse-surface":"#283044","on-tertiary-fixed":"#002113","on-surface":"#131b2e","on-primary-container":"#a1bbff","on-tertiary-container":"#66d09c","surface-container-high":"#e2e7ff","primary-fixed-dim":"#b0c6ff","on-surface-variant":"#434652","tertiary-fixed":"#8df7c1","surface-container-highest":"#dae2fd","tertiary":"#003d27","on-primary":"#ffffff","tertiary-container":"#005739","on-error":"#ffffff","background":"#faf8ff","secondary-fixed-dim":"#00daf3","surface-bright":"#faf8ff","outline":"#737783","surface-dim":"#d2d9f4","outline-variant":"#c3c6d4","inverse-primary":"#b0c6ff","tertiary-fixed-dim":"#71dba6","on-secondary":"#ffffff","surface-container":"#eaedff","primary-container":"#0d47a1","on-secondary-container":"#00616d","secondary":"#006875","on-tertiary-fixed-variant":"#005235","error":"#ba1a1a","primary":"#003178","surface":"#faf8ff","secondary-container":"#00e3fd","surface-container-lowest":"#ffffff","on-secondary-fixed-variant":"#004f58","on-primary-fixed-variant":"#00429c","on-background":"#131b2e","on-secondary-fixed":"#001f24","error-container":"#ffdad6","primary-fixed":"#d9e2ff","on-error-container":"#93000a","inverse-on-surface":"#eef0ff","surface-variant":"#dae2fd","on-tertiary":"#ffffff","surface-container-low":"#f2f3ff","on-primary-fixed":"#001945","surface-tint":"#2b5bb5","secondary-fixed":"#9cf0ff"},borderRadius:{"DEFAULT":"0.25rem","lg":"0.5rem","xl":"0.75rem","full":"9999px"},spacing:{"space-xs":"0.25rem","space-sm":"0.5rem","space-lg":"1rem","gutter":"1rem","space-md":"0.75rem","margin-desktop":"2rem","space-xl":"1.5rem","space-2xl":"2rem","gutter-desktop":"1.5rem","margin":"1rem","margin-tablet":"1.5rem"},fontFamily:{"body-md":["Plus Jakarta Sans"],"label-sm":["Plus Jakarta Sans"],"headline-lg-mobile":["Plus Jakarta Sans"],"title":["Plus Jakarta Sans"],"body-lg":["Plus Jakarta Sans"],"headline-sm":["Plus Jakarta Sans"],"headline-lg":["Plus Jakarta Sans"],"body-sm":["Plus Jakarta Sans"],"display":["Plus Jakarta Sans"],"headline-md":["Plus Jakarta Sans"],"code-metric":["Plus Jakarta Sans"],"label-md":["Plus Jakarta Sans"]},fontSize:{"body-md":["14px",{lineHeight:"20px",fontWeight:"400"}],"label-sm":["11px",{lineHeight:"14px",letterSpacing:"0.04em",fontWeight:"700"}],"headline-lg-mobile":["24px",{lineHeight:"32px",letterSpacing:"-0.01em",fontWeight:"700"}],"title":["16px",{lineHeight:"22px",fontWeight:"600"}],"body-lg":["15px",{lineHeight:"22px",fontWeight:"400"}],"headline-sm":["18px",{lineHeight:"24px",fontWeight:"600"}],"headline-lg":["28px",{lineHeight:"36px",letterSpacing:"-0.02em",fontWeight:"700"}],"body-sm":["13px",{lineHeight:"18px",fontWeight:"400"}],"display":["36px",{lineHeight:"44px",letterSpacing:"-0.02em",fontWeight:"700"}],"headline-md":["22px",{lineHeight:"28px",letterSpacing:"-0.01em",fontWeight:"600"}],"code-metric":["14px",{lineHeight:"20px",fontWeight:"700"}],"label-md":["13px",{lineHeight:"16px",letterSpacing:"0.01em",fontWeight:"600"}]}}}};</script></head><body class="bg-surface font-body-md text-on-surface antialiased"><main class="w-full bg-surface min-h-screen"><div class="flex flex-col w-full">
+<!-- Top Onboarding Stepper Header -->
+<section class="w-full bg-surface-container-lowest shadow-sm px-4 md:px-8 py-6 mb-8">
+<div class="max-w-7xl mx-auto flex flex-col gap-6">
+<!-- Breadcrumb & Portal Identifier -->
+<div class="flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-2 text-on-surface-variant font-label-md text-label-md">
+<span class="text-primary font-bold tracking-wide">TRUSTIT PARTNER ONBOARDING</span>
+<span class="material-symbols-outlined text-outline text-sm">chevron_right</span>
+<span>Application #IND-BLR-89240</span>
+<span class="material-symbols-outlined text-outline text-sm">chevron_right</span>
+<span class="text-on-surface font-semibold">Store Profile &amp; Hyperlocal Setup</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-container-high text-primary font-label-sm text-label-sm uppercase tracking-wider">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+            Stage 5 in Progress
+          </span>
+<span class="text-on-surface-variant font-body-sm text-body-sm">Est. 4 mins remaining</span>
+</div>
+</div>
+<!-- Stepper Track -->
+<div class="grid grid-cols-2 md:grid-cols-6 gap-3 pt-2">
+<!-- Step 1 -->
+<div class="flex flex-col gap-1.5">
+<div class="h-1.5 w-full rounded-full bg-tertiary-container"></div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-tertiary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>1. Basic Details</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="flex flex-col gap-1.5">
+<div class="h-1.5 w-full rounded-full bg-tertiary-container"></div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-tertiary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>2. Business Type</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="flex flex-col gap-1.5">
+<div class="h-1.5 w-full rounded-full bg-tertiary-container"></div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-tertiary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>3. GST &amp; PAN</span>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="flex flex-col gap-1.5">
+<div class="h-1.5 w-full rounded-full bg-tertiary-container"></div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-tertiary">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span>4. Bank &amp; Nodal</span>
+</div>
+</div>
+<!-- Step 5: Active -->
+<div class="flex flex-col gap-1.5">
+<div class="h-1.5 w-full rounded-full bg-primary-container"></div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-primary font-bold">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">radio_button_checked</span>
+<span>5. Store Setup</span>
+</div>
+</div>
+<!-- Step 6 -->
+<div class="flex flex-col gap-1.5">
+<div class="h-1.5 w-full rounded-full bg-surface-container-high"></div>
+<div class="flex items-center gap-1 font-label-sm text-label-sm text-outline">
+<span class="material-symbols-outlined text-sm">circle</span>
+<span>6. QR &amp; Activation</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Main Work Area -->
+<div class="max-w-7xl mx-auto px-4 md:px-8 w-full flex flex-col gap-8 pb-32">
+<!-- Section Intro Banner -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 bg-gradient-to-r from-surface-container-low to-surface-container p-6 rounded-xl shadow-sm">
+<div class="flex flex-col gap-1 max-w-3xl">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-secondary">Operational Configuration</span>
+<h1 class="font-headline-lg text-headline-lg text-on-surface">Store Profile &amp; Hyperlocal Parameters</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+          Establish your storefront customer-facing branding, calibrate exact doorstep GPS geo-fencing for partner couriers, and set operational fulfillment thresholds.
+        </p>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-lowest px-4 py-2.5 rounded-lg shadow-sm">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">verified</span>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">MERCHANT STATUS</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">Tier-1 MSME Verified</span>
+</div>
+</div>
+</div>
+<!-- Layout Grid: Left Form Modules, Right Operational Preview -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+<!-- Primary Column (8 Cols) -->
+<div class="lg:col-span-8 flex flex-col gap-8">
+<!-- 1. Store Branding & Visual Assets -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between pb-4 border-b border-surface-container-high">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">storefront</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">1. Store Branding &amp; Visual Assets</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Displayed directly to local buyers across discovery and settlement feeds</span>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded bg-surface-container text-outline font-label-sm text-label-sm">PUBLIC DISPLAY</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Logo Upload (1:1) -->
+<div class="md:col-span-4 flex flex-col gap-3">
+<span class="font-title text-title text-on-surface">Store Logo (1:1)</span>
+<div class="relative group bg-surface-container-low rounded-xl p-4 flex flex-col items-center justify-center text-center gap-3">
+<div class="w-24 h-24 rounded-xl bg-primary-container text-on-primary flex items-center justify-center font-display text-display shadow-md relative overflow-hidden">
+<span>SK</span>
+<div class="absolute inset-0 bg-primary/20 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+<span class="material-symbols-outlined text-white text-2xl">photo_camera</span>
+</div>
+</div>
+<div class="flex flex-col gap-1 items-center">
+<span class="font-label-md text-label-md text-on-surface">Sri Krishna Gourmet</span>
+<span class="font-label-sm text-label-sm text-outline">Rec: 500×500px PNG/JPG</span>
+</div>
+<div class="flex gap-2 w-full pt-1">
+<button class="w-full py-1.5 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high text-primary font-label-md text-label-md transition-colors flex items-center justify-center gap-1" type="button">
+<span class="material-symbols-outlined text-sm">upload</span>
+                    Change
+                  </button>
+</div>
+</div>
+</div>
+<!-- Cover Banner (16:9) -->
+<div class="md:col-span-8 flex flex-col gap-3">
+<span class="font-title text-title text-on-surface">Store Cover Banner (16:9)</span>
+<div class="relative group rounded-xl overflow-hidden shadow-sm bg-surface-container-low h-44 flex flex-col justify-end p-4">
+<img class="absolute inset-0 w-full h-full object-cover" data-alt="A warm, vibrant artisan South Indian kitchen and dining showcase with brass tableware, modern interior lighting, fresh filter coffee decanters and golden traditional sweets displayed under soft morning sun in a Bengaluru restaurant." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC7C2cF6CN2hLqCy9qeTn_5nX3anwO8P32b6_877MjZ5AD2UjrzltsplJaN59M0imooCWVGTTW7_yJjKWft0HSj4PjplI3S2hMtd0K0biL1sKmgch5vA71UtjAHxmHK2WraTm-PFo4Q-bQK-SzN9sxb8PqL-R5jYiLg-HJ35OX7jXXPcGPopQKWIrHKed_MtBa2xTm_wamNloDH106luJ-brUNBouB23Q4U0R-WGiI"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/90 via-on-surface/40 to-transparent"></div>
+<div class="relative z-10 flex items-end justify-between gap-4">
+<div class="flex flex-col text-white">
+<span class="font-label-md text-label-md">Modern Artisan Dining Ambiance</span>
+<span class="font-label-sm text-label-sm text-surface-variant">Recommended 1200×600px • JPG / WebP up to 4MB</span>
+</div>
+<button class="px-3 py-1.5 rounded-lg bg-white/90 hover:bg-white text-on-surface font-label-md text-label-md shadow-sm backdrop-blur-sm transition-all flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-sm">cloud_upload</span>
+                    Replace Banner
+                  </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Description Field -->
+<div class="flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<label class="font-title text-title text-on-surface" for="store-desc">Short Store Description &amp; Specialties</label>
+<span class="font-code-metric text-code-metric text-outline" id="char-counter">142 / 300 chars</span>
+</div>
+<textarea class="w-full bg-surface-container-lowest text-on-surface font-body-md text-body-md rounded-lg p-3.5 focus:outline-none focus:bg-surface-container-low transition-colors resize-none shadow-sm" id="store-desc" placeholder="Summarize your shop's signature offerings for buyers..." rows="3">Authentic South Indian artisanal delicacies, pure ghee sweets, and premium filter coffee blends crafted fresh daily in Indiranagar.</textarea>
+<div class="flex items-center gap-2 text-outline font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-sm">info</span>
+<span>This snippet appears under your merchant heading in customer discovery search feeds.</span>
+</div>
+</div>
+</div>
+<!-- 2. Physical Store Location & Geofencing -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between pb-4 border-b border-surface-container-high">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">pin_drop</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">2. Physical Location &amp; Geofencing</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Determines hyper-local dispatch availability, delivery partner arrival, and taxation hub</span>
+</div>
+</div>
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-tertiary-container/10 text-tertiary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">check</span>
+              GPS LOCKED
+            </span>
+</div>
+<!-- Street Address Input Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Door / Shop / Unit No.</label>
+<input class="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none" type="text" value="Plot #42, Ground Floor"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Building / Complex Name</label>
+<input class="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none" type="text" value="Krishna Heritage Arcade"/>
+</div>
+<div class="md:col-span-2 flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Street Address / Landmark</label>
+<input class="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none" type="text" value="100 Feet Road, HAL 2nd Stage, Opposite Metro Pillar #114"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Locality / Sector</label>
+<input class="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none" type="text" value="Indiranagar"/>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">City</label>
+<input class="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none" type="text" value="Bengaluru"/>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Postal PIN Code</label>
+<input class="w-full px-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md font-code-metric focus:outline-none" type="text" value="560038"/>
+</div>
+</div>
+</div>
+<!-- Geofence Visual Map Simulation Widget -->
+<div class="flex flex-col gap-3 pt-2">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="font-title text-title text-on-surface">Hyperlocal Geofence Simulation</span>
+<span class="px-2 py-0.5 rounded text-xs bg-primary/10 text-primary font-semibold">3.0 km Instant Radius</span>
+</div>
+<button class="text-primary hover:text-primary-container font-label-md text-label-md flex items-center gap-1 transition-colors" type="button">
+<span class="material-symbols-outlined text-base">my_location</span>
+                Adjust Exact Doorstep Pin
+              </button>
+</div>
+<!-- Map View Container with Radius Graphic Overlay -->
+<div class="relative w-full h-72 rounded-xl overflow-hidden bg-surface-container shadow-inner flex items-center justify-center">
+<div class="w-full h-full bg-cover bg-center" data-location="Indiranagar, Bengaluru, Karnataka, India" style=""></div>
+<!-- Simulated Radar / Dispatch Range SVG Overlay -->
+<div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+<div class="w-56 h-56 rounded-full border-2 border-primary/40 bg-primary/10 animate-pulse flex items-center justify-center">
+<div class="w-36 h-36 rounded-full border border-primary/60 bg-primary/15 flex items-center justify-center">
+<!-- Central Store Pin Indicator -->
+<div class="relative flex flex-col items-center">
+<div class="w-10 h-10 rounded-full bg-primary text-white shadow-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-xl">restaurant</span>
+</div>
+<div class="px-2 py-0.5 bg-on-surface text-surface text-[10px] rounded shadow-md mt-1 font-semibold whitespace-nowrap">
+                        Store Doorstep
+                      </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Map Control Floaters -->
+<div class="absolute top-3 left-3 bg-surface-container-lowest/90 backdrop-blur-md px-3 py-2 rounded-lg shadow-sm flex flex-col gap-0.5">
+<span class="font-label-sm text-label-sm text-outline">AUTO-RESOLVED GPS COORDINATES</span>
+<div class="flex items-center gap-2 font-code-metric text-code-metric text-on-surface">
+<span>12.9716° N</span>
+<span class="text-outline">•</span>
+<span>77.6412° E</span>
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="absolute bottom-3 right-3 bg-surface-container-lowest/95 backdrop-blur-md p-2.5 rounded-lg shadow-sm flex items-center gap-3">
+<div class="flex flex-col text-right">
+<span class="font-label-sm text-label-sm text-outline">GEOFENCE REACH</span>
+<span class="font-body-sm text-body-sm font-semibold text-on-surface">~42,000 Local Households</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg">radar</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 3. Operating Hours & Service Shifts -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between pb-4 border-b border-surface-container-high">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">schedule</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">3. Operating Hours &amp; Shifts</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Define when your catalogue accepts orders and kitchen dispatches</span>
+</div>
+</div>
+<!-- Holiday Switch -->
+<label class="flex items-center gap-2 cursor-pointer">
+<span class="font-label-md text-label-md text-on-surface-variant">Open on Public Holidays</span>
+<div class="relative inline-flex items-center">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</label>
+</div>
+<!-- Weekly Schedule Selector -->
+<div class="flex flex-col gap-3">
+<span class="font-label-md text-label-md text-outline">ACTIVE SERVICE DAYS</span>
+<div class="flex flex-wrap items-center gap-2">
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm" type="button">Mon</button>
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm" type="button">Tue</button>
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm" type="button">Wed</button>
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm" type="button">Thu</button>
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm" type="button">Fri</button>
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm" type="button">Sat</button>
+<button class="px-4 py-2 rounded-lg bg-primary text-on-primary font-label-md text-label-md shadow-sm" type="button">Sun</button>
+<span class="font-body-sm text-body-sm text-on-surface-variant ml-2">All 7 days operational</span>
+</div>
+</div>
+<!-- Shift Slots Split -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Slot A -->
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-primary">wb_sunny</span>
+                  Morning &amp; Lunch Service
+                </span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">Slot 1</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-outline">OPENS AT</span>
+<input class="px-3 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-code-metric text-code-metric focus:outline-none" type="time" value="07:00"/>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-outline">BREAK / PAUSE AT</span>
+<input class="px-3 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-code-metric text-code-metric focus:outline-none" type="time" value="15:30"/>
+</div>
+</div>
+</div>
+<!-- Slot B -->
+<div class="p-4 rounded-xl bg-surface-container-low flex flex-col gap-3">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-base text-primary">nights_stay</span>
+                  Evening &amp; Dinner Service
+                </span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant">Slot 2</span>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-outline">RESUMES AT</span>
+<input class="px-3 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-code-metric text-code-metric focus:outline-none" type="time" value="17:00"/>
+</div>
+<div class="flex flex-col gap-1">
+<span class="font-label-sm text-label-sm text-outline">CLOSES AT</span>
+<input class="px-3 py-2 rounded-lg bg-surface-container-lowest text-on-surface font-code-metric text-code-metric focus:outline-none" type="time" value="23:30"/>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 4. Store Direct Contact -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between pb-4 border-b border-surface-container-high">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">contact_phone</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">4. Store Desk &amp; Escalation Contact</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dedicated communication bridge for dispatch couriers and platform ops team</span>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Manager Name -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Store In-Charge / Manager</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-lg">person</span>
+<input class="w-full pl-9 pr-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-body-md text-body-md focus:outline-none" type="text" value="Rameshwar Gupta"/>
+</div>
+</div>
+<!-- Order Dispatch Phone -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Order Dispatch Desk Phone</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-outline text-lg">call</span>
+<input class="w-full pl-9 pr-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-code-metric text-code-metric focus:outline-none" type="tel" value="+91 98765 43210"/>
+</div>
+</div>
+<!-- Escalation WhatsApp -->
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">WhatsApp Emergency Alert</label>
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-tertiary text-lg">chat</span>
+<input class="w-full pl-9 pr-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-code-metric text-code-metric focus:outline-none" type="tel" value="+91 98765 43210"/>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. Fulfillment & Ordering Modes -->
+<div class="bg-surface-container-lowest rounded-xl p-6 shadow-sm flex flex-col gap-6">
+<div class="flex items-center justify-between pb-4 border-b border-surface-container-high">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-surface-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-xl">moped</span>
+</div>
+<div class="flex flex-col">
+<h2 class="font-headline-sm text-headline-sm text-on-surface">5. Hyperlocal Fulfillment Channels</h2>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Enable customer ordering pipelines and order value limitations</span>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Channel 1: Hyperlocal Delivery -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-surface-container-low gap-3">
+<div class="flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm shrink-0">
+<span class="material-symbols-outlined">electric_moped</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title text-title text-on-surface">Hyperlocal On-Demand Delivery</span>
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-tertiary-container/15 text-tertiary uppercase">Fleet Integrated</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Auto-dispatch via Dunzo, Shadowfax &amp; TRUSTIT Hyperlocal Pool riders</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Channel 2: Takeaway / Pickup -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-surface-container-low gap-3">
+<div class="flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm shrink-0">
+<span class="material-symbols-outlined">shopping_bag</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title text-title text-on-surface">Direct Storefront Customer Pickup (Takeaway)</span>
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-surface-container-high text-on-surface-variant uppercase">0% Courier Fee</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Customers collect orders directly from your billing counter</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Channel 3: Dine-In QR -->
+<div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-surface-container-low gap-3">
+<div class="flex items-start gap-3.5">
+<div class="w-10 h-10 rounded-lg bg-surface-container-lowest flex items-center justify-center text-primary shadow-sm shrink-0">
+<span class="material-symbols-outlined">qr_code_scanner</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-2">
+<span class="font-title text-title text-on-surface">Dine-in Digital Table QR Ordering</span>
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-secondary-fixed text-on-secondary-fixed uppercase">Contactless Pay</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Instant table ordering linked directly to kitchen order tickets (KOT)</span>
+</div>
+</div>
+<label class="relative inline-flex items-center cursor-pointer shrink-0">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+<!-- Minimum Order Value & Packaging Fee -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Minimum Order Value for Delivery</label>
+<div class="relative flex items-center">
+<span class="absolute left-3 text-outline font-code-metric">₹</span>
+<input class="w-full pl-8 pr-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-code-metric text-code-metric focus:outline-none" type="number" value="100"/>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Orders below ₹100 will not trigger delivery dispatch</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">Default Eco Packaging Charge (Per Order)</label>
+<div class="relative flex items-center">
+<span class="absolute left-3 text-outline font-code-metric">₹</span>
+<input class="w-full pl-8 pr-3.5 py-2.5 rounded-lg bg-surface-container-low text-on-surface font-code-metric text-code-metric focus:outline-none" type="number" value="15"/>
+</div>
+<span class="font-label-sm text-label-sm text-outline">Includes tamper-evident bio-pouches &amp; seals</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: Live Storefront Card & Compliance Sidebar (4 Cols) -->
+<div class="lg:col-span-4 flex flex-col gap-6 sticky top-6">
+<!-- Live Buyer Card Mockup Preview -->
+<div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<span class="font-title text-title text-on-surface">Buyer View Preview</span>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-tertiary-container/10 text-tertiary">LIVE PREVIEW</span>
+</div>
+<!-- Customer Mobile Card Mockup -->
+<div class="rounded-xl overflow-hidden shadow-md bg-surface-container-low flex flex-col">
+<div class="relative h-32 w-full">
+<img class="w-full h-full object-cover" data-alt="Close up shot of handcrafted crispy Mysore pak and assorted South Indian ghee sweets arranged neatly on brass serving trays inside a modern gourmet sweet shop." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCqRrOG8XW1i9jK9Z-MStsbK2zG53-zLZh83CYxaBqfCpXm7nw8Z6lXHsCDIRKVofZYilQF05LRFIpqio9iVUtjR7DOr-QBs3MfkfkhR8HTs3lbo1mKLbI6BLoLsruD2O3Hl4lTaWTqe5yLUBQa4f_3kJmIIJJUZyDgylcCqmYHe1zM5Ard0rpAFVO6oKc4wI8b7Jtr35k_ASbFDt7SIK8uY7CzMfvD5e02yeJ1thg"/>
+<div class="absolute top-2 right-2 bg-on-surface/80 backdrop-blur-sm text-white px-2 py-0.5 rounded text-xs font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-amber-400" style="font-variation-settings: 'FILL' 1;">star</span>
+<span>New Store</span>
+</div>
+</div>
+<div class="p-3.5 flex flex-col gap-2">
+<div class="flex items-start justify-between gap-2">
+<div class="flex flex-col">
+<span class="font-title text-title text-on-surface leading-tight">Sri Krishna Gourmet</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Sweets, Filter Coffee, Breakfast</span>
+</div>
+<div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary font-bold text-xs flex items-center justify-center shrink-0">
+                  SK
+                </div>
+</div>
+<div class="flex items-center gap-3 text-xs text-on-surface-variant pt-1 border-t border-surface-container">
+<span class="flex items-center gap-1 font-semibold text-primary">
+<span class="material-symbols-outlined text-sm">near_me</span>
+                  1.2 km (Indiranagar)
+                </span>
+<span>•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">schedule</span>
+                  20-25 mins
+                </span>
+</div>
+</div>
+</div>
+<div class="p-3 rounded-lg bg-surface-container-low text-xs text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-base">check_circle</span>
+<span>Your store branding will update within 60 seconds across apps once activated.</span>
+</div>
+</div>
+<!-- Compliance & Regulatory Checklist -->
+<div class="bg-surface-container-lowest rounded-xl p-5 shadow-sm flex flex-col gap-4">
+<div class="flex items-center gap-2 text-on-surface">
+<span class="material-symbols-outlined text-primary">security</span>
+<span class="font-title text-title">Linked Verified Credentials</span>
+</div>
+<div class="flex flex-col gap-3 font-body-sm text-body-sm">
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">GSTIN LINKED</span>
+<span class="font-code-metric text-xs font-semibold text-on-surface">29ABCDE1234F1Z5</span>
+</div>
+<span class="material-symbols-outlined text-tertiary text-lg" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">FSSAI REGISTRATION</span>
+<span class="font-code-metric text-xs font-semibold text-on-surface">11223334000189</span>
+</div>
+<span class="material-symbols-outlined text-tertiary text-lg" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+<div class="flex items-center justify-between p-2 rounded bg-surface-container-low">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">NODAL ESCROW SETTLEMENT</span>
+<span class="font-code-metric text-xs font-semibold text-on-surface">HDFC0000128 (Current)</span>
+</div>
+<span class="material-symbols-outlined text-tertiary text-lg" style="font-variation-settings: 'FILL' 1;">verified</span>
+</div>
+</div>
+</div>
+<!-- Hyperlocal Operations Advisor Note -->
+<div class="p-4 rounded-xl bg-gradient-to-br from-primary-container to-primary text-white flex flex-col gap-2.5 shadow-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-container text-xl">tips_and_updates</span>
+<span class="font-title text-title text-white">Peak Order Dispatch Tip</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-primary-container">
+            Keeping your store open before 07:30 AM in Indiranagar increases early morning South Indian breakfast orders by 38% via TRUSTIT Express couriers.
+          </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Sticky Action Bar -->
+<aside aria-label="Step navigation" class="fixed bottom-0 left-0 right-0 z-50 bg-surface-container-lowest/95 backdrop-blur-md shadow-xl py-3.5 px-4 md:px-8">
+<div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+<!-- Back Navigation -->
+<a class="inline-flex items-center gap-2 text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors py-2" href="javascript:void(0)">
+<span class="material-symbols-outlined text-base">arrow_back</span>
+<span>Back to Step 4: Bank Details</span>
+</a>
+<!-- Progression Actions -->
+<div class="flex items-center gap-3 w-full sm:w-auto">
+<button class="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-colors" type="button">
+          Save as Draft
+        </button>
+<button class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-label-md text-label-md shadow-md transition-all flex items-center justify-center gap-2" type="button">
+<span>Continue to Step 6: QR Kit &amp; Final Review</span>
+<span class="material-symbols-outlined text-base">arrow_forward</span>
+</button>
+</div>
+</div>
+</aside>
+</div>
+<script>
+  // Character counter helper for short business description
+  (function() {
+    const descArea = document.getElementById('store-desc');
+    const counterDisplay = document.getElementById('char-counter');
+    if (descArea && counterDisplay) {
+      descArea.addEventListener('input', function() {
+        const len = this.value.length;
+        counterDisplay.textContent = len + ' / 300 chars';
+        if (len > 300) {
+          counterDisplay.classList.add('text-error');
+        } else {
+          counterDisplay.classList.remove('text-error');
+        }
+      });
+    }
+  })();
+</script></main></body></html>

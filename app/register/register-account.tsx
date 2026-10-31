@@ -8,6 +8,8 @@ import {
   logoutTrustitMerchantSession,
   requestMerchantEmailOtpAction,
   verifyMerchantEmailOtpAction,
+  requestMerchantPhoneOtpAction,
+  verifyMerchantPhoneOtpAction,
   completeMerchantEmailRegistrationAction,
 } from "./actions";
 
@@ -42,11 +44,15 @@ export default function RegisterAccount({
   const [showPassword, setShowPassword] = useState(false);
 
   // OTP flow states
+  const [otpChannel, setOtpChannel] = useState<"mobile" | "email">("mobile");
   const [otpSent, setOtpSent] = useState(false);
   const [otpSuccessMessage, setOtpSuccessMessage] = useState("");
   const [previewOtp, setPreviewOtp] = useState<string | undefined>(undefined);
+  const [isMobileVerified, setIsMobileVerified] = useState(false);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [verificationToken, setVerificationToken] = useState<string | null>(null);
+
+  const isVerified = isMobileVerified || isEmailVerified;
 
   // Loading & status states
   const [getOtpBusy, setGetOtpBusy] = useState(false);
@@ -85,7 +91,7 @@ export default function RegisterAccount({
   }
 
   // 1. Get OTP Button Click
-  async function handleGetOtp() {
+  async function handleGetOtp(targetChannel = otpChannel) {
     setGeneralError("");
     setOtpError("");
     setDuplicateMobile(false);
@@ -107,32 +113,51 @@ export default function RegisterAccount({
       setGeneralError("Please enter a valid 10-digit mobile number.");
       return;
     }
-    if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
+    if (targetChannel === "email" && (!cleanEmail.includes("@") || !cleanEmail.includes("."))) {
       setGeneralError("Please enter a valid email address for verification.");
       return;
     }
 
     setGetOtpBusy(true);
     try {
-      const result = await requestMerchantEmailOtpAction({
-        businessName: cleanBiz,
-        fullName: cleanName,
-        mobile: cleanPhone,
-        email: cleanEmail,
-      });
+      if (targetChannel === "mobile") {
+        const result = await requestMerchantPhoneOtpAction({
+          businessName: cleanBiz,
+          fullName: cleanName,
+          mobile: cleanPhone,
+        });
 
-      if (!result.success) {
-        setDuplicateMobile(result.code === "duplicate_mobile");
-        setGeneralError(result.message);
-        return;
+        if (!result.success) {
+          setDuplicateMobile(result.code === "duplicate_mobile");
+          setGeneralError(result.message);
+          return;
+        }
+
+        setOtpSent(true);
+        setPreviewOtp(result.previewOtp);
+        setOtpSuccessMessage(`OTP sent successfully to +91 ${cleanPhone}`);
+        setResendCooldown(30);
+      } else {
+        const result = await requestMerchantEmailOtpAction({
+          businessName: cleanBiz,
+          fullName: cleanName,
+          mobile: cleanPhone,
+          email: cleanEmail,
+        });
+
+        if (!result.success) {
+          setDuplicateMobile(result.code === "duplicate_mobile");
+          setGeneralError(result.message);
+          return;
+        }
+
+        setOtpSent(true);
+        setPreviewOtp(result.previewOtp);
+        setOtpSuccessMessage("OTP sent successfully to your email");
+        setResendCooldown(30);
       }
-
-      setOtpSent(true);
-      setPreviewOtp(result.previewOtp);
-      setOtpSuccessMessage("OTP sent successfully to your email");
-      setResendCooldown(30);
     } catch {
-      setGeneralError("Failed to send email verification OTP. Please try again.");
+      setGeneralError("Failed to send verification OTP. Please try again.");
     } finally {
       setGetOtpBusy(false);
     }
@@ -142,29 +167,47 @@ export default function RegisterAccount({
   async function handleVerifyOtp() {
     setOtpError("");
     const cleanOtp = otp.trim();
+    const cleanPhone = mobile.replace(/\D/g, "");
     const cleanEmail = email.trim().toLowerCase();
 
     if (cleanOtp.length !== 6) {
-      setOtpError("Please enter the 6-digit code sent to your email.");
+      setOtpError("Please enter the 6-digit code.");
       return;
     }
 
     setVerifyOtpBusy(true);
     try {
-      const result = await verifyMerchantEmailOtpAction({
-        email: cleanEmail,
-        otp: cleanOtp,
-      });
+      if (otpChannel === "mobile") {
+        const result = await verifyMerchantPhoneOtpAction({
+          mobile: cleanPhone,
+          otp: cleanOtp,
+        });
 
-      if (!result.success) {
-        setOtpError(result.message || "Invalid verification code. Please try again.");
-        return;
+        if (!result.success) {
+          setOtpError(result.message || "Invalid verification code. Please try again.");
+          return;
+        }
+
+        setIsMobileVerified(true);
+        setVerificationToken(result.verificationToken || null);
+        setOtpSuccessMessage("Mobile number verified successfully! ✓");
+        setStep1Completed(true);
+      } else {
+        const result = await verifyMerchantEmailOtpAction({
+          email: cleanEmail,
+          otp: cleanOtp,
+        });
+
+        if (!result.success) {
+          setOtpError(result.message || "Invalid verification code. Please try again.");
+          return;
+        }
+
+        setIsEmailVerified(true);
+        setVerificationToken(result.verificationToken || null);
+        setOtpSuccessMessage("Email verified successfully! ✓");
+        setStep1Completed(true);
       }
-
-      setIsEmailVerified(true);
-      setVerificationToken(result.verificationToken || null);
-      setOtpSuccessMessage("Email verified successfully! ✓");
-      setStep1Completed(true);
     } catch {
       setOtpError("Verification failed. Please check your code and try again.");
     } finally {
@@ -177,8 +220,8 @@ export default function RegisterAccount({
     e.preventDefault();
     setGeneralError("");
 
-    if (!isEmailVerified) {
-      setGeneralError("Please verify your email with OTP before continuing.");
+    if (!isVerified) {
+      setGeneralError("Please verify your mobile number or email with OTP before continuing.");
       return;
     }
 
@@ -244,7 +287,7 @@ export default function RegisterAccount({
   }
 
   const isFormReadyForNext =
-    isEmailVerified &&
+    isVerified &&
     businessName.trim().length > 0 &&
     name.trim().length > 0 &&
     mobile.replace(/\D/g, "").length >= 10 &&
@@ -271,7 +314,7 @@ export default function RegisterAccount({
               placeholder=""
               value={businessName}
               onChange={(e) => setBusinessName(e.target.value)}
-              disabled={isEmailVerified || submitBusy}
+              disabled={isVerified || submitBusy}
               className="h-8.5 w-full px-3 text-xs sm:text-[13px] font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
@@ -295,21 +338,42 @@ export default function RegisterAccount({
               placeholder=""
               value={name}
               onChange={(e) => setName(e.target.value)}
-              disabled={isEmailVerified || submitBusy}
+              disabled={isVerified || submitBusy}
               className="h-8.5 w-full px-3 text-xs sm:text-[13px] font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
           </div>
         </div>
 
-        {/* 3. Mobile Number with Leading Icon Box & Country Code */}
+        {/* 3. Mobile Number with Leading Icon Box & INLINE Get OTP Button */}
         <div>
-          <label htmlFor="mobileField" className="block text-xs font-bold text-slate-700">
-            3. Mobile Number <span className="text-rose-500">*</span>
-          </label>
+          <div className="flex items-center justify-between">
+            <label htmlFor="mobileField" className="block text-xs font-bold text-slate-700">
+              3. Mobile Number <span className="text-rose-500">*</span>
+            </label>
+            {isMobileVerified ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.2 text-[9.5px] font-black text-emerald-700">
+                ✓ Mobile Verified
+              </span>
+            ) : (
+              otpChannel === "mobile" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpChannel("email");
+                    setOtpSent(false);
+                    setOtpSuccessMessage("");
+                  }}
+                  className="text-[10px] text-blue-600 hover:underline font-semibold"
+                >
+                  Verify via Email instead
+                </button>
+              )
+            )}
+          </div>
           <div className="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
             <div className="h-8.5 w-8.5 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
-              📞
+              📱
             </div>
             <div className="flex items-center border-r border-slate-200 bg-slate-50 px-2 h-8.5 text-xs font-bold text-slate-700 shrink-0 select-none">
               🇮🇳 +91 ▾
@@ -321,27 +385,123 @@ export default function RegisterAccount({
               maxLength={10}
               placeholder=""
               value={mobile}
-              onChange={(e) => setMobile(e.target.value.replace(/\D/g, ""))}
-              disabled={isEmailVerified || submitBusy}
+              onChange={(e) => {
+                setMobile(e.target.value.replace(/\D/g, ""));
+                if (otpSent && !isVerified) {
+                  setOtpSent(false);
+                  setOtpSuccessMessage("");
+                }
+              }}
+              disabled={isVerified || submitBusy}
               className="h-8.5 w-full px-3 text-xs sm:text-[13px] font-semibold text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
+            {/* INLINE Get OTP Button for Mobile */}
+            {!isVerified && otpChannel === "mobile" && (
+              <button
+                type="button"
+                disabled={
+                  getOtpBusy ||
+                  resendCooldown > 0 ||
+                  mobile.replace(/\D/g, "").length < 10 ||
+                  !businessName.trim() ||
+                  !name.trim()
+                }
+                onClick={() => handleGetOtp("mobile")}
+                className="m-1 h-6.5 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition border border-blue-600 shadow-2xs whitespace-nowrap shrink-0 disabled:opacity-50 disabled:cursor-not-allowed select-none"
+              >
+                {getOtpBusy
+                  ? "Sending…"
+                  : resendCooldown > 0
+                  ? `Resend (${resendCooldown}s)`
+                  : otpSent
+                  ? "Resend OTP"
+                  : "Get OTP (SMS)"}
+              </button>
+            )}
           </div>
           <p className="mt-0.5 text-[9.5px] text-slate-400">
-            Used for order updates &amp; delivery coordination.
+            SMS / WhatsApp OTP will be sent to verify your shop's primary contact.
           </p>
+
+          {/* Inline OTP Section revealed immediately underneath Mobile */}
+          {otpSent && otpChannel === "mobile" && (
+            <div className="mt-1.5 rounded-xl border border-blue-200/90 bg-blue-50/70 p-2 space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <p className="flex items-center gap-1 font-bold text-blue-900 text-[10.5px]">
+                  <span className="text-emerald-600 font-black">✓</span>
+                  <span>{otpSuccessMessage || "OTP sent successfully to your mobile"}</span>
+                </p>
+                {previewOtp && (
+                  <span className="rounded-md border border-blue-300 bg-white px-1.5 py-0.2 font-mono text-[9px] font-black text-blue-800 shadow-2xs">
+                    Quick Test: {previewOtp}
+                  </span>
+                )}
+              </div>
+
+              {!isMobileVerified && (
+                <div className="flex items-center gap-2 pt-0.5">
+                  <input
+                    id="inlineMobileOtpBox"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={6}
+                    placeholder="Enter 6-digit OTP"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                    className="h-8 w-32 rounded-lg border border-slate-300 bg-white px-2 text-center font-mono text-xs font-bold tracking-widest text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                  />
+                  <button
+                    type="button"
+                    disabled={verifyOtpBusy || otp.trim().length !== 6}
+                    onClick={handleVerifyOtp}
+                    className="h-8 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white shadow-2xs transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {verifyOtpBusy ? "Verifying…" : "Verify OTP"}
+                  </button>
+                </div>
+              )}
+
+              {otpError && (
+                <p role="alert" className="text-[10px] font-bold text-rose-700">
+                  {otpError}
+                </p>
+              )}
+
+              {isMobileVerified && (
+                <p className="text-[10px] font-bold text-emerald-800 flex items-center gap-1">
+                  <span>✓</span>
+                  <span>Mobile verified successfully!</span>
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* 4. Email ID with Leading Icon Box & INLINE Get OTP Button */}
+        {/* 4. Email ID */}
         <div>
           <div className="flex items-center justify-between">
             <label htmlFor="emailField" className="block text-xs font-bold text-slate-700">
               4. Email ID <span className="text-rose-500">*</span>
             </label>
-            {isEmailVerified && (
+            {isEmailVerified ? (
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.2 text-[9.5px] font-black text-emerald-700">
                 ✓ Verified
               </span>
+            ) : (
+              otpChannel === "email" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpChannel("mobile");
+                    setOtpSent(false);
+                    setOtpSuccessMessage("");
+                  }}
+                  className="text-[10px] text-blue-600 hover:underline font-semibold"
+                >
+                  Verify via Mobile (SMS) instead
+                </button>
+              )
             )}
           </div>
 
@@ -358,17 +518,17 @@ export default function RegisterAccount({
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
-                if (otpSent && !isEmailVerified) {
+                if (otpSent && !isVerified) {
                   setOtpSent(false);
                   setOtpSuccessMessage("");
                 }
               }}
-              disabled={isEmailVerified || submitBusy}
+              disabled={isVerified || submitBusy}
               className="h-8.5 w-full px-3 text-xs sm:text-[13px] font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
               required
             />
-            {/* INLINE Get OTP Button right inside email input */}
-            {!isEmailVerified && (
+            {/* INLINE Get OTP Button for Email if selected */}
+            {!isVerified && otpChannel === "email" && (
               <button
                 type="button"
                 disabled={
@@ -379,7 +539,7 @@ export default function RegisterAccount({
                   !name.trim() ||
                   mobile.replace(/\D/g, "").length < 10
                 }
-                onClick={handleGetOtp}
+                onClick={() => handleGetOtp("email")}
                 className="m-1 h-6.5 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition border border-blue-200 shadow-2xs whitespace-nowrap shrink-0 disabled:opacity-50 disabled:cursor-not-allowed select-none"
               >
                 {getOtpBusy
@@ -388,13 +548,13 @@ export default function RegisterAccount({
                   ? `Resend (${resendCooldown}s)`
                   : otpSent
                   ? "Resend OTP"
-                  : "Get OTP"}
+                  : "Get OTP (Email)"}
               </button>
             )}
           </div>
 
-          {/* Inline OTP Section revealed immediately underneath email */}
-          {otpSent && (
+          {/* Inline OTP Section revealed immediately underneath email if email channel */}
+          {otpSent && otpChannel === "email" && (
             <div className="mt-1.5 rounded-xl border border-blue-200/90 bg-blue-50/70 p-2 space-y-1">
               <div className="flex items-center justify-between text-xs">
                 <p className="flex items-center gap-1 font-bold text-blue-900 text-[10.5px]">
@@ -411,7 +571,7 @@ export default function RegisterAccount({
               {!isEmailVerified && (
                 <div className="flex items-center gap-2 pt-0.5">
                   <input
-                    id="inlineOtpBox"
+                    id="inlineEmailOtpBox"
                     type="text"
                     inputMode="numeric"
                     maxLength={6}
@@ -440,7 +600,7 @@ export default function RegisterAccount({
               {isEmailVerified && (
                 <p className="text-[10px] font-bold text-emerald-800 flex items-center gap-1">
                   <span>✓</span>
-                  <span>Email verified successfully! Now create your password.</span>
+                  <span>Email verified successfully!</span>
                 </p>
               )}
             </div>
