@@ -498,7 +498,7 @@ export async function completeMerchantEmailRegistrationAction(input: {
   businessName: string;
   fullName: string;
   mobile: string;
-  email: string;
+  email?: string;
   otp?: string;
   verificationToken?: string;
   password: string;
@@ -511,7 +511,7 @@ export async function completeMerchantEmailRegistrationAction(input: {
   const verificationToken = typeof input?.verificationToken === "string" ? input.verificationToken.trim() : "";
   const password = typeof input?.password === "string" ? input.password : "";
 
-  if (!businessName || !fullName || !phone || !cleanEmail) {
+  if (!businessName || !fullName || !phone) {
     return { success: false, message: "Please fill in all required details." };
   }
   if (!isValidTrustitPassword(password, password)) {
@@ -524,7 +524,7 @@ export async function completeMerchantEmailRegistrationAction(input: {
     if (verificationToken !== expectedToken) {
       return { success: false, message: "Mobile verification session has expired. Please verify OTP again." };
     }
-  } else if (verificationToken) {
+  } else if (verificationToken && cleanEmail) {
     const isTokenValid = isValidVerificationToken(cleanEmail, verificationToken);
     if (!isTokenValid) {
       return { success: false, message: "Verification session has expired. Please verify OTP again." };
@@ -532,9 +532,13 @@ export async function completeMerchantEmailRegistrationAction(input: {
   } else if (otp) {
     const phoneRes = await verifyMerchantPhoneOtp(phone, otp);
     if (!phoneRes.success) {
-      const emailRes = await verifyMerchantEmailOtp(cleanEmail, otp);
-      if (!emailRes.success) {
-        return { success: false, message: phoneRes.message || emailRes.message };
+      if (cleanEmail) {
+        const emailRes = await verifyMerchantEmailOtp(cleanEmail, otp);
+        if (!emailRes.success) {
+          return { success: false, message: phoneRes.message || emailRes.message };
+        }
+      } else {
+        return { success: false, message: phoneRes.message };
       }
     }
   } else {
@@ -553,7 +557,7 @@ export async function completeMerchantEmailRegistrationAction(input: {
   try {
     const { data: userList } = await admin.auth.admin.listUsers();
     const ghosts = userList?.users?.filter(
-      (u) => (u.email && u.email.toLowerCase() === cleanEmail) || (u.phone && normalizeTrustitPhone(u.phone) === phone)
+      (u) => (cleanEmail && u.email && u.email.toLowerCase() === cleanEmail) || (u.phone && normalizeTrustitPhone(u.phone) === phone)
     );
     if (ghosts && ghosts.length > 0) {
       for (const ghost of ghosts) {
@@ -569,9 +573,11 @@ export async function completeMerchantEmailRegistrationAction(input: {
     }
   } catch {}
 
-  // 4. Create the verified Auth user
+  // 4. Create the verified Auth user (fallback to merchantAuthEmail if email not provided)
+  const authEmail = cleanEmail || merchantAuthEmail(phone);
+
   const { data: created, error: createError } = await admin.auth.admin.createUser({
-    email: cleanEmail,
+    email: authEmail,
     email_confirm: true,
     phone,
     phone_confirm: true,
@@ -597,7 +603,7 @@ export async function completeMerchantEmailRegistrationAction(input: {
 
   // 5. Sign in with the newly created credentials to set the session cookie
   const { error: signInError } = await signupMerchantClient.auth.signInWithPassword({
-    email: cleanEmail,
+    email: authEmail,
     password,
   });
 
@@ -611,8 +617,8 @@ export async function completeMerchantEmailRegistrationAction(input: {
     return profile;
   }
 
-  // Update email in merchant_profiles
-  await admin.from("merchant_profiles").update({ email: cleanEmail }).eq("user_id", userId);
+  // Update email in merchant_profiles (if cleanEmail provided, save it; otherwise null)
+  await admin.from("merchant_profiles").update({ email: cleanEmail || null }).eq("user_id", userId);
 
   return { success: true };
 }

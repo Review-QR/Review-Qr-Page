@@ -91,7 +91,10 @@ export default function RegisterAccount({
   }
 
   // 1. Get OTP Button Click
-  async function handleGetOtp(targetChannel = otpChannel) {
+  async function handleGetOtp(targetChannel = "mobile") {
+    // Prevent multiple rapid clicks immediately (debouncing)
+    if (getOtpBusy || resendCooldown > 0) return;
+
     setGeneralError("");
     setOtpError("");
     setDuplicateMobile(false);
@@ -99,63 +102,41 @@ export default function RegisterAccount({
     const cleanBiz = businessName.trim();
     const cleanName = name.trim();
     const cleanPhone = mobile.replace(/\D/g, "");
-    const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanBiz) {
       setGeneralError("Please enter your business name.");
+      document.getElementById("businessNameField")?.focus();
       return;
     }
     if (!cleanName) {
       setGeneralError("Please enter the business owner's name.");
+      document.getElementById("ownerNameField")?.focus();
       return;
     }
     if (cleanPhone.length < 10) {
       setGeneralError("Please enter a valid 10-digit mobile number.");
-      return;
-    }
-    if (targetChannel === "email" && (!cleanEmail.includes("@") || !cleanEmail.includes("."))) {
-      setGeneralError("Please enter a valid email address for verification.");
+      document.getElementById("mobileField")?.focus();
       return;
     }
 
     setGetOtpBusy(true);
     try {
-      if (targetChannel === "mobile") {
-        const result = await requestMerchantPhoneOtpAction({
-          businessName: cleanBiz,
-          fullName: cleanName,
-          mobile: cleanPhone,
-        });
+      const result = await requestMerchantPhoneOtpAction({
+        businessName: cleanBiz,
+        fullName: cleanName,
+        mobile: cleanPhone,
+      });
 
-        if (!result.success) {
-          setDuplicateMobile(result.code === "duplicate_mobile");
-          setGeneralError(result.message);
-          return;
-        }
-
-        setOtpSent(true);
-        setPreviewOtp(result.previewOtp);
-        setOtpSuccessMessage(`OTP sent successfully to +91 ${cleanPhone}`);
-        setResendCooldown(30);
-      } else {
-        const result = await requestMerchantEmailOtpAction({
-          businessName: cleanBiz,
-          fullName: cleanName,
-          mobile: cleanPhone,
-          email: cleanEmail,
-        });
-
-        if (!result.success) {
-          setDuplicateMobile(result.code === "duplicate_mobile");
-          setGeneralError(result.message);
-          return;
-        }
-
-        setOtpSent(true);
-        setPreviewOtp(result.previewOtp);
-        setOtpSuccessMessage("OTP sent successfully to your email");
-        setResendCooldown(30);
+      if (!result.success) {
+        setDuplicateMobile(result.code === "duplicate_mobile");
+        setGeneralError(result.message);
+        return;
       }
+
+      setOtpSent(true);
+      setPreviewOtp(result.previewOtp);
+      setOtpSuccessMessage(`OTP sent successfully to +91 ${cleanPhone}`);
+      setResendCooldown(30);
     } catch {
       setGeneralError("Failed to send verification OTP. Please try again.");
     } finally {
@@ -221,7 +202,7 @@ export default function RegisterAccount({
     setGeneralError("");
 
     if (!isVerified) {
-      setGeneralError("Please verify your mobile number or email with OTP before continuing.");
+      setGeneralError("Please verify your mobile number with OTP before continuing.");
       return;
     }
 
@@ -236,7 +217,7 @@ export default function RegisterAccount({
         businessName: businessName.trim(),
         fullName: name.trim(),
         mobile: mobile.replace(/\D/g, ""),
-        email: email.trim().toLowerCase(),
+        email: email.trim().toLowerCase() || undefined,
         verificationToken: verificationToken || undefined,
         otp: otp.trim(),
         password,
@@ -345,41 +326,43 @@ export default function RegisterAccount({
           </div>
         </div>
 
-        {/* 3. Mobile Number with Leading Icon Box & INLINE Get OTP Button */}
+        {/* 3. Mobile Number with Leading Icon Box & Dedicated Below-Box OTP Controls */}
         <div>
           <div className="flex items-center justify-between">
             <label htmlFor="mobileField" className="block text-xs font-bold text-slate-700">
               3. Mobile Number <span className="text-rose-500">*</span>
             </label>
-            {isMobileVerified ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.2 text-[9.5px] font-black text-emerald-700">
-                ✓ Mobile Verified
-              </span>
-            ) : (
-              otpChannel === "mobile" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpChannel("email");
-                    setOtpSent(false);
-                    setOtpSuccessMessage("");
-                  }}
-                  className="text-[10px] text-blue-600 hover:underline font-semibold"
-                >
-                  Verify via Email instead
-                </button>
-              )
+            {isMobileVerified && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileVerified(false);
+                  setVerificationToken(null);
+                  setOtp("");
+                  setOtpSent(false);
+                  setOtpSuccessMessage("");
+                  setGeneralError("");
+                }}
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 hover:underline"
+              >
+                Change Number
+              </button>
             )}
           </div>
-          <div className={`mt-0.5 flex items-center rounded-xl border bg-white overflow-hidden shadow-2xs transition ${
-            duplicateMobile
-              ? "border-amber-400 ring-2 ring-amber-100"
-              : "border-slate-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100"
-          }`}>
-            <div className="h-8.5 w-8.5 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
+
+          <div
+            className={`mt-1 flex items-stretch rounded-xl border bg-white overflow-hidden shadow-2xs transition ${
+              isMobileVerified
+                ? "border-emerald-500 ring-2 ring-emerald-100 bg-emerald-50/20"
+                : duplicateMobile
+                ? "border-amber-400 ring-2 ring-amber-100"
+                : "border-slate-300 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100"
+            }`}
+          >
+            <div className="h-9 w-9 flex items-center justify-center border-r border-slate-200 bg-slate-50 text-slate-600 text-sm shrink-0">
               📱
             </div>
-            <div className="flex items-center border-r border-slate-200 bg-slate-50 px-2 h-8.5 text-xs font-bold text-slate-700 shrink-0 select-none">
+            <div className="flex items-center border-r border-slate-200 bg-slate-50 px-2.5 h-9 text-xs font-bold text-slate-700 shrink-0 select-none">
               🇮🇳 +91 ▾
             </div>
             <input
@@ -387,7 +370,7 @@ export default function RegisterAccount({
               type="tel"
               inputMode="numeric"
               maxLength={10}
-              placeholder=""
+              placeholder="10-digit mobile number"
               value={mobile}
               onChange={(e) => {
                 setMobile(e.target.value.replace(/\D/g, ""));
@@ -398,41 +381,56 @@ export default function RegisterAccount({
                   setOtpSuccessMessage("");
                 }
               }}
-              disabled={isVerified || submitBusy}
-              className="h-8.5 w-full px-3 text-xs sm:text-[13px] font-semibold text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
+              disabled={isMobileVerified || submitBusy}
+              className="h-9 w-full px-3 text-xs sm:text-[13px] font-semibold text-slate-900 outline-none disabled:bg-slate-50/50 disabled:text-slate-700 tracking-wider"
               required
             />
-            {/* INLINE Get OTP Button for Mobile */}
-            {!isVerified && otpChannel === "mobile" && (
-              <button
-                type="button"
-                disabled={
-                  getOtpBusy ||
-                  resendCooldown > 0 ||
-                  mobile.replace(/\D/g, "").length < 10 ||
-                  !businessName.trim() ||
-                  !name.trim()
-                }
-                onClick={() => handleGetOtp("mobile")}
-                className="m-1 h-6.5 px-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition border border-blue-600 shadow-2xs whitespace-nowrap shrink-0 disabled:opacity-50 disabled:cursor-not-allowed select-none"
-              >
-                {getOtpBusy
-                  ? "Sending…"
-                  : resendCooldown > 0
-                  ? `Resend (${resendCooldown}s)`
-                  : otpSent
-                  ? "Resend OTP"
-                  : "Get OTP (SMS)"}
-              </button>
+            {isMobileVerified && (
+              <div className="flex items-center gap-1 px-3 bg-emerald-50 text-emerald-700 font-bold text-xs shrink-0 select-none border-l border-emerald-200">
+                <span className="text-emerald-600 text-sm font-black">✓</span>
+                <span>Verified</span>
+              </div>
             )}
           </div>
-          <p className="mt-0.5 text-[9.5px] text-slate-400">
-            SMS / WhatsApp OTP will be sent to verify your shop's primary contact.
+          <p className="mt-1 text-[10px] text-slate-400">
+            SMS OTP will be sent to verify your shop's primary contact.
           </p>
+
+          {/* DEDICATED Get OTP Button Below the Input (Hidden once verified) */}
+          {!isMobileVerified && (
+            <div className="mt-2">
+              <button
+                type="button"
+                disabled={getOtpBusy || resendCooldown > 0}
+                onClick={() => handleGetOtp("mobile")}
+                className={`w-full h-9 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2 shadow-2xs select-none ${
+                  getOtpBusy || resendCooldown > 0
+                    ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+                    : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer active:scale-[0.99]"
+                }`}
+              >
+                {getOtpBusy ? (
+                  <>
+                    <svg className="h-3.5 w-3.5 animate-spin text-slate-400" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                    <span>Sending OTP via SMS...</span>
+                  </>
+                ) : resendCooldown > 0 ? (
+                  <span>Resend OTP in {resendCooldown}s</span>
+                ) : otpSent ? (
+                  <span>Resend OTP (SMS)</span>
+                ) : (
+                  <span>Get OTP (SMS)</span>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Inline Duplicate Mobile Notice with 1-click Clear/Edit */}
           {duplicateMobile && (
-            <div className="mt-1.5 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-950 shadow-2xs">
+            <div className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-950 shadow-2xs">
               <div className="flex items-start gap-2">
                 <span className="text-sm">⚠️</span>
                 <div className="min-w-0 flex-1">
@@ -465,11 +463,11 @@ export default function RegisterAccount({
             </div>
           )}
 
-          {/* Inline OTP Section revealed immediately underneath Mobile */}
-          {otpSent && otpChannel === "mobile" && (
-            <div className="mt-1.5 rounded-xl border border-blue-200/90 bg-blue-50/70 p-2 space-y-1">
+          {/* Collapsible OTP Drawer: Disappears automatically when isMobileVerified is true */}
+          {otpSent && !isMobileVerified && (
+            <div className="mt-2 rounded-xl border border-blue-200 bg-blue-50/70 p-2.5 space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <p className="flex items-center gap-1 font-bold text-blue-900 text-[10.5px]">
+                <p className="flex items-center gap-1 font-bold text-blue-900 text-[11px]">
                   <span className="text-emerald-600 font-black">✓</span>
                   <span>{otpSuccessMessage || "OTP sent successfully to your mobile"}</span>
                 </p>
@@ -480,73 +478,46 @@ export default function RegisterAccount({
                 )}
               </div>
 
-              {!isMobileVerified && (
-                <div className="flex items-center gap-2 pt-0.5">
-                  <input
-                    id="inlineMobileOtpBox"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    className="h-8 w-32 rounded-lg border border-slate-300 bg-white px-2 text-center font-mono text-xs font-bold tracking-widest text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                  />
-                  <button
-                    type="button"
-                    disabled={verifyOtpBusy || otp.trim().length !== 6}
-                    onClick={handleVerifyOtp}
-                    className="h-8 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white shadow-2xs transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {verifyOtpBusy ? "Verifying…" : "Verify OTP"}
-                  </button>
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                <input
+                  id="inlineMobileOtpBox"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="Enter 6-digit OTP"
+                  value={otp}
+                  onChange={(e) => {
+                    setOtp(e.target.value.replace(/\D/g, ""));
+                    setOtpError("");
+                  }}
+                  className="h-8.5 flex-1 rounded-xl border border-slate-300 bg-white px-3 text-center font-mono text-xs font-bold tracking-widest text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+                />
+                <button
+                  type="button"
+                  disabled={verifyOtpBusy || otp.trim().length !== 6}
+                  onClick={handleVerifyOtp}
+                  className="h-8.5 rounded-xl bg-emerald-600 px-4 text-xs font-bold text-white shadow-2xs transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50 shrink-0"
+                >
+                  {verifyOtpBusy ? "Verifying…" : "Verify OTP"}
+                </button>
+              </div>
 
               {otpError && (
                 <p role="alert" className="text-[10px] font-bold text-rose-700">
                   {otpError}
                 </p>
               )}
-
-              {isMobileVerified && (
-                <p className="text-[10px] font-bold text-emerald-800 flex items-center gap-1">
-                  <span>✓</span>
-                  <span>Mobile verified successfully!</span>
-                </p>
-              )}
             </div>
           )}
         </div>
 
-        {/* 4. Email ID */}
+        {/* 4. Email ID (Optional) */}
         <div>
-          <div className="flex items-center justify-between">
-            <label htmlFor="emailField" className="block text-xs font-bold text-slate-700">
-              4. Email ID <span className="text-rose-500">*</span>
-            </label>
-            {isEmailVerified ? (
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.2 text-[9.5px] font-black text-emerald-700">
-                ✓ Verified
-              </span>
-            ) : (
-              otpChannel === "email" && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setOtpChannel("mobile");
-                    setOtpSent(false);
-                    setOtpSuccessMessage("");
-                  }}
-                  className="text-[10px] text-blue-600 hover:underline font-semibold"
-                >
-                  Verify via Mobile (SMS) instead
-                </button>
-              )
-            )}
-          </div>
+          <label htmlFor="emailField" className="block text-xs font-bold text-slate-700">
+            4. Email ID <span className="text-slate-400 font-normal text-[11px]">(Optional)</span>
+          </label>
 
-          <div className="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+          <div className="mt-1 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
             <div className="h-8.5 w-8.5 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
               ✉️
             </div>
@@ -555,98 +526,19 @@ export default function RegisterAccount({
               type="email"
               inputMode="email"
               autoComplete="email"
-              placeholder=""
+              placeholder="e.g. contact@business.com"
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
                 setGeneralError("");
-                if (otpSent && !isVerified) {
-                  setOtpSent(false);
-                  setOtpSuccessMessage("");
-                }
               }}
-              disabled={isVerified || submitBusy}
+              disabled={submitBusy}
               className="h-8.5 w-full px-3 text-xs sm:text-[13px] font-medium text-slate-900 outline-none disabled:bg-slate-50 disabled:text-slate-600"
-              required
             />
-            {/* INLINE Get OTP Button for Email if selected */}
-            {!isVerified && otpChannel === "email" && (
-              <button
-                type="button"
-                disabled={
-                  getOtpBusy ||
-                  resendCooldown > 0 ||
-                  !email.includes("@") ||
-                  !businessName.trim() ||
-                  !name.trim() ||
-                  mobile.replace(/\D/g, "").length < 10
-                }
-                onClick={() => handleGetOtp("email")}
-                className="m-1 h-6.5 px-2.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs transition border border-blue-200 shadow-2xs whitespace-nowrap shrink-0 disabled:opacity-50 disabled:cursor-not-allowed select-none"
-              >
-                {getOtpBusy
-                  ? "Sending…"
-                  : resendCooldown > 0
-                  ? `Resend (${resendCooldown}s)`
-                  : otpSent
-                  ? "Resend OTP"
-                  : "Get OTP (Email)"}
-              </button>
-            )}
           </div>
-
-          {/* Inline OTP Section revealed immediately underneath email if email channel */}
-          {otpSent && otpChannel === "email" && (
-            <div className="mt-1.5 rounded-xl border border-blue-200/90 bg-blue-50/70 p-2 space-y-1">
-              <div className="flex items-center justify-between text-xs">
-                <p className="flex items-center gap-1 font-bold text-blue-900 text-[10.5px]">
-                  <span className="text-emerald-600 font-black">✓</span>
-                  <span>{otpSuccessMessage || "OTP sent successfully to your email"}</span>
-                </p>
-                {previewOtp && (
-                  <span className="rounded-md border border-blue-300 bg-white px-1.5 py-0.2 font-mono text-[9px] font-black text-blue-800 shadow-2xs">
-                    Quick Test: {previewOtp}
-                  </span>
-                )}
-              </div>
-
-              {!isEmailVerified && (
-                <div className="flex items-center gap-2 pt-0.5">
-                  <input
-                    id="inlineEmailOtpBox"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={6}
-                    placeholder="Enter 6-digit OTP"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-                    className="h-8 w-32 rounded-lg border border-slate-300 bg-white px-2 text-center font-mono text-xs font-bold tracking-widest text-slate-900 outline-none focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-                  />
-                  <button
-                    type="button"
-                    disabled={verifyOtpBusy || otp.trim().length !== 6}
-                    onClick={handleVerifyOtp}
-                    className="h-8 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white shadow-2xs transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {verifyOtpBusy ? "Verifying…" : "Verify OTP"}
-                  </button>
-                </div>
-              )}
-
-              {otpError && (
-                <p role="alert" className="text-[10px] font-bold text-rose-700">
-                  {otpError}
-                </p>
-              )}
-
-              {isEmailVerified && (
-                <p className="text-[10px] font-bold text-emerald-800 flex items-center gap-1">
-                  <span>✓</span>
-                  <span>Email verified successfully!</span>
-                </p>
-              )}
-            </div>
-          )}
+          <p className="mt-0.5 text-[9.5px] text-slate-400">
+            Optional: For monthly sales reports, invoice copies and backup.
+          </p>
         </div>
 
         {/* 5. Create Your Password with Leading Icon Box & Show/Hide Toggle */}
@@ -713,9 +605,9 @@ export default function RegisterAccount({
             )}
           </button>
 
-          {!isEmailVerified && (
+          {!isMobileVerified && (
             <p className="mt-1 text-center text-[9.5px] text-slate-400 font-medium">
-              Verify Email OTP above to unlock Business Address.
+              Verify Mobile OTP above to unlock Business Address.
             </p>
           )}
         </div>
