@@ -47,8 +47,60 @@ export default async function MerchantLoginPage() {
 
         {/* Main Content Area */}
         <div className="my-auto grid items-start gap-8 py-8 lg:grid-cols-12 lg:gap-10">
-          {/* Left Column (Hero, Growth Graphic, 6 Feature Cards & Categories) */}
-          <div className="space-y-6 lg:col-span-7">
+          {/* Right Column: TRUSTIT Merchant Sign In Card (Mobile-First: Order-1 on Mobile, Order-2 on Desktop) */}
+          <div className="order-1 lg:order-2 lg:col-span-5">
+            <section className="w-full rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.12)]">
+              <div className="text-center">
+                {/* QR Blue Logo */}
+                <div
+                  className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-xl font-black text-white shadow-md shadow-blue-200"
+                  aria-hidden="true"
+                >
+                  QR
+                </div>
+                <p className="text-[11px] font-black uppercase tracking-wider text-blue-700">
+                  TRUSTIT
+                </p>
+                <h2 className="mt-1 text-2xl font-black text-slate-900 tracking-tight">
+                  Merchant Sign In
+                </h2>
+                <p className="mt-1 text-xs text-slate-500 max-w-xs mx-auto">
+                  Access your business dashboard and manage your services, orders, payments and more.
+                </p>
+
+                {merchant ? (
+                  <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-center">
+                    <span className="inline-block text-3xl">✅</span>
+                    <h3 className="mt-2 text-sm font-bold text-slate-900">
+                      Signed in as {merchant.businessName}
+                    </h3>
+                    <p className="mt-1 text-xs text-slate-600">
+                      Business ID: <span className="font-mono font-bold text-blue-700">{merchant.businessId}</span>
+                    </p>
+                    <div className="mt-5 space-y-2.5">
+                      <Link
+                        href="/merchant/dashboard"
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-xs font-black text-white shadow-xs hover:bg-blue-700 transition"
+                      >
+                        <span>Open Merchant Dashboard</span>
+                        <span>→</span>
+                      </Link>
+                      <form action={merchantSignOutAction}>
+                        <button className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
+                          Sign Out of Merchant Hub
+                        </button>
+                      </form>
+                    </div>
+                  </div>
+                ) : (
+                  <MerchantLoginForm />
+                )}
+              </div>
+            </section>
+          </div>
+
+          {/* Left Column (Hero, Growth Graphic, 6 Feature Cards & Categories) (Order-2 on Mobile, Order-1 on Desktop) */}
+          <div className="order-2 lg:order-1 space-y-6 lg:col-span-7">
             {/* Platform Pill Badge */}
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50/90 px-3.5 py-1 text-xs font-bold text-blue-800 shadow-2xs">
               <span className="text-sm">🛡️</span>
@@ -275,58 +327,6 @@ export default async function MerchantLoginPage() {
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Right Column: TRUSTIT Merchant Sign In Card */}
-          <div className="lg:col-span-5">
-            <section className="w-full rounded-3xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-[0_25px_60px_-15px_rgba(15,23,42,0.12)]">
-              <div className="text-center">
-                {/* QR Blue Logo */}
-                <div
-                  className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-xl font-black text-white shadow-md shadow-blue-200"
-                  aria-hidden="true"
-                >
-                  QR
-                </div>
-                <p className="text-[11px] font-black uppercase tracking-wider text-blue-700">
-                  TRUSTIT
-                </p>
-                <h2 className="mt-1 text-2xl font-black text-slate-900 tracking-tight">
-                  Merchant Sign In
-                </h2>
-                <p className="mt-1 text-xs text-slate-500 max-w-xs mx-auto">
-                  Access your business dashboard and manage your services, orders, payments and more.
-                </p>
-
-                {merchant ? (
-                  <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-center">
-                    <span className="inline-block text-3xl">✅</span>
-                    <h3 className="mt-2 text-sm font-bold text-slate-900">
-                      Signed in as {merchant.businessName}
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-600">
-                      Business ID: <span className="font-mono font-bold text-blue-700">{merchant.businessId}</span>
-                    </p>
-                    <div className="mt-5 space-y-2.5">
-                      <Link
-                        href="/merchant/dashboard"
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-xs font-black text-white shadow-xs hover:bg-blue-700 transition"
-                      >
-                        <span>Open Merchant Dashboard</span>
-                        <span>→</span>
-                      </Link>
-                      <form action={merchantSignOutAction}>
-                        <button className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
-                          Sign Out of Merchant Hub
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                ) : (
-                  <MerchantLoginForm />
-                )}
-              </div>
-            </section>
           </div>
         </div>
 

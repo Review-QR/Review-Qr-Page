@@ -371,7 +371,11 @@ export default function RegisterAccount({
               )
             )}
           </div>
-          <div className="mt-0.5 flex items-center rounded-xl border border-slate-200 bg-white overflow-hidden shadow-2xs focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 transition">
+          <div className={`mt-0.5 flex items-center rounded-xl border bg-white overflow-hidden shadow-2xs transition ${
+            duplicateMobile
+              ? "border-amber-400 ring-2 ring-amber-100"
+              : "border-slate-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100"
+          }`}>
             <div className="h-8.5 w-8.5 flex items-center justify-center border-r border-slate-200 bg-slate-50/70 text-slate-600 text-sm shrink-0">
               📱
             </div>
@@ -387,6 +391,8 @@ export default function RegisterAccount({
               value={mobile}
               onChange={(e) => {
                 setMobile(e.target.value.replace(/\D/g, ""));
+                setDuplicateMobile(false);
+                setGeneralError("");
                 if (otpSent && !isVerified) {
                   setOtpSent(false);
                   setOtpSuccessMessage("");
@@ -423,6 +429,41 @@ export default function RegisterAccount({
           <p className="mt-0.5 text-[9.5px] text-slate-400">
             SMS / WhatsApp OTP will be sent to verify your shop's primary contact.
           </p>
+
+          {/* Inline Duplicate Mobile Notice with 1-click Clear/Edit */}
+          {duplicateMobile && (
+            <div className="mt-1.5 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-950 shadow-2xs">
+              <div className="flex items-start gap-2">
+                <span className="text-sm">⚠️</span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-bold leading-tight">This mobile number is already registered!</p>
+                  <p className="mt-0.5 text-[11px] text-amber-800 leading-normal">
+                    You can edit the number above. Your business name and owner details are safely preserved.
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobile("");
+                        setDuplicateMobile(false);
+                        setGeneralError("");
+                        document.getElementById("mobileField")?.focus();
+                      }}
+                      className="rounded-lg bg-amber-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-amber-700 transition"
+                    >
+                      Clear &amp; Enter New Number
+                    </button>
+                    <Link
+                      href="/merchant/login"
+                      className="text-[11px] font-bold text-blue-700 underline underline-offset-2"
+                    >
+                      Sign In with this number instead →
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Inline OTP Section revealed immediately underneath Mobile */}
           {otpSent && otpChannel === "mobile" && (
@@ -518,6 +559,7 @@ export default function RegisterAccount({
               value={email}
               onChange={(e) => {
                 setEmail(e.target.value);
+                setGeneralError("");
                 if (otpSent && !isVerified) {
                   setOtpSent(false);
                   setOtpSuccessMessage("");
