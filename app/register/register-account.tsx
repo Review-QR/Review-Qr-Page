@@ -428,6 +428,13 @@ export default function RegisterAccount({
             </div>
           )}
 
+          {/* Immediate Error Feedback under the button */}
+          {generalError && !duplicateMobile && !isMobileVerified && (
+            <div className="mt-2 rounded-xl border border-rose-300 bg-rose-50 p-2.5 text-xs font-semibold text-rose-800 shadow-2xs">
+              <p>{generalError}</p>
+            </div>
+          )}
+
           {/* Inline Duplicate Mobile Notice with 1-click Clear/Edit */}
           {duplicateMobile && (
             <div className="mt-2 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-xs text-amber-950 shadow-2xs">

@@ -19,7 +19,7 @@ function cleanPhone(raw: string): string {
 }
 
 /**
- * Sends an SMS OTP using an external provider (e.g. Fast2SMS Quick/OTP API)
+ * Sends an SMS OTP using an external provider (Fast2SMS Quick SMS / OTP API)
  * If no API key is configured, falls back to dev preview so setup is never blocked.
  */
 async function dispatchSmsOtp(phone10: string, otp: string, businessName?: string): Promise<{ success: boolean; provider: string; previewOtp?: string; error?: string }> {
@@ -27,7 +27,30 @@ async function dispatchSmsOtp(phone10: string, otp: string, businessName?: strin
 
   if (fast2SmsKey) {
     try {
-      const response = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+      // 1. Try Quick SMS (route: 'q') — This is active on the account and requires no DLT / domain verification
+      const msgText = `Your Trustit verification OTP is ${otp}. Valid for 5 minutes. Do not share this code.`;
+      const qResponse = await fetch("https://www.fast2sms.com/dev/bulkV2", {
+        method: "POST",
+        headers: {
+          authorization: fast2SmsKey,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          route: "q",
+          message: msgText,
+          language: "english",
+          flash: 0,
+          numbers: phone10,
+        }),
+      });
+
+      const qData = await qResponse.json().catch(() => null);
+      if (qResponse.ok && qData?.return === true) {
+        return { success: true, provider: "fast2sms-quick" };
+      }
+
+      // 2. Fallback to route: 'otp' if route: 'q' fails
+      const otpResponse = await fetch("https://www.fast2sms.com/dev/bulkV2", {
         method: "POST",
         headers: {
           authorization: fast2SmsKey,
@@ -40,14 +63,22 @@ async function dispatchSmsOtp(phone10: string, otp: string, businessName?: strin
         }),
       });
 
-      const data = await response.json().catch(() => null);
-      if (response.ok && data?.return === true) {
-        return { success: true, provider: "fast2sms" };
+      const otpData = await otpResponse.json().catch(() => null);
+      if (otpResponse.ok && otpData?.return === true) {
+        return { success: true, provider: "fast2sms-otp" };
       }
+
+      const rawMsg = qData?.message || otpData?.message;
+      const errorMsg = Array.isArray(rawMsg)
+        ? rawMsg.join(", ")
+        : typeof rawMsg === "string"
+        ? rawMsg
+        : "SMS Gateway delivery failed. Please check your Fast2SMS account.";
+
       return {
         success: false,
         provider: "fast2sms",
-        error: data?.message?.[0] || "SMS Gateway delivery failed",
+        error: errorMsg,
       };
     } catch (err) {
       return {
@@ -58,8 +89,7 @@ async function dispatchSmsOtp(phone10: string, otp: string, businessName?: strin
     }
   }
 
-  // Fallback Dev / Pilot mode: If no SMS provider key is set yet,
-  // allow development testing with logged code
+  // Fallback Dev / Pilot mode: If no SMS provider key is set yet
   console.info(`[PHONE_OTP_DEV_DISPATCH] Mobile: +91-${phone10} | Business: ${businessName || "Trustit"} | OTP: ${otp}`);
   return {
     success: true,
@@ -80,9 +110,9 @@ export async function sendMerchantPhoneOtp(
     return { success: false, message: "Please enter a valid 10-digit mobile number." };
   }
 
-  // Rate Limiting: Max 3 OTP requests per 10 minutes per mobile number
+  // Rate Limiting: Max 10 OTP requests per 10 minutes per mobile number
   const rateLimit = checkRateLimit(`phone_otp:${phone10}`, {
-    maxRequests: 3,
+    maxRequests: 10,
     windowMs: 10 * 60 * 1000,
   });
 
