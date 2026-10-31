@@ -478,11 +478,6 @@ export default function RegisterAccount({
                   <span className="text-emerald-600 font-black">✓</span>
                   <span>{otpSuccessMessage || "OTP sent successfully to your mobile"}</span>
                 </p>
-                {previewOtp && (
-                  <span className="rounded-md border border-blue-400 bg-white px-2 py-0.5 font-mono text-[10px] font-black text-blue-800 shadow-2xs">
-                    OTP: {previewOtp}
-                  </span>
-                )}
               </div>
 
               <div className="flex items-center gap-2">

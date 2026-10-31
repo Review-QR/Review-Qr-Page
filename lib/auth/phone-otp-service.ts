@@ -34,7 +34,7 @@ async function dispatchSmsOtp(phone10: string, otp: string, businessName?: strin
   if (fast2SmsKey) {
     try {
       // 1. Try Quick SMS (route: 'q') — Active on the account, delivers to DND and non-DND numbers instantly
-      const msgText = `Your Trustit verification OTP is ${otp}. Valid for 5 minutes. Do not share this code.`;
+      const msgText = `Your Trustit OTP is ${otp}. Valid for 5 minutes.`;
       const qResponse = await fetch("https://www.fast2sms.com/dev/bulkV2", {
         method: "POST",
         headers: {
@@ -52,7 +52,7 @@ async function dispatchSmsOtp(phone10: string, otp: string, businessName?: strin
 
       const qData = await qResponse.json().catch(() => null);
       if (qResponse.ok && qData?.return === true) {
-        return { success: true, provider: "fast2sms-quick", previewOtp: otp };
+        return { success: true, provider: "fast2sms-quick" };
       }
 
       // 2. Fallback to route: 'otp' if route: 'q' fails
@@ -71,7 +71,7 @@ async function dispatchSmsOtp(phone10: string, otp: string, businessName?: strin
 
       const otpData = await otpResponse.json().catch(() => null);
       if (otpResponse.ok && otpData?.return === true) {
-        return { success: true, provider: "fast2sms-otp", previewOtp: otp };
+        return { success: true, provider: "fast2sms-otp" };
       }
 
       const rawMsg = qData?.message || otpData?.message;
@@ -177,7 +177,6 @@ export async function sendMerchantPhoneOtp(
   return {
     success: true,
     message: `OTP sent to +91 ${phone10}`,
-    previewOtp: dispatchResult.previewOtp,
   };
 }
 
