@@ -15,7 +15,7 @@ const items = [
   { href: "/merchant/dashboard/products", label: "QR Standees & Kits", icon: "products" },
   { href: "/merchant/dashboard/reviews", label: "Customer Reviews", icon: "reviews" },
   { href: "/merchant/dashboard/messages", label: "Message Designer", icon: "business" },
-  { href: "/merchant/dashboard#scan-analytics", label: "Analytics", icon: "analytics" },
+  { href: "/merchant/dashboard/analytics", label: "Analytics", icon: "analytics" },
   { href: "/merchant/dashboard/subscription", label: "Subscription", icon: "subscription" },
   { href: "/merchant/dashboard/payments", label: "Payments", icon: "payments" },
   { href: "/merchant/dashboard/profile", label: "Merchant Profile", icon: "profile" },
@@ -93,6 +93,7 @@ export default function MerchantNavigation({
           item.href !== "/merchant/dashboard/orders" &&
           item.href !== "/merchant/dashboard/menu" &&
           item.href !== "/merchant/dashboard/messages" &&
+          item.href !== "/merchant/dashboard/analytics" &&
           !item.href.includes("#scan-analytics"),
       )
     : items
@@ -111,15 +112,10 @@ export default function MerchantNavigation({
   return (
     <nav aria-label="Merchant navigation" className={mobile ? "merchant-mobile-nav" : "merchant-nav"}>
       {visibleItems.map((item) => {
-        const active = item.href.endsWith("#scan-analytics")
-          ? pathname === "/merchant/dashboard" && hash === "#scan-analytics"
-          : item.href === "/merchant/dashboard"
-            ? pathname === item.href && hash !== "#scan-analytics"
-            : pathname === item.href || pathname.startsWith(`${item.href}/`);
+        const active = pathname === item.href || (item.href !== "/merchant/dashboard" && pathname.startsWith(`${item.href}/`));
         const link = (
           <Link
             href={item.href}
-            onClick={() => setHash(item.href.endsWith("#scan-analytics") ? "#scan-analytics" : "")}
             aria-current={active ? "page" : undefined}
             className={`merchant-nav__link${active ? " is-active" : ""}`}
           >

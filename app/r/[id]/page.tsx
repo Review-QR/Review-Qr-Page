@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { supabase } from "@/lib/supabase";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { safeReviewLink } from "@/lib/safe-review-link";
 import ReviewExperience from "./review-experience";
 import {
@@ -74,6 +75,14 @@ export default async function ScanPage({ params }: ScanPageProps) {
   }
 
   const qrBusinessId = business.id;
+  const admin = createSupabaseAdminClient();
+  const { data: businessExtra } = await admin
+    .from("businesses")
+    .select("logo_url")
+    .eq("id", business.id)
+    .maybeSingle();
+
+  const logoUrl = businessExtra?.logo_url ? String(businessExtra.logo_url) : null;
   const cookieSessionId = await getReviewSessionCookie(qrBusinessId);
   const restoredSession = cookieSessionId
     ? await restoreReviewSessionForBusiness(qrBusinessId, cookieSessionId)
@@ -123,6 +132,7 @@ export default async function ScanPage({ params }: ScanPageProps) {
   return (
     <ReviewExperience
       businessName={business.name}
+      logoUrl={logoUrl}
       googleReviewUrl={reviewLink}
       experienceCategories={customerCategories}
       initialSession={restoredSession}

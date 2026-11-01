@@ -16,6 +16,7 @@ import type {
 
 type ReviewExperienceProps = {
   businessName: string;
+  logoUrl?: string | null;
   googleReviewUrl: string | null;
   experienceCategories: ReviewExperienceCategory[];
   initialSession: RestoredReviewSession;
@@ -58,7 +59,7 @@ function PrimaryButton({ children, ...props }: React.ButtonHTMLAttributes<HTMLBu
 }
 
 export default function ReviewExperience({
-  businessName, googleReviewUrl, experienceCategories, initialSession, createReviewSession, saveExperiences,
+  businessName, logoUrl, googleReviewUrl, experienceCategories, initialSession, createReviewSession, saveExperiences,
   generateReviewDraft, googleReviewHandoff, saveReviewDraft, submitTrustitReview,
 }: ReviewExperienceProps) {
   const [isPending, startTransition] = useTransition();
@@ -216,13 +217,27 @@ export default function ReviewExperience({
     <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 top-0 -z-0 h-80 bg-[radial-gradient(ellipse_at_top,_#ffe4b7_0%,_#fff8ed_72%)]" />
     <div className="relative mx-auto w-full max-w-3xl">
       <header className="mb-5 flex items-center justify-center gap-2.5 sm:mb-7">
-        <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 text-lg font-black text-white shadow-md shadow-blue-200">T</span>
-        <span><strong className="block text-lg font-extrabold tracking-tight">Trustit</strong><small className="block text-[11px] leading-4 text-slate-500">Your Feedback Matters</small></span>
+        {logoUrl ? (
+          <div className="size-10 rounded-xl overflow-hidden border border-slate-200 bg-white shadow-xs shrink-0 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
+          </div>
+        ) : (
+          <span className="grid size-10 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-indigo-700 text-lg font-black text-white shadow-md shadow-blue-200">T</span>
+        )}
+        <span><strong className="block text-lg font-extrabold tracking-tight">{businessName}</strong><small className="block text-[11px] leading-4 text-slate-500">Customer Review Portal</small></span>
       </header>
       <section className="rounded-[28px] border border-orange-100 bg-white/95 shadow-[0_18px_60px_rgba(112,81,40,.10)] sm:rounded-[32px]">
         <div className="relative overflow-hidden rounded-t-[28px] border-b border-amber-100 bg-[linear-gradient(120deg,#fffdf8,#fff4e2)] px-5 pb-6 pt-7 text-center sm:rounded-t-[32px] sm:px-9 sm:pb-7 sm:pt-9">
           <span aria-hidden="true" className="pointer-events-none absolute -right-7 top-3 text-5xl text-amber-200/70">✧</span>
-          <span className="mx-auto mb-3 grid size-16 place-items-center rounded-full border-4 border-white bg-gradient-to-br from-amber-100 to-orange-200 text-2xl font-extrabold text-orange-800 shadow-md shadow-orange-100">{businessName.trim().slice(0, 1).toUpperCase()}</span>
+          {logoUrl ? (
+            <div className="mx-auto mb-3 size-16 sm:size-20 rounded-full border-4 border-white shadow-md shadow-orange-100 overflow-hidden bg-white ring-2 ring-amber-300 flex items-center justify-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
+            </div>
+          ) : (
+            <span className="mx-auto mb-3 grid size-16 place-items-center rounded-full border-4 border-white bg-gradient-to-br from-amber-100 to-orange-200 text-2xl font-extrabold text-orange-800 shadow-md shadow-orange-100">{businessName.trim().slice(0, 1).toUpperCase()}</span>
+          )}
           <p className="text-xs font-semibold text-slate-500">Your feedback helps us serve you better</p>
           <h1 className="mt-1 break-words text-[22px] font-extrabold leading-tight tracking-[-.035em] text-[#10153f] sm:text-3xl">{businessName}</h1>
         </div>
