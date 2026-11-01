@@ -41,40 +41,6 @@ export default async function MerchantDashboardLayout({ children }: { children: 
 
   return (
     <div className={`trustit-merchant-app${isPremium ? " is-premium-vip" : ""} flex flex-col min-h-screen bg-[#faf8ff]`}>
-      {/* 1. Top Institutional Sub-Bar (Stitch Kinetic Trust Standard) */}
-      <div className="w-full bg-[#faf8ff] border-b border-[#eaedff] px-4 sm:px-8 py-2 text-xs">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          {/* Left: DPIIT & Startup India Recognition */}
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#eaedff] text-[#003178] font-bold tracking-wider text-[11px] uppercase shadow-xs">
-              <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-                verified
-              </span>
-              <span>DPIIT RECOGNIZED • STARTUP INDIA</span>
-            </div>
-            <div className="h-4 w-px bg-[#dae2fd] hidden sm:block"></div>
-            <span className="text-[#434652] text-[11px] font-medium hidden md:inline">
-              TRUSTIT Merchant Partner Network • Kinetic Rail v2.0
-            </span>
-          </div>
-
-          {/* Right: Direct Toll-Free Helpline & Gateway Health */}
-          <div className="flex items-center gap-3 text-[#434652] text-[11px] flex-wrap">
-            <a
-              href="tel:18004198787"
-              className="inline-flex items-center gap-1.5 text-[#131b2e] hover:text-[#003178] transition-colors font-semibold"
-            >
-              <span className="material-symbols-outlined text-[15px] text-[#006875]">support_agent</span>
-              <span>Merchant Desk: <strong>1800-419-8787</strong></span>
-            </a>
-            <div className="flex items-center gap-1.5 text-[#005739] font-bold bg-[#eaedff] px-2.5 py-0.5 rounded-full">
-              <span className="inline-block w-2 h-2 rounded-full bg-[#005739] animate-pulse"></span>
-              <span>Gateways Nominal</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div className="flex flex-1 min-h-0">
         {/* 2. Modernized Stitch Sidebar */}
         <aside className="merchant-sidebar">
@@ -87,28 +53,28 @@ export default async function MerchantDashboardLayout({ children }: { children: 
           </Link>
 
           <div className="merchant-identity">
-            <span className="merchant-identity__avatar overflow-hidden p-0.5" aria-hidden="true">
+            <div className="h-11 w-11 shrink-0 rounded-full border-2 border-[#b59363] ring-2 ring-amber-200/50 bg-[#1e140a] flex items-center justify-center overflow-hidden shadow-xs">
               {merchant.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover rounded-xl" />
+                <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover" />
               ) : (
-                merchantIcon(merchant.businessType)
+                <span className="text-amber-300 font-bold text-lg">{merchantIcon(merchant.businessType)}</span>
               )}
-            </span>
-            <span className="merchant-identity__copy">
+            </div>
+            <div className="merchant-identity__copy min-w-0 flex-1">
               <span className="flex items-center gap-1.5">
-                <strong>{merchant.businessName}</strong>
+                <strong className="truncate block font-bold text-slate-900 text-xs sm:text-sm">{merchant.businessName}</strong>
                 {isPremium && (
-                  <span title="Trustit VIP Merchant" aria-label="VIP Merchant" className="inline-flex items-center text-amber-500">
+                  <span title="Trustit VIP Merchant" aria-label="VIP Merchant" className="inline-flex items-center text-amber-500 shrink-0">
                     👑
                   </span>
                 )}
               </span>
-              <small className="font-mono text-[10px] text-[#737783]">{merchant.businessId}</small>
+              <small className="font-mono text-[10px] text-slate-500 block truncate">{merchant.businessId}</small>
               <span className="merchant-active-pill">
                 <i /> Active Merchant
               </span>
-            </span>
+            </div>
           </div>
 
           <MerchantNavigation
@@ -161,7 +127,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
               </Link>
               <div className="h-5 w-px bg-[#eaedff] hidden sm:block"></div>
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#1e140a] border border-[#b59363] text-white flex items-center justify-center font-bold text-xs shadow-xs overflow-hidden">
+                <div className="w-9 h-9 rounded-full bg-[#1e140a] border-2 border-[#b59363] ring-2 ring-amber-200/50 text-white flex items-center justify-center font-bold text-xs shadow-xs overflow-hidden shrink-0">
                   {merchant.logoUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover" />
@@ -173,8 +139,8 @@ export default async function MerchantDashboardLayout({ children }: { children: 
                   <span className="text-xs font-bold text-[#131b2e] leading-tight truncate max-w-[160px]">
                     {merchant.businessName}
                   </span>
-                  <span className="text-[10px] text-[#005739] font-semibold uppercase">
-                    {isPremium ? "VIP Partner" : "Verified Partner"}
+                  <span className="text-[10px] text-[#005739] font-bold uppercase tracking-wider">
+                    {isPremium ? "👑 VIP Partner" : "✓ Verified Partner"}
                   </span>
                 </div>
               </div>
