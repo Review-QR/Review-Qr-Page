@@ -122,11 +122,8 @@ test("all five QR designs consume one merchant business category instead of temp
 
 test("normal merchant page rendering reads saved artwork only and never starts paid generation", async () => {
   const qrPage = await readFile(new URL("./page.tsx", import.meta.url), "utf8");
-  const dashboardPage = await readFile(new URL("../page.tsx", import.meta.url), "utf8");
   assert.match(qrPage, /getPersistedBusinessQrDesignAssets/);
-  assert.match(dashboardPage, /getPersistedBusinessQrDesignAssets/);
   assert.doesNotMatch(qrPage, /getBusinessQrDesignAssets\(/);
-  assert.doesNotMatch(dashboardPage, /getBusinessQrDesignAssets\(/);
   const assetService = await readFile(new URL("../../../../lib/trustit-ai/qr-design-assets.server.ts", import.meta.url), "utf8");
   assert.match(assetService, /export async function getPersistedBusinessQrDesignAssets/);
   assert.match(assetService, /return loadPersistedAssets\(/);

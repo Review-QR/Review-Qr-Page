@@ -213,7 +213,7 @@ export default async function MerchantDashboardPage() {
   return (
     <div className="merchant-dashboard-page space-y-6">
       {/* Stitch Executive Storefront Hero Bar */}
-      <section className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-xs mb-6 transition hover:shadow-sm">
+      <section className={`merchant-hero${isPremium ? " merchant-hero--premium" : ""} rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-xs mb-6 transition hover:shadow-sm`}>
         {/* Top Row: Store Identity, Greeting & Action Buttons */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-5 border-b border-slate-100">
           {/* Left: Circular Medallion Logo + Store Identity */}
