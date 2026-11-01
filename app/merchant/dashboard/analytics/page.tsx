@@ -115,11 +115,11 @@ export default async function MerchantAnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Clean Analytics Header - Dedicated, No Operational Clutter */}
-      <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs sm:p-8">
+      <header className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-700">
+              <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-bold uppercase tracking-wider text-white">
                 Analytics &amp; Footfall Intelligence
               </span>
               <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-800">
@@ -138,14 +138,14 @@ export default async function MerchantAnalyticsPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/merchant/dashboard/qr"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-bold text-slate-700 shadow-2xs hover:bg-slate-50 transition"
             >
               <span>📱</span>
               <span>My QR &amp; Standee</span>
             </Link>
             <Link
               href="/merchant/dashboard"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-2xs hover:bg-slate-800 transition"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-slate-800 transition"
             >
               <span>Back to Dashboard</span>
             </Link>
@@ -210,33 +210,33 @@ export default async function MerchantAnalyticsPage() {
         </div>
       </section>
 
-      {/* 👥 CUSTOMER DATA & FOOTFALL INTELLIGENCE (मर्चेंट कस्टमर डेटा - लाइन बाय लाइन) */}
+      {/* 👥 CUSTOMER FOOTFALL & CRM INTELLIGENCE (LINE BY LINE) */}
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-base">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-base text-white">
               👥
             </span>
             <div>
               <h2 className="text-base font-black text-slate-900">
-                Customer Data &amp; Footfall Intelligence (कस्टमर डेटा मीट्रिक्स)
+                Customer Footfall &amp; CRM Intelligence
               </h2>
               <p className="text-[11px] text-slate-500">
-                Kitne customers ne mobile number, naam, family members aur celebration dates add ki hain.
+                Verified customer profiles, contact numbers, family circles, and occasion milestones.
               </p>
             </div>
           </div>
 
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
-            <span>🔒</span> DPDP Privacy Compliant
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100 px-3 py-1 text-xs font-bold text-slate-800">
+            <span>🔒</span> Privacy Compliant
           </span>
         </div>
 
         {/* Compact Privacy Notice */}
-        <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-indigo-100 bg-indigo-50/40 px-3 py-2 text-[11px] text-indigo-900">
+        <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[11px] text-slate-600">
           <span className="text-sm">🛡️</span>
           <span>
-            <strong>Privacy Compliant Aggregation:</strong> Individual phone numbers ya private dates open list me display nahi ki jaati hain. Merchant ko sirf total footfall counts aur verified metrics dikhaye jaate hain.
+            <strong>Data Privacy Shield:</strong> Individual personal contact details and private celebration dates are protected under data privacy standards. Only aggregated footfall totals are presented.
           </span>
         </div>
 
@@ -255,7 +255,7 @@ export default async function MerchantAnalyticsPage() {
                     WhatsApp Ready
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-500">Kitne logon ne mobile number enter kiya hai</span>
+                <span className="text-[11px] text-slate-500">Customers who provided verified mobile number</span>
               </div>
             </div>
 
@@ -269,8 +269,8 @@ export default async function MerchantAnalyticsPage() {
                 </div>
                 <span className="text-[10px] text-slate-500">{crmMetrics.whatsAppReadyPercentage}% of reviewers</span>
               </div>
-              <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
-                {crmMetrics.customersWithMobile} <span className="text-xs font-normal text-slate-500">लोग</span>
+              <div className="min-w-[75px] text-right font-black text-slate-900 text-sm">
+                {crmMetrics.customersWithMobile} <span className="text-xs font-normal text-slate-500">Customers</span>
               </div>
             </div>
           </div>
@@ -288,7 +288,7 @@ export default async function MerchantAnalyticsPage() {
                     Personalized
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-500">Kitne logon ne apna naam dala hai</span>
+                <span className="text-[11px] text-slate-500">Customers who provided personalized profile name</span>
               </div>
             </div>
 
@@ -306,8 +306,8 @@ export default async function MerchantAnalyticsPage() {
                       </div>
                       <span className="text-[10px] text-slate-500">{pct}% of reviewers</span>
                     </div>
-                    <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
-                      {crmMetrics.customersWithName} <span className="text-xs font-normal text-slate-500">लोग</span>
+                    <div className="min-w-[75px] text-right font-black text-slate-900 text-sm">
+                      {crmMetrics.customersWithName} <span className="text-xs font-normal text-slate-500">Customers</span>
                     </div>
                   </>
                 );
@@ -328,7 +328,7 @@ export default async function MerchantAnalyticsPage() {
                     {crmMetrics.totalFamilyMembers} Members
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-500">Customers jinhone family (spouse/kids/parents) add kiya</span>
+                <span className="text-[11px] text-slate-500">Customers who registered family (spouse, kids, parents)</span>
               </div>
             </div>
 
@@ -342,8 +342,8 @@ export default async function MerchantAnalyticsPage() {
                 </div>
                 <span className="text-[10px] text-slate-500">{crmMetrics.familyProfiledPercentage}% profiled</span>
               </div>
-              <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
-                {crmMetrics.customersWithFamily} <span className="text-xs font-normal text-slate-500">लोग</span>
+              <div className="min-w-[75px] text-right font-black text-slate-900 text-sm">
+                {crmMetrics.customersWithFamily} <span className="text-xs font-normal text-slate-500">Customers</span>
               </div>
             </div>
           </div>
@@ -358,10 +358,10 @@ export default async function MerchantAnalyticsPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-slate-900">Special Occasions Recorded</span>
                   <span className="rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.2 text-[10px] font-bold text-amber-800">
-                    🎂 {crmMetrics.birthdaysCount} B&apos;days · 💍 {crmMetrics.anniversariesCount} Anniv
+                    🎂 {crmMetrics.birthdaysCount} Birthdays · 💍 {crmMetrics.anniversariesCount} Anniversaries
                   </span>
                 </div>
-                <span className="text-[11px] text-slate-500">Birthdays aur anniversaries mapped for WhatsApp automation</span>
+                <span className="text-[11px] text-slate-500">Celebrations mapped for automated WhatsApp greeting cards</span>
               </div>
             </div>
 
@@ -369,27 +369,27 @@ export default async function MerchantAnalyticsPage() {
               <div className="w-24 sm:w-36 text-right text-[11px] font-semibold text-emerald-700">
                 ✓ Auto-Wish Ready
               </div>
-              <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
-                {crmMetrics.totalOccasions} <span className="text-xs font-normal text-slate-500">लोग / तारीखें</span>
+              <div className="min-w-[75px] text-right font-black text-slate-900 text-sm">
+                {crmMetrics.totalOccasions} <span className="text-xs font-normal text-slate-500">Dates</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 🌟 7 CUSTOMER EXPERIENCE POINTS BREAKDOWN (सातों पॉइंट - लाइन बाय लाइन) */}
+      {/* 🌟 7 CUSTOMER EXPERIENCE POINTS BREAKDOWN (LINE BY LINE) */}
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
           <div className="flex items-center gap-2.5">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-100 text-base">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-base text-white">
               🎯
             </span>
             <div>
               <h2 className="text-base font-black text-slate-900">
-                Customer Experience Points Breakdown (7 Core Touchpoints)
+                Customer Experience Breakdown (7 Core Touchpoints)
               </h2>
               <p className="text-[11px] text-slate-500">
-                Kis customer ne kis point par review diya — dekhein har point ko kitne logon ne chuna.
+                Customer satisfaction ratings across quality, hospitality, and ambience.
               </p>
             </div>
           </div>
@@ -431,8 +431,8 @@ export default async function MerchantAnalyticsPage() {
                   </div>
                   <span className="text-[10px] text-slate-500">{point.percentage}% rating share</span>
                 </div>
-                <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
-                  {point.count} <span className="text-xs font-normal text-slate-500">लोग</span>
+                <div className="min-w-[75px] text-right font-black text-slate-900 text-sm">
+                  {point.count} <span className="text-xs font-normal text-slate-500">Customers</span>
                 </div>
               </div>
             </div>
@@ -440,14 +440,14 @@ export default async function MerchantAnalyticsPage() {
         </div>
       </section>
 
-      {/* ⭐ CUSTOMER STAR RATING DISTRIBUTION (सीधी लाइन बाय लाइन नीचे तक) */}
+      {/* ⭐ CUSTOMER STAR RATING DISTRIBUTION (LINE BY LINE) */}
       <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-base">⭐</span>
             <div>
               <h2 className="text-base font-black text-slate-900">Customer Star Rating Distribution</h2>
-              <p className="text-[11px] text-slate-500">5-Star breakdown line by line</p>
+              <p className="text-[11px] text-slate-500">5-Star rating breakdown line by line</p>
             </div>
           </div>
           <span className="text-xs text-slate-500">
@@ -458,11 +458,11 @@ export default async function MerchantAnalyticsPage() {
         {/* Straight Down Line by Line List */}
         <div className="mt-3.5 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-slate-50/40 overflow-hidden">
           {[
-            { stars: "5 ★", label: "फाइव स्टार", count: r5, color: "bg-emerald-500", text: "text-emerald-700" },
-            { stars: "4 ★", label: "फोर स्टार", count: r4, color: "bg-teal-500", text: "text-teal-700" },
-            { stars: "3 ★", label: "थ्री स्टार", count: r3, color: "bg-amber-500", text: "text-amber-700" },
-            { stars: "2 ★", label: "टू स्टार", count: r2, color: "bg-orange-500", text: "text-orange-700" },
-            { stars: "1 ★", label: "वन स्टार", count: r1, color: "bg-rose-500", text: "text-rose-700" },
+            { stars: "5 ★", label: "5 Stars (Excellent)", count: r5, color: "bg-emerald-500", text: "text-emerald-700" },
+            { stars: "4 ★", label: "4 Stars (Good)", count: r4, color: "bg-teal-500", text: "text-teal-700" },
+            { stars: "3 ★", label: "3 Stars (Average)", count: r3, color: "bg-amber-500", text: "text-amber-700" },
+            { stars: "2 ★", label: "2 Stars (Needs Improvement)", count: r2, color: "bg-orange-500", text: "text-orange-700" },
+            { stars: "1 ★", label: "1 Star (Unsatisfactory)", count: r1, color: "bg-rose-500", text: "text-rose-700" },
           ].map((bar) => {
             const pct = totalReviews > 0 ? Math.round((bar.count / totalReviews) * 100) : 0;
             return (
@@ -486,8 +486,8 @@ export default async function MerchantAnalyticsPage() {
                     </div>
                   </div>
                   <span className="w-10 text-right text-[11px] font-bold text-slate-400">{pct}%</span>
-                  <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
-                    {bar.count} <span className="text-xs font-normal text-slate-500">लोग</span>
+                  <div className="min-w-[75px] text-right font-black text-slate-900 text-sm">
+                    {bar.count} <span className="text-xs font-normal text-slate-500">Reviews</span>
                   </div>
                 </div>
               </div>

@@ -1075,7 +1075,7 @@ export default function OccasionStudio({
         </div>
       </div>
 
-      {/* 📋 SAVED OCCASION PLANS & ACTIVE SCHEMES (चारों सेव्ड प्लान) */}
+      {/* 📋 SAVED OCCASION PLANS & ACTIVE SCHEMES */}
       <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
@@ -1084,10 +1084,10 @@ export default function OccasionStudio({
             </span>
             <div>
               <h3 className="text-base font-bold text-slate-900">
-                Saved Occasion Plans &amp; Active Schemes (चारों सेव्ड प्लान)
+                Saved Occasion Plans &amp; Active Schemes
               </h3>
               <p className="text-xs text-slate-500">
-                Aapke 4 categories ke saved plans — dekhein har occasion par kitna discount, coupon code, validity aur dispatch timing set hai.
+                View your 4 configured occasion schemes — discount %, coupon code, validity period, and automatic dispatch schedule.
               </p>
             </div>
           </div>
