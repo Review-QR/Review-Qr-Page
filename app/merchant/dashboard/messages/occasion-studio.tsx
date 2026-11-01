@@ -499,25 +499,20 @@ export default function OccasionStudio({
                   </span>
                 </div>
 
-                {/* Middle Section: Occasion Icon + Headline + Customer Name + Ornate Divider */}
+                {/* Middle Section: Occasion Icon + Headline + Ornate Divider */}
                 <div className="relative z-10 my-3">
-                  <span className="text-4xl drop-shadow-md">{occasionIcon}</span>
+                  <span className="text-5xl drop-shadow-md">{occasionIcon}</span>
 
                   {/* Headline */}
-                  <h3 className="mt-2 text-lg sm:text-xl font-black tracking-tight text-white drop-shadow-md leading-snug">
+                  <h3 className="mt-2.5 text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md leading-snug">
                     {headline}
                   </h3>
 
-                  {/* Customer Name in Bold Gold/White */}
-                  <div className="mt-1 font-sans text-xl sm:text-2xl font-black uppercase tracking-wider text-[#f5e6b3] drop-shadow-lg">
-                    MR LUCKY !!
-                  </div>
-
                   {/* Golden Ornate Divider */}
-                  <div className="my-2 flex items-center justify-center gap-2 text-[#d4af37]">
-                    <span className="h-[1px] w-10 bg-gradient-to-r from-transparent to-[#d4af37]" />
-                    <span className="text-xs">‹ ❖ ›</span>
-                    <span className="h-[1px] w-10 bg-gradient-to-l from-transparent to-[#d4af37]" />
+                  <div className="my-2.5 flex items-center justify-center gap-2 text-[#d4af37]">
+                    <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#d4af37]" />
+                    <span className="text-sm">‹ ❖ ›</span>
+                    <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#d4af37]" />
                   </div>
 
                   {/* Subtitle / Wishes */}
@@ -575,25 +570,20 @@ export default function OccasionStudio({
                   </span>
                 </div>
 
-                {/* Middle Section: Occasion Icon + Headline + Customer Name + Divider */}
+                {/* Middle Section: Occasion Icon + Headline + Divider */}
                 <div className="relative z-10 my-3">
-                  <span className="text-4xl drop-shadow-sm">{occasionIcon}</span>
+                  <span className="text-5xl drop-shadow-sm">{occasionIcon}</span>
 
                   {/* Headline */}
-                  <h3 className="mt-2 text-lg sm:text-xl font-black tracking-tight text-[#3a2717] leading-snug">
+                  <h3 className="mt-2.5 text-xl sm:text-2xl font-black tracking-tight text-[#3a2717] leading-snug">
                     {headline}
                   </h3>
 
-                  {/* Customer Name in Warm Brown */}
-                  <div className="mt-1 font-sans text-xl sm:text-2xl font-black uppercase tracking-wider text-[#2e1c0d]">
-                    MR LUCKY !!
-                  </div>
-
                   {/* Warm Bronze Ornate Divider */}
-                  <div className="my-2 flex items-center justify-center gap-2 text-[#b89564]">
-                    <span className="h-[1px] w-10 bg-gradient-to-r from-transparent to-[#b89564]" />
-                    <span className="text-xs">‹ ❖ ›</span>
-                    <span className="h-[1px] w-10 bg-gradient-to-l from-transparent to-[#b89564]" />
+                  <div className="my-2.5 flex items-center justify-center gap-2 text-[#b89564]">
+                    <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#b89564]" />
+                    <span className="text-sm">‹ ❖ ›</span>
+                    <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#b89564]" />
                   </div>
 
                   {/* Subtitle / Wishes */}
@@ -815,14 +805,14 @@ export default function OccasionStudio({
                 </div>
               </div>
 
-              {/* Headline (Free Text Input with Dynamic Customer Name Lock) */}
+              {/* Headline (Free Text Input for Universal Card Poster) */}
               <div>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
                     Greeting Card Headline:
                   </label>
                   <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
-                    <span>🔒</span> Customer Name Auto-Joined
+                    <span>👑</span> Universal Royal Card Poster
                   </span>
                 </div>
                 <input
@@ -833,31 +823,31 @@ export default function OccasionStudio({
                   className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
                 />
                 <span className="mt-1 block text-[11px] text-slate-500">
-                  Card par is headline ke theek niche customer ka naam (jaise: <strong>MR LUCKY !!</strong>) automatically judega.
+                  Yeh headline aapke universal royal card poster par print hogi (sab customer ke liye timeless aur consistent).
                 </span>
               </div>
 
-              {/* Message Body with Locked Customer Name Indicator */}
+              {/* Message Body with Dynamic Customer Personalization */}
               <div>
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
                     Greeting Message Body:
                   </label>
-                  <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
-                    <span>🔒</span> Name Position Locked
+                  <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                    <span>⚡</span> Smart Personalization
                   </span>
                 </div>
 
-                {/* Locked Indicator Box: Guarantees customer name cannot be accidentally broken/deleted */}
-                <div className="mt-1.5 flex flex-col gap-1.5 rounded-2xl border border-amber-200 bg-amber-50/80 p-3">
+                {/* Personalization Info Box */}
+                <div className="mt-1.5 flex flex-col gap-1.5 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-amber-200 px-2.5 py-1 text-xs font-black text-amber-950 border border-amber-300 shadow-sm">
-                      🔒 [ Customer Name 👤 ]
+                    <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-200 px-2.5 py-1 text-xs font-black text-emerald-950 border border-emerald-300 shadow-sm">
+                      👤 [ Customer Name (Auto-Inserted in WhatsApp) ]
                     </span>
                     <span className="text-xs font-bold text-slate-700">+ Aapka Customized Message Niche:</span>
                   </div>
-                  <p className="text-[11px] text-amber-800">
-                    💡 <strong>Safe Mode Active:</strong> Customer ka actual naam live customer records se WhatsApp bhejte samay automatic jud jayega. Yeh space locked hai taaki merchant dwara koi syntax error na ho.
+                  <p className="text-[11px] text-emerald-900">
+                    💡 <strong>Universal Card + Dynamic Personalization:</strong> Card poster ek timeless luxury poster rahega, jabki customer ka personal naam (jaise: <strong>Rahul ji</strong> ya <strong>Priya ji</strong>) WhatsApp message me har customer ke hisab se dynamically deliver hoga!
                   </p>
                 </div>
 

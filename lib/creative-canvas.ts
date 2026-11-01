@@ -434,29 +434,24 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
 
     // Headline
     ctx.fillStyle = "#ffffff";
-    ctx.font = "900 52px sans-serif";
-    ctx.fillText(headline, width / 2, 500);
-
-    // Customer Name
-    ctx.fillStyle = "#f5e6b3";
-    ctx.font = "900 64px sans-serif";
-    ctx.fillText(customerName, width / 2, 580);
+    ctx.font = "900 58px sans-serif";
+    ctx.fillText(headline, width / 2, 510);
 
     // Ornate Golden Divider
     ctx.fillStyle = "#d4af37";
-    ctx.font = "bold 26px sans-serif";
-    ctx.fillText("✦ ────── ‹ ❖ › ────── ✦", width / 2, 640);
+    ctx.font = "bold 28px sans-serif";
+    ctx.fillText("✦ ────── ‹ ❖ › ────── ✦", width / 2, 580);
 
     // Subtitle Wishes
     ctx.fillStyle = "#f0dfaa";
     ctx.font = "italic 32px Georgia, serif";
-    ctx.fillText(`"${subtitle}"`, width / 2, 705);
+    ctx.fillText(`"${subtitle}"`, width / 2, 650);
 
     // Coupon Ticket Box
     const couponBoxW = width - 240;
     const couponBoxH = 290;
     const couponBoxX = 120;
-    const couponBoxY = 780;
+    const couponBoxY = 750;
 
     ctx.save();
     ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
@@ -557,29 +552,24 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
 
     // Headline
     ctx.fillStyle = "#3a2717";
-    ctx.font = "900 52px sans-serif";
-    ctx.fillText(headline, width / 2, 500);
-
-    // Customer Name
-    ctx.fillStyle = "#2e1c0d";
-    ctx.font = "900 64px sans-serif";
-    ctx.fillText(customerName, width / 2, 580);
+    ctx.font = "900 58px sans-serif";
+    ctx.fillText(headline, width / 2, 510);
 
     // Ornate Divider
     ctx.fillStyle = "#b89564";
-    ctx.font = "bold 26px sans-serif";
-    ctx.fillText("✦ ────── ‹ ❖ › ────── ✦", width / 2, 640);
+    ctx.font = "bold 28px sans-serif";
+    ctx.fillText("✦ ────── ‹ ❖ › ────── ✦", width / 2, 580);
 
     // Subtitle Wishes
     ctx.fillStyle = "#4a3420";
     ctx.font = "italic 32px Georgia, serif";
-    ctx.fillText(`"${subtitle}"`, width / 2, 705);
+    ctx.fillText(`"${subtitle}"`, width / 2, 650);
 
     // Dashed Coupon Ticket Box
     const couponBoxW = width - 240;
     const couponBoxH = 290;
     const couponBoxX = 120;
-    const couponBoxY = 780;
+    const couponBoxY = 750;
 
     ctx.save();
     ctx.fillStyle = "#faf6f0";
