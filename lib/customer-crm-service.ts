@@ -330,6 +330,26 @@ export async function creditMerchantConnectWallet(
 ): Promise<{ success: boolean; newBalance: number }> {
   const admin = createSupabaseAdminClient();
 
+  // Idempotency guard: prevent duplicate credit if both webhook and client verification hit
+  if (cashfreeOrderId) {
+    const { data: existingTx } = await admin
+      .from("merchant_credit_transactions")
+      .select("id, balance_after")
+      .eq("cashfree_order_id", cashfreeOrderId)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingTx) {
+      console.log(`[creditMerchantConnectWallet] Order ${cashfreeOrderId} already processed. Skipping duplicate credit.`);
+      const { data: w } = await admin
+        .from("merchant_connect_wallets")
+        .select("credits_balance")
+        .eq("business_id", businessId)
+        .single();
+      return { success: true, newBalance: w?.credits_balance ?? existingTx.balance_after ?? 0 };
+    }
+  }
+
   // Get or init wallet
   await admin.rpc("get_or_create_merchant_wallet", { p_business_id: businessId });
 
