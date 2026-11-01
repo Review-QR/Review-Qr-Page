@@ -134,19 +134,7 @@ export default function PageCorrectionWidget() {
       return;
     }
 
-    // Explicitly prompt for mic permission via getUserMedia
-    try {
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        stream.getTracks().forEach((track) => track.stop());
-      }
-    } catch (permErr: any) {
-      console.warn("getUserMedia permission error:", permErr);
-      setMicStatus("error");
-      setMicError("Microphone permission blocked hai! Browser ke URL bar me lock (🔒) ya tune icon par click karke Mic ko 'Allow' kijiye.");
-      return;
-    }
-
+    // Start SpeechRecognition directly (Edge/Chrome uses the site permission directly)
     try {
       const recognition = new SpeechRecognitionClass();
       recognition.continuous = true;
@@ -172,13 +160,15 @@ export default function PageCorrectionWidget() {
         console.warn("Speech error:", event);
         const errType = event.error;
         if (errType === "not-allowed" || errType === "service-not-allowed") {
-          setMicError("Microphone block hai! URL bar me lock icon se mic Allow kijiye.");
+          setMicError("Settings me Allow ho chuka hai! Bas is page ko ek baar Reload/Refresh (Ctrl+R) kijiye taaki setting activate ho sake.");
         } else if (errType === "no-speech") {
           return;
         } else if (errType === "network") {
-          setMicError("Speech network connect nahi ho paya. Internet connection check kijiye.");
+          setMicError("Speech network connect nahi ho paya. Kripya dobara try kijiye.");
+        } else if (errType === "audio-capture") {
+          setMicError("Audio capture device busy hai ya detect nahi hua.");
         } else {
-          setMicError(`Mic notice: ${errType || "Please try speaking again"}`);
+          setMicError(`Mic note: ${errType || "Please try speaking again"}`);
         }
         setMicStatus("error");
       };
@@ -192,7 +182,7 @@ export default function PageCorrectionWidget() {
     } catch (err: any) {
       console.error("Speech recognition start failed:", err);
       setMicStatus("error");
-      setMicError("Speech start failed: " + (err?.message || "Please retry"));
+      setMicError("Speech start failed: " + (err?.message || "Please reload page & retry"));
     }
   };
 
@@ -411,13 +401,22 @@ export default function PageCorrectionWidget() {
                 <span className="material-symbols-outlined text-[16px] text-amber-600">warning</span>
                 <span>{micError}</span>
               </span>
-              <button
-                type="button"
-                onClick={() => setMicError(null)}
-                className="text-[10px] font-bold text-amber-700 hover:underline"
-              >
-                Dismiss
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.location.reload()}
+                  className="px-2 py-0.5 rounded bg-amber-200 hover:bg-amber-300 text-amber-950 text-[10px] font-bold transition"
+                >
+                  🔄 Reload Page
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMicError(null)}
+                  className="text-[10px] font-bold text-amber-700 hover:underline"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
           )}
 
