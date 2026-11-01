@@ -1074,6 +1074,244 @@ export default function OccasionStudio({
           </div>
         </div>
       </div>
+
+      {/* 📋 SAVED OCCASION PLANS & ACTIVE SCHEMES (चारों सेव्ड प्लान) */}
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-100 text-xl">
+              📋
+            </span>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                Saved Occasion Plans &amp; Active Schemes (चारों सेव्ड प्लान)
+              </h3>
+              <p className="text-xs text-slate-500">
+                Aapke 4 categories ke saved plans — dekhein har occasion par kitna discount, coupon code, validity aur dispatch timing set hai.
+              </p>
+            </div>
+          </div>
+
+          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3 py-1 text-xs font-bold text-emerald-800">
+            ✓ 4 Occasions Configured
+          </span>
+        </div>
+
+        {/* 4 Occasion Plans Grid */}
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Plan 1: Birthday Plan */}
+          <div className="flex flex-col justify-between rounded-2xl border border-orange-200 bg-gradient-to-b from-orange-50/50 to-white p-4 shadow-2xs">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">🎂</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                    autoBirthday
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      : "bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {autoBirthday ? "Auto Active" : "Paused"}
+                </span>
+              </div>
+              <h4 className="mt-2 text-sm font-extrabold text-slate-900">Birthday Scheme</h4>
+              <p className="text-[11px] text-slate-500">Daily automated customer wish</p>
+
+              <div className="mt-3 space-y-1.5 border-t border-orange-100 pt-2.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Discount:</span>
+                  <span className="font-extrabold text-orange-600">
+                    Flat {draftsMap.birthday?.discount_percent ?? 15}% OFF
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Coupon:</span>
+                  <span className="font-mono font-bold text-slate-800">
+                    BDAY-LUCKY-{draftsMap.birthday?.discount_percent ?? 15}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Validity:</span>
+                  <span className="font-semibold text-slate-700">
+                    {draftsMap.birthday?.coupon_validity_days ?? 7} Days
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Dispatch Time:</span>
+                  <span className="font-semibold text-slate-700">{dispatchTime} AM</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                handleOccasionSwitch("birthday");
+                window.scrollTo({ top: 120, behavior: "smooth" });
+              }}
+              className="mt-4 w-full rounded-xl border border-orange-200 bg-white py-2 text-xs font-bold text-orange-700 hover:bg-orange-50 transition"
+            >
+              ✏️ Edit Birthday Plan
+            </button>
+          </div>
+
+          {/* Plan 2: Anniversary Plan */}
+          <div className="flex flex-col justify-between rounded-2xl border border-rose-200 bg-gradient-to-b from-rose-50/50 to-white p-4 shadow-2xs">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">💍</span>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                    autoAnniversary
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      : "bg-slate-200 text-slate-600"
+                  }`}
+                >
+                  {autoAnniversary ? "Auto Active" : "Paused"}
+                </span>
+              </div>
+              <h4 className="mt-2 text-sm font-extrabold text-slate-900">Anniversary Scheme</h4>
+              <p className="text-[11px] text-slate-500">Wedding anniversary greeting</p>
+
+              <div className="mt-3 space-y-1.5 border-t border-rose-100 pt-2.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Discount:</span>
+                  <span className="font-extrabold text-rose-600">
+                    Flat {draftsMap.anniversary?.discount_percent ?? 20}% OFF
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Coupon:</span>
+                  <span className="font-mono font-bold text-slate-800">
+                    ANNIV-LUCKY-{draftsMap.anniversary?.discount_percent ?? 20}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Validity:</span>
+                  <span className="font-semibold text-slate-700">
+                    {draftsMap.anniversary?.coupon_validity_days ?? 7} Days
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Dispatch Time:</span>
+                  <span className="font-semibold text-slate-700">{dispatchTime} AM</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                handleOccasionSwitch("anniversary");
+                window.scrollTo({ top: 120, behavior: "smooth" });
+              }}
+              className="mt-4 w-full rounded-xl border border-rose-200 bg-white py-2 text-xs font-bold text-rose-700 hover:bg-rose-50 transition"
+            >
+              ✏️ Edit Anniversary Plan
+            </button>
+          </div>
+
+          {/* Plan 3: Festival Plan */}
+          <div className="flex flex-col justify-between rounded-2xl border border-indigo-200 bg-gradient-to-b from-indigo-50/50 to-white p-4 shadow-2xs">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">🪔</span>
+                <span className="rounded-full bg-indigo-100 border border-indigo-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-indigo-800">
+                  {draftsMap.festival ? "Plan Saved" : "Default Ready"}
+                </span>
+              </div>
+              <h4 className="mt-2 text-sm font-extrabold text-slate-900">Festival Campaign</h4>
+              <p className="text-[11px] text-slate-500">Festivals &amp; seasonal greetings</p>
+
+              <div className="mt-3 space-y-1.5 border-t border-indigo-100 pt-2.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Discount:</span>
+                  <span className="font-extrabold text-indigo-600">
+                    Flat {draftsMap.festival?.discount_percent ?? 25}% OFF
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Coupon:</span>
+                  <span className="font-mono font-bold text-slate-800">
+                    FESTIVE-LUCKY-{draftsMap.festival?.discount_percent ?? 25}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Validity:</span>
+                  <span className="font-semibold text-slate-700">
+                    {draftsMap.festival?.coupon_validity_days ?? 7} Days
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Mode:</span>
+                  <span className="font-semibold text-slate-700">Festival Broadcast</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                handleOccasionSwitch("festival");
+                window.scrollTo({ top: 120, behavior: "smooth" });
+              }}
+              className="mt-4 w-full rounded-xl border border-indigo-200 bg-white py-2 text-xs font-bold text-indigo-700 hover:bg-indigo-50 transition"
+            >
+              ✏️ Edit Festival Plan
+            </button>
+          </div>
+
+          {/* Plan 4: Special Offer Plan */}
+          <div className="flex flex-col justify-between rounded-2xl border border-emerald-200 bg-gradient-to-b from-emerald-50/50 to-white p-4 shadow-2xs">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">🔥</span>
+                <span className="rounded-full bg-emerald-100 border border-emerald-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-800">
+                  {draftsMap.offer ? "Plan Saved" : "Default Ready"}
+                </span>
+              </div>
+              <h4 className="mt-2 text-sm font-extrabold text-slate-900">Today&apos;s Special Offer</h4>
+              <p className="text-[11px] text-slate-500">Flash discount &amp; dining vouchers</p>
+
+              <div className="mt-3 space-y-1.5 border-t border-emerald-100 pt-2.5 text-xs">
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Discount:</span>
+                  <span className="font-extrabold text-emerald-600">
+                    Flat {draftsMap.offer?.discount_percent ?? 10}% OFF
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Coupon:</span>
+                  <span className="font-mono font-bold text-slate-800">
+                    SPECIAL-LUCKY-{draftsMap.offer?.discount_percent ?? 10}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Validity:</span>
+                  <span className="font-semibold text-slate-700">
+                    {draftsMap.offer?.coupon_validity_days ?? 3} Days
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Mode:</span>
+                  <span className="font-semibold text-slate-700">Special Promotion</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                handleOccasionSwitch("offer");
+                window.scrollTo({ top: 120, behavior: "smooth" });
+              }}
+              className="mt-4 w-full rounded-xl border border-emerald-200 bg-white py-2 text-xs font-bold text-emerald-700 hover:bg-emerald-50 transition"
+            >
+              ✏️ Edit Offer Plan
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

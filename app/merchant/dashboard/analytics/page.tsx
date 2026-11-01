@@ -210,115 +210,104 @@ export default async function MerchantAnalyticsPage() {
         </div>
       </section>
 
-      {/* 👥 CUSTOMER DATA & CRM INTELLIGENCE BREAKDOWN (मर्चेंट कस्टमर डेटा मीट्रिक्स) */}
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs sm:p-7">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-base">
-                👥
-              </span>
-              <h2 className="text-base sm:text-lg font-black text-slate-900">
+      {/* 👥 CUSTOMER DATA & FOOTFALL INTELLIGENCE (मर्चेंट कस्टमर डेटा - लाइन बाय लाइन) */}
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-indigo-100 text-base">
+              👥
+            </span>
+            <div>
+              <h2 className="text-base font-black text-slate-900">
                 Customer Data &amp; Footfall Intelligence (कस्टमर डेटा मीट्रिक्स)
               </h2>
-            </div>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Dekhein kitne customers ne apna mobile number, naam, family members aur celebration dates add ki hain.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
-              <span>🔒</span> DPDP Privacy Compliant
-            </span>
-          </div>
-        </div>
-
-        {/* DPDP Privacy Notice - Explicitly follows User Instruction */}
-        <div className="mt-4 flex items-start gap-3 rounded-2xl border border-indigo-100/90 bg-indigo-50/50 p-3.5 text-xs text-indigo-900">
-          <span className="mt-0.5 text-sm">🛡️</span>
-          <div className="leading-relaxed">
-            <strong className="text-indigo-950">Privacy &amp; Data Security Shield:</strong> Customer privacy compliance ke niyam ke tahat individual vyakti ka phone number, naam ya personal celebration dates yahan open list me display nahi ki jaati hain. Merchant ko marketing aur WhatsApp automation ke liye <strong>sirf aggregated metrics aur intelligence breakdown</strong> dikhaya jata hai.
-          </div>
-        </div>
-
-        {/* Customer Data Metric Cards Grid */}
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Card 1: Mobile Numbers Captured */}
-          <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:bg-white hover:shadow-xs">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl">📱</span>
-                <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-800">
-                  Mobile Captured
-                </span>
-              </div>
-              <h3 className="mt-2 text-sm font-extrabold text-slate-900">Customers with Mobile</h3>
-              <p className="mt-0.5 text-[11px] text-slate-500">
-                Kitne logon ne mobile number enter kiya
+              <p className="text-[11px] text-slate-500">
+                Kitne customers ne mobile number, naam, family members aur celebration dates add ki hain.
               </p>
             </div>
+          </div>
 
-            <div className="mt-4 border-t border-slate-200/80 pt-3">
-              <div className="flex items-baseline justify-between">
-                <span className="text-xs font-bold text-slate-600">Total Registered:</span>
-                <span className="text-xl font-black text-slate-900">
-                  {crmMetrics.customersWithMobile}
-                </span>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-bold text-indigo-700">
+            <span>🔒</span> DPDP Privacy Compliant
+          </span>
+        </div>
+
+        {/* Compact Privacy Notice */}
+        <div className="mt-3 flex items-center gap-2.5 rounded-xl border border-indigo-100 bg-indigo-50/40 px-3 py-2 text-[11px] text-indigo-900">
+          <span className="text-sm">🛡️</span>
+          <span>
+            <strong>Privacy Compliant Aggregation:</strong> Individual phone numbers ya private dates open list me display nahi ki jaati hain. Merchant ko sirf total footfall counts aur verified metrics dikhaye jaate hain.
+          </span>
+        </div>
+
+        {/* Line by Line Rows (Saves Space, Clean & Compact) */}
+        <div className="mt-3.5 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-slate-50/40 overflow-hidden">
+          {/* Row 1: Mobile Numbers Captured */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 sm:px-4 bg-white hover:bg-slate-50 transition">
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-base">
+                📱
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900">Customers with Mobile Number</span>
+                  <span className="rounded-md bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 text-[10px] font-bold text-emerald-700">
+                    WhatsApp Ready
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-500">Kitne logon ne mobile number enter kiya hai</span>
               </div>
+            </div>
 
-              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"
-                  style={{ width: `${crmMetrics.whatsAppReadyPercentage}%` }}
-                />
+            <div className="flex items-center gap-3 sm:justify-end">
+              <div className="w-24 sm:w-36">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-full rounded-full bg-emerald-500"
+                    style={{ width: `${crmMetrics.whatsAppReadyPercentage}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-slate-500">{crmMetrics.whatsAppReadyPercentage}% of reviewers</span>
               </div>
-
-              <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
-                <span>
-                  {totalReviews > 0 ? `${crmMetrics.customersWithMobile} of ${totalReviews} reviewers` : "No data yet"}
-                </span>
-                <span className="font-bold text-emerald-700">{crmMetrics.whatsAppReadyPercentage}%</span>
+              <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
+                {crmMetrics.customersWithMobile} <span className="text-xs font-normal text-slate-500">लोग</span>
               </div>
             </div>
           </div>
 
-          {/* Card 2: Customer Names Captured */}
-          <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:bg-white hover:shadow-xs">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl">👤</span>
-                <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-blue-800">
-                  Name Profiled
-                </span>
+          {/* Row 2: Customer Names Profiled */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 sm:px-4 bg-white hover:bg-slate-50 transition">
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-base">
+                👤
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900">Customers with Name</span>
+                  <span className="rounded-md bg-blue-50 border border-blue-200 px-1.5 py-0.2 text-[10px] font-bold text-blue-700">
+                    Personalized
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-500">Kitne logon ne apna naam dala hai</span>
               </div>
-              <h3 className="mt-2 text-sm font-extrabold text-slate-900">Customers with Name</h3>
-              <p className="mt-0.5 text-[11px] text-slate-500">
-                Kitne logon ne apna naam dala hai
-              </p>
             </div>
 
-            <div className="mt-4 border-t border-slate-200/80 pt-3">
-              <div className="flex items-baseline justify-between">
-                <span className="text-xs font-bold text-slate-600">Personalized Profiles:</span>
-                <span className="text-xl font-black text-slate-900">
-                  {crmMetrics.customersWithName}
-                </span>
-              </div>
-
+            <div className="flex items-center gap-3 sm:justify-end">
               {(() => {
                 const pct = totalReviews > 0 ? Math.min(100, Math.round((crmMetrics.customersWithName / totalReviews) * 100)) : 0;
                 return (
                   <>
-                    <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-blue-500 to-indigo-500"
-                        style={{ width: `${pct}%` }}
-                      />
+                    <div className="w-24 sm:w-36">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                        <div
+                          className="h-full rounded-full bg-blue-500"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-slate-500">{pct}% of reviewers</span>
                     </div>
-                    <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
-                      <span>{totalReviews > 0 ? `${crmMetrics.customersWithName} of ${totalReviews} reviewers` : "No data yet"}</span>
-                      <span className="font-bold text-blue-700">{pct}%</span>
+                    <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
+                      {crmMetrics.customersWithName} <span className="text-xs font-normal text-slate-500">लोग</span>
                     </div>
                   </>
                 );
@@ -326,195 +315,124 @@ export default async function MerchantAnalyticsPage() {
             </div>
           </div>
 
-          {/* Card 3: Family Members Added */}
-          <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:bg-white hover:shadow-xs">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl">👨‍👩‍👧‍👦</span>
-                <span className="rounded-full bg-purple-100 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-purple-800">
-                  Family Circle
-                </span>
-              </div>
-              <h3 className="mt-2 text-sm font-extrabold text-slate-900">Family Members Added</h3>
-              <p className="mt-0.5 text-[11px] text-slate-500">
-                Customers jinhone family ko add kiya
-              </p>
-            </div>
-
-            <div className="mt-4 border-t border-slate-200/80 pt-3">
-              <div className="flex items-baseline justify-between">
-                <span className="text-xs font-bold text-slate-600">Family Customers:</span>
-                <span className="text-xl font-black text-slate-900">
-                  {crmMetrics.customersWithFamily}
-                </span>
-              </div>
-
-              <div className="mt-2 flex items-center justify-between rounded-xl bg-purple-50 px-2.5 py-1.5 text-[11px] font-semibold text-purple-800">
-                <span>Total Family Members:</span>
-                <span className="font-bold">{crmMetrics.totalFamilyMembers} Members</span>
-              </div>
-
-              <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
-                <span>Spouse, Kids, Parents profiled</span>
-                <span className="font-bold text-purple-700">{crmMetrics.familyProfiledPercentage}%</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 4: Total Special Occasions Mapped */}
-          <div className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/70 p-4 transition hover:bg-white hover:shadow-xs">
-            <div>
-              <div className="flex items-center justify-between">
-                <span className="text-2xl">🎂</span>
-                <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-800">
-                  Auto-Wish Ready
-                </span>
-              </div>
-              <h3 className="mt-2 text-sm font-extrabold text-slate-900">Occasions Profiled</h3>
-              <p className="mt-0.5 text-[11px] text-slate-500">
-                Birthdays &amp; Anniversaries recorded
-              </p>
-            </div>
-
-            <div className="mt-4 border-t border-slate-200/80 pt-3">
-              <div className="flex items-baseline justify-between">
-                <span className="text-xs font-bold text-slate-600">Total Dates:</span>
-                <span className="text-xl font-black text-slate-900">
-                  {crmMetrics.totalOccasions}
-                </span>
-              </div>
-
-              <div className="mt-2 grid grid-cols-2 gap-1.5 text-center text-[11px]">
-                <div className="rounded-lg bg-orange-50 py-1 text-orange-800 font-bold">
-                  🎂 {crmMetrics.birthdaysCount} B&apos;days
+          {/* Row 3: Family Members Added */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 sm:px-4 bg-white hover:bg-slate-50 transition">
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-purple-100 text-base">
+                👨‍👩‍👧‍👦
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900">Family Members Added</span>
+                  <span className="rounded-md bg-purple-50 border border-purple-200 px-1.5 py-0.2 text-[10px] font-bold text-purple-700">
+                    {crmMetrics.totalFamilyMembers} Members
+                  </span>
                 </div>
-                <div className="rounded-lg bg-rose-50 py-1 text-rose-800 font-bold">
-                  💍 {crmMetrics.anniversariesCount} Anniv
+                <span className="text-[11px] text-slate-500">Customers jinhone family (spouse/kids/parents) add kiya</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 sm:justify-end">
+              <div className="w-24 sm:w-36">
+                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                  <div
+                    className="h-full rounded-full bg-purple-500"
+                    style={{ width: `${crmMetrics.familyProfiledPercentage}%` }}
+                  />
                 </div>
+                <span className="text-[10px] text-slate-500">{crmMetrics.familyProfiledPercentage}% profiled</span>
               </div>
-
-              <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
-                <span>WhatsApp Auto-Dispatches</span>
-                <span className="font-bold text-amber-700">Active</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 3 AI Suggested CRM Quality & Reach Insights (Suggested Metrics as requested) */}
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-gradient-to-br from-emerald-50/50 to-slate-50 p-3.5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-lg">
-              💬
-            </span>
-            <div>
-              <div className="text-xs font-bold text-slate-900">WhatsApp Reachable Audience</div>
-              <div className="text-[11px] text-slate-500">
-                <strong>{crmMetrics.customersWithMobile}</strong> verified numbers ready for auto greetings.
+              <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
+                {crmMetrics.customersWithFamily} <span className="text-xs font-normal text-slate-500">लोग</span>
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-gradient-to-br from-amber-50/50 to-slate-50 p-3.5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-lg">
-              💎
-            </span>
-            <div>
-              <div className="text-xs font-bold text-slate-900">
-                Data Completeness: {crmMetrics.dataCompletenessPercentage}%
-              </div>
-              <div className="text-[11px] text-slate-500">
-                High quality customer info captured for marketing.
+          {/* Row 4: Occasions (Birthdays & Anniversaries) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 sm:px-4 bg-white hover:bg-slate-50 transition">
+            <div className="flex items-center gap-3">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-base">
+                🎂
+              </span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900">Special Occasions Recorded</span>
+                  <span className="rounded-md bg-amber-50 border border-amber-200 px-1.5 py-0.2 text-[10px] font-bold text-amber-800">
+                    🎂 {crmMetrics.birthdaysCount} B&apos;days · 💍 {crmMetrics.anniversariesCount} Anniv
+                  </span>
+                </div>
+                <span className="text-[11px] text-slate-500">Birthdays aur anniversaries mapped for WhatsApp automation</span>
               </div>
             </div>
-          </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-gradient-to-br from-indigo-50/50 to-slate-50 p-3.5">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-100 text-lg">
-              🎯
-            </span>
-            <div>
-              <div className="text-xs font-bold text-slate-900">CRM Occasion Automation</div>
-              <div className="text-[11px] text-slate-500">
-                Automatic vouchers dispatch on special days via Fast2SMS.
+            <div className="flex items-center gap-3 sm:justify-end">
+              <div className="w-24 sm:w-36 text-right text-[11px] font-semibold text-emerald-700">
+                ✓ Auto-Wish Ready
+              </div>
+              <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
+                {crmMetrics.totalOccasions} <span className="text-xs font-normal text-slate-500">लोग / तारीखें</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 🌟 7 CUSTOMER EXPERIENCE POINTS BREAKDOWN (सातों पॉइंट एनालिटिक्स) */}
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs sm:p-7">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-100 text-base">
-                🎯
-              </span>
-              <h2 className="text-base sm:text-lg font-black text-slate-900">
+      {/* 🌟 7 CUSTOMER EXPERIENCE POINTS BREAKDOWN (सातों पॉइंट - लाइन बाय लाइन) */}
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3.5">
+          <div className="flex items-center gap-2.5">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-100 text-base">
+              🎯
+            </span>
+            <div>
+              <h2 className="text-base font-black text-slate-900">
                 Customer Experience Points Breakdown (7 Core Touchpoints)
               </h2>
+              <p className="text-[11px] text-slate-500">
+                Kis customer ne kis point par review diya — dekhein har point ko kitne logon ne chuna.
+              </p>
             </div>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Kis customer ne kis cheez par review diya — dekhein har point ko kitne customers dwara chuna gaya.
-            </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
-              Total Reviews: <strong>{totalReviews}</strong>
-            </span>
-          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-700">
+            Total Reviews: <strong>{totalReviews}</strong>
+          </span>
         </div>
 
-        {/* 7 Points Grid */}
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {/* Line by Line Rows (Saves Space) */}
+        <div className="mt-3.5 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-slate-50/40 overflow-hidden">
           {experiencePoints.map((point, index) => (
             <div
               key={point.key}
-              className="flex flex-col justify-between rounded-2xl border border-slate-200 bg-slate-50/60 p-4 transition hover:bg-white hover:shadow-xs"
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 sm:px-4 bg-white hover:bg-slate-50 transition"
             >
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl">{point.icon}</span>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
-                      point.count > 0
-                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
-                        : "bg-slate-200 text-slate-600"
-                    }`}
-                  >
-                    Point #{index + 1}
-                  </span>
+              <div className="flex items-center gap-3">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-base">
+                  {point.icon}
+                </span>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-900">{point.label}</span>
+                    <span className="text-[10px] font-semibold text-slate-400">Point #{index + 1}</span>
+                  </div>
+                  <span className="text-[11px] text-slate-500 line-clamp-1">{point.desc}</span>
                 </div>
-
-                <h3 className="mt-2 text-sm font-extrabold text-slate-900">{point.label}</h3>
-                <p className="mt-0.5 text-[11px] text-slate-500 line-clamp-1">{point.desc}</p>
               </div>
 
-              <div className="mt-4 border-t border-slate-200/80 pt-3">
-                <div className="flex items-baseline justify-between">
-                  <span className="text-xs font-bold text-slate-600">Selected By:</span>
-                  <span className="text-sm font-black text-slate-900">
-                    {point.count} {point.count === 1 ? "Customer" : "Customers"}
-                  </span>
+              <div className="flex items-center gap-3 sm:justify-end">
+                <div className="w-24 sm:w-40">
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        point.count > 0 ? "bg-gradient-to-r from-orange-500 to-amber-500" : "bg-slate-300"
+                      }`}
+                      style={{ width: `${totalReviews > 0 ? point.percentage : 0}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] text-slate-500">{point.percentage}% rating share</span>
                 </div>
-
-                {/* Progress Visual Bar */}
-                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                  <div
-                    className={`h-full rounded-full transition-all duration-500 ${
-                      point.count > 0 ? "bg-gradient-to-r from-orange-500 to-amber-500" : "bg-slate-300"
-                    }`}
-                    style={{ width: `${totalReviews > 0 ? point.percentage : 0}%` }}
-                  />
-                </div>
-
-                <div className="mt-1.5 flex items-center justify-between text-[10px] text-slate-500">
-                  <span>
-                    {totalReviews > 0 ? `${point.count} of ${totalReviews} reviewers` : "No reviews yet"}
-                  </span>
-                  <span className="font-bold text-slate-700">{point.percentage}%</span>
+                <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
+                  {point.count} <span className="text-xs font-normal text-slate-500">लोग</span>
                 </div>
               </div>
             </div>
@@ -522,33 +440,56 @@ export default async function MerchantAnalyticsPage() {
         </div>
       </section>
 
-      {/* Star Rating Distribution Grid */}
-      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xs sm:p-7">
+      {/* ⭐ CUSTOMER STAR RATING DISTRIBUTION (सीधी लाइन बाय लाइन नीचे तक) */}
+      <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:p-6">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
             <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-base">⭐</span>
-            <h2 className="text-base font-black text-slate-900">Customer Star Rating Distribution</h2>
+            <div>
+              <h2 className="text-base font-black text-slate-900">Customer Star Rating Distribution</h2>
+              <p className="text-[11px] text-slate-500">5-Star breakdown line by line</p>
+            </div>
           </div>
-          <span className="text-xs text-slate-500">5-Star Breakdown</span>
+          <span className="text-xs text-slate-500">
+            Avg: <strong>{averageRating !== null && Number.isFinite(averageRating) ? `${averageRating.toFixed(1)} / 5` : "— / 5"}</strong>
+          </span>
         </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-5">
+        {/* Straight Down Line by Line List */}
+        <div className="mt-3.5 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-slate-50/40 overflow-hidden">
           {[
-            { stars: "5 ★", count: r5, color: "bg-emerald-500", text: "text-emerald-700" },
-            { stars: "4 ★", count: r4, color: "bg-teal-500", text: "text-teal-700" },
-            { stars: "3 ★", count: r3, color: "bg-amber-500", text: "text-amber-700" },
-            { stars: "2 ★", count: r2, color: "bg-orange-500", text: "text-orange-700" },
-            { stars: "1 ★", count: r1, color: "bg-rose-500", text: "text-rose-700" },
+            { stars: "5 ★", label: "फाइव स्टार", count: r5, color: "bg-emerald-500", text: "text-emerald-700" },
+            { stars: "4 ★", label: "फोर स्टार", count: r4, color: "bg-teal-500", text: "text-teal-700" },
+            { stars: "3 ★", label: "थ्री स्टार", count: r3, color: "bg-amber-500", text: "text-amber-700" },
+            { stars: "2 ★", label: "टू स्टार", count: r2, color: "bg-orange-500", text: "text-orange-700" },
+            { stars: "1 ★", label: "वन स्टार", count: r1, color: "bg-rose-500", text: "text-rose-700" },
           ].map((bar) => {
             const pct = totalReviews > 0 ? Math.round((bar.count / totalReviews) * 100) : 0;
             return (
-              <div key={bar.stars} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 text-center">
-                <span className={`text-base font-black ${bar.text}`}>{bar.stars}</span>
-                <div className="my-1.5 text-lg font-black text-slate-900">{bar.count}</div>
-                <div className="h-1.5 w-full rounded-full bg-slate-200 overflow-hidden">
-                  <div className={`h-full ${bar.color}`} style={{ width: `${pct}%` }} />
+              <div
+                key={bar.stars}
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 sm:px-4 bg-white hover:bg-slate-50 transition"
+              >
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-black ${bar.text} w-10 shrink-0`}>
+                    {bar.stars}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-700">
+                    {bar.label}
+                  </span>
                 </div>
-                <span className="mt-1 block text-[10px] text-slate-500">{pct}%</span>
+
+                <div className="flex items-center gap-3 sm:justify-end flex-1 sm:max-w-md">
+                  <div className="flex-1">
+                    <div className="h-2 w-full rounded-full bg-slate-200 overflow-hidden">
+                      <div className={`h-full ${bar.color}`} style={{ width: `${pct}%` }} />
+                    </div>
+                  </div>
+                  <span className="w-10 text-right text-[11px] font-bold text-slate-400">{pct}%</span>
+                  <div className="min-w-[65px] text-right font-black text-slate-900 text-sm">
+                    {bar.count} <span className="text-xs font-normal text-slate-500">लोग</span>
+                  </div>
+                </div>
               </div>
             );
           })}
