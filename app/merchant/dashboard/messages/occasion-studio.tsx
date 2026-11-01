@@ -165,24 +165,24 @@ export default function OccasionStudio({
   });
 
   const [occasionType, setOccasionType] = useState<"birthday" | "anniversary" | "festival" | "offer">("birthday");
-  const [selectedLang, setSelectedLang] = useState<LanguageMode>("hinglish");
+  const [selectedLang, setSelectedLang] = useState<LanguageMode>("english");
 
   // Active Draft based on occasionType
   const currentDraft = draftsMap[occasionType];
 
-  // Card Template Style: "royal_gold" (Card 1) or "ivory_cream" (Card 2)
+  // Card Template Style: "ivory_cream" (Card 1 Default) or "royal_gold" (Card 2)
   const initialStyle =
-    currentDraft?.template_style === "ivory_cream" || currentDraft?.template_style === "rose_luxury"
-      ? "ivory_cream"
-      : "royal_gold";
+    currentDraft?.template_style === "royal_gold"
+      ? "royal_gold"
+      : "ivory_cream";
   const [templateStyle, setTemplateStyle] = useState<"royal_gold" | "ivory_cream">(initialStyle);
 
   // Form states
   const [headline, setHeadline] = useState(
-    currentDraft?.headline || TEMPLATE_MESSAGES.birthday.hinglish.headline
+    currentDraft?.headline || TEMPLATE_MESSAGES.birthday.english.headline
   );
   const [bodyText, setBodyText] = useState(
-    currentDraft?.body_text || TEMPLATE_MESSAGES.birthday.hinglish.messages[0]
+    currentDraft?.body_text || TEMPLATE_MESSAGES.birthday.english.messages[0]
   );
   const [discountPercent, setDiscountPercent] = useState<number>(currentDraft?.discount_percent ?? 15);
   const [couponValidityDays, setCouponValidityDays] = useState<number>(currentDraft?.coupon_validity_days ?? 7);
@@ -205,7 +205,7 @@ export default function OccasionStudio({
       setBodyText(saved.body_text);
       setDiscountPercent(saved.discount_percent);
       setCouponValidityDays(saved.coupon_validity_days);
-      setTemplateStyle(saved.template_style === "ivory_cream" ? "ivory_cream" : "royal_gold");
+      setTemplateStyle(saved.template_style === "royal_gold" ? "royal_gold" : "ivory_cream");
     } else {
       // Load default for this occasion in selected language
       const tmpl = TEMPLATE_MESSAGES[type][selectedLang];
@@ -215,6 +215,7 @@ export default function OccasionStudio({
       else if (type === "anniversary") setDiscountPercent(20);
       else if (type === "festival") setDiscountPercent(25);
       else setDiscountPercent(10);
+      setTemplateStyle("ivory_cream");
     }
   }
 
@@ -621,18 +622,8 @@ export default function OccasionStudio({
 
             {/* CAROUSEL SLIDER POINTS (Directly underneath the card) */}
             <div className="mt-4 flex flex-col items-center gap-2 border-t border-white/10 pt-3">
-              {/* Pagination Dots */}
+              {/* Pagination Dots: Dot 1 = Ivory Cream (Default), Dot 2 = Royal Dark Gold */}
               <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setTemplateStyle("royal_gold")}
-                  className={`h-3 rounded-full transition-all duration-300 ${
-                    templateStyle === "royal_gold"
-                      ? "w-8 bg-amber-400 shadow-md ring-2 ring-amber-300/40"
-                      : "w-3 bg-slate-600 hover:bg-slate-500"
-                  }`}
-                  aria-label="Card 1: Royal Dark Gold"
-                />
                 <button
                   type="button"
                   onClick={() => setTemplateStyle("ivory_cream")}
@@ -641,7 +632,17 @@ export default function OccasionStudio({
                       ? "w-8 bg-amber-400 shadow-md ring-2 ring-amber-300/40"
                       : "w-3 bg-slate-600 hover:bg-slate-500"
                   }`}
-                  aria-label="Card 2: Ivory Cream Elegance"
+                  aria-label="Card 1: Ivory Cream (Default)"
+                />
+                <button
+                  type="button"
+                  onClick={() => setTemplateStyle("royal_gold")}
+                  className={`h-3 rounded-full transition-all duration-300 ${
+                    templateStyle === "royal_gold"
+                      ? "w-8 bg-amber-400 shadow-md ring-2 ring-amber-300/40"
+                      : "w-3 bg-slate-600 hover:bg-slate-500"
+                  }`}
+                  aria-label="Card 2: Royal Dark Gold"
                 />
               </div>
 
@@ -649,17 +650,6 @@ export default function OccasionStudio({
               <div className="flex items-center justify-between w-full max-w-[280px] text-[11px] font-bold">
                 <button
                   type="button"
-                  onClick={() => setTemplateStyle("royal_gold")}
-                  className={`transition ${
-                    templateStyle === "royal_gold"
-                      ? "text-amber-300 font-extrabold"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  ‹ 1. Royal Dark Gold
-                </button>
-                <button
-                  type="button"
                   onClick={() => setTemplateStyle("ivory_cream")}
                   className={`transition ${
                     templateStyle === "ivory_cream"
@@ -667,7 +657,18 @@ export default function OccasionStudio({
                       : "text-slate-400 hover:text-slate-200"
                   }`}
                 >
-                  2. Ivory Cream ›
+                  ‹ 1. Ivory Cream (Default)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplateStyle("royal_gold")}
+                  className={`transition ${
+                    templateStyle === "royal_gold"
+                      ? "text-amber-300 font-extrabold"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  2. Royal Dark Gold ›
                 </button>
               </div>
               <p className="text-[10px] text-slate-400">
@@ -769,53 +770,6 @@ export default function OccasionStudio({
             </div>
 
             <div className="mt-4 space-y-4">
-              {/* 1-Click Language Selector Bar */}
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
-                  Select Draft Language (1-Click Switch):
-                </label>
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSwitch("hinglish")}
-                    className={`flex items-center justify-center gap-1.5 rounded-2xl border p-2.5 text-xs font-bold transition ${
-                      selectedLang === "hinglish"
-                        ? "border-orange-500 bg-orange-500 text-white shadow-sm"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>🇮🇳</span>
-                    <span>Hinglish (Phonetic)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSwitch("hindi")}
-                    className={`flex items-center justify-center gap-1.5 rounded-2xl border p-2.5 text-xs font-bold transition ${
-                      selectedLang === "hindi"
-                        ? "border-orange-500 bg-orange-500 text-white shadow-sm"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>🪔</span>
-                    <span>Pure Hindi (हिंदी)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleLanguageSwitch("english")}
-                    className={`flex items-center justify-center gap-1.5 rounded-2xl border p-2.5 text-xs font-bold transition ${
-                      selectedLang === "english"
-                        ? "border-orange-500 bg-orange-500 text-white shadow-sm"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>🇬🇧</span>
-                    <span>English</span>
-                  </button>
-                </div>
-              </div>
-
               {/* Headline (Free Text Input for Universal Card Poster) */}
               <div>
                 <div className="flex items-center justify-between">
@@ -823,7 +777,12 @@ export default function OccasionStudio({
                     Greeting Card Headline:
                   </label>
                   <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
-                    <span>👑</span> Universal Royal Card Poster
+                    <span>{templateStyle === "ivory_cream" ? "🌿" : "👑"}</span>
+                    <span>
+                      {templateStyle === "ivory_cream"
+                        ? "Universal Ivory Elegance Poster"
+                        : "Universal Royal Dark Gold Poster"}
+                    </span>
                   </span>
                 </div>
                 <input
@@ -834,7 +793,7 @@ export default function OccasionStudio({
                   className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
                 />
                 <span className="mt-1 block text-[11px] text-slate-500">
-                  Yeh headline aapke universal royal card poster par print hogi (sab customer ke liye timeless aur consistent).
+                  Yeh headline aapke universal poster par print hogi (sab customer ke liye timeless aur consistent).
                 </span>
               </div>
 
@@ -869,6 +828,66 @@ export default function OccasionStudio({
                   placeholder="Yahan aapna shubh-kamna sandesh likhein..."
                   className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 shadow-sm"
                 />
+
+                {/* Repositioned Language Selector: Directly Below Wishing Box */}
+                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-slate-50/90 p-2.5 shadow-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
+                      <span>🌐</span> Language :-
+                    </span>
+                    <select
+                      value={selectedLang}
+                      onChange={(e) => handleLanguageSwitch(e.target.value as LanguageMode)}
+                      className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 cursor-pointer shadow-xs"
+                    >
+                      <option value="english">🇬🇧 English</option>
+                      <option value="hinglish">🇮🇳 Hinglish (Phonetic)</option>
+                      <option value="hindi">🪔 Pure Hindi (हिंदी)</option>
+                    </select>
+                  </div>
+
+                  {/* 1-Click Quick Language Switch Pills */}
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleLanguageSwitch("english")}
+                      className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition ${
+                        selectedLang === "english"
+                          ? "bg-orange-500 text-white shadow-xs"
+                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span>🇬🇧</span>
+                      <span>English</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleLanguageSwitch("hinglish")}
+                      className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition ${
+                        selectedLang === "hinglish"
+                          ? "bg-orange-500 text-white shadow-xs"
+                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span>🇮🇳</span>
+                      <span>Hinglish</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleLanguageSwitch("hindi")}
+                      className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition ${
+                        selectedLang === "hindi"
+                          ? "bg-orange-500 text-white shadow-xs"
+                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
+                      }`}
+                    >
+                      <span>🪔</span>
+                      <span>Pure Hindi</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {/* Discount Coupon Settings */}
