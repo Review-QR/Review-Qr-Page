@@ -11,7 +11,7 @@ const items = [
   { href: "/merchant/dashboard/business", label: "My Business", icon: "business" },
   { href: "/merchant/dashboard/orders", label: "Live Orders & Queue", icon: "orders" },
   { href: "/merchant/dashboard/menu", label: "Menu & Items", icon: "menu" },
-  { href: "/merchant/dashboard/qr", label: "My QR Code", icon: "qr" },
+  { href: "/merchant/dashboard/qr", label: "My QR & Reviews", icon: "qr" },
   { href: "/merchant/dashboard/products", label: "QR Standees & Kits", icon: "products" },
   { href: "/merchant/dashboard/reviews", label: "Customer Reviews", icon: "reviews" },
   { href: "/merchant/dashboard/messages", label: "Message Designer", icon: "business" },
@@ -96,7 +96,9 @@ export default function MerchantNavigation({
           !item.href.includes("#scan-analytics"),
       )
     : items
-  ).map((item) => {
+  )
+    .filter((item) => item.href !== "/merchant/dashboard/reviews")
+    .map((item) => {
     if (item.href === "/merchant/dashboard/menu") {
       return { ...item, label: categoryLabels.menu };
     }

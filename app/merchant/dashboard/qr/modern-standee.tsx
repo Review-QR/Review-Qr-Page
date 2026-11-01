@@ -22,20 +22,8 @@ export type StandeeTheme = {
 
 export const STANDEE_THEMES: StandeeTheme[] = [
   {
-    id: "standee_1",
-    number: 1,
-    name: "Electric Blue",
-    categoryTitle: "Retail / Shop",
-    tagline: "Your Tagline Here",
-    primary: "#0284C7",
-    accentLight: "#BAE6FD",
-    accentMid: "#38BDF8",
-    accentDark: "#0369A1",
-    footerBg: "#0284C7",
-  },
-  {
     id: "standee_2",
-    number: 2,
+    number: 1,
     name: "Warm Amber",
     categoryTitle: "Food & Dining",
     tagline: "Delicious Food, Happy People",
@@ -44,6 +32,18 @@ export const STANDEE_THEMES: StandeeTheme[] = [
     accentMid: "#FB923C",
     accentDark: "#C2410C",
     footerBg: "#EA580C",
+  },
+  {
+    id: "standee_1",
+    number: 2,
+    name: "Electric Blue",
+    categoryTitle: "Retail / Shop",
+    tagline: "Your Tagline Here",
+    primary: "#0284C7",
+    accentLight: "#BAE6FD",
+    accentMid: "#38BDF8",
+    accentDark: "#0369A1",
+    footerBg: "#0284C7",
   },
   {
     id: "standee_3",

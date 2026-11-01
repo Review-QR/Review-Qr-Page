@@ -616,21 +616,21 @@ export default function MyQrCode({
               <>
                 <button
                   type="button"
-                  className="merchant-btn-poster merchant-btn-poster--png"
+                  className="merchant-btn-poster merchant-btn-poster--png cursor-pointer"
                   onClick={() => void downloadFullPoster("png")}
                   disabled={!usable || isExporting}
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  <span>{isExporting ? "Exporting…" : `Download Standee (${currentStandee.name.split(" ")[0]} PNG)`}</span>
+                  <span>{isExporting ? "Exporting…" : `Download QR Standee (PNG)`}</span>
                 </button>
                 <button
                   type="button"
-                  className="merchant-btn-poster merchant-btn-poster--pdf"
+                  className="merchant-btn-poster merchant-btn-poster--pdf cursor-pointer"
                   onClick={() => void downloadFullPoster("pdf")}
                   disabled={!usable || isExporting}
                   title={`Download printable PDF (4 × 6 in)`}
                 >
-                  PDF
+                  Download PDF
                 </button>
               </>
             ) : (
@@ -638,19 +638,20 @@ export default function MyQrCode({
                 href="/merchant/dashboard/subscription"
                 className="merchant-btn-poster merchant-btn-poster--locked"
               >
-                <span>🔒 Upgrade Plan to Download ({currentStandee.name.split(" ")[0]})</span>
+                <span>🔒 Upgrade Plan to Download</span>
               </Link>
             )}
           </div>
 
           <div className="merchant-qr-actions">
-            <button type="button" onClick={() => void downloadQr()} disabled={!usable || !imageUrl}>⇩ Download QR</button>
-            <button type="button" onClick={() => void printQr()} disabled={!usable}>▤ Print QR</button>
-            <button type="button" onClick={() => void shareQr()} disabled={!usable || !scanUrl}>↗ Share Link</button>
+            <button type="button" onClick={() => void downloadFullPoster("png")} disabled={!usable || isExporting} className="cursor-pointer">⇩ Download QR (Full Poster)</button>
+            <button type="button" onClick={() => void printQr()} disabled={!usable} className="cursor-pointer">🖨️ Print Full Standee</button>
+            <button type="button" onClick={() => void shareQr()} disabled={!usable || !scanUrl} className="cursor-pointer">↗ Share Link</button>
+            <button type="button" onClick={() => void copyScanLink("Business QR link copied.")} className="cursor-pointer">📋 Copy QR Link</button>
           </div>
           <div className="merchant-qr-actions merchant-qr-actions--secondary">
             <a href={scanUrl || "#"} target="_blank" rel="noreferrer" aria-disabled={!scanUrl} className={!scanUrl ? "is-disabled" : ""}>⌕ Test Scan</a>
-            <Link href={standalone ? "#template-gallery" : "/merchant/dashboard/qr"}>✦ Change Template</Link>
+            <Link href={standalone ? "#template-gallery" : "/merchant/dashboard/qr"}>✦ All Templates</Link>
           </div>
           <p className={`merchant-qr-message ${messageTone === "error" ? "text-rose-600" : "text-emerald-700"}`} role="status" aria-live="polite">{message}</p>
         </div>
