@@ -4,6 +4,7 @@ import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { normalizePlanTier } from "@/lib/plan-rules";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import OccasionDashboardCard from "./occasion-dashboard-card";
+import OutletStatusToggles from "./outlet-status-toggles";
 import { getMerchantOccasionSummary, getMerchantConnectWallet } from "@/lib/customer-crm-service";
 
 export const dynamic = "force-dynamic";
@@ -266,22 +267,32 @@ export default async function MerchantDashboardPage() {
             </div>
           </div>
 
-          {/* Right: Quick Action Buttons (Matching Rates & Menu styling) */}
-          <div className="flex items-center gap-2.5 self-start lg:self-center">
-            <Link
-              href="/merchant/dashboard/orders"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
-            >
-              <span className="material-symbols-outlined text-[17px]">receipt_long</span>
-              <span>View Orders ({pendingOrders.length})</span>
-            </Link>
-            <Link
-              href={launcher.href}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
-            >
-              <span className="material-symbols-outlined text-[17px]">restaurant_menu</span>
-              <span>Rates &amp; Menu</span>
-            </Link>
+          {/* Right: Quick Action Buttons & Compact Toggles */}
+          <div className="flex flex-col items-start lg:items-end gap-2 self-start lg:self-center">
+            <div className="flex items-center gap-2.5">
+              <Link
+                href="/merchant/dashboard/orders"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
+              >
+                <span className="material-symbols-outlined text-[17px]">receipt_long</span>
+                <span>View Orders ({pendingOrders.length})</span>
+              </Link>
+              <Link
+                href={launcher.href}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
+              >
+                <span className="material-symbols-outlined text-[17px]">restaurant_menu</span>
+                <span>Rates &amp; Menu</span>
+              </Link>
+            </div>
+
+            {/* Small Compact Toggles planted right below View Orders & Rates */}
+            <OutletStatusToggles
+              businessId={merchant.businessId}
+              initialIsOutletOpen={merchant.isOutletOpen}
+              allowTakingOrders={merchant.allowTakingOrders}
+              initialIsTakingOrders={merchant.isTakingOrders}
+            />
           </div>
         </div>
 

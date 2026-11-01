@@ -2,7 +2,6 @@ import Link from "next/link";
 import { merchantSignOutAction } from "@/app/merchant/login/actions";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import MerchantNavigation from "./merchant-navigation";
-import OutletStatusToggles from "./outlet-status-toggles";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import { normalizePlanTier } from "@/lib/plan-rules";
 import "./dashboard.css";
@@ -116,15 +115,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
               </span>
             </div>
 
-            <div className="flex items-center gap-3 sm:gap-4">
-              {/* Stacked Dual Interactive Toggles: Outlet Status + Taking Orders */}
-              <OutletStatusToggles
-                businessId={merchant.businessId}
-                initialIsOutletOpen={merchant.isOutletOpen}
-                allowTakingOrders={merchant.allowTakingOrders}
-                initialIsTakingOrders={merchant.isTakingOrders}
-              />
-
+            <div className="flex items-center gap-3">
               {/* Clean White Live Orders Button styled like Rates & Menu */}
               <Link
                 href="/merchant/dashboard/orders"
