@@ -24,7 +24,82 @@ export default function PageCorrectionWidget() {
   const [copied, setCopied] = useState(false);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<"hi-IN" | "en-IN">("hi-IN");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Stop speech recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {
+          // ignore
+        }
+      }
+    };
+  }, []);
+
+  // Toggle speech-to-text audio typing
+  const toggleListening = () => {
+    if (isListening) {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch {
+          // ignore
+        }
+      }
+      setIsListening(false);
+      return;
+    }
+
+    const win = typeof window !== "undefined" ? (window as unknown as { SpeechRecognition?: any; webkitSpeechRecognition?: any }) : null;
+    const SpeechRecognitionClass = win?.SpeechRecognition || win?.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionClass) {
+      alert("Aapke browser me speech recognition support nahi mila. Kripya Google Chrome ya Microsoft Edge browser use kijiye jisme mic feature chalta hai.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognitionClass();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = voiceLang;
+
+      const baseText = text ? text.trim() + " " : "";
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        let transcript = "";
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setText(baseText + transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn("Speech error:", event);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.error("Speech recognition start failed:", err);
+      setIsListening(false);
+    }
+  };
 
   // Load saved corrections on mount
   useEffect(() => {
@@ -107,6 +182,15 @@ export default function PageCorrectionWidget() {
         month: "short",
       }),
     };
+
+    if (isListening && recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        // ignore
+      }
+      setIsListening(false);
+    }
 
     const updated = [newCorrection, ...corrections];
     saveCorrectionsList(updated);
@@ -283,22 +367,69 @@ export default function PageCorrectionWidget() {
             onPaste={handlePaste}
             className="p-3.5 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                 <span className="material-symbols-outlined text-[15px] text-slate-500">add_comment</span>
                 <span>Is Page Par Kya Badalna Hai?</span>
               </label>
-              <span className="text-[10px] text-slate-500 font-medium">
-                💡 Paste (Ctrl+V) se bhi photo lagti hai
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={voiceLang}
+                  onChange={(e) => setVoiceLang(e.target.value as "hi-IN" | "en-IN")}
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-white border border-slate-300 text-slate-700 cursor-pointer shadow-2xs"
+                  title="Audio typing language"
+                >
+                  <option value="hi-IN">🇮🇳 Hindi (हिंदी)</option>
+                  <option value="en-IN">🇬🇧 English</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Smooth Voice Typing / Audio Dictation Button */}
+            <div className="flex items-center justify-between gap-2 pt-0.5">
+              <button
+                type="button"
+                onClick={toggleListening}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-xs ${
+                  isListening
+                    ? "bg-red-600 text-white animate-pulse ring-2 ring-red-300"
+                    : "bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 hover:scale-[1.02] active:scale-95"
+                }`}
+                title={isListening ? "Listening... Click to stop" : "Click to speak in Hindi or English"}
+              >
+                <span
+                  className={`material-symbols-outlined text-[16px] ${
+                    isListening ? "animate-bounce text-white" : "text-amber-800"
+                  }`}
+                >
+                  {isListening ? "mic" : "mic_none"}
+                </span>
+                <span>
+                  {isListening
+                    ? "🔴 Sun raha hoon... (Bolte jaiye)"
+                    : "🎙️ Bol Kar Likhein (Audio Type)"}
+                </span>
+              </button>
+
+              <span className="text-[10px] text-slate-400 font-medium">
+                💡 Paste (Ctrl+V) se photo
               </span>
             </div>
 
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="e.g. Yaha button ka rang change karo, namaste me kewal first name dikhao, spacing kam karo..."
+              placeholder={
+                isListening
+                  ? "🎙️ Bolte jaiye, live voice text automatically likh raha hai..."
+                  : "e.g. Yaha button ka rang change karo, namaste me kewal first name dikhao (ya mic button daba kar boliye)..."
+              }
               rows={3}
-              className="w-full text-xs p-3 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white placeholder:text-slate-400 text-slate-800 resize-none shadow-2xs"
+              className={`w-full text-xs p-3 rounded-xl border transition-all ${
+                isListening
+                  ? "border-amber-500 ring-2 ring-amber-200 bg-amber-50/40 text-slate-900"
+                  : "border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white text-slate-800"
+              } placeholder:text-slate-400 resize-none shadow-2xs`}
             />
 
             {/* Attached Image Preview */}
