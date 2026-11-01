@@ -87,15 +87,18 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
     (o) => o.payment_status === "paid" || o.payment_mode === "cod"
   );
 
-  // 5 Date Filters: Today, Yesterday, This Week, This Month, All Orders
+  // 5 Date Filters: Today, Yesterday, This Week (Last 7 Days), This Month (Last 30 Days), All Orders
   const [dateFilter, setDateFilter] = useState<"today" | "yesterday" | "week" | "month" | "all">("today");
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
   const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).getTime();
-  const dayOfWeek = (now.getDay() + 6) % 7; // Monday = 0
-  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek).getTime();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+  // Rolling 7-day and 30-day windows (so orders placed 3-4 days ago like Oct 28/29 appear in This Week and This Month)
+  const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const startOfWeek = now.getTime() - SEVEN_DAYS_MS;
+  const startOfMonth = now.getTime() - THIRTY_DAYS_MS;
 
   const todayCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfToday).length;
   const yesterdayCount = confirmedOrders.filter((o) => {
@@ -502,7 +505,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                   ? "No orders received today yet."
                   : dateFilter === "yesterday"
                   ? "No orders found for yesterday."
-                  : `No orders found for ${dateFilter === "week" ? "this week" : dateFilter === "month" ? "this month" : "all"}.`}
+                  : `No orders found for ${dateFilter === "week" ? "the last 7 days" : dateFilter === "month" ? "the last 30 days" : "all"}.`}
               </h3>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
                 Incoming confirmed orders will appear here automatically with buzzer sound.
