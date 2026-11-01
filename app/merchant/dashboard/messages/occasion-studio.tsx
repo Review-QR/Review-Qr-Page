@@ -327,7 +327,11 @@ export default function OccasionStudio({
   const testCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const logoImgRef = useRef<HTMLImageElement | null>(null);
   const [testPhone, setTestPhone] = useState(merchantPhone || "7388184925");
-  const [testNotice, setTestNotice] = useState<string | null>(null);
+  const [testNotice, setTestNotice] = useState<{
+    type: "success" | "pending" | "error" | "info";
+    text: string;
+    details?: string;
+  } | null>(null);
 
   useEffect(() => {
     if (merchantPhone) {
@@ -365,7 +369,10 @@ export default function OccasionStudio({
     link.download = `${occasionType}-${businessName.toLowerCase().replace(/\s+/g, "-")}-greeting-card.png`;
     link.href = testCanvasRef.current.toDataURL("image/png");
     link.click();
-    setTestNotice("HD Card Poster downloaded to your device!");
+    setTestNotice({
+      type: "info",
+      text: "HD Card Poster downloaded to your device!",
+    });
   }
 
   function handleSendWhatsAppTest() {
@@ -385,7 +392,10 @@ export default function OccasionStudio({
 
     const waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(formattedMsg)}`;
     window.open(waUrl, "_blank");
-    setTestNotice("WhatsApp opened & Card downloaded! Aap WhatsApp chat me image attach karke send kar sakte hain.");
+    setTestNotice({
+      type: "success",
+      text: "WhatsApp opened & Card downloaded! You can attach the card image and send.",
+    });
   }
 
   const [testingFast2Sms, setTestingFast2Sms] = useState(false);
@@ -408,12 +418,27 @@ export default function OccasionStudio({
       });
 
       if (res.success) {
-        setTestNotice(`✓ Fast2SMS WhatsApp Gateway Success! (Request ID: ${res.requestId || "Dispatched"})`);
+        setTestNotice({
+          type: "success",
+          text: `Fast2SMS WhatsApp Gateway Success! (Request ID: ${res.requestId || "Dispatched"})`,
+        });
+      } else if (res.isPendingMetaApproval) {
+        setTestNotice({
+          type: "pending",
+          text: "Fast2SMS WhatsApp Template: Pending Meta Review",
+          details: res.message,
+        });
       } else {
-        setTestNotice(`Fast2SMS Response: ${res.error || "Gateway response received"}`);
+        setTestNotice({
+          type: "error",
+          text: res.message || "Fast2SMS dispatch failed.",
+        });
       }
     } catch (err: unknown) {
-      setTestNotice(`API Error: ${err instanceof Error ? err.message : "Failed to contact Fast2SMS"}`);
+      setTestNotice({
+        type: "error",
+        text: `API Error: ${err instanceof Error ? err.message : "Failed to contact Fast2SMS"}`,
+      });
     } finally {
       setTestingFast2Sms(false);
     }
@@ -739,14 +764,14 @@ export default function OccasionStudio({
             <div className="mt-4 rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-emerald-950/70 to-slate-900 p-4 text-left shadow-lg">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-300">
-                  <span>📱</span> Fast2SMS Official WhatsApp Cloud API Test
+                  <span>📱</span> Fast2SMS WhatsApp Cloud API &amp; Test
                 </span>
                 <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
-                  Cloud API
+                  Official Gateway
                 </span>
               </div>
               <p className="mt-1 text-[11px] text-slate-300">
-                Type mobile number to receive live WhatsApp greeting &amp; coupon via official Cloud API:
+                Type mobile number to test WhatsApp greeting with dynamic coupon code:
               </p>
 
               <div className="mt-3 flex flex-col sm:flex-row gap-2">
@@ -761,15 +786,26 @@ export default function OccasionStudio({
                     className="w-full rounded-xl border border-emerald-500/40 bg-slate-950/80 pl-11 pr-3 py-2 text-xs font-bold text-white placeholder-slate-500 outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
                   />
                 </div>
-                <button
-                  type="button"
-                  disabled={testingFast2Sms}
-                  onClick={handleSendFast2SmsApiTest}
-                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-teal-700 active:scale-95 transition disabled:opacity-50"
-                >
-                  <span>⚡</span>
-                  <span>{testingFast2Sms ? "Dispatching API..." : "Send Test to WhatsApp"}</span>
-                </button>
+                <div className="flex gap-1.5">
+                  <button
+                    type="button"
+                    disabled={testingFast2Sms}
+                    onClick={handleSendFast2SmsApiTest}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-teal-700 active:scale-95 transition disabled:opacity-50"
+                  >
+                    <span>⚡</span>
+                    <span>{testingFast2Sms ? "Dispatching..." : "Send via API"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSendWhatsAppTest}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-950/80 px-3 py-2 text-xs font-bold text-emerald-200 hover:bg-emerald-900/60 active:scale-95 transition"
+                    title="Open directly in WhatsApp Web or App"
+                  >
+                    <span>📲</span>
+                    <span>Open in WhatsApp</span>
+                  </button>
+                </div>
               </div>
 
               <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-white/10 text-[11px]">
@@ -781,13 +817,51 @@ export default function OccasionStudio({
                   <span>⬇️</span> Download HD Card Poster
                 </button>
                 <span className="text-[10px] text-slate-400">
-                  Dispatched via WhatsApp Cloud API
+                  Fast2SMS Template ID: 41350
                 </span>
               </div>
 
               {testNotice && (
-                <div className="mt-2 rounded-xl bg-emerald-900/60 border border-emerald-500/50 p-2 text-[11px] font-semibold text-emerald-200">
-                  ✓ {testNotice}
+                <div
+                  className={`mt-2.5 rounded-xl border p-2.5 text-[11px] font-medium leading-relaxed ${
+                    testNotice.type === "success"
+                      ? "bg-emerald-900/60 border-emerald-500/50 text-emerald-200"
+                      : testNotice.type === "pending"
+                      ? "bg-amber-950/70 border-amber-500/50 text-amber-200"
+                      : testNotice.type === "info"
+                      ? "bg-blue-950/60 border-blue-500/50 text-blue-200"
+                      : "bg-rose-950/60 border-rose-500/50 text-rose-200"
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <span>
+                      {testNotice.type === "success"
+                        ? "✓"
+                        : testNotice.type === "pending"
+                        ? "⏳"
+                        : testNotice.type === "info"
+                        ? "ℹ️"
+                        : "⚠️"}
+                    </span>
+                    <span>{testNotice.text}</span>
+                  </div>
+                  {testNotice.details && (
+                    <p className="mt-1 text-[10px] text-amber-100/90 border-t border-amber-500/20 pt-1">
+                      {testNotice.details}
+                    </p>
+                  )}
+                  {testNotice.type === "pending" && (
+                    <div className="mt-2 flex items-center justify-between border-t border-amber-500/30 pt-1.5">
+                      <span className="text-[10px] text-amber-300">Live test WhatsApp par karein:</span>
+                      <button
+                        type="button"
+                        onClick={handleSendWhatsAppTest}
+                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-[10px] font-bold text-white shadow hover:bg-emerald-700 transition"
+                      >
+                        <span>📲</span> Open Direct in WhatsApp
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -308,7 +308,10 @@ export async function sendFast2SmsWhatsAppTestAction(input: {
   couponValidityDays: number;
 }) {
   const merchant = await requireActiveMerchant();
-  const { dispatchFast2SmsWhatsAppMessage } = await import("@/lib/messaging/fast2sms-dispatch");
+  const {
+    dispatchFast2SmsWhatsAppMessage,
+    getFast2SmsTemplateStatus,
+  } = await import("@/lib/messaging/fast2sms-dispatch");
 
   const couponCode = `${
     input.occasionType === "birthday"
@@ -329,5 +332,33 @@ export async function sendFast2SmsWhatsAppTestAction(input: {
     validityDays: input.couponValidityDays,
   });
 
-  return res;
+  if (res.success) {
+    return {
+      success: true,
+      requestId: res.requestId,
+      message: `WhatsApp greeting dispatched via Fast2SMS Cloud API! (Request ID: ${res.requestId})`,
+    };
+  }
+
+  if (res.isTemplatePending) {
+    const templateInfo = await getFast2SmsTemplateStatus();
+    return {
+      success: false,
+      isPendingMetaApproval: true,
+      templateStatus: templateInfo.status,
+      message: `Fast2SMS WhatsApp Template (ID: 41350, trustit_occasion_wish) abhi Meta ke dwara review me "${templateInfo.status || "Pending"}" hai. Jaise hi Meta approve karega, Fast2SMS API se automatic delivery chalu ho jayegi!`,
+    };
+  }
+
+  return {
+    success: false,
+    message: res.error || "Fast2SMS dispatch failed.",
+  };
+}
+
+/** 9. Get Fast2SMS WhatsApp Cloud Gateway & Template Status */
+export async function getFast2SmsWabaStatusAction() {
+  await requireActiveMerchant();
+  const { getFast2SmsTemplateStatus } = await import("@/lib/messaging/fast2sms-dispatch");
+  return await getFast2SmsTemplateStatus();
 }
