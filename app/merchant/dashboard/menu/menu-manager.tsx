@@ -244,33 +244,23 @@ export default function MenuManager({
   return (
     <div className="space-y-6">
       {/* ── Top Header ── */}
-      <div className="flex flex-col gap-3 rounded-3xl border border-slate-200 bg-white p-5 shadow-xs sm:flex-row sm:items-center sm:justify-between sm:p-6">
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xs sm:flex-row sm:items-center sm:justify-between sm:p-5">
         <div>
-          <span className="text-xs font-extrabold uppercase tracking-widest text-blue-700">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">
             {businessType ? `${businessType} Catalog & Rates` : "Merchant Catalog Manager"}
           </span>
-          <h1 className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">
+          <h1 className="mt-0.5 text-xl font-bold text-slate-950 sm:text-2xl">
             Menu, Items &amp; Pricing
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-600">
-            Manage your items for <strong>{businessName}</strong>. Items with prices and stock toggled ON appear live for customer orders.
+          <p className="mt-0.5 text-xs text-slate-600">
+            Manage your items for <strong>{businessName}</strong>. Turn items ON/OFF in real-time.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={handleLoadCategoryTemplates}
-            disabled={isPending}
-            className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-2 text-xs sm:text-sm font-bold text-amber-900 shadow-xs hover:bg-amber-100 transition active:scale-95"
-            title="Load category master list of staples, grocery brands, or services"
-          >
-            <span>⚡</span>
-            <span>Pre-Seeded Catalog (बनी-बनाई लिस्ट)</span>
-          </button>
-
+        <div className="flex items-center gap-2">
           <button
             onClick={openAddModal}
-            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-xs sm:text-sm font-bold text-white shadow-xs hover:bg-blue-800 transition active:scale-95"
+            className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-xl bg-blue-700 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-800 transition active:scale-95 cursor-pointer"
           >
             <span>➕</span>
             <span>Add Item</span>
@@ -313,13 +303,12 @@ export default function MenuManager({
       </div>
 
       {/* ── Filter & Search Toolbar ── */}
-      <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
+      <div className="flex flex-col gap-2.5 rounded-2xl border border-slate-200/90 bg-white p-3 shadow-2xs sm:flex-row sm:items-center sm:justify-between sm:p-3.5">
         {/* Status Filter Tabs */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-100 pb-3">
-          <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Visibility:</span>
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             onClick={() => setStatusFilter("all")}
-            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
               statusFilter === "all" ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
@@ -327,181 +316,177 @@ export default function MenuManager({
           </button>
           <button
             onClick={() => setStatusFilter("active")}
-            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
               statusFilter === "active" ? "bg-emerald-600 text-white" : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
             }`}
           >
-            🟢 Live for Customers ({activeCount})
+            🟢 In Stock ({activeCount})
           </button>
           <button
             onClick={() => setStatusFilter("draft")}
-            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
-              statusFilter === "draft" ? "bg-amber-600 text-white" : "bg-amber-50 text-amber-800 hover:bg-amber-100"
+            className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
+              statusFilter === "draft" ? "bg-rose-600 text-white" : "bg-rose-50 text-rose-800 hover:bg-rose-100"
             }`}
           >
-            ⚪ Draft / Missing Rate ({draftCount})
+            🔴 Out of Stock / Draft ({draftCount})
           </button>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          {/* Category Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-            {categories.map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setSelectedCategory(cat)}
-                className={`rounded-xl px-3 py-1.5 text-xs font-bold transition shrink-0 ${
-                  selectedCategory === cat
-                    ? "bg-blue-700 text-white shadow-2xs"
-                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
-
-          {/* Quick Search in Menu */}
-          <div className="relative shrink-0 sm:w-64">
-            <input
-              type="text"
-              placeholder="Search items..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-blue-700"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700"
-              >
-                ✕
-              </button>
-            )}
-          </div>
+        {/* Quick Search */}
+        <div className="relative shrink-0 sm:w-72">
+          <input
+            type="text"
+            placeholder="Search item, ingredient or rate..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-blue-700"
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-700 cursor-pointer"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 
-      {/* ── Items Grid ── */}
+      {/* ── Line-by-Line Items List ── */}
       {filteredItems.length ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xs divide-y divide-slate-100">
+          {/* Optional Table Header on Desktop */}
+          <div className="hidden sm:grid sm:grid-cols-12 gap-3 bg-slate-50/80 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200/80">
+            <div className="col-span-5 flex items-center gap-2">Item &amp; Description</div>
+            <div className="col-span-2 text-center">Portion / Unit</div>
+            <div className="col-span-2 text-right">Price (₹)</div>
+            <div className="col-span-2 text-center">Stock Status</div>
+            <div className="col-span-1 text-right">Actions</div>
+          </div>
+
           {filteredItems.map((item) => {
             const isLive = item.price > 0 && item.isAvailable;
             return (
               <div
                 key={item.id}
-                className={`group flex flex-col justify-between rounded-2xl border p-4.5 transition-all shadow-2xs ${
-                  isLive
-                    ? "border-slate-200/90 bg-white hover:border-blue-300 hover:shadow-xs"
-                    : "border-amber-200 bg-amber-50/20"
+                className={`group flex flex-col sm:grid sm:grid-cols-12 gap-2.5 sm:gap-3 items-start sm:items-center px-4 py-3 transition hover:bg-slate-50/70 ${
+                  !item.isAvailable ? "bg-slate-50/40 opacity-75 hover:opacity-100" : ""
                 }`}
               >
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      {item.itemType === "veg" && (
-                        <span className="grid size-3.5 place-items-center rounded border border-emerald-600 p-0.5" title="Pure Veg">
-                          <span className="size-1.5 rounded-full bg-emerald-600" />
-                        </span>
-                      )}
-                      {item.itemType === "non_veg" && (
-                        <span className="grid size-3.5 place-items-center rounded border border-rose-600 p-0.5" title="Non-Veg">
-                          <span className="size-1.5 rounded-full bg-rose-600" />
-                        </span>
-                      )}
-                      {item.itemType === "service" && (
-                        <span className="text-xs">✂️</span>
-                      )}
-                      <span className="rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600 truncate">
-                        {item.category}
+                {/* Col 1: Veg/Non-Veg + Name + Category + Description (Col-span 5) */}
+                <div className="sm:col-span-5 flex items-start gap-2.5 min-w-0 w-full">
+                  <div className="mt-0.5 shrink-0">
+                    {item.itemType === "veg" && (
+                      <span className="grid size-4 place-items-center rounded border border-emerald-600 bg-emerald-50/60 p-0.5" title="Pure Veg">
+                        <span className="size-2 rounded-full bg-emerald-600" />
                       </span>
-                    </div>
-
-                    {/* Stock Switch */}
-                    <button
-                      onClick={() => handleToggleAvailability(item)}
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-extrabold transition ${
-                        item.isAvailable
-                          ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-600/20 hover:bg-emerald-100"
-                          : "bg-slate-200 text-slate-600 hover:bg-slate-300"
-                      }`}
-                      title="Click to toggle availability"
-                    >
-                      <span>{item.isAvailable ? "✓ Open" : "✕ Off"}</span>
-                    </button>
+                    )}
+                    {item.itemType === "non_veg" && (
+                      <span className="grid size-4 place-items-center rounded border border-rose-600 bg-rose-50/60 p-0.5" title="Non-Veg">
+                        <span className="size-2 rounded-full bg-rose-600" />
+                      </span>
+                    )}
+                    {item.itemType === "egg" && (
+                      <span className="grid size-4 place-items-center rounded border border-amber-600 bg-amber-50/60 p-0.5" title="Egg">
+                        <span className="size-2 rounded-full bg-amber-600" />
+                      </span>
+                    )}
+                    {item.itemType === "service" && (
+                      <span className="text-sm" title="Service">✂️</span>
+                    )}
+                    {item.itemType === "product" && (
+                      <span className="text-sm" title="Product">📦</span>
+                    )}
                   </div>
 
-                  <h3 className="mt-2.5 text-base font-bold text-slate-900 group-hover:text-blue-700 transition leading-snug">
-                    {item.name}
-                  </h3>
-
-                  {item.description && (
-                    <p className="mt-1 text-xs text-slate-500 line-clamp-2 leading-relaxed">
-                      {item.description}
-                    </p>
-                  )}
-
-                  {/* Pricing or Inline Rate Editor */}
-                  {item.price > 0 ? (
-                    <div className="mt-3 flex items-baseline justify-between border-t border-slate-100 pt-2">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="text-lg font-black text-slate-950">₹{item.price}</span>
-                        {item.unit && (
-                          <span className="text-xs font-semibold text-slate-500">{item.unit}</span>
-                        )}
-                      </div>
-                      <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-md ${
-                        item.isAvailable ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-600"
-                      }`}>
-                        {item.isAvailable ? "Live on App" : "Turned Off"}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-slate-900 group-hover:text-blue-700 transition">
+                        {item.name}
                       </span>
+                      {item.category && item.category !== "General" && (
+                        <span className="rounded-md bg-slate-100 px-1.5 py-0.2 text-[10px] font-semibold text-slate-600">
+                          {item.category}
+                        </span>
+                      )}
                     </div>
+                    {item.description && (
+                      <p className="mt-0.5 text-[11px] text-slate-500 line-clamp-1">
+                        {item.description}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Col 2: Portion / Unit (Col-span 2) */}
+                <div className="sm:col-span-2 text-left sm:text-center shrink-0">
+                  <span className="inline-block rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-700">
+                    {item.unit || "Standard / 1 Pc"}
+                  </span>
+                </div>
+
+                {/* Col 3: Price / Inline Rate (Col-span 2) */}
+                <div className="sm:col-span-2 text-left sm:text-right shrink-0">
+                  {item.price > 0 ? (
+                    <span className="text-sm font-black text-slate-950">₹{item.price}</span>
                   ) : (
-                    <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-2.5 space-y-1.5">
-                      <div className="flex items-center justify-between text-[11px] font-bold text-amber-900">
-                        <span>⚠️ Rate Missing (Draft)</span>
-                        <span className="text-[10px] text-amber-700">Enter rate to publish</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs font-black text-slate-700">₹</span>
-                        <input
-                          type="number"
-                          min="0"
-                          placeholder="Rate"
-                          defaultValue=""
-                          onChange={(e) => setInlineRates({ ...inlineRates, [item.id]: e.target.value })}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              handleQuickRateSave(item, inlineRates[item.id] || "", true);
-                            }
-                          }}
-                          className="w-20 rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-bold text-slate-900 focus:outline-blue-600"
-                        />
-                        <button
-                          onClick={() => handleQuickRateSave(item, inlineRates[item.id] || "", true)}
-                          disabled={isPending}
-                          className="rounded-lg bg-emerald-600 px-2.5 py-1 text-[11px] font-bold text-white hover:bg-emerald-700 shadow-2xs"
-                        >
-                          ✓ Set Live
-                        </button>
-                      </div>
+                    <div className="inline-flex items-center gap-1">
+                      <input
+                        type="number"
+                        min="0"
+                        placeholder="Rate ₹"
+                        defaultValue=""
+                        onChange={(e) => setInlineRates({ ...inlineRates, [item.id]: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleQuickRateSave(item, inlineRates[item.id] || "", true);
+                          }
+                        }}
+                        className="w-16 rounded-md border border-slate-300 bg-white px-1.5 py-0.5 text-xs font-bold text-slate-900 focus:outline-blue-600"
+                      />
+                      <button
+                        onClick={() => handleQuickRateSave(item, inlineRates[item.id] || "", true)}
+                        disabled={isPending}
+                        className="rounded-md bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-emerald-700 cursor-pointer"
+                      >
+                        Set
+                      </button>
                     </div>
                   )}
                 </div>
 
-                {/* Action Buttons */}
-                <div className="mt-4 flex items-center justify-end gap-2 border-t border-slate-100 pt-3">
+                {/* Col 4: Live Stock Toggle Button (Col-span 2) */}
+                <div className="sm:col-span-2 flex justify-start sm:justify-center shrink-0">
+                  <button
+                    onClick={() => handleToggleAvailability(item)}
+                    disabled={isPending}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-extrabold transition shadow-2xs cursor-pointer ${
+                      item.isAvailable
+                        ? "bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100"
+                        : "bg-slate-100 text-slate-600 border border-slate-300 hover:bg-slate-200"
+                    }`}
+                    title="Click to toggle In Stock / Out of Stock"
+                  >
+                    <span className={`size-2 rounded-full ${item.isAvailable ? "bg-emerald-600 animate-pulse" : "bg-slate-400"}`} />
+                    <span>{item.isAvailable ? "In Stock" : "Out of Stock"}</span>
+                  </button>
+                </div>
+
+                {/* Col 5: Actions (Col-span 1) */}
+                <div className="sm:col-span-1 flex items-center justify-end gap-1.5 shrink-0 self-end sm:self-center">
                   <button
                     onClick={() => openEditModal(item)}
-                    className="rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-700 transition"
+                    className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-blue-700 transition cursor-pointer"
+                    title="Edit item"
                   >
-                    Edit
+                    <span className="material-symbols-outlined text-[17px]">edit</span>
                   </button>
                   <button
                     onClick={() => handleDelete(item.id, item.name)}
-                    className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700 hover:bg-rose-100 transition"
+                    className="p-1.5 rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition cursor-pointer"
+                    title="Delete item"
                   >
-                    Delete
+                    <span className="material-symbols-outlined text-[17px]">delete</span>
                   </button>
                 </div>
               </div>
@@ -544,6 +529,23 @@ export default function MenuManager({
             </div>
 
             <form onSubmit={handleSave} className="mt-5 space-y-4">
+              {!editingItem && (
+                <div className="rounded-xl border border-amber-300 bg-amber-50/90 p-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold text-amber-950">⚡ Need standard items quickly?</p>
+                    <p className="text-[11px] text-amber-800">Load pre-seeded category catalog in 1 click.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLoadCategoryTemplates}
+                    disabled={isPending}
+                    className="shrink-0 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3 py-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                  >
+                    {isPending ? "Loading…" : "Load Templates"}
+                  </button>
+                </div>
+              )}
+
               {errorMsg && (
                 <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs font-bold text-rose-700">
                   {errorMsg}
@@ -593,6 +595,18 @@ export default function MenuManager({
                     onChange={(e) => setFormUnit(e.target.value)}
                     className="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none"
                   />
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {["1 Pc", "Standard", "Half", "Full", "Per Plate", "1 Kg", "500 ml"].map((preset) => (
+                      <button
+                        key={preset}
+                        type="button"
+                        onClick={() => setFormUnit(preset)}
+                        className="rounded-md border border-slate-200 bg-slate-50 hover:bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 cursor-pointer"
+                      >
+                        {preset}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
