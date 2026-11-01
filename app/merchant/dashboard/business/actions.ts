@@ -236,19 +236,42 @@ export async function uploadBusinessLogoAction(
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    const { error: uploadError } = await admin.storage
-      .from("merchant-assets")
+    let bucketName = "merchant-assets";
+    let uploadResult = await admin.storage
+      .from(bucketName)
       .upload(filePath, buffer, {
         contentType: file.type,
         upsert: true,
       });
 
-    if (uploadError) {
-      return { success: false, message: `Upload failed: ${uploadError.message}` };
+    if (uploadResult.error && uploadResult.error.message.toLowerCase().includes("bucket not found")) {
+      // Auto-create merchant-assets bucket if missing
+      await admin.storage.createBucket("merchant-assets", { public: true }).catch(() => null);
+      uploadResult = await admin.storage
+        .from(bucketName)
+        .upload(filePath, buffer, {
+          contentType: file.type,
+          upsert: true,
+        });
+
+      if (uploadResult.error) {
+        // Fallback to existing trustit-qr-designs bucket
+        bucketName = "trustit-qr-designs";
+        uploadResult = await admin.storage
+          .from(bucketName)
+          .upload(filePath, buffer, {
+            contentType: file.type,
+            upsert: true,
+          });
+      }
+    }
+
+    if (uploadResult.error) {
+      return { success: false, message: `Upload failed: ${uploadResult.error.message}` };
     }
 
     const { data: urlData } = admin.storage
-      .from("merchant-assets")
+      .from(bucketName)
       .getPublicUrl(filePath);
 
     const publicUrl = urlData.publicUrl;
