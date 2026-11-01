@@ -204,6 +204,61 @@ export default function BusinessProfileForm({
     }
   }
 
+  // Helper to ensure image is optimized before upload
+  async function prepareLogoFile(rawFile: File): Promise<File> {
+    if (typeof window === "undefined") return rawFile;
+    // If file is already small (<= 1MB), upload directly
+    if (rawFile.size <= 1024 * 1024) return rawFile;
+
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 800;
+          let w = img.width;
+          let h = img.height;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) {
+              h = Math.round((h * maxDim) / w);
+              w = maxDim;
+            } else {
+              w = Math.round((w * maxDim) / h);
+              h = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(rawFile);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, w, h);
+          const isPng = rawFile.type === "image/png" || rawFile.name.toLowerCase().endsWith(".png");
+          const mime = isPng ? "image/png" : "image/jpeg";
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const cleanName = isPng ? "logo.png" : "logo.jpg";
+                resolve(new File([blob], cleanName, { type: mime }));
+              } else {
+                resolve(rawFile);
+              }
+            },
+            mime,
+            0.9
+          );
+        };
+        img.onerror = () => resolve(rawFile);
+        img.src = String(event.target?.result);
+      };
+      reader.onerror = () => resolve(rawFile);
+      reader.readAsDataURL(rawFile);
+    });
+  }
+
   // 3. Handle Logo Upload
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -211,17 +266,19 @@ export default function BusinessProfileForm({
     setLogoMsg(null);
     setLogoUploading(true);
     try {
+      const optimizedFile = await prepareLogoFile(file);
       const fd = new FormData();
-      fd.append("logo", file);
+      fd.append("logo", optimizedFile);
       const res = await uploadBusinessLogoAction(fd);
       if (res.success && res.logoUrl) {
         setCurrentLogoUrl(res.logoUrl);
         setLogoMsg({ text: res.message, error: false });
       } else {
-        setLogoMsg({ text: res.message, error: true });
+        setLogoMsg({ text: res.message || "Upload failed.", error: true });
       }
-    } catch {
-      setLogoMsg({ text: "Failed to upload logo. Please try again.", error: true });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to upload logo. Please try again.";
+      setLogoMsg({ text: msg, error: true });
     } finally {
       setLogoUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

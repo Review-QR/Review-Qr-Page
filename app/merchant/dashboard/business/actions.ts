@@ -218,19 +218,50 @@ export async function uploadBusinessLogoAction(
     return { success: false, message: "Please select an image file to upload." };
   }
 
-  // Max 5MB
-  if (file.size > 5 * 1024 * 1024) {
-    return { success: false, message: "Logo file size must be less than 5MB." };
+  // Max 10MB
+  if (file.size > 10 * 1024 * 1024) {
+    return { success: false, message: "Logo file size must be less than 10MB." };
   }
 
-  const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
-  if (!allowedTypes.includes(file.type)) {
+  const fileName = (file.name || "").toLowerCase();
+  const isAllowedExt =
+    fileName.endsWith(".png") ||
+    fileName.endsWith(".jpg") ||
+    fileName.endsWith(".jpeg") ||
+    fileName.endsWith(".webp") ||
+    fileName.endsWith(".jfif");
+  const isAllowedMime =
+    file.type === "image/png" ||
+    file.type === "image/jpeg" ||
+    file.type === "image/jpg" ||
+    file.type === "image/webp" ||
+    file.type.startsWith("image/");
+
+  if (!isAllowedExt && !isAllowedMime) {
     return { success: false, message: "Only PNG, JPG, or WEBP image formats are supported." };
+  }
+
+  let ext = "png";
+  let contentType = "image/png";
+
+  if (
+    fileName.endsWith(".jpg") ||
+    fileName.endsWith(".jpeg") ||
+    fileName.endsWith(".jfif") ||
+    file.type.includes("jpeg")
+  ) {
+    ext = "jpg";
+    contentType = "image/jpeg";
+  } else if (fileName.endsWith(".webp") || file.type.includes("webp")) {
+    ext = "webp";
+    contentType = "image/webp";
+  } else {
+    ext = "png";
+    contentType = "image/png";
   }
 
   try {
     const admin = createSupabaseAdminClient();
-    const ext = file.type.split("/")[1] || "png";
     const filePath = `logos/${merchant.businessId}_${Date.now()}.${ext}`;
 
     const arrayBuffer = await file.arrayBuffer();
@@ -240,7 +271,7 @@ export async function uploadBusinessLogoAction(
     let uploadResult = await admin.storage
       .from(bucketName)
       .upload(filePath, buffer, {
-        contentType: file.type,
+        contentType,
         upsert: true,
       });
 
@@ -250,7 +281,7 @@ export async function uploadBusinessLogoAction(
       uploadResult = await admin.storage
         .from(bucketName)
         .upload(filePath, buffer, {
-          contentType: file.type,
+          contentType,
           upsert: true,
         });
 
@@ -260,7 +291,7 @@ export async function uploadBusinessLogoAction(
         uploadResult = await admin.storage
           .from(bucketName)
           .upload(filePath, buffer, {
-            contentType: file.type,
+            contentType,
             upsert: true,
           });
       }
