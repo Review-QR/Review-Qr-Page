@@ -5,6 +5,10 @@ import {
   debitMerchantConnectCredits,
   maskPhoneForMerchant,
 } from "@/lib/customer-crm-service";
+import {
+  getWhatsAppCloudConfig,
+  sendWhatsAppOccasionMessage,
+} from "@/lib/messaging/whatsapp-cloud-api";
 
 const FAST2SMS_BACKUP_TOKEN = Buffer.from(
   "TWY3WW9EMm8yeHhsYVBqNndGQ0VEd2RSUUlROGRzS0E4ZmVtWDVBaUlLenV0UHhYWHowV3IxMjRWWndxVm9jaGtkd3VqMmx0ekpKWXg5TDU=",
@@ -196,11 +200,31 @@ export async function runDailyOccasionAutoDispatcher(): Promise<{
         ? `Janmadin ki dhero shubhkamnaye ${customerName}! 🎂 ${businessName} ki taraf se aapko hardik badhaiyan. Special Gift Code: ${coupon} (Flat ${discount}% OFF, valid ${validity} days). Visit today!`
         : `Marriage Anniversary ki dhero shubhkamnaye ${customerName}! 💍 ${businessName} ki taraf se shandar uphar. Special Code: ${coupon} (Flat ${discount}% OFF, valid ${validity} days). Visit today!`;
 
-      // Dispatch via Fast2SMS
-      const res = await dispatchFast2SmsMessage(phone, msg);
+      // Dispatch via WhatsApp Cloud API (if configured), otherwise fallback to Fast2SMS
+      let dispatchSuccess = false;
+      const waConfig = getWhatsAppCloudConfig();
 
-      if (res.success) {
-        // Debit credit only if Fast2SMS succeeds
+      if (waConfig.phoneNumberId && waConfig.accessToken) {
+        const waRes = await sendWhatsAppOccasionMessage({
+          recipientPhone: phone,
+          captionText: msg,
+        });
+        if (waRes.success) {
+          dispatchSuccess = true;
+        }
+      }
+
+      if (!dispatchSuccess) {
+        const res = await dispatchFast2SmsMessage(phone, msg);
+        if (res.success) {
+          dispatchSuccess = true;
+        } else {
+          errors.push(`Failed to send to ${masked}: ${res.error}`);
+        }
+      }
+
+      if (dispatchSuccess) {
+        // Debit credit only if dispatch succeeds
         await debitMerchantConnectCredits(
           businessId,
           1,
@@ -209,8 +233,6 @@ export async function runDailyOccasionAutoDispatcher(): Promise<{
         );
         creditsRemaining--;
         totalDispatched++;
-      } else {
-        errors.push(`Failed to send to ${masked}: ${res.error}`);
       }
     }
   }

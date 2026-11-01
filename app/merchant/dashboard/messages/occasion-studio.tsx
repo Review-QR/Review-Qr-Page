@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   saveMerchantOccasionDraftAction,
   updateMerchantOccasionScheduleAction,
 } from "./actions";
+import { renderOccasionGreetingPoster } from "@/lib/creative-canvas";
 
 export type OccasionDraft = {
   id?: string;
@@ -315,8 +316,69 @@ export default function OccasionStudio({
 
   const occasionSubtitle = TEMPLATE_MESSAGES[occasionType][selectedLang].subtitle;
 
+  // Canvas and WhatsApp Test Dispatch
+  const testCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const logoImgRef = useRef<HTMLImageElement | null>(null);
+  const [testPhone, setTestPhone] = useState("7388184925");
+  const [testNotice, setTestNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (logoUrl) {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        logoImgRef.current = img;
+      };
+      img.src = logoUrl;
+    }
+  }, [logoUrl]);
+
+  function handleDownloadPosterImage() {
+    if (!testCanvasRef.current) return;
+    renderOccasionGreetingPoster({
+      canvas: testCanvasRef.current,
+      style: templateStyle,
+      businessName,
+      logoImg: logoImgRef.current,
+      occasionType,
+      headline,
+      customerName: "MR LUCKY !!",
+      subtitle: occasionSubtitle,
+      couponCode,
+      discountPercent,
+      couponValidityDays,
+    });
+    const link = document.createElement("a");
+    link.download = `${occasionType}-${businessName.toLowerCase().replace(/\s+/g, "-")}-greeting-card.png`;
+    link.href = testCanvasRef.current.toDataURL("image/png");
+    link.click();
+    setTestNotice("HD Card Poster downloaded to your device!");
+  }
+
+  function handleSendWhatsAppTest() {
+    const clean = testPhone.replace(/\D/g, "");
+    if (clean.length < 10) {
+      alert("Kripya 10-digit mobile number enter karein.");
+      return;
+    }
+    const targetPhone = clean.length === 10 ? `91${clean}` : clean;
+
+    // Trigger poster card download so merchant has the image file
+    handleDownloadPosterImage();
+
+    // Clean body text (strip out any bracket artifacts)
+    const cleanBody = bodyText.replace(/\[.*?\]/g, "").trim();
+    const formattedMsg = `🎉 *${headline} MR LUCKY !!* ${occasionIcon}\n\n*${businessName}:* Dear Lucky ji, ${cleanBody}\n\n🎁 *EXCLUSIVE GIFT COUPON:* ${couponCode}\n✨ *Flat ${discountPercent}% OFF On Your Visit!* (Valid for ${couponValidityDays} days)\n\n_"${occasionSubtitle}"_\n\n— Team ${businessName} ❤️`;
+
+    const waUrl = `https://api.whatsapp.com/send?phone=${targetPhone}&text=${encodeURIComponent(formattedMsg)}`;
+    window.open(waUrl, "_blank");
+    setTestNotice("WhatsApp opened & Card downloaded! Aap WhatsApp chat me image attach karke send kar sakte hain.");
+  }
+
   return (
     <div className="space-y-6">
+      {/* Offscreen Canvas for HD Poster Rendering */}
+      <canvas ref={testCanvasRef} className="hidden" />
       {/* Occasion Selection Header */}
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="flex items-center gap-3">
@@ -628,6 +690,62 @@ export default function OccasionStudio({
               <div className="mt-3 rounded-xl bg-amber-950/70 border border-amber-400/40 p-2.5 text-xs text-amber-200">
                 🎁 <strong>Special Gift Code:</strong> {couponCode} (Valid {couponValidityDays} days)
               </div>
+            </div>
+
+            {/* Interactive Real Test on WhatsApp Panel */}
+            <div className="mt-4 rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-emerald-950/70 to-slate-900 p-4 text-left shadow-lg">
+              <div className="flex items-center justify-between">
+                <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-300">
+                  <span>📱</span> Real Test on WhatsApp
+                </span>
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
+                  Instant Test
+                </span>
+              </div>
+              <p className="mt-1 text-[11px] text-slate-300">
+                Apne phone par abhi card poster aur WhatsApp message bhej kar check karein:
+              </p>
+
+              <div className="mt-3 flex items-center gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-2 text-xs text-emerald-400 font-bold">+91</span>
+                  <input
+                    type="tel"
+                    value={testPhone}
+                    maxLength={10}
+                    onChange={(e) => setTestPhone(e.target.value.replace(/\D/g, ""))}
+                    placeholder="Enter mobile number"
+                    className="w-full rounded-xl border border-emerald-500/40 bg-slate-950/80 pl-11 pr-3 py-2 text-xs font-bold text-white placeholder-slate-500 outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSendWhatsAppTest}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-teal-700 active:scale-95 transition"
+                >
+                  <span>🚀</span>
+                  <span>Send on WhatsApp</span>
+                </button>
+              </div>
+
+              <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-white/10 text-[11px]">
+                <button
+                  type="button"
+                  onClick={handleDownloadPosterImage}
+                  className="inline-flex items-center gap-1 font-bold text-amber-300 hover:text-amber-200 transition"
+                >
+                  <span>⬇️</span> Download HD Card Poster
+                </button>
+                <span className="text-[10px] text-slate-400">
+                  Zero setup • Opens WhatsApp directly
+                </span>
+              </div>
+
+              {testNotice && (
+                <div className="mt-2 rounded-xl bg-emerald-900/60 border border-emerald-500/50 p-2 text-[11px] font-semibold text-emerald-200">
+                  ✓ {testNotice}
+                </div>
+              )}
             </div>
           </div>
         </div>

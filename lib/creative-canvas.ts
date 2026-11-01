@@ -317,3 +317,311 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.arcTo(x, y, x + w, y, r);
   ctx.closePath();
 }
+
+export interface RenderOccasionPosterOptions {
+  canvas: HTMLCanvasElement;
+  style: "royal_gold" | "ivory_cream";
+  businessName: string;
+  logoImg?: HTMLImageElement | null;
+  occasionType: "birthday" | "anniversary" | "festival" | "offer";
+  headline: string;
+  customerName?: string;
+  subtitle: string;
+  couponCode: string;
+  discountPercent: number;
+  couponValidityDays: number;
+}
+
+export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) {
+  const {
+    canvas,
+    style,
+    businessName,
+    logoImg,
+    occasionType,
+    headline,
+    customerName = "MR LUCKY !!",
+    subtitle,
+    couponCode,
+    discountPercent,
+    couponValidityDays,
+  } = opts;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const width = (canvas.width = 1080);
+  const height = (canvas.height = 1350); // 4:5 Portrait Mobile Poster / WhatsApp Screen Fit
+
+  ctx.clearRect(0, 0, width, height);
+
+  const occasionIcon =
+    occasionType === "birthday"
+      ? "🎂"
+      : occasionType === "anniversary"
+      ? "💍"
+      : occasionType === "festival"
+      ? "🪔"
+      : "🔥";
+
+  if (style === "royal_gold") {
+    // ── CARD 1: ROYAL DARK GOLD LUXURY ──
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, "#19150c");
+    bgGrad.addColorStop(0.5, "#0b0a08");
+    bgGrad.addColorStop(1, "#1f180d");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Outer Card Frame
+    ctx.save();
+    ctx.strokeStyle = "#d4af37";
+    ctx.lineWidth = 6;
+    ctx.shadowColor = "rgba(212, 175, 55, 0.4)";
+    ctx.shadowBlur = 25;
+    roundRect(ctx, 40, 40, width - 80, height - 80, 48);
+    ctx.stroke();
+    ctx.restore();
+
+    // Corner Golden Waves
+    ctx.save();
+    const waveGrad1 = ctx.createRadialGradient(80, 80, 10, 80, 80, 300);
+    waveGrad1.addColorStop(0, "rgba(245, 215, 127, 0.25)");
+    waveGrad1.addColorStop(1, "transparent");
+    ctx.fillStyle = waveGrad1;
+    ctx.fillRect(0, 0, 400, 400);
+
+    const waveGrad2 = ctx.createRadialGradient(width - 80, 80, 10, width - 80, 80, 300);
+    waveGrad2.addColorStop(0, "rgba(245, 215, 127, 0.25)");
+    waveGrad2.addColorStop(1, "transparent");
+    ctx.fillStyle = waveGrad2;
+    ctx.fillRect(width - 400, 0, 400, 400);
+    ctx.restore();
+
+    // Top Logo Frame (140x140)
+    const logoX = (width - 140) / 2;
+    const logoY = 110;
+    ctx.save();
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#d4af37";
+    ctx.lineWidth = 4;
+    ctx.shadowColor = "rgba(212, 175, 55, 0.5)";
+    ctx.shadowBlur = 15;
+    roundRect(ctx, logoX, logoY, 140, 140, 32);
+    ctx.fill();
+    ctx.stroke();
+
+    if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+      ctx.clip();
+      ctx.drawImage(logoImg, logoX + 10, logoY + 10, 120, 120);
+    } else {
+      ctx.font = "60px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🏪", width / 2, logoY + 70);
+    }
+    ctx.restore();
+
+    // Business Name
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#e5c158";
+    ctx.font = "900 32px sans-serif";
+    ctx.fillText(businessName.toUpperCase(), width / 2, 310);
+
+    // Occasion Icon
+    ctx.font = "80px sans-serif";
+    ctx.fillText(occasionIcon, width / 2, 420);
+
+    // Headline
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "900 52px sans-serif";
+    ctx.fillText(headline, width / 2, 500);
+
+    // Customer Name
+    ctx.fillStyle = "#f5e6b3";
+    ctx.font = "900 64px sans-serif";
+    ctx.fillText(customerName, width / 2, 580);
+
+    // Ornate Golden Divider
+    ctx.fillStyle = "#d4af37";
+    ctx.font = "bold 26px sans-serif";
+    ctx.fillText("✦ ────── ‹ ❖ › ────── ✦", width / 2, 640);
+
+    // Subtitle Wishes
+    ctx.fillStyle = "#f0dfaa";
+    ctx.font = "italic 32px Georgia, serif";
+    ctx.fillText(`"${subtitle}"`, width / 2, 705);
+
+    // Coupon Ticket Box
+    const couponBoxW = width - 240;
+    const couponBoxH = 290;
+    const couponBoxX = 120;
+    const couponBoxY = 780;
+
+    ctx.save();
+    ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
+    ctx.strokeStyle = "rgba(212, 175, 55, 0.8)";
+    ctx.lineWidth = 3;
+    roundRect(ctx, couponBoxX, couponBoxY, couponBoxW, couponBoxH, 36);
+    ctx.fill();
+    ctx.stroke();
+
+    // Ticket Header
+    ctx.fillStyle = "#e5c158";
+    ctx.font = "bold 24px sans-serif";
+    ctx.fillText(`EXCLUSIVE GIFT COUPON (VALID ${couponValidityDays} DAYS)`, width / 2, couponBoxY + 55);
+
+    // Golden Ticket Pill
+    const pillW = 460;
+    const pillH = 84;
+    const pillX = (width - pillW) / 2;
+    const pillY = couponBoxY + 85;
+
+    const pillGrad = ctx.createLinearGradient(pillX, pillY, pillX + pillW, pillY);
+    pillGrad.addColorStop(0, "#d4af37");
+    pillGrad.addColorStop(0.5, "#fcedbf");
+    pillGrad.addColorStop(1, "#d4af37");
+    ctx.fillStyle = pillGrad;
+    roundRect(ctx, pillX, pillY, pillW, pillH, 24);
+    ctx.fill();
+
+    // Code
+    ctx.fillStyle = "#1a1205";
+    ctx.font = "900 44px monospace";
+    ctx.fillText(couponCode, width / 2, pillY + 56);
+
+    // Ticket Subtext
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 30px sans-serif";
+    ctx.fillText(`Flat ${discountPercent}% OFF On Your Visit!`, width / 2, couponBoxY + 230);
+    ctx.restore();
+
+    // Golden Ribbon Bow at the bottom
+    ctx.font = "70px sans-serif";
+    ctx.fillText("🎀", width / 2, 1140);
+  } else {
+    // ── CARD 2: WARM IVORY CREAM ELEGANCE ──
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, "#fdfbf7");
+    bgGrad.addColorStop(0.5, "#f7f2ea");
+    bgGrad.addColorStop(1, "#eee5d8");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Outer Card Frame
+    ctx.save();
+    ctx.strokeStyle = "#d9c7a7";
+    ctx.lineWidth = 6;
+    ctx.shadowColor = "rgba(180, 150, 110, 0.25)";
+    ctx.shadowBlur = 20;
+    roundRect(ctx, 40, 40, width - 80, height - 80, 48);
+    ctx.stroke();
+    ctx.restore();
+
+    // Botanical Corner Leaves
+    ctx.font = "90px sans-serif";
+    ctx.fillText("🌿", width - 130, 140);
+    ctx.fillText("🍃", 130, height - 120);
+
+    // Top Logo Frame
+    const logoX = (width - 140) / 2;
+    const logoY = 110;
+    ctx.save();
+    ctx.fillStyle = "#ffffff";
+    ctx.strokeStyle = "#cbb28b";
+    ctx.lineWidth = 4;
+    roundRect(ctx, logoX, logoY, 140, 140, 32);
+    ctx.fill();
+    ctx.stroke();
+
+    if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
+      ctx.clip();
+      ctx.drawImage(logoImg, logoX + 10, logoY + 10, 120, 120);
+    } else {
+      ctx.font = "60px sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("🏪", width / 2, logoY + 70);
+    }
+    ctx.restore();
+
+    // Business Name
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#5c3e1e";
+    ctx.font = "900 32px sans-serif";
+    ctx.fillText(businessName.toUpperCase(), width / 2, 310);
+
+    // Occasion Icon
+    ctx.font = "80px sans-serif";
+    ctx.fillText(occasionIcon, width / 2, 420);
+
+    // Headline
+    ctx.fillStyle = "#3a2717";
+    ctx.font = "900 52px sans-serif";
+    ctx.fillText(headline, width / 2, 500);
+
+    // Customer Name
+    ctx.fillStyle = "#2e1c0d";
+    ctx.font = "900 64px sans-serif";
+    ctx.fillText(customerName, width / 2, 580);
+
+    // Ornate Divider
+    ctx.fillStyle = "#b89564";
+    ctx.font = "bold 26px sans-serif";
+    ctx.fillText("✦ ────── ‹ ❖ › ────── ✦", width / 2, 640);
+
+    // Subtitle Wishes
+    ctx.fillStyle = "#4a3420";
+    ctx.font = "italic 32px Georgia, serif";
+    ctx.fillText(`"${subtitle}"`, width / 2, 705);
+
+    // Dashed Coupon Ticket Box
+    const couponBoxW = width - 240;
+    const couponBoxH = 290;
+    const couponBoxX = 120;
+    const couponBoxY = 780;
+
+    ctx.save();
+    ctx.fillStyle = "#faf6f0";
+    ctx.strokeStyle = "#cbb28b";
+    ctx.lineWidth = 4;
+    ctx.setLineDash([12, 10]);
+    roundRect(ctx, couponBoxX, couponBoxY, couponBoxW, couponBoxH, 36);
+    ctx.fill();
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Ticket Header
+    ctx.fillStyle = "#5c3e1e";
+    ctx.font = "bold 24px sans-serif";
+    ctx.fillText(`EXCLUSIVE GIFT COUPON (VALID ${couponValidityDays} DAYS)`, width / 2, couponBoxY + 55);
+
+    // Ticket Pill
+    const pillW = 460;
+    const pillH = 84;
+    const pillX = (width - pillW) / 2;
+    const pillY = couponBoxY + 85;
+
+    const pillGrad = ctx.createLinearGradient(pillX, pillY, pillX + pillW, pillY);
+    pillGrad.addColorStop(0, "#f0d9ab");
+    pillGrad.addColorStop(0.5, "#fcedcf");
+    pillGrad.addColorStop(1, "#e8cb97");
+    ctx.fillStyle = pillGrad;
+    ctx.strokeStyle = "#dfc698";
+    ctx.lineWidth = 2;
+    roundRect(ctx, pillX, pillY, pillW, pillH, 24);
+    ctx.fill();
+    ctx.stroke();
+
+    // Code
+    ctx.fillStyle = "#3a2510";
+    ctx.font = "900 44px monospace";
+    ctx.fillText(couponCode, width / 2, pillY + 56);
+
+    // Ticket Subtext
+    ctx.fillStyle = "#2d1e11";
+    ctx.font = "bold 30px sans-serif";
+    ctx.fillText(`Flat ${discountPercent}% OFF On Your Visit!`, width / 2, couponBoxY + 230);
+    ctx.restore();
+  }
+}
