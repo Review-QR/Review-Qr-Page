@@ -574,34 +574,34 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
     }
     ctx.restore();
 
-    // Business Name
+    // Business Name (Dominant, bolder, rich dark tone)
     ctx.textAlign = "center";
-    ctx.fillStyle = "#5c3e1e";
-    ctx.font = "900 34px sans-serif";
-    ctx.fillText(businessName.toUpperCase(), width / 2, 285);
+    ctx.fillStyle = "#2c1808";
+    ctx.font = "900 44px sans-serif";
+    ctx.fillText(businessName.toUpperCase(), width / 2, 288);
 
     // Category Badge
-    ctx.fillStyle = "#8a6d4d";
-    ctx.font = "bold 18px sans-serif";
-    ctx.fillText(`✦ ${emblem.label.toUpperCase()} ✦`, width / 2, 320);
+    ctx.fillStyle = "#6d4d29";
+    ctx.font = "bold 20px sans-serif";
+    ctx.fillText(`✦ ${emblem.label.toUpperCase()} ✦`, width / 2, 326);
 
     // Occasion Icon
     ctx.font = "80px sans-serif";
     ctx.fillText(occasionIcon, width / 2, 420);
 
-    // Headline
-    ctx.fillStyle = "#3a2717";
-    ctx.font = "900 58px sans-serif";
+    // Headline (Darker, rich tone)
+    ctx.fillStyle = "#1e1107";
+    ctx.font = "900 62px sans-serif";
     ctx.fillText(headline, width / 2, 510);
 
     // Ornate Divider
-    ctx.fillStyle = "#b89564";
+    ctx.fillStyle = "#997340";
     ctx.font = "bold 28px sans-serif";
     ctx.fillText("✦ ────── ‹ ❖ › ────── ✦", width / 2, 580);
 
-    // Subtitle Wishes
-    ctx.fillStyle = "#4a3420";
-    ctx.font = "italic 32px Georgia, serif";
+    // Subtitle Wishes (Darker, clear tone)
+    ctx.fillStyle = "#2e1a0b";
+    ctx.font = "italic bold 33px Georgia, serif";
     ctx.fillText(`"${subtitle}"`, width / 2, 650);
 
     // Dashed Coupon Ticket Box
@@ -612,7 +612,7 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
 
     ctx.save();
     ctx.fillStyle = "#faf6f0";
-    ctx.strokeStyle = "#cbb28b";
+    ctx.strokeStyle = "#bda278";
     ctx.lineWidth = 4;
     ctx.setLineDash([12, 10]);
     roundRect(ctx, couponBoxX, couponBoxY, couponBoxW, couponBoxH, 36);
@@ -621,7 +621,7 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
     ctx.setLineDash([]);
 
     // Ticket Header
-    ctx.fillStyle = "#5c3e1e";
+    ctx.fillStyle = "#42250d";
     ctx.font = "bold 24px sans-serif";
     ctx.fillText(`EXCLUSIVE GIFT COUPON (VALID ${couponValidityDays} DAYS)`, width / 2, couponBoxY + 55);
 
@@ -632,27 +632,27 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
     const pillY = couponBoxY + 85;
 
     const pillGrad = ctx.createLinearGradient(pillX, pillY, pillX + pillW, pillY);
-    pillGrad.addColorStop(0, "#f0d9ab");
-    pillGrad.addColorStop(0.5, "#fcedcf");
-    pillGrad.addColorStop(1, "#e8cb97");
+    pillGrad.addColorStop(0, "#edd39f");
+    pillGrad.addColorStop(0.5, "#fae6c3");
+    pillGrad.addColorStop(1, "#e4c287");
     ctx.fillStyle = pillGrad;
-    ctx.strokeStyle = "#dfc698";
+    ctx.strokeStyle = "#d2b37c";
     ctx.lineWidth = 2;
     roundRect(ctx, pillX, pillY, pillW, pillH, 24);
     ctx.fill();
     ctx.stroke();
 
     // Code
-    ctx.fillStyle = "#3a2510";
+    ctx.fillStyle = "#281607";
     ctx.font = "900 38px monospace";
     ctx.fillText(`VIP PASS · ${discountPercent}% OFF`, width / 2, pillY + 56);
 
     // Ticket Subtext
-    ctx.fillStyle = "#2d1e11";
+    ctx.fillStyle = "#1f1105";
     ctx.font = "bold 30px sans-serif";
     ctx.fillText(`Flat ${discountPercent}% OFF On Your Visit!`, width / 2, couponBoxY + 225);
     ctx.font = "italic 20px sans-serif";
-    ctx.fillStyle = "#8a6d4d";
+    ctx.fillStyle = "#4a2b10";
     ctx.fillText(`(Show WhatsApp message code below to redeem)`, width / 2, couponBoxY + 258);
     ctx.restore();
   }

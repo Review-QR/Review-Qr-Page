@@ -552,20 +552,20 @@ export default function OccasionStudio({
               </div>
             )}
 
-            {/* CARD 2: WARM IVORY CREAM ELEGANCE */}
+            {/* CARD 1 (DEFAULT): WARM IVORY CREAM ELEGANCE */}
             {templateStyle === "ivory_cream" && (
-              <div className="relative overflow-hidden rounded-3xl border-2 border-[#d9c7a7] bg-gradient-to-b from-[#fdfbf7] via-[#f7f2ea] to-[#eee5d8] p-6 text-center shadow-[0_12px_40px_rgba(180,150,110,0.22)] transition min-h-[470px] flex flex-col justify-between">
+              <div className="relative overflow-hidden rounded-3xl border-2 border-[#cfb894] bg-gradient-to-b from-[#fdfbf7] via-[#f7f2ea] to-[#eee5d8] p-6 text-center shadow-[0_12px_40px_rgba(180,150,110,0.25)] transition min-h-[470px] flex flex-col justify-between">
                 {/* Botanical Leaves Accents on Corners */}
-                <div className="pointer-events-none absolute -right-2 -top-2 text-4xl opacity-75">
+                <div className="pointer-events-none absolute -right-2 -top-2 text-4xl opacity-80">
                   🌿
                 </div>
-                <div className="pointer-events-none absolute -left-2 -bottom-2 text-4xl opacity-75">
+                <div className="pointer-events-none absolute -left-2 -bottom-2 text-4xl opacity-80">
                   🍃
                 </div>
 
-                {/* Top Section: Compact Logo + Business Name + Category Emblem */}
+                {/* Top Section: Logo + Dominant Business Name + Category Emblem */}
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#cbb28b] ring-2 ring-amber-200/50 bg-white p-1 shadow-[0_6px_20px_rgba(180,150,110,0.3)]">
+                  <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-2xl border-2 border-[#b59363] ring-2 ring-amber-300/60 bg-white p-1 shadow-[0_6px_22px_rgba(140,105,65,0.32)]">
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={logoUrl} alt={businessName} className="h-full w-full object-contain" />
@@ -573,49 +573,50 @@ export default function OccasionStudio({
                       <span className="text-3xl">{emblem.icon}</span>
                     )}
                   </div>
-                  <span className="mt-2 text-xs sm:text-sm font-black uppercase tracking-[0.22em] text-[#5c3e1e]">
+                  {/* Dominant Bolder Business Name */}
+                  <span className="mt-2.5 text-base sm:text-lg font-black uppercase tracking-[0.16em] text-[#2c1808] drop-shadow-xs">
                     {businessName}
                   </span>
-                  <span className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-[#8a6d4d]">
+                  <span className="mt-0.5 text-[11px] font-extrabold uppercase tracking-widest text-[#6d4d29]">
                     ✦ {emblem.label} ✦
                   </span>
                 </div>
 
-                {/* Middle Section: Occasion Icon + Headline + Divider */}
+                {/* Middle Section: Occasion Icon + Darker Headline + Divider */}
                 <div className="relative z-10 my-3">
                   <span className="text-5xl drop-shadow-sm">{occasionIcon}</span>
 
-                  {/* Headline */}
-                  <h3 className="mt-2.5 text-xl sm:text-2xl font-black tracking-tight text-[#3a2717] leading-snug">
+                  {/* Headline (Darker, rich tone) */}
+                  <h3 className="mt-2 text-xl sm:text-2xl font-black tracking-tight text-[#1e1107] leading-snug drop-shadow-xs">
                     {headline}
                   </h3>
 
                   {/* Warm Bronze Ornate Divider */}
-                  <div className="my-2.5 flex items-center justify-center gap-2 text-[#b89564]">
-                    <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#b89564]" />
-                    <span className="text-sm">‹ ❖ ›</span>
-                    <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#b89564]" />
+                  <div className="my-2.5 flex items-center justify-center gap-2 text-[#997340]">
+                    <span className="h-[1.5px] w-12 bg-gradient-to-r from-transparent to-[#997340]" />
+                    <span className="text-sm font-bold">‹ ❖ ›</span>
+                    <span className="h-[1.5px] w-12 bg-gradient-to-l from-transparent to-[#997340]" />
                   </div>
 
-                  {/* Subtitle / Wishes */}
-                  <p className="font-serif text-xs sm:text-sm italic text-[#4a3420] px-2 leading-relaxed">
+                  {/* Subtitle / Wishes (Darker, crisper readability) */}
+                  <p className="font-serif text-sm sm:text-[15px] font-semibold italic text-[#2e1a0b] px-2 leading-relaxed">
                     &ldquo;{occasionSubtitle}&rdquo;
                   </p>
                 </div>
 
                 {/* Bottom Section: Stitched Coupon Box */}
-                <div className="relative z-10 rounded-2xl border-2 border-dashed border-[#cbb28b] bg-[#faf6f0] p-3.5 shadow-sm">
-                  <span className="block text-[10px] font-black uppercase tracking-wider text-[#5c3e1e]">
+                <div className="relative z-10 rounded-2xl border-2 border-dashed border-[#bda278] bg-[#f8f2e7] p-3.5 shadow-sm">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-[#42250d]">
                     EXCLUSIVE GIFT COUPON (VALID {couponValidityDays} DAYS)
                   </span>
 
                   {/* Universal Cream/Golden Ticket Pill */}
-                  <div className="relative mx-auto my-1.5 max-w-[230px] rounded-xl bg-gradient-to-r from-[#f0d9ab] via-[#fcedcf] to-[#e8cb97] py-1.5 px-4 font-mono text-sm sm:text-base font-black tracking-wider text-[#3a2510] shadow-sm border border-[#dfc698]">
+                  <div className="relative mx-auto my-1.5 max-w-[240px] rounded-xl bg-gradient-to-r from-[#edd39f] via-[#fae6c3] to-[#e4c287] py-1.5 px-4 font-mono text-sm sm:text-base font-black tracking-wider text-[#281607] shadow-sm border border-[#d2b37c]">
                     VIP PASS · FLAT {discountPercent}% OFF
                   </div>
 
-                  <span className="text-xs font-bold text-[#2d1e11] block">Flat {discountPercent}% OFF On Your Visit!</span>
-                  <span className="text-[10px] text-[#5c3e1e]/80 block mt-0.5">Show message code below to redeem</span>
+                  <span className="text-xs font-black text-[#1f1105] block">Flat {discountPercent}% OFF On Your Visit!</span>
+                  <span className="text-[10px] font-medium text-[#4a2b10] block mt-0.5">Show message code below to redeem</span>
                 </div>
               </div>
             )}
@@ -1004,6 +1005,202 @@ export default function OccasionStudio({
               >
                 Update Schedule
               </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 📋 SAVED PLANS & LIVE DISCOUNT STATUS SUMMARY */}
+      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-100 text-base">
+                📋
+              </span>
+              <h3 className="text-base font-black text-slate-900">
+                Saved Occasion Plans &amp; Live Discount Status
+              </h3>
+            </div>
+            <p className="mt-0.5 text-xs text-slate-500">
+              Aapke sabhi occasion plans ka live status aur customer ko milne wali discount chhoot ka instant overview.
+            </p>
+          </div>
+          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3.5 py-1 text-xs font-bold text-emerald-800">
+            🟢 Daily Auto-Engine Active at {dispatchTime}
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Plan 1: Birthday */}
+          <div
+            onClick={() => handleOccasionSwitch("birthday")}
+            className={`cursor-pointer rounded-2xl border p-4 transition hover:shadow-md ${
+              occasionType === "birthday"
+                ? "border-orange-500 bg-orange-50/50 ring-2 ring-orange-200 shadow-sm"
+                : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-2xl">🎂</span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                  autoBirthday
+                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                    : "bg-slate-200 text-slate-600"
+                }`}
+              >
+                {autoBirthday ? "🟢 AUTO ACTIVE" : "⏸️ PAUSED"}
+              </span>
+            </div>
+            <h4 className="mt-2 text-sm font-black text-slate-900">Birthday Greeting</h4>
+            <p className="text-[11px] text-slate-500 truncate">
+              {draftsMap.birthday?.headline || "🎉 Happy Birthday!"}
+            </p>
+
+            <div className="mt-3 flex items-baseline justify-between border-t border-slate-200/80 pt-2.5">
+              <span className="text-xs font-bold text-slate-600">Customer Chhoot:</span>
+              <span className="rounded-lg bg-orange-600 px-2.5 py-0.5 text-xs font-black text-white shadow-xs">
+                FLAT {draftsMap.birthday?.discount_percent ?? (occasionType === "birthday" ? discountPercent : 15)}% OFF
+              </span>
+            </div>
+
+            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Coupon Validity:</span>
+              <span className="font-bold text-slate-900">
+                {draftsMap.birthday?.coupon_validity_days ?? 7} Days
+              </span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Card Style:</span>
+              <span className="font-bold text-amber-800">
+                {draftsMap.birthday?.template_style === "royal_gold" ? "👑 Royal Dark Gold" : "🌿 Ivory Cream"}
+              </span>
+            </div>
+          </div>
+
+          {/* Plan 2: Anniversary */}
+          <div
+            onClick={() => handleOccasionSwitch("anniversary")}
+            className={`cursor-pointer rounded-2xl border p-4 transition hover:shadow-md ${
+              occasionType === "anniversary"
+                ? "border-rose-500 bg-rose-50/50 ring-2 ring-rose-200 shadow-sm"
+                : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-2xl">💍</span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                  autoAnniversary
+                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                    : "bg-slate-200 text-slate-600"
+                }`}
+              >
+                {autoAnniversary ? "🟢 AUTO ACTIVE" : "⏸️ PAUSED"}
+              </span>
+            </div>
+            <h4 className="mt-2 text-sm font-black text-slate-900">Anniversary Wish</h4>
+            <p className="text-[11px] text-slate-500 truncate">
+              {draftsMap.anniversary?.headline || "💍 Happy Anniversary!"}
+            </p>
+
+            <div className="mt-3 flex items-baseline justify-between border-t border-slate-200/80 pt-2.5">
+              <span className="text-xs font-bold text-slate-600">Customer Chhoot:</span>
+              <span className="rounded-lg bg-rose-600 px-2.5 py-0.5 text-xs font-black text-white shadow-xs">
+                FLAT {draftsMap.anniversary?.discount_percent ?? (occasionType === "anniversary" ? discountPercent : 20)}% OFF
+              </span>
+            </div>
+
+            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Coupon Validity:</span>
+              <span className="font-bold text-slate-900">
+                {draftsMap.anniversary?.coupon_validity_days ?? 7} Days
+              </span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Card Style:</span>
+              <span className="font-bold text-amber-800">
+                {draftsMap.anniversary?.template_style === "royal_gold" ? "👑 Royal Dark Gold" : "🌿 Ivory Cream"}
+              </span>
+            </div>
+          </div>
+
+          {/* Plan 3: Festivals */}
+          <div
+            onClick={() => handleOccasionSwitch("festival")}
+            className={`cursor-pointer rounded-2xl border p-4 transition hover:shadow-md ${
+              occasionType === "festival"
+                ? "border-indigo-500 bg-indigo-50/50 ring-2 ring-indigo-200 shadow-sm"
+                : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-2xl">🪔</span>
+              <span className="rounded-full bg-indigo-100 border border-indigo-300 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-indigo-800">
+                ⚡ MANUAL BROADCAST
+              </span>
+            </div>
+            <h4 className="mt-2 text-sm font-black text-slate-900">Festivals &amp; Events</h4>
+            <p className="text-[11px] text-slate-500 truncate">
+              {draftsMap.festival?.headline || "🪔 Festive Greetings!"}
+            </p>
+
+            <div className="mt-3 flex items-baseline justify-between border-t border-slate-200/80 pt-2.5">
+              <span className="text-xs font-bold text-slate-600">Customer Chhoot:</span>
+              <span className="rounded-lg bg-indigo-600 px-2.5 py-0.5 text-xs font-black text-white shadow-xs">
+                FLAT {draftsMap.festival?.discount_percent ?? (occasionType === "festival" ? discountPercent : 25)}% OFF
+              </span>
+            </div>
+
+            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Coupon Validity:</span>
+              <span className="font-bold text-slate-900">
+                {draftsMap.festival?.coupon_validity_days ?? 7} Days
+              </span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Send Mode:</span>
+              <span className="font-bold text-slate-800">1-Click Blast</span>
+            </div>
+          </div>
+
+          {/* Plan 4: Today's Special */}
+          <div
+            onClick={() => handleOccasionSwitch("offer")}
+            className={`cursor-pointer rounded-2xl border p-4 transition hover:shadow-md ${
+              occasionType === "offer"
+                ? "border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-200 shadow-sm"
+                : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70"
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-2xl">🔥</span>
+              <span className="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-800">
+                ⚡ CHEF SPECIAL
+              </span>
+            </div>
+            <h4 className="mt-2 text-sm font-black text-slate-900">Today&apos;s Special</h4>
+            <p className="text-[11px] text-slate-500 truncate">
+              {draftsMap.offer?.headline || "🔥 Today's Chef Special"}
+            </p>
+
+            <div className="mt-3 flex items-baseline justify-between border-t border-slate-200/80 pt-2.5">
+              <span className="text-xs font-bold text-slate-600">Customer Chhoot:</span>
+              <span className="rounded-lg bg-emerald-600 px-2.5 py-0.5 text-xs font-black text-white shadow-xs">
+                FLAT {draftsMap.offer?.discount_percent ?? (occasionType === "offer" ? discountPercent : 10)}% OFF
+              </span>
+            </div>
+
+            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Coupon Validity:</span>
+              <span className="font-bold text-slate-900">
+                {draftsMap.offer?.coupon_validity_days ?? 3} Days
+              </span>
+            </div>
+            <div className="mt-1 flex items-center justify-between text-[11px] text-slate-600">
+              <span>Send Mode:</span>
+              <span className="font-bold text-slate-800">Flash Offer</span>
             </div>
           </div>
         </div>
