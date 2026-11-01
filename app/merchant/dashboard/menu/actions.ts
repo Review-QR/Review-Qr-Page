@@ -23,6 +23,74 @@ export type ActionResponse = {
   item?: Record<string, unknown>;
 };
 
+export async function uploadCatalogItemImageAction(
+  formData: FormData,
+): Promise<{ success: boolean; imageUrl?: string; message?: string }> {
+  const merchant = await requireActiveMerchant();
+  const file = formData.get("image") as File | null;
+
+  if (!file || file.size === 0) {
+    return { success: false, message: "No image file provided." };
+  }
+
+  if (file.size > 5 * 1024 * 1024) {
+    return { success: false, message: "Image size must be under 5 MB." };
+  }
+
+  const fileName = (file.name || "").toLowerCase();
+  let ext = "jpg";
+  let contentType = "image/jpeg";
+
+  if (fileName.endsWith(".png") || file.type.includes("png")) {
+    ext = "png";
+    contentType = "image/png";
+  } else if (fileName.endsWith(".webp") || file.type.includes("webp")) {
+    ext = "webp";
+    contentType = "image/webp";
+  }
+
+  try {
+    const admin = createSupabaseAdminClient();
+    const filePath = `menu-items/${merchant.businessId}_${Date.now()}.${ext}`;
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    let bucketName = "merchant-assets";
+    let uploadResult = await admin.storage.from(bucketName).upload(filePath, buffer, {
+      contentType,
+      upsert: true,
+    });
+
+    if (uploadResult.error && uploadResult.error.message.toLowerCase().includes("bucket not found")) {
+      await admin.storage.createBucket("merchant-assets", { public: true }).catch(() => null);
+      uploadResult = await admin.storage.from(bucketName).upload(filePath, buffer, {
+        contentType,
+        upsert: true,
+      });
+
+      if (uploadResult.error) {
+        bucketName = "trustit-qr-designs";
+        uploadResult = await admin.storage.from(bucketName).upload(filePath, buffer, {
+          contentType,
+          upsert: true,
+        });
+      }
+    }
+
+    if (uploadResult.error) {
+      return { success: false, message: `Upload failed: ${uploadResult.error.message}` };
+    }
+
+    const { data: urlData } = admin.storage.from(bucketName).getPublicUrl(filePath);
+    return { success: true, imageUrl: urlData.publicUrl, message: "Image uploaded successfully." };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "Failed to upload image.",
+    };
+  }
+}
+
 export async function saveCatalogItemAction(input: CatalogItemInput): Promise<ActionResponse> {
   const merchant = await requireActiveMerchant();
   const name = input.name?.trim();

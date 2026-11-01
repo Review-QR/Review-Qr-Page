@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import {
   saveCatalogItemAction,
   deleteCatalogItemAction,
   toggleItemAvailabilityAction,
   seedCategoryTemplatesAction,
   quickUpdateRateAction,
+  uploadCatalogItemImageAction,
   type CatalogItemInput,
 } from "./actions";
 
@@ -51,6 +52,31 @@ export default function MenuManager({
   const [formType, setFormType] = useState<CatalogItemInput["itemType"]>("veg");
   const [formDescription, setFormDescription] = useState("");
   const [formImageUrl, setFormImageUrl] = useState("");
+  const [imageUploading, setImageUploading] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setErrorMsg("");
+    setImageUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("image", file);
+      const res = await uploadCatalogItemImageAction(fd);
+      if (res.success && res.imageUrl) {
+        setFormImageUrl(res.imageUrl);
+      } else {
+        setErrorMsg(res.message || "Failed to upload image.");
+      }
+    } catch {
+      setErrorMsg("Failed to upload image. Please try again.");
+    } finally {
+      setImageUploading(false);
+      e.target.value = "";
+    }
+  }
 
   const categories = ["All", ...Array.from(new Set(items.map((i) => i.category || "General")))];
 
@@ -610,37 +636,22 @@ export default function MenuManager({
                 </div>
               </div>
 
-              {/* Category & Item Type */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Category *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Fast Food, Detergent..."
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Type
-                  </label>
-                  <select
-                    value={formType}
-                    onChange={(e) => setFormType(e.target.value as CatalogItemInput["itemType"])}
-                    className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none"
-                  >
-                    <option value="veg">Pure Veg</option>
-                    <option value="non_veg">Non-Veg</option>
-                    <option value="egg">Egg</option>
-                    <option value="product">Product / Packaged</option>
-                    <option value="service">Service</option>
-                  </select>
-                </div>
+              {/* Item Type (Veg / Non-Veg / Service) */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                  Item Food / Service Type *
+                </label>
+                <select
+                  value={formType}
+                  onChange={(e) => setFormType(e.target.value as CatalogItemInput["itemType"])}
+                  className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none font-medium"
+                >
+                  <option value="veg">🟢 Pure Veg</option>
+                  <option value="non_veg">🔴 Non-Veg</option>
+                  <option value="egg">🟡 Egg</option>
+                  <option value="product">📦 Packaged Grocery / Product</option>
+                  <option value="service">✂️ Service (Salon / Wash / Repair)</option>
+                </select>
               </div>
 
               {/* Description */}
@@ -657,18 +668,95 @@ export default function MenuManager({
                 />
               </div>
 
-              {/* Image URL */}
+              {/* Item Photo & Live Camera Box */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Image URL (Optional)
+                  Item Photo (आइटम की फोटो)
                 </label>
-                <input
-                  type="url"
-                  placeholder="https://..."
-                  value={formImageUrl}
-                  onChange={(e) => setFormImageUrl(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none"
-                />
+                <div className="mt-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                  <div className="flex flex-col sm:flex-row items-center gap-3">
+                    {/* Photo Box / Preview */}
+                    <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-white shadow-2xs">
+                      {formImageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={formImageUrl} alt="Item Preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-slate-400 p-1 text-center">
+                          <span className="text-xl">📷</span>
+                          <span className="text-[9px] font-semibold mt-0.5">No photo</span>
+                        </div>
+                      )}
+                      {imageUploading && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs">
+                          <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons: Direct Camera & Choose from Files */}
+                    <div className="flex-1 space-y-1.5 w-full">
+                      <p className="text-xs font-semibold text-slate-800">
+                        {formImageUrl ? "Item photo attached ✓" : "Take live photo or upload from device"}
+                      </p>
+                      <p className="text-[11px] text-slate-500">
+                        Camera se live photo lein ya folder se select karein.
+                      </p>
+
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        {/* Hidden Inputs */}
+                        <input
+                          ref={cameraInputRef}
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+                        <input
+                          ref={galleryInputRef}
+                          type="file"
+                          accept="image/png,image/jpeg,image/jpg,image/webp"
+                          onChange={handleImageUpload}
+                          className="hidden"
+                        />
+
+                        {/* Direct Camera Button */}
+                        <button
+                          type="button"
+                          disabled={imageUploading}
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-2xs cursor-pointer transition active:scale-95 disabled:opacity-50"
+                        >
+                          <span>📸</span>
+                          <span>Click from Camera</span>
+                        </button>
+
+                        {/* Choose File (Upload) Button */}
+                        <button
+                          type="button"
+                          disabled={imageUploading}
+                          onClick={() => galleryInputRef.current?.click()}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold shadow-2xs cursor-pointer transition active:scale-95 disabled:opacity-50"
+                        >
+                          <span>📁</span>
+                          <span>Choose from Files</span>
+                        </button>
+
+                        {/* Remove Photo Button */}
+                        {formImageUrl && (
+                          <button
+                            type="button"
+                            disabled={imageUploading}
+                            onClick={() => setFormImageUrl("")}
+                            className="px-2.5 py-1.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold cursor-pointer transition disabled:opacity-50"
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Modal Actions */}
