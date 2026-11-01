@@ -272,16 +272,31 @@ export default function BusinessProfileForm({
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                Business Logo & Branding
+                Business Logo &amp; Branding
                 {currentLogoUrl && (
                   <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                     Active
                   </span>
                 )}
               </h3>
-              <p className="mt-0.5 text-xs text-slate-500 max-w-md">
-                Used automatically on your WhatsApp Greeting Cards (Birthdays & Anniversaries), QR Standees, and Merchant Profile.
+
+              {/* Standard Specifications (Compact & Clean) */}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-700">
+                <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
+                  <span>📐</span> <strong>500 × 500 px</strong> (Square 1:1)
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
+                  <span>📁</span> <strong>PNG (Transparent) / JPG</strong>
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
+                  <span>⚖️</span> <strong>Max 2 MB</strong>
+                </span>
+              </div>
+
+              <p className="mt-1.5 text-[11px] text-slate-500">
+                Yeh standard size aapke <strong>Merchant Profile Icon</strong> aur sabhi <strong>WhatsApp Greeting Cards / Posters</strong> par bina kate ekdum sharp aur perfect fit hoga.
               </p>
+
               {logoMsg && (
                 <p className={`mt-1.5 text-xs font-semibold ${logoMsg.error ? "text-rose-600" : "text-emerald-700"}`}>
                   {logoMsg.text}
