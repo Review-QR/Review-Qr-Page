@@ -17,17 +17,6 @@ function merchantIcon(businessType: string | null) {
   return "✦";
 }
 
-function initials(value: string | null) {
-  return (
-    (value ?? "Merchant")
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? "")
-      .join("") || "M"
-  );
-}
-
 export default async function MerchantDashboardLayout({ children }: { children: React.ReactNode }) {
   const merchant = await requireActiveMerchant();
   const supabase = await createMerchantServerClient();
@@ -107,45 +96,6 @@ export default async function MerchantDashboardLayout({ children }: { children: 
 
         {/* 3. Main Workspace Area */}
         <div className="merchant-main flex flex-col flex-1 min-w-0">
-          {/* Top Sticky Status Bar */}
-          <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#eaedff] px-4 sm:px-8 py-2.5 flex items-center justify-between gap-4 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-slate-500 hidden md:inline">
-                Live Hyperlocal Mesh • Auto-Sync 4s
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Clean White Live Orders Button styled like Rates & Menu */}
-              <Link
-                href="/merchant/dashboard/orders"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
-              >
-                <span className="material-symbols-outlined text-[17px] text-slate-600">receipt_long</span>
-                <span>Live Orders</span>
-              </Link>
-              <div className="h-5 w-px bg-[#eaedff] hidden sm:block"></div>
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-full bg-[#1e140a] border-2 border-[#b59363] ring-2 ring-amber-200/50 text-white flex items-center justify-center font-bold text-xs shadow-xs overflow-hidden shrink-0">
-                  {merchant.logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover" />
-                  ) : (
-                    initials(merchant.businessName)
-                  )}
-                </div>
-                <div className="hidden sm:flex flex-col text-right">
-                  <span className="text-xs font-bold text-[#131b2e] leading-tight truncate max-w-[160px]">
-                    {merchant.businessName}
-                  </span>
-                  <span className="text-[10px] text-[#005739] font-bold uppercase tracking-wider">
-                    {isPremium ? "👑 VIP Partner" : "✓ Verified Partner"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </header>
-
           <div className="merchant-mobile-header">
             <Link href="/merchant/dashboard" className="merchant-brand">
               <img src="/trustit-icon.svg" alt="" width="36" height="36" />
