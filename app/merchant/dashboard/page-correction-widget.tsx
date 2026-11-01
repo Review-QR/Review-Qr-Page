@@ -23,6 +23,7 @@ export default function PageCorrectionWidget() {
   const [attachedImageName, setAttachedImageName] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [viewingImage, setViewingImage] = useState<string | null>(null);
+  const [isMinimized, setIsMinimized] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Load saved corrections on mount
@@ -178,64 +179,88 @@ export default function PageCorrectionWidget() {
 
   return (
     <>
-      {/* Floating Trigger Button */}
+      {/* Floating Trigger Button (or Minimized Bar) */}
       <div className="fixed bottom-5 right-5 z-40">
-        <button
-          type="button"
-          onClick={() => setIsOpen(true)}
-          className="group relative flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-slate-900 to-[#1e293b] hover:from-slate-800 hover:to-indigo-950 text-white rounded-full shadow-xl shadow-slate-900/30 border border-slate-700/60 transition-all hover:scale-105 active:scale-95"
-          title="Open Page Corrections Tool"
-        >
-          <span className="material-symbols-outlined text-[19px] text-amber-400 group-hover:rotate-12 transition-transform">
-            edit_note
-          </span>
-          <span className="text-xs font-bold tracking-wide">Page Corrections</span>
-          {corrections.length > 0 && (
-            <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-slate-950 text-[11px] font-black shadow-xs">
-              {corrections.length}
+        {isOpen && isMinimized ? (
+          <button
+            type="button"
+            onClick={() => setIsMinimized(false)}
+            className="flex items-center gap-2.5 px-4 py-2 bg-slate-900 text-white rounded-full shadow-2xl border-2 border-amber-400 hover:bg-slate-800 transition-all hover:scale-105 active:scale-95 animate-pulse"
+            title="Click to expand correction tool"
+          >
+            <span className="material-symbols-outlined text-amber-400 text-base">unfold_more</span>
+            <span className="text-xs font-bold text-amber-300">
+              {text ? `Draft: "${text.slice(0, 15)}..."` : "Draft Open"}
             </span>
-          )}
-          {corrections.length > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-3 w-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+            <span className="text-[11px] bg-amber-400 text-slate-900 font-black px-1.5 py-0.5 rounded-full">
+              Expand ↗
             </span>
-          )}
-        </button>
+          </button>
+        ) : !isOpen ? (
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(true);
+              setIsMinimized(false);
+            }}
+            className="group relative flex items-center gap-2.5 px-4 py-2.5 bg-gradient-to-r from-slate-900 to-[#1e293b] hover:from-slate-800 hover:to-indigo-950 text-white rounded-full shadow-xl shadow-slate-900/30 border border-slate-700/60 transition-all hover:scale-105 active:scale-95"
+            title="Open Page Corrections Tool"
+          >
+            <span className="material-symbols-outlined text-[19px] text-amber-400 group-hover:rotate-12 transition-transform">
+              edit_note
+            </span>
+            <span className="text-xs font-bold tracking-wide">Page Corrections</span>
+            {corrections.length > 0 && (
+              <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-amber-500 text-slate-950 text-[11px] font-black shadow-xs">
+                {corrections.length}
+              </span>
+            )}
+            {corrections.length > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+              </span>
+            )}
+          </button>
+        ) : null}
       </div>
 
-      {/* Slide-over Drawer Backdrop */}
-      {isOpen && (
-        <div
-          onClick={() => setIsOpen(false)}
-          className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs z-50 transition-opacity"
-        />
-      )}
-
-      {/* Slide-over Drawer */}
+      {/* Slide-over Drawer (No backdrop blur - background stays 100% clear & interactive) */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-[480px] bg-white z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out border-l border-slate-200 ${
-          isOpen ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 right-0 h-full w-full sm:w-[420px] bg-white z-50 shadow-2xl flex flex-col transition-transform duration-300 ease-in-out border-l border-slate-300 ${
+          isOpen && !isMinimized ? "translate-x-0" : "translate-x-full"
         }`}
       >
         {/* Drawer Header */}
-        <div className="px-5 py-4 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-amber-400 text-2xl">rate_review</span>
+        <div className="px-4 py-3.5 bg-slate-900 text-white flex items-center justify-between border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-amber-400 text-xl">rate_review</span>
             <div>
-              <h2 className="text-sm font-bold tracking-tight">Live Page Corrections Tool</h2>
-              <p className="text-[11px] text-slate-400">
-                Har page par note likho ya photo attach karo, sab ek sath save hoga.
+              <h2 className="text-xs font-bold tracking-tight">Live Page Corrections</h2>
+              <p className="text-[10px] text-slate-400">
+                Screen dekh kar note likho ya photo attach karo
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center transition"
-          >
-            <span className="material-symbols-outlined text-[18px]">close</span>
-          </button>
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIsMinimized(true)}
+              title="Minimize to see full screen"
+              className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold flex items-center gap-1 transition"
+            >
+              <span className="material-symbols-outlined text-[15px]">unfold_less</span>
+              <span className="text-[10px]">Minimize</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              title="Close panel"
+              className="w-7 h-7 rounded-lg bg-slate-800 hover:bg-red-900/60 text-slate-300 hover:text-white flex items-center justify-center transition"
+            >
+              <span className="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </div>
         </div>
 
         {/* Current Active Page Badge */}
