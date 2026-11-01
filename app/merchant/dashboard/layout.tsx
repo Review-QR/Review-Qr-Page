@@ -87,8 +87,13 @@ export default async function MerchantDashboardLayout({ children }: { children: 
           </Link>
 
           <div className="merchant-identity">
-            <span className="merchant-identity__avatar" aria-hidden="true">
-              {merchantIcon(merchant.businessType)}
+            <span className="merchant-identity__avatar overflow-hidden p-0.5" aria-hidden="true">
+              {merchant.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover rounded-xl" />
+              ) : (
+                merchantIcon(merchant.businessType)
+              )}
             </span>
             <span className="merchant-identity__copy">
               <span className="flex items-center gap-1.5">
@@ -156,8 +161,13 @@ export default async function MerchantDashboardLayout({ children }: { children: 
               </Link>
               <div className="h-5 w-px bg-[#eaedff] hidden sm:block"></div>
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[#0d47a1] text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                  {initials(merchant.businessName)}
+                <div className="w-8 h-8 rounded-full bg-[#1e140a] border border-[#b59363] text-white flex items-center justify-center font-bold text-xs shadow-xs overflow-hidden">
+                  {merchant.logoUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover" />
+                  ) : (
+                    initials(merchant.businessName)
+                  )}
                 </div>
                 <div className="hidden sm:flex flex-col text-right">
                   <span className="text-xs font-bold text-[#131b2e] leading-tight truncate max-w-[160px]">
