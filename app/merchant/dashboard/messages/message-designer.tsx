@@ -377,6 +377,7 @@ export default function MessageDesigner({
 
   function edit(item: Saved) {
     setEditingId(item.id);
+    setActiveTab("templates");
     setCategory(item.category as MessageCategory);
     setTemplateId(item.template_id);
     setTitle(item.title);

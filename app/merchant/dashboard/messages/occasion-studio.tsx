@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   saveMerchantOccasionDraftAction,
   updateMerchantOccasionScheduleAction,
@@ -21,11 +22,12 @@ export type LanguageMode = "hinglish" | "hindi" | "english";
 
 export const TEMPLATE_MESSAGES: Record<
   "birthday" | "anniversary" | "festival" | "offer",
-  Record<LanguageMode, { headline: string; messages: string[] }>
+  Record<LanguageMode, { headline: string; subtitle: string; messages: string[] }>
 > = {
   birthday: {
     hinglish: {
-      headline: "🎉 Happy Birthday! Janmadin Ki Dhero Shubh-kamnaye",
+      headline: "🎉 Happy Birthday!",
+      subtitle: "Dear Lucky Ji, wishes from our entire team!",
       messages: [
         "Aapke is khas janamdin par hamari taraf se dher saari shubh-kamnaye! 🎉 Aapka aane wala saal khushiyo se bhara ho. Hamare sang jude rehne ke liye dil se shukriya!",
         "Janmadin ki dher saari badhaiyan! 🎂 Aapka yeh khas din mangalmay ho. Is khas din ko aur bhi yaadgar banane ke liye hamari taraf se ek chhota sa uphar!",
@@ -33,7 +35,8 @@ export const TEMPLATE_MESSAGES: Record<
       ],
     },
     hindi: {
-      headline: "🎉 जन्मदिन की हार्दिक शुभकामनाएं एवं मंगलकामनाएं!",
+      headline: "🎉 जन्मदिन की हार्दिक बधाई!",
+      subtitle: "श्री लकी जी, हमारे समस्त परिवार की ओर से सप्रेम मंगलकामनाएं!",
       messages: [
         "आपके इस पावन जन्मदिन पर हमारे पूरे प्रतिष्ठान की ओर से हार्दिक शुभकामनाएं! 🎂 ईश्वर आपको उत्तम स्वास्थ्य, दीर्घायु और अपार खुशियां प्रदान करें।",
         "जन्मदिन की अनंत बधाई! 🌟 आपका जीवन सदैव सुख, शांति और समृद्धि से परिपूर्ण रहे। आपके इस विशेष दिन को खास बनाने के लिए हमारी तरफ से यह उपहार!",
@@ -41,7 +44,8 @@ export const TEMPLATE_MESSAGES: Record<
       ],
     },
     english: {
-      headline: "🎉 Wishing You A Very Happy Birthday!",
+      headline: "🎉 Happy Birthday!",
+      subtitle: "Dear Lucky Ji, warmest wishes from our entire team!",
       messages: [
         "Wishing you a very Happy Birthday! 🌟 May this year bring you immense success, good health, and joyful moments. Thank you for being a wonderful patron!",
         "Warmest birthday wishes to you! 🎂 May your day be filled with laughter and cherished memories. Celebrate your day with our special treat!",
@@ -51,7 +55,8 @@ export const TEMPLATE_MESSAGES: Record<
   },
   anniversary: {
     hinglish: {
-      headline: "💍 Happy Marriage Anniversary! Saalgirah Mubarak",
+      headline: "💍 Happy Anniversary!",
+      subtitle: "Wishing you both endless love and togetherness!",
       messages: [
         "Aapki Marriage Anniversary par aap dono ko dher saari shubh-kamnaye! 💍 Aapki jodi hamesha salamat rahe aur khushiyo se aangan mehkata rahe!",
         "Saalgirah ki hardik badhaiyan! 🥂 Prem aur vishwas ka yeh bandhan hamesha aise hi mazboot rahe. Celebrate with your loved ones with our special anniversary offer!",
@@ -59,15 +64,17 @@ export const TEMPLATE_MESSAGES: Record<
       ],
     },
     hindi: {
-      headline: "💍 वैवाहिक वर्षगांठ की अशेष शुभकामनाएं!",
+      headline: "💍 विवाह वर्षगांठ की बधाई!",
+      subtitle: "आप दोनों की जोड़ी सदा सलामत और खुशियों से परिपूर्ण रहे!",
       messages: [
         "आप दोनों को विवाह वर्षगांठ की हार्दिक शुभकामनाएं! 💍 प्रेम और विश्वास का यह पवित्र बंधन जन्म-जन्मांतर तक यूं ही प्रगाढ़ बना रहे।",
-        "शादी की सालगिरह मुबारक! 🥂 ईश्वर आपके दांपत्य जीवन को सुख, शांति और आनंद से सदैव आलोकित रखे। हमारे विशेष उपहार के साथ जश्न मनाएं!",
+        "शादी की सालगिरh मुबारक! 🥂 ईश्वर आपके दांपत्य जीवन को सुख, शांति और आनंद से सदैव आलोकित रखे। हमारे विशेष उपहार के साथ जश्न मनाएं!",
         "सुखी दांपत्य जीवन की मंगलकामनाएं! ✨ आप दोनों की जोड़ी सदा सलामत रहे। इस पावन अवसर पर हमारी ओर से एक विशेष सौगात।",
       ],
     },
     english: {
       headline: "💍 Happy Wedding Anniversary!",
+      subtitle: "Wishing a wonderful couple a lifetime of happiness!",
       messages: [
         "Happy Wedding Anniversary! 💍 Wishing you both a lifetime of love, laughter, and endless companionship. Celebrate your milestone with us!",
         "Warmest congratulations on your Anniversary! 🥂 May the love you share today grow even stronger with every passing year. Enjoy this special coupon!",
@@ -77,21 +84,24 @@ export const TEMPLATE_MESSAGES: Record<
   },
   festival: {
     hinglish: {
-      headline: "🪔 Festive Greetings & Grand Celebration Offers!",
+      headline: "🪔 Shubh Deepawali / Festive Greetings!",
+      subtitle: "Tyohar ki khushiyan aapke aangan me sada mehkati rahein!",
       messages: [
         "Aapko aur aapke poore parivar ko tyohar ki dher saari shubh-kamnaye! 🪔 Is utsav ke mausam par paiye shandar offers aur khushiyon bhare treats.",
         "Utsav ke is shubh awasar par hamari taraf se badhaiyan! ✨ Tyohar ki mithas badhane aaiye hamare yahan aur lutf uthaiye special discounts ka.",
       ],
     },
     hindi: {
-      headline: "🪔 पावन पर्व एवं उत्सव की हार्दिक मंगलकामनाएं!",
+      headline: "🪔 पावन पर्व की हार्दिक शुभकामनाएं!",
+      subtitle: "यह पावन त्यौहार आपके जीवन में सुख, शांति और समृद्धि लाए!",
       messages: [
         "आपको एवं आपके पूरे परिवार को पावन पर्व की हार्दिक शुभकामनाएं! 🪔 यह त्यौहार आपके जीवन में सुख, समृद्धि और नई उमंग लेकर आए।",
         "त्यौहारों की पावन बेला में खुशियां दोगुनी करें! 🌟 हमारी ओर से आपके लिए विशेष त्यौहारी छूट व सौगात उपलब्ध है। सपरिवार पधारें!",
       ],
     },
     english: {
-      headline: "🪔 Season's Greetings & Festive Special Offers!",
+      headline: "🪔 Festive Greetings & Joy!",
+      subtitle: "May this festive season illuminate your life with joy!",
       messages: [
         "Wishing you and your family joy, peace, and prosperity this festive season! 🪔 Celebrate with our special handcrafted delights.",
         "Celebrate the festival of joy with exclusive festive savings! ✨ Wishing you and your loved ones sparkling celebrations.",
@@ -100,21 +110,24 @@ export const TEMPLATE_MESSAGES: Record<
   },
   offer: {
     hinglish: {
-      headline: "🔥 Today's Special Dish & Chef's Exclusive Discount",
+      headline: "🔥 Today's Chef Special Feast!",
+      subtitle: "Freshly crafted delicacies waiting for you today!",
       messages: [
         "Aaj ka din khas hai! Hamari kitchen me aaj ban raha hai fresh aur special swadist menu. Aaiye aur enjoy kijiye special offer ke saath!",
         "Fresh flavours & sizzling discounts today! 🍴 Apne dosto aur parivar ke saath aaiye aur hamari signature recipe par paiye flat discount.",
       ],
     },
     hindi: {
-      headline: "🔥 आज का विशेष स्वाद एवं स्पेशल छूट!",
+      headline: "🔥 आज का विशेष स्वाद एवं छूट!",
+      subtitle: "स्वाद के शौकीनों के लिए शेफ की खास पेशकश!",
       messages: [
         "स्वाद के शौकीनों के लिए आज का दिन बेहद खास! ताजा और लजीज व्यंजनों पर आज ही पाएं विशेष छूट। आपका स्वागत है!",
         "शेफ की विशेष पेशकश केवल आज के लिए! 🍴 अपने प्रियजनों के साथ आएं और लजीज भोजन का विशेष रियायती दरों पर आनंद लें।",
       ],
     },
     english: {
-      headline: "🔥 Today's Chef Special & Exclusive Discounts!",
+      headline: "🔥 Today's Chef Special!",
+      subtitle: "Savor our freshest culinary creations at exclusive prices!",
       messages: [
         "Savor today's handcrafted chef specials at an irresistible limited-time discount! Visit today and treat your taste buds.",
         "Exclusive limited-time treat waiting for you! 🍴 Taste our freshest specialties crafted with passion and love at a special price today.",
@@ -136,51 +149,72 @@ export default function OccasionStudio({
   dailyDispatchTime?: string;
   creditsBalance?: number;
 }) {
+  const router = useRouter();
+
+  // In-memory drafts map initialized with props
+  const [draftsMap, setDraftsMap] = useState<Record<string, OccasionDraft>>(() => {
+    const map: Record<string, OccasionDraft> = {};
+    for (const d of initialDrafts) {
+      if (d.occasion_type) map[d.occasion_type] = d;
+    }
+    return map;
+  });
+
   const [occasionType, setOccasionType] = useState<"birthday" | "anniversary" | "festival" | "offer">("birthday");
   const [selectedLang, setSelectedLang] = useState<LanguageMode>("hinglish");
 
-  // Find existing draft or set defaults
-  const bDraft = initialDrafts.find((d) => d.occasion_type === "birthday");
-  const aDraft = initialDrafts.find((d) => d.occasion_type === "anniversary");
+  // Active Draft based on occasionType
+  const currentDraft = draftsMap[occasionType];
+
+  // Card Template Style: "royal_gold" (Card 1) or "ivory_cream" (Card 2)
+  const initialStyle =
+    currentDraft?.template_style === "ivory_cream" || currentDraft?.template_style === "rose_luxury"
+      ? "ivory_cream"
+      : "royal_gold";
+  const [templateStyle, setTemplateStyle] = useState<"royal_gold" | "ivory_cream">(initialStyle);
 
   // Form states
   const [headline, setHeadline] = useState(
-    occasionType === "birthday"
-      ? bDraft?.headline || TEMPLATE_MESSAGES.birthday.hinglish.headline
-      : aDraft?.headline || TEMPLATE_MESSAGES.anniversary.hinglish.headline
+    currentDraft?.headline || TEMPLATE_MESSAGES.birthday.hinglish.headline
   );
   const [bodyText, setBodyText] = useState(
-    occasionType === "birthday"
-      ? bDraft?.body_text || TEMPLATE_MESSAGES.birthday.hinglish.messages[0]
-      : aDraft?.body_text || TEMPLATE_MESSAGES.anniversary.hinglish.messages[0]
+    currentDraft?.body_text || TEMPLATE_MESSAGES.birthday.hinglish.messages[0]
   );
-  const [templateStyle, setTemplateStyle] = useState<string>("gold_celebration");
-  const [discountPercent, setDiscountPercent] = useState<number>(15);
-  const [couponValidityDays, setCouponValidityDays] = useState<number>(7);
+  const [discountPercent, setDiscountPercent] = useState<number>(currentDraft?.discount_percent ?? 15);
+  const [couponValidityDays, setCouponValidityDays] = useState<number>(currentDraft?.coupon_validity_days ?? 7);
   const [dispatchTime, setDispatchTime] = useState(dailyDispatchTime);
-  const [autoBirthday, setAutoBirthday] = useState(bDraft?.is_active ?? true);
-  const [autoAnniversary, setAutoAnniversary] = useState(aDraft?.is_active ?? true);
+  const [autoBirthday, setAutoBirthday] = useState(draftsMap.birthday?.is_active ?? true);
+  const [autoAnniversary, setAutoAnniversary] = useState(draftsMap.anniversary?.is_active ?? true);
 
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ text: string; error: boolean } | null>(null);
 
+  // When switching occasion tab (Birthday, Anniversary, Festival, Offer)
   function handleOccasionSwitch(type: "birthday" | "anniversary" | "festival" | "offer") {
     setOccasionType(type);
     setSaveMsg(null);
-    const tmpl = TEMPLATE_MESSAGES[type][selectedLang];
-    setHeadline(tmpl.headline);
-    setBodyText(tmpl.messages[0]);
-    if (type === "birthday") {
-      setDiscountPercent(bDraft?.discount_percent ?? 15);
-    } else if (type === "anniversary") {
-      setDiscountPercent(aDraft?.discount_percent ?? 20);
-    } else if (type === "festival") {
-      setDiscountPercent(25);
+
+    const saved = draftsMap[type];
+    if (saved) {
+      // Load saved draft
+      setHeadline(saved.headline);
+      setBodyText(saved.body_text);
+      setDiscountPercent(saved.discount_percent);
+      setCouponValidityDays(saved.coupon_validity_days);
+      setTemplateStyle(saved.template_style === "ivory_cream" ? "ivory_cream" : "royal_gold");
     } else {
-      setDiscountPercent(10);
+      // Load default for this occasion in selected language
+      const tmpl = TEMPLATE_MESSAGES[type][selectedLang];
+      setHeadline(tmpl.headline);
+      setBodyText(tmpl.messages[0]);
+      if (type === "birthday") setDiscountPercent(15);
+      else if (type === "anniversary") setDiscountPercent(20);
+      else if (type === "festival") setDiscountPercent(25);
+      else setDiscountPercent(10);
     }
   }
 
+  // 1-Click Language Switcher
   function handleLanguageSwitch(lang: LanguageMode) {
     setSelectedLang(lang);
     setSaveMsg(null);
@@ -189,6 +223,7 @@ export default function OccasionStudio({
     setBodyText(tmpl.messages[0]);
   }
 
+  // Regenerate variations in chosen language
   function handleRegenerateText() {
     const list = TEMPLATE_MESSAGES[occasionType][selectedLang].messages;
     const remaining = list.filter((m) => m !== bodyText);
@@ -196,10 +231,12 @@ export default function OccasionStudio({
     setBodyText(next);
   }
 
+  // Save draft action with in-memory sync and router.refresh()
   async function handleSaveDraft() {
     setSaveMsg(null);
     setSaving(true);
     try {
+      const activeState = occasionType === "birthday" ? autoBirthday : autoAnniversary;
       const res = await saveMerchantOccasionDraftAction({
         occasionType,
         templateStyle,
@@ -207,11 +244,23 @@ export default function OccasionStudio({
         bodyText,
         discountPercent,
         couponValidityDays,
-        isActive: occasionType === "birthday" ? autoBirthday : autoAnniversary,
+        isActive: activeState,
       });
 
       if (res.success) {
+        // Update in-memory state so subsequent tab switches or edits retain saved values
+        const updated: OccasionDraft = {
+          occasion_type: occasionType,
+          template_style: templateStyle,
+          headline,
+          body_text: bodyText,
+          discount_percent: discountPercent,
+          coupon_validity_days: couponValidityDays,
+          is_active: activeState,
+        };
+        setDraftsMap((prev) => ({ ...prev, [occasionType]: updated }));
         setSaveMsg({ text: res.message, error: false });
+        router.refresh();
       } else {
         setSaveMsg({ text: res.message, error: true });
       }
@@ -233,6 +282,7 @@ export default function OccasionStudio({
       });
       if (res.success) {
         setSaveMsg({ text: res.message, error: false });
+        router.refresh();
       } else {
         setSaveMsg({ text: res.message, error: true });
       }
@@ -242,6 +292,28 @@ export default function OccasionStudio({
       setSaving(false);
     }
   }
+
+  // Active occasion icon & prefix
+  const occasionIcon =
+    occasionType === "birthday"
+      ? "🎂"
+      : occasionType === "anniversary"
+      ? "💍"
+      : occasionType === "festival"
+      ? "🪔"
+      : "🔥";
+
+  const couponCode = `${
+    occasionType === "birthday"
+      ? "BDAY"
+      : occasionType === "anniversary"
+      ? "ANNIV"
+      : occasionType === "festival"
+      ? "FESTIVE"
+      : "SPECIAL"
+  }-LUCKY-${discountPercent}`;
+
+  const occasionSubtitle = TEMPLATE_MESSAGES[occasionType][selectedLang].subtitle;
 
   return (
     <div className="space-y-6">
@@ -269,7 +341,7 @@ export default function OccasionStudio({
         </div>
       </div>
 
-      {/* Occasion Types Tab Bar */}
+      {/* Occasion Types Tab Bar (4 Categories) */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <button
           type="button"
@@ -282,6 +354,7 @@ export default function OccasionStudio({
         >
           <span className="text-base">🎂</span>
           <span>Birthday (Auto)</span>
+          {draftsMap.birthday && <span className="h-2 w-2 rounded-full bg-emerald-300" />}
         </button>
 
         <button
@@ -295,6 +368,7 @@ export default function OccasionStudio({
         >
           <span className="text-base">💍</span>
           <span>Anniversary (Auto)</span>
+          {draftsMap.anniversary && <span className="h-2 w-2 rounded-full bg-emerald-300" />}
         </button>
 
         <button
@@ -308,6 +382,7 @@ export default function OccasionStudio({
         >
           <span className="text-base">🪔</span>
           <span>Festivals (Manual)</span>
+          {draftsMap.festival && <span className="h-2 w-2 rounded-full bg-emerald-300" />}
         </button>
 
         <button
@@ -321,82 +396,227 @@ export default function OccasionStudio({
         >
           <span className="text-base">🔥</span>
           <span>Today&apos;s Special (Manual)</span>
+          {draftsMap.offer && <span className="h-2 w-2 rounded-full bg-emerald-300" />}
         </button>
       </div>
 
       {/* Main Designer Grid */}
       <div className="grid gap-6 lg:grid-cols-12 items-start">
-        {/* Left Column: Enlarged Visual WhatsApp Poster Card Preview (5 Cols) */}
+        {/* Left Column: WhatsApp Sticker Poster Preview + Bottom Dots Carousel (5 Cols) */}
         <div className="lg:col-span-5 space-y-4">
-          <div className="rounded-3xl border border-slate-200 bg-slate-900 p-6 text-white shadow-xl">
-            <div className="mb-4 flex items-center justify-between border-b border-white/10 pb-3 text-xs text-slate-400">
+          <div className="rounded-3xl border border-slate-200 bg-slate-900 p-5 text-white shadow-xl">
+            <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-2.5 text-xs text-slate-400">
               <span className="flex items-center gap-2 font-bold text-amber-300 text-sm">
                 <span>📱</span> WhatsApp Greeting Poster
               </span>
               <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
-                HD Preview
+                Sticker Fit
               </span>
             </div>
 
-            {/* Poster Canvas Representation (Slightly larger, taller, and more prominent) */}
-            <div
-              className={`relative overflow-hidden rounded-2xl p-7 sm:p-8 text-center shadow-2xl transition min-h-[440px] flex flex-col justify-between ${
-                templateStyle === "gold_celebration"
-                  ? "border-2 border-amber-400/50 bg-gradient-to-br from-amber-950 via-slate-900 to-amber-900"
-                  : templateStyle === "rose_luxury"
-                  ? "border-2 border-rose-400/50 bg-gradient-to-br from-rose-950 via-slate-900 to-rose-900"
-                  : "border-2 border-indigo-400/50 bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-900"
-              }`}
-            >
-              {/* Corner Ornaments */}
-              <div className="pointer-events-none absolute -right-6 -top-6 h-32 w-32 rounded-full bg-amber-400/20 blur-2xl" />
-              <div className="pointer-events-none absolute -bottom-6 -left-6 h-32 w-32 rounded-full bg-rose-400/20 blur-2xl" />
+            {/* CARD 1: ROYAL DARK GOLD LUXURY */}
+            {templateStyle === "royal_gold" && (
+              <div className="relative overflow-hidden rounded-3xl border-2 border-[#d4af37]/70 bg-gradient-to-b from-[#18140c] via-[#0d0c0a] to-[#1e170d] p-6 text-center shadow-[0_12px_40px_rgba(212,175,55,0.28)] transition min-h-[470px] flex flex-col justify-between">
+                {/* Curved Gold Ribbon Waves on Top Corners */}
+                <div className="pointer-events-none absolute -left-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br from-[#f5d77f]/30 via-[#d4af37]/20 to-transparent blur-xl" />
+                <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-bl from-[#f5d77f]/30 via-[#d4af37]/20 to-transparent blur-xl" />
+                <div className="pointer-events-none absolute -bottom-10 -right-10 h-36 w-36 rounded-full bg-gradient-to-tl from-[#d4af37]/25 to-transparent blur-xl" />
 
-              {/* Shop Logo & Name */}
-              <div className="flex flex-col items-center">
-                <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-2 border-amber-300/60 bg-white shadow-lg">
-                  {logoUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={logoUrl} alt={businessName} className="h-full w-full object-contain p-1" />
-                  ) : (
-                    <span className="text-3xl">🏪</span>
-                  )}
+                {/* Top Section: Compact Logo + Business Name */}
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#d4af37] bg-white p-1 shadow-[0_4px_14px_rgba(212,175,55,0.4)]">
+                    {logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={logoUrl} alt={businessName} className="h-full w-full object-contain" />
+                    ) : (
+                      <span className="text-2xl">🏪</span>
+                    )}
+                  </div>
+                  <span className="mt-2 text-xs font-black uppercase tracking-[0.22em] text-[#e5c158] drop-shadow-sm">
+                    {businessName}
+                  </span>
                 </div>
-                <span className="mt-2 text-sm font-black uppercase tracking-widest text-amber-300">
-                  {businessName}
-                </span>
-              </div>
 
-              {/* Occasion Big Icon & Headline */}
-              <div className="my-4">
-                <span className="text-5xl drop-shadow-md">
-                  {occasionType === "birthday" ? "🎂" : occasionType === "anniversary" ? "💍" : "✨"}
-                </span>
-                <h3 className="mt-3 text-xl font-black tracking-tight text-white drop-shadow-md leading-snug">
-                  {headline}
-                </h3>
-                <p className="mt-2 font-serif text-sm italic text-amber-200">
-                  &ldquo;Dear <span className="underline decoration-amber-400">[Customer Name 👤]</span>, wishes from our entire team!&rdquo;
-                </p>
-              </div>
+                {/* Middle Section: Occasion Icon + Headline + Customer Name + Ornate Divider */}
+                <div className="relative z-10 my-3">
+                  <span className="text-4xl drop-shadow-md">{occasionIcon}</span>
 
-              {/* Coupon Box with Gift Emoji */}
-              <div className="mt-4 rounded-2xl border-2 border-dashed border-amber-400/70 bg-amber-400/15 p-4 shadow-lg backdrop-blur-sm">
-                <span className="flex items-center justify-center gap-1.5 text-xs font-black uppercase tracking-wider text-amber-300">
-                  <span>🎁</span> EXCLUSIVE GIFT COUPON (VALID {couponValidityDays} DAYS)
-                </span>
-                <div className="mt-1.5 font-mono text-lg font-black tracking-widest text-amber-100">
-                  {occasionType === "birthday" ? "BDAY" : "ANNIV"}-CUSTOMER-{discountPercent}
+                  {/* Headline */}
+                  <h3 className="mt-2 text-lg sm:text-xl font-black tracking-tight text-white drop-shadow-md leading-snug">
+                    {headline}
+                  </h3>
+
+                  {/* Customer Name in Bold Gold/White */}
+                  <div className="mt-1 font-sans text-xl sm:text-2xl font-black uppercase tracking-wider text-[#f5e6b3] drop-shadow-lg">
+                    MR LUCKY !!
+                  </div>
+
+                  {/* Golden Ornate Divider */}
+                  <div className="my-2 flex items-center justify-center gap-2 text-[#d4af37]">
+                    <span className="h-[1px] w-10 bg-gradient-to-r from-transparent to-[#d4af37]" />
+                    <span className="text-xs">‹ ❖ ›</span>
+                    <span className="h-[1px] w-10 bg-gradient-to-l from-transparent to-[#d4af37]" />
+                  </div>
+
+                  {/* Subtitle / Wishes */}
+                  <p className="font-serif text-xs sm:text-sm italic text-[#f0dfaa] px-2 leading-relaxed">
+                    &ldquo;{occasionSubtitle}&rdquo;
+                  </p>
                 </div>
-                <span className="mt-1 block text-sm font-extrabold text-white">Flat {discountPercent}% OFF On Your Visit!</span>
+
+                {/* Bottom Section: Coupon Ticket Box */}
+                <div className="relative z-10 rounded-2xl border border-[#d4af37]/60 bg-black/50 p-3.5 backdrop-blur-sm shadow-inner">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-[#e5c158]">
+                    EXCLUSIVE GIFT COUPON (VALID {couponValidityDays} DAYS)
+                  </span>
+
+                  {/* Golden Ticket Pill with Notches */}
+                  <div className="relative mx-auto my-1.5 max-w-[210px] rounded-xl bg-gradient-to-r from-[#d4af37] via-[#f7e8b6] to-[#d4af37] py-1.5 px-4 font-mono text-base font-black tracking-wider text-[#1a1205] shadow-[0_4px_12px_rgba(212,175,55,0.4)]">
+                    {couponCode}
+                  </div>
+
+                  <span className="text-xs font-bold text-white">Flat {discountPercent}% OFF On Your Visit!</span>
+                </div>
+
+                {/* Golden Ribbon Bow at the Bottom Center */}
+                <div className="relative z-10 -mb-2 mt-2 flex justify-center">
+                  <div className="flex items-center justify-center text-2xl drop-shadow-[0_2px_8px_rgba(212,175,55,0.5)]">
+                    🎀
+                  </div>
+                </div>
               </div>
+            )}
+
+            {/* CARD 2: WARM IVORY CREAM ELEGANCE */}
+            {templateStyle === "ivory_cream" && (
+              <div className="relative overflow-hidden rounded-3xl border-2 border-[#d9c7a7] bg-gradient-to-b from-[#fdfbf7] via-[#f7f2ea] to-[#eee5d8] p-6 text-center shadow-[0_12px_40px_rgba(180,150,110,0.22)] transition min-h-[470px] flex flex-col justify-between">
+                {/* Botanical Leaves Accents on Corners */}
+                <div className="pointer-events-none absolute -right-2 -top-2 text-4xl opacity-75">
+                  🌿
+                </div>
+                <div className="pointer-events-none absolute -left-2 -bottom-2 text-4xl opacity-75">
+                  🍃
+                </div>
+
+                {/* Top Section: Compact Logo + Business Name */}
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#cbb28b] bg-white p-1 shadow-md">
+                    {logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={logoUrl} alt={businessName} className="h-full w-full object-contain" />
+                    ) : (
+                      <span className="text-2xl">🏪</span>
+                    )}
+                  </div>
+                  <span className="mt-2 text-xs font-black uppercase tracking-[0.22em] text-[#5c3e1e]">
+                    {businessName}
+                  </span>
+                </div>
+
+                {/* Middle Section: Occasion Icon + Headline + Customer Name + Divider */}
+                <div className="relative z-10 my-3">
+                  <span className="text-4xl drop-shadow-sm">{occasionIcon}</span>
+
+                  {/* Headline */}
+                  <h3 className="mt-2 text-lg sm:text-xl font-black tracking-tight text-[#3a2717] leading-snug">
+                    {headline}
+                  </h3>
+
+                  {/* Customer Name in Warm Brown */}
+                  <div className="mt-1 font-sans text-xl sm:text-2xl font-black uppercase tracking-wider text-[#2e1c0d]">
+                    MR LUCKY !!
+                  </div>
+
+                  {/* Warm Bronze Ornate Divider */}
+                  <div className="my-2 flex items-center justify-center gap-2 text-[#b89564]">
+                    <span className="h-[1px] w-10 bg-gradient-to-r from-transparent to-[#b89564]" />
+                    <span className="text-xs">‹ ❖ ›</span>
+                    <span className="h-[1px] w-10 bg-gradient-to-l from-transparent to-[#b89564]" />
+                  </div>
+
+                  {/* Subtitle / Wishes */}
+                  <p className="font-serif text-xs sm:text-sm italic text-[#4a3420] px-2 leading-relaxed">
+                    &ldquo;{occasionSubtitle}&rdquo;
+                  </p>
+                </div>
+
+                {/* Bottom Section: Stitched Coupon Box */}
+                <div className="relative z-10 rounded-2xl border-2 border-dashed border-[#cbb28b] bg-[#faf6f0] p-3.5 shadow-sm">
+                  <span className="block text-[10px] font-black uppercase tracking-wider text-[#5c3e1e]">
+                    EXCLUSIVE GIFT COUPON (VALID {couponValidityDays} DAYS)
+                  </span>
+
+                  {/* Cream/Golden Ticket Pill with Notches */}
+                  <div className="relative mx-auto my-1.5 max-w-[210px] rounded-xl bg-gradient-to-r from-[#f0d9ab] via-[#fcedcf] to-[#e8cb97] py-1.5 px-4 font-mono text-base font-black tracking-wider text-[#3a2510] shadow-sm border border-[#dfc698]">
+                    {couponCode}
+                  </div>
+
+                  <span className="text-xs font-bold text-[#2d1e11]">Flat {discountPercent}% OFF On Your Visit!</span>
+                </div>
+              </div>
+            )}
+
+            {/* CAROUSEL SLIDER POINTS (Directly underneath the card) */}
+            <div className="mt-4 flex flex-col items-center gap-2 border-t border-white/10 pt-3">
+              {/* Pagination Dots */}
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setTemplateStyle("royal_gold")}
+                  className={`h-3 rounded-full transition-all duration-300 ${
+                    templateStyle === "royal_gold"
+                      ? "w-8 bg-amber-400 shadow-md ring-2 ring-amber-300/40"
+                      : "w-3 bg-slate-600 hover:bg-slate-500"
+                  }`}
+                  aria-label="Card 1: Royal Dark Gold"
+                />
+                <button
+                  type="button"
+                  onClick={() => setTemplateStyle("ivory_cream")}
+                  className={`h-3 rounded-full transition-all duration-300 ${
+                    templateStyle === "ivory_cream"
+                      ? "w-8 bg-amber-400 shadow-md ring-2 ring-amber-300/40"
+                      : "w-3 bg-slate-600 hover:bg-slate-500"
+                  }`}
+                  aria-label="Card 2: Ivory Cream Elegance"
+                />
+              </div>
+
+              {/* Sub-label & slide hints */}
+              <div className="flex items-center justify-between w-full max-w-[280px] text-[11px] font-bold">
+                <button
+                  type="button"
+                  onClick={() => setTemplateStyle("royal_gold")}
+                  className={`transition ${
+                    templateStyle === "royal_gold"
+                      ? "text-amber-300 font-extrabold"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  ‹ 1. Royal Dark Gold
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTemplateStyle("ivory_cream")}
+                  className={`transition ${
+                    templateStyle === "ivory_cream"
+                      ? "text-amber-300 font-extrabold"
+                      : "text-slate-400 hover:text-slate-200"
+                  }`}
+                >
+                  2. Ivory Cream ›
+                </button>
+              </div>
+              <p className="text-[10px] text-slate-400">
+                👆 Slide / click dots below card to switch style
+              </p>
             </div>
 
-            {/* Simulated WhatsApp Caption Text (Enlarged and crystal clear) */}
-            <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-left text-sm leading-relaxed text-slate-100 shadow-md">
+            {/* Simulated WhatsApp Caption Text */}
+            <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-left text-xs sm:text-sm leading-relaxed text-slate-100 shadow-md">
               <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                  📱 WhatsApp Caption Sent to Customer:
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
+                  📱 WhatsApp Caption Sent Below Poster:
                 </span>
                 <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
                   Auto-Personalized
@@ -406,7 +626,7 @@ export default function OccasionStudio({
                 <strong className="text-amber-300">{businessName}:</strong> Dear <span className="font-bold underline text-amber-200">[Customer Name 👤]</span> ji, {bodyText}
               </p>
               <div className="mt-3 rounded-xl bg-amber-950/70 border border-amber-400/40 p-2.5 text-xs text-amber-200">
-                🎁 <strong>Special Gift Code:</strong> {occasionType === "birthday" ? "BDAY" : "ANNIV"}-[NAME]-{discountPercent} (Valid for {couponValidityDays} days)
+                🎁 <strong>Special Gift Code:</strong> {couponCode} (Valid {couponValidityDays} days)
               </div>
             </div>
           </div>
@@ -418,7 +638,7 @@ export default function OccasionStudio({
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
               <div>
                 <h3 className="text-base font-bold text-slate-900">Customize Draft &amp; Styling</h3>
-                <p className="text-xs text-slate-500">Edit headline, heartfelt greetings, and discount coupon.</p>
+                <p className="text-xs text-slate-500">Edit headline, greetings, and discount coupon for {occasionType}.</p>
               </div>
               <button
                 type="button"
@@ -477,45 +697,26 @@ export default function OccasionStudio({
                 </div>
               </div>
 
-              {/* Card Style Selector */}
+              {/* Headline (Free Text Input with Dynamic Customer Name Lock) */}
               <div>
-                <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
-                  Select Visual Card Style:
-                </label>
-                <div className="mt-2 grid grid-cols-3 gap-2">
-                  {[
-                    { id: "gold_celebration", label: "🌟 Gold Luxury", desc: "Warm celebration" },
-                    { id: "rose_luxury", label: "🌹 Rose Velvet", desc: "Anniversary special" },
-                    { id: "modern_minimal", label: "🎨 Modern Indigo", desc: "Contemporary vibe" },
-                  ].map((style) => (
-                    <button
-                      key={style.id}
-                      type="button"
-                      onClick={() => setTemplateStyle(style.id)}
-                      className={`flex flex-col items-center justify-center rounded-2xl border p-2.5 text-center transition ${
-                        templateStyle === style.id
-                          ? "border-orange-500 bg-orange-50/60 ring-2 ring-orange-200"
-                          : "border-slate-200 bg-white hover:bg-slate-50"
-                      }`}
-                    >
-                      <span className="text-xs font-bold text-slate-900">{style.label}</span>
-                      <span className="text-[10px] text-slate-500">{style.desc}</span>
-                    </button>
-                  ))}
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                    Greeting Card Headline:
+                  </label>
+                  <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
+                    <span>🔒</span> Customer Name Auto-Joined
+                  </span>
                 </div>
-              </div>
-
-              {/* Headline */}
-              <div>
-                <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
-                  Greeting Card Headline:
-                </label>
                 <input
                   type="text"
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
+                  placeholder="e.g. 🎉 Happy Birthday!"
                   className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
                 />
+                <span className="mt-1 block text-[11px] text-slate-500">
+                  Card par is headline ke theek niche customer ka naam (jaise: <strong>MR LUCKY !!</strong>) automatically judega.
+                </span>
               </div>
 
               {/* Message Body with Locked Customer Name Indicator */}
@@ -525,7 +726,7 @@ export default function OccasionStudio({
                     Greeting Message Body:
                   </label>
                   <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
-                    <span>🔒</span> Customer Name Locked
+                    <span>🔒</span> Name Position Locked
                   </span>
                 </div>
 
@@ -606,7 +807,7 @@ export default function OccasionStudio({
                   onClick={handleSaveDraft}
                   className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 py-3.5 text-sm font-bold text-white shadow-md hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 transition"
                 >
-                  {saving ? "Saving Draft..." : "✓ Approve & Save as Active Occasion Draft"}
+                  {saving ? "Saving Draft..." : `✓ Approve & Save ${occasionType.toUpperCase()} Draft`}
                 </button>
               </div>
             </div>
