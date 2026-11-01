@@ -16,7 +16,7 @@ import {
 
 const initialState: BusinessProfileActionState = { ok: false, message: "" };
 const inputClass =
-  "mt-1.5 min-h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:bg-slate-50 disabled:text-slate-500";
+  "mt-1 min-h-[38px] w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-900 outline-none transition focus:border-orange-400 focus:ring-1 focus:ring-orange-200 disabled:bg-slate-50 disabled:text-slate-500";
 
 export default function BusinessProfileForm({
   name,
