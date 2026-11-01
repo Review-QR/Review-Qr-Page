@@ -55,11 +55,6 @@ export default function PublicLocationForm({
         </div>
       </div>
 
-      <div className="mt-3 rounded-lg bg-orange-50/60 border border-orange-200/60 p-2.5 text-[11px] text-orange-950 flex items-center gap-2">
-        <span className="material-symbols-outlined text-orange-700 text-sm shrink-0">verified</span>
-        <span>Verified Discovery Status: Yeh details upar Business Information se automatically fetch hoti hain aur yeh card direct editable nahi hai.</span>
-      </div>
-
       <div className="hidden" aria-hidden="true">
         <form action={action} className="mt-4 grid gap-3 sm:grid-cols-2">
           <p className="text-[11px] leading-relaxed text-slate-500 sm:col-span-2">

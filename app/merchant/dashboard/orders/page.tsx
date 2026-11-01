@@ -58,7 +58,7 @@ export default async function MerchantLiveOrdersPage() {
   }
 
   return (
-    <div className="merchant-orders-page max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="merchant-orders-page w-full space-y-4 py-1">
       <UniversalOrdersConsoleClient
         business={{
           id: merchant.businessId,

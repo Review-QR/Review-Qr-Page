@@ -69,6 +69,27 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
     (o) => o.payment_status === "paid" || o.payment_mode === "cod"
   );
 
+  // 4 Date Filters: Today, This Week, This Month, All Orders
+  const [dateFilter, setDateFilter] = useState<"today" | "week" | "month" | "all">("today");
+
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7)).getTime();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+  const filteredOrders = confirmedOrders.filter((order) => {
+    if (dateFilter === "all") return true;
+    const orderTime = new Date(order.created_at).getTime();
+    if (dateFilter === "today") return orderTime >= startOfToday;
+    if (dateFilter === "week") return orderTime >= startOfWeek;
+    if (dateFilter === "month") return orderTime >= startOfMonth;
+    return true;
+  });
+
+  const todayCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfToday).length;
+  const weekCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfWeek).length;
+  const monthCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfMonth).length;
+
   // Walk-in token state (Salon / Car Wash)
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -240,6 +261,22 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
     }
   }
 
+  async function handleMarkDelivered(orderId: string) {
+    setIsSubmitting(true);
+    try {
+      await fetch(`/api/hyperlocal/orders`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "delivered", orderId }),
+      }).catch(() => {});
+
+      setActionSuccess("Order marked as Delivered!");
+      refreshData();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   async function handleBookWalkinToken() {
     if (!customerName.trim() || !customerPhone.trim()) return;
     setIsSubmitting(true);
@@ -345,363 +382,163 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
 
       {/* ADAPTIVE VIEW 1: RESTAURANT & FOOD MODE */}
       {!isSalon && !isCarWash && (
-        <div className="space-y-4">
-          {confirmedOrders.length === 0 ? (
-            <div className="bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-2">
-              <span className="text-4xl block">🔔</span>
-              <h3 className="text-sm font-bold text-slate-900">Waiting for Confirmed Orders...</h3>
+        <div className="space-y-3">
+          {/* 4 DATE FILTERS BAR */}
+          <div className="flex flex-wrap items-center justify-between gap-2.5 pb-1">
+            <div className="inline-flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setDateFilter("today")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  dateFilter === "today"
+                    ? "bg-white text-slate-950 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Today ({todayCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter("week")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  dateFilter === "week"
+                    ? "bg-white text-slate-950 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                This Week ({weekCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter("month")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  dateFilter === "month"
+                    ? "bg-white text-slate-950 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                This Month ({monthCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter("all")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  dateFilter === "all"
+                    ? "bg-white text-slate-950 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                All Orders ({confirmedOrders.length})
+              </button>
+            </div>
+
+            <span className="text-[11px] text-slate-500 font-medium">
+              Showing <strong>{filteredOrders.length}</strong> orders
+            </span>
+          </div>
+
+          {filteredOrders.length === 0 ? (
+            <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-1.5">
+              <span className="text-3xl block">🔔</span>
+              <h3 className="text-sm font-bold text-slate-900">
+                {dateFilter === "today"
+                  ? "No orders received today yet."
+                  : `No orders found for ${dateFilter === "week" ? "this week" : dateFilter === "month" ? "this month" : "all"}.`}
+              </h3>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                Keep this tab open. When Cashfree webhook confirms payment (or a COD order is placed), a high-ringing kitchen siren &amp; pop-up notification modal will sound automatically.
+                Incoming confirmed orders will appear here automatically with buzzer sound.
               </p>
             </div>
           ) : (
-            confirmedOrders.map((order) => {
-              const isNewPlaced = order.status === "placed";
-              const isAccepted = order.status === "accepted_by_merchant" || order.status === "preparing";
+            <div className="space-y-1.5">
+              {filteredOrders.map((order) => {
+                const isNewPlaced = order.status === "placed";
+                const isAccepted = order.status === "accepted_by_merchant" || order.status === "preparing";
 
-              // 180s countdown timer calculation
-              const elapsedSec = Math.floor((currentTime - new Date(order.created_at).getTime()) / 1000);
-              const remainingSec = Math.max(0, 180 - elapsedSec);
-              const timerMins = Math.floor(remainingSec / 60);
-              const timerSecs = remainingSec % 60;
-
-              return (
-                <div
-                  key={order.id}
-                  className={`p-5 rounded-3xl border transition-all ${
-                    isNewPlaced
-                      ? "bg-amber-50/60 border-amber-300 shadow-lg ring-2 ring-amber-400"
-                      : "bg-white border-slate-200 shadow-sm"
-                  }`}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono font-black text-sm text-slate-950 bg-slate-100 px-2.5 py-1 rounded-xl border border-slate-300">
+                return (
+                  <div
+                    key={order.id}
+                    className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl border transition-all ${
+                      isNewPlaced
+                        ? "bg-amber-50/70 border-amber-300 ring-1 ring-amber-400"
+                        : "bg-white border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    {/* 1. Code & Time */}
+                    <div className="flex items-center gap-2 min-w-[130px] shrink-0">
+                      <span className="font-mono font-bold text-xs text-slate-950 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
                         {formatUnifiedOrderCode(order.id, business.name)}
                       </span>
+                      <span className="text-[11px] text-slate-500 font-medium">
+                        {new Date(order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </div>
+
+                    {/* 2. Items / Ingredients */}
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className="text-xs font-semibold text-slate-800 truncate"
+                        title={order.hyperlocal_order_items?.map((i) => `${i.quantity}x ${i.item_name}`).join(", ") || "Custom order items"}
+                      >
+                        {order.hyperlocal_order_items?.map((i) => `${i.quantity}x ${i.item_name}`).join(", ") || "Custom order items"}
+                      </p>
+                    </div>
+
+                    {/* 3. Total Bill Amount */}
+                    <div className="text-left sm:text-right min-w-[75px] shrink-0">
+                      <span className="text-xs font-extrabold text-slate-950 font-mono">₹{order.total_amount}</span>
+                    </div>
+
+                    {/* 4. Status Badge */}
+                    <div className="shrink-0 min-w-[100px]">
                       {order.status === "cancelled" ? (
-                        <span className="px-2.5 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-800 border border-rose-300">
-                          🔴 CANCELLED
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                          Cancelled
                         </span>
                       ) : isNewPlaced ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500 text-white animate-pulse">
-                          ⏳ NEW ORDER RECEIVED
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
+                          New Order
                         </span>
                       ) : isAccepted ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-100 text-indigo-900 border border-indigo-200">
-                          👨‍🍳 PREPARING IN KITCHEN
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                          Preparing
                         </span>
                       ) : order.status === "ready_for_pickup" ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
-                          🥡 READY FOR PICKUP
-                        </span>
-                      ) : order.status === "picked_up" || order.status === "out_for_delivery" ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-purple-100 text-purple-900 border border-purple-300">
-                          🛵 ON THE WAY (RIDER PICKED UP)
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          Ready for Pickup
                         </span>
                       ) : order.status === "delivered" || order.status === "completed" ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-emerald-900 border border-emerald-300">
-                          ✅ DELIVERED
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300">
+                          Delivered ✓
                         </span>
                       ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-slate-100 text-slate-800">
-                          {order.status.replace(/_/g, " ").toUpperCase()}
+                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                          {order.status.replace(/_/g, " ")}
                         </span>
                       )}
                     </div>
 
-                    <div className="text-right">
-                      <span className="text-xs text-slate-400 block font-medium">Customer Bill</span>
-                      <span className="text-base font-extrabold text-slate-900">₹{order.total_amount}</span>
-                    </div>
-                  </div>
-
-                  {/* Cancellation Reason Notice (Visible to Merchant) */}
-                  {(order.status === "cancelled" || order.status === "rejected") && (
-                    <div className="my-2.5 p-3.5 rounded-2xl bg-rose-50 border border-rose-300 text-xs text-rose-900 space-y-1 shadow-2xs">
-                      <div className="flex items-center justify-between">
-                        <span className="font-black text-rose-800 flex items-center gap-1.5">
-                          <span>🔴</span>
-                          <span>ORDER CANCELLED</span>
-                        </span>
-                        {order.cancellation_reason === "customer_refused_at_doorstep" ? (
-                          <span className="font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded text-[10px]">
-                            Food Cost Settled to Restaurant ✓
-                          </span>
-                        ) : (
-                          <span className="font-bold text-rose-700 bg-rose-100 px-2 py-0.5 rounded text-[10px]">
-                            Cancelled
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-rose-700 font-semibold">
-                        <strong>Cancellation Reason:</strong>{" "}
-                        {order.cancellation_reason === "customer_refused_at_doorstep"
-                          ? "Customer refused delivery at doorstep. Rider was compensated and food cost is settled to restaurant."
-                          : order.cancellation_reason?.replace(/_/g, " ") || "Order declined or cancelled."}
-                      </p>
-                      {order.admin_notes && (
-                        <p className="text-[10px] text-rose-600 font-mono">
-                          Audit Note: {order.admin_notes}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* 180s Auto-Reject Countdown Bar */}
-                  {isNewPlaced && (
-                    <div className="my-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-300 flex items-center justify-between text-xs">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">⏳</span>
-                        <span className="font-bold text-amber-950">
-                          Auto-rejects in {timerMins}:{String(timerSecs).padStart(2, "0")}
-                        </span>
-                      </div>
-                      <div className="w-28 bg-amber-200 rounded-full h-2 overflow-hidden">
-                        <div
-                          className={`h-full transition-all ${
-                            remainingSec < 45 ? "bg-rose-500" : remainingSec < 90 ? "bg-amber-500" : "bg-emerald-500"
-                          }`}
-                          style={{ width: `${(remainingSec / 180) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Kitchen Preparation Circular Countdown Ring */}
-                  {isAccepted && (() => {
-                    const prep = getKitchenPrepCountdown(order, currentTime);
-                    const strokeCircumference = 163.4;
-                    const strokeOffset = strokeCircumference - (strokeCircumference * prep.percent) / 100;
-                    const ringColor = prep.isExpired ? "#ef4444" : prep.mins < 5 ? "#f59e0b" : "#10b981";
-
-                    return (
-                      <div className="my-3 p-3.5 bg-gradient-to-r from-emerald-50/80 via-teal-50/50 to-white border border-emerald-200 rounded-2xl flex items-center justify-between gap-3 shadow-2xs">
-                        <div className="flex items-center gap-3.5">
-                          {/* SVG Countdown Circle */}
-                          <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
-                            <svg className="h-16 w-16 transform -rotate-90" viewBox="0 0 64 64">
-                              <circle cx="32" cy="32" r="26" stroke="#e2e8f0" strokeWidth="4.5" fill="none" />
-                              <circle
-                                cx="32"
-                                cy="32"
-                                r="26"
-                                stroke={ringColor}
-                                strokeWidth="4.5"
-                                strokeDasharray={strokeCircumference}
-                                strokeDashoffset={strokeOffset}
-                                strokeLinecap="round"
-                                fill="none"
-                                className="transition-all duration-1000 ease-linear"
-                              />
-                            </svg>
-                            <div className="absolute text-center leading-none">
-                              <span className="font-mono text-xs font-black text-slate-900 block">
-                                {prep.mins}:{String(prep.secs).padStart(2, "0")}
-                              </span>
-                              <span
-                                className={`text-[8px] font-black uppercase ${
-                                  prep.isExpired ? "text-rose-600 animate-pulse" : "text-slate-500"
-                                }`}
-                              >
-                                {prep.isExpired ? "OVERDUE" : "LEFT"}
-                              </span>
-                            </div>
-                          </div>
-
-                          <div>
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm">👨‍🍳</span>
-                              <h4 className="text-xs font-black text-slate-900">Food is being prepared in kitchen</h4>
-                            </div>
-                            <p className="text-[10px] text-slate-500 mt-0.5">
-                              Target prep: <strong>{prep.prepMins} mins</strong> · Started at{" "}
-                              {new Date(prep.startTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </p>
-                            {prep.isExpired && (
-                              <p className="text-[10px] text-rose-600 font-bold mt-0.5">
-                                ⚠️ Prep target time reached! Please mark food ready below.
-                              </p>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="hidden sm:block text-right">
-                          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-lg">
-                            Cooking Active 🔥
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })()}
-
-                  {/* Food Ready at Counter Notice */}
-                  {order.status === "ready_for_pickup" && (
-                    <div className="my-2 p-3 bg-emerald-50 border border-emerald-300 rounded-2xl flex items-center justify-between text-xs text-emerald-900 font-bold shadow-2xs">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">🥡</span>
-                        <div>
-                          <span className="block text-xs font-black">Food Ready &amp; Packed at Counter!</span>
-                          <span className="text-[10px] text-emerald-700 font-medium">
-                            Nearest delivery rider alerted to collect parcel.
-                          </span>
-                        </div>
-                      </div>
-                      <span className="bg-emerald-600 text-white px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider">
-                        Awaiting Pickup
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Customer Info (With Coordinate Sanitizer) */}
-                  <div className="py-2.5 text-xs space-y-1">
-                    <p className="font-bold text-slate-800">
-                      Customer: {order.customer_name} ({order.customer_phone})
-                    </p>
-                    <p className="text-slate-500">
-                      Delivery Address: {sanitizeDisplayLocation(order.customer_address?.street)},{" "}
-                      {order.customer_address?.city || "Bahraich"}
-                    </p>
-                    <div className="pt-0.5">
-                      {order.payment_status === "paid" ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200">
-                          ✅ Payment Confirmed via Cashfree Webhook
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200">
-                          💵 Cash on Delivery
-                        </span>
-                      )}
-                    </div>
-                    {order.customer_notes && (
-                      <p className="text-amber-800 bg-amber-50 p-1.5 rounded-lg font-medium border border-amber-200">
-                        📝 Customer Note: {sanitizeCustomerNote(order.customer_notes)}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Order Items with Variants & Cooking Notes */}
-                  <div className="p-3 bg-slate-50 rounded-2xl space-y-2 text-xs">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Items Ordered</span>
-                    {order.hyperlocal_order_items?.map((item, idx) => (
-                      <div key={idx} className="border-b border-slate-200/50 pb-1.5 last:border-0 last:pb-0">
-                        <div className="flex justify-between font-bold text-slate-800">
-                          <span>{item.quantity}x {item.item_name}</span>
-                          <span className="text-slate-600">₹{item.total_price}</span>
-                        </div>
-                        {item.notes && (
-                          <p className="text-[10px] text-amber-900 bg-amber-100/70 px-2 py-0.5 rounded mt-0.5 font-bold inline-block">
-                            ⚠️ {item.notes}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Assigned Rider Info or Assigning Soon */}
-                  {order.delivery_riders ? (
-                    <div className="mt-3 p-3 bg-purple-50 rounded-2xl text-xs flex items-center justify-between border border-purple-200 shadow-2xs">
-                      <div className="flex items-center gap-2.5">
-                        <span className="grid h-8 w-8 place-items-center rounded-xl bg-purple-600 text-white text-base">
-                          🛵
-                        </span>
-                        <div>
-                          <span className="text-[10px] font-bold text-purple-700 uppercase block">Assigned Rider</span>
-                          <p className="font-bold text-slate-800">
-                            {order.delivery_riders.full_name} ({order.delivery_riders.vehicle_number || "Verified Rider"})
-                          </p>
-                        </div>
-                      </div>
-                      <a
-                        href={`tel:${order.delivery_riders.phone}`}
-                        className="px-3 py-1.5 bg-purple-600 text-white rounded-xl text-xs font-bold hover:bg-purple-700 transition shadow-2xs"
-                      >
-                        📞 Call Rider
-                      </a>
-                    </div>
-                  ) : order.status !== "delivered" &&
-                    order.status !== "completed" &&
-                    order.status !== "cancelled" &&
-                    order.status !== "rejected" ? (
-                    <div className="mt-3 p-3 bg-amber-50/70 rounded-2xl text-xs flex items-center justify-between border border-amber-300 shadow-2xs">
-                      <div className="flex items-center gap-2.5">
-                        <span className="relative flex h-3.5 w-3.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3.5 w-3.5 bg-amber-500"></span>
-                        </span>
-                        <div>
-                          <span className="text-[10px] font-bold text-amber-800 uppercase block">Rider Assignment</span>
-                          <p className="text-xs font-black text-amber-950">
-                            Assigning Soon (Scanning nearest riders in Bahraich zone)...
-                          </p>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-lg">
-                        Proximity Radar 📡
-                      </span>
-                    </div>
-                  ) : null}
-
-                  {/* Action Buttons */}
-                  <div className="pt-4 flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2">
+                    {/* 5. Print KOT & Action Button */}
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
                         onClick={() => setKotOrderModal(order)}
-                        className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition"
+                        title="Print KOT Slip"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition cursor-pointer"
                       >
-                        📄 Print / View KOT Slip
+                        <span>📄</span>
+                        <span>KOT</span>
                       </button>
-                    </div>
 
-                    <div className="flex items-center gap-2">
                       {isNewPlaced && (
-                        <>
-                          <div className="flex items-center gap-1.5 text-xs bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-                            <span className="text-slate-600 font-semibold text-[11px]">
-                              {order.order_type === "grocery_parcha" ? "📦 Packing Time:" : "🍳 Kitchen Cooking:"}
-                            </span>
-                            {(order.order_type === "grocery_parcha" ? [20, 30, 40, 60] : [15, 20, 25, 35]).map((mins) => (
-                              <button
-                                key={mins}
-                                type="button"
-                                onClick={() => setPrepTimeMinutes(mins)}
-                                className={`px-2 py-0.5 rounded-lg text-xs font-bold transition ${
-                                  prepTimeMinutes === mins
-                                    ? "bg-slate-900 text-white shadow-xs"
-                                    : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-                                }`}
-                              >
-                                {mins}m
-                              </button>
-                            ))}
-                            <div className="flex items-center gap-0.5 ml-1">
-                              <input
-                                type="number"
-                                min={5}
-                                max={120}
-                                value={prepTimeMinutes}
-                                onChange={(e) => setPrepTimeMinutes(Math.max(5, Math.min(120, Number(e.target.value) || 20)))}
-                                className="w-12 px-1.5 py-0.5 text-xs text-center font-bold bg-white border border-slate-300 rounded-md outline-none focus:border-slate-800"
-                              />
-                              <span className="text-[10px] text-slate-400 font-mono">min</span>
-                            </div>
-                          </div>
-
-                          <button
-                            type="button"
-                            disabled={isSubmitting}
-                            onClick={() => handleAcceptOrder(order.id)}
-                            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow transition flex items-center gap-1.5"
-                          >
-                            <span>✓</span>
-                            <span>
-                              {order.order_type === "grocery_parcha"
-                                ? `Accept & Start Packing (~${prepTimeMinutes}m) →`
-                                : `Accept & Dispatch Rider (~${prepTimeMinutes}m) →`}
-                            </span>
-                          </button>
-                        </>
+                        <button
+                          type="button"
+                          disabled={isSubmitting}
+                          onClick={() => handleAcceptOrder(order.id)}
+                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer"
+                        >
+                          Accept
+                        </button>
                       )}
 
                       {isAccepted && (
@@ -709,16 +546,27 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                           type="button"
                           disabled={isSubmitting}
                           onClick={() => handleMarkFoodReady(order.id)}
-                          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow transition"
+                          className="px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer"
                         >
-                          📦 Mark Food Prepared & Ready (Summon Rider) →
+                          Food Ready
+                        </button>
+                      )}
+
+                      {order.status === "ready_for_pickup" && (
+                        <button
+                          type="button"
+                          disabled={isSubmitting}
+                          onClick={() => handleMarkDelivered(order.id)}
+                          className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer"
+                        >
+                          Delivered
                         </button>
                       )}
                     </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
       )}

@@ -39,14 +39,14 @@ export default async function MerchantBusinessPage() {
   });
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5">
       <header className="pb-0.5">
         <h1 className="text-xl font-bold text-slate-950 tracking-tight">Business Profile</h1>
         <a href="#public-discovery-location" className="sr-only" aria-hidden={discoveryComplete}>
           {discoveryComplete ? "Public discovery location complete" : "Complete public discovery location"}
         </a>
       </header>
-      <section className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs sm:p-5">
+      <section className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs sm:p-4">
         <BusinessProfileForm
           name={merchant.businessName}
           type={merchant.businessType}
@@ -71,9 +71,9 @@ export default async function MerchantBusinessPage() {
       <div className="hidden" aria-hidden="true">
         <GoogleReviewLinkForm initialLink={reviewLink ?? ""} />
       </div>
-      <section className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs sm:p-5">
-        <h2 className="mb-3 text-base font-bold text-slate-950">Account and Plan</h2>
-        <dl className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-2xs sm:p-4">
+        <h2 className="mb-2.5 text-base font-bold text-slate-950">Account and Plan</h2>
+        <dl className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           <BusinessField label="Business ID" value={merchant.businessId} />
           <BusinessField label="Business Status" value={merchant.businessStatus} />
           <BusinessField label="Merchant Status" value={merchant.merchantStatus} />
@@ -81,7 +81,6 @@ export default async function MerchantBusinessPage() {
           <BusinessField label="Current Plan" value={merchant.plan} />
           <BusinessField label="Expiry Date" value={formattedDate(merchant.expiry)} />
         </dl>
-        <Link href="/merchant/dashboard/profile" className="mt-4 inline-flex min-h-9 items-center rounded-lg border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-semibold text-orange-900 hover:bg-orange-100 transition">View Profile Completion and Location →</Link>
       </section>
       <PublicLocationForm
         name={merchant.businessName}

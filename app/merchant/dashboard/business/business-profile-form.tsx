@@ -372,10 +372,10 @@ export default function BusinessProfileForm({
   return (
     <div className="relative">
       {/* CARD HEADER: Title on Left, Edit Button on Right */}
-      <div className="flex items-center justify-between pb-5 border-b border-slate-100 mb-6">
+      <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 mb-3">
         <div>
-          <h2 className="text-xl font-bold text-slate-950 tracking-tight">Business Information</h2>
-          <p className="text-xs text-slate-500 mt-0.5">Aapke store ki verified profile details aur branding.</p>
+          <h2 className="text-lg font-bold text-slate-950 tracking-tight">Business Information</h2>
+          <p className="text-xs text-slate-500">Aapke store ki verified profile details aur branding.</p>
         </div>
 
         {!isEditUnlocked ? (
@@ -387,9 +387,9 @@ export default function BusinessProfileForm({
               setEditAuthSent(false);
               setEditAuthMsg(null);
             }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold shadow-2xs transition active:scale-95"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold shadow-2xs transition active:scale-95"
           >
-            <span className="material-symbols-outlined text-[16px] text-indigo-600">edit</span>
+            <span className="material-symbols-outlined text-[15px] text-indigo-600">edit</span>
             <span>Edit Details</span>
           </button>
         ) : (
@@ -410,30 +410,29 @@ export default function BusinessProfileForm({
       </div>
 
       {/* BUSINESS BRANDING & LOGO UPLOAD */}
-      <div className="mb-6 rounded-2xl border border-slate-200 bg-gradient-to-r from-orange-50/50 via-white to-slate-50 p-4 sm:p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+      <div className="mb-3 rounded-xl border border-slate-200 bg-gradient-to-r from-orange-50/50 via-white to-slate-50 p-3 sm:p-3.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
             {/* Circular Luxury Brand Medallion */}
-            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#b59363] ring-4 ring-amber-200/50 bg-[#1e140a] shadow-md">
+            <div className="relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#b59363] ring-2 ring-amber-200/50 bg-[#1e140a] shadow-xs">
               {currentLogoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={currentLogoUrl} alt="Business Logo" className="h-full w-full object-cover" />
               ) : (
                 <div className="flex flex-col items-center justify-center text-amber-200/80">
-                  <span className="text-2xl">🏪</span>
-                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">No Logo</span>
+                  <span className="text-xl">🏪</span>
                 </div>
               )}
               {logoUploading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
                 </div>
               )}
             </div>
 
             {!isEditUnlocked ? (
               <div>
-                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
                   <span>{name}</span>
                   {currentLogoUrl && (
                     <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
@@ -441,13 +440,13 @@ export default function BusinessProfileForm({
                     </span>
                   )}
                 </h3>
-                <p className="mt-0.5 text-xs font-medium text-slate-500">
+                <p className="text-[11px] font-medium text-slate-500">
                   {type || "Business"} · Verified Merchant Store Profile
                 </p>
               </div>
             ) : (
               <div>
-                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <h3 className="text-xs font-bold text-slate-900 flex items-center gap-2">
                   Business Logo &amp; Branding
                   {currentLogoUrl && (
                     <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
@@ -456,24 +455,20 @@ export default function BusinessProfileForm({
                   )}
                 </h3>
 
-                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-700">
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
-                    <span>📐</span> <strong>500 × 500 px</strong> (Square 1:1)
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[10px] font-semibold text-slate-700">
+                  <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-0.5 shadow-2xs">
+                    <span>📐</span> <strong>500 × 500 px</strong>
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
-                    <span>📁</span> <strong>PNG (Transparent) / JPG</strong>
+                  <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-0.5 shadow-2xs">
+                    <span>📁</span> <strong>PNG / JPG</strong>
                   </span>
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
+                  <span className="inline-flex items-center gap-1 rounded border border-slate-200 bg-white px-2 py-0.5 shadow-2xs">
                     <span>⚖️</span> <strong>Max 2 MB</strong>
                   </span>
                 </div>
 
-                <p className="mt-1.5 text-[11px] text-slate-500">
-                  Yeh standard size aapke <strong>Merchant Profile Icon</strong> aur sabhi <strong>WhatsApp Greeting Cards / Posters</strong> par bina kate ekdum sharp aur perfect fit hoga.
-                </p>
-
                 {logoMsg && (
-                  <p className={`mt-1.5 text-xs font-semibold ${logoMsg.error ? "text-rose-600" : "text-emerald-700"}`}>
+                  <p className={`mt-1 text-xs font-semibold ${logoMsg.error ? "text-rose-600" : "text-emerald-700"}`}>
                     {logoMsg.text}
                   </p>
                 )}
@@ -494,16 +489,16 @@ export default function BusinessProfileForm({
                 type="button"
                 disabled={logoUploading}
                 onClick={() => fileInputRef.current?.click()}
-                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 cursor-pointer"
+                className="inline-flex min-h-8 items-center justify-center rounded-lg bg-gradient-to-r from-orange-600 to-amber-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 cursor-pointer"
               >
-                {logoUploading ? "Uploading..." : currentLogoUrl ? "Change Logo" : "Upload Logo (PNG/JPG)"}
+                {logoUploading ? "Uploading..." : currentLogoUrl ? "Change Logo" : "Upload Logo"}
               </button>
               {currentLogoUrl && (
                 <button
                   type="button"
                   disabled={logoUploading}
                   onClick={handleLogoRemove}
-                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
+                  className="inline-flex min-h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
                 >
                   Remove
                 </button>
@@ -515,39 +510,39 @@ export default function BusinessProfileForm({
 
       {/* VIEW 1: READ-ONLY DISPLAY BY DEFAULT */}
       {!isEditUnlocked ? (
-        <div className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2.5">
+          <div className="grid gap-2 sm:grid-cols-2">
             {/* Business Name */}
-            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 sm:p-3">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
                 Business Name
               </span>
-              <p className="mt-1.5 text-sm font-bold text-slate-900">{name || "—"}</p>
+              <p className="mt-1 text-xs font-bold text-slate-900">{name || "—"}</p>
             </div>
 
             {/* Business Type */}
-            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 sm:p-3">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
                 Business Type
               </span>
-              <p className="mt-1.5 text-sm font-bold text-slate-900">{type || "—"}</p>
+              <p className="mt-1 text-xs font-bold text-slate-900">{type || "—"}</p>
             </div>
 
             {/* Owner / Merchant Name */}
-            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 sm:p-3">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
                 Owner / Merchant Name
               </span>
-              <p className="mt-1.5 text-sm font-bold text-slate-900">{owner || "—"}</p>
+              <p className="mt-1 text-xs font-bold text-slate-900">{owner || "—"}</p>
             </div>
 
             {/* Registered Mobile */}
-            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 sm:p-3">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
                 Registered Mobile
               </span>
-              <div className="mt-1.5 flex items-center gap-2">
-                <p className="text-sm font-bold text-slate-900 font-mono">
+              <div className="mt-1 flex items-center gap-2">
+                <p className="text-xs font-bold text-slate-900 font-mono">
                   +91 {currentPhone ? currentPhone.replace(/\D/g, "").slice(-10) : "—"}
                 </p>
                 {isMobileVerified && (
@@ -559,12 +554,12 @@ export default function BusinessProfileForm({
             </div>
 
             {/* Email ID */}
-            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 sm:p-3">
+              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
                 Email ID
               </span>
-              <div className="mt-1.5 flex items-center gap-2">
-                <p className="text-sm font-bold text-slate-900 truncate">
+              <div className="mt-1 flex items-center gap-2">
+                <p className="text-xs font-bold text-slate-900 truncate">
                   {currentEmail || "Not provided"}
                 </p>
                 {currentEmail && isEmailVerified ? (
@@ -580,34 +575,31 @@ export default function BusinessProfileForm({
             </div>
 
             {/* Locality & Store Address (View Details opens popup) */}
-            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 sm:p-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
                   Locality &amp; Store Address
                 </span>
                 <button
                   type="button"
                   onClick={() => setShowLocalityModal(true)}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
                 >
                   <span>View Details</span>
-                  <span className="material-symbols-outlined text-[15px]">visibility</span>
+                  <span className="material-symbols-outlined text-[14px]">visibility</span>
                 </button>
               </div>
-              <div className="mt-1.5 flex items-center justify-between">
-                <p className="text-sm font-bold text-slate-900 truncate">
+              <div className="mt-1 flex items-center justify-between">
+                <p className="text-xs font-bold text-slate-900 truncate">
                   {[localityVal, cityVal, stateVal].filter(Boolean).join(", ") || "Address not confirmed"}
                 </p>
               </div>
-              <p className="mt-1 text-[11px] text-slate-500">
-                {pincodeVal ? `PIN: ${pincodeVal}` : "Tap View Details to see full address breakdown"}
-              </p>
             </div>
 
             {/* Google Review Link (Integrated into Business Profile card) */}
-            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4 sm:col-span-2">
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-2.5 sm:p-3 sm:col-span-2">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block">
                   Google Review Link
                 </span>
                 {currentReviewLink ? (
@@ -615,23 +607,18 @@ export default function BusinessProfileForm({
                     href={currentReviewLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-bold text-blue-700 hover:underline"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:underline"
                   >
                     <span>Test Google Link</span>
                     <span className="material-symbols-outlined text-[13px]">open_in_new</span>
                   </a>
                 ) : null}
               </div>
-              <p className="mt-1.5 text-xs font-mono font-medium text-slate-800 truncate">
+              <p className="mt-1 text-xs font-mono font-medium text-slate-800 truncate">
                 {currentReviewLink || "No Google Review link configured yet."}
               </p>
             </div>
           </div>
-
-          <p className="text-xs text-slate-500 flex items-center gap-1.5 pt-2">
-            <span className="material-symbols-outlined text-[16px] text-slate-400">lock</span>
-            <span>Security notice: Details edit karne ke liye upar <strong>Edit Details</strong> button par click karke WhatsApp / SMS OTP verify kijiye.</span>
-          </p>
         </div>
       ) : (
         /* VIEW 2: UNLOCKED EDITABLE FORM */
