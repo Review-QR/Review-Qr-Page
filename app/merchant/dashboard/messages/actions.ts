@@ -212,3 +212,89 @@ export async function publishPostizSocialPost(input: {
     return { ok: false, message: `Could not connect to Postiz: ${msg}` };
   }
 }
+
+/** 5. Get Saved Occasion Drafts */
+export async function getMerchantOccasionDraftsAction() {
+  const merchant = await requireActiveMerchant();
+  const { createSupabaseAdminClient } = await import("@/lib/supabase-admin");
+  const admin = createSupabaseAdminClient();
+  const { data } = await admin
+    .from("merchant_occasion_templates")
+    .select("*")
+    .eq("business_id", merchant.businessId);
+  return data ?? [];
+}
+
+/** 6. Save/Approve Occasion Greeting Draft */
+export async function saveMerchantOccasionDraftAction(input: {
+  occasionType: "birthday" | "anniversary" | "festival" | "offer";
+  templateStyle: string;
+  headline: string;
+  bodyText: string;
+  discountPercent: number;
+  couponValidityDays: number;
+  isActive: boolean;
+}) {
+  const merchant = await requireActiveMerchant();
+  const { createSupabaseAdminClient } = await import("@/lib/supabase-admin");
+  const admin = createSupabaseAdminClient();
+
+  const { error } = await admin
+    .from("merchant_occasion_templates")
+    .upsert(
+      {
+        business_id: merchant.businessId,
+        occasion_type: input.occasionType,
+        template_style: input.templateStyle,
+        headline: input.headline.trim(),
+        body_text: input.bodyText.trim(),
+        discount_percent: input.discountPercent,
+        coupon_validity_days: input.couponValidityDays,
+        is_active: input.isActive,
+        updated_at: new Date().toISOString(),
+      },
+      {
+        onConflict: "business_id,occasion_type",
+      }
+    );
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+  return {
+    success: true,
+    message: `${
+      input.occasionType === "birthday"
+        ? "Birthday"
+        : input.occasionType === "anniversary"
+        ? "Anniversary"
+        : "Offer"
+    } greeting approved and saved as active draft!`,
+  };
+}
+
+/** 7. Update Occasion Schedule & Timing */
+export async function updateMerchantOccasionScheduleAction(input: {
+  dailyDispatchTime: string;
+  birthdayActive: boolean;
+  anniversaryActive: boolean;
+}) {
+  const merchant = await requireActiveMerchant();
+  const { createSupabaseAdminClient } = await import("@/lib/supabase-admin");
+  const admin = createSupabaseAdminClient();
+
+  const { error } = await admin
+    .from("merchant_connect_wallets")
+    .update({
+      daily_dispatch_time: input.dailyDispatchTime,
+      birthday_active: input.birthdayActive,
+      anniversary_active: input.anniversaryActive,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("business_id", merchant.businessId);
+
+  if (error) {
+    return { success: false, message: error.message };
+  }
+  return { success: true, message: "Occasion schedule & auto-dispatch time updated successfully." };
+}

@@ -2,7 +2,13 @@ import Link from "next/link";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { normalizePlanTier } from "@/lib/plan-rules";
 import MessageDesigner from "./message-designer";
-import { getMerchantMessages, getMerchantCatalogItems, getMerchantSocialIntegration } from "./actions";
+import {
+  getMerchantMessages,
+  getMerchantCatalogItems,
+  getMerchantSocialIntegration,
+  getMerchantOccasionDraftsAction,
+} from "./actions";
+import { getMerchantConnectWallet } from "@/lib/customer-crm-service";
 
 export const dynamic = "force-dynamic";
 
@@ -58,10 +64,12 @@ export default async function MerchantMessagesPage() {
     );
   }
 
-  const [saved, catalogItems, socialIntegration] = await Promise.all([
+  const [saved, catalogItems, socialIntegration, occasionDrafts, connectWallet] = await Promise.all([
     getMerchantMessages(),
     getMerchantCatalogItems(),
     getMerchantSocialIntegration(),
+    getMerchantOccasionDraftsAction(),
+    getMerchantConnectWallet(merchant.businessId),
   ]);
 
   return (
@@ -70,9 +78,12 @@ export default async function MerchantMessagesPage() {
       businessType={merchant.businessType}
       city={merchant.city ?? "Bahraich"}
       phone={merchant.registeredMobile ?? ""}
+      logoUrl={merchant.logoUrl}
       saved={saved}
       catalogItems={catalogItems}
       socialIntegration={socialIntegration}
+      occasionDrafts={occasionDrafts}
+      connectWallet={connectWallet}
     />
   );
 }

@@ -10,6 +10,8 @@ import { getPersistedBusinessQrDesignAssets } from "@/lib/trustit-ai/qr-design-a
 import { qrTemplates } from "./qr/templates";
 import ReviewCard from "./review-card";
 import MerchantConsoleClient from "./merchant-console-client";
+import OccasionDashboardCard from "./occasion-dashboard-card";
+import { getMerchantOccasionSummary, getMerchantConnectWallet } from "@/lib/customer-crm-service";
 
 export const dynamic = "force-dynamic";
 
@@ -188,13 +190,24 @@ export default async function MerchantDashboardPage() {
     designAssetError = "Custom artwork is temporarily unavailable. Your QR code and standard poster designs are still ready.";
   }
   const supabase = await createMerchantServerClient();
-  const [statsResult, activityResult, reviewsResult, subscriptionResult, paymentsResult, ordersResult] = await Promise.all([
+  const [
+    statsResult,
+    activityResult,
+    reviewsResult,
+    subscriptionResult,
+    paymentsResult,
+    ordersResult,
+    occasionSummary,
+    walletState,
+  ] = await Promise.all([
     supabase.rpc("get_merchant_dashboard_stats", { p_business_id: merchant.businessId }),
     supabase.rpc("get_merchant_scan_activity", { p_business_id: merchant.businessId, p_days: 90 }),
     supabase.rpc("get_merchant_trustit_reviews", { p_business_id: merchant.businessId }).order("submitted_at", { ascending: false }).limit(5),
     supabase.from("subscriptions").select("amount, status, starts_at, expires_at, auto_renew, created_at").eq("business_id", merchant.businessId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("payment_records").select("cashfree_order_id, amount, currency, payment_status, created_at").eq("business_id", merchant.businessId).order("created_at", { ascending: false }).limit(5),
     supabase.from("hyperlocal_orders").select("id, status, customer_name, customer_phone, total_amount, items, created_at, accepted_at").eq("business_id", merchant.businessId).order("created_at", { ascending: false }).limit(10),
+    getMerchantOccasionSummary(merchant.businessId),
+    getMerchantConnectWallet(merchant.businessId),
   ]);
 
   const stats = (statsResult.data?.[0] ?? null) as DashboardStats | null;
@@ -246,12 +259,27 @@ export default async function MerchantDashboardPage() {
 
   return (
     <div className="merchant-dashboard-page">
+      {/* OCCASION INTELLIGENCE & CONNECT CREDITS ENGINE */}
+      <OccasionDashboardCard
+        summary={occasionSummary}
+        wallet={walletState}
+        businessName={merchant.businessName}
+        logoUrl={merchant.logoUrl}
+      />
+
       {/* Stitch Kinetic Trust Operational Hero Bar */}
       <section className={`merchant-hero${isPremium ? " merchant-hero--premium" : sweetsBusiness ? " merchant-hero--sweets" : ""} bg-surface-container-lowest rounded-2xl p-5 sm:p-7 border border-[#eaedff] shadow-xs mb-6`}>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-[#eaedff]">
           <div className="flex items-start gap-4">
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-[#0d47a1] text-white flex items-center justify-center text-2xl sm:text-3xl shadow-xs shrink-0">
-              {categoryEmoji}
+            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-white border border-slate-200 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-xs shrink-0 overflow-hidden">
+              {merchant.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-contain p-1" />
+              ) : (
+                <div className="h-full w-full bg-[#0d47a1] flex items-center justify-center text-2xl sm:text-3xl">
+                  {categoryEmoji}
+                </div>
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">

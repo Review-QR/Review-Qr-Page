@@ -33,6 +33,7 @@ export type MerchantContext = {
   qrTemplate: string;
   expiry: string | null;
   reviewLink: string | null;
+  logoUrl: string | null;
 };
 
 export async function getActiveMerchant(): Promise<MerchantContext | null> {
@@ -52,7 +53,7 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
 
     const { data: business, error: businessError } = await supabase
       .from("businesses")
-      .select("id, name, owner, phone, type, address, locality, city, district, state, pincode, discovery_location_verified_at, discovery_location_verified_by, discovery_location_verification_source, location_latitude, location_longitude, location_captured_at, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, deleted_at")
+      .select("id, name, owner, phone, type, address, locality, city, district, state, pincode, discovery_location_verified_at, discovery_location_verified_by, discovery_location_verification_source, location_latitude, location_longitude, location_captured_at, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, logo_url, deleted_at")
       .eq("id", mapping.business_id)
       .eq("merchant_status", "active")
       .is("deleted_at", null)
@@ -104,6 +105,7 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
       qrTemplate: business.qr_template || "template_1",
       expiry: business.expiry,
       reviewLink: business.review_link,
+      logoUrl: (business as { logo_url?: string | null }).logo_url ?? null,
     };
   } catch {
     // Fail closed without exposing database or session details to the merchant.

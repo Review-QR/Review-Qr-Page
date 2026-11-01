@@ -6,6 +6,7 @@ import {
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createCashfreeWebhookHandler } from "@/lib/cashfree-webhook-handler";
 import { handleProductOrderWebhook } from "@/lib/product-orders/webhook-handler";
+import { creditMerchantConnectWallet } from "@/lib/customer-crm-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -106,6 +107,38 @@ export async function POST(request: Request): Promise<Response> {
         return Response.json({ result: "unauthorized" }, { status: 401 });
       }
       return await handleProductOrderWebhook(payload);
+    }
+
+    if (typeof orderId === "string" && orderId.startsWith("twal_")) {
+      // Verify webhook signature for Connect Wallet recharge
+      const timestamp = request.headers.get("x-webhook-timestamp");
+      const signature = request.headers.get("x-webhook-signature");
+      if (!verifyCashfreeWebhookSignature({ rawBody: text, timestamp, signature })) {
+        return Response.json({ result: "unauthorized" }, { status: 401 });
+      }
+
+      const paymentStatus = payload?.data?.payment?.payment_status;
+      const eventType = payload?.type;
+      const isSuccess = paymentStatus === "SUCCESS" || eventType === "PAYMENT_SUCCESS_WEBHOOK";
+
+      if (isSuccess) {
+        const orderAmount = Number(payload?.data?.order?.order_amount ?? payload?.data?.payment?.payment_amount ?? 0);
+        const orderTags = (payload?.data?.order as { order_tags?: Record<string, string> } | undefined)?.order_tags || {};
+        const businessId = orderTags.business_id;
+        const credits = Number(orderTags.credits || orderAmount);
+
+        if (businessId) {
+          await creditMerchantConnectWallet(
+            businessId,
+            orderAmount,
+            credits,
+            orderId,
+            "Cashfree Webhook Top-up"
+          );
+        }
+        return Response.json({ success: true, orderId, paymentStatus: "paid" });
+      }
+      return Response.json({ success: true, orderId, paymentStatus: paymentStatus || "PENDING" });
     }
   } catch {
     // If JSON parsing fails, fall through to subscriptionWebhookHandler which rejects safely

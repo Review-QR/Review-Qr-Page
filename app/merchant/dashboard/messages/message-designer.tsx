@@ -11,6 +11,8 @@ import {
 import { suggestMessage, templatesForBusiness, type MessageCategory } from "@/lib/merchant-message-templates";
 import { generateSocialCaption } from "@/lib/merchant-social";
 import { renderCreativePoster } from "@/lib/creative-canvas";
+import OccasionStudio, { type OccasionDraft } from "./occasion-studio";
+import type { MerchantConnectWalletState } from "@/lib/customer-crm-service";
 
 type Saved = {
   id: string;
@@ -59,20 +61,26 @@ export default function MessageDesigner({
   businessType,
   city = "Bahraich",
   phone = "",
+  logoUrl = null,
   saved = [],
   catalogItems = [],
   socialIntegration = null,
+  occasionDrafts = [],
+  connectWallet,
 }: {
   businessName: string;
   businessType: string | null;
   city?: string;
   phone?: string;
+  logoUrl?: string | null;
   saved: Saved[];
   catalogItems?: CatalogItem[];
   socialIntegration?: SocialIntegration;
+  occasionDrafts?: OccasionDraft[];
+  connectWallet?: MerchantConnectWalletState;
 }) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<"ai_creative" | "templates" | "social_settings">("ai_creative");
+  const [activeTab, setActiveTab] = useState<"occasions" | "ai_creative" | "templates" | "social_settings">("occasions");
 
   // Template State (Preserving all existing contracts)
   const templates = useMemo(() => templatesForBusiness(businessType), [businessType]);
@@ -433,6 +441,17 @@ export default function MessageDesigner({
           <div className="flex flex-wrap gap-2 rounded-2xl bg-slate-100 p-1.5 text-xs font-bold">
             <button
               type="button"
+              onClick={() => setActiveTab("occasions")}
+              className={`rounded-xl px-4 py-2.5 transition ${
+                activeTab === "occasions"
+                  ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-sm"
+                  : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              ✨ Occasions &amp; Auto-Wishes
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveTab("ai_creative")}
               className={`rounded-xl px-4 py-2.5 transition ${
                 activeTab === "ai_creative" ? "bg-white text-slate-900 shadow-sm" : "text-slate-600 hover:text-slate-900"
@@ -472,6 +491,17 @@ export default function MessageDesigner({
         <div role="status" className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold text-emerald-800 shadow-sm">
           ✓ {notice}
         </div>
+      )}
+
+      {/* TAB 0: OCCASIONS & AUTO-WISHES CRM */}
+      {activeTab === "occasions" && (
+        <OccasionStudio
+          businessName={businessName}
+          logoUrl={logoUrl ?? null}
+          initialDrafts={occasionDrafts}
+          dailyDispatchTime={connectWallet?.dailyDispatchTime}
+          creditsBalance={connectWallet?.creditsBalance}
+        />
       )}
 
       {/* TAB 1: AI CREATIVE PHOTO & SOCIAL POST */}

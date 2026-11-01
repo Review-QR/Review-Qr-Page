@@ -89,6 +89,45 @@ export default async function HomePage() {
     // Graceful fallback
   }
 
+  let merchantWallets: Array<{
+    business_id: string;
+    credits_balance: number;
+    total_recharged: number;
+    total_consumed: number;
+    low_balance_threshold: number;
+    auto_wish_enabled: boolean;
+    daily_dispatch_time: string;
+    businesses?: { name?: string; phone?: string } | { name?: string; phone?: string }[] | null;
+  }> = [];
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data: walletsData } = await supabase
+      .from("merchant_connect_wallets")
+      .select(`
+        business_id,
+        credits_balance,
+        total_recharged,
+        total_consumed,
+        low_balance_threshold,
+        auto_wish_enabled,
+        daily_dispatch_time,
+        businesses (
+          name,
+          phone
+        )
+      `)
+      .order("credits_balance", { ascending: false });
+
+    merchantWallets = (walletsData ?? []) as typeof merchantWallets;
+  } catch {
+    // Graceful fallback
+  }
+
+  const totalCommittedCredits = merchantWallets.reduce((acc, w) => acc + (Number(w.credits_balance) || 0), 0);
+  const totalRechargeRevenue = merchantWallets.reduce((acc, w) => acc + (Number(w.total_recharged) || 0), 0);
+  const totalWishesDispatched = merchantWallets.reduce((acc, w) => acc + (Number(w.total_consumed) || 0), 0);
+
   const today = new Date().toISOString().slice(0, 10);
 
   const totalBusinesses = businesses.length;
@@ -420,6 +459,91 @@ export default async function HomePage() {
               <span>⚡ Open Live Delivery Command Center</span>
               <span>→</span>
             </Link>
+          </section>
+
+          {/* ── FAST2SMS MASTER LIQUIDITY & MERCHANT CREDITS COMMAND CENTER ── */}
+          <section className="dashboard-panel border-2 border-indigo-400/50 bg-gradient-to-br from-slate-900 via-indigo-950/70 to-slate-900 p-5 rounded-2xl shadow-md space-y-4 text-white">
+            <div className="flex items-center justify-between pb-3 border-b border-indigo-500/20">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400">MASTER LIQUIDITY WATCH</p>
+                <h2 className="text-base font-black text-white flex items-center gap-1.5 mt-0.5">
+                  <span>🪙</span> Messaging Credits &amp; Fast2SMS
+                </h2>
+              </div>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">
+                ● Live Sync
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-300 leading-relaxed">
+              Monitors total merchant message balance vs Fast2SMS master gateway to prevent delivery stoppages.
+            </p>
+
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
+                <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Merchant Credits</span>
+                <span className="text-lg font-black text-amber-300">{totalCommittedCredits}</span>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
+                <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Dispatched</span>
+                <span className="text-lg font-black text-emerald-400">{totalWishesDispatched}</span>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-white/5 p-2.5">
+                <span className="text-[9px] font-bold uppercase text-slate-400 block">Total Recharged</span>
+                <span className="text-lg font-black text-white">₹{totalRechargeRevenue}</span>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-amber-400/30 bg-amber-500/10 p-2.5 text-xs text-amber-200">
+              💡 <strong>Fast2SMS Balance Safety Buffer:</strong> Keep your main Fast2SMS balance above <strong>₹{Math.max(1000, totalCommittedCredits)}</strong> to guarantee uninterrupted delivery for all merchants.
+            </div>
+
+            {/* Merchant-wise Credits Breakdown List */}
+            {merchantWallets.length > 0 && (
+              <div className="space-y-2 pt-1">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Individual Merchant Balances:
+                </p>
+                <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                  {merchantWallets.map((w) => {
+                    const b = Array.isArray(w.businesses) ? w.businesses[0] : w.businesses;
+                    const name = b?.name || `Business ${w.business_id.slice(0, 8)}`;
+                    const isLow = w.credits_balance < 50 && w.credits_balance > 0;
+                    const isZero = w.credits_balance === 0;
+
+                    return (
+                      <div
+                        key={w.business_id}
+                        className="flex items-center justify-between rounded-lg border border-white/5 bg-white/5 px-3 py-1.5 text-xs"
+                      >
+                        <div className="truncate pr-2">
+                          <strong className="text-white block truncate">{name}</strong>
+                          <span className="text-[10px] text-slate-400">
+                            Auto-wish: {w.auto_wish_enabled ? `Active (${w.daily_dispatch_time})` : "Paused"}
+                          </span>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <span
+                            className={`inline-block font-mono font-bold text-xs ${
+                              isZero
+                                ? "text-rose-400"
+                                : isLow
+                                ? "text-amber-300"
+                                : "text-emerald-300"
+                            }`}
+                          >
+                            {w.credits_balance} Credits
+                          </span>
+                          <span className="text-[10px] text-slate-400 block">
+                            {w.total_consumed} sent
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </section>
 
           {/* System Status Panel */}

@@ -1,12 +1,14 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useRef } from "react";
 import {
   saveBusinessProfileAction,
   requestMerchantMobileChangeOtpAction,
   verifyAndApplyMobileChangeAction,
   requestMerchantEmailChangeOtpAction,
   verifyAndApplyEmailChangeAction,
+  uploadBusinessLogoAction,
+  removeBusinessLogoAction,
   type BusinessProfileActionState,
 } from "./actions";
 
@@ -23,6 +25,7 @@ export default function BusinessProfileForm({
   email: initialEmail,
   isMobileVerified: initialIsMobileVerified,
   isEmailVerified: initialIsEmailVerified,
+  logoUrl: initialLogoUrl,
 }: {
   name: string;
   type: string | null;
@@ -32,8 +35,15 @@ export default function BusinessProfileForm({
   email: string | null;
   isMobileVerified: boolean;
   isEmailVerified: boolean;
+  logoUrl?: string | null;
 }) {
   const [state, action, pending] = useActionState(saveBusinessProfileAction, initialState);
+
+  // Logo upload state
+  const [currentLogoUrl, setCurrentLogoUrl] = useState(initialLogoUrl ?? null);
+  const [logoUploading, setLogoUploading] = useState(false);
+  const [logoMsg, setLogoMsg] = useState<{ text: string; error: boolean } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Live state for mobile and email
   const [currentPhone, setCurrentPhone] = useState(phone ?? "");
@@ -194,8 +204,122 @@ export default function BusinessProfileForm({
     }
   }
 
+  // 3. Handle Logo Upload
+  async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setLogoMsg(null);
+    setLogoUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("logo", file);
+      const res = await uploadBusinessLogoAction(fd);
+      if (res.success && res.logoUrl) {
+        setCurrentLogoUrl(res.logoUrl);
+        setLogoMsg({ text: res.message, error: false });
+      } else {
+        setLogoMsg({ text: res.message, error: true });
+      }
+    } catch {
+      setLogoMsg({ text: "Failed to upload logo. Please try again.", error: true });
+    } finally {
+      setLogoUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  // 4. Handle Logo Remove
+  async function handleLogoRemove() {
+    if (!confirm("Are you sure you want to remove your business logo?")) return;
+    setLogoMsg(null);
+    setLogoUploading(true);
+    try {
+      const res = await removeBusinessLogoAction();
+      if (res.success) {
+        setCurrentLogoUrl(null);
+        setLogoMsg({ text: "Logo removed successfully.", error: false });
+      } else {
+        setLogoMsg({ text: res.message, error: true });
+      }
+    } catch {
+      setLogoMsg({ text: "Failed to remove logo.", error: true });
+    } finally {
+      setLogoUploading(false);
+    }
+  }
+
   return (
     <div className="relative">
+      {/* BUSINESS BRANDING & LOGO UPLOAD */}
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-gradient-to-r from-orange-50/50 via-white to-slate-50 p-4 sm:p-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-orange-300 bg-white shadow-sm">
+              {currentLogoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={currentLogoUrl} alt="Business Logo" className="h-full w-full object-contain p-1" />
+              ) : (
+                <div className="flex flex-col items-center justify-center text-slate-400">
+                  <span className="text-2xl">🏪</span>
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">No Logo</span>
+                </div>
+              )}
+              {logoUploading && (
+                <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-xs">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
+                </div>
+              )}
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                Business Logo & Branding
+                {currentLogoUrl && (
+                  <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                    Active
+                  </span>
+                )}
+              </h3>
+              <p className="mt-0.5 text-xs text-slate-500 max-w-md">
+                Used automatically on your WhatsApp Greeting Cards (Birthdays & Anniversaries), QR Standees, and Merchant Profile.
+              </p>
+              {logoMsg && (
+                <p className={`mt-1.5 text-xs font-semibold ${logoMsg.error ? "text-rose-600" : "text-emerald-700"}`}>
+                  {logoMsg.text}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-center">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              onChange={handleLogoUpload}
+              className="hidden"
+            />
+            <button
+              type="button"
+              disabled={logoUploading}
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 px-4 py-2 text-xs font-bold text-white shadow-sm hover:from-orange-700 hover:to-amber-700 disabled:opacity-50"
+            >
+              {logoUploading ? "Uploading..." : currentLogoUrl ? "Change Logo" : "Upload Logo (PNG/JPG)"}
+            </button>
+            {currentLogoUrl && (
+              <button
+                type="button"
+                disabled={logoUploading}
+                onClick={handleLogoRemove}
+                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+              >
+                Remove
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
       <form action={action} className="grid gap-4 sm:grid-cols-2">
         <label className="text-sm font-semibold text-slate-800">
           Business Name

@@ -205,3 +205,101 @@ export async function verifyAndApplyEmailChangeAction(newEmail: string, otp: str
   for (const path of ["/merchant/dashboard/business", "/merchant/dashboard/profile", "/merchant/dashboard"]) revalidatePath(path);
   return { success: true, message: "Email updated and verified successfully!", email: cleanEmail };
 }
+
+/** 5. Upload Business Logo (PNG, JPG, WEBP) */
+export async function uploadBusinessLogoAction(
+  formData: FormData
+): Promise<{ success: boolean; message: string; logoUrl?: string }> {
+  const merchant = await getActiveMerchant();
+  if (!merchant) return { success: false, message: "Please sign in to update your business logo." };
+
+  const file = formData.get("logo") as File | null;
+  if (!file || file.size === 0) {
+    return { success: false, message: "Please select an image file to upload." };
+  }
+
+  // Max 5MB
+  if (file.size > 5 * 1024 * 1024) {
+    return { success: false, message: "Logo file size must be less than 5MB." };
+  }
+
+  const allowedTypes = ["image/png", "image/jpeg", "image/jpg", "image/webp"];
+  if (!allowedTypes.includes(file.type)) {
+    return { success: false, message: "Only PNG, JPG, or WEBP image formats are supported." };
+  }
+
+  try {
+    const admin = createSupabaseAdminClient();
+    const ext = file.type.split("/")[1] || "png";
+    const filePath = `logos/${merchant.businessId}_${Date.now()}.${ext}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error: uploadError } = await admin.storage
+      .from("merchant-assets")
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (uploadError) {
+      return { success: false, message: `Upload failed: ${uploadError.message}` };
+    }
+
+    const { data: urlData } = admin.storage
+      .from("merchant-assets")
+      .getPublicUrl(filePath);
+
+    const publicUrl = urlData.publicUrl;
+
+    // Save to businesses table
+    await admin
+      .from("businesses")
+      .update({ logo_url: publicUrl })
+      .eq("id", merchant.businessId);
+
+    for (const path of [
+      "/merchant/dashboard/business",
+      "/merchant/dashboard",
+      "/merchant/dashboard/profile",
+      "/merchant/dashboard/messages",
+    ]) {
+      revalidatePath(path);
+    }
+
+    return { success: true, message: "Business logo updated successfully!", logoUrl: publicUrl };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      message: err instanceof Error ? err.message : "Failed to upload business logo.",
+    };
+  }
+}
+
+/** 6. Remove Business Logo */
+export async function removeBusinessLogoAction(): Promise<{ success: boolean; message: string }> {
+  const merchant = await getActiveMerchant();
+  if (!merchant) return { success: false, message: "Please sign in to update your business logo." };
+
+  try {
+    const admin = createSupabaseAdminClient();
+    await admin
+      .from("businesses")
+      .update({ logo_url: null })
+      .eq("id", merchant.businessId);
+
+    for (const path of [
+      "/merchant/dashboard/business",
+      "/merchant/dashboard",
+      "/merchant/dashboard/profile",
+      "/merchant/dashboard/messages",
+    ]) {
+      revalidatePath(path);
+    }
+
+    return { success: true, message: "Business logo removed." };
+  } catch {
+    return { success: false, message: "Failed to remove business logo." };
+  }
+}
