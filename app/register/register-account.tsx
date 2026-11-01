@@ -229,6 +229,7 @@ export default function RegisterAccount({
         return;
       }
 
+      setStep1Completed(true);
       window.sessionStorage.setItem("trustit_business_name", businessName.trim());
       router.push("/register/business");
       router.refresh();
@@ -600,18 +601,9 @@ export default function RegisterAccount({
                 <span>Creating Account…</span>
               </>
             ) : (
-              <>
-                <span>Business Address</span>
-                <span>→</span>
-              </>
+              <span>Business Address →</span>
             )}
           </button>
-
-          {!isMobileVerified && (
-            <p className="mt-1 text-center text-[9.5px] text-slate-400 font-medium">
-              Verify Mobile OTP above to unlock Business Address.
-            </p>
-          )}
         </div>
 
         {/* Error / Alert Messages */}
