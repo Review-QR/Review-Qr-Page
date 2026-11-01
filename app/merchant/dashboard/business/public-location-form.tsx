@@ -37,80 +37,91 @@ export default function PublicLocationForm({
         <div className="rounded-lg border border-slate-100 bg-slate-50 px-3.5 py-2.5 sm:col-span-2">
           <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Business</p>
           <p className="mt-0.5 text-xs font-bold text-slate-900">{name} · {type || "Category not set"}</p>
-          <p className="mt-0.5 text-[11px] text-slate-600"><span className="font-semibold">Address:</span> {address?.trim() || "Not provided"}</p>
+          <p className="mt-0.5 text-[11px] text-slate-600">
+            <span className="font-semibold">Auto-fetched Store Address:</span>{" "}
+            {[locality, city, district, state].filter(Boolean).join(", ") || address?.trim() || "Not provided"}
+            {pincode ? ` - ${pincode}` : ""}
+          </p>
         </div>
         <div className="rounded-lg border border-slate-100 px-3.5 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Latitude / Longitude</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Latitude / Longitude (GPS)</p>
           <p className="mt-0.5 text-xs font-bold text-slate-900">{coordinates ? `${latitude}, ${longitude}` : "Not captured · optional"}</p>
-          <p className="mt-0.5 text-[11px] text-slate-500">Coordinates improve directions and distance sorting but are not required for city listings.</p>
+          <p className="mt-0.5 text-[11px] text-slate-500">Coordinates improve directions and distance sorting on customer search.</p>
         </div>
         <div className="rounded-lg border border-slate-100 px-3.5 py-2.5">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Location confirmation</p>
-          <p className="mt-0.5 text-xs font-bold text-slate-900">{verifiedAt ? verificationSource === "admin_reviewed" ? "Admin reviewed" : "Merchant confirmed" : "Not confirmed"}</p>
-          <p className="mt-0.5 text-[11px] text-slate-500">A complete location requires city, state, six-digit pincode, and a valid business category.</p>
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Location Confirmation</p>
+          <p className="mt-0.5 text-xs font-bold text-slate-900">{verifiedAt ? (verificationSource === "admin_reviewed" ? "Admin reviewed" : "Merchant confirmed") : "Auto-synced with profile"}</p>
+          <p className="mt-0.5 text-[11px] text-slate-500">Auto-synced from your verified Business Information details.</p>
         </div>
       </div>
 
-      <form action={action} className="mt-4 grid gap-3 sm:grid-cols-2">
-        <p className="text-[11px] leading-relaxed text-slate-500 sm:col-span-2">
-          Your registered address and GPS coordinates stay unchanged. Enter only location details you can confirm; we never infer them from your address.
-        </p>
-        <label className="text-xs font-semibold text-slate-800">
-          Locality <span className="font-normal text-slate-500">(Optional)</span>
-          <input className={inputClass} name="locality" defaultValue={locality ?? ""} maxLength={160} autoComplete="address-level3" />
-        </label>
-        <label className="text-xs font-semibold text-slate-800">
-          City <span className="text-rose-700">*</span>
-          <input className={inputClass} name="city" defaultValue={city ?? ""} maxLength={160} required autoComplete="address-level2" />
-        </label>
-        <label className="text-xs font-semibold text-slate-800">
-          District <span className="font-normal text-slate-500">(Optional)</span>
-          <input className={inputClass} name="district" defaultValue={district ?? ""} maxLength={160} />
-        </label>
-        <label className="text-xs font-semibold text-slate-800">
-          State <span className="text-rose-700">*</span>
-          <input className={inputClass} name="state" defaultValue={state ?? ""} maxLength={100} required autoComplete="address-level1" />
-        </label>
-        <label className="text-xs font-semibold text-slate-800">
-          Pincode <span className="font-normal text-slate-500">(Optional while completing)</span>
-          <input className={inputClass} name="pincode" defaultValue={pincode ?? ""} maxLength={6} inputMode="numeric" autoComplete="postal-code" pattern="[0-9]{6}" title="Leave blank or enter a 6-digit pincode" />
-        </label>
-        <p className="self-center text-[11px] leading-relaxed text-slate-500">
-          A six-digit pincode is needed for a Complete status and public city listing. You may save confirmed city/state now and add the pincode later.
-        </p>
+      <div className="mt-3 rounded-lg bg-orange-50/60 border border-orange-200/60 p-2.5 text-[11px] text-orange-950 flex items-center gap-2">
+        <span className="material-symbols-outlined text-orange-700 text-sm shrink-0">verified</span>
+        <span>Verified Discovery Status: Yeh details upar Business Information se automatically fetch hoti hain aur yeh card direct editable nahi hai.</span>
+      </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 sm:col-span-2">
-          <LocationCapture
-            latitude={latitude}
-            longitude={longitude}
-            capturedAt={capturedAt}
-            onLocationResolved={(loc) => {
-              const localityInput = document.querySelector('input[name="locality"]') as HTMLInputElement | null;
-              const cityInput = document.querySelector('input[name="city"]') as HTMLInputElement | null;
-              const districtInput = document.querySelector('input[name="district"]') as HTMLInputElement | null;
-              const stateInput = document.querySelector('input[name="state"]') as HTMLInputElement | null;
-              const pincodeInput = document.querySelector('input[name="pincode"]') as HTMLInputElement | null;
+      <div className="hidden" aria-hidden="true">
+        <form action={action} className="mt-4 grid gap-3 sm:grid-cols-2">
+          <p className="text-[11px] leading-relaxed text-slate-500 sm:col-span-2">
+            Your registered address and GPS coordinates stay unchanged. Enter only location details you can confirm; we never infer them from your address.
+          </p>
+          <label className="text-xs font-semibold text-slate-800">
+            Locality <span className="font-normal text-slate-500">(Optional)</span>
+            <input className={inputClass} name="locality" defaultValue={locality ?? ""} maxLength={160} autoComplete="address-level3" />
+          </label>
+          <label className="text-xs font-semibold text-slate-800">
+            City <span className="text-rose-700">*</span>
+            <input className={inputClass} name="city" defaultValue={city ?? ""} maxLength={160} required autoComplete="address-level2" />
+          </label>
+          <label className="text-xs font-semibold text-slate-800">
+            District <span className="font-normal text-slate-500">(Optional)</span>
+            <input className={inputClass} name="district" defaultValue={district ?? ""} maxLength={160} />
+          </label>
+          <label className="text-xs font-semibold text-slate-800">
+            State <span className="text-rose-700">*</span>
+            <input className={inputClass} name="state" defaultValue={state ?? ""} maxLength={100} required autoComplete="address-level1" />
+          </label>
+          <label className="text-xs font-semibold text-slate-800">
+            Pincode <span className="font-normal text-slate-500">(Optional while completing)</span>
+            <input className={inputClass} name="pincode" defaultValue={pincode ?? ""} maxLength={6} inputMode="numeric" autoComplete="postal-code" pattern="[0-9]{6}" title="Leave blank or enter a 6-digit pincode" />
+          </label>
+          <p className="self-center text-[11px] leading-relaxed text-slate-500">
+            A six-digit pincode is needed for a Complete status and public city listing. You may save confirmed city/state now and add the pincode later.
+          </p>
 
-              if (localityInput && loc.locality && !localityInput.value) localityInput.value = loc.locality;
-              if (cityInput && loc.city && (!cityInput.value || cityInput.value === "Not set")) cityInput.value = loc.city;
-              if (districtInput && loc.district && !districtInput.value) districtInput.value = loc.district;
-              if (stateInput && loc.state && !stateInput.value) stateInput.value = loc.state;
-              if (pincodeInput && loc.pincode && !pincodeInput.value) pincodeInput.value = loc.pincode;
-            }}
-          />
-        </div>
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 sm:col-span-2">
+            <LocationCapture
+              latitude={latitude}
+              longitude={longitude}
+              capturedAt={capturedAt}
+              onLocationResolved={(loc) => {
+                const localityInput = document.querySelector('input[name="locality"]') as HTMLInputElement | null;
+                const cityInput = document.querySelector('input[name="city"]') as HTMLInputElement | null;
+                const districtInput = document.querySelector('input[name="district"]') as HTMLInputElement | null;
+                const stateInput = document.querySelector('input[name="state"]') as HTMLInputElement | null;
+                const pincodeInput = document.querySelector('input[name="pincode"]') as HTMLInputElement | null;
 
-        <div className="flex flex-wrap items-center gap-2.5 sm:col-span-2 pt-1">
-          <button type="submit" disabled={pending} className="min-h-9 rounded-lg bg-[#a64c05] px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#873d03] disabled:opacity-60 transition">
-            {pending ? "Saving…" : verifiedAt && verificationSource === "merchant_attested" ? "Save Location" : "Confirm Location"}
-          </button>
-          {result.message && (
-            <p role={result.ok ? "status" : "alert"} aria-live="polite" className={`text-xs ${result.ok ? "text-emerald-700" : "text-rose-700"}`}>
-              {result.message}
-            </p>
-          )}
-        </div>
-      </form>
+                if (localityInput && loc.locality && !localityInput.value) localityInput.value = loc.locality;
+                if (cityInput && loc.city && (!cityInput.value || cityInput.value === "Not set")) cityInput.value = loc.city;
+                if (districtInput && loc.district && !districtInput.value) districtInput.value = loc.district;
+                if (stateInput && loc.state && !stateInput.value) stateInput.value = loc.state;
+                if (pincodeInput && loc.pincode && !pincodeInput.value) pincodeInput.value = loc.pincode;
+              }}
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 sm:col-span-2 pt-1">
+            <button type="submit" disabled={pending} className="min-h-9 rounded-lg bg-[#a64c05] px-4 py-2 text-xs font-bold text-white shadow-2xs hover:bg-[#873d03] disabled:opacity-60 transition">
+              {pending ? "Saving…" : verifiedAt && verificationSource === "merchant_attested" ? "Save Location" : "Confirm Location"}
+            </button>
+            {result.message && (
+              <p role={result.ok ? "status" : "alert"} aria-live="polite" className={`text-xs ${result.ok ? "text-emerald-700" : "text-rose-700"}`}>
+                {result.message}
+              </p>
+            )}
+          </div>
+        </form>
+      </div>
     </section>
   );
 }

@@ -430,85 +430,86 @@ export default function BusinessProfileForm({
                 </div>
               )}
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                Business Logo &amp; Branding
-                {currentLogoUrl && (
-                  <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                    Active
-                  </span>
-                )}
-              </h3>
 
-              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-700">
-                <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
-                  <span>📐</span> <strong>500 × 500 px</strong> (Square 1:1)
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
-                  <span>📁</span> <strong>PNG (Transparent) / JPG</strong>
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
-                  <span>⚖️</span> <strong>Max 2 MB</strong>
-                </span>
-              </div>
-
-              <p className="mt-1.5 text-[11px] text-slate-500">
-                Yeh standard size aapke <strong>Merchant Profile Icon</strong> aur sabhi <strong>WhatsApp Greeting Cards / Posters</strong> par bina kate ekdum sharp aur perfect fit hoga.
-              </p>
-
-              {logoMsg && (
-                <p className={`mt-1.5 text-xs font-semibold ${logoMsg.error ? "text-rose-600" : "text-emerald-700"}`}>
-                  {logoMsg.text}
+            {!isEditUnlocked ? (
+              <div>
+                <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                  <span>{name}</span>
+                  {currentLogoUrl && (
+                    <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                      Active
+                    </span>
+                  )}
+                </h3>
+                <p className="mt-0.5 text-xs font-medium text-slate-500">
+                  {type || "Business"} · Verified Merchant Store Profile
                 </p>
-              )}
-            </div>
+              </div>
+            ) : (
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  Business Logo &amp; Branding
+                  {currentLogoUrl && (
+                    <span className="rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                      Active
+                    </span>
+                  )}
+                </h3>
+
+                <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-slate-700">
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
+                    <span>📐</span> <strong>500 × 500 px</strong> (Square 1:1)
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
+                    <span>📁</span> <strong>PNG (Transparent) / JPG</strong>
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 shadow-2xs">
+                    <span>⚖️</span> <strong>Max 2 MB</strong>
+                  </span>
+                </div>
+
+                <p className="mt-1.5 text-[11px] text-slate-500">
+                  Yeh standard size aapke <strong>Merchant Profile Icon</strong> aur sabhi <strong>WhatsApp Greeting Cards / Posters</strong> par bina kate ekdum sharp aur perfect fit hoga.
+                </p>
+
+                {logoMsg && (
+                  <p className={`mt-1.5 text-xs font-semibold ${logoMsg.error ? "text-rose-600" : "text-emerald-700"}`}>
+                    {logoMsg.text}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-center">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/jpg,image/webp"
-              onChange={handleLogoUpload}
-              className="hidden"
-            />
-            <button
-              type="button"
-              disabled={logoUploading}
-              onClick={() => {
-                if (!isEditUnlocked) {
-                  setShowEditAuthModal(true);
-                  setEditAuthSent(false);
-                  setEditAuthOtp("");
-                  setEditAuthMsg({ text: "Logo update karne ke liye pehle OTP verification karke edit unlock kijiye.", error: false });
-                  return;
-                }
-                fileInputRef.current?.click();
-              }}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 cursor-pointer"
-            >
-              {logoUploading ? "Uploading..." : currentLogoUrl ? "Change Logo" : "Upload Logo (PNG/JPG)"}
-            </button>
-            {currentLogoUrl && (
+          {isEditUnlocked && (
+            <div className="flex items-center gap-2 self-start sm:self-center">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+                onChange={handleLogoUpload}
+                className="hidden"
+              />
               <button
                 type="button"
                 disabled={logoUploading}
-                onClick={() => {
-                  if (!isEditUnlocked) {
-                    setShowEditAuthModal(true);
-                    setEditAuthSent(false);
-                    setEditAuthOtp("");
-                    setEditAuthMsg({ text: "Logo remove karne ke liye pehle OTP verification karke edit unlock kijiye.", error: false });
-                    return;
-                  }
-                  handleLogoRemove();
-                }}
-                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+                className="inline-flex min-h-10 items-center justify-center rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 cursor-pointer"
               >
-                Remove
+                {logoUploading ? "Uploading..." : currentLogoUrl ? "Change Logo" : "Upload Logo (PNG/JPG)"}
               </button>
-            )}
-          </div>
+              {currentLogoUrl && (
+                <button
+                  type="button"
+                  disabled={logoUploading}
+                  onClick={handleLogoRemove}
+                  className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -542,31 +543,9 @@ export default function BusinessProfileForm({
 
             {/* Registered Mobile */}
             <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
-                  Registered Mobile
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isEditUnlocked) {
-                      setShowEditAuthModal(true);
-                      setEditAuthSent(false);
-                      setEditAuthOtp("");
-                      setEditAuthMsg({ text: "Mobile change karne ke liye pehle OTP verification karke edit unlock kijiye.", error: false });
-                      return;
-                    }
-                    setShowMobileModal(true);
-                    setNewMobile("");
-                    setMobileOtp("");
-                    setMobileOtpSent(false);
-                    setMobileModalMsg(null);
-                  }}
-                  className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
-                >
-                  Change Mobile →
-                </button>
-              </div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+                Registered Mobile
+              </span>
               <div className="mt-1.5 flex items-center gap-2">
                 <p className="text-sm font-bold text-slate-900 font-mono">
                   +91 {currentPhone ? currentPhone.replace(/\D/g, "").slice(-10) : "—"}
@@ -581,31 +560,9 @@ export default function BusinessProfileForm({
 
             {/* Email ID */}
             <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
-                  Email ID
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!isEditUnlocked) {
-                      setShowEditAuthModal(true);
-                      setEditAuthSent(false);
-                      setEditAuthOtp("");
-                      setEditAuthMsg({ text: "Email change karne ke liye pehle OTP verification karke edit unlock kijiye.", error: false });
-                      return;
-                    }
-                    setShowEmailModal(true);
-                    setNewEmail(currentEmail || "");
-                    setEmailOtp("");
-                    setEmailOtpSent(false);
-                    setEmailModalMsg(null);
-                  }}
-                  className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
-                >
-                  {currentEmail ? (isEmailVerified ? "Change Email →" : "Verify Email →") : "Add Email →"}
-                </button>
-              </div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+                Email ID
+              </span>
               <div className="mt-1.5 flex items-center gap-2">
                 <p className="text-sm font-bold text-slate-900 truncate">
                   {currentEmail || "Not provided"}
@@ -940,7 +897,7 @@ export default function BusinessProfileForm({
               </div>
 
               <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 sm:col-span-2">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Live GPS Location</span>
                   {currentLat !== null && currentLon !== null && (
                     <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 rounded-full px-2 py-0.5">
@@ -948,20 +905,24 @@ export default function BusinessProfileForm({
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs font-mono font-bold text-slate-900">
-                  {currentLat !== null && currentLon !== null ? `${currentLat}, ${currentLon}` : "GPS coordinates not captured yet"}
-                </p>
-                {currentCapturedAt && (
-                  <p className="mt-0.5 text-[10px] text-slate-500">
-                    Captured: {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" }).format(new Date(currentCapturedAt))}
-                  </p>
-                )}
+                <LocationCapture
+                  latitude={currentLat}
+                  longitude={currentLon}
+                  capturedAt={currentCapturedAt}
+                  onLocationResolved={(loc) => {
+                    if (loc.locality && !localityVal) setLocalityVal(loc.locality);
+                    if (loc.city && (!cityVal || cityVal === "Not set")) setCityVal(loc.city);
+                    if (loc.district && !districtVal) setDistrictVal(loc.district);
+                    if (loc.state && !stateVal) setStateVal(loc.state);
+                    if (loc.pincode && !pincodeVal) setPincodeVal(loc.pincode);
+                  }}
+                />
               </div>
             </div>
 
             <div className="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
               <span className="material-symbols-outlined text-amber-600 text-base shrink-0">lock</span>
-              <span>Yeh popup sirf dekhne ke liye hai. Locality ya GPS change karne ke liye pehle <strong>Edit Details</strong> se OTP verify karke unlock kijiye.</span>
+              <span>Address fields ko update karne ke liye <strong>Edit Locality Details</strong> se OTP verify karke unlock kijiye.</span>
             </div>
 
             <div className="mt-4 flex items-center justify-end gap-2">
