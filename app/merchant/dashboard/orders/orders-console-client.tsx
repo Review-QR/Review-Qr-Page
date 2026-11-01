@@ -36,6 +36,24 @@ function sanitizeCustomerNote(note?: string | null): string | null {
     .trim();
 }
 
+function formatOrderDateTime(isoString: string) {
+  const d = new Date(isoString);
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).getTime();
+  const timeStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  const orderTime = d.getTime();
+  if (orderTime >= startOfToday) {
+    return { badge: "Today", time: timeStr, isToday: true, isYesterday: false };
+  } else if (orderTime >= startOfYesterday && orderTime < startOfToday) {
+    return { badge: "Yesterday", time: timeStr, isToday: false, isYesterday: true };
+  } else {
+    const dateStr = d.toLocaleDateString("en-IN", { day: "2-digit", month: "short" });
+    return { badge: dateStr, time: timeStr, isToday: false, isYesterday: false };
+  }
+}
+
 function getKitchenPrepCountdown(order: HyperlocalOrder, currentTime: number) {
   const prepMins = order.merchant_prep_time_minutes || 20;
   const startTime = new Date(order.accepted_at || order.updated_at || order.created_at).getTime();
@@ -69,26 +87,38 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
     (o) => o.payment_status === "paid" || o.payment_mode === "cod"
   );
 
-  // 4 Date Filters: Today, This Week, This Month, All Orders
-  const [dateFilter, setDateFilter] = useState<"today" | "week" | "month" | "all">("today");
+  // 5 Date Filters: Today, Yesterday, This Week, This Month, All Orders
+  const [dateFilter, setDateFilter] = useState<"today" | "yesterday" | "week" | "month" | "all">("today");
 
   const now = new Date();
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - ((now.getDay() + 6) % 7)).getTime();
+  const startOfYesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1).getTime();
+  const dayOfWeek = (now.getDay() + 6) % 7; // Monday = 0
+  const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek).getTime();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+  const todayCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfToday).length;
+  const yesterdayCount = confirmedOrders.filter((o) => {
+    const t = new Date(o.created_at).getTime();
+    return t >= startOfYesterday && t < startOfToday;
+  }).length;
+  const weekCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfWeek).length;
+  const monthCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfMonth).length;
 
   const filteredOrders = confirmedOrders.filter((order) => {
     if (dateFilter === "all") return true;
     const orderTime = new Date(order.created_at).getTime();
     if (dateFilter === "today") return orderTime >= startOfToday;
+    if (dateFilter === "yesterday") return orderTime >= startOfYesterday && orderTime < startOfToday;
     if (dateFilter === "week") return orderTime >= startOfWeek;
     if (dateFilter === "month") return orderTime >= startOfMonth;
     return true;
   });
 
-  const todayCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfToday).length;
-  const weekCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfWeek).length;
-  const monthCount = confirmedOrders.filter((o) => new Date(o.created_at).getTime() >= startOfMonth).length;
+  // Strict reverse-chronological order: newest orders at the top, then older
+  const sortedOrders = [...filteredOrders].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 
   // Walk-in token state (Salon / Car Wash)
   const [customerName, setCustomerName] = useState("");
@@ -277,6 +307,22 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
     }
   }
 
+  async function handleRejectOrder(orderId: string, reason = "Declined by restaurant") {
+    setIsSubmitting(true);
+    try {
+      await fetch(`/api/hyperlocal/orders`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action: "reject", orderId, reason }),
+      }).catch(() => {});
+
+      setActionSuccess("Order declined and marked cancelled.");
+      refreshData();
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   async function handleBookWalkinToken() {
     if (!customerName.trim() || !customerPhone.trim()) return;
     setIsSubmitting(true);
@@ -383,7 +429,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
       {/* ADAPTIVE VIEW 1: RESTAURANT & FOOD MODE */}
       {!isSalon && !isCarWash && (
         <div className="space-y-3">
-          {/* 4 DATE FILTERS BAR */}
+          {/* 5 DATE FILTERS BAR: Today, Yesterday, This Week, This Month, All Orders */}
           <div className="flex flex-wrap items-center justify-between gap-2.5 pb-1">
             <div className="inline-flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200">
               <button
@@ -396,6 +442,17 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                 }`}
               >
                 Today ({todayCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setDateFilter("yesterday")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
+                  dateFilter === "yesterday"
+                    ? "bg-white text-slate-950 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Yesterday ({yesterdayCount})
               </button>
               <button
                 type="button"
@@ -433,16 +490,18 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
             </div>
 
             <span className="text-[11px] text-slate-500 font-medium">
-              Showing <strong>{filteredOrders.length}</strong> orders
+              Showing <strong>{sortedOrders.length}</strong> orders (Reverse Chronological)
             </span>
           </div>
 
-          {filteredOrders.length === 0 ? (
+          {sortedOrders.length === 0 ? (
             <div className="bg-white p-8 rounded-2xl border border-slate-200 text-center space-y-1.5">
               <span className="text-3xl block">🔔</span>
               <h3 className="text-sm font-bold text-slate-900">
                 {dateFilter === "today"
                   ? "No orders received today yet."
+                  : dateFilter === "yesterday"
+                  ? "No orders found for yesterday."
                   : `No orders found for ${dateFilter === "week" ? "this week" : dateFilter === "month" ? "this month" : "all"}.`}
               </h3>
               <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -451,9 +510,10 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
             </div>
           ) : (
             <div className="space-y-1.5">
-              {filteredOrders.map((order) => {
+              {sortedOrders.map((order) => {
                 const isNewPlaced = order.status === "placed";
                 const isAccepted = order.status === "accepted_by_merchant" || order.status === "preparing";
+                const dt = formatOrderDateTime(order.created_at);
 
                 return (
                   <div
@@ -461,17 +521,26 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                     className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl border transition-all ${
                       isNewPlaced
                         ? "bg-amber-50/70 border-amber-300 ring-1 ring-amber-400"
+                        : order.status === "cancelled" || order.status === "rejected"
+                        ? "bg-rose-50/30 border-rose-200 opacity-85 hover:opacity-100"
                         : "bg-white border-slate-200 hover:border-slate-300"
                     }`}
                   >
-                    {/* 1. Code & Time */}
-                    <div className="flex items-center gap-2 min-w-[130px] shrink-0">
-                      <span className="font-mono font-bold text-xs text-slate-950 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200">
+                    {/* 1. Code & Exact Date / Time */}
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 min-w-[170px] shrink-0">
+                      <span className="font-mono font-bold text-xs text-slate-950 bg-slate-100 px-2 py-0.5 rounded-lg border border-slate-200 shrink-0">
                         {formatUnifiedOrderCode(order.id, business.name)}
                       </span>
-                      <span className="text-[11px] text-slate-500 font-medium">
-                        {new Date(order.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </span>
+                      <div className="flex items-center gap-1 text-[11px] text-slate-600 font-medium">
+                        <span className={`px-1.5 py-0.2 rounded font-bold text-[10px] ${
+                          dt.isToday ? "bg-emerald-50 text-emerald-800 border border-emerald-200" :
+                          dt.isYesterday ? "bg-amber-50 text-amber-800 border border-amber-200" :
+                          "bg-slate-100 text-slate-700"
+                        }`}>
+                          {dt.badge}
+                        </span>
+                        <span className="font-mono text-slate-500">{dt.time}</span>
+                      </div>
                     </div>
 
                     {/* 2. Items / Ingredients */}
@@ -489,12 +558,33 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                       <span className="text-xs font-extrabold text-slate-950 font-mono">₹{order.total_amount}</span>
                     </div>
 
-                    {/* 4. Status Badge */}
-                    <div className="shrink-0 min-w-[100px]">
-                      {order.status === "cancelled" ? (
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                          Cancelled
-                        </span>
+                    {/* 4. Status Badge with Clear Cancellation Reason */}
+                    <div className="shrink-0 min-w-[130px]">
+                      {order.status === "cancelled" || order.status === "rejected" ? (
+                        <div className="flex flex-col items-start gap-0.5">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            <span>✕</span>
+                            <span>
+                              {order.cancelled_by === "customer"
+                                ? "Cancelled by Customer"
+                                : order.cancelled_by === "rider"
+                                ? "Cancelled by Rider"
+                                : order.cancelled_by === "merchant" || order.status === "rejected"
+                                ? "Cancelled by Restaurant"
+                                : order.dispute_status === "customer_refused"
+                                ? "Customer Refused at Doorstep"
+                                : "Cancelled"}
+                            </span>
+                          </span>
+                          {(order.cancellation_reason || order.dispute_notes || order.admin_notes) && (
+                            <span
+                              className="text-[10px] text-rose-700 italic font-medium max-w-[210px] truncate"
+                              title={order.cancellation_reason || order.dispute_notes || order.admin_notes || ""}
+                            >
+                              Reason: {order.cancellation_reason || order.dispute_notes || order.admin_notes}
+                            </span>
+                          )}
+                        </div>
                       ) : isNewPlaced ? (
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white animate-pulse">
                           New Order
@@ -518,7 +608,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                       )}
                     </div>
 
-                    {/* 5. Print KOT & Action Button */}
+                    {/* 5. Print KOT & Action Buttons */}
                     <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         type="button"
@@ -531,14 +621,30 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                       </button>
 
                       {isNewPlaced && (
-                        <button
-                          type="button"
-                          disabled={isSubmitting}
-                          onClick={() => handleAcceptOrder(order.id)}
-                          className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer"
-                        >
-                          Accept
-                        </button>
+                        <div className="flex items-center gap-1">
+                          <button
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={() => handleAcceptOrder(order.id)}
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer shadow-2xs"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            type="button"
+                            disabled={isSubmitting}
+                            onClick={() => {
+                              const reason = window.prompt("Reason for declining order (optional):", "Items out of stock");
+                              if (reason !== null) {
+                                handleRejectOrder(order.id, reason || "Declined by restaurant");
+                              }
+                            }}
+                            className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold rounded-lg transition disabled:opacity-50 cursor-pointer"
+                            title="Decline order"
+                          >
+                            Decline
+                          </button>
+                        </div>
                       )}
 
                       {isAccepted && (
@@ -769,6 +875,22 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
 
               <button
                 type="button"
+                disabled={isSubmitting}
+                onClick={async () => {
+                  const targetId = incomingOrderModal.id;
+                  const reason = window.prompt("Reason for declining order (optional):", "Items out of stock");
+                  if (reason !== null) {
+                    setIncomingOrderModal(null);
+                    await handleRejectOrder(targetId, reason || "Declined by restaurant");
+                  }
+                }}
+                className="py-3 px-3.5 rounded-xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition cursor-pointer"
+              >
+                ✕ Decline
+              </button>
+
+              <button
+                type="button"
                 onClick={() => {
                   setDismissedOrderIds((prev) => [...prev, incomingOrderModal.id]);
                   setIncomingOrderModal(null);
@@ -794,6 +916,19 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
                 <span>{new Date(kotOrderModal.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
               </div>
             </div>
+
+            {/* Cancellation Notice in KOT */}
+            {(kotOrderModal.status === "cancelled" || kotOrderModal.status === "rejected") && (
+              <div className="p-2 rounded-xl bg-rose-50 border border-rose-200 text-[10px] text-rose-800 space-y-0.5">
+                <p className="font-bold">
+                  🔴 Order Cancelled
+                  {kotOrderModal.cancelled_by ? ` (by ${kotOrderModal.cancelled_by})` : ""}
+                </p>
+                {(kotOrderModal.cancellation_reason || kotOrderModal.dispute_notes) && (
+                  <p className="italic">Reason: {kotOrderModal.cancellation_reason || kotOrderModal.dispute_notes}</p>
+                )}
+              </div>
+            )}
 
             {/* Items with Variants & Notes */}
             <div className="space-y-2 border-b-2 border-dashed border-slate-300 pb-2.5">

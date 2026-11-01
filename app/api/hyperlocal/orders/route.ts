@@ -57,6 +57,7 @@ export async function PUT(request: Request) {
         .from("hyperlocal_orders")
         .update({
           status: "rejected",
+          cancelled_by: "merchant",
           cancellation_reason: reason || "Declined by restaurant",
           updated_at: now,
         })
