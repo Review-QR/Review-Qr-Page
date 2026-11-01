@@ -383,7 +383,8 @@ export default function MenuManager({
         <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-2xs divide-y divide-slate-100">
           {/* Optional Table Header on Desktop */}
           <div className="hidden sm:grid sm:grid-cols-12 gap-3 bg-slate-50/80 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200/80">
-            <div className="col-span-5 flex items-center gap-2">Item &amp; Description</div>
+            <div className="col-span-1 text-center">Image</div>
+            <div className="col-span-4 flex items-center gap-2">Item &amp; Description</div>
             <div className="col-span-2 text-center">Portion / Unit</div>
             <div className="col-span-2 text-right">Price (₹)</div>
             <div className="col-span-2 text-center">Stock Status</div>
@@ -399,8 +400,31 @@ export default function MenuManager({
                   !item.isAvailable ? "bg-slate-50/40 opacity-75 hover:opacity-100" : ""
                 }`}
               >
-                {/* Col 1: Veg/Non-Veg + Name + Category + Description (Col-span 5) */}
-                <div className="sm:col-span-5 flex items-start gap-2.5 min-w-0 w-full">
+                {/* Col 0: Image Box (Col-span 1) */}
+                <div className="sm:col-span-1 flex items-center justify-start sm:justify-center shrink-0">
+                  {item.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      onClick={() => openEditModal(item)}
+                      className="size-11 sm:size-12 rounded-xl object-cover border border-slate-200 bg-slate-100 shadow-2xs cursor-pointer hover:opacity-90 transition"
+                      title="Click to view/edit photo"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(item)}
+                      className="grid size-11 sm:size-12 place-items-center rounded-xl border border-dashed border-slate-300 bg-slate-50 text-slate-400 hover:border-blue-400 hover:text-blue-600 hover:bg-blue-50/50 cursor-pointer transition shadow-2xs"
+                      title="Add photo"
+                    >
+                      <span className="text-base">📸</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Col 1: Veg/Non-Veg + Name + Category + Description (Col-span 4) */}
+                <div className="sm:col-span-4 flex items-start gap-2.5 min-w-0 w-full">
                   <div className="mt-0.5 shrink-0">
                     {item.itemType === "veg" && (
                       <span className="grid size-4 place-items-center rounded border border-emerald-600 bg-emerald-50/60 p-0.5" title="Pure Veg">
@@ -447,7 +471,7 @@ export default function MenuManager({
                 {/* Col 2: Portion / Unit (Col-span 2) */}
                 <div className="sm:col-span-2 text-left sm:text-center shrink-0">
                   <span className="inline-block rounded-md border border-slate-200 bg-white px-2 py-0.5 text-xs font-medium text-slate-700">
-                    {item.unit || "Standard / 1 Pc"}
+                    {item.unit || "Standard / 1 Piece"}
                   </span>
                 </div>
 
@@ -616,13 +640,13 @@ export default function MenuManager({
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. 1 Kg, Full, 1 Pc..."
+                    placeholder="e.g. 1 Kg, Full, 1 Piece..."
                     value={formUnit}
                     onChange={(e) => setFormUnit(e.target.value)}
                     className="mt-1 w-full rounded-xl border border-slate-300 px-3.5 py-2 text-sm text-slate-900 focus:border-blue-600 focus:outline-none"
                   />
                   <div className="mt-1.5 flex flex-wrap gap-1">
-                    {["1 Pc", "Standard", "Half", "Full", "Per Plate", "1 Kg", "500 ml"].map((preset) => (
+                    {["1 Piece", "Standard", "Half", "Full", "Per Plate", "1 Kg", "500 ml"].map((preset) => (
                       <button
                         key={preset}
                         type="button"

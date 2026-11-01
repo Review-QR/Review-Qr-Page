@@ -141,6 +141,7 @@ export const TEMPLATE_MESSAGES: Record<
 export default function OccasionStudio({
   businessName,
   businessType = null,
+  merchantPhone,
   logoUrl,
   initialDrafts = [],
   dailyDispatchTime = "09:00",
@@ -148,6 +149,7 @@ export default function OccasionStudio({
 }: {
   businessName: string;
   businessType?: string | null;
+  merchantPhone?: string;
   logoUrl: string | null;
   initialDrafts?: OccasionDraft[];
   dailyDispatchTime?: string;
@@ -324,8 +326,14 @@ export default function OccasionStudio({
   // Canvas and WhatsApp Test Dispatch
   const testCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const logoImgRef = useRef<HTMLImageElement | null>(null);
-  const [testPhone, setTestPhone] = useState("7388184925");
+  const [testPhone, setTestPhone] = useState(merchantPhone || "7388184925");
   const [testNotice, setTestNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (merchantPhone) {
+      setTestPhone(merchantPhone);
+    }
+  }, [merchantPhone]);
 
   useEffect(() => {
     if (logoUrl) {
@@ -439,62 +447,62 @@ export default function OccasionStudio({
         </div>
       </div>
 
-      {/* Occasion Types Tab Bar (4 Categories) */}
+      {/* Occasion Types Tab Bar (4 Categories - Compact & Rounded) */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <button
           type="button"
           onClick={() => handleOccasionSwitch("birthday")}
-          className={`flex items-center justify-center gap-2 rounded-2xl border p-3.5 text-xs font-bold transition ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs ${
             occasionType === "birthday"
-              ? "border-orange-500 bg-orange-600 text-white shadow-md"
+              ? "border-orange-500 bg-orange-600 text-white shadow-xs"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <span className="text-base">🎂</span>
+          <span className="text-sm">🎂</span>
           <span>Birthday (Auto)</span>
-          {draftsMap.birthday && <span className="h-2 w-2 rounded-full bg-emerald-300" />}
+          {draftsMap.birthday && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
         </button>
 
         <button
           type="button"
           onClick={() => handleOccasionSwitch("anniversary")}
-          className={`flex items-center justify-center gap-2 rounded-2xl border p-3.5 text-xs font-bold transition ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs ${
             occasionType === "anniversary"
-              ? "border-rose-500 bg-rose-600 text-white shadow-md"
+              ? "border-rose-500 bg-rose-600 text-white shadow-xs"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <span className="text-base">💍</span>
+          <span className="text-sm">💍</span>
           <span>Anniversary (Auto)</span>
-          {draftsMap.anniversary && <span className="h-2 w-2 rounded-full bg-emerald-300" />}
+          {draftsMap.anniversary && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
         </button>
 
         <button
           type="button"
           onClick={() => handleOccasionSwitch("festival")}
-          className={`flex items-center justify-center gap-2 rounded-2xl border p-3.5 text-xs font-bold transition ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs ${
             occasionType === "festival"
-              ? "border-indigo-500 bg-indigo-600 text-white shadow-md"
+              ? "border-indigo-500 bg-indigo-600 text-white shadow-xs"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <span className="text-base">🪔</span>
+          <span className="text-sm">🪔</span>
           <span>Festivals (Manual)</span>
-          {draftsMap.festival && <span className="h-2 w-2 rounded-full bg-emerald-300" />}
+          {draftsMap.festival && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
         </button>
 
         <button
           type="button"
           onClick={() => handleOccasionSwitch("offer")}
-          className={`flex items-center justify-center gap-2 rounded-2xl border p-3.5 text-xs font-bold transition ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs ${
             occasionType === "offer"
-              ? "border-emerald-500 bg-emerald-600 text-white shadow-md"
+              ? "border-emerald-500 bg-emerald-600 text-white shadow-xs"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <span className="text-base">🔥</span>
-          <span>Today&apos;s Special (Manual)</span>
-          {draftsMap.offer && <span className="h-2 w-2 rounded-full bg-emerald-300" />}
+          <span className="text-sm">🔥</span>
+          <span>Today&apos;s Special</span>
+          {draftsMap.offer && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
         </button>
       </div>
 
@@ -727,23 +735,23 @@ export default function OccasionStudio({
               </div>
             </div>
 
-            {/* Interactive Real Test on WhatsApp Panel */}
+            {/* Interactive Real Test on WhatsApp Panel via Cloud API */}
             <div className="mt-4 rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-emerald-950/70 to-slate-900 p-4 text-left shadow-lg">
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-300">
-                  <span>📱</span> Real Test on WhatsApp
+                  <span>📱</span> Fast2SMS Official WhatsApp Cloud API Test
                 </span>
                 <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
-                  Instant Test
+                  Cloud API
                 </span>
               </div>
               <p className="mt-1 text-[11px] text-slate-300">
-                Apne phone par abhi card poster aur WhatsApp message bhej kar check karein:
+                Type mobile number to receive live WhatsApp greeting &amp; coupon via official Cloud API:
               </p>
 
-              <div className="mt-3 flex items-center gap-2">
+              <div className="mt-3 flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
-                  <span className="absolute left-3 top-2 text-xs text-emerald-400 font-bold">+91</span>
+                  <span className="absolute left-3 top-2.5 text-xs text-emerald-400 font-bold">+91</span>
                   <input
                     type="tel"
                     value={testPhone}
@@ -755,24 +763,12 @@ export default function OccasionStudio({
                 </div>
                 <button
                   type="button"
-                  onClick={handleSendWhatsAppTest}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-teal-700 active:scale-95 transition"
-                >
-                  <span>🚀</span>
-                  <span>Open WhatsApp</span>
-                </button>
-              </div>
-
-              {/* Fast2SMS Official Cloud API Direct Test */}
-              <div className="mt-2 flex items-center gap-2">
-                <button
-                  type="button"
                   disabled={testingFast2Sms}
                   onClick={handleSendFast2SmsApiTest}
-                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-950/70 hover:bg-emerald-900/80 px-3 py-2 text-xs font-bold text-emerald-300 transition disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-teal-700 active:scale-95 transition disabled:opacity-50"
                 >
                   <span>⚡</span>
-                  <span>{testingFast2Sms ? "Calling Fast2SMS Gateway..." : "Test via Fast2SMS Official Cloud API"}</span>
+                  <span>{testingFast2Sms ? "Dispatching API..." : "Send Test to WhatsApp"}</span>
                 </button>
               </div>
 
@@ -785,7 +781,7 @@ export default function OccasionStudio({
                   <span>⬇️</span> Download HD Card Poster
                 </button>
                 <span className="text-[10px] text-slate-400">
-                  Zero setup • Opens WhatsApp directly
+                  Dispatched via WhatsApp Cloud API
                 </span>
               </div>
 
@@ -875,64 +871,14 @@ export default function OccasionStudio({
                   className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 shadow-sm"
                 />
 
-                {/* Repositioned Language Selector: Directly Below Wishing Box */}
-                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-slate-50/90 p-2.5 shadow-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-700 flex items-center gap-1">
-                      <span>🌐</span> Language :-
-                    </span>
-                    <select
-                      value={selectedLang}
-                      onChange={(e) => handleLanguageSwitch(e.target.value as LanguageMode)}
-                      className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 cursor-pointer shadow-xs"
-                    >
-                      <option value="english">🇬🇧 English</option>
-                      <option value="hinglish">🇮🇳 Hinglish (Phonetic)</option>
-                      <option value="hindi">🪔 Pure Hindi (हिंदी)</option>
-                    </select>
-                  </div>
-
-                  {/* 1-Click Quick Language Switch Pills */}
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => handleLanguageSwitch("english")}
-                      className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition ${
-                        selectedLang === "english"
-                          ? "bg-orange-500 text-white shadow-xs"
-                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span>🇬🇧</span>
-                      <span>English</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleLanguageSwitch("hinglish")}
-                      className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition ${
-                        selectedLang === "hinglish"
-                          ? "bg-orange-500 text-white shadow-xs"
-                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span>🇮🇳</span>
-                      <span>Hinglish</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleLanguageSwitch("hindi")}
-                      className={`flex items-center gap-1 rounded-xl px-2.5 py-1 text-xs font-bold transition ${
-                        selectedLang === "hindi"
-                          ? "bg-orange-500 text-white shadow-xs"
-                          : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-100"
-                      }`}
-                    >
-                      <span>🪔</span>
-                      <span>Pure Hindi</span>
-                    </button>
-                  </div>
+                {/* Language Selector: English (Auto-Selected Permanently) */}
+                <div className="mt-2.5 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/90 px-3.5 py-2 shadow-2xs">
+                  <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <span>🌐</span> Language:
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-extrabold text-slate-800 shadow-2xs">
+                    <span>🇬🇧</span> English (Auto-Selected)
+                  </span>
                 </div>
               </div>
 
@@ -1050,202 +996,6 @@ export default function OccasionStudio({
               >
                 Update Schedule
               </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 📋 SAVED PLANS & LIVE DISCOUNT STATUS SUMMARY */}
-      <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-100 text-base">
-                📋
-              </span>
-              <h3 className="text-base font-black text-slate-900">
-                Saved Occasion Plans &amp; Live Discount Status
-              </h3>
-            </div>
-            <p className="mt-0.5 text-xs text-slate-500">
-              Aapke sabhi occasion plans ka live status aur customer ko milne wali discount chhoot ka instant overview.
-            </p>
-          </div>
-          <span className="rounded-full bg-emerald-50 border border-emerald-200 px-3.5 py-1 text-xs font-bold text-emerald-800">
-            🟢 Daily Auto-Engine Active at {dispatchTime}
-          </span>
-        </div>
-
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Plan 1: Birthday */}
-          <div
-            onClick={() => handleOccasionSwitch("birthday")}
-            className={`cursor-pointer rounded-2xl border p-4 transition hover:shadow-md ${
-              occasionType === "birthday"
-                ? "border-orange-500 bg-orange-50/50 ring-2 ring-orange-200 shadow-sm"
-                : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-2xl">🎂</span>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
-                  autoBirthday
-                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                    : "bg-slate-200 text-slate-600"
-                }`}
-              >
-                {autoBirthday ? "🟢 AUTO ACTIVE" : "⏸️ PAUSED"}
-              </span>
-            </div>
-            <h4 className="mt-2 text-sm font-black text-slate-900">Birthday Greeting</h4>
-            <p className="text-[11px] text-slate-500 truncate">
-              {draftsMap.birthday?.headline || "🎉 Happy Birthday!"}
-            </p>
-
-            <div className="mt-3 flex items-baseline justify-between border-t border-slate-200/80 pt-2.5">
-              <span className="text-xs font-bold text-slate-600">Customer Chhoot:</span>
-              <span className="rounded-lg bg-orange-600 px-2.5 py-0.5 text-xs font-black text-white shadow-xs">
-                FLAT {draftsMap.birthday?.discount_percent ?? (occasionType === "birthday" ? discountPercent : 15)}% OFF
-              </span>
-            </div>
-
-            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
-              <span>Coupon Validity:</span>
-              <span className="font-bold text-slate-900">
-                {draftsMap.birthday?.coupon_validity_days ?? 7} Days
-              </span>
-            </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] text-slate-600">
-              <span>Card Style:</span>
-              <span className="font-bold text-amber-800">
-                {draftsMap.birthday?.template_style === "royal_gold" ? "👑 Royal Dark Gold" : "🌿 Ivory Cream"}
-              </span>
-            </div>
-          </div>
-
-          {/* Plan 2: Anniversary */}
-          <div
-            onClick={() => handleOccasionSwitch("anniversary")}
-            className={`cursor-pointer rounded-2xl border p-4 transition hover:shadow-md ${
-              occasionType === "anniversary"
-                ? "border-rose-500 bg-rose-50/50 ring-2 ring-rose-200 shadow-sm"
-                : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-2xl">💍</span>
-              <span
-                className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
-                  autoAnniversary
-                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
-                    : "bg-slate-200 text-slate-600"
-                }`}
-              >
-                {autoAnniversary ? "🟢 AUTO ACTIVE" : "⏸️ PAUSED"}
-              </span>
-            </div>
-            <h4 className="mt-2 text-sm font-black text-slate-900">Anniversary Wish</h4>
-            <p className="text-[11px] text-slate-500 truncate">
-              {draftsMap.anniversary?.headline || "💍 Happy Anniversary!"}
-            </p>
-
-            <div className="mt-3 flex items-baseline justify-between border-t border-slate-200/80 pt-2.5">
-              <span className="text-xs font-bold text-slate-600">Customer Chhoot:</span>
-              <span className="rounded-lg bg-rose-600 px-2.5 py-0.5 text-xs font-black text-white shadow-xs">
-                FLAT {draftsMap.anniversary?.discount_percent ?? (occasionType === "anniversary" ? discountPercent : 20)}% OFF
-              </span>
-            </div>
-
-            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
-              <span>Coupon Validity:</span>
-              <span className="font-bold text-slate-900">
-                {draftsMap.anniversary?.coupon_validity_days ?? 7} Days
-              </span>
-            </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] text-slate-600">
-              <span>Card Style:</span>
-              <span className="font-bold text-amber-800">
-                {draftsMap.anniversary?.template_style === "royal_gold" ? "👑 Royal Dark Gold" : "🌿 Ivory Cream"}
-              </span>
-            </div>
-          </div>
-
-          {/* Plan 3: Festivals */}
-          <div
-            onClick={() => handleOccasionSwitch("festival")}
-            className={`cursor-pointer rounded-2xl border p-4 transition hover:shadow-md ${
-              occasionType === "festival"
-                ? "border-indigo-500 bg-indigo-50/50 ring-2 ring-indigo-200 shadow-sm"
-                : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-2xl">🪔</span>
-              <span className="rounded-full bg-indigo-100 border border-indigo-300 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-indigo-800">
-                ⚡ MANUAL BROADCAST
-              </span>
-            </div>
-            <h4 className="mt-2 text-sm font-black text-slate-900">Festivals &amp; Events</h4>
-            <p className="text-[11px] text-slate-500 truncate">
-              {draftsMap.festival?.headline || "🪔 Festive Greetings!"}
-            </p>
-
-            <div className="mt-3 flex items-baseline justify-between border-t border-slate-200/80 pt-2.5">
-              <span className="text-xs font-bold text-slate-600">Customer Chhoot:</span>
-              <span className="rounded-lg bg-indigo-600 px-2.5 py-0.5 text-xs font-black text-white shadow-xs">
-                FLAT {draftsMap.festival?.discount_percent ?? (occasionType === "festival" ? discountPercent : 25)}% OFF
-              </span>
-            </div>
-
-            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
-              <span>Coupon Validity:</span>
-              <span className="font-bold text-slate-900">
-                {draftsMap.festival?.coupon_validity_days ?? 7} Days
-              </span>
-            </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] text-slate-600">
-              <span>Send Mode:</span>
-              <span className="font-bold text-slate-800">1-Click Blast</span>
-            </div>
-          </div>
-
-          {/* Plan 4: Today's Special */}
-          <div
-            onClick={() => handleOccasionSwitch("offer")}
-            className={`cursor-pointer rounded-2xl border p-4 transition hover:shadow-md ${
-              occasionType === "offer"
-                ? "border-emerald-500 bg-emerald-50/50 ring-2 ring-emerald-200 shadow-sm"
-                : "border-slate-200 bg-slate-50/70 hover:bg-slate-100/70"
-            }`}
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-2xl">🔥</span>
-              <span className="rounded-full bg-amber-100 border border-amber-300 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-800">
-                ⚡ CHEF SPECIAL
-              </span>
-            </div>
-            <h4 className="mt-2 text-sm font-black text-slate-900">Today&apos;s Special</h4>
-            <p className="text-[11px] text-slate-500 truncate">
-              {draftsMap.offer?.headline || "🔥 Today's Chef Special"}
-            </p>
-
-            <div className="mt-3 flex items-baseline justify-between border-t border-slate-200/80 pt-2.5">
-              <span className="text-xs font-bold text-slate-600">Customer Chhoot:</span>
-              <span className="rounded-lg bg-emerald-600 px-2.5 py-0.5 text-xs font-black text-white shadow-xs">
-                FLAT {draftsMap.offer?.discount_percent ?? (occasionType === "offer" ? discountPercent : 10)}% OFF
-              </span>
-            </div>
-
-            <div className="mt-2 flex items-center justify-between text-[11px] text-slate-600">
-              <span>Coupon Validity:</span>
-              <span className="font-bold text-slate-900">
-                {draftsMap.offer?.coupon_validity_days ?? 3} Days
-              </span>
-            </div>
-            <div className="mt-1 flex items-center justify-between text-[11px] text-slate-600">
-              <span>Send Mode:</span>
-              <span className="font-bold text-slate-800">Flash Offer</span>
             </div>
           </div>
         </div>
