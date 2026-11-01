@@ -263,10 +263,10 @@ export default async function MerchantDashboardPage() {
       <section className={`merchant-hero${isPremium ? " merchant-hero--premium" : sweetsBusiness ? " merchant-hero--sweets" : ""} rounded-3xl p-5 sm:p-7 border border-slate-200/80 bg-white shadow-sm mb-6`}>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-6 border-b border-slate-100">
           <div className="flex items-start gap-4">
-            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-2xl bg-slate-50 border border-slate-200 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-xs shrink-0 overflow-hidden">
+            <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-[#1e140a] border-2 border-[#b59363] text-white flex items-center justify-center text-2xl sm:text-3xl shadow-xs shrink-0 overflow-hidden ring-2 ring-amber-200/40">
               {merchant.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-contain p-1" />
+                <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover" />
               ) : (
                 <div className="h-full w-full bg-[#0d47a1] flex items-center justify-center text-2xl sm:text-3xl">
                   {categoryEmoji}

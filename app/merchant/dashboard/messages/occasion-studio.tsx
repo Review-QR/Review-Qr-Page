@@ -520,12 +520,12 @@ export default function OccasionStudio({
                 <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-bl from-[#f5d77f]/30 via-[#d4af37]/20 to-transparent blur-xl" />
                 <div className="pointer-events-none absolute -bottom-10 -right-10 h-36 w-36 rounded-full bg-gradient-to-tl from-[#d4af37]/25 to-transparent blur-xl" />
 
-                {/* Top Section: Compact Logo + Business Name + Category Emblem */}
+                {/* Top Section: Circular Medallion Logo + Business Name + Category Emblem */}
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#d4af37] ring-2 ring-amber-400/30 bg-white p-1 shadow-[0_6px_20px_rgba(212,175,55,0.45)]">
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-[#f5d77f] ring-4 ring-[#d4af37]/35 bg-[#140f09] shadow-[0_8px_25px_rgba(212,175,55,0.45)]">
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={logoUrl} alt={businessName} className="h-full w-full object-contain" />
+                      <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
                     ) : (
                       <span className="text-3xl">{emblem.icon}</span>
                     )}
@@ -595,12 +595,12 @@ export default function OccasionStudio({
                   🍃
                 </div>
 
-                {/* Top Section: Logo + Dominant Business Name + Category Emblem */}
+                {/* Top Section: Circular Medallion Logo + Dominant Business Name + Category Emblem */}
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex h-[72px] w-[72px] items-center justify-center overflow-hidden rounded-2xl border-2 border-[#b59363] ring-2 ring-amber-300/60 bg-white p-1 shadow-[0_6px_22px_rgba(140,105,65,0.32)]">
+                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-[#b59363] ring-4 ring-[#dfc698]/50 bg-[#1e140a] shadow-[0_8px_25px_rgba(140,105,65,0.28)]">
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={logoUrl} alt={businessName} className="h-full w-full object-contain" />
+                      <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
                     ) : (
                       <span className="text-3xl">{emblem.icon}</span>
                     )}

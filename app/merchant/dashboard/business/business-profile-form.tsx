@@ -311,19 +311,20 @@ export default function BusinessProfileForm({
       <div className="mb-6 rounded-2xl border border-slate-200 bg-gradient-to-r from-orange-50/50 via-white to-slate-50 p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-orange-300 bg-white shadow-sm">
+            {/* Circular Luxury Brand Medallion */}
+            <div className="relative flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-[#b59363] ring-4 ring-amber-200/50 bg-[#1e140a] shadow-md">
               {currentLogoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={currentLogoUrl} alt="Business Logo" className="h-full w-full object-contain p-1" />
+                <img src={currentLogoUrl} alt="Business Logo" className="h-full w-full object-cover" />
               ) : (
-                <div className="flex flex-col items-center justify-center text-slate-400">
+                <div className="flex flex-col items-center justify-center text-amber-200/80">
                   <span className="text-2xl">🏪</span>
-                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">No Logo</span>
+                  <span className="text-[10px] font-bold text-amber-300 uppercase tracking-wider">No Logo</span>
                 </div>
               )}
               {logoUploading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-xs">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-orange-600 border-t-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-xs">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-amber-400 border-t-transparent" />
                 </div>
               )}
             </div>

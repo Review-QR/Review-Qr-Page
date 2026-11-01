@@ -424,27 +424,42 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
     ctx.fillRect(width - 400, 0, 400, 400);
     ctx.restore();
 
-    // Top Logo Frame (140x140)
-    const logoX = (width - 140) / 2;
-    const logoY = 95;
+    // Top Logo Circular Luxury Medallion
+    const centerX = width / 2;
+    const centerY = 165;
+    const radius = 72;
+
     ctx.save();
-    ctx.fillStyle = "#ffffff";
-    ctx.strokeStyle = "#d4af37";
+    // Outer Gold Glow Rim
+    ctx.shadowColor = "rgba(212, 175, 55, 0.45)";
+    ctx.shadowBlur = 20;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = "#f5d77f";
     ctx.lineWidth = 4;
-    ctx.shadowColor = "rgba(212, 175, 55, 0.5)";
-    ctx.shadowBlur = 15;
-    roundRect(ctx, logoX, logoY, 140, 140, 32);
-    ctx.fill();
     ctx.stroke();
 
+    // Medallion Background & Inner Rim
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#140f09";
+    ctx.fill();
+    ctx.strokeStyle = "#d4af37";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Clip circular area to smoothly mask square corners
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.clip();
+
     if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
-      ctx.clip();
-      ctx.drawImage(logoImg, logoX + 10, logoY + 10, 120, 120);
+      ctx.drawImage(logoImg, centerX - radius, centerY - radius, radius * 2, radius * 2);
     } else {
       ctx.font = "64px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(emblem.icon, width / 2, logoY + 70);
+      ctx.fillText(emblem.icon, centerX, centerY);
     }
     ctx.restore();
 
@@ -552,25 +567,42 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
     ctx.fillText("🌿", width - 130, 140);
     ctx.fillText("🍃", 130, height - 120);
 
-    // Top Logo Frame
-    const logoX = (width - 140) / 2;
-    const logoY = 95;
+    // Top Logo Circular Luxury Medallion (Ivory Cream)
+    const centerX = width / 2;
+    const centerY = 165;
+    const radius = 74;
+
     ctx.save();
-    ctx.fillStyle = "#ffffff";
-    ctx.strokeStyle = "#cbb28b";
+    // Outer Warm Bronze/Gold Glow Rim
+    ctx.shadowColor = "rgba(181, 147, 99, 0.35)";
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius + 4, 0, Math.PI * 2);
+    ctx.strokeStyle = "#dfc698";
     ctx.lineWidth = 4;
-    roundRect(ctx, logoX, logoY, 140, 140, 32);
-    ctx.fill();
     ctx.stroke();
 
+    // Medallion Background & Inner Rim
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.fillStyle = "#1e140a";
+    ctx.fill();
+    ctx.strokeStyle = "#b59363";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Clip circular area to smoothly mask square corners
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+    ctx.clip();
+
     if (logoImg && logoImg.complete && logoImg.naturalWidth > 0) {
-      ctx.clip();
-      ctx.drawImage(logoImg, logoX + 10, logoY + 10, 120, 120);
+      ctx.drawImage(logoImg, centerX - radius, centerY - radius, radius * 2, radius * 2);
     } else {
       ctx.font = "64px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText(emblem.icon, width / 2, logoY + 70);
+      ctx.fillText(emblem.icon, centerX, centerY);
     }
     ctx.restore();
 
