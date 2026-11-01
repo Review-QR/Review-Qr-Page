@@ -39,7 +39,7 @@ export async function POST(req: Request) {
       success: true,
       orderId: orderResult.orderId,
       paymentSessionId: orderResult.paymentSessionId,
-      paymentUrl: orderResult.paymentUrl,
+      checkoutMode: orderResult.environment,
     });
   } catch (err: unknown) {
     return NextResponse.json(

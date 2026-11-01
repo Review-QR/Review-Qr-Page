@@ -19,7 +19,7 @@ export type CreateWalletPaymentOrderResult =
       success: true;
       orderId: string;
       paymentSessionId: string;
-      paymentUrl?: string;
+      environment: string;
     }
   | {
       success: false;
@@ -103,16 +103,11 @@ export async function createCashfreeWalletRechargeOrder(
       payments?: { url?: string };
     };
 
-    const paymentUrl =
-      client.environment === "sandbox"
-        ? `https://sandbox.cashfree.com/pg/orders/${data.order_id}/checkout`
-        : `https://api.cashfree.com/pg/orders/${data.order_id}/checkout`;
-
     return {
       success: true,
       orderId: data.order_id,
       paymentSessionId: data.payment_session_id,
-      paymentUrl,
+      environment: client.environment,
     };
   } catch (err) {
     return {

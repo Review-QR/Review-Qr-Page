@@ -173,46 +173,8 @@ export default function MerchantConsoleClient({
         </div>
       </div>
 
-      {/* LEFT: VERTICAL MODULES BUTTON LIST (13 ACTIVE BUTTONS) */}
-      <div className="lg:col-span-3 bg-[#f7f3ec] border border-[#ede6dd] rounded-2xl p-3 shadow-2xs">
-        <div className="px-2 py-1 mb-2 flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Merchant Modules</span>
-          <span className="text-[9px] font-bold bg-[#85583f] text-white px-1.5 py-0.5 rounded">All Active</span>
-        </div>
-
-        <div className="space-y-1 text-xs font-semibold">
-          {moduleItems.map((item) => {
-            const isActive = selectedModule === item.id;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                onClick={() => setSelectedModule(item.id)}
-                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition text-left ${
-                  isActive
-                    ? "bg-[#85583f] text-white shadow-xs font-bold"
-                    : "text-slate-700 hover:bg-[#ede6dd]"
-                }`}
-              >
-                <span className="flex items-center gap-2">
-                  <span>{item.icon}</span>
-                  <span>{item.label}</span>
-                </span>
-                {item.live ? (
-                  <span className="text-[9px] font-black bg-rose-500 text-white px-1.5 py-0.2 rounded-full">
-                    Live
-                  </span>
-                ) : (
-                  <span className="text-xs opacity-60">›</span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* RIGHT: DYNAMIC WORKSPACE CONTENT ACCORDING TO SELECTED BUTTON */}
-      <div className="lg:col-span-9 min-h-[520px]">
+      {/* DYNAMIC WORKSPACE CONTENT ACCORDING TO SELECTED MODULE */}
+      <div className="lg:col-span-12 w-full min-h-[520px]">
         
         {/* VIEW 1: DASHBOARD OVERVIEW */}
         {selectedModule === "dashboard" && (

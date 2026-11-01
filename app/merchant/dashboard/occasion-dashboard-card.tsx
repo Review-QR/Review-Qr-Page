@@ -4,6 +4,26 @@ import { useState } from "react";
 import Link from "next/link";
 import type { MerchantOccasionSummary, MerchantConnectWalletState } from "@/lib/customer-crm-service";
 
+let cashfreeSdkPromise: Promise<void> | null = null;
+function loadCashfreeSdk(): Promise<void> {
+  if (typeof window === "undefined") return Promise.resolve();
+  if ((window as unknown as { Cashfree?: unknown }).Cashfree) return Promise.resolve();
+  if (cashfreeSdkPromise) return cashfreeSdkPromise;
+
+  cashfreeSdkPromise = new Promise<void>((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
+    script.async = true;
+    script.onload = () => {
+      if ((window as unknown as { Cashfree?: unknown }).Cashfree) resolve();
+      else reject(new Error("Cashfree checkout could not be loaded."));
+    };
+    script.onerror = () => reject(new Error("Cashfree checkout could not be loaded."));
+    document.head.appendChild(script);
+  });
+  return cashfreeSdkPromise;
+}
+
 export default function OccasionDashboardCard({
   summary,
   wallet: initialWallet,
@@ -62,9 +82,38 @@ export default function OccasionDashboardCard({
         return;
       }
 
-      // Redirect or invoke Cashfree JS checkout
-      if (data.paymentUrl) {
-        window.location.href = data.paymentUrl;
+      // Load official Cashfree JS SDK & launch modal checkout
+      await loadCashfreeSdk();
+
+      const cfWindow = window as unknown as {
+        Cashfree?: (opts: { mode: string }) => {
+          checkout: (opts: { paymentSessionId: string; redirectTarget: string }) => Promise<unknown>;
+        };
+      };
+
+      if (cfWindow.Cashfree) {
+        const cashfree = cfWindow.Cashfree({ mode: data.checkoutMode || "production" });
+        await cashfree.checkout({
+          paymentSessionId: data.paymentSessionId,
+          redirectTarget: "_modal",
+        });
+
+        // Verify payment and update wallet state immediately
+        const resVerify = await fetch("/api/merchant/wallet/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: data.orderId,
+            credits: effectiveCredits,
+          }),
+        });
+
+        const verifyData = await resVerify.json();
+        if (verifyData.success && verifyData.wallet) {
+          setWallet(verifyData.wallet);
+          setShowRechargeModal(false);
+          alert(`🎉 Payment Successful! ${effectiveCredits} Connect Credits added to your wallet.`);
+        }
       }
     } catch {
       setRechargeError("Network error. Please try again.");
