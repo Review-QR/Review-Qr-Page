@@ -318,10 +318,34 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.closePath();
 }
 
+export function getCategoryEmblem(type?: string | null): { icon: string; label: string } {
+  const t = (type || "").toLowerCase();
+  if (t.includes("cafe") || t.includes("coffee")) return { icon: "☕", label: "Cafe & Lounge" };
+  if (t.includes("restaurant") || t.includes("food") || t.includes("hotel") || t.includes("dhaba") || t.includes("dining"))
+    return { icon: "🍽️", label: "Restaurant & Dining" };
+  if (t.includes("sweet") || t.includes("mithai") || t.includes("dessert") || t.includes("cake") || t.includes("bakery"))
+    return { icon: "🧁", label: "Sweets & Bakery" };
+  if (t.includes("salon") || t.includes("beauty") || t.includes("spa") || t.includes("parlour"))
+    return { icon: "💇", label: "Salon & Spa" };
+  if (t.includes("jewel") || t.includes("gold")) return { icon: "💎", label: "Jewellery & Gems" };
+  if (t.includes("cloth") || t.includes("fashion") || t.includes("garment") || t.includes("boutique"))
+    return { icon: "👗", label: "Fashion & Apparel" };
+  if (t.includes("electr") || t.includes("mobile") || t.includes("phone"))
+    return { icon: "📱", label: "Electronics & Mobile" };
+  if (t.includes("grocery") || t.includes("kirana") || t.includes("supermarket") || t.includes("mart"))
+    return { icon: "🛒", label: "Grocery & Retail" };
+  if (t.includes("health") || t.includes("pharma") || t.includes("medical"))
+    return { icon: "💊", label: "Healthcare & Pharmacy" };
+  if (t.includes("auto") || t.includes("motor") || t.includes("car") || t.includes("bike"))
+    return { icon: "🚗", label: "Automobile & Services" };
+  return { icon: "🏪", label: type || "Verified Business" };
+}
+
 export interface RenderOccasionPosterOptions {
   canvas: HTMLCanvasElement;
   style: "royal_gold" | "ivory_cream";
   businessName: string;
+  businessType?: string | null;
   logoImg?: HTMLImageElement | null;
   occasionType: "birthday" | "anniversary" | "festival" | "offer";
   headline: string;
@@ -337,15 +361,17 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
     canvas,
     style,
     businessName,
+    businessType,
     logoImg,
     occasionType,
     headline,
-    customerName = "MR LUCKY !!",
     subtitle,
     couponCode,
     discountPercent,
     couponValidityDays,
   } = opts;
+
+  const emblem = getCategoryEmblem(businessType);
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -400,7 +426,7 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
 
     // Top Logo Frame (140x140)
     const logoX = (width - 140) / 2;
-    const logoY = 110;
+    const logoY = 95;
     ctx.save();
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#d4af37";
@@ -415,18 +441,23 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
       ctx.clip();
       ctx.drawImage(logoImg, logoX + 10, logoY + 10, 120, 120);
     } else {
-      ctx.font = "60px sans-serif";
+      ctx.font = "64px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("🏪", width / 2, logoY + 70);
+      ctx.fillText(emblem.icon, width / 2, logoY + 70);
     }
     ctx.restore();
 
     // Business Name
     ctx.textAlign = "center";
     ctx.fillStyle = "#e5c158";
-    ctx.font = "900 32px sans-serif";
-    ctx.fillText(businessName.toUpperCase(), width / 2, 310);
+    ctx.font = "900 34px sans-serif";
+    ctx.fillText(businessName.toUpperCase(), width / 2, 285);
+
+    // Category Badge
+    ctx.fillStyle = "#d4af37";
+    ctx.font = "bold 18px sans-serif";
+    ctx.fillText(`✦ ${emblem.label.toUpperCase()} ✦`, width / 2, 320);
 
     // Occasion Icon
     ctx.font = "80px sans-serif";
@@ -520,7 +551,7 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
 
     // Top Logo Frame
     const logoX = (width - 140) / 2;
-    const logoY = 110;
+    const logoY = 95;
     ctx.save();
     ctx.fillStyle = "#ffffff";
     ctx.strokeStyle = "#cbb28b";
@@ -533,18 +564,23 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
       ctx.clip();
       ctx.drawImage(logoImg, logoX + 10, logoY + 10, 120, 120);
     } else {
-      ctx.font = "60px sans-serif";
+      ctx.font = "64px sans-serif";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
-      ctx.fillText("🏪", width / 2, logoY + 70);
+      ctx.fillText(emblem.icon, width / 2, logoY + 70);
     }
     ctx.restore();
 
     // Business Name
     ctx.textAlign = "center";
     ctx.fillStyle = "#5c3e1e";
-    ctx.font = "900 32px sans-serif";
-    ctx.fillText(businessName.toUpperCase(), width / 2, 310);
+    ctx.font = "900 34px sans-serif";
+    ctx.fillText(businessName.toUpperCase(), width / 2, 285);
+
+    // Category Badge
+    ctx.fillStyle = "#8a6d4d";
+    ctx.font = "bold 18px sans-serif";
+    ctx.fillText(`✦ ${emblem.label.toUpperCase()} ✦`, width / 2, 320);
 
     // Occasion Icon
     ctx.font = "80px sans-serif";

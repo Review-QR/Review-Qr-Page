@@ -6,7 +6,7 @@ import {
   saveMerchantOccasionDraftAction,
   updateMerchantOccasionScheduleAction,
 } from "./actions";
-import { renderOccasionGreetingPoster } from "@/lib/creative-canvas";
+import { renderOccasionGreetingPoster, getCategoryEmblem } from "@/lib/creative-canvas";
 
 export type OccasionDraft = {
   id?: string;
@@ -139,18 +139,21 @@ export const TEMPLATE_MESSAGES: Record<
 
 export default function OccasionStudio({
   businessName,
+  businessType = null,
   logoUrl,
   initialDrafts = [],
   dailyDispatchTime = "09:00",
   creditsBalance = 0,
 }: {
   businessName: string;
+  businessType?: string | null;
   logoUrl: string | null;
   initialDrafts?: OccasionDraft[];
   dailyDispatchTime?: string;
   creditsBalance?: number;
 }) {
   const router = useRouter();
+  const emblem = getCategoryEmblem(businessType);
 
   // In-memory drafts map initialized with props
   const [draftsMap, setDraftsMap] = useState<Record<string, OccasionDraft>>(() => {
@@ -339,10 +342,10 @@ export default function OccasionStudio({
       canvas: testCanvasRef.current,
       style: templateStyle,
       businessName,
+      businessType,
       logoImg: logoImgRef.current,
       occasionType,
       headline,
-      customerName: "MR LUCKY !!",
       subtitle: occasionSubtitle,
       couponCode,
       discountPercent,
@@ -484,18 +487,21 @@ export default function OccasionStudio({
                 <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-bl from-[#f5d77f]/30 via-[#d4af37]/20 to-transparent blur-xl" />
                 <div className="pointer-events-none absolute -bottom-10 -right-10 h-36 w-36 rounded-full bg-gradient-to-tl from-[#d4af37]/25 to-transparent blur-xl" />
 
-                {/* Top Section: Compact Logo + Business Name */}
+                {/* Top Section: Compact Logo + Business Name + Category Emblem */}
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#d4af37] bg-white p-1 shadow-[0_4px_14px_rgba(212,175,55,0.4)]">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#d4af37] ring-2 ring-amber-400/30 bg-white p-1 shadow-[0_6px_20px_rgba(212,175,55,0.45)]">
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={logoUrl} alt={businessName} className="h-full w-full object-contain" />
                     ) : (
-                      <span className="text-2xl">🏪</span>
+                      <span className="text-3xl">{emblem.icon}</span>
                     )}
                   </div>
-                  <span className="mt-2 text-xs font-black uppercase tracking-[0.22em] text-[#e5c158] drop-shadow-sm">
+                  <span className="mt-2 text-xs sm:text-sm font-black uppercase tracking-[0.22em] text-[#e5c158] drop-shadow-sm">
                     {businessName}
+                  </span>
+                  <span className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-[#d4af37]/80">
+                    ✦ {emblem.label} ✦
                   </span>
                 </div>
 
@@ -555,18 +561,21 @@ export default function OccasionStudio({
                   🍃
                 </div>
 
-                {/* Top Section: Compact Logo + Business Name */}
+                {/* Top Section: Compact Logo + Business Name + Category Emblem */}
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#cbb28b] bg-white p-1 shadow-md">
+                  <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border-2 border-[#cbb28b] ring-2 ring-amber-200/50 bg-white p-1 shadow-[0_6px_20px_rgba(180,150,110,0.3)]">
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={logoUrl} alt={businessName} className="h-full w-full object-contain" />
                     ) : (
-                      <span className="text-2xl">🏪</span>
+                      <span className="text-3xl">{emblem.icon}</span>
                     )}
                   </div>
-                  <span className="mt-2 text-xs font-black uppercase tracking-[0.22em] text-[#5c3e1e]">
+                  <span className="mt-2 text-xs sm:text-sm font-black uppercase tracking-[0.22em] text-[#5c3e1e]">
                     {businessName}
+                  </span>
+                  <span className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-[#8a6d4d]">
+                    ✦ {emblem.label} ✦
                   </span>
                 </div>
 

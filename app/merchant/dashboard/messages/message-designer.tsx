@@ -498,6 +498,7 @@ export default function MessageDesigner({
       {activeTab === "occasions" && (
         <OccasionStudio
           businessName={businessName}
+          businessType={businessType}
           logoUrl={logoUrl ?? null}
           initialDrafts={occasionDrafts}
           dailyDispatchTime={connectWallet?.dailyDispatchTime}
