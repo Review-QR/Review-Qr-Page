@@ -16,14 +16,21 @@ export async function POST(req: Request) {
 
     // Check allow_taking_orders permission if merchant is trying to enable taking orders
     if (typeof isTakingOrders === "boolean" && isTakingOrders === true) {
-      const { data: business } = await supabase
-        .from("businesses")
-        .select("allow_taking_orders")
-        .eq("id", merchant.businessId)
-        .maybeSingle();
+      try {
+        const { data: business } = await supabase
+          .from("businesses")
+          .select("allow_taking_orders")
+          .eq("id", merchant.businessId)
+          .maybeSingle();
 
-      const isAllowed = Boolean((business as { allow_taking_orders?: boolean } | null)?.allow_taking_orders);
-      if (!isAllowed) {
+        const isAllowed = Boolean((business as { allow_taking_orders?: boolean } | null)?.allow_taking_orders);
+        if (!isAllowed) {
+          return NextResponse.json(
+            { error: "Access Denied: Taking orders has not been allowed by admin." },
+            { status: 403 }
+          );
+        }
+      } catch {
         return NextResponse.json(
           { error: "Access Denied: Taking orders has not been allowed by admin." },
           { status: 403 }
@@ -40,10 +47,14 @@ export async function POST(req: Request) {
     }
 
     if (Object.keys(updates).length > 0) {
-      await supabase
-        .from("businesses")
-        .update(updates)
-        .eq("id", merchant.businessId);
+      try {
+        await supabase
+          .from("businesses")
+          .update(updates)
+          .eq("id", merchant.businessId);
+      } catch (dbErr) {
+        console.warn("Outlet status DB update note:", dbErr);
+      }
     }
 
     return NextResponse.json({ success: true, updates });

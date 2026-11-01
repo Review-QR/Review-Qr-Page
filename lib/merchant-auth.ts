@@ -54,14 +54,34 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
       .maybeSingle();
     if (mappingError || !mapping) return null;
 
+    // Core business data query - strictly uses verified existing columns
     const { data: business, error: businessError } = await supabase
       .from("businesses")
-      .select("id, name, owner, phone, type, address, locality, city, district, state, pincode, discovery_location_verified_at, discovery_location_verified_by, discovery_location_verification_source, location_latitude, location_longitude, location_captured_at, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, logo_url, is_outlet_open, allow_taking_orders, is_taking_orders, deleted_at")
+      .select("id, name, owner, phone, type, address, locality, city, district, state, pincode, discovery_location_verified_at, discovery_location_verified_by, discovery_location_verification_source, location_latitude, location_longitude, location_captured_at, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, logo_url, deleted_at")
       .eq("id", mapping.business_id)
       .eq("merchant_status", "active")
       .is("deleted_at", null)
       .maybeSingle();
     if (businessError || !business) return null;
+
+    // Optional outlet status query - fails gracefully if columns are not yet applied on remote DB
+    let isOutletOpen = true;
+    let allowTakingOrders = false;
+    let isTakingOrders = false;
+    try {
+      const { data: outletFlags } = await supabase
+        .from("businesses")
+        .select("is_outlet_open, allow_taking_orders, is_taking_orders")
+        .eq("id", mapping.business_id)
+        .maybeSingle();
+      if (outletFlags) {
+        if (typeof outletFlags.is_outlet_open === "boolean") isOutletOpen = outletFlags.is_outlet_open;
+        if (typeof outletFlags.allow_taking_orders === "boolean") allowTakingOrders = outletFlags.allow_taking_orders;
+        if (typeof outletFlags.is_taking_orders === "boolean") isTakingOrders = outletFlags.is_taking_orders;
+      }
+    } catch {
+      // Safe fallback: defaults remain true / false / false
+    }
 
     const { data: profile } = await supabase
       .from("merchant_profiles")
@@ -109,9 +129,9 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
       expiry: business.expiry,
       reviewLink: business.review_link,
       logoUrl: (business as { logo_url?: string | null }).logo_url ?? null,
-      isOutletOpen: (business as { is_outlet_open?: boolean | null }).is_outlet_open ?? true,
-      allowTakingOrders: (business as { allow_taking_orders?: boolean | null }).allow_taking_orders ?? false,
-      isTakingOrders: (business as { is_taking_orders?: boolean | null }).is_taking_orders ?? false,
+      isOutletOpen,
+      allowTakingOrders,
+      isTakingOrders,
     };
   } catch {
     // Fail closed without exposing database or session details to the merchant.
