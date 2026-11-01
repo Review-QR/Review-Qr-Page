@@ -16,6 +16,73 @@ const FAST2SMS_BACKUP_TOKEN = Buffer.from(
 ).toString("utf-8");
 
 /**
+ * Dispatch official WhatsApp Template message via Fast2SMS WhatsApp API
+ */
+export async function dispatchFast2SmsWhatsAppMessage(params: {
+  phone: string;
+  customerName: string;
+  businessName: string;
+  couponCode: string;
+  discountPercent: number;
+  validityDays: number;
+  mediaUrl?: string;
+  messageId?: string;
+}): Promise<{ success: boolean; error?: string; requestId?: string }> {
+  const digits = params.phone.replace(/\D/g, "");
+  const phone10 = digits.length === 10 ? digits : digits.slice(-10);
+
+  if (phone10.length !== 10) {
+    return { success: false, error: "Invalid 10-digit mobile number." };
+  }
+
+  const fast2SmsKey = (process.env.FAST2SMS_API_KEY || FAST2SMS_BACKUP_TOKEN).trim();
+  if (!fast2SmsKey) {
+    return { success: false, error: "Fast2SMS API Key not configured." };
+  }
+
+  const messageId = params.messageId || process.env.FAST2SMS_WHATSAPP_MESSAGE_ID || "41350";
+  const variableValues = [
+    params.customerName,
+    params.businessName,
+    params.couponCode,
+    String(params.discountPercent),
+    String(params.validityDays),
+  ].join("|");
+
+  const url = new URL("https://www.fast2sms.com/dev/whatsapp");
+  url.searchParams.set("authorization", fast2SmsKey);
+  url.searchParams.set("message_id", messageId);
+  url.searchParams.set("numbers", phone10);
+  url.searchParams.set("variables_values", variableValues);
+  if (params.mediaUrl) {
+    url.searchParams.set("media_url", params.mediaUrl);
+  }
+
+  try {
+    const response = await fetch(url.toString(), {
+      method: "GET",
+      headers: {
+        authorization: fast2SmsKey,
+      },
+    });
+
+    const data = await response.json().catch(() => null);
+
+    if (response.ok && (data?.status === true || data?.return === true)) {
+      return { success: true, requestId: data?.request_id };
+    }
+
+    const errorMsg = data?.message || "Fast2SMS WhatsApp dispatch failed.";
+    return { success: false, error: typeof errorMsg === "string" ? errorMsg : JSON.stringify(errorMsg) };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Network error contacting Fast2SMS WhatsApp API",
+    };
+  }
+}
+
+/**
  * Dispatch an individual SMS/WhatsApp text via Fast2SMS Master API
  */
 export async function dispatchFast2SmsMessage(
@@ -200,26 +267,45 @@ export async function runDailyOccasionAutoDispatcher(): Promise<{
         ? `Janmadin ki dhero shubhkamnaye ${customerName}! 🎂 ${businessName} ki taraf se aapko hardik badhaiyan. Special Gift Code: ${coupon} (Flat ${discount}% OFF, valid ${validity} days). Visit today!`
         : `Marriage Anniversary ki dhero shubhkamnaye ${customerName}! 💍 ${businessName} ki taraf se shandar uphar. Special Code: ${coupon} (Flat ${discount}% OFF, valid ${validity} days). Visit today!`;
 
-      // Dispatch via WhatsApp Cloud API (if configured), otherwise fallback to Fast2SMS
+      // Dispatch priority:
+      // 1. Fast2SMS Official WhatsApp Template (Message ID: 41350)
+      // 2. Direct Meta Cloud API (if separate credentials configured)
+      // 3. Fast2SMS SMS Fallback
       let dispatchSuccess = false;
-      const waConfig = getWhatsAppCloudConfig();
 
-      if (waConfig.phoneNumberId && waConfig.accessToken) {
-        const waRes = await sendWhatsAppOccasionMessage({
-          recipientPhone: phone,
-          captionText: msg,
-        });
-        if (waRes.success) {
-          dispatchSuccess = true;
+      // 1. Fast2SMS WhatsApp Template API
+      const waRes = await dispatchFast2SmsWhatsAppMessage({
+        phone,
+        customerName,
+        businessName,
+        couponCode: coupon,
+        discountPercent: discount,
+        validityDays: validity,
+      });
+
+      if (waRes.success) {
+        dispatchSuccess = true;
+      } else {
+        // 2. Direct Meta Cloud API fallback
+        const waConfig = getWhatsAppCloudConfig();
+        if (waConfig.phoneNumberId && waConfig.accessToken) {
+          const directMetaRes = await sendWhatsAppOccasionMessage({
+            recipientPhone: phone,
+            captionText: msg,
+          });
+          if (directMetaRes.success) {
+            dispatchSuccess = true;
+          }
         }
       }
 
+      // 3. Fallback to Fast2SMS SMS
       if (!dispatchSuccess) {
-        const res = await dispatchFast2SmsMessage(phone, msg);
-        if (res.success) {
+        const smsRes = await dispatchFast2SmsMessage(phone, msg);
+        if (smsRes.success) {
           dispatchSuccess = true;
         } else {
-          errors.push(`Failed to send to ${masked}: ${res.error}`);
+          errors.push(`Failed to send to ${masked}: ${waRes.error || smsRes.error}`);
         }
       }
 
