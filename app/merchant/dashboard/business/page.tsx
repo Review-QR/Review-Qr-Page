@@ -58,7 +58,30 @@ export default async function MerchantBusinessPage() {
           isEmailVerified={merchant.isEmailVerified}
           logoUrl={merchant.logoUrl}
           reviewLink={reviewLink}
+          locality={merchant.locality}
+          city={merchant.city}
+          district={merchant.district}
+          state={merchant.state}
+          pincode={merchant.pincode}
+          latitude={merchant.locationLatitude}
+          longitude={merchant.locationLongitude}
+          capturedAt={merchant.locationCapturedAt}
         />
+      </section>
+      <div className="hidden" aria-hidden="true">
+        <GoogleReviewLinkForm initialLink={reviewLink ?? ""} />
+      </div>
+      <section className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs sm:p-5">
+        <h2 className="mb-3 text-base font-bold text-slate-950">Account and Plan</h2>
+        <dl className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
+          <BusinessField label="Business ID" value={merchant.businessId} />
+          <BusinessField label="Business Status" value={merchant.businessStatus} />
+          <BusinessField label="Merchant Status" value={merchant.merchantStatus} />
+          <BusinessField label="Registration Date" value={formattedDate(merchant.registrationDate)} />
+          <BusinessField label="Current Plan" value={merchant.plan} />
+          <BusinessField label="Expiry Date" value={formattedDate(merchant.expiry)} />
+        </dl>
+        <Link href="/merchant/dashboard/profile" className="mt-4 inline-flex min-h-9 items-center rounded-lg border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-semibold text-orange-900 hover:bg-orange-100 transition">View Profile Completion and Location →</Link>
       </section>
       <PublicLocationForm
         name={merchant.businessName}
@@ -75,21 +98,6 @@ export default async function MerchantBusinessPage() {
         longitude={merchant.locationLongitude}
         capturedAt={merchant.locationCapturedAt}
       />
-      <div className="hidden" aria-hidden="true">
-        <GoogleReviewLinkForm initialLink={reviewLink ?? ""} />
-      </div>
-      <section className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-2xs sm:p-5">
-        <h2 className="mb-3 text-base font-bold text-slate-950">Account and Plan</h2>
-        <dl className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
-          <BusinessField label="Business ID" value={merchant.businessId} />
-          <BusinessField label="Business Status" value={merchant.businessStatus} />
-          <BusinessField label="Merchant Status" value={merchant.merchantStatus} />
-          <BusinessField label="Registration Date" value={formattedDate(merchant.registrationDate)} />
-          <BusinessField label="Current Plan" value={merchant.plan} />
-          <BusinessField label="Expiry Date" value={formattedDate(merchant.expiry)} />
-        </dl>
-        <Link href="/merchant/dashboard/profile" className="mt-4 inline-flex min-h-9 items-center rounded-lg border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-semibold text-orange-900 hover:bg-orange-100 transition">View Profile Completion and Location →</Link>
-      </section>
     </div>
   );
 }

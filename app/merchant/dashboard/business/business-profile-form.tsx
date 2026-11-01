@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState, useState, useRef } from "react";
+import LocationCapture from "../profile/location-capture";
+import { saveMerchantDiscoveryLocationAction } from "./location-actions";
 import {
   saveBusinessProfileAction,
   requestMerchantMobileChangeOtpAction,
@@ -29,6 +31,14 @@ export default function BusinessProfileForm({
   isEmailVerified: initialIsEmailVerified,
   logoUrl: initialLogoUrl,
   reviewLink: initialReviewLink,
+  locality: initialLocality,
+  city: initialCity,
+  district: initialDistrict,
+  state: initialRegionalState,
+  pincode: initialPincode,
+  latitude: initialLatitude,
+  longitude: initialLongitude,
+  capturedAt: initialCapturedAt,
 }: {
   name: string;
   type: string | null;
@@ -40,6 +50,14 @@ export default function BusinessProfileForm({
   isEmailVerified: boolean;
   logoUrl?: string | null;
   reviewLink?: string | null;
+  locality?: string | null;
+  city?: string | null;
+  district?: string | null;
+  state?: string | null;
+  pincode?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  capturedAt?: string | null;
 }) {
   const [state, action, pending] = useActionState(saveBusinessProfileAction, initialState);
 
@@ -53,6 +71,17 @@ export default function BusinessProfileForm({
   const [editAuthMsg, setEditAuthMsg] = useState<{ text: string; error: boolean } | null>(null);
   const [editAuthMaskedPhone, setEditAuthMaskedPhone] = useState<string>("");
   const [editAuthPreviewOtp, setEditAuthPreviewOtp] = useState<string | null>(null);
+
+  // Locality Modal and state
+  const [showLocalityModal, setShowLocalityModal] = useState(false);
+  const [localityVal, setLocalityVal] = useState(initialLocality ?? "");
+  const [cityVal, setCityVal] = useState(initialCity ?? "");
+  const [districtVal, setDistrictVal] = useState(initialDistrict ?? "");
+  const [stateVal, setStateVal] = useState(initialRegionalState ?? "");
+  const [pincodeVal, setPincodeVal] = useState(initialPincode ?? "");
+  const [currentLat, setCurrentLat] = useState<number | null>(initialLatitude ?? null);
+  const [currentLon, setCurrentLon] = useState<number | null>(initialLongitude ?? null);
+  const [currentCapturedAt, setCurrentCapturedAt] = useState<string | null>(initialCapturedAt ?? null);
 
   // Logo upload state
   const [currentLogoUrl, setCurrentLogoUrl] = useState(initialLogoUrl ?? null);
@@ -324,6 +353,22 @@ export default function BusinessProfileForm({
     }
   }
 
+  // 9. Handle Full Profile & Locality Save
+  async function handleProfileSubmit(formData: FormData) {
+    const city = String(formData.get("store_city") ?? "").trim();
+    const regionalState = String(formData.get("store_state") ?? "").trim();
+    if (city && regionalState) {
+      const locData = new FormData();
+      locData.set("locality", String(formData.get("store_locality") ?? ""));
+      locData.set("city", city);
+      locData.set("district", String(formData.get("store_district") ?? ""));
+      locData.set("state", regionalState);
+      locData.set("pincode", String(formData.get("store_pincode") ?? ""));
+      await saveMerchantDiscoveryLocationAction({ ok: false, message: "" }, locData);
+    }
+    action(formData);
+  }
+
   return (
     <div className="relative">
       {/* CARD HEADER: Title on Left, Edit Button on Right */}
@@ -430,8 +475,17 @@ export default function BusinessProfileForm({
             <button
               type="button"
               disabled={logoUploading}
-              onClick={() => fileInputRef.current?.click()}
-              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-orange-700 hover:to-amber-700 disabled:opacity-50"
+              onClick={() => {
+                if (!isEditUnlocked) {
+                  setShowEditAuthModal(true);
+                  setEditAuthSent(false);
+                  setEditAuthOtp("");
+                  setEditAuthMsg({ text: "Logo update karne ke liye pehle OTP verification karke edit unlock kijiye.", error: false });
+                  return;
+                }
+                fileInputRef.current?.click();
+              }}
+              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 cursor-pointer"
             >
               {logoUploading ? "Uploading..." : currentLogoUrl ? "Change Logo" : "Upload Logo (PNG/JPG)"}
             </button>
@@ -439,8 +493,17 @@ export default function BusinessProfileForm({
               <button
                 type="button"
                 disabled={logoUploading}
-                onClick={handleLogoRemove}
-                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+                onClick={() => {
+                  if (!isEditUnlocked) {
+                    setShowEditAuthModal(true);
+                    setEditAuthSent(false);
+                    setEditAuthOtp("");
+                    setEditAuthMsg({ text: "Logo remove karne ke liye pehle OTP verification karke edit unlock kijiye.", error: false });
+                    return;
+                  }
+                  handleLogoRemove();
+                }}
+                className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 disabled:opacity-50 cursor-pointer"
               >
                 Remove
               </button>
@@ -486,13 +549,20 @@ export default function BusinessProfileForm({
                 <button
                   type="button"
                   onClick={() => {
+                    if (!isEditUnlocked) {
+                      setShowEditAuthModal(true);
+                      setEditAuthSent(false);
+                      setEditAuthOtp("");
+                      setEditAuthMsg({ text: "Mobile change karne ke liye pehle OTP verification karke edit unlock kijiye.", error: false });
+                      return;
+                    }
                     setShowMobileModal(true);
                     setNewMobile("");
                     setMobileOtp("");
                     setMobileOtpSent(false);
                     setMobileModalMsg(null);
                   }}
-                  className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline"
+                  className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
                 >
                   Change Mobile →
                 </button>
@@ -518,13 +588,20 @@ export default function BusinessProfileForm({
                 <button
                   type="button"
                   onClick={() => {
+                    if (!isEditUnlocked) {
+                      setShowEditAuthModal(true);
+                      setEditAuthSent(false);
+                      setEditAuthOtp("");
+                      setEditAuthMsg({ text: "Email change karne ke liye pehle OTP verification karke edit unlock kijiye.", error: false });
+                      return;
+                    }
                     setShowEmailModal(true);
                     setNewEmail(currentEmail || "");
                     setEmailOtp("");
                     setEmailOtpSent(false);
                     setEmailModalMsg(null);
                   }}
-                  className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline"
+                  className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
                 >
                   {currentEmail ? (isEmailVerified ? "Change Email →" : "Verify Email →") : "Add Email →"}
                 </button>
@@ -543,6 +620,31 @@ export default function BusinessProfileForm({
                   </span>
                 ) : null}
               </div>
+            </div>
+
+            {/* Locality & Store Address (View Details opens popup) */}
+            <div className="rounded-xl border border-slate-200/90 bg-slate-50/70 p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 block">
+                  Locality &amp; Store Address
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowLocalityModal(true)}
+                  className="inline-flex items-center gap-1 text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+                >
+                  <span>View Details</span>
+                  <span className="material-symbols-outlined text-[15px]">visibility</span>
+                </button>
+              </div>
+              <div className="mt-1.5 flex items-center justify-between">
+                <p className="text-sm font-bold text-slate-900 truncate">
+                  {[localityVal, cityVal, stateVal].filter(Boolean).join(", ") || "Address not confirmed"}
+                </p>
+              </div>
+              <p className="mt-1 text-[11px] text-slate-500">
+                {pincodeVal ? `PIN: ${pincodeVal}` : "Tap View Details to see full address breakdown"}
+              </p>
             </div>
 
             {/* Google Review Link (Integrated into Business Profile card) */}
@@ -576,7 +678,7 @@ export default function BusinessProfileForm({
         </div>
       ) : (
         /* VIEW 2: UNLOCKED EDITABLE FORM */
-        <form action={action} className="grid gap-4 sm:grid-cols-2 pt-2 animate-in fade-in duration-200">
+        <form action={handleProfileSubmit} className="grid gap-4 sm:grid-cols-2 pt-2 animate-in fade-in duration-200">
           <label className="text-sm font-semibold text-slate-800">
             Business Name
             <input className={inputClass} name="name" defaultValue={name} maxLength={200} required autoComplete="organization" />
@@ -593,9 +695,24 @@ export default function BusinessProfileForm({
           </label>
 
           <div>
-            <label className="text-sm font-semibold text-slate-800 block">
-              Registered Mobile
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-slate-800 block">
+                Registered Mobile
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowMobileModal(true);
+                  setNewMobile("");
+                  setMobileOtp("");
+                  setMobileOtpSent(false);
+                  setMobileModalMsg(null);
+                }}
+                className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+              >
+                Change Mobile →
+              </button>
+            </div>
             <input
               className={`${inputClass} bg-slate-50 text-slate-600 cursor-not-allowed`}
               value={currentPhone ? `+91 ${currentPhone.replace(/\D/g, "").slice(-10)} (Protected)` : "—"}
@@ -607,9 +724,24 @@ export default function BusinessProfileForm({
           </div>
 
           <div>
-            <label className="text-sm font-semibold text-slate-800 block">
-              Email ID (Optional)
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-semibold text-slate-800 block">
+                Email ID (Optional)
+              </label>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowEmailModal(true);
+                  setNewEmail(currentEmail || "");
+                  setEmailOtp("");
+                  setEmailOtpSent(false);
+                  setEmailModalMsg(null);
+                }}
+                className="text-xs font-bold text-amber-700 hover:text-amber-800 hover:underline cursor-pointer"
+              >
+                {currentEmail ? "Verify / Change Email →" : "Add Email →"}
+              </button>
+            </div>
             <input
               className={inputClass}
               name="email"
@@ -621,7 +753,7 @@ export default function BusinessProfileForm({
             />
           </div>
 
-          <div className="sm:col-span-2">
+          <div>
             <label className="text-sm font-semibold text-slate-800 block">
               Google Review Link
             </label>
@@ -633,33 +765,229 @@ export default function BusinessProfileForm({
               onChange={(e) => setCurrentReviewLink(e.target.value)}
               placeholder="https://maps.app.goo.gl/... or https://search.google.com/local/writereview?placeid=..."
             />
-            <span className="mt-1 block text-[11px] text-slate-500">
-              Customer review QR scan karne ke baad customer ko is link par direct kiya jata hai.
-            </span>
+          </div>
+
+          {/* STORE LOCALITY & DISCOVERY ADDRESS */}
+          <div className="sm:col-span-2 pt-2 border-t border-slate-200">
+            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-amber-600 text-lg">distance</span>
+              <span>Locality &amp; Store Discovery Address</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Trustit search aur customer directions ke liye address update kijiye.
+            </p>
+          </div>
+
+          <label className="text-xs font-semibold text-slate-800">
+            Locality <span className="font-normal text-slate-500">(Optional)</span>
+            <input
+              className={inputClass}
+              name="store_locality"
+              value={localityVal}
+              onChange={(e) => setLocalityVal(e.target.value)}
+              maxLength={160}
+              placeholder="e.g. Kdc road, Civil Lines"
+              autoComplete="address-level3"
+            />
+          </label>
+
+          <label className="text-xs font-semibold text-slate-800">
+            City <span className="text-rose-700">*</span>
+            <input
+              className={inputClass}
+              name="store_city"
+              value={cityVal}
+              onChange={(e) => setCityVal(e.target.value)}
+              maxLength={160}
+              required
+              placeholder="e.g. Bahraich"
+              autoComplete="address-level2"
+            />
+          </label>
+
+          <label className="text-xs font-semibold text-slate-800">
+            District <span className="font-normal text-slate-500">(Optional)</span>
+            <input
+              className={inputClass}
+              name="store_district"
+              value={districtVal}
+              onChange={(e) => setDistrictVal(e.target.value)}
+              maxLength={160}
+              placeholder="e.g. Bahraich"
+            />
+          </label>
+
+          <label className="text-xs font-semibold text-slate-800">
+            State <span className="text-rose-700">*</span>
+            <input
+              className={inputClass}
+              name="store_state"
+              value={stateVal}
+              onChange={(e) => setStateVal(e.target.value)}
+              maxLength={100}
+              required
+              placeholder="e.g. Uttar Pradesh"
+              autoComplete="address-level1"
+            />
+          </label>
+
+          <label className="text-xs font-semibold text-slate-800">
+            Pincode <span className="font-normal text-slate-500">(Optional while completing)</span>
+            <input
+              className={inputClass}
+              name="store_pincode"
+              value={pincodeVal}
+              onChange={(e) => setPincodeVal(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              maxLength={6}
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              placeholder="e.g. 271801"
+              autoComplete="postal-code"
+            />
+          </label>
+
+          {/* UPDATE CURRENT LOCATION (GPS Capture) */}
+          <div className="sm:col-span-2 pt-1">
+            <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5">
+              <LocationCapture
+                latitude={currentLat}
+                longitude={currentLon}
+                capturedAt={currentCapturedAt}
+                onLocationResolved={(loc) => {
+                  if (loc.locality && !localityVal) setLocalityVal(loc.locality);
+                  if (loc.city && (!cityVal || cityVal === "Not set")) setCityVal(loc.city);
+                  if (loc.district && !districtVal) setDistrictVal(loc.district);
+                  if (loc.state && !stateVal) setStateVal(loc.state);
+                  if (loc.pincode && !pincodeVal) setPincodeVal(loc.pincode);
+                }}
+              />
+            </div>
           </div>
 
           <input type="hidden" name="address" value={address ?? ""} />
 
-          <div className="flex flex-wrap items-center gap-3 sm:col-span-2 pt-2">
+          <div className="flex flex-wrap items-center gap-3 sm:col-span-2 pt-2 border-t border-slate-100">
             <button
               type="submit"
               disabled={pending}
-              className="min-h-11 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-xs transition hover:bg-indigo-700 disabled:opacity-60 cursor-pointer"
+              className="min-h-11 rounded-xl bg-indigo-600 px-6 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-indigo-700 disabled:opacity-60 cursor-pointer"
             >
-              {pending ? "Saving…" : "Save Changes"}
+              {pending ? "Saving…" : "Save Profile"}
             </button>
             <button
               type="button"
               onClick={() => setIsEditUnlocked(false)}
-              className="min-h-11 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="min-h-11 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 cursor-pointer"
             >
               Cancel
             </button>
-            <p role={state.message ? "status" : undefined} aria-live="polite" className={`text-sm ${state.ok ? "text-emerald-700" : "text-rose-700"}`}>
+            <p role={state.message ? "status" : undefined} aria-live="polite" className={`text-xs ${state.ok ? "text-emerald-700" : "text-rose-700"}`}>
               {state.message}
             </p>
           </div>
         </form>
+      )}
+
+      {/* ======================================================== */}
+      {/* 0. LOCALITY & STORE ADDRESS MODAL (Read-Only Popup)       */}
+      {/* ======================================================== */}
+      {showLocalityModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-700">
+                  <span className="material-symbols-outlined text-[20px]">location_on</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">Locality &amp; Store Address</h3>
+                  <p className="text-xs text-slate-500">Public discovery address details (View Mode)</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowLocalityModal(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Locality</span>
+                <p className="mt-1 text-xs font-bold text-slate-900">{localityVal?.trim() || "Not provided"}</p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">City</span>
+                <p className="mt-1 text-xs font-bold text-slate-900">{cityVal?.trim() || "Not provided"}</p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">District</span>
+                <p className="mt-1 text-xs font-bold text-slate-900">{districtVal?.trim() || "Not provided"}</p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">State</span>
+                <p className="mt-1 text-xs font-bold text-slate-900">{stateVal?.trim() || "Not provided"}</p>
+              </div>
+
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 sm:col-span-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Pincode</span>
+                <p className="mt-1 text-xs font-mono font-bold text-slate-900">{pincodeVal?.trim() || "Not provided"}</p>
+              </div>
+
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 sm:col-span-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 block">Live GPS Location</span>
+                  {currentLat !== null && currentLon !== null && (
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 rounded-full px-2 py-0.5">
+                      ✓ Active GPS
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs font-mono font-bold text-slate-900">
+                  {currentLat !== null && currentLon !== null ? `${currentLat}, ${currentLon}` : "GPS coordinates not captured yet"}
+                </p>
+                {currentCapturedAt && (
+                  <p className="mt-0.5 text-[10px] text-slate-500">
+                    Captured: {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Kolkata" }).format(new Date(currentCapturedAt))}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
+              <span className="material-symbols-outlined text-amber-600 text-base shrink-0">lock</span>
+              <span>Yeh popup sirf dekhne ke liye hai. Locality ya GPS change karne ke liye pehle <strong>Edit Details</strong> se OTP verify karke unlock kijiye.</span>
+            </div>
+
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowLocalityModal(false);
+                  setShowEditAuthModal(true);
+                  setEditAuthSent(false);
+                  setEditAuthOtp("");
+                  setEditAuthMsg({ text: "Locality address edit karne ke liye OTP verify kijiye.", error: false });
+                }}
+                className="px-4 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold hover:bg-indigo-100 cursor-pointer"
+              >
+                Edit Locality Details →
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowLocalityModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ======================================================== */}

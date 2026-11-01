@@ -11,7 +11,6 @@ const items = [
   { href: "/merchant/dashboard/business", label: "My Business", icon: "business" },
   { href: "/merchant/dashboard/orders", label: "Live Orders & Queue", icon: "orders" },
   { href: "/merchant/dashboard/menu", label: "Menu & Items", icon: "menu" },
-  { href: "/merchant/dashboard/fleet", label: "Delivery & Fleet", icon: "fleet" },
   { href: "/merchant/dashboard/qr", label: "My QR Code", icon: "qr" },
   { href: "/merchant/dashboard/products", label: "QR Standees & Kits", icon: "products" },
   { href: "/merchant/dashboard/reviews", label: "Customer Reviews", icon: "reviews" },
