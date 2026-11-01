@@ -1,7 +1,7 @@
 "use client";
 
 import type { AdminBankChangeItem } from "@/lib/bank-payouts-service";
-import { approveBankChangeAction, rejectBankChangeAction } from "@/app/merchants/actions";
+import { approveBankChangeAction, rejectBankChangeAction, toggleAllowTakingOrdersAction } from "@/app/merchants/actions";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -166,6 +166,8 @@ function DetailDialog({
   onClose: () => void;
   onOpenQr: (business: Business) => void;
 }) {
+  const [allowedTakingOrders, setAllowedTakingOrders] = useState(Boolean(business.allow_taking_orders));
+  const [isTogglingOrders, setIsTogglingOrders] = useState(false);
   const merchantStatus = business.merchant_status || "pending";
   const detailGroups = [
     {
@@ -195,6 +197,7 @@ function DetailDialog({
       items: [
         ["Merchant Status", merchantStatus],
         ["Account State", provisioned ? "Provisioned" : "Not Provisioned"],
+        ["Taking Orders Permission", allowedTakingOrders ? "Allowed (Active)" : "Disallowed (Paused)"],
       ] as const,
     },
     {
@@ -282,6 +285,33 @@ function DetailDialog({
             className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-sm font-bold text-white shadow-xs hover:bg-blue-700 transition"
           >
             🔲 Merchant QR
+          </button>
+          <button
+            type="button"
+            disabled={isTogglingOrders}
+            onClick={async () => {
+              setIsTogglingOrders(true);
+              const nextVal = !allowedTakingOrders;
+              const res = await toggleAllowTakingOrdersAction(business.id, nextVal);
+              if (res.success) {
+                setAllowedTakingOrders(nextVal);
+                alert(res.message);
+              } else {
+                alert(res.message);
+              }
+              setIsTogglingOrders(false);
+            }}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-bold shadow-xs transition ${
+              allowedTakingOrders
+                ? "bg-rose-100 text-rose-800 border border-rose-300 hover:bg-rose-200"
+                : "bg-emerald-600 text-white hover:bg-emerald-700"
+            }`}
+          >
+            {isTogglingOrders
+              ? "Updating..."
+              : allowedTakingOrders
+              ? "🛑 Revoke Taking Orders Access"
+              : "🛵 Allow Outlet for Taking Orders"}
           </button>
         </div>
       </section>
@@ -754,7 +784,7 @@ export default function MerchantManagement({
               <tbody className="divide-y divide-slate-100 bg-white">
                 {filteredRows.map((business) => {
                   const provisioned = provisionedIds.has(business.id);
-                  const merchantStatus = business.merchant_status || "pending";
+  const merchantStatus = business.merchant_status || "pending";
                   return (
                     <tr key={business.id} className="align-top transition hover:bg-slate-50/70">
                       <td className="px-3 py-4">

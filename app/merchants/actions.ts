@@ -166,3 +166,39 @@ export async function rejectBankChangeAction(
   revalidateMerchantLists();
   return res;
 }
+
+
+export async function toggleAllowTakingOrdersAction(
+  businessIdInput: unknown,
+  allowTakingOrders: boolean
+) {
+  const admin = await requireActiveAdmin();
+  if (!admin) return { success: false, message: "Unauthorized: Active admin required." };
+
+  if (typeof businessIdInput !== "string" || !BUSINESS_ID_PATTERN.test(businessIdInput)) {
+    return { success: false, message: "Invalid merchant identifier." };
+  }
+
+  try {
+    const adminClient = createSupabaseAdminClient();
+    const { error } = await adminClient
+      .from("businesses")
+      .update({ allow_taking_orders: allowTakingOrders })
+      .eq("id", businessIdInput);
+
+    if (error) {
+      return { success: false, message: error.message || "Failed to update permission." };
+    }
+
+    revalidateMerchantLists();
+    return {
+      success: true,
+      allowTakingOrders,
+      message: allowTakingOrders
+        ? "Outlet has been approved for online order intake."
+        : "Outlet online order intake permission revoked.",
+    };
+  } catch {
+    return { success: false, message: "Server error updating order permission." };
+  }
+}

@@ -234,7 +234,7 @@ export default async function MerchantDashboardPage() {
               <div className="flex flex-wrap items-center gap-2 mb-1.5">
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
                   <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                  Open &amp; Taking Orders
+                  Outlet: {merchant.isOutletOpen ? "Open" : "Closed"}
                 </span>
                 <span className="text-xs text-slate-400">•</span>
                 <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
@@ -258,7 +258,7 @@ export default async function MerchantDashboardPage() {
 
               {/* Greeting Headline */}
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                Namaste, {merchant.ownerName || merchant.businessName}! 👋
+                Namaste, {(merchant.ownerName || merchant.businessName || "Merchant").trim().split(/\s+/)[0]} ji! 🙏
               </h1>
               <p className="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium">
                 Welcome back to <strong className="text-slate-800">{merchant.businessName}</strong> console. Have a profitable day!
@@ -266,11 +266,11 @@ export default async function MerchantDashboardPage() {
             </div>
           </div>
 
-          {/* Right: Quick Action Buttons (Modern Vibrant Blue Action) */}
+          {/* Right: Quick Action Buttons (Matching Rates & Menu styling) */}
           <div className="flex items-center gap-2.5 self-start lg:self-center">
             <Link
               href="/merchant/dashboard/orders"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black shadow-md shadow-blue-500/25 border border-blue-400/30 transition-all transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
             >
               <span className="material-symbols-outlined text-[17px]">receipt_long</span>
               <span>View Orders ({pendingOrders.length})</span>
@@ -403,7 +403,7 @@ export default async function MerchantDashboardPage() {
             <div className="mt-4 flex items-center justify-center gap-2">
               <Link
                 href="/merchant/dashboard/orders"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 transition-all"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
               >
                 <span className="material-symbols-outlined text-[16px]">point_of_sale</span>
                 <span>Open Full KOT Console</span>
@@ -431,7 +431,7 @@ export default async function MerchantDashboardPage() {
                   <span className="text-base font-extrabold text-[#131b2e]">₹{order.total_amount}</span>
                   <Link
                     href="/merchant/dashboard/orders"
-                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:from-blue-700 hover:to-indigo-700 shadow-xs transition-all"
+                    className="px-3.5 py-1.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
                   >
                     Accept in KOT →
                   </Link>

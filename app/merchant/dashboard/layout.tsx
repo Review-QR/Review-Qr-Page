@@ -2,6 +2,7 @@ import Link from "next/link";
 import { merchantSignOutAction } from "@/app/merchant/login/actions";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import MerchantNavigation from "./merchant-navigation";
+import OutletStatusToggles from "./outlet-status-toggles";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import { normalizePlanTier } from "@/lib/plan-rules";
 import "./dashboard.css";
@@ -116,24 +117,20 @@ export default async function MerchantDashboardLayout({ children }: { children: 
             </div>
 
             <div className="flex items-center gap-3 sm:gap-4">
-              {/* Stacked Dual Control Buttons: Store Status + Taking Orders */}
-              <div className="flex flex-col gap-1 items-end">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800 shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span>Store: OPEN</span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[11px] font-bold text-blue-800 shadow-2xs">
-                  <span className="text-[10px]">🛵</span>
-                  <span>Orders: TAKING ORDERS</span>
-                </div>
-              </div>
+              {/* Stacked Dual Interactive Toggles: Outlet Status + Taking Orders */}
+              <OutletStatusToggles
+                businessId={merchant.businessId}
+                initialIsOutletOpen={merchant.isOutletOpen}
+                allowTakingOrders={merchant.allowTakingOrders}
+                initialIsTakingOrders={merchant.isTakingOrders}
+              />
 
-              {/* Vibrant Live Orders Button */}
+              {/* Clean White Live Orders Button styled like Rates & Menu */}
               <Link
                 href="/merchant/dashboard/orders"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black shadow-md shadow-blue-500/25 border border-blue-400/30 transition-all transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
               >
-                <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                <span className="material-symbols-outlined text-[17px] text-slate-600">receipt_long</span>
                 <span>Live Orders</span>
               </Link>
               <div className="h-5 w-px bg-[#eaedff] hidden sm:block"></div>

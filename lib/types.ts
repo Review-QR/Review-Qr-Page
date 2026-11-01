@@ -29,4 +29,8 @@ export type Business = {
   merchant_status?: string | null;
   deleted_at?: string | null;
   deleted_by?: string | null;
+  is_outlet_open?: boolean | null;
+  allow_taking_orders?: boolean | null;
+  is_taking_orders?: boolean | null;
+  logo_url?: string | null;
 };

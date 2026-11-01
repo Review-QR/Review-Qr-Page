@@ -34,6 +34,9 @@ export type MerchantContext = {
   expiry: string | null;
   reviewLink: string | null;
   logoUrl: string | null;
+  isOutletOpen: boolean;
+  allowTakingOrders: boolean;
+  isTakingOrders: boolean;
 };
 
 export async function getActiveMerchant(): Promise<MerchantContext | null> {
@@ -53,7 +56,7 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
 
     const { data: business, error: businessError } = await supabase
       .from("businesses")
-      .select("id, name, owner, phone, type, address, locality, city, district, state, pincode, discovery_location_verified_at, discovery_location_verified_by, discovery_location_verification_source, location_latitude, location_longitude, location_captured_at, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, logo_url, deleted_at")
+      .select("id, name, owner, phone, type, address, locality, city, district, state, pincode, discovery_location_verified_at, discovery_location_verified_by, discovery_location_verification_source, location_latitude, location_longitude, location_captured_at, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, logo_url, is_outlet_open, allow_taking_orders, is_taking_orders, deleted_at")
       .eq("id", mapping.business_id)
       .eq("merchant_status", "active")
       .is("deleted_at", null)
@@ -106,6 +109,9 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
       expiry: business.expiry,
       reviewLink: business.review_link,
       logoUrl: (business as { logo_url?: string | null }).logo_url ?? null,
+      isOutletOpen: (business as { is_outlet_open?: boolean | null }).is_outlet_open ?? true,
+      allowTakingOrders: (business as { allow_taking_orders?: boolean | null }).allow_taking_orders ?? false,
+      isTakingOrders: (business as { is_taking_orders?: boolean | null }).is_taking_orders ?? false,
     };
   } catch {
     // Fail closed without exposing database or session details to the merchant.
