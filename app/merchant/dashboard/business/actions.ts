@@ -47,26 +47,36 @@ export async function saveBusinessProfileAction(
   const name = String(formData.get("name") ?? "").trim();
   const type = String(formData.get("type") ?? "").trim();
   const owner = String(formData.get("owner") ?? "").trim();
-  const address = String(formData.get("address") ?? "").trim();
   const emailRaw = formData.get("email");
   const email = typeof emailRaw === "string" ? emailRaw.trim().toLowerCase() : "";
 
   if (!name || name.length > 200) return { ok: false, message: "Enter a business name under 200 characters." };
   if (!type || type.length > 120) return { ok: false, message: "Enter a business type under 120 characters." };
   if (!owner || owner.length > 200) return { ok: false, message: "Enter an owner name under 200 characters." };
-  if (!address || address.length > 1000) return { ok: false, message: "Enter a business address under 1,000 characters." };
   if (email && (!email.includes("@") || !email.includes("."))) {
     return { ok: false, message: "Enter a valid email address." };
   }
 
   const merchant = await getActiveMerchant();
   if (!merchant) return { ok: false, message: "Sign in to an active merchant account to update your profile." };
+  
+  const addressRaw = String(formData.get("address") ?? "").trim();
+  const address = addressRaw || merchant.address || "Main Road, Bahraich";
+
+  if (!address || address.length > 1000) return { ok: false, message: "Enter a business address under 1,000 characters." };
   if (!(await isAvailableBusinessType(type, true))) {
     return { ok: false, message: "Choose a valid business type from the category list." };
   }
-  const reviewLink = merchant.reviewLink ? safeReviewLink(merchant.reviewLink) : null;
-  if (merchant.reviewLink && !reviewLink) {
-    return { ok: false, message: "Update your Google Review link before saving business details." };
+
+  const reviewLinkRaw = formData.get("googleReviewLink") ?? formData.get("reviewLink");
+  let reviewLink: string | null = null;
+  if (reviewLinkRaw !== null && String(reviewLinkRaw).trim() !== "") {
+    reviewLink = safeGoogleReviewLink(String(reviewLinkRaw).trim());
+    if (!reviewLink) {
+      return { ok: false, message: "Enter a valid HTTPS Google Review link (e.g. https://maps.app.goo.gl/...)." };
+    }
+  } else {
+    reviewLink = merchant.reviewLink ? safeReviewLink(merchant.reviewLink) : null;
   }
 
   try {
@@ -89,6 +99,50 @@ export async function saveBusinessProfileAction(
   } catch {
     return { ok: false, message: "We could not save your business details. Please try again." };
   }
+}
+
+/** Request OTP on current registered phone to unlock business profile editing */
+export async function requestMerchantProfileEditOtpAction(): Promise<{
+  success: boolean;
+  message: string;
+  maskedPhone?: string;
+  previewOtp?: string;
+}> {
+  const merchant = await getActiveMerchant();
+  if (!merchant) return { success: false, message: "Please sign in to edit your business profile." };
+
+  const phone = normalizeTrustitPhone(merchant.registeredMobile);
+  if (!phone) return { success: false, message: "No registered mobile number found on account." };
+
+  const digits = phone.replace(/\D/g, "").slice(-10);
+  const maskedPhone = `+91 ******${digits.slice(-4)}`;
+
+  const res = await sendMerchantPhoneOtp(phone, merchant.businessName);
+  return {
+    success: res.success,
+    message: res.message,
+    maskedPhone,
+    previewOtp: res.previewOtp,
+  };
+}
+
+/** Verify OTP to unlock business profile editing */
+export async function verifyMerchantProfileEditOtpAction(
+  otp: string,
+): Promise<{ success: boolean; message: string }> {
+  const merchant = await getActiveMerchant();
+  if (!merchant) return { success: false, message: "Please sign in to edit your business profile." };
+
+  const phone = normalizeTrustitPhone(merchant.registeredMobile);
+  if (!phone) return { success: false, message: "No registered mobile number found." };
+  if (!otp || otp.trim().length !== 6) return { success: false, message: "Enter a valid 6-digit OTP code." };
+
+  const verification = await verifyMerchantPhoneOtp(phone, otp.trim());
+  if (!verification.success) {
+    return { success: false, message: verification.message };
+  }
+
+  return { success: true, message: "Identity verified. You can now edit your business details." };
 }
 
 /** 1. Request OTP for Changing Registered Mobile */

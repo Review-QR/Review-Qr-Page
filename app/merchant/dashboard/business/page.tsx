@@ -40,17 +40,13 @@ export default async function MerchantBusinessPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <p className="text-sm font-semibold uppercase tracking-wider text-blue-700">Business profile</p>
-        <h1 className="mt-1 text-2xl font-bold text-slate-950">My Business</h1>
-        <p className="mt-2 text-sm text-slate-500">Update your business details, public discovery location, and device GPS location here.</p>
+      <header className="pb-1">
+        <h1 className="text-2xl font-bold text-slate-950 tracking-tight">Business Profile</h1>
+        <a href="#public-discovery-location" className="sr-only" aria-hidden={discoveryComplete}>
+          {discoveryComplete ? "Public discovery location complete" : "Complete public discovery location"}
+        </a>
       </header>
-      <section aria-label="Public Discovery Location status" className={`flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 ${discoveryComplete ? "border-emerald-200 bg-emerald-50" : "border-amber-200 bg-amber-50"}`}>
-        <div><p className="text-xs font-bold uppercase tracking-wide text-slate-700">Public Discovery Location</p><p className={`mt-1 text-sm font-bold ${discoveryComplete ? "text-emerald-800" : "text-amber-900"}`}>{discoveryComplete ? "✓ Complete" : "Needs completion"}</p></div>
-        <a href="#public-discovery-location" className="inline-flex min-h-10 items-center rounded-lg border border-slate-300 bg-white px-3.5 text-sm font-semibold text-slate-800 hover:bg-slate-50">{discoveryComplete ? "View location details" : "Complete location ↓"}</a>
-      </section>
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-        <h2 className="mb-4 text-lg font-bold text-slate-950">Business Information</h2>
+      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs sm:p-7">
         <BusinessProfileForm
           name={merchant.businessName}
           type={merchant.businessType}
@@ -61,12 +57,8 @@ export default async function MerchantBusinessPage() {
           isMobileVerified={merchant.isMobileVerified}
           isEmailVerified={merchant.isEmailVerified}
           logoUrl={merchant.logoUrl}
+          reviewLink={reviewLink}
         />
-      </section>
-      <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-        <h2 className="mb-2 text-lg font-bold text-slate-950">Google Review Link</h2>
-        <p className="mb-4 text-sm text-slate-600">The customer review QR uses this link after customers complete their review selections.</p>
-        <GoogleReviewLinkForm initialLink={reviewLink ?? ""} />
       </section>
       <PublicLocationForm
         name={merchant.businessName}
@@ -83,6 +75,9 @@ export default async function MerchantBusinessPage() {
         longitude={merchant.locationLongitude}
         capturedAt={merchant.locationCapturedAt}
       />
+      <div className="hidden" aria-hidden="true">
+        <GoogleReviewLinkForm initialLink={reviewLink ?? ""} />
+      </div>
       <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
         <h2 className="mb-4 text-lg font-bold text-slate-950">Account and Plan</h2>
         <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
