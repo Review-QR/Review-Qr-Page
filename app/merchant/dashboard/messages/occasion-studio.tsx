@@ -28,7 +28,7 @@ export const TEMPLATE_MESSAGES: Record<
   birthday: {
     hinglish: {
       headline: "🎉 Happy Birthday!",
-      subtitle: "Dear Lucky Ji, wishes from our entire team!",
+      subtitle: "Aapke is khas din par dhero shubh-kamnaye — hamari poori team ki taraf se!",
       messages: [
         "Aapke is khas janamdin par hamari taraf se dher saari shubh-kamnaye! 🎉 Aapka aane wala saal khushiyo se bhara ho. Hamare sang jude rehne ke liye dil se shukriya!",
         "Janmadin ki dher saari badhaiyan! 🎂 Aapka yeh khas din mangalmay ho. Is khas din ko aur bhi yaadgar banane ke liye hamari taraf se ek chhota sa uphar!",
@@ -37,7 +37,7 @@ export const TEMPLATE_MESSAGES: Record<
     },
     hindi: {
       headline: "🎉 जन्मदिन की हार्दिक बधाई!",
-      subtitle: "श्री लकी जी, हमारे समस्त परिवार की ओर से सप्रेम मंगलकामनाएं!",
+      subtitle: "आपके उत्तम स्वास्थ्य और खुशियों की मंगलकामनाएं — हमारी पूरी टीम की ओर से!",
       messages: [
         "आपके इस पावन जन्मदिन पर हमारे पूरे प्रतिष्ठान की ओर से हार्दिक शुभकामनाएं! 🎂 ईश्वर आपको उत्तम स्वास्थ्य, दीर्घायु और अपार खुशियां प्रदान करें।",
         "जन्मदिन की अनंत बधाई! 🌟 आपका जीवन सदैव सुख, शांति और समृद्धि से परिपूर्ण रहे। आपके इस विशेष दिन को खास बनाने के लिए हमारी तरफ से यह उपहार!",
@@ -46,7 +46,7 @@ export const TEMPLATE_MESSAGES: Record<
     },
     english: {
       headline: "🎉 Happy Birthday!",
-      subtitle: "Dear Lucky Ji, warmest wishes from our entire team!",
+      subtitle: "Wishing you a joyful celebration and happiness — from our entire team!",
       messages: [
         "Wishing you a very Happy Birthday! 🌟 May this year bring you immense success, good health, and joyful moments. Thank you for being a wonderful patron!",
         "Warmest birthday wishes to you! 🎂 May your day be filled with laughter and cherished memories. Celebrate your day with our special treat!",
@@ -533,12 +533,13 @@ export default function OccasionStudio({
                     EXCLUSIVE GIFT COUPON (VALID {couponValidityDays} DAYS)
                   </span>
 
-                  {/* Golden Ticket Pill with Notches */}
-                  <div className="relative mx-auto my-1.5 max-w-[210px] rounded-xl bg-gradient-to-r from-[#d4af37] via-[#f7e8b6] to-[#d4af37] py-1.5 px-4 font-mono text-base font-black tracking-wider text-[#1a1205] shadow-[0_4px_12px_rgba(212,175,55,0.4)]">
-                    {couponCode}
+                  {/* Universal VIP Ticket Pill */}
+                  <div className="relative mx-auto my-1.5 max-w-[230px] rounded-xl bg-gradient-to-r from-[#d4af37] via-[#f7e8b6] to-[#d4af37] py-1.5 px-4 font-mono text-sm sm:text-base font-black tracking-wider text-[#1a1205] shadow-[0_4px_12px_rgba(212,175,55,0.4)]">
+                    VIP PASS · FLAT {discountPercent}% OFF
                   </div>
 
-                  <span className="text-xs font-bold text-white">Flat {discountPercent}% OFF On Your Visit!</span>
+                  <span className="text-xs font-bold text-white block">Flat {discountPercent}% OFF On Your Visit!</span>
+                  <span className="text-[10px] text-amber-200/80 block mt-0.5">Show message code below to redeem</span>
                 </div>
 
                 {/* Golden Ribbon Bow at the Bottom Center */}
@@ -607,12 +608,13 @@ export default function OccasionStudio({
                     EXCLUSIVE GIFT COUPON (VALID {couponValidityDays} DAYS)
                   </span>
 
-                  {/* Cream/Golden Ticket Pill with Notches */}
-                  <div className="relative mx-auto my-1.5 max-w-[210px] rounded-xl bg-gradient-to-r from-[#f0d9ab] via-[#fcedcf] to-[#e8cb97] py-1.5 px-4 font-mono text-base font-black tracking-wider text-[#3a2510] shadow-sm border border-[#dfc698]">
-                    {couponCode}
+                  {/* Universal Cream/Golden Ticket Pill */}
+                  <div className="relative mx-auto my-1.5 max-w-[230px] rounded-xl bg-gradient-to-r from-[#f0d9ab] via-[#fcedcf] to-[#e8cb97] py-1.5 px-4 font-mono text-sm sm:text-base font-black tracking-wider text-[#3a2510] shadow-sm border border-[#dfc698]">
+                    VIP PASS · FLAT {discountPercent}% OFF
                   </div>
 
-                  <span className="text-xs font-bold text-[#2d1e11]">Flat {discountPercent}% OFF On Your Visit!</span>
+                  <span className="text-xs font-bold text-[#2d1e11] block">Flat {discountPercent}% OFF On Your Visit!</span>
+                  <span className="text-[10px] text-[#5c3e1e]/80 block mt-0.5">Show message code below to redeem</span>
                 </div>
               </div>
             )}

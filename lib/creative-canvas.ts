@@ -513,13 +513,16 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
 
     // Code
     ctx.fillStyle = "#1a1205";
-    ctx.font = "900 44px monospace";
-    ctx.fillText(couponCode, width / 2, pillY + 56);
+    ctx.font = "900 38px monospace";
+    ctx.fillText(`VIP PASS · ${discountPercent}% OFF`, width / 2, pillY + 56);
 
     // Ticket Subtext
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 30px sans-serif";
-    ctx.fillText(`Flat ${discountPercent}% OFF On Your Visit!`, width / 2, couponBoxY + 230);
+    ctx.fillText(`Flat ${discountPercent}% OFF On Your Visit!`, width / 2, couponBoxY + 225);
+    ctx.font = "italic 20px sans-serif";
+    ctx.fillStyle = "#f0dfaa";
+    ctx.fillText(`(Show WhatsApp message code below to redeem)`, width / 2, couponBoxY + 258);
     ctx.restore();
 
     // Golden Ribbon Bow at the bottom
@@ -641,13 +644,16 @@ export function renderOccasionGreetingPoster(opts: RenderOccasionPosterOptions) 
 
     // Code
     ctx.fillStyle = "#3a2510";
-    ctx.font = "900 44px monospace";
-    ctx.fillText(couponCode, width / 2, pillY + 56);
+    ctx.font = "900 38px monospace";
+    ctx.fillText(`VIP PASS · ${discountPercent}% OFF`, width / 2, pillY + 56);
 
     // Ticket Subtext
     ctx.fillStyle = "#2d1e11";
     ctx.font = "bold 30px sans-serif";
-    ctx.fillText(`Flat ${discountPercent}% OFF On Your Visit!`, width / 2, couponBoxY + 230);
+    ctx.fillText(`Flat ${discountPercent}% OFF On Your Visit!`, width / 2, couponBoxY + 225);
+    ctx.font = "italic 20px sans-serif";
+    ctx.fillStyle = "#8a6d4d";
+    ctx.fillText(`(Show WhatsApp message code below to redeem)`, width / 2, couponBoxY + 258);
     ctx.restore();
   }
 }
