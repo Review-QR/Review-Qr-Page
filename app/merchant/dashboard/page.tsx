@@ -1,15 +1,8 @@
 import Link from "next/link";
-import { appConfig } from "@/lib/config";
 import { isPublicDiscoveryLocationComplete } from "@/lib/business-location";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import { normalizePlanTier } from "@/lib/plan-rules";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
-import MyQrCode from "./my-qr-code";
-import ScanAnalytics from "./scan-analytics";
-import { getPersistedBusinessQrDesignAssets } from "@/lib/trustit-ai/qr-design-assets.server";
-import { qrTemplates } from "./qr/templates";
-import ReviewCard from "./review-card";
-import MerchantConsoleClient from "./merchant-console-client";
 import OccasionDashboardCard from "./occasion-dashboard-card";
 import { getMerchantOccasionSummary, getMerchantConnectWallet } from "@/lib/customer-crm-service";
 
@@ -20,201 +13,161 @@ type DashboardStats = {
   this_month_scans: number | string;
   total_reviews: number | string;
   average_rating: number | string | null;
-  rating_5_count: number | string;
-  rating_4_count: number | string;
-  rating_3_count: number | string;
-  rating_2_count: number | string;
-  rating_1_count: number | string;
-  experience_counts: unknown;
 };
-
-type Review = {
-  review_id: string;
-  rating: number;
-  review_text: string;
-  selected_experiences: string[];
-  submitted_at: string;
-};
-
-type Payment = { cashfree_order_id: string; amount: number | string; currency: string; payment_status: string; created_at: string };
-type ExperienceCount = { label: string; count: number };
 
 function count(value: number | string | null | undefined) {
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
 }
 
-function dateLabel(value: string | null | undefined) {
-  if (!value) return "—";
-  const date = new Date(value.length === 10 ? `${value}T00:00:00Z` : value);
-  return Number.isFinite(date.getTime())
-    ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium", timeZone: "Asia/Kolkata" }).format(date)
-    : "—";
-}
-
-function amountLabel(amount: number | string | null | undefined, currency = "INR") {
-  const value = typeof amount === "number" ? amount : Number(amount);
-  if (!Number.isFinite(value)) return "—";
-  return new Intl.NumberFormat("en-IN", { style: "currency", currency, maximumFractionDigits: 2 }).format(value);
-}
-
-function greeting() {
-  const hour = Number(new Intl.DateTimeFormat("en-IN", { hour: "numeric", hourCycle: "h23", timeZone: "Asia/Kolkata" }).format(new Date()));
-  return hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-}
-
-
 function getCategoryLauncher(type: string | null | undefined) {
-  const norm = (type || '').toLowerCase();
-  if (norm.includes('restaurant') || norm.includes('cafe') || norm.includes('food') || norm.includes('sweet')) {
+  const norm = (type || "").toLowerCase();
+  if (norm.includes("restaurant") || norm.includes("cafe") || norm.includes("food") || norm.includes("sweet")) {
     return {
-      emoji: '🍔',
-      badge: 'KITCHEN KOT & FOOD MENU',
-      title: 'Manage Restaurant Menu & Kitchen KOT',
-      subtitle: 'Add dishes, update cooking prep times, and receive loud audio alerts on new orders.',
-      cta: 'Open Menu & KOT Console →',
-      href: '/merchant/dashboard/menu',
-      gradient: 'from-orange-500/10 via-amber-500/5 to-white',
-      borderColor: 'border-orange-200',
-      btnClass: 'bg-orange-600 hover:bg-orange-700 text-white',
+      emoji: "🍔",
+      badge: "KITCHEN KOT & FOOD MENU",
+      title: "Manage Restaurant Menu & Kitchen KOT",
+      subtitle: "Add dishes, update cooking prep times, and receive loud audio alerts on new orders.",
+      cta: "Open Menu & KOT Console →",
+      href: "/merchant/dashboard/menu",
+      gradient: "from-orange-500/10 via-amber-500/5 to-white",
+      borderColor: "border-orange-200",
+      btnClass: "bg-orange-600 hover:bg-orange-700 text-white",
     };
   }
-  if (norm.includes('grocery') || norm.includes('kirana') || norm.includes('supermarket')) {
+  if (norm.includes("grocery") || norm.includes("kirana") || norm.includes("supermarket")) {
     return {
-      emoji: '🛒',
-      badge: 'KIRANA MASTER RATES & PARCHA',
-      title: 'Master Rates Editor & Smart Parcha Hub',
-      subtitle: '50+ daily essentials loaded. Enter your rates to set items live, and quote customer grocery parchis in 1 click.',
-      cta: 'Open Kirana Rates Editor →',
-      href: '/merchant/dashboard/menu',
-      gradient: 'from-emerald-500/10 via-teal-500/5 to-white',
-      borderColor: 'border-emerald-200',
-      btnClass: 'bg-emerald-600 hover:bg-emerald-700 text-white',
+      emoji: "🛒",
+      badge: "KIRANA MASTER RATES & PARCHA",
+      title: "Master Rates Editor & Smart Parcha Hub",
+      subtitle: "50+ daily essentials loaded. Enter your rates to set items live, and quote customer grocery parchis in 1 click.",
+      cta: "Open Kirana Rates Editor →",
+      href: "/merchant/dashboard/menu",
+      gradient: "from-emerald-500/10 via-teal-500/5 to-white",
+      borderColor: "border-emerald-200",
+      btnClass: "bg-emerald-600 hover:bg-emerald-700 text-white",
     };
   }
-  if (norm.includes('dairy') || norm.includes('milk')) {
+  if (norm.includes("dairy") || norm.includes("milk")) {
     return {
-      emoji: '🥛',
-      badge: 'DAIRY PRODUCTS & SLOTS',
-      title: 'Manage Pure Milk, Paneer & Delivery Slots',
-      subtitle: 'Update daily fresh milk and paneer rates, and check morning and evening dispatch schedules.',
-      cta: 'Open Dairy Pricing & Slots →',
-      href: '/merchant/dashboard/menu',
-      gradient: 'from-sky-500/10 via-blue-500/5 to-white',
-      borderColor: 'border-sky-200',
-      btnClass: 'bg-sky-600 hover:bg-sky-700 text-white',
+      emoji: "🥛",
+      badge: "DAIRY PRODUCTS & SLOTS",
+      title: "Manage Pure Milk, Paneer & Delivery Slots",
+      subtitle: "Update daily fresh milk and paneer rates, and check morning and evening dispatch schedules.",
+      cta: "Open Dairy Pricing & Slots →",
+      href: "/merchant/dashboard/menu",
+      gradient: "from-sky-500/10 via-blue-500/5 to-white",
+      borderColor: "border-sky-200",
+      btnClass: "bg-sky-600 hover:bg-sky-700 text-white",
     };
   }
-  if (norm.includes('salon') || norm.includes('barber') || norm.includes('beauty') || norm.includes('spa')) {
+  if (norm.includes("salon") || norm.includes("barber") || norm.includes("beauty") || norm.includes("spa")) {
     return {
-      emoji: '✂️',
-      badge: 'SALON QUEUE & TOKEN PASS',
-      title: 'Manage Salon Services, Rates & Live Queue',
-      subtitle: 'Set haircut and grooming charges, manage stylist chairs, and monitor live customer queue passes.',
-      cta: 'Open Salon Console →',
-      href: '/merchant/dashboard/menu',
-      gradient: 'from-purple-500/10 via-indigo-500/5 to-white',
-      borderColor: 'border-purple-200',
-      btnClass: 'bg-purple-600 hover:bg-purple-700 text-white',
+      emoji: "✂️",
+      badge: "SALON QUEUE & TOKEN PASS",
+      title: "Manage Salon Services, Rates & Live Queue",
+      subtitle: "Set haircut and grooming charges, manage stylist chairs, and monitor live customer queue passes.",
+      cta: "Open Salon Console →",
+      href: "/merchant/dashboard/menu",
+      gradient: "from-purple-500/10 via-indigo-500/5 to-white",
+      borderColor: "border-purple-200",
+      btnClass: "bg-purple-600 hover:bg-purple-700 text-white",
     };
   }
-  if (norm.includes('car') || norm.includes('wash') || norm.includes('auto')) {
+  if (norm.includes("car") || norm.includes("wash") || norm.includes("auto")) {
     return {
-      emoji: '🚗',
-      badge: 'WASH PACKAGES & BAY QUEUE',
-      title: 'Manage Wash Packages, Detailing & Bays',
-      subtitle: 'Update foam wash and detailing rates, and control live bay availability.',
-      cta: 'Open Wash Packages →',
-      href: '/merchant/dashboard/menu',
-      gradient: 'from-indigo-500/10 via-blue-500/5 to-white',
-      borderColor: 'border-indigo-200',
-      btnClass: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+      emoji: "🚗",
+      badge: "WASH PACKAGES & BAY QUEUE",
+      title: "Manage Wash Packages, Detailing & Bays",
+      subtitle: "Update foam wash and detailing rates, and control live bay availability.",
+      cta: "Open Wash Packages →",
+      href: "/merchant/dashboard/menu",
+      gradient: "from-indigo-500/10 via-blue-500/5 to-white",
+      borderColor: "border-indigo-200",
+      btnClass: "bg-indigo-600 hover:bg-indigo-700 text-white",
     };
   }
   return {
-    emoji: '⚡',
-    badge: 'HYPERLOCAL WORKSPACE',
-    title: 'Category Catalog & Live Operations',
-    subtitle: 'Manage your rates, live availability, and hyperlocal customer requests.',
-    cta: 'Manage Catalog & Rates →',
-    href: '/merchant/dashboard/menu',
-    gradient: 'from-blue-500/10 via-indigo-500/5 to-white',
-    borderColor: 'border-blue-200',
-    btnClass: 'bg-blue-600 hover:bg-blue-700 text-white',
+    emoji: "⚡",
+    badge: "HYPERLOCAL WORKSPACE",
+    title: "Category Catalog & Live Operations",
+    subtitle: "Manage your rates, live availability, and hyperlocal customer requests.",
+    cta: "Manage Catalog & Rates →",
+    href: "/merchant/dashboard/menu",
+    gradient: "from-blue-500/10 via-indigo-500/5 to-white",
+    borderColor: "border-blue-200",
+    btnClass: "bg-blue-600 hover:bg-blue-700 text-white",
   };
 }
 
-function infoField(label: string, value: string | null | undefined) {
-  return <div key={label} className="merchant-data-field"><dt>{label}</dt><dd>{value?.trim() || "—"}</dd></div>;
-}
-
 function StatIcon({ kind }: { kind: "qr" | "bars" | "star" }) {
-  if (kind === "qr") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v2m-3 3h4v2h-2" /></svg>;
-  if (kind === "bars") return <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><rect x="3" y="13" width="4" height="8" rx="1" /><rect x="10" y="8" width="4" height="13" rx="1" /><rect x="17" y="3" width="4" height="18" rx="1" /></svg>;
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 2.9 6.1 6.7.9-4.9 4.7 1.2 6.6-5.9-3.2-5.9 3.2 1.2-6.6-4.9-4.7 6.7-.9L12 2Z" /></svg>;
+  if (kind === "qr")
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+        <path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v2m-3 3h4v2h-2" />
+      </svg>
+    );
+  if (kind === "bars")
+    return (
+      <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+        <rect x="3" y="13" width="4" height="8" rx="1" />
+        <rect x="10" y="8" width="4" height="13" rx="1" />
+        <rect x="17" y="3" width="4" height="18" rx="1" />
+      </svg>
+    );
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+      <path d="m12 2 2.9 6.1 6.7.9-4.9 4.7 1.2 6.6-5.9-3.2-5.9 3.2 1.2-6.6-4.9-4.7 6.7-.9L12 2Z" />
+    </svg>
+  );
 }
 
-function StatCard({ label, value, detail, tone, icon }: { label: string; value: string; detail: string; tone: string; icon: "qr" | "bars" | "star" }) {
-  return <article className={`merchant-stat merchant-stat--${tone}`}><span className="merchant-stat__icon"><StatIcon kind={icon} /></span><div className="merchant-stat__copy"><p>{label}</p><strong>{value}</strong><small>{detail}</small></div></article>;
+function StatCard({
+  label,
+  value,
+  detail,
+  tone,
+  icon,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+  tone: string;
+  icon: "qr" | "bars" | "star";
+}) {
+  return (
+    <article className={`merchant-stat merchant-stat--${tone}`}>
+      <span className="merchant-stat__icon">
+        <StatIcon kind={icon} />
+      </span>
+      <div className="merchant-stat__copy">
+        <p>{label}</p>
+        <strong>{value}</strong>
+        <small>{detail}</small>
+      </div>
+    </article>
+  );
 }
-
-const actions = [
-  { href: "/merchant/dashboard/qr", title: "View QR", description: "View and download your Trustit QR." },
-  { href: "/merchant/dashboard/reviews", title: "Customer Reviews", description: "Read customer feedback shared on Trustit." },
-  { href: "/merchant/dashboard/business", title: "My Business", description: "View your registered business details." },
-  { href: "/merchant/dashboard/subscription", title: "Subscription", description: "Review your plan and renewal options." },
-  { href: "/merchant/dashboard/payments", title: "Payments", description: "View payments for your business." },
-];
 
 export default async function MerchantDashboardPage() {
   const merchant = await requireActiveMerchant();
   const isPremium = normalizePlanTier(merchant.plan) === "premium";
   const launcher = getCategoryLauncher(merchant.businessType);
-  let designAssets: Awaited<ReturnType<typeof getPersistedBusinessQrDesignAssets>> | undefined;
-  let designAssetError: string | undefined;
-  try {
-    designAssets = await getPersistedBusinessQrDesignAssets(merchant.businessId, merchant.businessType);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "";
-    const openAiStatus = /^OpenAI image generation failed \((\d{3})\)\.$/.exec(message)?.[1];
-    const failureCategory = openAiStatus
-      ? `OpenAI HTTP ${openAiStatus}`
-      : /Unable to load saved QR design assets/.test(message)
-        ? "Supabase asset lookup"
-        : /Unable to persist QR design metadata/.test(message)
-          ? "Supabase asset metadata write"
-          : /Server-side Supabase Auth administration is not configured/.test(message)
-            ? "Supabase service secret missing"
-            : error instanceof Error ? error.name : "UnknownError";
-    console.error("Trustit QR artwork unavailable while rendering merchant dashboard", failureCategory);
-    designAssetError = "Custom artwork is temporarily unavailable. Your QR code and standard poster designs are still ready.";
-  }
+
   const supabase = await createMerchantServerClient();
-  const [
-    statsResult,
-    activityResult,
-    reviewsResult,
-    subscriptionResult,
-    paymentsResult,
-    ordersResult,
-    occasionSummary,
-    walletState,
-  ] = await Promise.all([
+  const [statsResult, ordersResult, occasionSummary, walletState] = await Promise.all([
     supabase.rpc("get_merchant_dashboard_stats", { p_business_id: merchant.businessId }),
-    supabase.rpc("get_merchant_scan_activity", { p_business_id: merchant.businessId, p_days: 90 }),
-    supabase.rpc("get_merchant_trustit_reviews", { p_business_id: merchant.businessId }).order("submitted_at", { ascending: false }).limit(5),
-    supabase.from("subscriptions").select("amount, status, starts_at, expires_at, auto_renew, created_at").eq("business_id", merchant.businessId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-    supabase.from("payment_records").select("cashfree_order_id, amount, currency, payment_status, created_at").eq("business_id", merchant.businessId).order("created_at", { ascending: false }).limit(5),
-    supabase.from("hyperlocal_orders").select("id, status, customer_name, customer_phone, total_amount, items, created_at, accepted_at").eq("business_id", merchant.businessId).order("created_at", { ascending: false }).limit(10),
+    supabase
+      .from("hyperlocal_orders")
+      .select("id, status, customer_name, customer_phone, total_amount, items, created_at, accepted_at")
+      .eq("business_id", merchant.businessId)
+      .order("created_at", { ascending: false })
+      .limit(10),
     getMerchantOccasionSummary(merchant.businessId),
     getMerchantConnectWallet(merchant.businessId),
   ]);
 
   const stats = (statsResult.data?.[0] ?? null) as DashboardStats | null;
-  const activity = activityResult.error ? null : (activityResult.data ?? []) as { scan_date: string; scans: number | string }[];
-  const reviews = reviewsResult.error ? null : (reviewsResult.data ?? []) as Review[];
-  const subscription = subscriptionResult.data;
-  const payments = paymentsResult.error ? null : (paymentsResult.data ?? []) as Payment[];
   const realOrders = (ordersResult.data ?? []) as Array<{
     id: string;
     status: string;
@@ -231,35 +184,35 @@ export default async function MerchantDashboardPage() {
   const outForDeliveryOrders = realOrders.filter((o) => o.status === "out_for_delivery" || o.status === "ready_for_pickup");
   const deliveredOrders = realOrders.filter((o) => o.status === "delivered");
 
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const todayOrders = realOrders.filter((o) => (o.created_at || "").slice(0, 10) === todayIso);
-  const todaySales = todayOrders.reduce((acc, o) => acc + (Number(o.total_amount) || 0), 0);
-  const planConfig = Object.values(appConfig.plans).find((plan) => plan.name.toLowerCase() === merchant.plan?.trim().toLowerCase());
-  const planPrice = subscription?.amount ?? planConfig?.price;
-  const subscriptionStatus = subscription?.status || merchant.businessStatus || "Unknown";
-  const statusClass = String(subscriptionStatus).toLowerCase() === "active" ? "bg-emerald-100 text-emerald-800" : String(subscriptionStatus).toLowerCase() === "expired" ? "bg-rose-100 text-rose-800" : "bg-amber-100 text-amber-800";
-  const experienceCounts = Array.isArray(stats?.experience_counts) ? stats.experience_counts as ExperienceCount[] : [];
-  const ratingCounts = [5, 4, 3, 2, 1].map((rating) => ({
-    rating,
-    total: count(stats?.[`rating_${rating}_count` as keyof DashboardStats] as number | string | undefined),
-  }));
   const totalReviews = count(stats?.total_reviews);
   const average = stats?.average_rating == null ? null : Number(stats.average_rating);
-  const currentTemplate = qrTemplates.find((template) => template.id === merchant.qrTemplate) ?? qrTemplates[0];
   const businessType = merchant.businessType || "Business";
   const sweetsBusiness = /(sweet|mithai|bakery|cake|dessert)/i.test(businessType);
-  const ownerName = merchant.ownerName?.trim() || "Merchant";
-  const ownerInitials = ownerName.split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() ?? "").join("") || "M";
-  const categoryEmoji = sweetsBusiness ? "🍬" : /(food|restaurant|cafe|dhaba|dining)/i.test(businessType) ? "🍽️" : /(medical|clinic|doctor|health|pharmacy)/i.test(businessType) ? "🩺" : /(salon|beauty|spa|barber)/i.test(businessType) ? "✂️" : /(hotel|stay|resort)/i.test(businessType) ? "🏨" : "🏬";
+  const categoryEmoji = sweetsBusiness
+    ? "🍬"
+    : /(food|restaurant|cafe|dhaba|dining)/i.test(businessType)
+    ? "🍽️"
+    : /(medical|clinic|doctor|health|pharmacy)/i.test(businessType)
+    ? "🩺"
+    : /(salon|beauty|spa|barber)/i.test(businessType)
+    ? "✂️"
+    : /(hotel|stay|resort)/i.test(businessType)
+    ? "🏨"
+    : "🏬";
+
   const publicLocationComplete = isPublicDiscoveryLocationComplete({
-    type: merchant.businessType, locality: merchant.locality, city: merchant.city,
-    district: merchant.district, state: merchant.state, pincode: merchant.pincode,
+    type: merchant.businessType,
+    locality: merchant.locality,
+    city: merchant.city,
+    district: merchant.district,
+    state: merchant.state,
+    pincode: merchant.pincode,
     verifiedAt: merchant.discoveryLocationVerifiedAt,
   });
 
   return (
     <div className="merchant-dashboard-page space-y-6">
-      {/* Stitch Executive Storefront Hero Bar (Ultra-Clean Redesign) */}
+      {/* Stitch Executive Storefront Hero Bar */}
       <section className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-xs mb-6 transition hover:shadow-sm">
         {/* Top Row: Store Identity, Greeting & Action Buttons */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-5 border-b border-slate-100">
@@ -313,11 +266,11 @@ export default async function MerchantDashboardPage() {
             </div>
           </div>
 
-          {/* Right: Quick Action Buttons */}
+          {/* Right: Quick Action Buttons (Modern Vibrant Blue Action) */}
           <div className="flex items-center gap-2.5 self-start lg:self-center">
             <Link
               href="/merchant/dashboard/orders"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#003178] hover:bg-[#0d47a1] text-white text-xs font-bold shadow-xs transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black shadow-md shadow-blue-500/25 border border-blue-400/30 transition-all transform hover:-translate-y-0.5"
             >
               <span className="material-symbols-outlined text-[17px]">receipt_long</span>
               <span>View Orders ({pendingOrders.length})</span>
@@ -348,32 +301,33 @@ export default async function MerchantDashboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {/* Stage 1: New Orders */}
+          {/* 4 Clean Pipeline Metric Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+            {/* Stage 1: New Orders Pending */}
             <Link
               href="/merchant/dashboard/orders"
               className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
             >
               <div>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">New Orders</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">New Pending</span>
                 <span className="text-xl font-black text-rose-600 mt-0.5 block">{pendingOrders.length}</span>
               </div>
               <div className="h-10 w-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-                📥
+                ⏳
               </div>
             </Link>
 
-            {/* Stage 2: In Kitchen */}
+            {/* Stage 2: In Kitchen / Prep */}
             <Link
               href="/merchant/dashboard/orders"
               className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
             >
               <div>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">In Kitchen</span>
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">In Prep / Packing</span>
                 <span className="text-xl font-black text-blue-600 mt-0.5 block">{prepOrders.length}</span>
               </div>
-              <div className="h-10 w-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-                🍳
+              <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
+                🍲
               </div>
             </Link>
 
@@ -420,13 +374,18 @@ export default async function MerchantDashboardPage() {
       <section className="bg-surface-container-lowest rounded-2xl p-5 border border-[#eaedff] shadow-xs mb-6">
         <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#eaedff]">
           <div className="flex items-center gap-2.5">
-            <span className={`w-2.5 h-2.5 rounded-full ${pendingOrders.length > 0 ? "bg-[#ba1a1a] animate-pulse" : "bg-slate-300"}`}></span>
+            <span
+              className={`w-2.5 h-2.5 rounded-full ${pendingOrders.length > 0 ? "bg-[#ba1a1a] animate-pulse" : "bg-slate-300"}`}
+            ></span>
             <h2 className="text-base font-extrabold text-[#131b2e]">Urgent Incoming Orders Queue</h2>
             <span className="px-2 py-0.5 rounded-full bg-[#eaedff] text-[#003178] font-mono text-[11px] font-bold">
               {pendingOrders.length} Needing Acceptance
             </span>
           </div>
-          <Link href="/merchant/dashboard/orders" className="text-xs font-bold text-[#003178] hover:underline flex items-center gap-1">
+          <Link
+            href="/merchant/dashboard/orders"
+            className="text-xs font-bold text-blue-700 hover:text-blue-900 flex items-center gap-1"
+          >
             <span>View All Orders</span>
             <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
           </Link>
@@ -434,7 +393,7 @@ export default async function MerchantDashboardPage() {
 
         {pendingOrders.length === 0 ? (
           <div className="py-8 px-4 text-center rounded-xl bg-[#faf8ff] border border-dashed border-[#eaedff]">
-            <div className="w-12 h-12 rounded-xl bg-[#eaedff] text-[#003178] mx-auto flex items-center justify-center mb-2.5">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 mx-auto flex items-center justify-center mb-2.5">
               <span className="material-symbols-outlined text-[24px]">receipt_long</span>
             </div>
             <h3 className="text-sm font-bold text-[#131b2e]">Order Queue is Clear</h3>
@@ -444,7 +403,7 @@ export default async function MerchantDashboardPage() {
             <div className="mt-4 flex items-center justify-center gap-2">
               <Link
                 href="/merchant/dashboard/orders"
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#003178] text-white text-xs font-bold hover:bg-[#0d47a1] shadow-xs transition-colors"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/20 transition-all"
               >
                 <span className="material-symbols-outlined text-[16px]">point_of_sale</span>
                 <span>Open Full KOT Console</span>
@@ -472,7 +431,7 @@ export default async function MerchantDashboardPage() {
                   <span className="text-base font-extrabold text-[#131b2e]">₹{order.total_amount}</span>
                   <Link
                     href="/merchant/dashboard/orders"
-                    className="px-3.5 py-1.5 rounded-xl bg-[#003178] text-white text-xs font-bold hover:bg-[#0d47a1] transition-colors"
+                    className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:from-blue-700 hover:to-indigo-700 shadow-xs transition-all"
                   >
                     Accept in KOT →
                   </Link>
@@ -483,11 +442,33 @@ export default async function MerchantDashboardPage() {
         )}
       </section>
 
-      {!publicLocationComplete ? <section aria-labelledby="complete-public-location-title" className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 mb-4"><div><p className="text-xs font-bold uppercase tracking-wider text-blue-800">Get discovered locally</p><h2 id="complete-public-location-title" className="mt-1 text-lg font-bold text-slate-950">Complete Public Profile</h2><p className="mt-1 text-sm text-slate-700">Complete your public location to appear in Trustit local search. This does not affect your QR or review features.</p></div><Link href="/merchant/dashboard/business#public-discovery-location" className="inline-flex min-h-11 items-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800">Complete Location</Link></section> : null}
+      {!publicLocationComplete ? (
+        <section
+          aria-labelledby="complete-public-location-title"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-blue-200 bg-blue-50/70 p-5 mb-4"
+        >
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-blue-800">Get discovered locally</p>
+            <h2 id="complete-public-location-title" className="mt-1 text-lg font-bold text-slate-950">
+              Complete Public Profile
+            </h2>
+            <p className="mt-1 text-sm text-slate-700">
+              Complete your public location to appear in Trustit local search. This does not affect your QR or review features.
+            </p>
+          </div>
+          <Link
+            href="/merchant/dashboard/business#public-discovery-location"
+            className="inline-flex min-h-11 items-center rounded-xl bg-blue-700 px-4 py-2.5 text-sm font-bold text-white hover:bg-blue-800"
+          >
+            Complete Location
+          </Link>
+        </section>
+      ) : null}
 
-      
       {/* Category-Adaptive Operational Launch Banner */}
-      <section className={`relative overflow-hidden rounded-3xl border ${launcher.borderColor} bg-gradient-to-r ${launcher.gradient} p-5 sm:p-6 mb-4 shadow-sm`}>
+      <section
+        className={`relative overflow-hidden rounded-3xl border ${launcher.borderColor} bg-gradient-to-r ${launcher.gradient} p-5 sm:p-6 mb-4 shadow-sm`}
+      >
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-start gap-3.5">
             <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-white text-2xl shadow-xs border border-slate-100">
@@ -503,12 +484,8 @@ export default async function MerchantDashboardPage() {
                   Live Operational Console
                 </span>
               </div>
-              <h2 className="mt-1 text-base font-extrabold text-slate-900 sm:text-lg">
-                {launcher.title}
-              </h2>
-              <p className="mt-0.5 max-w-xl text-xs text-slate-600 sm:text-sm">
-                {launcher.subtitle}
-              </p>
+              <h2 className="mt-1 text-base font-extrabold text-slate-900 sm:text-lg">{launcher.title}</h2>
+              <p className="mt-0.5 max-w-xl text-xs text-slate-600 sm:text-sm">{launcher.subtitle}</p>
             </div>
           </div>
           <Link
@@ -520,84 +497,37 @@ export default async function MerchantDashboardPage() {
         </div>
       </section>
 
+      {/* 4 Stat Cards - Dashboard clean terminus */}
       <section aria-label="Merchant statistics" className="merchant-stats">
-        <StatCard tone="green" icon="qr" label="Total Scans" value={stats ? count(stats.total_scans).toLocaleString("en-IN") : "—"} detail="All-time QR scans" />
-        <StatCard tone="amber" icon="bars" label="This Month’s Scans" value={stats ? count(stats.this_month_scans).toLocaleString("en-IN") : "—"} detail="Current month activity" />
-        <StatCard tone="rose" icon="star" label="Total Reviews" value={stats ? totalReviews.toLocaleString("en-IN") : "—"} detail={totalReviews === 0 ? "No reviews yet" : "Customer feedback"} />
-        <StatCard tone="violet" icon="star" label="Average Rating" value={average !== null && Number.isFinite(average) ? `${average.toFixed(1)} / 5` : "— / 5"} detail={totalReviews === 0 ? "Waiting for first review" : "Customer rating"} />
-      </section>
-
-      {!statsResult.error && !stats ? <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800 mb-4" role="status">Dashboard analytics are not available for this merchant account.</p> : null}
-
-      {/* Interactive Vertical Module Console & Dynamic Workspace */}
-      <section className="mb-6">
-        <MerchantConsoleClient
-          merchant={{
-            businessId: merchant.businessId,
-            businessName: merchant.businessName,
-            businessType: merchant.businessType,
-            ownerName: merchant.ownerName,
-            plan: merchant.plan,
-            locality: merchant.locality,
-            city: merchant.city,
-            pincode: merchant.pincode,
-            reviewLink: merchant.reviewLink,
-            merchantStatus: merchant.merchantStatus,
-          }}
-          stats={{
-            totalScans: count(stats?.total_scans),
-            totalCustomers: Math.max(1, Math.round(count(stats?.total_scans) * 0.6)),
-            totalReviews: totalReviews,
-            averageRating: average,
-          }}
-          activity={activity ?? []}
-          reviews={reviews ?? []}
-          subscriptionStatus={subscriptionStatus}
+        <StatCard
+          tone="green"
+          icon="qr"
+          label="Total Scans"
+          value={stats ? count(stats.total_scans).toLocaleString("en-IN") : "—"}
+          detail="All-time QR scans"
+        />
+        <StatCard
+          tone="amber"
+          icon="bars"
+          label="This Month’s Scans"
+          value={stats ? count(stats.this_month_scans).toLocaleString("en-IN") : "—"}
+          detail="Current month activity"
+        />
+        <StatCard
+          tone="rose"
+          icon="star"
+          label="Total Reviews"
+          value={stats ? totalReviews.toLocaleString("en-IN") : "—"}
+          detail={totalReviews === 0 ? "No reviews yet" : "Customer feedback"}
+        />
+        <StatCard
+          tone="violet"
+          icon="star"
+          label="Average Rating"
+          value={average !== null && Number.isFinite(average) ? `${average.toFixed(1)} / 5` : "— / 5"}
+          detail={totalReviews === 0 ? "Waiting for first review" : "Customer rating"}
         />
       </section>
-
-      <div className="merchant-workspace">
-        <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} totalScans={stats ? count(stats.total_scans) : 0} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} designAssets={designAssets} initialDesignError={designAssetError} />
-      </div>
-
-      <section className="merchant-lower-grid">
-        <div className="merchant-lower-panel">
-          <div className="merchant-section-heading">
-            <span className="merchant-section-heading__icon" aria-hidden="true">
-              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            </span>
-            <div><h2>Quick Actions</h2><p>Manage your QR code and get more reviews.</p></div>
-          </div>
-          <div className="merchant-quick-grid">{actions.map((action, index) => <Link key={action.href} href={action.href} className="merchant-quick-link"><span className="merchant-quick-link__icon" aria-hidden="true">{["⇩", "▤", "▣", "↗", "✦"][index]}</span><strong>{action.title}</strong><small>{action.description}</small></Link>)}</div>
-        </div>
-        <aside className="merchant-lower-panel merchant-tips">
-          <div className="merchant-section-heading">
-            <span className="merchant-section-heading__icon" aria-hidden="true">
-              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            </span>
-            <div><h2>Tips to Get More Reviews</h2><p>Simple ways to invite honest feedback.</p></div>
-          </div>
-          <ul className="merchant-tips__list"><li>Place your QR code standee at your shop counter.</li><li>Add a small “Review us on Google” message on bills.</li><li>Use a counter stand or cash-drawer sticker.</li><li>Deliver great customer service to every visitor.</li></ul>
-          <span className="merchant-tips__art" aria-hidden="true">{categoryEmoji}</span>
-        </aside>
-      </section>
-
-      <section className="merchant-analytics-grid">
-        <ScanAnalytics activity={activity ?? []} />
-        <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.045)] sm:p-7"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">REVIEW SUMMARY</p><h2 className="mt-1 text-lg font-bold text-slate-900">Customer ratings</h2><div className="mt-3 flex items-end gap-2"><strong className="text-3xl text-slate-950">{average !== null && Number.isFinite(average) ? average.toFixed(1) : "—"}</strong><span className="pb-1 text-sm text-slate-500">/ 5 · {totalReviews} reviews</span></div><div className="mt-5 space-y-3">{ratingCounts.map(({ rating, total }) => <div key={rating} className="flex items-center gap-3 text-sm"><span className="w-14 shrink-0 text-amber-600">{"★".repeat(rating)}{"☆".repeat(5 - rating)}</span><div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-amber-400" style={{ width: `${totalReviews ? (total / totalReviews) * 100 : 0}%` }} /></div><span className="w-8 text-right font-medium text-slate-700">{total}</span></div>)}</div></section>
-      </section>
-
-      <section className="merchant-data-grid">
-        <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.045)] sm:p-7"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">CUSTOMER EXPERIENCE</p><h2 className="mt-1 text-lg font-bold text-slate-900">Selected experience points</h2>{!stats || experienceCounts.length === 0 ? <p className="mt-5 rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">No customer feedback yet.</p> : <ol className="mt-4 space-y-3">{experienceCounts.map((item) => <li key={item.label} className="flex items-center justify-between gap-4 border-b border-slate-100 pb-3 last:border-0"><span className="text-sm font-medium text-slate-800">{item.label}</span><span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-800">{count(item.count)}</span></li>)}</ol>}</section>
-        <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.045)] sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">LATEST FEEDBACK</p><h2 className="mt-1 text-lg font-bold text-slate-900">Recent Reviews</h2></div><Link href="/merchant/dashboard/reviews" className="shrink-0 text-sm font-semibold text-blue-700 hover:text-blue-900">View All Reviews →</Link></div>{reviews === null ? <p className="mt-4 text-sm text-rose-700">Reviews are temporarily unavailable.</p> : reviews.length === 0 ? <p className="mt-4 rounded-xl bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">No reviews yet.</p> : <div className="mt-4 space-y-3">{reviews.map((review) => <ReviewCard key={review.review_id} review={review} dateLabel={dateLabel(review.submitted_at)} />)}</div>}</section>
-      </section>
-
-      <section className="merchant-data-grid">
-        <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.045)] sm:p-7"><div className="mb-4"><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">MY BUSINESS</p><h2 className="mt-1 text-lg font-bold text-slate-900">Business details</h2></div><dl className="grid gap-3 sm:grid-cols-2">{infoField("Business Name", merchant.businessName)}{infoField("Business ID", merchant.businessId)}{infoField("Business Type", merchant.businessType)}{infoField("Owner / Merchant Name", merchant.ownerName)}{infoField("Mobile", merchant.registeredMobile)}{infoField("Address", merchant.address)}</dl><Link href="/merchant/dashboard/business" className="mt-4 inline-flex text-sm font-semibold text-blue-700">My Business →</Link></section>
-        <section className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_8px_28px_rgba(15,23,42,0.045)] sm:p-7"><div className="flex items-center justify-between gap-3"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-blue-700">SUBSCRIPTION</p><h2 className="mt-1 text-lg font-bold text-slate-900">Current subscription</h2></div><span className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${statusClass}`}>{subscriptionStatus}</span></div><dl className="mt-4 grid gap-3 sm:grid-cols-2">{infoField("Current Plan", merchant.plan)}{infoField("Price", planPrice == null ? null : `${amountLabel(planPrice)} / month`)}{infoField("Start Date", dateLabel(subscription?.starts_at ?? merchant.registrationDate))}{infoField("Expiry Date", dateLabel(subscription?.expires_at ?? merchant.expiry))}</dl><Link href="/merchant/dashboard/subscription" className="mt-4 inline-flex text-sm font-semibold text-blue-700">Renew Plan →</Link></section>
-      </section>
-
-      <section className="merchant-data-panel"><p>PAYMENTS</p><div className="flex items-center justify-between gap-3"><h2>Recent payments</h2><Link href="/merchant/dashboard/payments">View all →</Link></div>{payments === null ? <p className="mt-4 text-sm text-rose-700">Payment history is temporarily unavailable.</p> : payments.length === 0 ? <p className="merchant-data-panel__empty">No payments yet.</p> : <div className="mt-4 max-w-full overflow-x-auto"><table className="w-full table-fixed text-left"><thead><tr><th className="w-[34%]">Date</th><th className="w-[33%]">Amount</th><th className="w-[33%]">Status</th></tr></thead><tbody>{payments.map((payment) => <tr key={payment.cashfree_order_id}><td>{dateLabel(payment.created_at)}</td><td>{amountLabel(payment.amount, payment.currency)}</td><td className="capitalize">{payment.payment_status.replaceAll("_", " ")}</td></tr>)}</tbody></table></div>}</section>
     </div>
   );
 }

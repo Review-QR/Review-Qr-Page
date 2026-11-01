@@ -124,119 +124,120 @@ export default function OccasionDashboardCard({
 
   return (
     <>
-      <div className="relative mb-6 overflow-hidden rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-900 via-slate-900 to-indigo-950 p-6 text-white shadow-xl">
-        {/* Glow Effects */}
-        <div className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-indigo-500/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -left-16 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="relative mb-6 overflow-hidden rounded-3xl border border-amber-200/60 bg-gradient-to-b from-[#FFFDF9] to-[#FFF9F0] p-6 text-slate-800 shadow-sm">
+        {/* Soft Background Accents */}
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-200/25 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-orange-100/35 blur-3xl" />
 
         <div className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           {/* Left Column: Occasion Intelligence */}
           <div className="flex-1 space-y-4">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-400/15 border border-amber-400/30 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-300">
-                ✨ Automated Occasion CRM & AI Greetings
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100/80 border border-amber-300/60 px-3 py-1 text-xs font-bold uppercase tracking-wider text-amber-900 shadow-2xs">
+                ✨ Automated Occasion CRM &amp; AI Greetings
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-300">
-                ● DPDP 2023 Masked
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-300/70 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                DPDP 2023 Masked
               </span>
             </div>
 
             <div>
-              <h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
+              <h2 className="text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
                 Today&apos;s Occasions &amp; Customer Wishes
               </h2>
-              <p className="mt-1 text-sm text-slate-300">
+              <p className="mt-1 text-sm text-slate-600 font-medium">
                 Automated rich greeting cards &amp; coupons sent directly to your customers on WhatsApp at{" "}
-                <span className="font-semibold text-amber-300">{wallet.dailyDispatchTime} AM</span> daily.
+                <span className="font-bold text-amber-800 bg-amber-100/60 px-1.5 py-0.5 rounded-md">{wallet.dailyDispatchTime} AM</span> daily.
               </p>
             </div>
 
             {/* Quick Counters Grid */}
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 pt-1">
               {/* Today's Birthdays */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-xs">
+              <div className="rounded-2xl border border-orange-200/70 bg-orange-50/60 p-3.5 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xl">🎂</span>
-                  <span className="text-xs font-bold text-amber-300">Today</span>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-orange-700 bg-orange-100 px-2 py-0.5 rounded-full">Today</span>
                 </div>
-                <div className="mt-2 text-2xl font-black text-white">{summary.todayBirthdaysCount}</div>
-                <div className="text-xs text-slate-400">
+                <div className="mt-2 text-2xl font-black text-slate-900">{summary.todayBirthdaysCount}</div>
+                <div className="text-xs font-semibold text-orange-800">
                   {summary.birthdaysSentToday > 0 ? `✓ ${summary.birthdaysSentToday} Sent` : "Birthdays"}
                 </div>
               </div>
 
               {/* Today's Anniversaries */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-xs">
+              <div className="rounded-2xl border border-rose-200/70 bg-rose-50/60 p-3.5 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xl">💍</span>
-                  <span className="text-xs font-bold text-rose-300">Today</span>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-rose-700 bg-rose-100 px-2 py-0.5 rounded-full">Today</span>
                 </div>
-                <div className="mt-2 text-2xl font-black text-white">{summary.todayAnniversariesCount}</div>
-                <div className="text-xs text-slate-400">
+                <div className="mt-2 text-2xl font-black text-slate-900">{summary.todayAnniversariesCount}</div>
+                <div className="text-xs font-semibold text-rose-800">
                   {summary.anniversariesSentToday > 0 ? `✓ ${summary.anniversariesSentToday} Sent` : "Anniversaries"}
                 </div>
               </div>
 
               {/* Today's Special Offers */}
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3.5 backdrop-blur-xs">
+              <div className="rounded-2xl border border-indigo-200/70 bg-indigo-50/60 p-3.5 shadow-2xs">
                 <div className="flex items-center justify-between">
                   <span className="text-xl">📢</span>
-                  <span className="text-xs font-bold text-sky-300">Promos</span>
+                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">Promos</span>
                 </div>
-                <div className="mt-2 text-2xl font-black text-white">{summary.offersSentToday}</div>
-                <div className="text-xs text-slate-400">Offers Sent</div>
+                <div className="mt-2 text-2xl font-black text-slate-900">{summary.offersSentToday}</div>
+                <div className="text-xs font-semibold text-indigo-800">Offers Sent</div>
               </div>
 
               {/* Connect Credits Balance */}
               <div
-                className={`rounded-2xl border p-3.5 backdrop-blur-xs transition ${
+                className={`rounded-2xl border p-3.5 shadow-2xs transition ${
                   wallet.isZeroBalance
-                    ? "border-rose-500/50 bg-rose-500/10 text-rose-200"
+                    ? "border-rose-300 bg-rose-50/80 text-rose-900"
                     : wallet.isLowBalance
-                    ? "border-amber-500/50 bg-amber-500/10 text-amber-200"
-                    : "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                    ? "border-amber-300 bg-amber-50/80 text-amber-900"
+                    : "border-emerald-200/80 bg-emerald-50/70 text-emerald-950"
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xl">🪙</span>
                   {wallet.isLowBalance ? (
-                    <span className="rounded-full bg-amber-400/20 px-1.5 py-0.2 text-[10px] font-bold text-amber-300">
+                    <span className="rounded-full bg-amber-200 px-2 py-0.5 text-[10px] font-bold text-amber-900">
                       Low
                     </span>
                   ) : wallet.isZeroBalance ? (
-                    <span className="rounded-full bg-rose-400/20 px-1.5 py-0.2 text-[10px] font-bold text-rose-300">
+                    <span className="rounded-full bg-rose-200 px-2 py-0.5 text-[10px] font-bold text-rose-900">
                       0 Credits
                     </span>
                   ) : (
-                    <span className="rounded-full bg-emerald-400/20 px-1.5 py-0.2 text-[10px] font-bold text-emerald-300">
+                    <span className="rounded-full bg-emerald-200/80 px-2 py-0.5 text-[10px] font-bold text-emerald-900">
                       Active
                     </span>
                   )}
                 </div>
-                <div className="mt-2 text-2xl font-black text-white">{wallet.creditsBalance}</div>
-                <div className="text-xs text-slate-300">Connect Credits</div>
+                <div className="mt-2 text-2xl font-black text-slate-900">{wallet.creditsBalance}</div>
+                <div className="text-xs font-semibold text-emerald-800">Connect Credits</div>
               </div>
             </div>
 
             {/* Today's Masked Customer List */}
             {summary.todayCustomers.length > 0 && (
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-3">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-300">
+              <div className="rounded-2xl border border-amber-200/70 bg-white/70 p-3.5 shadow-2xs">
+                <p className="text-xs font-bold uppercase tracking-wider text-slate-600">
                   Customers Celebrating Today:
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {summary.todayCustomers.slice(0, 6).map((c) => (
                     <span
                       key={c.id}
-                      className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/10 px-2.5 py-1 text-xs text-white"
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50/70 px-2.5 py-1 text-xs text-slate-800"
                     >
                       <span>{c.occasionType === "birthday" ? "🎂" : "💍"}</span>
-                      <strong className="font-semibold text-white">{c.customerName}</strong>
-                      <span className="font-mono text-[11px] text-amber-200/90">({c.maskedPhone})</span>
+                      <strong className="font-bold text-slate-900">{c.customerName}</strong>
+                      <span className="font-mono text-[11px] text-amber-900">({c.maskedPhone})</span>
                     </span>
                   ))}
                   {summary.todayCustomers.length > 6 && (
-                    <span className="inline-flex items-center rounded-xl bg-white/10 px-2.5 py-1 text-xs font-semibold text-slate-300">
+                    <span className="inline-flex items-center rounded-xl bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
                       +{summary.todayCustomers.length - 6} more
                     </span>
                   )}
@@ -245,20 +246,20 @@ export default function OccasionDashboardCard({
             )}
           </div>
 
-          {/* Right Column: Actions & Recharge */}
-          <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/5 p-4 sm:min-w-[280px]">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          {/* Right Column: Actions & Recharge (Warm Luxury Gold Card) */}
+          <div className="flex flex-col gap-3 rounded-2xl border border-amber-300/70 bg-gradient-to-b from-amber-50/90 to-amber-100/60 p-4.5 sm:min-w-[280px] shadow-sm">
+            <div className="flex items-center justify-between border-b border-amber-200/70 pb-3">
               <div>
-                <span className="text-xs text-slate-400">Available Balance</span>
-                <div className="flex items-center gap-1.5 text-xl font-bold text-white">
-                  <span>🪙</span>
-                  <span>{wallet.creditsBalance} Connect Credits</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-800">Available Balance</span>
+                <div className="flex items-center gap-2 text-xl font-black text-slate-900 mt-0.5">
+                  <span className="text-xl">🪙</span>
+                  <span>{wallet.creditsBalance} Credits</span>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setShowRechargeModal(true)}
-                className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3.5 py-2 text-xs font-bold text-slate-950 shadow-md hover:from-amber-400 hover:to-orange-400"
+                className="rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-500 px-4 py-2 text-xs font-black text-white shadow-md shadow-amber-500/20 hover:from-amber-600 hover:to-orange-600 transition"
               >
                 + Top-up
               </button>
@@ -266,14 +267,14 @@ export default function OccasionDashboardCard({
 
             {/* Low Balance Warning Alert */}
             {wallet.isLowBalance && (
-              <div className="rounded-xl border border-amber-400/30 bg-amber-500/20 p-2.5 text-xs text-amber-200">
+              <div className="rounded-xl border border-amber-300 bg-amber-100/90 p-2.5 text-xs text-amber-950 font-medium">
                 ⚠️ <strong>Low message balance!</strong> Recharge now so tomorrow morning&apos;s wishes aren&apos;t paused.
               </div>
             )}
 
             {wallet.isZeroBalance && (
-              <div className="rounded-xl border border-rose-400/30 bg-rose-500/20 p-2.5 text-xs text-rose-200">
-                🛑 <strong>Balance exhausted!</strong> Automatic birthday and anniversary greetings are currently paused.
+              <div className="rounded-xl border border-rose-300 bg-rose-100/90 p-2.5 text-xs text-rose-950 font-medium">
+                🛑 <strong>Balance exhausted!</strong> Automatic greetings are currently paused.
               </div>
             )}
 
@@ -281,14 +282,14 @@ export default function OccasionDashboardCard({
             <div className="flex flex-col gap-2 pt-1">
               <Link
                 href="/merchant/dashboard/messages"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-slate-900 shadow-sm transition hover:bg-slate-100"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800"
               >
                 <span>🎨 Greeting Card &amp; Draft Studio</span>
                 <span>→</span>
               </Link>
               <Link
                 href="/merchant/dashboard/business"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-white/10"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-300/80 bg-white/90 px-4 py-2 text-xs font-bold text-amber-950 hover:bg-white shadow-2xs transition"
               >
                 <span>🏢 Manage Logo &amp; Shop Details</span>
               </Link>

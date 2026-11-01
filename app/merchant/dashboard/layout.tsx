@@ -108,19 +108,30 @@ export default async function MerchantDashboardLayout({ children }: { children: 
         {/* 3. Main Workspace Area */}
         <div className="merchant-main flex flex-col flex-1 min-w-0">
           {/* Top Sticky Status Bar */}
-          <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#eaedff] px-4 sm:px-8 py-3 flex items-center justify-between gap-4 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
+          <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#eaedff] px-4 sm:px-8 py-2.5 flex items-center justify-between gap-4 shadow-[0_1px_4px_rgba(0,0,0,0.02)]">
             <div className="flex items-center gap-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#eaedff] text-[#003178] rounded-full text-xs font-semibold">
-                <span className="w-2 h-2 rounded-full bg-[#005739] animate-pulse"></span>
-                <span>Open &amp; Taking Orders</span>
-              </div>
-              <span className="text-xs text-[#737783] hidden md:inline">Live Hyperlocal Mesh • Auto-Sync 4s</span>
+              <span className="text-xs font-semibold text-slate-500 hidden md:inline">
+                Live Hyperlocal Mesh • Auto-Sync 4s
+              </span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* Stacked Dual Control Buttons: Store Status + Taking Orders */}
+              <div className="flex flex-col gap-1 items-end">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[11px] font-bold text-emerald-800 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Store: OPEN</span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-[11px] font-bold text-blue-800 shadow-2xs">
+                  <span className="text-[10px]">🛵</span>
+                  <span>Orders: TAKING ORDERS</span>
+                </div>
+              </div>
+
+              {/* Vibrant Live Orders Button */}
               <Link
                 href="/merchant/dashboard/orders"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#003178] hover:bg-[#0d47a1] text-white text-xs font-semibold shadow-xs transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black shadow-md shadow-blue-500/25 border border-blue-400/30 transition-all transform hover:-translate-y-0.5"
               >
                 <span className="material-symbols-outlined text-[16px]">receipt_long</span>
                 <span>Live Orders</span>
