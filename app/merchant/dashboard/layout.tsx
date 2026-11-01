@@ -4,6 +4,7 @@ import { requireActiveMerchant } from "@/lib/merchant-auth";
 import MerchantNavigation from "./merchant-navigation";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import { normalizePlanTier } from "@/lib/plan-rules";
+import PageCorrectionWidget from "./page-correction-widget";
 import "./dashboard.css";
 
 export const dynamic = "force-dynamic";
@@ -118,6 +119,9 @@ export default async function MerchantDashboardLayout({ children }: { children: 
           <main className="merchant-content">{children}</main>
         </div>
       </div>
+
+      {/* Floating Live Page Corrections Review Widget */}
+      <PageCorrectionWidget />
     </div>
   );
 }
