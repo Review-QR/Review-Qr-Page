@@ -298,3 +298,36 @@ export async function updateMerchantOccasionScheduleAction(input: {
   }
   return { success: true, message: "Occasion schedule & auto-dispatch time updated successfully." };
 }
+
+/** 8. Test Dispatch Fast2SMS Official WhatsApp Message */
+export async function sendFast2SmsWhatsAppTestAction(input: {
+  phone: string;
+  customerName?: string;
+  occasionType: string;
+  discountPercent: number;
+  couponValidityDays: number;
+}) {
+  const merchant = await requireActiveMerchant();
+  const { dispatchFast2SmsWhatsAppMessage } = await import("@/lib/messaging/fast2sms-dispatch");
+
+  const couponCode = `${
+    input.occasionType === "birthday"
+      ? "BDAY"
+      : input.occasionType === "anniversary"
+      ? "ANNIV"
+      : input.occasionType === "festival"
+      ? "FESTIVE"
+      : "SPECIAL"
+  }-TEST-${input.discountPercent}`;
+
+  const res = await dispatchFast2SmsWhatsAppMessage({
+    phone: input.phone,
+    customerName: input.customerName || "Lucky Ji",
+    businessName: merchant.businessName,
+    couponCode,
+    discountPercent: input.discountPercent,
+    validityDays: input.couponValidityDays,
+  });
+
+  return res;
+}

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   saveMerchantOccasionDraftAction,
   updateMerchantOccasionScheduleAction,
+  sendFast2SmsWhatsAppTestAction,
 } from "./actions";
 import { renderOccasionGreetingPoster, getCategoryEmblem } from "@/lib/creative-canvas";
 
@@ -379,6 +380,37 @@ export default function OccasionStudio({
     setTestNotice("WhatsApp opened & Card downloaded! Aap WhatsApp chat me image attach karke send kar sakte hain.");
   }
 
+  const [testingFast2Sms, setTestingFast2Sms] = useState(false);
+
+  async function handleSendFast2SmsApiTest() {
+    const clean = testPhone.replace(/\D/g, "");
+    if (clean.length < 10) {
+      alert("Kripya 10-digit mobile number enter karein.");
+      return;
+    }
+    setTestingFast2Sms(true);
+    setTestNotice(null);
+    try {
+      const res = await sendFast2SmsWhatsAppTestAction({
+        phone: clean,
+        customerName: "Lucky Ji",
+        occasionType,
+        discountPercent,
+        couponValidityDays,
+      });
+
+      if (res.success) {
+        setTestNotice(`✓ Fast2SMS WhatsApp Gateway Success! (Request ID: ${res.requestId || "Dispatched"})`);
+      } else {
+        setTestNotice(`Fast2SMS Response: ${res.error || "Gateway response received"}`);
+      }
+    } catch (err: unknown) {
+      setTestNotice(`API Error: ${err instanceof Error ? err.message : "Failed to contact Fast2SMS"}`);
+    } finally {
+      setTestingFast2Sms(false);
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Offscreen Canvas for HD Poster Rendering */}
@@ -724,10 +756,23 @@ export default function OccasionStudio({
                 <button
                   type="button"
                   onClick={handleSendWhatsAppTest}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-teal-700 active:scale-95 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-teal-700 active:scale-95 transition"
                 >
                   <span>🚀</span>
-                  <span>Send on WhatsApp</span>
+                  <span>Open WhatsApp</span>
+                </button>
+              </div>
+
+              {/* Fast2SMS Official Cloud API Direct Test */}
+              <div className="mt-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  disabled={testingFast2Sms}
+                  onClick={handleSendFast2SmsApiTest}
+                  className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-950/70 hover:bg-emerald-900/80 px-3 py-2 text-xs font-bold text-emerald-300 transition disabled:opacity-50"
+                >
+                  <span>⚡</span>
+                  <span>{testingFast2Sms ? "Calling Fast2SMS Gateway..." : "Test via Fast2SMS Official Cloud API"}</span>
                 </button>
               </div>
 
