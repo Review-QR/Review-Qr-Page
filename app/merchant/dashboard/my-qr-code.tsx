@@ -636,7 +636,7 @@ export default function MyQrCode({
           </div>
 
           {/* 2. The 4 Stat Cards in 2×2 Grid (Total Scans, Month Scans, Total Reviews, Rating) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             {/* Card 1: Total Scans */}
             <article className="merchant-stat merchant-stat--green">
               <span className="merchant-stat__icon">
