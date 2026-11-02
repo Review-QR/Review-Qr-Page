@@ -395,13 +395,13 @@ export default function MyQrCode({
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
             }
-            .print-page {
+            .print-container {
               width: 4in;
               height: 6in;
               max-width: 4in;
               max-height: 6in;
               margin: 0 auto;
-              padding: 0.15in;
+              padding: 0.12in 0.18in;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -412,25 +412,39 @@ export default function MyQrCode({
               max-width: 100%;
               max-height: 100%;
               width: auto;
-              height: auto;
+              height: 5.76in;
               object-fit: contain;
               display: block;
               margin: 0 auto;
+              border-radius: 32px;
+              box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
             }
             @media screen {
               body {
-                background: #f1f5f9;
+                background: #f8fafc;
                 min-height: 100vh;
-                padding: 24px;
+                padding: 20px;
               }
-              .print-page {
+              .print-container {
                 background: #ffffff;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-                border-radius: 8px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                border-radius: 12px;
+              }
+            }
+            @media print {
+              body {
+                background: #ffffff;
+                padding: 0;
+              }
+              .print-container {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                background: transparent !important;
+                padding: 0.12in 0.18in !important;
               }
             }
           </style></head><body>
-            <div class="print-page">
+            <div class="print-container">
               <img src="${png}" alt="Standee Poster for ${escapeHtml(businessName)}" />
             </div>
           </body></html>`);
@@ -609,11 +623,101 @@ export default function MyQrCode({
               {currentStandee.label}
             </span>
           </div>
+
+          {/* Under-Standee Compact Action Buttons (PNG, PDF, Print, Copy Link) */}
+          <div className="w-full max-w-[340px] mt-4 px-1">
+            <div className="grid grid-cols-2 gap-2">
+              {/* Button 1: Download PNG */}
+              <button
+                type="button"
+                onClick={() => void downloadFullPoster("png")}
+                disabled={!usable || isExporting}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-50"
+                title="Download QR Standee (PNG)"
+              >
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+                </svg>
+                <span>{isExporting ? "Exporting…" : "PNG"}</span>
+              </button>
+
+              {/* Button 2: Download PDF */}
+              <button
+                type="button"
+                onClick={() => void downloadFullPoster("pdf")}
+                disabled={!usable || isExporting}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50"
+                title="Download Printable PDF (4 × 6 in)"
+              >
+                <svg className="w-3.5 h-3.5 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+                <span>PDF</span>
+              </button>
+
+              {/* Button 3: Print */}
+              <button
+                type="button"
+                onClick={() => void printQr()}
+                disabled={!usable}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-50"
+                title="Print standee directly (4 × 6 in)"
+              >
+                <span className="material-symbols-outlined text-[16px]">print</span>
+                <span>Print</span>
+              </button>
+
+              {/* Button 4: Copy Link */}
+              <button
+                type="button"
+                onClick={() => void copyScanLink("Business review link copied.")}
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition shadow-2xs cursor-pointer"
+                title="Copy customer review link"
+              >
+                <span className="material-symbols-outlined text-[16px]">content_copy</span>
+                <span>Copy Link</span>
+              </button>
+            </div>
+
+            {/* Test Scan link */}
+            <div className="flex items-center justify-center pt-2.5">
+              <a
+                href={scanUrl ? (scanUrl.includes("?") ? `${scanUrl}&test=1` : `${scanUrl}?test=1`) : "#"}
+                target="_blank"
+                rel="noreferrer"
+                aria-disabled={!scanUrl}
+                className={`inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-slate-900 transition ${
+                  !scanUrl ? "pointer-events-none opacity-50" : ""
+                }`}
+              >
+                <span className="material-symbols-outlined text-[14px]">open_in_new</span>
+                <span>Test Scan in New Tab</span>
+              </a>
+            </div>
+
+            {/* Feedback notification message */}
+            {message && (
+              <p
+                className={`text-xs text-center font-semibold mt-2.5 px-2 py-1.5 rounded-lg ${
+                  messageTone === "error"
+                    ? "text-rose-700 bg-rose-50 border border-rose-200"
+                    : "text-emerald-800 bg-emerald-50 border border-emerald-200"
+                }`}
+                role="status"
+              >
+                {message}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Right Column: 4 Stat Cards + Compact Flat Toolbar (Replaces Clunky Long Buttons) */}
-        <div className="merchant-qr-details flex flex-col justify-between gap-4">
-          {/* 1. Sleek Compact Flat Action Bar */}
+        {/* Right Column: Active Standee & Status Header + 4 Stat Cards */}
+        <div className="merchant-qr-details flex flex-col justify-start gap-4">
+          {/* Top Status & Plan Card */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
               <div className="flex items-center gap-2">
@@ -638,71 +742,22 @@ export default function MyQrCode({
               <span className="text-[11px] font-mono text-slate-500">ID: {businessId}</span>
             </div>
 
-            {/* Flat Compact Buttons: Download PNG, Download PDF, Print, Copy Link, Test Scan */}
-            <div className="flex flex-wrap items-center gap-2 pt-0.5">
-              <button
-                type="button"
-                onClick={() => void downloadFullPoster("png")}
-                disabled={!usable || isExporting}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
-                title="Download QR Standee (PNG)"
-              >
-                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                <span>{isExporting ? "Exporting…" : "Download PNG"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void downloadFullPoster("pdf")}
-                disabled={!usable || isExporting}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
-                title="Download printable PDF (4 × 6 in)"
-              >
-                <svg className="w-3.5 h-3.5 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                <span>Download PDF</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void printQr()}
-                disabled={!usable}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
-              >
-                <span className="material-symbols-outlined text-[15px]">print</span>
-                <span>Print</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void copyScanLink("Business QR link copied.")}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[15px]">content_copy</span>
-                <span>Copy Link</span>
-              </button>
-
-              <a
-                href={scanUrl ? (scanUrl.includes("?") ? `${scanUrl}&test=1` : `${scanUrl}?test=1`) : "#"}
-                target="_blank"
-                rel="noreferrer"
-                aria-disabled={!scanUrl}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs ${
-                  !scanUrl ? "pointer-events-none opacity-50" : ""
-                }`}
-              >
-                <span className="material-symbols-outlined text-[15px]">qr_code_scanner</span>
-                <span>Test</span>
-              </a>
+            {/* Status & Plan Metadata Strip */}
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Status: <strong className="text-slate-900 font-semibold">{statusLabel}</strong></span>
+              </div>
+              <div>
+                <span>Plan: <strong className="capitalize text-slate-900 font-semibold">{plan?.trim() || "Standard"}</strong></span>
+              </div>
+              <div>
+                <span>Expiry: <strong className="font-mono text-slate-900 font-semibold">{expiry || "Active"}</strong></span>
+              </div>
             </div>
-
-            {message && (
-              <p className={`text-xs font-semibold ${messageTone === "error" ? "text-rose-600" : "text-emerald-700"}`} role="status">
-                {message}
-              </p>
-            )}
           </div>
 
-          {/* 2. The 4 Stat Cards in 2×2 Grid (Total Scans, Month Scans, Total Reviews, Rating) */}
+          {/* 4 Stat Cards in 2×2 Grid (Total Scans, Month Scans, Total Reviews, Rating) */}
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             {/* Card 1: Total Scans */}
             <article className="merchant-stat merchant-stat--green">
@@ -763,11 +818,17 @@ export default function MyQrCode({
             </article>
           </div>
 
-          {/* 3. Sleek Identity Footer Strip */}
-          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600">
-            <span>Status: <strong className="text-emerald-700">● {statusLabel}</strong></span>
-            <span>Plan: <strong className="capitalize text-slate-800">{plan?.trim() || "Standard"}</strong></span>
-            <span>Expiry: <strong className="font-mono text-slate-800">{expiry || "Active"}</strong></span>
+          {/* Placement Tip Card (Fills height cleanly, no empty space) */}
+          <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-slate-50 to-white p-4 text-xs text-slate-600 shadow-2xs">
+            <div className="flex items-start gap-3">
+              <span className="material-symbols-outlined text-amber-500 text-[20px] shrink-0 mt-0.5">tips_and_updates</span>
+              <div className="space-y-1">
+                <p className="font-bold text-slate-900">How to get 3× more Google reviews:</p>
+                <p className="leading-relaxed">
+                  Print this standee on 4 × 6 inch acrylic sheet and place it at your billing desk, dining tables, or checkout counter. Customers can scan in 5 seconds without typing!
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
