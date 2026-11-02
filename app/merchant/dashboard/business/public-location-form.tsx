@@ -26,7 +26,7 @@ export default function PublicLocationForm({
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-orange-800">Trustit Local Search</p>
           <h2 id="public-location-heading" className="mt-0.5 text-base font-bold text-slate-950">Public Discovery Location</h2>
-          <p className="mt-0.5 text-xs text-slate-600">Ye details Trustit par aapke business ko sahi city aur category mein dikhane ke liye use hongi.</p>
+          <p className="mt-0.5 text-xs text-slate-600">These details ensure your store appears accurately in customer searches for your city and category.</p>
         </div>
         <span className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${complete ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-900"}`}>
           {complete ? "✓ Complete" : "⚠ Incomplete"}

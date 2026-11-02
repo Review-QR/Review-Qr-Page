@@ -74,7 +74,11 @@ export default async function MerchantDashboardLayout({ children }: { children: 
             businessType={merchant.businessType}
           />
 
-          <div className="merchant-sidebar__footer">
+          <Link
+            href="/merchant/dashboard/support"
+            className="merchant-sidebar__footer hover:opacity-90 transition block"
+            aria-label="Open support - 24x7 merchant operations desk"
+          >
             <div className="merchant-help-icon" aria-hidden="true">
               <span className="material-symbols-outlined text-[18px]">headset_mic</span>
             </div>
@@ -82,10 +86,10 @@ export default async function MerchantDashboardLayout({ children }: { children: 
               <strong>Need support?</strong>
               <small>24x7 merchant operations desk</small>
             </span>
-            <Link href="/merchant/dashboard/support" aria-label="Open support">
+            <span className="ml-auto text-slate-500 text-lg leading-none" aria-hidden="true">
               ›
-            </Link>
-          </div>
+            </span>
+          </Link>
 
           <form action={merchantSignOutAction} className="merchant-logout-form">
             <button type="submit" className="flex items-center justify-center gap-1.5">

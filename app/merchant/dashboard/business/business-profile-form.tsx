@@ -663,7 +663,7 @@ export default function BusinessProfileForm({
               readOnly
             />
             <span className="mt-1 block text-[11px] text-slate-500">
-              Mobile number badalne ke liye &apos;Change Mobile&apos; option use kijiye.
+              Use &apos;Change Mobile&apos; to update your registered phone number.
             </span>
           </div>
 
@@ -718,7 +718,7 @@ export default function BusinessProfileForm({
               <span>Locality &amp; Store Discovery Address</span>
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Trustit search aur customer directions ke liye address update kijiye.
+              Update your address for customer directions and Trustit local discovery.
             </p>
           </div>
 
@@ -837,7 +837,7 @@ export default function BusinessProfileForm({
       {/* ======================================================== */}
       {showLocalityModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6 animate-in fade-in zoom-in-95 duration-150">
+          <div className="w-full max-w-2xl max-h-[90vh] flex flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl sm:p-6 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 border border-amber-200 text-amber-700">
@@ -857,7 +857,7 @@ export default function BusinessProfileForm({
               </button>
             </div>
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 overflow-y-auto pr-1">
               <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Locality</span>
                 <p className="mt-1 text-xs font-bold text-slate-900">{localityVal?.trim() || "Not provided"}</p>
@@ -907,29 +907,18 @@ export default function BusinessProfileForm({
               </div>
             </div>
 
-            <div className="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-center gap-2">
-              <span className="material-symbols-outlined text-amber-600 text-base shrink-0">lock</span>
-              <span>Address fields ko update karne ke liye <strong>Edit Locality Details</strong> se OTP verify karke unlock kijiye.</span>
-            </div>
-
-            <div className="mt-4 flex items-center justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setShowLocalityModal(false);
-                  setShowEditAuthModal(true);
-                  setEditAuthSent(false);
-                  setEditAuthOtp("");
-                  setEditAuthMsg({ text: "Locality address edit karne ke liye OTP verify kijiye.", error: false });
-                }}
-                className="px-4 py-2 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold hover:bg-indigo-100 cursor-pointer"
+            <div className="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <a
+                href="#public-discovery-location"
+                onClick={() => setShowLocalityModal(false)}
+                className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer"
               >
                 Edit Locality Details →
-              </button>
+              </a>
               <button
                 type="button"
                 onClick={() => setShowLocalityModal(false)}
-                className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 cursor-pointer"
+                className="px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 cursor-pointer"
               >
                 Close
               </button>

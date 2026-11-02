@@ -174,7 +174,7 @@ export default async function MerchantProfilePage() {
         <p className="mt-2 text-sm text-slate-600">
           {bankDetails
             ? "Your verified bank account for daily T+1 automated payouts, platform commission splits, and bank UTR settlements for orders placed on Trustit."
-            : "Apne business orders ka rozana subah 10:00 AM bank payout lene ke liye apna bank account link karein."}
+            : "Update your bank account details to receive timely automated settlements according to your scheduled payout window."}
         </p>
 
         <ul className="mt-4 grid gap-2 sm:grid-cols-2">
