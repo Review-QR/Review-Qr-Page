@@ -104,6 +104,26 @@ export function ModernStandee({
 
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const nameRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState<number>(1);
+
+  // Auto-fit scale on mobile devices (< 370px width) so standee never overflows
+  useEffect(() => {
+    function computeScale() {
+      if (!containerRef.current) return;
+      const parent = containerRef.current.parentElement;
+      const available = parent ? parent.clientWidth : window.innerWidth;
+      if (available > 0 && available < 370) {
+        const s = Math.min(1, Math.max(0.65, (available - 16) / 350));
+        setScale(s);
+      } else {
+        setScale(1);
+      }
+    }
+    computeScale();
+    window.addEventListener("resize", computeScale);
+    return () => window.removeEventListener("resize", computeScale);
+  }, []);
 
   // Generate QR code data URL at 2x resolution (424px) for 212px crisp display
   useEffect(() => {
@@ -145,8 +165,36 @@ export function ModernStandee({
   }, [businessName, safeIndex]);
 
   return (
-    <div className="trustit-standee-scope">
-      {/* Self-contained SVG Symbols for #shield and #gl so domToPng / print cloning always preserves them */}
+    <div
+      ref={containerRef}
+      className="trustit-standee-scope"
+      style={
+        scale < 1
+          ? {
+              width: `${Math.round(350 * scale)}px`,
+              height: `${Math.round(662 * scale)}px`,
+              display: "flex",
+              justifyContent: "center",
+              overflow: "hidden",
+              margin: "0 auto",
+            }
+          : undefined
+      }
+    >
+      <div
+        style={
+          scale < 1
+            ? {
+                transform: `scale(${scale})`,
+                transformOrigin: "top center",
+                width: "350px",
+                height: "662px",
+                flexShrink: 0,
+              }
+            : undefined
+        }
+      >
+        {/* Self-contained SVG Symbols for #shield and #gl so domToPng / print cloning always preserves them */}
       <svg width="0" height="0" style={{ position: "absolute", pointerEvents: "none" }} aria-hidden="true">
         <symbol id="shield" viewBox="0 0 64 70">
           <path style={{ fill: "var(--b1)" }} d="M32 5 6 15v18c0 17 11 29 26 35z" />
@@ -301,6 +349,7 @@ export function ModernStandee({
           </svg>
           <b>Trustit</b>
         </div>
+      </div>
       </div>
     </div>
   );

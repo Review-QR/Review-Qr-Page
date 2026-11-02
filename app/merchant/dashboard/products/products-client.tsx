@@ -227,8 +227,8 @@ export default function ProductsClient({ merchant, products, initialOrders }: Pr
           <p className="text-xs text-slate-500 mt-0.5">Order custom-printed waterproof standees and stickers delivered to your counter.</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-xl p-1 bg-slate-100 border border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full sm:w-auto">
+          <div className="grid grid-cols-3 sm:flex rounded-xl p-1 bg-slate-100 border border-slate-200 w-full sm:w-auto text-center">
             <button
               type="button"
               onClick={() => setActiveTab("catalog")}
@@ -268,7 +268,7 @@ export default function ProductsClient({ merchant, products, initialOrders }: Pr
             <button
               type="button"
               onClick={() => setIsCheckoutOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow transition w-full sm:w-auto"
             >
               <span>🛒 Cart ({cart.reduce((s, i) => s + i.quantity, 0)})</span>
               <span className="bg-indigo-800 px-1.5 py-0.5 rounded text-[11px]">₹{cartTotal}</span>
