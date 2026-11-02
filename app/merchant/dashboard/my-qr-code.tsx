@@ -415,17 +415,16 @@ export default function MyQrCode({
         </span>
         <div>
           <p className="merchant-page-heading__eyebrow">{standalone ? "Your customer sharing kit" : "MY QR CODE & STANDEE"}</p>
-          <h2 id="merchant-my-qr-heading">My QR Code & Standee Posters</h2>
-          <p>Slide left or right to preview all 8 standees. Select, download, or print your standee.</p>
+          <h2 id="merchant-my-qr-heading">My QR Code &amp; Standee Posters</h2>
+          <p>Slide left or right to preview all 5 standee templates. Select, download, or print your standee.</p>
         </div>
         <span className="merchant-page-heading__badge">● {statusLabel}</span>
       </header>
 
       {/* Template Selector Slider Strip */}
       <div className="merchant-template-slider-bar" role="tablist" aria-label="Standee templates slider">
-        <div className="merchant-template-slider-track">
-          {STANDEE_THEMES.slice(0, allowedTemplatesCount).map((theme, idx) => {
-            const unlocked = isTemplateUnlocked(idx);
+        <div className="merchant-template-slider-track flex items-center gap-2 overflow-x-auto pb-1">
+          {STANDEE_THEMES.map((theme, idx) => {
             const isSelected = idx === currentIndex;
             const isSaved = idx === savedStandeeIndex;
             return (
@@ -438,17 +437,17 @@ export default function MyQrCode({
                   setCurrentIndex(idx);
                   setMessage("");
                 }}
-                className={`merchant-template-pill ${isSelected ? "is-active" : ""} ${!unlocked ? "is-locked" : ""}`}
-                title={`${theme.name} (4×6 in) - ${unlocked ? (isSaved ? "Active Template" : "Unlocked") : "Locked (Upgrade required)"}`}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold transition flex items-center gap-1.5 shrink-0 border cursor-pointer ${
+                  isSelected
+                    ? "bg-slate-900 text-white border-slate-900 shadow-sm"
+                    : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
+                }`}
               >
-                <span className="merchant-template-pill__number">{idx + 1}</span>
-                <span className="merchant-template-pill__name">{theme.name.split(" ")[0]}</span>
-                <span className="merchant-template-pill__size">4×6</span>
-                {!unlocked ? (
-                  <span className="merchant-template-pill__lock" aria-label="Locked">🔒</span>
-                ) : isSaved ? (
-                  <span className="merchant-template-pill__badge" aria-label="Active">✓</span>
-                ) : null}
+                <span>{theme.label}</span>
+                <span className="text-[11px] opacity-75">({theme.name})</span>
+                {isSaved && (
+                  <span className="h-2 w-2 rounded-full bg-emerald-400" title="Active Standee" />
+                )}
               </button>
             );
           })}
@@ -480,7 +479,6 @@ export default function MyQrCode({
                     businessType={businessType}
                     qrUrl={scanUrl}
                     usable={usable}
-                    categoryConfig={categoryConfig}
                     compact={!standalone}
                   />
 
@@ -490,7 +488,7 @@ export default function MyQrCode({
                       <div className="merchant-lock-card">
                         <span className="merchant-lock-icon" aria-hidden="true">🔒</span>
                         <h3>Template Locked</h3>
-                        <p>This premium standee is included in <strong>Standard & Premium</strong> plans.</p>
+                        <p>This premium standee is included in <strong>Standard &amp; Premium</strong> plans.</p>
                         <Link href="/merchant/dashboard/subscription" className="merchant-lock-cta">
                           Upgrade to Unlock (₹49)
                         </Link>
@@ -520,129 +518,139 @@ export default function MyQrCode({
             </button>
           </div>
 
-          {/* Template Info & Selection Status Bar */}
-          <div className="merchant-slider-footer">
-            <div className="merchant-slider-footer__meta">
-              <strong>{currentStandee.name}</strong>
-              <small>· 4 × 6 in (Portrait) · Slide {currentIndex + 1} of {allowedTemplatesCount}</small>
-            </div>
-            <div className="merchant-slider-footer__actions">
-              {isCurrentUnlocked ? (
-                isCurrentSaved ? (
-                  <span className="merchant-pill-active-saved">✓ Active Standee</span>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => handleSelectTemplate(currentIndex)}
-                    disabled={isSaving}
-                    className="merchant-btn-set-active"
-                  >
-                    {isSaving ? "Saving…" : "★ Set as Active"}
-                  </button>
-                )
-              ) : (
-                <Link href="/merchant/dashboard/subscription" className="merchant-btn-upgrade-pill">
-                  🔒 Upgrade to Use
-                </Link>
-              )}
-            </div>
+          {/* Under-poster Matching Template Pill */}
+          <div className="flex justify-center mt-3">
+            <span
+              className="inline-flex items-center px-4 py-1 rounded-full text-xs font-bold border shadow-xs"
+              style={{
+                backgroundColor: currentStandee.pillBg,
+                color: currentStandee.pillColor,
+                borderColor: currentStandee.pillBorder,
+              }}
+            >
+              {currentStandee.label}
+            </span>
           </div>
         </div>
 
-        {/* Right Column: Business Details & Action Controls */}
-        <div className="merchant-qr-details">
-          <dl className="merchant-qr-details__list">
-            <div className="merchant-qr-detail">
-              <span className="merchant-qr-detail__icon" aria-hidden="true">
-                <svg className="w-4 h-4 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-              </span>
-              <div className="merchant-qr-detail__copy">
-                <small>Business Name</small>
-                <strong>{businessName}</strong>
+        {/* Right Column: Analytical Metric Box & Action Controls */}
+        <div className="merchant-qr-details space-y-3.5">
+          {/* 1. Analytical Metric Box */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
+            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-slate-800 text-[20px]">badge</span>
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 leading-tight">Standee Identity &amp; Status</h3>
+                  <p className="text-[11px] text-slate-500">Live verified merchant parameters</p>
+                </div>
               </div>
-            </div>
-            <div className="merchant-qr-detail">
-              <span className="merchant-qr-detail__icon" aria-hidden="true">
-                <svg className="w-4 h-4 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3z"/></svg>
+              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
+                ● {statusLabel}
               </span>
-              <div className="merchant-qr-detail__copy">
-                <small>Business ID</small>
-                <strong>{businessId}</strong>
-                <button type="button" onClick={() => void copyScanLink("Business QR link copied.")}>Copy QR link</button>
-              </div>
             </div>
-            <div className="merchant-qr-detail">
-              <span className="merchant-qr-detail__icon" aria-hidden="true">
-                <svg className="w-4 h-4 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              </span>
-              <div className="merchant-qr-detail__copy">
-                <small>Google Review Link</small>
-                {safeLink ? <a href={safeLink} target="_blank" rel="noreferrer">{safeLink}</a> : <strong>Unavailable</strong>}
-                <button type="button" onClick={() => void copyGoogleReviewLink()} disabled={!safeLink}>Copy review link</button>
-              </div>
-            </div>
-            <div className="merchant-qr-detail">
-              <span className="merchant-qr-detail__icon" aria-hidden="true">
-                <svg className="w-4 h-4 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              </span>
-              <div className="merchant-qr-detail__copy">
-                <small>QR Status</small>
-                <strong>{statusLabel}</strong>
-              </div>
-            </div>
-            <div className="merchant-qr-detail">
-              <span className="merchant-qr-detail__icon" aria-hidden="true">
-                <svg className="w-4 h-4 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              </span>
-              <div className="merchant-qr-detail__copy">
-                <small>Plan</small>
-                <strong>{plan?.trim() || "No plan"} plan</strong>
-              </div>
-            </div>
-            <div className="merchant-qr-detail">
-              <span className="merchant-qr-detail__icon" aria-hidden="true">
-                <svg className="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              </span>
-              <div className="merchant-qr-detail__copy">
-                <small>Expiry Date</small>
-                <strong>{expiry || "—"}</strong>
-              </div>
-            </div>
-          </dl>
 
-          {/* Primary Action: Download Standee Poster */}
-          <div className="merchant-qr-poster-actions">
-            {isCurrentUnlocked ? (
-              <>
-                <button
-                  type="button"
-                  className="merchant-btn-poster merchant-btn-poster--png cursor-pointer"
-                  onClick={() => void downloadFullPoster("png")}
-                  disabled={!usable || isExporting}
-                >
-                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-                  <span>{isExporting ? "Exporting…" : `Download QR Standee (PNG)`}</span>
-                </button>
-                <button
-                  type="button"
-                  className="merchant-btn-poster merchant-btn-poster--pdf cursor-pointer"
-                  onClick={() => void downloadFullPoster("pdf")}
-                  disabled={!usable || isExporting}
-                  title={`Download printable PDF (4 × 6 in)`}
-                >
-                  Download PDF
-                </button>
-              </>
+            {/* 5 Column / Row Metric Boxes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {/* Business Name */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 sm:col-span-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Business Name</span>
+                <p className="mt-0.5 text-sm font-bold text-slate-900 truncate" title={businessName}>
+                  {businessName}
+                </p>
+              </div>
+
+              {/* Business ID */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Business ID</span>
+                <div className="mt-0.5 flex items-center justify-between">
+                  <span className="text-xs font-bold font-mono text-slate-900">{businessId}</span>
+                  <button
+                    type="button"
+                    onClick={() => void copyScanLink("Business QR link copied.")}
+                    className="text-[10px] font-bold text-blue-700 hover:underline cursor-pointer"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+
+              {/* QR Status */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">QR Status</span>
+                <p className="mt-0.5 text-xs font-bold text-emerald-700 flex items-center gap-1.5">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span>
+                  <span>{statusLabel}</span>
+                </p>
+              </div>
+
+              {/* Current Plan */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Plan</span>
+                <p className="mt-0.5 text-xs font-bold text-slate-900 capitalize">
+                  {plan?.trim() || "Standard"} Plan
+                </p>
+              </div>
+
+              {/* Expiry Date */}
+              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Expiry Date</span>
+                <p className="mt-0.5 text-xs font-mono font-bold text-slate-900">
+                  {expiry || "Active"}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Active Standee Selector Pill Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+            <div>
+              <span className="text-xs font-bold text-slate-900 block">
+                {currentStandee.label} · {currentStandee.name}
+              </span>
+              <span className="text-[11px] text-slate-500">
+                Active template shown to customers at your counter desk
+              </span>
+            </div>
+            {isCurrentSaved ? (
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-xl shrink-0">
+                ✓ Active Standee
+              </span>
             ) : (
-              <Link
-                href="/merchant/dashboard/subscription"
-                className="merchant-btn-poster merchant-btn-poster--locked"
+              <button
+                type="button"
+                onClick={() => handleSelectTemplate(currentIndex)}
+                disabled={isSaving}
+                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 px-4 py-2 rounded-xl transition cursor-pointer shrink-0 shadow-xs"
               >
-                <span>🔒 Upgrade Plan to Download</span>
-              </Link>
+                {isSaving ? "Saving…" : "★ Set as Active"}
+              </button>
             )}
           </div>
 
+          {/* 3. Primary Export Actions (Download PNG, PDF, Print) */}
+          <div className="merchant-qr-poster-actions">
+            <button
+              type="button"
+              className="merchant-btn-poster merchant-btn-poster--png cursor-pointer"
+              onClick={() => void downloadFullPoster("png")}
+              disabled={!usable || isExporting}
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <span>{isExporting ? "Exporting…" : "Download QR Standee (PNG)"}</span>
+            </button>
+            <button
+              type="button"
+              className="merchant-btn-poster merchant-btn-poster--pdf cursor-pointer"
+              onClick={() => void downloadFullPoster("pdf")}
+              disabled={!usable || isExporting}
+              title="Download printable PDF (4 × 6 in)"
+            >
+              Download PDF
+            </button>
+          </div>
+
+          {/* 4. Secondary Action Buttons */}
           <div className="merchant-qr-actions">
             <button type="button" onClick={() => void downloadFullPoster("png")} disabled={!usable || isExporting} className="cursor-pointer">⇩ Download QR (Full Poster)</button>
             <button type="button" onClick={() => void printQr()} disabled={!usable} className="cursor-pointer">🖨️ Print Full Standee</button>
@@ -651,7 +659,7 @@ export default function MyQrCode({
           </div>
           <div className="merchant-qr-actions merchant-qr-actions--secondary">
             <a href={scanUrl || "#"} target="_blank" rel="noreferrer" aria-disabled={!scanUrl} className={!scanUrl ? "is-disabled" : ""}>⌕ Test Scan</a>
-            <Link href={standalone ? "#template-gallery" : "/merchant/dashboard/qr"}>✦ All Templates</Link>
+            <Link href={standalone ? "#customer-reviews" : "/merchant/dashboard/qr"}>✦ Customer Reviews</Link>
           </div>
           <p className={`merchant-qr-message ${messageTone === "error" ? "text-rose-600" : "text-emerald-700"}`} role="status" aria-live="polite">{message}</p>
         </div>

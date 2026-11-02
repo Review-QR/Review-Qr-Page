@@ -1,127 +1,85 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import BusinessCategoryIcon from "@/app/components/business-category-icon";
-import type { UnifiedBusinessCategory } from "@/lib/business-category-catalog";
-import { getBusinessCategory } from "@/lib/config/business-catalog";
 
 export type StandeeTheme = {
   id: string;
   number: number;
+  label: string; // "Template 01", etc.
   name: string;
-  categoryTitle: string;
-  tagline: string;
+  pillColor: string;
+  pillBg: string;
+  pillBorder: string;
   primary: string;
   secondary?: string;
-  accentLight: string;
-  accentMid: string;
-  accentDark: string;
-  footerBg: string;
-  hasLeafWatermark?: boolean;
+  tagline: string;
+  templateType: 1 | 2 | 3 | 4 | 5;
 };
 
 export const STANDEE_THEMES: StandeeTheme[] = [
   {
-    id: "standee_2",
+    id: "template_1",
     number: 1,
-    name: "Warm Amber",
-    categoryTitle: "Food & Dining",
-    tagline: "Delicious Food, Happy People",
+    label: "Template 01",
+    name: "Sunset Waves",
+    pillColor: "#9A3412",
+    pillBg: "#FFEDD5",
+    pillBorder: "#FDBA74",
     primary: "#EA580C",
-    accentLight: "#FFEDD5",
-    accentMid: "#FB923C",
-    accentDark: "#C2410C",
-    footerBg: "#EA580C",
+    tagline: "Scan to Review on Trustit",
+    templateType: 1,
   },
   {
-    id: "standee_1",
+    id: "template_2",
     number: 2,
-    name: "Electric Blue",
-    categoryTitle: "Retail / Shop",
-    tagline: "Your Tagline Here",
+    label: "Template 02",
+    name: "Cobalt Blue Frame",
+    pillColor: "#0369A1",
+    pillBg: "#E0F2FE",
+    pillBorder: "#7DD3FC",
     primary: "#0284C7",
-    accentLight: "#BAE6FD",
-    accentMid: "#38BDF8",
-    accentDark: "#0369A1",
-    footerBg: "#0284C7",
+    tagline: "Review & Support Local Business",
+    templateType: 2,
   },
   {
-    id: "standee_3",
+    id: "template_3",
     number: 3,
-    name: "Vibrant Rose",
-    categoryTitle: "Fashion & Sweets",
-    tagline: "Shop More, Smile More",
-    primary: "#DB2777",
-    accentLight: "#FCE7F3",
-    accentMid: "#F472B6",
-    accentDark: "#BE185D",
-    footerBg: "#DB2777",
+    label: "Template 03",
+    name: "Rainbow Prism",
+    pillColor: "#15803D",
+    pillBg: "#DCFCE7",
+    pillBorder: "#86EFAC",
+    primary: "#16A34A",
+    tagline: "Scan to Review on Trustit",
+    templateType: 3,
   },
   {
-    id: "standee_4",
+    id: "template_4",
     number: 4,
-    name: "Emerald Mint",
-    categoryTitle: "Healthcare & Clinic",
-    tagline: "Your Health, Our Priority",
-    primary: "#059669",
-    accentLight: "#D1FAE5",
-    accentMid: "#34D399",
-    accentDark: "#047857",
-    footerBg: "#059669",
+    label: "Template 04",
+    name: "Corner Arcs",
+    pillColor: "#6B21A8",
+    pillBg: "#F3E8FF",
+    pillBorder: "#D8B4FE",
+    primary: "#9333EA",
+    tagline: "Scan to Review on Trustit",
+    templateType: 4,
   },
   {
-    id: "standee_5",
+    id: "template_5",
     number: 5,
-    name: "Royal Violet",
-    categoryTitle: "Salon & Spa",
-    tagline: "Look Good, Feel Great",
-    primary: "#7E22CE",
-    accentLight: "#F3E8FF",
-    accentMid: "#C084FC",
-    accentDark: "#581C87",
-    footerBg: "#7E22CE",
-    hasLeafWatermark: true,
-  },
-  {
-    id: "standee_6",
-    number: 6,
-    name: "Royal Gold & Navy",
-    categoryTitle: "Hospitality & Stay",
-    tagline: "Stay With Comfort",
-    primary: "#D97706",
-    secondary: "#0F172A",
-    accentLight: "#FEF3C7",
-    accentMid: "#F59E0B",
-    accentDark: "#B45309",
-    footerBg: "#0F172A",
-  },
-  {
-    id: "standee_7",
-    number: 7,
-    name: "Ocean Sky Blue",
-    categoryTitle: "Education & Growth",
-    tagline: "Learn Today, Grow Tomorrow",
-    primary: "#0284C7",
-    accentLight: "#E0F2FE",
-    accentMid: "#38BDF8",
-    accentDark: "#0369A1",
-    footerBg: "#0284C7",
-  },
-  {
-    id: "standee_8",
-    number: 8,
-    name: "Obsidian Slate",
-    categoryTitle: "Corporate & Universal",
-    tagline: "Quality Service, Always",
-    primary: "#0F172A",
-    accentLight: "#E2E8F0",
-    accentMid: "#94A3B8",
-    accentDark: "#000000",
-    footerBg: "#000000",
+    label: "Template 05",
+    name: "Warm Amber",
+    pillColor: "#C2410C",
+    pillBg: "#FFEDD5",
+    pillBorder: "#FDBA74",
+    primary: "#EA580C",
+    tagline: "Delicious Food, Happy People",
+    templateType: 5,
   },
 ];
 
-function GoogleGIcon({ className = "h-4 w-4" }: { className?: string }) {
+function GoogleGIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
       <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -132,57 +90,43 @@ function GoogleGIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
-function TrustitCenterShield({
-  color = "#0284c7",
-  className = "h-5 w-5",
-}: {
-  color?: string;
-  className?: string;
-}) {
-  const gradId = `ts-center-grad-${color.replace("#", "")}`;
+function TrustitLogo({ dark = false }: { dark?: boolean }) {
+  return (
+    <div className="flex items-center justify-center gap-1.5">
+      <svg className="h-6 w-6 sm:h-7 sm:w-7 shrink-0" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+        <path
+          d="M50 14 C68 14 80 20 80 34 C80 62 58 84 50 90 C42 84 20 62 20 34 C20 20 32 14 50 14 Z"
+          fill="#EA580C"
+        />
+        <path
+          d="M34 47 L45 58 L66 35"
+          stroke="#ffffff"
+          strokeWidth="9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span className={`text-xl sm:text-2xl font-black tracking-tight ${dark ? "text-white" : "text-slate-900"}`}>
+        Trustit
+      </span>
+    </div>
+  );
+}
+
+function TrustitCheckShield({ className = "h-3.5 w-3.5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 100 100" fill="none" aria-hidden="true">
-      <defs>
-        <linearGradient id={gradId} x1="10%" y1="0%" x2="90%" y2="100%">
-          <stop offset="0%" stopColor={color} />
-          <stop offset="100%" stopColor="#0f172a" stopOpacity="0.85" />
-        </linearGradient>
-      </defs>
-      {/* 4-point sparkle on top-right */}
-      <path
-        d="M80 6 C81 12 83 14 89 15 C83 16 81 18 80 24 C79 18 77 16 71 15 C77 14 79 12 80 6 Z"
-        fill={color}
-      />
-      {/* 3D Shield */}
       <path
         d="M50 14 C68 14 80 20 80 34 C80 62 58 84 50 90 C42 84 20 62 20 34 C20 20 32 14 50 14 Z"
-        fill={`url(#${gradId})`}
+        fill="#ffffff"
       />
-      {/* Bold White Checkmark */}
       <path
         d="M34 47 L45 58 L66 35"
-        stroke="#ffffff"
+        stroke="#EA580C"
         strokeWidth="9"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      {/* Dynamic Swoosh */}
-      <path
-        d="M32 60 C40 68 56 68 68 54"
-        stroke="#ffffff"
-        strokeWidth="4"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.8"
-      />
-    </svg>
-  );
-}
-
-function TrustitShieldIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1 14.5l-4-4 1.41-1.41L11 13.67l6.59-6.59L19 8.5l-8 8z" />
     </svg>
   );
 }
@@ -190,25 +134,24 @@ function TrustitShieldIcon({ className = "h-3.5 w-3.5" }: { className?: string }
 export type ModernStandeeProps = {
   standeeIndex?: number;
   businessName: string;
-  businessType: string | null;
+  businessType?: string | null;
   qrUrl: string;
   usable: boolean;
   tagline?: string;
-  categoryConfig?: UnifiedBusinessCategory | null;
+  categoryConfig?: unknown;
   compact?: boolean;
 };
 
 export function ModernStandee({
   standeeIndex = 0,
   businessName,
-  businessType,
   qrUrl,
   usable,
   tagline,
-  categoryConfig,
   compact = false,
 }: ModernStandeeProps) {
-  const theme = STANDEE_THEMES[Math.abs(standeeIndex) % STANDEE_THEMES.length];
+  const safeIndex = Math.abs(standeeIndex) % STANDEE_THEMES.length;
+  const theme = STANDEE_THEMES[safeIndex];
   const [localQr, setLocalQr] = useState<string>("");
 
   useEffect(() => {
@@ -223,8 +166,8 @@ export function ModernStandee({
         mod.default.toDataURL(target || qrUrl, {
           errorCorrectionLevel: "H",
           margin: 1,
-          width: compact ? 300 : 900,
-          color: { dark: "#0f172a", light: "#ffffff" },
+          width: compact ? 340 : 900,
+          color: { dark: "#000000", light: "#ffffff" },
         })
       )
       .then((dataUrl) => {
@@ -237,145 +180,155 @@ export function ModernStandee({
     };
   }, [qrUrl, usable, compact]);
 
-  const category = categoryConfig ?? getBusinessCategory(businessType);
-  const iconName = category?.primaryIcon ?? "Store";
-  const designFamily = category?.designFamily ?? "general";
-  const activeTagline = tagline || theme.tagline;
-
   const displayQr = localQr || qrUrl;
 
   return (
     <article
       data-standee-theme={theme.id}
-      className="relative flex aspect-[2/3] w-full flex-col justify-between overflow-hidden rounded-2xl bg-white shadow-lg ring-1 ring-slate-900/10"
+      className={`relative flex aspect-[2/3] w-full flex-col justify-between overflow-hidden rounded-3xl bg-white shadow-xl select-none ${
+        theme.templateType === 2 ? "border-[5px] sm:border-[6px] border-[#0284C7]" : ""
+      } ${theme.templateType === 5 ? "bg-[#FFF9F2]" : ""}`}
       style={{
-        boxShadow: "0 10px 30px -5px rgba(0,0,0,0.12), 0 4px 12px -2px rgba(0,0,0,0.06)",
+        boxShadow: "0 12px 35px -5px rgba(0,0,0,0.12), 0 4px 14px -2px rgba(0,0,0,0.06)",
       }}
     >
-      {/* ── Background Curved Waves (Exact Match to Image) ── */}
-      <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-        {/* Top-Left Waves */}
-        <svg
-          className="absolute -left-2 -top-2 h-36 w-48 sm:h-44 sm:w-56"
-          viewBox="0 0 220 180"
-          fill="none"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0 0 L180 0 C130 50 160 110 0 160 Z"
-            fill={theme.accentLight}
-            opacity="0.8"
-          />
-          <path
-            d="M0 0 L150 0 C100 40 120 90 0 130 Z"
-            fill={theme.accentMid}
-            opacity="0.9"
-          />
-          <path
-            d="M0 0 L110 0 C70 30 80 70 0 95 Z"
-            fill={theme.primary}
-            opacity="0.95"
-          />
-        </svg>
+      {/* ========================================================= */}
+      {/* TEMPLATE-SPECIFIC BACKGROUND SVGS                         */}
+      {/* ========================================================= */}
 
-        {/* Top-Right Soft Wave */}
-        <svg
-          className="absolute -right-2 -top-2 h-28 w-36 sm:h-36 sm:w-44"
-          viewBox="0 0 160 140"
-          fill="none"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M160 0 L40 0 C80 40 100 80 160 110 Z"
-            fill={theme.accentLight}
-            opacity="0.65"
-          />
-          <path
-            d="M160 0 L80 0 C110 30 125 60 160 80 Z"
-            fill={theme.secondary || theme.accentMid}
-            opacity="0.85"
-          />
-        </svg>
-
-        {/* Bottom-Right Sweeping Dynamic Waves */}
-        <svg
-          className="absolute -bottom-2 -right-2 h-56 w-64 sm:h-64 sm:w-72"
-          viewBox="0 0 260 230"
-          fill="none"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M260 230 L40 230 C120 170 140 90 260 40 Z"
-            fill={theme.accentLight}
-            opacity="0.75"
-          />
-          <path
-            d="M260 230 L80 230 C150 180 180 110 260 80 Z"
-            fill={theme.accentMid}
-            opacity="0.9"
-          />
-          <path
-            d="M260 230 L120 230 C180 190 210 140 260 120 Z"
-            fill={theme.secondary || theme.accentDark}
-            opacity="0.95"
-          />
-        </svg>
-
-        {/* Bottom-Left Soft Accent Curve */}
-        <svg
-          className="absolute -bottom-2 -left-2 h-28 w-36 sm:h-36 sm:w-44"
-          viewBox="0 0 150 130"
-          fill="none"
-          preserveAspectRatio="none"
-        >
-          <path
-            d="M0 130 L110 130 C70 90 40 70 0 50 Z"
-            fill={theme.accentLight}
-            opacity="0.6"
-          />
-        </svg>
-
-        {/* Leaf Watermark Motif for Theme 5 (Salon / Purple) */}
-        {theme.hasLeafWatermark && (
-          <svg
-            className="absolute -right-4 bottom-24 h-48 w-32 opacity-25"
-            viewBox="0 0 120 200"
-            fill="none"
-            stroke={theme.primary}
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M100 190 C60 130 70 60 110 10" />
-            <path d="M85 140 C60 130 50 110 60 95 C75 95 85 110 85 140 Z" fill={theme.accentLight} />
-            <path d="M92 105 C115 95 125 75 115 60 C100 60 90 75 92 105 Z" fill={theme.accentLight} />
-            <path d="M78 70 C55 65 45 45 55 30 C70 30 80 45 78 70 Z" fill={theme.accentLight} />
-            <path d="M100 40 C118 35 122 18 112 8 C100 8 92 20 100 40 Z" fill={theme.accentLight} />
+      {/* TEMPLATE 01: Sunset Waves Top & Multi-Wave Bottom */}
+      {theme.templateType === 1 && (
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+          {/* Top Sunset Wave */}
+          <svg className="absolute -top-1 inset-x-0 w-full h-24 sm:h-28" viewBox="0 0 300 110" preserveAspectRatio="none" fill="none">
+            <path d="M0 0 L300 0 L300 65 C230 110 160 30 90 75 C40 100 0 70 0 70 Z" fill="url(#t1-top-grad)" />
+            <defs>
+              <linearGradient id="t1-top-grad" x1="0" y1="0" x2="300" y2="0" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#F59E0B" />
+                <stop offset="0.45" stopColor="#EA580C" />
+                <stop offset="1" stopColor="#DC2626" />
+              </linearGradient>
+            </defs>
           </svg>
-        )}
-      </div>
+          {/* Bottom Tropical Wave */}
+          <svg className="absolute -bottom-1 inset-x-0 w-full h-24 sm:h-28" viewBox="0 0 300 110" preserveAspectRatio="none" fill="none">
+            <path d="M0 60 C80 20 150 90 230 40 C270 20 300 45 300 45 L300 110 L0 110 Z" fill="url(#t1-bot-grad)" />
+            <defs>
+              <linearGradient id="t1-bot-grad" x1="0" y1="110" x2="300" y2="30" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#FBBF24" />
+                <stop offset="0.35" stopColor="#06B6D4" />
+                <stop offset="1" stopColor="#2563EB" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      )}
 
-      {/* ── Content Container ── */}
-      <div className="relative z-10 flex flex-1 min-h-0 w-full flex-col justify-between px-3 pt-2.5 sm:px-4 sm:pt-3 pb-0.5">
-        {/* Header: Circle Icon + Business Name + Tagline */}
+      {/* TEMPLATE 02: Cobalt Blue Frame with Bottom Wave Accent */}
+      {theme.templateType === 2 && (
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+          <svg className="absolute -bottom-1 inset-x-0 w-full h-20 sm:h-24" viewBox="0 0 300 85" preserveAspectRatio="none" fill="none">
+            <path d="M0 45 C90 15 180 60 300 35 L300 85 L0 85 Z" fill="#E0F2FE" />
+          </svg>
+        </div>
+      )}
+
+      {/* TEMPLATE 03: Rainbow Prism Split Waves */}
+      {theme.templateType === 3 && (
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+          {/* Top Left Red Wave */}
+          <svg className="absolute -top-1 -left-1 w-44 h-24 sm:w-52 sm:h-28" viewBox="0 0 160 90" fill="none">
+            <path d="M0 0 L160 0 C110 40 80 80 0 90 Z" fill="#DC2626" />
+          </svg>
+          {/* Top Right Royal Blue Wave */}
+          <svg className="absolute -top-1 -right-1 w-44 h-24 sm:w-52 sm:h-28" viewBox="0 0 160 90" fill="none">
+            <path d="M160 0 L20 0 C70 35 110 65 160 85 Z" fill="#2563EB" />
+          </svg>
+          {/* Bottom Multi-Color Wave (Yellow -> Green -> Blue) */}
+          <svg className="absolute -bottom-1 inset-x-0 w-full h-24 sm:h-28" viewBox="0 0 300 100" preserveAspectRatio="none" fill="none">
+            <path d="M0 45 C70 10 130 70 200 35 C240 15 280 40 300 40 L300 100 L0 100 Z" fill="url(#t3-bot-grad)" />
+            <defs>
+              <linearGradient id="t3-bot-grad" x1="0" y1="100" x2="300" y2="20" gradientUnits="userSpaceOnUse">
+                <stop stopColor="#F59E0B" />
+                <stop offset="0.4" stopColor="#16A34A" />
+                <stop offset="1" stopColor="#1E40AF" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      )}
+
+      {/* TEMPLATE 04: Four Corner Circular Arcs */}
+      {theme.templateType === 4 && (
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+          {/* Top-Left Yellow Arc */}
+          <svg className="absolute -top-1 -left-1 w-24 h-24 sm:w-28 sm:h-28" viewBox="0 0 100 100" fill="none">
+            <path d="M0 0 L85 0 C85 50 45 85 0 85 Z" fill="#F59E0B" />
+          </svg>
+          {/* Top-Right Red Arc */}
+          <svg className="absolute -top-1 -right-1 w-24 h-24 sm:w-28 sm:h-28" viewBox="0 0 100 100" fill="none">
+            <path d="M100 0 L15 0 C15 50 55 85 100 85 Z" fill="#DC2626" />
+          </svg>
+          {/* Bottom-Left Green Arc */}
+          <svg className="absolute -bottom-1 -left-1 w-24 h-24 sm:w-28 sm:h-28" viewBox="0 0 100 100" fill="none">
+            <path d="M0 100 L0 15 C45 15 85 55 85 100 Z" fill="#16A34A" />
+          </svg>
+          {/* Bottom-Right Blue Arc */}
+          <svg className="absolute -bottom-1 -right-1 w-24 h-24 sm:w-28 sm:h-28" viewBox="0 0 100 100" fill="none">
+            <path d="M100 100 L100 15 C55 15 15 55 15 100 Z" fill="#2563EB" />
+          </svg>
+        </div>
+      )}
+
+      {/* TEMPLATE 05: Warm Peach Contour Curves & Solid Orange Footer */}
+      {theme.templateType === 5 && (
+        <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
+          {/* Top-Left Peach Arc */}
+          <svg className="absolute -top-4 -left-4 w-48 h-40 sm:w-56 sm:h-48" viewBox="0 0 200 180" fill="none">
+            <path d="M0 0 L190 0 C130 50 150 110 0 170 Z" fill="#FED7AA" opacity="0.6" />
+            <path d="M0 0 L150 0 C90 40 120 90 0 130 Z" fill="#FDBA74" opacity="0.75" />
+          </svg>
+          {/* Top-Right Peach Arc */}
+          <svg className="absolute -top-4 -right-4 w-44 h-36 sm:w-52 sm:h-44" viewBox="0 0 180 160" fill="none">
+            <path d="M180 0 L40 0 C90 40 110 80 180 120 Z" fill="#FED7AA" opacity="0.6" />
+          </svg>
+          {/* Bottom Orange Solid Wave */}
+          <svg className="absolute -bottom-1 inset-x-0 w-full h-24 sm:h-28" viewBox="0 0 300 90" preserveAspectRatio="none" fill="none">
+            <path d="M0 35 C70 10 160 50 300 20 L300 90 L0 90 Z" fill="#EA580C" />
+          </svg>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* CONTENT LAYER                                             */}
+      {/* ========================================================= */}
+      <div className="relative z-10 flex flex-1 min-h-0 w-full flex-col justify-between px-3 pt-3 sm:px-4 sm:pt-4 pb-1">
+        {/* TOP SECTION: LOGO + SUBTITLE + BUSINESS NAME */}
         <div className="flex flex-col items-center text-center">
-          {/* Top Category Icon Circle */}
-          <div
-            className="grid h-10 w-10 sm:h-12 sm:w-12 place-items-center rounded-full bg-white shadow-md ring-2 ring-white/80"
-            style={{ color: theme.primary }}
-          >
-            <BusinessCategoryIcon
-              name={iconName}
-              family={designFamily}
-              className="h-5 w-5 sm:h-6 sm:w-6"
-            />
-          </div>
+          <TrustitLogo />
 
-          {/* Business Name */}
+          {/* Template 02 Subtitle & Accent Line */}
+          {theme.templateType === 2 && (
+            <div className="flex flex-col items-center mt-1">
+              <span className="text-[10px] sm:text-[11px] font-semibold text-slate-600 tracking-wide">
+                Review &amp; Support Local Business
+              </span>
+              <span className="w-10 h-0.5 bg-orange-500 rounded-full mt-1 mb-0.5" />
+            </div>
+          )}
+
+          {/* Template 05 Thin Accent Line */}
+          {theme.templateType === 5 && (
+            <div className="w-16 h-0.5 bg-orange-400/80 rounded-full mt-1.5 mb-1" />
+          )}
+
+          {/* Business Name Heading */}
           <h2
-            className="mt-1.5 max-w-[94%] font-black text-slate-900 tracking-tight leading-tight"
+            className={`font-black text-slate-900 tracking-tight leading-tight max-w-[94%] ${
+              theme.templateType === 2 ? "mt-0.5" : "mt-1.5"
+            }`}
             style={{
-              fontSize: "clamp(0.95rem, 2.5vw, 1.35rem)",
+              fontSize: "clamp(1.05rem, 2.7vw, 1.45rem)",
               textWrap: "balance",
               overflowWrap: "break-word",
             }}
@@ -384,151 +337,128 @@ export function ModernStandee({
             {businessName}
           </h2>
 
-          {/* Subtitle / Tagline */}
-          <p
-            className="mt-0.5 max-w-[90%] font-medium text-slate-500 tracking-normal line-clamp-1"
-            style={{ fontSize: "clamp(0.68rem, 1.6vw, 0.85rem)" }}
-          >
-            {activeTagline}
-          </p>
+          {/* Template 05 Tagline */}
+          {theme.templateType === 5 && (
+            <p
+              className="mt-0.5 font-medium text-slate-600 tracking-normal line-clamp-1"
+              style={{ fontSize: "clamp(0.68rem, 1.6vw, 0.85rem)" }}
+            >
+              {tagline || "Delicious Food, Happy People"}
+            </p>
+          )}
         </div>
 
-        {/* Center: QR Code with Rounded Corner Brackets */}
+        {/* CENTER: CRISP HIGH-CONTRAST QR CODE */}
         <div className="my-auto flex flex-col items-center justify-center py-1">
-          <div className="relative inline-flex items-center justify-center p-2.5 sm:p-3 bg-white/95 rounded-2xl shadow-sm">
-            {/* 4 Corner Brackets ⌜ ⌝ ⌞ ⌟ */}
-            <span
-              className="pointer-events-none absolute left-0 top-0 h-5 w-5 sm:h-6 sm:w-6 border-l-[3.5px] border-t-[3.5px] rounded-tl-xl"
-              style={{ borderColor: theme.primary }}
-            />
-            <span
-              className="pointer-events-none absolute right-0 top-0 h-5 w-5 sm:h-6 sm:w-6 border-r-[3.5px] border-t-[3.5px] rounded-tr-xl"
-              style={{ borderColor: theme.primary }}
-            />
-            <span
-              className="pointer-events-none absolute bottom-0 left-0 h-5 w-5 sm:h-6 sm:w-6 border-b-[3.5px] border-l-[3.5px] rounded-bl-xl"
-              style={{ borderColor: theme.primary }}
-            />
-            <span
-              className="pointer-events-none absolute bottom-0 right-0 h-5 w-5 sm:h-6 sm:w-6 border-b-[3.5px] border-r-[3.5px] rounded-br-xl"
-              style={{ borderColor: theme.primary }}
-            />
+          <div className="relative inline-flex items-center justify-center p-2.5 sm:p-3 bg-white rounded-2xl shadow-sm">
+            {/* Template 05: 4 Orange Corner Brackets ⌜ ⌝ ⌞ ⌟ */}
+            {theme.templateType === 5 && (
+              <>
+                <span className="pointer-events-none absolute left-0 top-0 h-5 w-5 sm:h-6 sm:w-6 border-l-[3.5px] border-t-[3.5px] border-orange-500 rounded-tl-xl" />
+                <span className="pointer-events-none absolute right-0 top-0 h-5 w-5 sm:h-6 sm:w-6 border-r-[3.5px] border-t-[3.5px] border-orange-500 rounded-tr-xl" />
+                <span className="pointer-events-none absolute bottom-0 left-0 h-5 w-5 sm:h-6 sm:w-6 border-b-[3.5px] border-l-[3.5px] border-orange-500 rounded-bl-xl" />
+                <span className="pointer-events-none absolute bottom-0 right-0 h-5 w-5 sm:h-6 sm:w-6 border-b-[3.5px] border-r-[3.5px] border-orange-500 rounded-br-xl" />
+              </>
+            )}
 
-            {/* Live QR Image */}
+            {/* QR Image */}
             {usable && displayQr ? (
               <div className="relative inline-flex items-center justify-center">
                 <img
                   src={displayQr}
-                  alt={`Trustit review QR for ${businessName}`}
-                  className="h-32 w-32 sm:h-44 sm:w-44 block object-contain"
+                  alt={`Trustit QR Code for ${businessName}`}
+                  className="h-36 w-36 sm:h-48 sm:w-48 block object-contain"
                 />
-                {/* Central Trustit Micro-Shield Badge */}
-                <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-                  <span className="flex h-6 w-6 sm:h-7.5 sm:w-7.5 items-center justify-center rounded-md bg-white p-0.5 shadow-sm ring-1 ring-slate-200/80">
-                    <TrustitCenterShield color={theme.primary} className="h-full w-full" />
-                  </span>
-                </div>
+                {/* Template 05: Central Trustit Shield Badge in Center of QR */}
+                {theme.templateType === 5 && (
+                  <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                    <span className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-md bg-white p-0.5 shadow-sm ring-1 ring-orange-200">
+                      <svg className="h-full w-full" viewBox="0 0 100 100" fill="none">
+                        <path
+                          d="M50 14 C68 14 80 20 80 34 C80 62 58 84 50 90 C42 84 20 62 20 34 C20 20 32 14 50 14 Z"
+                          fill="#EA580C"
+                        />
+                        <path
+                          d="M34 47 L45 58 L66 35"
+                          stroke="#ffffff"
+                          strokeWidth="9"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                )}
               </div>
             ) : (
-              <div className="h-32 w-32 sm:h-44 sm:w-44 flex items-center justify-center bg-slate-50 p-2 text-center text-[10px] font-medium text-slate-500">
+              <div className="h-36 w-36 sm:h-48 sm:w-48 flex items-center justify-center bg-slate-50 p-2 text-center text-xs font-medium text-slate-500">
                 QR unavailable while business is inactive
               </div>
             )}
           </div>
         </div>
 
-        {/* Dual Social Proof Badges: Review on Trustit + Review on Google */}
-        <div className="flex flex-col items-center gap-1 py-0.5 shrink-0">
-          {/* Badge 1: Review on Trustit (Colored Pill with Shield Icon) */}
-          <div
-            className="inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-white shadow-sm"
-            style={{
-              backgroundColor: theme.primary,
-              fontSize: "clamp(0.68rem, 1.6vw, 0.8rem)",
-            }}
-          >
-            <TrustitShieldIcon className="h-3.5 w-3.5 shrink-0 fill-white" />
-            <span className="font-semibold tracking-wide">
-              Review on <span className="font-black">Trustit</span>
+        {/* BOTTOM CALL-TO-ACTION BUTTONS */}
+        <div className="flex flex-col items-center gap-1.5 py-1 shrink-0">
+          {/* Templates 01, 03, 04: "Scan to Review on Trustit" as bold text */}
+          {(theme.templateType === 1 || theme.templateType === 3 || theme.templateType === 4) && (
+            <span
+              className="font-bold text-slate-900 tracking-tight"
+              style={{ fontSize: "clamp(0.75rem, 1.8vw, 0.9rem)" }}
+            >
+              Scan to Review on Trustit
             </span>
-          </div>
+          )}
 
-          {/* Badge 2: Review on Google (Clean White Pill with Google G) */}
+          {/* Templates 02, 05: Solid Orange Pill Button with Trustit Check Shield */}
+          {(theme.templateType === 2 || theme.templateType === 5) && (
+            <div
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#EA580C] px-4 py-1 text-white shadow-xs"
+              style={{ fontSize: "clamp(0.7rem, 1.7vw, 0.82rem)" }}
+            >
+              <TrustitCheckShield className="h-3.5 w-3.5 shrink-0" />
+              <span className="font-bold tracking-tight">Scan to Review on Trustit</span>
+            </div>
+          )}
+
+          {/* All 5 Templates: White Pill Button with Google Multi-Color 'G' */}
           <div
-            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3.5 py-0.5 shadow-sm text-slate-800"
-            style={{ fontSize: "clamp(0.65rem, 1.5vw, 0.78rem)" }}
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200/90 bg-white px-4 py-1 shadow-2xs text-slate-800"
+            style={{ fontSize: "clamp(0.68rem, 1.6vw, 0.8rem)" }}
           >
             <GoogleGIcon className="h-3.5 w-3.5 shrink-0" />
-            <span className="font-medium">
-              Review on <span className="font-bold">Google</span>
-            </span>
-          </div>
-        </div>
-
-        {/* 3-Step Circular Customer Guidance */}
-        <div className="mx-auto grid w-full max-w-[270px] grid-cols-3 gap-1.5 px-1 py-1 text-center shrink-0">
-          {/* Step 1: Open Camera */}
-          <div className="flex flex-col items-center">
-            <span
-              className="grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full text-white shadow-sm"
-              style={{ backgroundColor: theme.primary }}
-            >
-              <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
-                <circle cx="12" cy="13" r="3" />
-              </svg>
-            </span>
-            <span className="mt-1 text-[8px] sm:text-[9px] font-bold text-slate-700 uppercase tracking-tight">
-              Open Camera
-            </span>
-          </div>
-
-          {/* Step 2: Scan QR */}
-          <div className="flex flex-col items-center">
-            <span
-              className="grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full text-white shadow-sm"
-              style={{ backgroundColor: theme.primary }}
-            >
-              <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" />
-                <rect x="14" y="3" width="7" height="7" />
-                <rect x="3" y="14" width="7" height="7" />
-                <rect x="14" y="14" width="7" height="7" />
-              </svg>
-            </span>
-            <span className="mt-1 text-[8px] sm:text-[9px] font-bold text-slate-700 uppercase tracking-tight">
-              Scan QR
-            </span>
-          </div>
-
-          {/* Step 3: Give Your Review */}
-          <div className="flex flex-col items-center">
-            <span
-              className="grid h-7 w-7 sm:h-8 sm:w-8 place-items-center rounded-full text-white shadow-sm"
-              style={{ backgroundColor: theme.primary }}
-            >
-              <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
-            </span>
-            <span className="mt-1 text-[8px] sm:text-[9px] font-bold text-slate-700 uppercase tracking-tight">
-              Give Your Review
+            <span className="font-semibold">
+              Also Review on <span className="font-bold text-slate-900">Google</span>
             </span>
           </div>
         </div>
       </div>
 
-      {/* ── Solid Bottom Footer Bar ── */}
+      {/* SOLID FOOTER BAR: "Powered by Trustit" */}
       <div
-        className="relative z-10 flex shrink-0 w-full items-center justify-center gap-1.5 py-1.5 text-white font-bold tracking-wider"
-        style={{
-          backgroundColor: theme.footerBg,
-          fontSize: "clamp(0.62rem, 1.4vw, 0.75rem)",
-        }}
+        className={`relative z-10 flex shrink-0 w-full items-center justify-center gap-1.5 py-1.5 text-xs font-bold tracking-wider ${
+          theme.templateType === 5 ? "text-white" : "text-slate-900"
+        }`}
       >
-        <span className="font-normal opacity-90">Powered by</span>
-        <TrustitShieldIcon className="h-3 w-3 shrink-0 fill-white" />
-        <span className="font-black tracking-widest">TRUSTIT</span>
+        <span className={`font-medium ${theme.templateType === 5 ? "text-white/90" : "text-slate-600"}`}>
+          Powered by
+        </span>
+        <svg className="h-4 w-4 shrink-0" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+          <path
+            d="M50 14 C68 14 80 20 80 34 C80 62 58 84 50 90 C42 84 20 62 20 34 C20 20 32 14 50 14 Z"
+            fill={theme.templateType === 5 ? "#ffffff" : "#EA580C"}
+          />
+          <path
+            d="M34 47 L45 58 L66 35"
+            stroke={theme.templateType === 5 ? "#EA580C" : "#ffffff"}
+            strokeWidth="9"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span className={`font-black ${theme.templateType === 5 ? "text-white" : "text-slate-900"}`}>
+          Trustit
+        </span>
       </div>
     </article>
   );
