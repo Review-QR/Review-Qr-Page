@@ -15,6 +15,76 @@ const FAST2SMS_BACKUP_TOKEN = Buffer.from(
   "base64"
 ).toString("utf-8");
 
+export interface Fast2SmsTemplateDetails {
+  connected: boolean;
+  status: "Approved" | "Pending" | "Rejected" | "Unknown";
+  templateName?: string;
+  messageId?: number;
+  phoneNumberId?: string;
+  senderNumber?: string;
+  wabaId?: number;
+  allTemplates?: Array<{
+    message_id: number;
+    template_name: string;
+    status: string;
+    category?: string;
+  }>;
+}
+
+/**
+ * Fetch Fast2SMS WhatsApp WABA & Template status directly from Fast2SMS Dev API
+ */
+export async function getFast2SmsTemplateStatus(): Promise<Fast2SmsTemplateDetails> {
+  const fast2SmsKey = (process.env.FAST2SMS_API_KEY || FAST2SMS_BACKUP_TOKEN).trim();
+  if (!fast2SmsKey) return { connected: false, status: "Unknown" };
+
+  const targetMsgId = process.env.FAST2SMS_WHATSAPP_MESSAGE_ID
+    ? Number(process.env.FAST2SMS_WHATSAPP_MESSAGE_ID)
+    : null;
+  const targetPhoneId = process.env.FAST2SMS_PHONE_NUMBER_ID || null;
+
+  try {
+    const res = await fetch("https://www.fast2sms.com/dev/dlt_manager/whatsapp?type=template", {
+      headers: { authorization: fast2SmsKey },
+    });
+    const data = await res.json().catch(() => null);
+    if (data?.success && Array.isArray(data?.data) && data.data.length > 0) {
+      // Pick matching WABA by phone_number_id or the newest connected WABA
+      const waba = (targetPhoneId
+        ? data.data.find((w: { phone_number_id?: number | string }) => String(w.phone_number_id) === String(targetPhoneId))
+        : null) || data.data[data.data.length - 1];
+
+      if (waba) {
+        const templates = Array.isArray(waba.templates) ? waba.templates : [];
+        const match =
+          (targetMsgId ? templates.find((t: { message_id?: number }) => t.message_id === targetMsgId) : null) ||
+          templates.find((t: { status?: string }) => t.status === "Approved") ||
+          templates.find((t: { template_name?: string }) => t.template_name === "trustit_occasion_wish") ||
+          templates[0];
+
+        return {
+          connected: waba.connection_status === "CONNECTED",
+          status: match?.status === "Approved" ? "Approved" : match?.status === "Rejected" ? "Rejected" : "Pending",
+          templateName: match?.template_name,
+          messageId: match?.message_id,
+          phoneNumberId: String(waba.phone_number_id),
+          senderNumber: waba.number,
+          wabaId: waba.waba_id,
+          allTemplates: templates.map((t: { message_id: number; template_name: string; status: string; category?: string }) => ({
+            message_id: t.message_id,
+            template_name: t.template_name,
+            status: t.status,
+            category: t.category,
+          })),
+        };
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return { connected: false, status: "Unknown" };
+}
+
 /**
  * Dispatch official WhatsApp Template message via Fast2SMS WhatsApp API
  */
@@ -46,8 +116,23 @@ export async function dispatchFast2SmsWhatsAppMessage(params: {
     return { success: false, error: "Fast2SMS API Key not configured." };
   }
 
-  const messageId = params.messageId || process.env.FAST2SMS_WHATSAPP_MESSAGE_ID || "41350";
-  const phoneNumberId = params.phoneNumberId || process.env.FAST2SMS_PHONE_NUMBER_ID || "1465633519956651";
+  // Priority: 1. Passed in params -> 2. Environment override -> 3. Auto-detected from Fast2SMS WABA status -> 4. Fallback defaults
+  let messageId = params.messageId || process.env.FAST2SMS_WHATSAPP_MESSAGE_ID;
+  let phoneNumberId = params.phoneNumberId || process.env.FAST2SMS_PHONE_NUMBER_ID;
+
+  if (!messageId || !phoneNumberId) {
+    const status = await getFast2SmsTemplateStatus();
+    if (!messageId && status.messageId) {
+      messageId = String(status.messageId);
+    }
+    if (!phoneNumberId && status.phoneNumberId) {
+      phoneNumberId = status.phoneNumberId;
+    }
+  }
+
+  messageId = messageId || "41350";
+  phoneNumberId = phoneNumberId || "1465633519956651";
+
   const variableValues = [
     params.customerName,
     params.businessName,
@@ -103,46 +188,6 @@ export async function dispatchFast2SmsWhatsAppMessage(params: {
       error: err instanceof Error ? err.message : "Network error contacting Fast2SMS WhatsApp API",
     };
   }
-}
-
-/**
- * Fetch Fast2SMS WhatsApp WABA & Template status directly from Fast2SMS Dev API
- */
-export async function getFast2SmsTemplateStatus(): Promise<{
-  connected: boolean;
-  status: "Approved" | "Pending" | "Rejected" | "Unknown";
-  templateName?: string;
-  messageId?: number;
-}> {
-  const fast2SmsKey = (process.env.FAST2SMS_API_KEY || FAST2SMS_BACKUP_TOKEN).trim();
-  if (!fast2SmsKey) return { connected: false, status: "Unknown" };
-
-  try {
-    const res = await fetch("https://www.fast2sms.com/dev/dlt_manager/whatsapp?type=template", {
-      headers: { authorization: fast2SmsKey },
-    });
-    const data = await res.json().catch(() => null);
-    if (data?.success && Array.isArray(data?.data)) {
-      for (const waba of data.data) {
-        const templates = waba.templates || [];
-        const match = templates.find(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (t: any) => t.message_id === 41350 || t.template_name === "trustit_occasion_wish"
-        );
-        if (match) {
-          return {
-            connected: true,
-            status: match.status === "Approved" ? "Approved" : match.status === "Rejected" ? "Rejected" : "Pending",
-            templateName: match.template_name,
-            messageId: match.message_id,
-          };
-        }
-      }
-    }
-  } catch {
-    // ignore
-  }
-  return { connected: false, status: "Unknown" };
 }
 
 /**

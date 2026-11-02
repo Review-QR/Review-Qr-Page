@@ -346,7 +346,7 @@ export async function sendFast2SmsWhatsAppTestAction(input: {
       success: false,
       isPendingMetaApproval: true,
       templateStatus: templateInfo.status,
-      message: `Fast2SMS WhatsApp Template (ID: 41350, trustit_occasion_wish) abhi Meta ke dwara review me "${templateInfo.status || "Pending"}" hai. Jaise hi Meta approve karega, Fast2SMS API se automatic delivery chalu ho jayegi!`,
+      message: `Fast2SMS WhatsApp Template (ID: ${templateInfo.messageId || "Pending"}, ${templateInfo.templateName || "trustit_occasion_wish"}) abhi Meta ke dwara review me "${templateInfo.status || "Pending"}" hai. Jaise hi Meta approve karega, Fast2SMS API se automatic delivery chalu ho jayegi!`,
     };
   }
 

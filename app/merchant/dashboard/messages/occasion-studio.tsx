@@ -817,7 +817,7 @@ export default function OccasionStudio({
                   <span>⬇️</span> Download HD Card Poster
                 </button>
                 <span className="text-[10px] text-slate-400">
-                  Fast2SMS Template ID: 41350
+                  Fast2SMS Official Cloud API
                 </span>
               </div>
 

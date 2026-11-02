@@ -421,13 +421,11 @@ export async function saveReviewSessionExperiencesForBusiness(
     }
 
     if (!saved) {
-      if (existingExperiences?.length) {
-        await admin
-          .from("review_session_experiences")
-          .delete()
-          .eq("review_session_id", sessionId)
-          .eq("business_id", businessId);
-      }
+      await admin
+        .from("review_session_experiences")
+        .delete()
+        .eq("review_session_id", sessionId)
+        .eq("business_id", businessId);
 
       const rowsToInsert = normalizedKeys.map((key) => ({
         review_session_id: sessionId,

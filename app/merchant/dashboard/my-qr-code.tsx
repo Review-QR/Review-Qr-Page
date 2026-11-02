@@ -625,7 +625,7 @@ export default function MyQrCode({
           </div>
 
           {/* Under-Standee Compact Action Buttons (PNG, PDF, Print, Copy Link) */}
-          <div className="w-full max-w-[340px] mt-4 px-1">
+          <div className="w-full max-w-[340px] mt-4 px-1 mx-auto min-w-0 box-border">
             <div className="grid grid-cols-2 gap-2">
               {/* Button 1: Download PNG */}
               <button

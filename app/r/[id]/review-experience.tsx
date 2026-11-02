@@ -141,14 +141,14 @@ export default function ReviewExperience({
     runAction(async () => {
       if (!regenerate) {
         const saved = await saveExperiences(selectedCategories);
-        if (!saved.ok) { setError("Those choices could not be saved. Please try again."); return; }
+        if (!saved.ok) { setError(saved.message || "Those choices could not be saved. Please try again."); return; }
         setSelectedCategories(saved.categoryKeys);
       } else {
         const savedDraft = await saveReviewDraft(draft);
-        if (!savedDraft.ok) { setError("Your current draft could not be saved. Please try again."); return; }
+        if (!savedDraft.ok) { setError(savedDraft.message || "Your current draft could not be saved. Please try again."); return; }
       }
       const result = await generateReviewDraft(customerInput);
-      if (!result.ok) { setError("We couldn’t prepare a review suggestion. Please try again."); return; }
+      if (!result.ok) { setError(result.message || "We couldn’t prepare a review suggestion. Please try again."); return; }
       setDraft(result.draft); setCopied(false); setUnlockedStage((current) => Math.max(current, 2)); setStep("review");
       setTimeout(() => document.getElementById("review-stage-review")?.scrollIntoView({ behavior: "smooth", block: "start" }), 40);
     });

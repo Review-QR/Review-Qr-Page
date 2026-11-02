@@ -86,7 +86,14 @@ export default async function ScanPage({ params, searchParams }: ScanPageProps) 
     .maybeSingle();
 
   const logoUrl = businessExtra?.logo_url ? String(businessExtra.logo_url) : null;
-  const cookieSessionId = isTestMode ? null : await getReviewSessionCookie(qrBusinessId);
+  const rawCookieSessionId = await getReviewSessionCookie(qrBusinessId);
+  const rawRestoredSession = rawCookieSessionId
+    ? await restoreReviewSessionForBusiness(qrBusinessId, rawCookieSessionId)
+    : null;
+  // In test mode, only reset if the previous session was already completed/submitted.
+  // While a test review is in-progress (rating chosen, experiences being picked), retain the session across steps!
+  const cookieSessionId =
+    isTestMode && rawRestoredSession?.submitted ? null : rawCookieSessionId;
   const restoredSession = cookieSessionId
     ? await restoreReviewSessionForBusiness(qrBusinessId, cookieSessionId)
     : null;
@@ -111,17 +118,25 @@ export default async function ScanPage({ params, searchParams }: ScanPageProps) 
     "use server";
     return saveReviewSessionExperiencesForBusiness(
       qrBusinessId,
-      reviewSessionId,
+      (await getReviewSessionCookie(qrBusinessId)) || reviewSessionId,
       categoryKeys,
     );
   }
   async function generateReviewDraftAction(customerInput?: string) {
     "use server";
-    return generateReviewDraftForBusiness(qrBusinessId, reviewSessionId, customerInput);
+    return generateReviewDraftForBusiness(
+      qrBusinessId,
+      (await getReviewSessionCookie(qrBusinessId)) || reviewSessionId,
+      customerInput,
+    );
   }
   async function googleReviewHandoffAction(editedText: string) {
     "use server";
-    return handoffGoogleReviewForBusiness(qrBusinessId, reviewSessionId, editedText);
+    return handoffGoogleReviewForBusiness(
+      qrBusinessId,
+      (await getReviewSessionCookie(qrBusinessId)) || reviewSessionId,
+      editedText,
+    );
   }
   async function saveReviewDraftAction(editedText: string) {
     "use server";

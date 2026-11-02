@@ -107,14 +107,16 @@ export function ModernStandee({
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState<number>(1);
 
-  // Auto-fit scale on mobile devices (< 370px width) so standee never overflows
+  // Auto-fit scale on mobile devices (< 460px width) so standee fits 100% inside any mobile screen
   useEffect(() => {
     function computeScale() {
       if (!containerRef.current) return;
-      const parent = containerRef.current.parentElement;
-      const available = parent ? parent.clientWidth : window.innerWidth;
-      if (available > 0 && available < 370) {
-        const s = Math.min(1, Math.max(0.65, (available - 16) / 350));
+      const vw = typeof window !== "undefined" ? window.innerWidth : 380;
+      if (vw < 460) {
+        // Account for total horizontal margins and paddings:
+        // content (16px) + qr-card (2px) + qr-layout (16px) + poster-frame (10px) + arrows/safe space (36px) = ~80px
+        const usableWidth = Math.max(230, vw - 76);
+        const s = Math.min(1, Math.max(0.55, Math.round((usableWidth / 350) * 100) / 100));
         setScale(s);
       } else {
         setScale(1);
@@ -164,6 +166,9 @@ export function ModernStandee({
     }
   }, [businessName, safeIndex]);
 
+  const scaledWidth = scale < 1 ? Math.round(350 * scale) : 350;
+  const scaledHeight = scale < 1 ? Math.round(662 * scale) : 662;
+
   return (
     <div
       ref={containerRef}
@@ -175,31 +180,33 @@ export function ModernStandee({
         justifyContent: "flex-start",
         width: "100%",
         maxWidth: "100%",
-        padding: "8px 0 16px",
-        overflowX: "clip",
-        overflowY: "visible",
-        ...(scale < 1
-          ? {
-              width: `${Math.round(350 * scale)}px`,
-              height: `${Math.ceil(676 * scale + 16)}px`,
-              margin: "0 auto",
-            }
-          : undefined),
+        minWidth: 0,
+        padding: "6px 0 10px",
+        boxSizing: "border-box",
       }}
     >
       <div
-        style={
-          scale < 1
-            ? {
-                transform: `scale(${scale})`,
-                transformOrigin: "top center",
-                width: "350px",
-                height: "676px",
-                flexShrink: 0,
-              }
-            : undefined
-        }
+        style={{
+          width: `${scaledWidth}px`,
+          height: `${scaledHeight + 8}px`,
+          maxWidth: "100%",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          margin: "0 auto",
+          position: "relative",
+          overflow: "visible",
+        }}
       >
+        <div
+          style={{
+            width: "350px",
+            height: "662px",
+            transform: scale < 1 ? `scale(${scale})` : "none",
+            transformOrigin: "top center",
+            flexShrink: 0,
+          }}
+        >
         {/* Self-contained SVG Symbols for #shield and #gl so domToPng / print cloning always preserves them */}
       <svg width="0" height="0" style={{ position: "absolute", pointerEvents: "none" }} aria-hidden="true">
         <symbol id="shield" viewBox="0 0 64 70">
@@ -355,6 +362,7 @@ export function ModernStandee({
           </svg>
           <b>Trustit</b>
         </div>
+      </div>
       </div>
       </div>
     </div>
