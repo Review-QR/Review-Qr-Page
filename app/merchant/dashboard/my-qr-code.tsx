@@ -13,6 +13,13 @@ import { saveQrTemplateAction } from "./qr/actions";
 import type { QrDesignAssets } from "@/lib/trustit-ai/provider-contracts";
 import type { UnifiedBusinessCategory } from "@/lib/business-category-catalog";
 
+export type DashboardStats = {
+  total_scans?: number | string;
+  this_month_scans?: number | string;
+  total_reviews?: number | string;
+  average_rating?: number | string | null;
+};
+
 type MyQrCodeProps = {
   businessId: string;
   businessName: string;
@@ -29,6 +36,7 @@ type MyQrCodeProps = {
   designAssets?: QrDesignAssets;
   initialDesignError?: string | null;
   categoryConfig?: UnifiedBusinessCategory | null;
+  stats?: DashboardStats | null;
 };
 
 function isQrUsable(qrStatus: string | null, expiry: string | null) {
@@ -73,6 +81,7 @@ export default function MyQrCode({
   designAssets,
   initialDesignError,
   categoryConfig,
+  stats = null,
 }: MyQrCodeProps) {
   const origin = trustitAppOrigin;
   const router = useRouter();
@@ -535,131 +544,164 @@ export default function MyQrCode({
           </div>
         </div>
 
-        {/* Right Column: Sleek Compact Controls (No Big Table) */}
-        <div className="merchant-qr-details flex flex-col justify-between space-y-4">
-          {/* 1. Quick Meta Chips / Buttons Row */}
+        {/* Right Column: 4 Stat Cards + Compact Flat Toolbar (Replaces Clunky Long Buttons) */}
+        <div className="merchant-qr-details flex flex-col justify-between gap-4">
+          {/* 1. Sleek Compact Flat Action Bar */}
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs space-y-3">
-            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
-              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                <span className="material-symbols-outlined text-[18px] text-slate-700">verified</span>
-                <span>Standee Identity</span>
-              </span>
-              <span className="text-[11px] font-bold text-slate-900 truncate max-w-[180px]">
-                {businessName}
-              </span>
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-900">
+                  {currentStandee.label} · {currentStandee.name}
+                </span>
+                {isCurrentSaved ? (
+                  <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                    ✓ Active on Desk
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => handleSelectTemplate(currentIndex)}
+                    disabled={isSaving}
+                    className="text-[11px] font-bold text-white bg-slate-900 hover:bg-slate-800 px-3 py-1 rounded-full transition cursor-pointer shadow-xs disabled:opacity-60"
+                  >
+                    {isSaving ? "Saving…" : "★ Set as Active"}
+                  </button>
+                )}
+              </div>
+              <span className="text-[11px] font-mono text-slate-500">ID: {businessId}</span>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Business ID</span>
-                <span className="text-xs font-bold font-mono text-slate-800 block mt-0.5 truncate">{businessId}</span>
-              </div>
-              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">QR Status</span>
-                <span className="text-xs font-bold text-emerald-700 block mt-0.5">● {statusLabel}</span>
-              </div>
-              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Active Plan</span>
-                <span className="text-xs font-bold text-slate-800 block mt-0.5 capitalize">{plan?.trim() || "Standard"}</span>
-              </div>
-              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-center">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Expiry</span>
-                <span className="text-xs font-bold text-slate-800 block mt-0.5 font-mono">{expiry || "Active"}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 2. Active Standee Selection Card */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-slate-900 block">
-                {currentStandee.label} · {currentStandee.name}
-              </span>
-              <span className="text-[11px] text-slate-500">
-                Active template for customer counter desk
-              </span>
-            </div>
-            {isCurrentSaved ? (
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl shrink-0">
-                ✓ Active Standee
-              </span>
-            ) : (
+            {/* Flat Compact Buttons: Download PNG, Download PDF, Print, Copy Link, Test Scan */}
+            <div className="flex flex-wrap items-center gap-2 pt-0.5">
               <button
                 type="button"
-                onClick={() => handleSelectTemplate(currentIndex)}
-                disabled={isSaving}
-                className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 px-4 py-2 rounded-xl transition cursor-pointer shrink-0 shadow-xs"
+                onClick={() => void downloadFullPoster("png")}
+                disabled={!usable || isExporting}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs cursor-pointer disabled:opacity-60"
+                title="Download QR Standee (PNG)"
               >
-                {isSaving ? "Saving…" : "★ Set as Active"}
+                <svg className="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                <span>{isExporting ? "Exporting…" : "Download PNG"}</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => void downloadFullPoster("pdf")}
+                disabled={!usable || isExporting}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
+                title="Download printable PDF (4 × 6 in)"
+              >
+                <svg className="w-3.5 h-3.5 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span>Download PDF</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void printQr()}
+                disabled={!usable}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer disabled:opacity-60"
+              >
+                <span className="material-symbols-outlined text-[15px]">print</span>
+                <span>Print</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void copyScanLink("Business QR link copied.")}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-[15px]">content_copy</span>
+                <span>Copy Link</span>
+              </button>
+
+              <a
+                href={scanUrl || "#"}
+                target="_blank"
+                rel="noreferrer"
+                aria-disabled={!scanUrl}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold transition shadow-2xs ${
+                  !scanUrl ? "pointer-events-none opacity-50" : ""
+                }`}
+              >
+                <span className="material-symbols-outlined text-[15px]">qr_code_scanner</span>
+                <span>Test</span>
+              </a>
+            </div>
+
+            {message && (
+              <p className={`text-xs font-semibold ${messageTone === "error" ? "text-rose-600" : "text-emerald-700"}`} role="status">
+                {message}
+              </p>
             )}
           </div>
 
-          {/* 3. Sleek Clean Action Buttons (Download Standee PNG & Download PDF) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
-            <button
-              type="button"
-              className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer disabled:opacity-60"
-              onClick={() => void downloadFullPoster("png")}
-              disabled={!usable || isExporting}
-              aria-label="Download QR Standee (PNG)"
-            >
-              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-              <span>{isExporting ? "Exporting…" : "Download QR Standee (PNG)"}</span>
-            </button>
+          {/* 2. The 4 Stat Cards in 2×2 Grid (Total Scans, Month Scans, Total Reviews, Rating) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Card 1: Total Scans */}
+            <article className="merchant-stat merchant-stat--green">
+              <span className="merchant-stat__icon">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h3v3h-3zM20 14v2m-3 3h4v2h-2" />
+                </svg>
+              </span>
+              <div className="merchant-stat__copy">
+                <p>Total Scans</p>
+                <strong>{stats ? (Number(stats.total_scans) || 0).toLocaleString("en-IN") : "—"}</strong>
+                <small>All-time QR scans</small>
+              </div>
+            </article>
 
-            <button
-              type="button"
-              className="py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer disabled:opacity-60"
-              onClick={() => void downloadFullPoster("pdf")}
-              disabled={!usable || isExporting}
-              title="Download printable PDF (4 × 6 in)"
-            >
-              <svg className="w-4 h-4 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              <span>Download PDF</span>
-            </button>
+            {/* Card 2: This Month's Scans */}
+            <article className="merchant-stat merchant-stat--amber">
+              <span className="merchant-stat__icon">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="3" y="13" width="4" height="8" rx="1" />
+                  <rect x="10" y="8" width="4" height="13" rx="1" />
+                  <rect x="17" y="3" width="4" height="18" rx="1" />
+                </svg>
+              </span>
+              <div className="merchant-stat__copy">
+                <p>This Month’s Scans</p>
+                <strong>{stats ? (Number(stats.this_month_scans) || 0).toLocaleString("en-IN") : "—"}</strong>
+                <small>Current month activity</small>
+              </div>
+            </article>
+
+            {/* Card 3: Total Reviews */}
+            <article className="merchant-stat merchant-stat--rose">
+              <span className="merchant-stat__icon">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="m12 2 2.9 6.1 6.7.9-4.9 4.7 1.2 6.6-5.9-3.2-5.9 3.2 1.2-6.6-4.9-4.7 6.7-.9L12 2Z" />
+                </svg>
+              </span>
+              <div className="merchant-stat__copy">
+                <p>Total Reviews</p>
+                <strong>{stats ? (Number(stats.total_reviews) || 0).toLocaleString("en-IN") : "—"}</strong>
+                <small>Customer feedback</small>
+              </div>
+            </article>
+
+            {/* Card 4: Average Rating */}
+            <article className="merchant-stat merchant-stat--violet">
+              <span className="merchant-stat__icon">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="m12 2 2.9 6.1 6.7.9-4.9 4.7 1.2 6.6-5.9-3.2-5.9 3.2 1.2-6.6-4.9-4.7 6.7-.9L12 2Z" />
+                </svg>
+              </span>
+              <div className="merchant-stat__copy">
+                <p>Average Rating</p>
+                <strong>{stats?.average_rating != null && Number.isFinite(Number(stats.average_rating)) ? `${Number(stats.average_rating).toFixed(1)} / 5` : "— / 5"}</strong>
+                <small>Customer rating</small>
+              </div>
+            </article>
           </div>
 
-          {/* 4. Compact Secondary Row: Copy Link, Print, Test Scan */}
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <button
-              type="button"
-              onClick={() => void copyScanLink("Business QR link copied.")}
-              className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
-            >
-              <span className="material-symbols-outlined text-[16px]">content_copy</span>
-              <span>Copy QR Link</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => void printQr()}
-              disabled={!usable}
-              className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs disabled:opacity-60"
-            >
-              <span className="material-symbols-outlined text-[16px]">print</span>
-              <span>Print Standee</span>
-            </button>
-
-            <a
-              href={scanUrl || "#"}
-              target="_blank"
-              rel="noreferrer"
-              aria-disabled={!scanUrl}
-              className={`px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition flex items-center gap-1.5 shadow-2xs ${
-                !scanUrl ? "pointer-events-none opacity-50" : ""
-              }`}
-            >
-              <span className="material-symbols-outlined text-[16px]">qr_code_scanner</span>
-              <span>Test Scan</span>
-            </a>
+          {/* 3. Sleek Identity Footer Strip */}
+          <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 text-[11px] text-slate-600">
+            <span>Status: <strong className="text-emerald-700">● {statusLabel}</strong></span>
+            <span>Plan: <strong className="capitalize text-slate-800">{plan?.trim() || "Standard"}</strong></span>
+            <span>Expiry: <strong className="font-mono text-slate-800">{expiry || "Active"}</strong></span>
           </div>
-
-          {message && (
-            <p className={`text-xs font-semibold ${messageTone === "error" ? "text-rose-600" : "text-emerald-700"}`} role="status">
-              {message}
-            </p>
-          )}
         </div>
       </div>
     </section>

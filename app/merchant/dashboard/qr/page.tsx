@@ -33,12 +33,22 @@ export default async function MerchantQrPage() {
   }
   const currentTemplate = qrTemplates.find((template) => template.id === merchant.qrTemplate) ?? qrTemplates[0];
 
-  // Fetch customer reviews for this merchant
+  // Fetch customer reviews and dashboard stats for this merchant
   const supabase = await createMerchantServerClient();
-  const { data: reviewsData } = await supabase
-    .rpc("get_merchant_trustit_reviews", { p_business_id: merchant.businessId })
-    .order("submitted_at", { ascending: false })
-    .limit(100);
+  const [{ data: reviewsData }, { data: statsData }] = await Promise.all([
+    supabase
+      .rpc("get_merchant_trustit_reviews", { p_business_id: merchant.businessId })
+      .order("submitted_at", { ascending: false })
+      .limit(100),
+    supabase.rpc("get_merchant_dashboard_stats", { p_business_id: merchant.businessId }),
+  ]);
+
+  const stats = ((statsData as unknown[])?.[0] ?? null) as {
+    total_scans?: number | string;
+    this_month_scans?: number | string;
+    total_reviews?: number | string;
+    average_rating?: number | string | null;
+  } | null;
 
   const reviews = (reviewsData ?? []) as Review[];
   const average = reviews.length
@@ -59,7 +69,7 @@ export default async function MerchantQrPage() {
       </header>
 
       <div className="merchant-workspace">
-        <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} layout="standalone" designAssets={designAssets} categoryConfig={categoryConfig} initialTemplate={merchant.qrTemplate} />
+        <MyQrCode businessId={merchant.businessId} businessName={merchant.businessName} businessType={merchant.businessType} qrStatus={merchant.qrStatus} expiry={merchant.expiry} reviewLink={merchant.reviewLink} templateName={currentTemplate.name} templateId={currentTemplate.id} plan={merchant.plan} layout="standalone" designAssets={designAssets} categoryConfig={categoryConfig} initialTemplate={merchant.qrTemplate} stats={stats} />
       </div>
 
       {/* ── CUSTOMER REVIEWS (Merged with QR Page) ── */}

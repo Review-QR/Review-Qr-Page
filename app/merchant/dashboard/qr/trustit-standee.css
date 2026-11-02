@@ -453,3 +453,27 @@
 .trustit-standee-scope .l3 { background: #d8f1d8; color: #13351f; }
 .trustit-standee-scope .l4 { background: #e6dcfb; color: #2a1747; }
 .trustit-standee-scope .l5 { background: #fde4cf; color: #1a1a1a; }
+
+/* Responsive Scaling for Seamless Mobile Screen Fit (Fit & Flat) */
+@media (max-width: 480px) {
+  .trustit-standee-scope {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    overflow: hidden;
+  }
+  .trustit-standee-scope .card {
+    transform: scale(0.85);
+    transform-origin: top center;
+    margin-bottom: -95px;
+  }
+}
+
+@media (max-width: 375px) {
+  .trustit-standee-scope .card {
+    transform: scale(0.76);
+    transform-origin: top center;
+    margin-bottom: -155px;
+  }
+}
+
