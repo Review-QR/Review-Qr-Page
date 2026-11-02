@@ -168,18 +168,22 @@ export function ModernStandee({
     <div
       ref={containerRef}
       className="trustit-standee-scope"
-      style={
-        scale < 1
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        width: "100%",
+        padding: "8px 0 16px",
+        overflow: "visible",
+        ...(scale < 1
           ? {
               width: `${Math.round(350 * scale)}px`,
-              height: `${Math.round(662 * scale)}px`,
-              display: "flex",
-              justifyContent: "center",
-              overflow: "hidden",
+              height: `${Math.ceil(676 * scale + 16)}px`,
               margin: "0 auto",
             }
-          : undefined
-      }
+          : undefined),
+      }}
     >
       <div
         style={
@@ -188,7 +192,7 @@ export function ModernStandee({
                 transform: `scale(${scale})`,
                 transformOrigin: "top center",
                 width: "350px",
-                height: "662px",
+                height: "676px",
                 flexShrink: 0,
               }
             : undefined

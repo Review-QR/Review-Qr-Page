@@ -5,16 +5,19 @@
 
 .trustit-standee-scope {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-start;
   align-items: center;
   width: 100%;
+  padding: 6px 0;
+  box-sizing: border-box;
 }
 
 /* Card base */
 .trustit-standee-scope .card {
-  --b1: var(--brand-b1, #ea580c);
-  --b2: var(--brand-b2, #ff7a22);
-  --word: var(--brand-word, #14171f);
+  --b1: #1456c8;
+  --b2: #2f8cf5;
+  --word: #143a8f;
   --chk: #fff;
   position: relative;
   width: 350px;
@@ -23,11 +26,15 @@
   background: #fff;
   overflow: hidden;
   text-align: center;
-  padding-top: 38px;
+  padding: 0 !important;
+  padding-top: 38px !important;
+  border: none !important;
   box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.9), 0 10px 26px rgba(40, 60, 120, 0.2);
   font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   box-sizing: border-box;
   user-select: none;
+  margin: 6px auto;
+  flex-shrink: 0;
 }
 
 .trustit-standee-scope .card > * {
@@ -453,27 +460,4 @@
 .trustit-standee-scope .l3 { background: #d8f1d8; color: #13351f; }
 .trustit-standee-scope .l4 { background: #e6dcfb; color: #2a1747; }
 .trustit-standee-scope .l5 { background: #fde4cf; color: #1a1a1a; }
-
-/* Responsive Scaling for Seamless Mobile Screen Fit (Fit & Flat) */
-@media (max-width: 480px) {
-  .trustit-standee-scope {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    overflow: hidden;
-  }
-  .trustit-standee-scope .card {
-    transform: scale(0.85);
-    transform-origin: top center;
-    margin-bottom: -95px;
-  }
-}
-
-@media (max-width: 375px) {
-  .trustit-standee-scope .card {
-    transform: scale(0.76);
-    transform-origin: top center;
-    margin-bottom: -155px;
-  }
-}
 

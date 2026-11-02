@@ -258,21 +258,33 @@ export default function MyQrCode({
       const targetEl = (posterRef.current.querySelector(".card") as HTMLElement) || posterRef.current;
       const png = await domToPng(targetEl, {
         scale: 3,
-        style: { boxShadow: "none" },
+        width: 350,
+        height: 662,
+        style: {
+          transform: "none",
+          margin: "0",
+          boxShadow: "none",
+        },
       });
-      // Standee 350x662 ratio = 0.5287 (4" x 7.57" exact acrylic standee proportions)
-      const widthIn = 4;
-      const heightIn = 7.57;
       const filename = `Trustit-${safeFilename(currentStandee.name)}-${safeFilename(businessName || businessId)}-Standee.${format}`;
       if (format === "pdf") {
         const { jsPDF } = await import("jspdf");
+        // Standard 4 x 6 inch acrylic standee format requested by user
+        const pdfWidthIn = 4;
+        const pdfHeightIn = 6;
         const pdf = new jsPDF({
           orientation: "portrait",
           unit: "in",
-          format: [widthIn, heightIn],
+          format: [pdfWidthIn, pdfHeightIn],
           compress: true,
         });
-        pdf.addImage(png, "PNG", 0, 0, widthIn, heightIn, undefined, "FAST");
+        // Standee ratio: 350 / 662 = 0.5287
+        // Fit cleanly centered inside 4" x 6" with safe margins so 100% of the standee is visible
+        const targetHeightIn = 5.7;
+        const targetWidthIn = targetHeightIn * (350 / 662);
+        const xOffset = (pdfWidthIn - targetWidthIn) / 2;
+        const yOffset = (pdfHeightIn - targetHeightIn) / 2;
+        pdf.addImage(png, "PNG", xOffset, yOffset, targetWidthIn, targetHeightIn, undefined, "FAST");
         pdf.save(filename);
       } else {
         const link = document.createElement("a");
@@ -347,7 +359,16 @@ export default function MyQrCode({
       try {
         const { domToPng } = await import("modern-screenshot");
         const targetEl = (posterRef.current.querySelector(".card") as HTMLElement) || posterRef.current;
-        const png = await domToPng(targetEl, { scale: 3, style: { boxShadow: "none" } });
+        const png = await domToPng(targetEl, {
+          scale: 3,
+          width: 350,
+          height: 662,
+          style: {
+            transform: "none",
+            margin: "0",
+            boxShadow: "none",
+          },
+        });
         const printWindow = window.open("", "_blank");
         if (!printWindow) {
           setMessageTone("error");
@@ -355,20 +376,61 @@ export default function MyQrCode({
           return;
         }
         printWindow.document.write(`<!doctype html>
-          <html><head><title>${escapeHtml(businessName || "Review QR Standee")} · ${escapeHtml(currentTemplate.name)}</title>
+          <html><head><title>${escapeHtml(businessName || "Review QR Standee")} · ${escapeHtml(currentStandee.name)}</title>
           <style>
-            * { box-sizing: border-box; }
-            html, body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: #ffffff; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
-            .print-container { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; margin: auto; }
-            img { display: block; max-width: 90vw; max-height: 90vh; width: auto; height: auto; margin: auto; object-fit: contain; }
-            @media print {
-              @page { size: portrait; margin: 12mm; }
-              html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; }
-              .print-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; page-break-inside: avoid; }
-              img { max-width: 100%; max-height: 94vh; width: auto; height: auto; margin: 0 auto; display: block; object-fit: contain; }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            @page {
+              size: 4in 6in;
+              margin: 0;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              width: 100%;
+              height: 100%;
+              background: #ffffff;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .print-page {
+              width: 4in;
+              height: 6in;
+              max-width: 4in;
+              max-height: 6in;
+              margin: 0 auto;
+              padding: 0.15in;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              page-break-inside: avoid;
+              box-sizing: border-box;
+            }
+            img {
+              max-width: 100%;
+              max-height: 100%;
+              width: auto;
+              height: auto;
+              object-fit: contain;
+              display: block;
+              margin: 0 auto;
+            }
+            @media screen {
+              body {
+                background: #f1f5f9;
+                min-height: 100vh;
+                padding: 24px;
+              }
+              .print-page {
+                background: #ffffff;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+                border-radius: 8px;
+              }
             }
           </style></head><body>
-            <div class="print-container">
+            <div class="print-page">
               <img src="${png}" alt="Standee Poster for ${escapeHtml(businessName)}" />
             </div>
           </body></html>`);

@@ -231,12 +231,12 @@ html, body {
 /* Standee Layout: Balanced 2-column inside card */
 .merchant-qr-layout {
   display: grid;
-  grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+  grid-template-columns: minmax(380px, 440px) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
   padding: 22px;
 }
-.merchant-qr-layout--standalone { grid-template-columns: minmax(340px, 440px) minmax(0, 1fr); padding: 22px; }
+.merchant-qr-layout--standalone { grid-template-columns: minmax(380px, 460px) minmax(0, 1fr); padding: 22px; }
 
 .merchant-qr-poster-frame {
   display: flex;
@@ -245,7 +245,7 @@ html, body {
   width: 100%;
   min-width: 0;
   overflow: visible;
-  padding: 16px 14px;
+  padding: 18px 14px;
   border-radius: 18px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
@@ -290,10 +290,11 @@ html, body {
 .merchant-qr-poster-stage {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
-  max-width: 370px;
-  padding: 12px 0 10px;
+  max-width: 380px;
+  padding: 10px 0;
+  overflow: visible;
 }
 .merchant-qr-poster {
   position: relative;
@@ -301,6 +302,7 @@ html, body {
   max-width: 100%;
   border-radius: 36px;
   background: transparent;
+  overflow: visible;
 }
 .merchant-qr-layout--standalone .merchant-qr-poster { width: auto; max-width: 100%; }
 
@@ -572,9 +574,9 @@ html, body {
   .merchant-stat__copy small { margin-top: 2px; font-size: 8px; }
   .merchant-workspace, .merchant-lower-grid, .merchant-analytics-grid, .merchant-data-grid { gap: 10px; margin-bottom: 10px; }
   .merchant-qr-layout, .merchant-qr-layout--standalone { grid-template-columns: minmax(0, 1fr); padding: 10px; gap: 14px; }
-  .merchant-qr-poster-frame { padding: 8px 4px; align-items: center; justify-content: center; overflow: hidden; width: 100%; max-width: 100%; }
-  .merchant-qr-slider-viewport { width: 100%; max-width: 100%; overflow: hidden; }
-  .merchant-qr-poster-stage { max-width: 100%; overflow: hidden; }
+  .merchant-qr-poster-frame { padding: 12px 6px; align-items: center; justify-content: center; overflow: visible; width: 100%; max-width: 100%; }
+  .merchant-qr-slider-viewport { width: 100%; max-width: 100%; overflow: visible; }
+  .merchant-qr-poster-stage { max-width: 100%; overflow: visible; }
   .merchant-slider-arrow--prev { left: 4px; }
   .merchant-slider-arrow--next { right: 4px; }
   .merchant-qr-poster { width: auto; max-width: 100%; }
