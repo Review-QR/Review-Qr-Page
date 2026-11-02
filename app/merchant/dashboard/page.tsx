@@ -14,6 +14,11 @@ type DashboardStats = {
   this_month_scans: number | string;
   total_reviews: number | string;
   average_rating: number | string | null;
+  rating_5_count?: number | string;
+  rating_4_count?: number | string;
+  rating_3_count?: number | string;
+  rating_2_count?: number | string;
+  rating_1_count?: number | string;
 };
 
 function count(value: number | string | null | undefined) {
@@ -187,6 +192,11 @@ export default async function MerchantDashboardPage() {
 
   const totalReviews = count(stats?.total_reviews);
   const average = stats?.average_rating == null ? null : Number(stats.average_rating);
+  const r5 = count(stats?.rating_5_count);
+  const r4 = count(stats?.rating_4_count);
+  const r3 = count(stats?.rating_3_count);
+  const r2 = count(stats?.rating_2_count);
+  const r1 = count(stats?.rating_1_count);
   const businessType = merchant.businessType || "Business";
   const sweetsBusiness = /(sweet|mithai|bakery|cake|dessert)/i.test(businessType);
   const categoryEmoji = sweetsBusiness
@@ -213,80 +223,81 @@ export default async function MerchantDashboardPage() {
 
   return (
     <div className="merchant-dashboard-page space-y-6">
-      {/* Stitch Executive Storefront Hero Bar */}
-      <section className={`merchant-hero${isPremium ? " merchant-hero--premium" : ""} rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-7 shadow-xs mb-6 transition hover:shadow-sm`}>
-        {/* Top Row: Store Identity, Greeting & Action Buttons */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 pb-5 border-b border-slate-100">
-          {/* Left: Circular Medallion Logo + Store Identity */}
-          <div className="flex items-center gap-4">
-            <div className="h-16 w-16 sm:h-18 sm:w-18 rounded-full bg-[#1e140a] border-2 border-[#b59363] ring-4 ring-amber-100/70 text-white flex items-center justify-center text-2xl sm:text-3xl shadow-sm shrink-0 overflow-hidden">
-              {merchant.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover" />
-              ) : (
-                <div className="h-full w-full bg-[#0d47a1] flex items-center justify-center text-2xl sm:text-3xl">
-                  {categoryEmoji}
-                </div>
-              )}
-            </div>
-
-            <div>
-              {/* Clean Location & Store Badges */}
-              <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
-                  <span className="w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
-                  Outlet: {merchant.isOutletOpen ? "Open" : "Closed"}
-                </span>
-                <span className="text-xs text-slate-400">•</span>
-                <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-                  <span>📍</span>
-                  {merchant.locality || merchant.city || "Bahraich Hub"} • 3.5 km radius
-                </span>
-                <span className="text-xs text-slate-400">•</span>
-                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-xs text-slate-600 font-mono font-semibold">
-                  ID: {merchant.businessId}
-                </span>
-                {isPremium && (
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-900"
-                    title="Trustit VIP Merchant"
-                  >
-                    <span>👑</span>
-                    <span>VIP Merchant</span>
-                  </span>
+      {/* 2-Column Hero Grid: Left = Storefront Identity & Controls (50%), Right = Review & Rating Intelligence (50%) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
+        {/* Left Column (50%): Storefront Identity & Controls */}
+        <section className={`merchant-hero${isPremium ? " merchant-hero--premium ring-2 ring-amber-300/60" : ""} rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs flex flex-col justify-between transition hover:shadow-sm`}>
+          <div>
+            {/* Store Medallion & Information */}
+            <div className="flex items-start gap-4">
+              <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-full bg-[#1e140a] border-2 border-[#b59363] ring-4 ring-amber-100/70 text-white flex items-center justify-center text-xl sm:text-2xl shadow-sm shrink-0 overflow-hidden">
+                {merchant.logoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="h-full w-full bg-[#0d47a1] flex items-center justify-center text-xl sm:text-2xl">
+                    {categoryEmoji}
+                  </div>
                 )}
               </div>
 
-              {/* Greeting Headline */}
-              <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                Namaste, {(merchant.ownerName || merchant.businessName || "Merchant").trim().split(/\s+/)[0]} ji! 🙏
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium">
-                Welcome back to <strong className="text-slate-800">{merchant.businessName}</strong> console. Have a profitable day!
-              </p>
+              <div className="min-w-0 flex-1">
+                {/* Badges */}
+                <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                    Outlet: {merchant.isOutletOpen ? "Open" : "Closed"}
+                  </span>
+                  <span className="text-slate-400 text-xs">•</span>
+                  <span className="text-xs font-semibold text-slate-500 flex items-center gap-1 text-[11px]">
+                    <span>📍</span>
+                    {merchant.locality || merchant.city || "Bahraich Hub"}
+                  </span>
+                  <span className="text-slate-400 text-xs">•</span>
+                  <span className="px-1.5 py-0.5 rounded-md bg-slate-100 text-[10px] text-slate-600 font-mono font-semibold">
+                    ID: {merchant.businessId}
+                  </span>
+                  {isPremium && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-900"
+                      title="Trustit VIP Merchant"
+                    >
+                      <span>👑</span>
+                      <span>VIP Merchant</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Greeting & Store Name */}
+                <h1 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight leading-tight truncate">
+                  Namaste, {(merchant.ownerName || merchant.businessName || "Merchant").trim().split(/\s+/)[0]} ji! 🙏
+                </h1>
+                <p className="text-xs text-slate-500 mt-0.5 font-medium line-clamp-1">
+                  Welcome to <strong className="text-slate-800">{merchant.businessName}</strong> console.
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Right: Quick Action Buttons & Compact Toggles */}
-          <div className="flex flex-col items-start lg:items-end gap-2 self-start lg:self-center">
-            <div className="flex items-center gap-2.5">
+          {/* Action Buttons & Compact Toggles Shifted Underneath (Eliminating empty dead space) */}
+          <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
               <Link
                 href="/merchant/dashboard/orders"
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-2xs transition"
               >
-                <span className="material-symbols-outlined text-[17px]">receipt_long</span>
+                <span className="material-symbols-outlined text-[16px]">receipt_long</span>
                 <span>View Orders ({pendingOrders.length})</span>
               </Link>
               <Link
                 href={launcher.href}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-xs transition"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 text-xs font-bold shadow-2xs transition"
               >
-                <span className="material-symbols-outlined text-[17px]">restaurant_menu</span>
+                <span className="material-symbols-outlined text-[16px]">restaurant_menu</span>
                 <span>Rates &amp; Menu</span>
               </Link>
             </div>
 
-            {/* Small Compact Toggles planted right below View Orders & Rates */}
             <OutletStatusToggles
               businessId={merchant.businessId}
               initialIsOutletOpen={merchant.isOutletOpen}
@@ -294,82 +305,160 @@ export default async function MerchantDashboardPage() {
               initialIsTakingOrders={merchant.isTakingOrders}
             />
           </div>
+        </section>
+
+        {/* Right Column (50%): Customer Rating & Review Intelligence */}
+        <section className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs flex flex-col justify-between transition hover:shadow-sm">
+          <div>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-lg">
+                  ⭐
+                </span>
+                <div>
+                  <h2 className="text-base font-black text-slate-900 leading-tight">Customer Reviews &amp; Ratings</h2>
+                  <p className="text-[11px] text-slate-500">Live verified customer feedback</p>
+                </div>
+              </div>
+              <Link
+                href="/merchant/dashboard/analytics"
+                className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-xl transition"
+              >
+                <span>Analytics</span>
+                <span className="text-[10px]">→</span>
+              </Link>
+            </div>
+
+            {/* Main Score & Star Distribution Summary */}
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+              {/* Left Score Block */}
+              <div className="sm:col-span-5 flex flex-col items-center sm:items-start justify-center border-b sm:border-b-0 sm:border-r border-slate-100 pb-3 sm:pb-0 sm:pr-4 text-center sm:text-left">
+                <div className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">
+                  {average !== null && Number.isFinite(average) ? average.toFixed(1) : "—"}
+                  <span className="text-xl text-amber-500 font-bold ml-1">★</span>
+                </div>
+                <div className="flex items-center gap-0.5 mt-1.5 text-amber-400 text-sm">
+                  {"★★★★★".slice(0, Math.round(average ?? 5))}
+                  <span className="text-slate-300">{"★★★★★".slice(Math.round(average ?? 5))}</span>
+                </div>
+                <div className="mt-1 text-xs font-bold text-slate-600">
+                  {totalReviews.toLocaleString("en-IN")} <span className="font-normal text-slate-400">Total Reviews</span>
+                </div>
+              </div>
+
+              {/* Right Star Mini Bars */}
+              <div className="sm:col-span-7 space-y-1.5">
+                {[
+                  { star: "5 ★", count: r5, color: "bg-emerald-500" },
+                  { star: "4 ★", count: r4, color: "bg-teal-500" },
+                  { star: "3 ★", count: r3, color: "bg-amber-500" },
+                  { star: "2 ★", count: r2, color: "bg-orange-500" },
+                  { star: "1 ★", count: r1, color: "bg-rose-500" },
+                ].map((item) => {
+                  const pct = totalReviews > 0 ? Math.round((item.count / totalReviews) * 100) : 0;
+                  return (
+                    <div key={item.star} className="flex items-center gap-2 text-xs">
+                      <span className="w-6 text-[11px] font-bold text-slate-600">{item.star}</span>
+                      <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div className={`h-full ${item.color} rounded-full`} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-7 text-right text-[10px] font-semibold text-slate-400">{pct}%</span>
+                      <span className="w-8 text-right text-[10px] font-bold text-slate-700">{item.count}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Footer Links */}
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-slate-500 text-[11px]">
+              {totalReviews > 0 ? "Customer satisfaction is active" : "Awaiting first QR customer review"}
+            </span>
+            <Link
+              href="/merchant/dashboard/reviews"
+              className="text-xs font-bold text-blue-700 hover:text-blue-900"
+            >
+              View All Reviews →
+            </Link>
+          </div>
+        </section>
+      </div>
+
+      {/* Today's Live Order Pipeline (Placed directly below 2-column top grid) */}
+      <section className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-slate-700 text-[18px]">view_timeline</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Today&apos;s Live Order Pipeline</span>
+            <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 font-bold font-mono">
+              Auto-sync 4s
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 text-xs text-slate-400">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            <span>Realtime Database Synchronized</span>
+          </div>
         </div>
 
-        {/* Bottom Row: Clean 4-Stage Order Pipeline KPI Flow */}
-        <div className="pt-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 mb-2.5 border-b border-slate-100">
-            <div className="flex items-center gap-2">
-              <span className="material-symbols-outlined text-slate-700 text-[18px]">view_timeline</span>
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Today&apos;s Live Order Pipeline</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 font-bold font-mono">
-                Auto-sync 4s
-              </span>
+        {/* 4 Clean Pipeline Metric Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
+          {/* Stage 1: New Orders Pending */}
+          <Link
+            href="/merchant/dashboard/orders"
+            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
+          >
+            <div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">New Pending</span>
+              <span className="text-xl font-black text-rose-600 mt-0.5 block">{pendingOrders.length}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              <span>Realtime Database Synchronized</span>
+            <div className="h-10 w-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
+              ⏳
             </div>
-          </div>
+          </Link>
 
-          {/* 4 Clean Pipeline Metric Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
-            {/* Stage 1: New Orders Pending */}
-            <Link
-              href="/merchant/dashboard/orders"
-              className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
-            >
-              <div>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">New Pending</span>
-                <span className="text-xl font-black text-rose-600 mt-0.5 block">{pendingOrders.length}</span>
-              </div>
-              <div className="h-10 w-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-                ⏳
-              </div>
-            </Link>
+          {/* Stage 2: In Kitchen / Prep */}
+          <Link
+            href="/merchant/dashboard/orders"
+            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
+          >
+            <div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">In Prep / Packing</span>
+              <span className="text-xl font-black text-blue-600 mt-0.5 block">{prepOrders.length}</span>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
+              🍲
+            </div>
+          </Link>
 
-            {/* Stage 2: In Kitchen / Prep */}
-            <Link
-              href="/merchant/dashboard/orders"
-              className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
-            >
-              <div>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">In Prep / Packing</span>
-                <span className="text-xl font-black text-blue-600 mt-0.5 block">{prepOrders.length}</span>
-              </div>
-              <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-                🍲
-              </div>
-            </Link>
+          {/* Stage 3: Out for Delivery */}
+          <Link
+            href="/merchant/dashboard/fleet"
+            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
+          >
+            <div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">Out for Delivery</span>
+              <span className="text-xl font-black text-teal-600 mt-0.5 block">{outForDeliveryOrders.length}</span>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
+              🛵
+            </div>
+          </Link>
 
-            {/* Stage 3: Out for Delivery */}
-            <Link
-              href="/merchant/dashboard/fleet"
-              className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
-            >
-              <div>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">Out for Delivery</span>
-                <span className="text-xl font-black text-teal-600 mt-0.5 block">{outForDeliveryOrders.length}</span>
-              </div>
-              <div className="h-10 w-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-                🛵
-              </div>
-            </Link>
-
-            {/* Stage 4: Delivered Today */}
-            <Link
-              href="/merchant/dashboard/orders"
-              className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
-            >
-              <div>
-                <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">Delivered Today</span>
-                <span className="text-xl font-black text-emerald-600 mt-0.5 block">{deliveredOrders.length}</span>
-              </div>
-              <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-                ✅
-              </div>
-            </Link>
-          </div>
+          {/* Stage 4: Delivered Today */}
+          <Link
+            href="/merchant/dashboard/orders"
+            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
+          >
+            <div>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">Delivered Today</span>
+              <span className="text-xl font-black text-emerald-600 mt-0.5 block">{deliveredOrders.length}</span>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
+              ✅
+            </div>
+          </Link>
         </div>
       </section>
 
