@@ -533,87 +533,52 @@ export default function MyQrCode({
           </div>
         </div>
 
-        {/* Right Column: Analytical Metric Box & Action Controls */}
-        <div className="merchant-qr-details space-y-3.5">
-          {/* 1. Analytical Metric Box */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-slate-800 text-[20px]">badge</span>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900 leading-tight">Standee Identity &amp; Status</h3>
-                  <p className="text-[11px] text-slate-500">Live verified merchant parameters</p>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
-                ● {statusLabel}
+        {/* Right Column: Sleek Compact Controls (No Big Table) */}
+        <div className="merchant-qr-details flex flex-col justify-between space-y-4">
+          {/* 1. Quick Meta Chips / Buttons Row */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs space-y-3">
+            <div className="flex items-center justify-between pb-2.5 border-b border-slate-100">
+              <span className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[18px] text-slate-700">verified</span>
+                <span>Standee Identity</span>
+              </span>
+              <span className="text-[11px] font-bold text-slate-900 truncate max-w-[180px]">
+                {businessName}
               </span>
             </div>
 
-            {/* 5 Column / Row Metric Boxes */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {/* Business Name */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3 sm:col-span-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Business Name</span>
-                <p className="mt-0.5 text-sm font-bold text-slate-900 truncate" title={businessName}>
-                  {businessName}
-                </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-center">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Business ID</span>
+                <span className="text-xs font-bold font-mono text-slate-800 block mt-0.5 truncate">{businessId}</span>
               </div>
-
-              {/* Business ID */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Business ID</span>
-                <div className="mt-0.5 flex items-center justify-between">
-                  <span className="text-xs font-bold font-mono text-slate-900">{businessId}</span>
-                  <button
-                    type="button"
-                    onClick={() => void copyScanLink("Business QR link copied.")}
-                    className="text-[10px] font-bold text-blue-700 hover:underline cursor-pointer"
-                  >
-                    Copy
-                  </button>
-                </div>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-center">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">QR Status</span>
+                <span className="text-xs font-bold text-emerald-700 block mt-0.5">● {statusLabel}</span>
               </div>
-
-              {/* QR Status */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">QR Status</span>
-                <p className="mt-0.5 text-xs font-bold text-emerald-700 flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block"></span>
-                  <span>{statusLabel}</span>
-                </p>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-center">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Active Plan</span>
+                <span className="text-xs font-bold text-slate-800 block mt-0.5 capitalize">{plan?.trim() || "Standard"}</span>
               </div>
-
-              {/* Current Plan */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Plan</span>
-                <p className="mt-0.5 text-xs font-bold text-slate-900 capitalize">
-                  {plan?.trim() || "Standard"} Plan
-                </p>
-              </div>
-
-              {/* Expiry Date */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Expiry Date</span>
-                <p className="mt-0.5 text-xs font-mono font-bold text-slate-900">
-                  {expiry || "Active"}
-                </p>
+              <div className="rounded-xl border border-slate-100 bg-slate-50/80 p-2.5 text-center">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Expiry</span>
+                <span className="text-xs font-bold text-slate-800 block mt-0.5 font-mono">{expiry || "Active"}</span>
               </div>
             </div>
           </div>
 
-          {/* 2. Active Standee Selector Pill Card */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+          {/* 2. Active Standee Selection Card */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <span className="text-xs font-bold text-slate-900 block">
                 {currentStandee.label} · {currentStandee.name}
               </span>
               <span className="text-[11px] text-slate-500">
-                Active template shown to customers at your counter desk
+                Active template for customer counter desk
               </span>
             </div>
             {isCurrentSaved ? (
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3.5 py-1.5 rounded-xl shrink-0">
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-xl shrink-0">
                 ✓ Active Standee
               </span>
             ) : (
@@ -628,40 +593,71 @@ export default function MyQrCode({
             )}
           </div>
 
-          {/* 3. Primary Export Actions (Download PNG, PDF, Print) */}
-          <div className="merchant-qr-poster-actions">
+          {/* 3. Sleek Clean Action Buttons (Download Standee PNG & Download PDF) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
             <button
               type="button"
-              className="merchant-btn-poster merchant-btn-poster--png cursor-pointer"
+              className="py-3 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2 transition shadow-xs cursor-pointer disabled:opacity-60"
               onClick={() => void downloadFullPoster("png")}
               disabled={!usable || isExporting}
+              aria-label="Download QR Standee (PNG)"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               <span>{isExporting ? "Exporting…" : "Download QR Standee (PNG)"}</span>
             </button>
+
             <button
               type="button"
-              className="merchant-btn-poster merchant-btn-poster--pdf cursor-pointer"
+              className="py-3 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 font-bold text-xs flex items-center justify-center gap-2 transition shadow-2xs cursor-pointer disabled:opacity-60"
               onClick={() => void downloadFullPoster("pdf")}
               disabled={!usable || isExporting}
               title="Download printable PDF (4 × 6 in)"
             >
-              Download PDF
+              <svg className="w-4 h-4 text-rose-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              <span>Download PDF</span>
             </button>
           </div>
 
-          {/* 4. Secondary Action Buttons */}
-          <div className="merchant-qr-actions">
-            <button type="button" onClick={() => void downloadFullPoster("png")} disabled={!usable || isExporting} className="cursor-pointer">⇩ Download QR (Full Poster)</button>
-            <button type="button" onClick={() => void printQr()} disabled={!usable} className="cursor-pointer">🖨️ Print Full Standee</button>
-            <button type="button" onClick={() => void shareQr()} disabled={!usable || !scanUrl} className="cursor-pointer">↗ Share Link</button>
-            <button type="button" onClick={() => void copyScanLink("Business QR link copied.")} className="cursor-pointer">📋 Copy QR Link</button>
+          {/* 4. Compact Secondary Row: Copy Link, Print, Test Scan */}
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => void copyScanLink("Business QR link copied.")}
+              className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            >
+              <span className="material-symbols-outlined text-[16px]">content_copy</span>
+              <span>Copy QR Link</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void printQr()}
+              disabled={!usable}
+              className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition cursor-pointer flex items-center gap-1.5 shadow-2xs disabled:opacity-60"
+            >
+              <span className="material-symbols-outlined text-[16px]">print</span>
+              <span>Print Standee</span>
+            </button>
+
+            <a
+              href={scanUrl || "#"}
+              target="_blank"
+              rel="noreferrer"
+              aria-disabled={!scanUrl}
+              className={`px-3.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition flex items-center gap-1.5 shadow-2xs ${
+                !scanUrl ? "pointer-events-none opacity-50" : ""
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">qr_code_scanner</span>
+              <span>Test Scan</span>
+            </a>
           </div>
-          <div className="merchant-qr-actions merchant-qr-actions--secondary">
-            <a href={scanUrl || "#"} target="_blank" rel="noreferrer" aria-disabled={!scanUrl} className={!scanUrl ? "is-disabled" : ""}>⌕ Test Scan</a>
-            <Link href={standalone ? "#customer-reviews" : "/merchant/dashboard/qr"}>✦ Customer Reviews</Link>
-          </div>
-          <p className={`merchant-qr-message ${messageTone === "error" ? "text-rose-600" : "text-emerald-700"}`} role="status" aria-live="polite">{message}</p>
+
+          {message && (
+            <p className={`text-xs font-semibold ${messageTone === "error" ? "text-rose-600" : "text-emerald-700"}`} role="status">
+              {message}
+            </p>
+          )}
         </div>
       </div>
     </section>
