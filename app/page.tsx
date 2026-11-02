@@ -66,9 +66,9 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
           <nav className="flex items-center gap-2 sm:gap-3" aria-label="Main navigation">
             <Link
               href="/order"
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-xs font-black text-white shadow-sm shadow-orange-500/25 transition hover:from-amber-600 hover:to-orange-600"
+              className="flex items-center gap-1.5 rounded-xl bg-amber-500/10 border border-amber-300 px-3 py-2 text-xs font-black text-amber-800 transition hover:bg-amber-500/20"
             >
-              <span>⚡ Super-App</span>
+              <span>⚡ Super App</span>
             </Link>
             <Link
               href="/trustit"
@@ -78,15 +78,21 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
             </Link>
             <Link
               href="/merchant/login"
-              className="rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-50 sm:px-4"
+              className="inline-flex items-center gap-1.5 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-2 text-xs font-extrabold text-slate-800 shadow-xs hover:border-blue-600 hover:bg-blue-50/60 hover:text-blue-700 transition-all duration-150 sm:px-4"
             >
-              Merchant Login
+              <svg className="size-3.5 text-blue-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+              <span>Merchant Login</span>
             </Link>
             <Link
               href="/register"
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-blue-700 px-3.5 py-2 text-xs font-bold text-white shadow-sm shadow-blue-600/30 transition hover:from-blue-700 hover:to-blue-800 sm:px-4"
+              className="group inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-4 py-2 text-xs font-black text-white shadow-md shadow-blue-600/25 ring-1 ring-blue-500/50 hover:from-blue-700 hover:to-indigo-800 hover:shadow-lg hover:shadow-blue-600/30 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-150 sm:px-4.5"
             >
-              List Your Business →
+              <span>List Your Business</span>
+              <span className="text-blue-200 group-hover:translate-x-0.5 transition-transform font-bold">→</span>
             </Link>
           </nav>
         </div>
@@ -135,7 +141,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="inline-block rounded-md bg-amber-200/80 px-2 py-0.5 text-[10px] font-black uppercase text-amber-950">
-                      Trustit Hyperlocal Super-App
+                      Trustit Super App
                     </span>
                     <span className="rounded-md bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-800">
                       Live in {city ? city.charAt(0).toUpperCase() + city.slice(1) : "Bahraich"}
@@ -145,12 +151,12 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
                     Food Delivery · Salon Queue Token · Car Wash Bay · Kirana Parcha
                   </div>
                   <p className="text-xs text-slate-600">
-                    Bina line me lage number lagayein, rashan parcha upload karein ya restaurant se garam khana mangwayen.
+                    Order fresh food, book salon appointments, or get store essentials delivered to your door.
                   </p>
                 </div>
               </div>
               <span className="shrink-0 rounded-2xl bg-orange-600 px-5 py-2.5 text-xs font-black text-white shadow-md group-hover:bg-orange-700 transition">
-                Open Super-App →
+                Open Super App →
               </span>
             </Link>
           </div>

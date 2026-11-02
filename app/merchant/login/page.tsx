@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import MerchantLoginForm from "./merchant-login-form";
@@ -8,6 +9,9 @@ export const dynamic = "force-dynamic";
 
 export default async function MerchantLoginPage() {
   const merchant = await getActiveMerchant();
+  if (merchant) {
+    redirect("/merchant/dashboard");
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top_left,#eef4ff_0%,transparent_35%),radial-gradient(circle_at_90%_12%,#f0fdf4_0%,transparent_30%),#f8fafc] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
@@ -68,33 +72,7 @@ export default async function MerchantLoginPage() {
                   Access your business dashboard and manage your services, orders, payments and more.
                 </p>
 
-                {merchant ? (
-                  <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-5 text-center">
-                    <span className="inline-block text-3xl">✅</span>
-                    <h3 className="mt-2 text-sm font-bold text-slate-900">
-                      Signed in as {merchant.businessName}
-                    </h3>
-                    <p className="mt-1 text-xs text-slate-600">
-                      Business ID: <span className="font-mono font-bold text-blue-700">{merchant.businessId}</span>
-                    </p>
-                    <div className="mt-5 space-y-2.5">
-                      <Link
-                        href="/merchant/dashboard"
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-blue-600 px-4 py-3 text-xs font-black text-white shadow-xs hover:bg-blue-700 transition"
-                      >
-                        <span>Open Merchant Dashboard</span>
-                        <span>→</span>
-                      </Link>
-                      <form action={merchantSignOutAction}>
-                        <button className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition">
-                          Sign Out of Merchant Hub
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                ) : (
-                  <MerchantLoginForm />
-                )}
+                <MerchantLoginForm />
               </div>
             </section>
           </div>

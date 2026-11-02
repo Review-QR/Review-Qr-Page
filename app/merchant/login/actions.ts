@@ -147,7 +147,7 @@ export async function merchantSignInAction(
     return { message: "Unable to sign in right now. Please try again." };
   }
 
-  redirect("/merchant/login");
+  redirect("/merchant/dashboard");
 }
 
 export async function merchantSignOutAction(): Promise<void> {
