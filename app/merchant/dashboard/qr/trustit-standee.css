@@ -1,0 +1,455 @@
+/* ==========================================================================
+   Trustit Standee Templates CSS (Pixel-perfect to user-provided specifications)
+   Source: trustit-qr-templates.html & reference designs
+   ========================================================================== */
+
+.trustit-standee-scope {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+/* Card base */
+.trustit-standee-scope .card {
+  --b1: var(--brand-b1, #ea580c);
+  --b2: var(--brand-b2, #ff7a22);
+  --word: var(--brand-word, #14171f);
+  --chk: #fff;
+  position: relative;
+  width: 350px;
+  height: 662px;
+  border-radius: 36px;
+  background: #fff;
+  overflow: hidden;
+  text-align: center;
+  padding-top: 38px;
+  box-shadow: 0 0 0 5px rgba(255, 255, 255, 0.9), 0 10px 26px rgba(40, 60, 120, 0.2);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.trustit-standee-scope .card > * {
+  position: relative;
+  z-index: 1;
+  box-sizing: border-box;
+}
+
+.trustit-standee-scope .card::before,
+.trustit-standee-scope .card::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+/* Logo block */
+.trustit-standee-scope .logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 72px;
+}
+
+.trustit-standee-scope .logo svg {
+  width: 56px;
+  height: 61px;
+}
+
+.trustit-standee-scope .logo b {
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: -1.6px;
+  color: var(--word);
+  line-height: 1;
+}
+
+.trustit-standee-scope .sub {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1b1f2a;
+  margin-top: 6px;
+}
+
+.trustit-standee-scope .rule {
+  width: 52px;
+  height: 3px;
+  border-radius: 3px;
+  background: #f26a1b;
+  margin: 12px auto 0;
+  position: relative;
+}
+
+.trustit-standee-scope .rule + .name {
+  margin-top: 14px;
+}
+
+.trustit-standee-scope .name {
+  font-size: 29px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin-top: 26px;
+  color: #14171f;
+  padding: 0 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.trustit-standee-scope .tag {
+  font-size: 16px;
+  font-weight: 500;
+  margin-top: 8px;
+  color: #1b1f2a;
+  padding: 0 30px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trustit-standee-scope .div {
+  width: 80%;
+  height: 1px;
+  background: #dde2ee;
+  margin: 20px auto 26px;
+  position: relative;
+}
+
+.trustit-standee-scope .div::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  width: 5px;
+  height: 5px;
+  margin-left: -2px;
+  border-radius: 50%;
+  background: #c4cbe0;
+}
+
+/* QR Code Box */
+.trustit-standee-scope .qrbox {
+  position: relative;
+  width: 212px;
+  height: 212px;
+  margin: 0 auto;
+}
+
+.trustit-standee-scope .qrbox .qr img,
+.trustit-standee-scope .qrbox .qr canvas {
+  width: 212px !important;
+  height: 212px !important;
+  display: block;
+  border-radius: 4px;
+}
+
+.trustit-standee-scope .qrlogo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 54px;
+  height: 54px;
+  margin: -27px 0 0 -27px;
+  background: #fff;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
+.trustit-standee-scope .qrlogo svg {
+  width: 34px;
+  height: 37px;
+}
+
+/* Texts + Action buttons */
+.trustit-standee-scope .scan {
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 18px;
+  letter-spacing: -0.3px;
+  color: #14171f;
+}
+
+.trustit-standee-scope .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 40px;
+  width: 282px;
+  margin-top: 8px;
+  border-radius: 99px;
+  background: linear-gradient(180deg, #ff7a22, #ee5a0c);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 500;
+  box-shadow: 0 3px 8px rgba(238, 90, 12, 0.35);
+}
+
+.trustit-standee-scope .btn i {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.trustit-standee-scope .btn i svg {
+  width: 13px;
+  height: 13px;
+}
+
+.trustit-standee-scope .g {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  height: 44px;
+  padding: 0 24px;
+  margin-top: 10px;
+  border-radius: 99px;
+  background: #fff;
+  border: 1px solid #e5e8f0;
+  box-shadow: 0 3px 9px rgba(30, 40, 80, 0.14);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.4px;
+  color: #1d2230;
+}
+
+.trustit-standee-scope .g svg {
+  width: 26px;
+  height: 26px;
+}
+
+.trustit-standee-scope .g b {
+  font-weight: 700;
+}
+
+.trustit-standee-scope .scan + .g {
+  margin-top: 5px;
+}
+
+/* Powered by Footer */
+.trustit-standee-scope .pow {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 17px;
+  font-weight: 500;
+  color: #1d2230;
+  --b1: var(--brand-b1, #ea580c);
+  --b2: var(--brand-b2, #ff7a22);
+  --word: var(--brand-word, #14171f);
+}
+
+.trustit-standee-scope .pow svg {
+  width: 28px;
+  height: 30px;
+}
+
+.trustit-standee-scope .pow b {
+  font-size: 23px;
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  color: var(--word);
+}
+
+/* ==========================================================================
+   Template 01: Sunset Waves
+   ========================================================================== */
+.trustit-standee-scope .t1 {
+  background:
+    radial-gradient(circle at 100% 0, #f23a2c 0 55px, rgba(242, 58, 44, 0) 135px),
+    radial-gradient(circle at 0 0, #fcb913 0 70px, rgba(252, 185, 19, 0) 210px),
+    radial-gradient(ellipse 150px 70px at 0 100%, #2fa655 0 60%, rgba(47, 166, 85, 0) 100%),
+    radial-gradient(ellipse 170px 90px at 100% 100%, #1f7ae8 0 50%, rgba(31, 122, 232, 0) 100%),
+    linear-gradient(180deg, #fff3e1, #fff8ef 55%, #fff 80%);
+}
+
+.trustit-standee-scope .t1::after {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 78px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55) 55%, rgba(255, 255, 255, 0.2));
+  border-radius: 60% 40% 0 0 / 40px 30px 0 0;
+}
+
+/* ==========================================================================
+   Template 02: Cobalt Blue Frame
+   ========================================================================== */
+.trustit-standee-scope .t2 {
+  background: linear-gradient(135deg, #0d63de, #0a4cc2);
+  padding-top: 56px;
+}
+
+.trustit-standee-scope .t2::before {
+  inset: 18px;
+  border-radius: 26px;
+  background: linear-gradient(180deg, #fff 0, #fff 74%, #e8f1ff 100%);
+}
+
+.trustit-standee-scope .t2::after {
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  height: 80px;
+  border-radius: 0 0 26px 26px;
+  background: radial-gradient(ellipse 260px 60px at 50% 120%, #bcd7ff, rgba(188, 215, 255, 0));
+}
+
+.trustit-standee-scope .t2 .name {
+  font-size: 26px;
+  margin-top: 0;
+}
+
+.trustit-standee-scope .t2 .div {
+  display: none;
+}
+
+.trustit-standee-scope .t2 .qrbox {
+  margin-top: 30px;
+}
+
+.trustit-standee-scope .t2 .g {
+  height: 40px;
+  font-size: 19px;
+  padding: 0 22px;
+  margin-top: 11px;
+}
+
+.trustit-standee-scope .t2 .pow {
+  bottom: 30px;
+}
+
+/* ==========================================================================
+   Template 03: Rainbow Split Waves
+   ========================================================================== */
+.trustit-standee-scope .t3::before {
+  left: -10%;
+  top: -74px;
+  width: 120%;
+  height: 164px;
+  background: linear-gradient(90deg, #e9261b 0, #e9261b 52%, #1366d8 52%);
+  border-radius: 0 0 50% 50% / 0 0 100px 80px;
+}
+
+.trustit-standee-scope .t3::after {
+  left: -10%;
+  bottom: -54px;
+  width: 120%;
+  height: 130px;
+  background: linear-gradient(90deg, #fbbc04 0, #fbbc04 42%, #1fa24a 42%);
+  border-radius: 90px 70px 0 0 / 60px 50px 0 0;
+}
+
+/* ==========================================================================
+   Template 04: Four Corner Arcs
+   ========================================================================== */
+.trustit-standee-scope .t4 {
+  background:
+    radial-gradient(circle at 0 0, #fcc20c 0 95px, rgba(252, 194, 12, 0) 96px),
+    radial-gradient(circle at 100% 0, #ee2b22 0 110px, rgba(238, 43, 34, 0) 111px),
+    radial-gradient(circle at 0 100%, #1fa64a 0 105px, rgba(31, 166, 74, 0) 106px),
+    radial-gradient(circle at 100% 100%, #1561dc 0 95px, rgba(21, 97, 220, 0) 96px),
+    #fff;
+}
+
+/* ==========================================================================
+   Template 05: Warm Amber Contours
+   ========================================================================== */
+.trustit-standee-scope .t5 {
+  --b1: #e8530a;
+  --b2: #ff9a3c;
+  --word: #d9480f;
+  background: linear-gradient(180deg, #ff9248 0, #ffd9bd 17%, #fff1e5 36%, #fff8f2 70%, #ffe6d2 100%);
+}
+
+.trustit-standee-scope .t5::after {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 86px;
+  background: linear-gradient(180deg, #ff8a2b, #f2600a);
+}
+
+.trustit-standee-scope .t5 .logo + .rule {
+  margin-top: 6px;
+}
+
+.trustit-standee-scope .t5 .rule {
+  width: 110px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f26a1b 30%, #f26a1b 70%, transparent);
+}
+
+.trustit-standee-scope .t5 .name {
+  margin-top: 14px;
+}
+
+.trustit-standee-scope .t5 .tag {
+  font-size: 15px;
+  margin-top: 6px;
+}
+
+.trustit-standee-scope .t5 .qrbox {
+  margin-top: 18px;
+}
+
+.trustit-standee-scope .t5 .qrbox::before {
+  content: "";
+  position: absolute;
+  inset: -11px;
+  border-radius: 15px;
+  background: #fff7f0;
+  z-index: -1;
+}
+
+.trustit-standee-scope .t5 .btn {
+  margin-top: 20px;
+  width: 310px;
+}
+
+.trustit-standee-scope .t5 .g {
+  height: 40px;
+  font-size: 19px;
+  margin-top: 12px;
+}
+
+.trustit-standee-scope .t5 .pow {
+  color: #fff;
+  bottom: 30px;
+  --b1: #fff;
+  --b2: #ffe3cc;
+  --word: #fff;
+  --chk: #f26a10;
+}
+
+/* Template Labels */
+.trustit-standee-scope .lab {
+  padding: 11px 36px;
+  border-radius: 99px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+}
+
+.trustit-standee-scope .l1 { background: #fde4cf; color: #b8330c; }
+.trustit-standee-scope .l2 { background: #d6e8ff; color: #12295e; }
+.trustit-standee-scope .l3 { background: #d8f1d8; color: #13351f; }
+.trustit-standee-scope .l4 { background: #e6dcfb; color: #2a1747; }
+.trustit-standee-scope .l5 { background: #fde4cf; color: #1a1a1a; }

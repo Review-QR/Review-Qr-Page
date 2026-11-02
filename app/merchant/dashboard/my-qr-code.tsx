@@ -246,7 +246,8 @@ export default function MyQrCode({
     try {
       const { domToPng } = await import("modern-screenshot");
       await document.fonts.ready;
-      const png = await domToPng(posterRef.current, {
+      const targetEl = (posterRef.current.querySelector(".card") as HTMLElement) || posterRef.current;
+      const png = await domToPng(targetEl, {
         scale: 3,
         backgroundColor: "#ffffff",
         style: { borderRadius: "0px", boxShadow: "none" },
@@ -335,7 +336,8 @@ export default function MyQrCode({
     if (posterRef.current) {
       try {
         const { domToPng } = await import("modern-screenshot");
-        const png = await domToPng(posterRef.current, { scale: 3, backgroundColor: "#ffffff" });
+        const targetEl = (posterRef.current.querySelector(".card") as HTMLElement) || posterRef.current;
+        const png = await domToPng(targetEl, { scale: 3, backgroundColor: "#ffffff" });
         const printWindow = window.open("", "_blank");
         if (!printWindow) {
           setMessageTone("error");

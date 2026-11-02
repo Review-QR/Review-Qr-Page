@@ -285,19 +285,18 @@
 .merchant-qr-poster-stage {
   display: flex;
   justify-content: center;
+  align-items: center;
   width: 100%;
-  max-width: 320px;
+  max-width: 370px;
 }
 .merchant-qr-poster {
   position: relative;
-  width: 100%;
-  max-width: 310px;
-  overflow: hidden;
-  border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 10px 28px -4px rgba(15, 23, 42, 0.14);
+  width: auto;
+  max-width: 100%;
+  border-radius: 36px;
+  background: transparent;
 }
-.merchant-qr-layout--standalone .merchant-qr-poster { width: min(100%, 340px); max-width: 100%; }
+.merchant-qr-layout--standalone .merchant-qr-poster { width: auto; max-width: 100%; }
 
 /* Lock Overlay */
 .merchant-lock-overlay {
@@ -525,8 +524,8 @@
 
 @media (max-width: 1024px) {
   .merchant-qr-layout, .merchant-qr-layout--standalone { grid-template-columns: minmax(0, 1fr); gap: 20px; }
-  .merchant-qr-poster-stage { max-width: 360px; }
-  .merchant-qr-poster { width: 100%; max-width: 340px; }
+  .merchant-qr-poster-stage { max-width: 370px; }
+  .merchant-qr-poster { width: auto; max-width: 100%; }
   .merchant-lower-grid, .merchant-analytics-grid { grid-template-columns: minmax(0, 1fr); }
   .merchant-quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
@@ -568,7 +567,7 @@
   .merchant-workspace, .merchant-lower-grid, .merchant-analytics-grid, .merchant-data-grid { gap: 10px; margin-bottom: 10px; }
   .merchant-qr-layout, .merchant-qr-layout--standalone { grid-template-columns: minmax(0, 1fr); padding: 12px; }
   .merchant-qr-poster-frame { padding: 10px; }
-  .merchant-qr-poster { width: min(100%, 320px); max-width: 100%; }
+  .merchant-qr-poster { width: auto; max-width: 100%; }
   .merchant-qr-details__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .merchant-qr-detail { padding: 8px 8px; grid-template-columns: 26px minmax(0, 1fr); gap: 6px; }
   .merchant-qr-detail__icon { width: 26px; height: 26px; border-radius: 6px; font-size: 12px; }
