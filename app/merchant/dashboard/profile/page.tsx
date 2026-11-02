@@ -70,6 +70,52 @@ export default async function MerchantProfilePage() {
         <Link href="/merchant/dashboard/business" className="inline-flex min-h-11 shrink-0 items-center rounded-xl bg-[#a64c05] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#873d03]">Edit Business Details</Link>
       </header>
 
+      {/* MERCHANT IDENTITY & CONTACT CARD */}
+      <section aria-label="Merchant identity details" className="min-w-0 rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-4 border-b border-slate-100">
+          <div className="flex items-center gap-2">
+            <span className="material-symbols-outlined text-slate-800 text-[20px]">badge</span>
+            <div>
+              <h2 className="text-sm font-bold text-slate-900 leading-tight">Identity &amp; Contact Overview</h2>
+              <p className="text-[11px] text-slate-500">Verified merchant registration credentials</p>
+            </div>
+          </div>
+          <span className="text-[11px] font-mono px-2.5 py-1 rounded-md bg-slate-100 text-slate-600 font-medium">
+            Business ID: {merchant.businessId}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block">Business Name</span>
+            <span className="text-sm font-bold text-slate-900 mt-1 block truncate" title={merchant.businessName}>
+              {merchant.businessName}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block">Business Owner</span>
+            <span className="text-sm font-bold text-slate-900 mt-1 block truncate">
+              {merchant.ownerName || "Not specified"}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block">Mobile Number</span>
+            <span className="text-sm font-bold text-slate-900 mt-1 block truncate font-mono">
+              {merchant.registeredMobile || "Not provided"}
+            </span>
+          </div>
+
+          <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3.5">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block">Email ID</span>
+            <span className="text-sm font-bold text-slate-900 mt-1 block truncate font-mono">
+              {merchant.email || "Not provided"}
+            </span>
+          </div>
+        </div>
+      </section>
+
       {/* CORE PROFILE COMPLETION */}
       <section aria-labelledby="profile-completion-title" className="min-w-0 rounded-3xl border border-[#eee2d1] bg-white p-5 shadow-[0_8px_22px_rgba(89,62,30,0.05)] sm:p-7">
         <div className="flex flex-wrap items-end justify-between gap-4">

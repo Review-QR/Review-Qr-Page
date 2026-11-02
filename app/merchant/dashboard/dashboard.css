@@ -12,7 +12,12 @@
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   font-size: 13px;
   line-height: 1.45;
-  zoom: 0.9;
+}
+
+@media (min-width: 1024px) {
+  .trustit-merchant-app {
+    zoom: 0.9;
+  }
 }
 
 .merchant-content input,

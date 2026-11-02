@@ -307,160 +307,100 @@ export default async function MerchantDashboardPage() {
           </div>
         </section>
 
-        {/* Right Column (50%): Customer Rating & Review Intelligence */}
-        <section className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs flex flex-col justify-between transition hover:shadow-sm">
+        {/* Right Column (50%): Today's Live Order Pipeline (4 Vertical Lines/Rows) */}
+        <section className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-xs flex flex-col justify-between transition hover:shadow-sm">
           <div>
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2.5">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-lg">
-                  ⭐
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-white text-sm">
+                  ⏱️
                 </span>
                 <div>
-                  <h2 className="text-base font-black text-slate-900 leading-tight">Customer Reviews &amp; Ratings</h2>
-                  <p className="text-[11px] text-slate-500">Live verified customer feedback</p>
+                  <h2 className="text-sm font-bold text-slate-900 leading-tight">Live Order Pipeline</h2>
+                  <p className="text-[11px] text-slate-500">Realtime tracking &amp; fulfillment</p>
                 </div>
               </div>
-              <Link
-                href="/merchant/dashboard/analytics"
-                className="inline-flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-xl transition"
-              >
-                <span>Analytics</span>
-                <span className="text-[10px]">→</span>
-              </Link>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold font-mono">
+                Auto-sync 4s
+              </span>
             </div>
 
-            {/* Main Score & Star Distribution Summary */}
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
-              {/* Left Score Block */}
-              <div className="sm:col-span-5 flex flex-col items-center sm:items-start justify-center border-b sm:border-b-0 sm:border-r border-slate-100 pb-3 sm:pb-0 sm:pr-4 text-center sm:text-left">
-                <div className="text-3xl sm:text-4xl font-black text-slate-900 leading-none">
-                  {average !== null && Number.isFinite(average) ? average.toFixed(1) : "—"}
-                  <span className="text-xl text-amber-500 font-bold ml-1">★</span>
+            {/* 4 Line-by-Line Rows (Stacked Vertically) */}
+            <div className="mt-3 divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/40 overflow-hidden">
+              {/* Row 1: New Pending */}
+              <Link
+                href="/merchant/dashboard/orders"
+                className="flex items-center justify-between p-2.5 sm:px-3 bg-white hover:bg-slate-50 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-100 text-rose-700 text-xs">
+                    ⏳
+                  </span>
+                  <span className="text-xs font-bold text-slate-800">New Pending</span>
                 </div>
-                <div className="flex items-center gap-0.5 mt-1.5 text-amber-400 text-sm">
-                  {"★★★★★".slice(0, Math.round(average ?? 5))}
-                  <span className="text-slate-300">{"★★★★★".slice(Math.round(average ?? 5))}</span>
-                </div>
-                <div className="mt-1 text-xs font-bold text-slate-600">
-                  {totalReviews.toLocaleString("en-IN")} <span className="font-normal text-slate-400">Total Reviews</span>
-                </div>
-              </div>
+                <span className="text-xs font-black text-rose-600 bg-rose-50 px-2.5 py-0.5 rounded-full border border-rose-200">
+                  {pendingOrders.length} Orders
+                </span>
+              </Link>
 
-              {/* Right Star Mini Bars */}
-              <div className="sm:col-span-7 space-y-1.5">
-                {[
-                  { star: "5 ★", count: r5, color: "bg-emerald-500" },
-                  { star: "4 ★", count: r4, color: "bg-teal-500" },
-                  { star: "3 ★", count: r3, color: "bg-amber-500" },
-                  { star: "2 ★", count: r2, color: "bg-orange-500" },
-                  { star: "1 ★", count: r1, color: "bg-rose-500" },
-                ].map((item) => {
-                  const pct = totalReviews > 0 ? Math.round((item.count / totalReviews) * 100) : 0;
-                  return (
-                    <div key={item.star} className="flex items-center gap-2 text-xs">
-                      <span className="w-6 text-[11px] font-bold text-slate-600">{item.star}</span>
-                      <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-                        <div className={`h-full ${item.color} rounded-full`} style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className="w-7 text-right text-[10px] font-semibold text-slate-400">{pct}%</span>
-                      <span className="w-8 text-right text-[10px] font-bold text-slate-700">{item.count}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              {/* Row 2: In Prep / Packing */}
+              <Link
+                href="/merchant/dashboard/orders"
+                className="flex items-center justify-between p-2.5 sm:px-3 bg-white hover:bg-slate-50 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-100 text-blue-700 text-xs">
+                    🍲
+                  </span>
+                  <span className="text-xs font-bold text-slate-800">In Prep / Packing</span>
+                </div>
+                <span className="text-xs font-black text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                  {prepOrders.length} Orders
+                </span>
+              </Link>
+
+              {/* Row 3: Out for Delivery */}
+              <Link
+                href="/merchant/dashboard/fleet"
+                className="flex items-center justify-between p-2.5 sm:px-3 bg-white hover:bg-slate-50 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-teal-100 text-teal-700 text-xs">
+                    🛵
+                  </span>
+                  <span className="text-xs font-bold text-slate-800">Out for Delivery</span>
+                </div>
+                <span className="text-xs font-black text-teal-600 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200">
+                  {outForDeliveryOrders.length} Orders
+                </span>
+              </Link>
+
+              {/* Row 4: Delivered Today */}
+              <Link
+                href="/merchant/dashboard/orders"
+                className="flex items-center justify-between p-2.5 sm:px-3 bg-white hover:bg-slate-50 transition"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 text-xs">
+                    ✅
+                  </span>
+                  <span className="text-xs font-bold text-slate-800">Delivered Today</span>
+                </div>
+                <span className="text-xs font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                  {deliveredOrders.length} Orders
+                </span>
+              </Link>
             </div>
           </div>
 
-          {/* Quick Footer Links */}
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
-            <span className="text-slate-500 text-[11px]">
-              {totalReviews > 0 ? "Customer satisfaction is active" : "Awaiting first QR customer review"}
-            </span>
-            <Link
-              href="/merchant/dashboard/reviews"
-              className="text-xs font-bold text-blue-700 hover:text-blue-900"
-            >
-              View All Reviews →
+          <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className="text-slate-400 text-[11px]">Database synchronized</span>
+            <Link href="/merchant/dashboard/orders" className="font-bold text-slate-900 hover:text-slate-700">
+              Open Live Orders →
             </Link>
           </div>
         </section>
       </div>
-
-      {/* Today's Live Order Pipeline (Placed directly below 2-column top grid) */}
-      <section className="rounded-3xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-xs mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 mb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-slate-700 text-[18px]">view_timeline</span>
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Today&apos;s Live Order Pipeline</span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-800 border border-sky-200 font-bold font-mono">
-              Auto-sync 4s
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            <span>Realtime Database Synchronized</span>
-          </div>
-        </div>
-
-        {/* 4 Clean Pipeline Metric Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 pt-1">
-          {/* Stage 1: New Orders Pending */}
-          <Link
-            href="/merchant/dashboard/orders"
-            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
-          >
-            <div>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">New Pending</span>
-              <span className="text-xl font-black text-rose-600 mt-0.5 block">{pendingOrders.length}</span>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-              ⏳
-            </div>
-          </Link>
-
-          {/* Stage 2: In Kitchen / Prep */}
-          <Link
-            href="/merchant/dashboard/orders"
-            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
-          >
-            <div>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">In Prep / Packing</span>
-              <span className="text-xl font-black text-blue-600 mt-0.5 block">{prepOrders.length}</span>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-              🍲
-            </div>
-          </Link>
-
-          {/* Stage 3: Out for Delivery */}
-          <Link
-            href="/merchant/dashboard/fleet"
-            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
-          >
-            <div>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">Out for Delivery</span>
-              <span className="text-xl font-black text-teal-600 mt-0.5 block">{outForDeliveryOrders.length}</span>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-              🛵
-            </div>
-          </Link>
-
-          {/* Stage 4: Delivered Today */}
-          <Link
-            href="/merchant/dashboard/orders"
-            className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex items-center justify-between hover:bg-slate-100/70 transition shadow-2xs group"
-          >
-            <div>
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wide block">Delivered Today</span>
-              <span className="text-xl font-black text-emerald-600 mt-0.5 block">{deliveredOrders.length}</span>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold group-hover:scale-105 transition-transform">
-              ✅
-            </div>
-          </Link>
-        </div>
-      </section>
 
       {/* OCCASION INTELLIGENCE & CONNECT CREDITS ENGINE (PLACED DIRECTLY BELOW HERO) */}
       <OccasionDashboardCard

@@ -82,7 +82,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
               <strong>Need support?</strong>
               <small>24x7 merchant operations desk</small>
             </span>
-            <Link href="/merchant/dashboard/qr" aria-label="Open QR sharing help">
+            <Link href="/merchant/dashboard/support" aria-label="Open support">
               ›
             </Link>
           </div>
