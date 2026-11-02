@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import MerchantLoginForm from "./merchant-login-form";
+import PublicSupportModal from "./public-support-modal";
 import { merchantSignOutAction } from "./actions";
 import { getActiveMerchant } from "@/lib/merchant-auth";
 
@@ -33,17 +34,14 @@ export default async function MerchantLoginPage() {
           </Link>
 
           {/* Top-Right Trust Badges */}
-          <div className="flex flex-wrap items-center gap-4 text-xs font-semibold text-slate-600">
+          <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600">
             <div className="flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 shadow-2xs">
-              <span className="text-blue-600">🛡️</span>
-              <span>Safe & Secure</span>
+              <span className="text-emerald-600">🛡️</span>
+              <span>Safe &amp; Secure</span>
             </div>
+            <PublicSupportModal />
             <div className="flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 shadow-2xs">
-              <span className="text-indigo-600">🎧</span>
-              <span>24x7 Support</span>
-            </div>
-            <div className="flex items-center gap-1.5 rounded-full border border-slate-200/80 bg-white/80 px-3 py-1 shadow-2xs">
-              <span className="text-emerald-600">🌐</span>
+              <span className="text-slate-600">🇮🇳</span>
               <span>Made for Indian Businesses</span>
             </div>
           </div>
@@ -168,12 +166,12 @@ export default async function MerchantLoginPage() {
               </div>
             </div>
 
-            {/* 6 Feature Grid Cards (2 columns x 3 rows) */}
+            {/* 6 Feature Grid Cards (Sleek, Modern & Unified Executive Theme) */}
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3 pt-2">
               {/* Card 1 */}
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-purple-200 hover:shadow-xs transition">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-slate-300 hover:shadow-xs transition group">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-purple-100 text-base text-purple-700">
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-800 text-base border border-slate-200/60 group-hover:bg-slate-900 group-hover:text-white transition">
                     👥
                   </span>
                   <h3 className="text-xs font-bold text-slate-900 leading-tight">Get New Customers</h3>
@@ -184,12 +182,12 @@ export default async function MerchantLoginPage() {
               </div>
 
               {/* Card 2 */}
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-emerald-200 hover:shadow-xs transition">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-slate-300 hover:shadow-xs transition group">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-100 text-base text-emerald-700">
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-800 text-base border border-slate-200/60 group-hover:bg-slate-900 group-hover:text-white transition">
                     🏪
                   </span>
-                  <h3 className="text-xs font-bold text-slate-900 leading-tight">Manage Orders & Services</h3>
+                  <h3 className="text-xs font-bold text-slate-900 leading-tight">Manage Orders &amp; Services</h3>
                 </div>
                 <p className="mt-2 text-[11px] leading-snug text-slate-500">
                   Handle your bookings, orders and services easily.
@@ -197,9 +195,9 @@ export default async function MerchantLoginPage() {
               </div>
 
               {/* Card 3 */}
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-orange-200 hover:shadow-xs transition">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-slate-300 hover:shadow-xs transition group">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-orange-100 text-base text-orange-700">
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-800 text-base border border-slate-200/60 group-hover:bg-slate-900 group-hover:text-white transition">
                     💳
                   </span>
                   <h3 className="text-xs font-bold text-slate-900 leading-tight">Digital Payments</h3>
@@ -210,12 +208,12 @@ export default async function MerchantLoginPage() {
               </div>
 
               {/* Card 4 */}
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-rose-200 hover:shadow-xs transition">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-slate-300 hover:shadow-xs transition group">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-rose-100 text-base text-rose-700">
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-800 text-base border border-slate-200/60 group-hover:bg-slate-900 group-hover:text-white transition">
                     ⭐
                   </span>
-                  <h3 className="text-xs font-bold text-slate-900 leading-tight">Customer Feedback & Reviews</h3>
+                  <h3 className="text-xs font-bold text-slate-900 leading-tight">Customer Feedback &amp; Reviews</h3>
                 </div>
                 <p className="mt-2 text-[11px] leading-snug text-slate-500">
                   Build trust with genuine customer reviews.
@@ -223,9 +221,9 @@ export default async function MerchantLoginPage() {
               </div>
 
               {/* Card 5 */}
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-blue-200 hover:shadow-xs transition">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-slate-300 hover:shadow-xs transition group">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-blue-100 text-base text-blue-700">
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-800 text-base border border-slate-200/60 group-hover:bg-slate-900 group-hover:text-white transition">
                     📊
                   </span>
                   <h3 className="text-xs font-bold text-slate-900 leading-tight">Business Insights</h3>
@@ -236,9 +234,9 @@ export default async function MerchantLoginPage() {
               </div>
 
               {/* Card 6 */}
-              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-teal-200 hover:shadow-xs transition">
+              <div className="rounded-2xl border border-slate-200/90 bg-white p-3.5 shadow-2xs hover:border-slate-300 hover:shadow-xs transition group">
                 <div className="flex items-center gap-2.5">
-                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-teal-100 text-base text-teal-700">
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-800 text-base border border-slate-200/60 group-hover:bg-slate-900 group-hover:text-white transition">
                     🚀
                   </span>
                   <h3 className="text-xs font-bold text-slate-900 leading-tight">Build Your Brand Online</h3>

@@ -18,10 +18,13 @@ import {
 
 type ScanPageProps = {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ test?: string }>;
 };
 
-export default async function ScanPage({ params }: ScanPageProps) {
+export default async function ScanPage({ params, searchParams }: ScanPageProps) {
   const { id } = await params;
+  const query = searchParams ? await searchParams : {};
+  const isTestMode = query.test === "1" || query.test === "true";
 
   const { data, error } = await supabase.rpc("get_business_for_qr", {
     p_business_id: id,
@@ -83,7 +86,7 @@ export default async function ScanPage({ params }: ScanPageProps) {
     .maybeSingle();
 
   const logoUrl = businessExtra?.logo_url ? String(businessExtra.logo_url) : null;
-  const cookieSessionId = await getReviewSessionCookie(qrBusinessId);
+  const cookieSessionId = isTestMode ? null : await getReviewSessionCookie(qrBusinessId);
   const restoredSession = cookieSessionId
     ? await restoreReviewSessionForBusiness(qrBusinessId, cookieSessionId)
     : null;

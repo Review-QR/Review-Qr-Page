@@ -45,11 +45,11 @@ export default async function MerchantSupportPage() {
 
         <div className="flex items-center gap-3">
           <a
-            href="tel:+919118843415"
+            href="tel:+919118643415"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition-all shadow-xs"
           >
             <span className="material-symbols-outlined text-[18px]">support_agent</span>
-            <span>Call +91 9118843415</span>
+            <span>Call +91 9118643415</span>
           </a>
         </div>
       </div>
@@ -63,8 +63,8 @@ export default async function MerchantSupportPage() {
           <div>
             <h3 className="text-sm font-bold text-slate-900">Priority Merchant Hotline</h3>
             <p className="text-xs text-slate-500 mt-0.5">Dedicated desk for store operators</p>
-            <a href="tel:+919118843415" className="text-xs font-extrabold text-slate-900 hover:underline mt-2 block">
-              +91 9118843415
+            <a href="tel:+919118643415" className="text-xs font-extrabold text-slate-900 hover:underline mt-2 block">
+              +91 9118643415
             </a>
           </div>
         </div>
@@ -77,12 +77,12 @@ export default async function MerchantSupportPage() {
             <h3 className="text-sm font-bold text-slate-900">WhatsApp Business Desk</h3>
             <p className="text-xs text-slate-500 mt-0.5">Instant WhatsApp support for quick queries</p>
             <a
-              href="https://wa.me/919118843415"
+              href="https://wa.me/919118643415"
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-extrabold text-emerald-700 hover:underline mt-2 inline-flex items-center gap-1"
             >
-              <span>+91 9118843415</span>
+              <span>+91 9118643415</span>
               <span className="text-[10px]">↗</span>
             </a>
           </div>

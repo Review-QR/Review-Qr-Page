@@ -79,6 +79,7 @@ export default function ReviewExperience({
   const [birthday, setBirthday] = useState<Occasion>(emptyOccasion());
   const [anniversary, setAnniversary] = useState<Occasion>(emptyOccasion());
   const [family, setFamily] = useState<FamilyMember[]>([]);
+  const [savedMemberIndices, setSavedMemberIndices] = useState<Set<number>>(new Set());
   const [formErrors, setFormErrors] = useState<string[]>([]);
   const [isOpeningGoogle, setIsOpeningGoogle] = useState(false);
   const requestInProgress = useRef(false);
@@ -415,7 +416,41 @@ export default function ReviewExperience({
                       <OccasionRow label="Birthday" value={member.birthday} onChange={(v) => updateFamily(index, (m) => ({ ...m, birthday: v }))} />
                       <OccasionRow label="Anniversary" value={member.anniversary} onChange={(v) => updateFamily(index, (m) => ({ ...m, anniversary: v }))} />
                     </div>
-                    <button type="button" onClick={() => setFamily((current) => current.filter((_, i) => i !== index))} className="mt-2 min-h-10 text-sm font-semibold text-rose-700">Remove member</button>
+                    <div className="mt-3 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!member.name.trim()) {
+                            setError(`Please enter a name for Family member ${index + 1}`);
+                            return;
+                          }
+                          setSavedMemberIndices((prev) => new Set(prev).add(index));
+                          setError(null);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs ${
+                          savedMemberIndices.has(index)
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : "bg-amber-800 text-white hover:bg-amber-900"
+                        }`}
+                      >
+                        <span>{savedMemberIndices.has(index) ? "✓ Member Details Saved" : "💾 Save Member"}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFamily((current) => current.filter((_, i) => i !== index));
+                          setSavedMemberIndices((prev) => {
+                            const next = new Set(prev);
+                            next.delete(index);
+                            return next;
+                          });
+                        }}
+                        className="text-xs font-semibold text-rose-600 hover:text-rose-800 hover:underline"
+                      >
+                        Remove member
+                      </button>
+                    </div>
                   </fieldset>
                 ))}
                 <button type="button" disabled={family.length >= 8} onClick={() => setFamily((current) => [...current, emptyFamilyMember()])} className="min-h-11 rounded-xl px-2 text-sm font-bold text-amber-800 disabled:opacity-50">＋ Add Family Member</button>

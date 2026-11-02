@@ -293,6 +293,7 @@ html, body {
   align-items: center;
   width: 100%;
   max-width: 370px;
+  padding: 12px 0 10px;
 }
 .merchant-qr-poster {
   position: relative;

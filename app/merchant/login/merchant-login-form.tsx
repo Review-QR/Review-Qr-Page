@@ -20,9 +20,9 @@ export default function MerchantLoginForm() {
         <button
           type="button"
           onClick={() => setTab("mobile")}
-          className={`flex items-center justify-center gap-2 rounded-xl py-2.5 transition ${
+          className={`flex items-center justify-center gap-2 rounded-xl py-2.5 transition font-bold ${
             tab === "mobile"
-              ? "bg-white text-blue-700 shadow-xs"
+              ? "bg-white text-slate-900 shadow-xs"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -32,9 +32,9 @@ export default function MerchantLoginForm() {
         <button
           type="button"
           onClick={() => setTab("biz_id")}
-          className={`flex items-center justify-center gap-2 rounded-xl py-2.5 transition ${
+          className={`flex items-center justify-center gap-2 rounded-xl py-2.5 transition font-bold ${
             tab === "biz_id"
-              ? "bg-white text-blue-700 shadow-xs"
+              ? "bg-white text-slate-900 shadow-xs"
               : "text-slate-600 hover:text-slate-900"
           }`}
         >
@@ -43,7 +43,7 @@ export default function MerchantLoginForm() {
         </button>
       </div>
 
-      <form action={formAction} className="mt-5 space-y-4 text-left">
+      <form action={formAction} autoComplete="off" className="mt-5 space-y-4 text-left">
         {state.message && (
           <div
             className="flex items-start gap-2.5 rounded-2xl border border-red-200 bg-red-50 p-3.5 text-xs font-semibold text-red-700"
@@ -59,7 +59,7 @@ export default function MerchantLoginForm() {
             <label htmlFor="mobileInput" className="mb-1.5 block text-xs font-bold text-slate-800">
               Registered Mobile Number
             </label>
-            <div className="relative flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs focus-within:border-blue-600 focus-within:ring-4 focus-within:ring-blue-100 transition">
+            <div className="relative flex overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xs focus-within:border-slate-800 focus-within:ring-4 focus-within:ring-slate-100 transition">
               <div className="flex flex-col items-center justify-center border-r border-slate-200 bg-slate-50/80 px-3.5 py-1 text-center select-none">
                 <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">IN</span>
                 <span className="text-xs font-black text-slate-900">+91</span>
@@ -70,10 +70,11 @@ export default function MerchantLoginForm() {
                 inputMode="numeric"
                 maxLength={10}
                 required
+                autoComplete="off"
                 value={mobileNumber}
                 onChange={(e) => setMobileNumber(e.target.value.replace(/\D/g, ""))}
-                placeholder="Enter your mobile number"
-                className="w-full px-3.5 py-3 text-sm font-semibold text-slate-900 placeholder:text-slate-400 outline-none"
+                placeholder="Enter 10-digit mobile number"
+                className="w-full px-3.5 py-3 text-sm font-semibold text-slate-900 placeholder:font-normal placeholder:text-slate-400 outline-none"
               />
             </div>
             {/* Hidden field for form submission with +91 normalized value */}
@@ -82,8 +83,8 @@ export default function MerchantLoginForm() {
               name="businessId"
               value={mobileNumber ? `+91${mobileNumber}` : ""}
             />
-            <p className="mt-1.5 text-[11px] text-slate-500">
-              We&apos;ll send a 10-digit OTP to your number
+            <p className="mt-1.5 text-[11px] text-slate-500 font-medium">
+              Enter your registered 10-digit mobile number
             </p>
           </div>
         ) : (
@@ -94,15 +95,15 @@ export default function MerchantLoginForm() {
             <input
               id="businessId"
               name="businessId"
-              autoComplete="username"
+              autoComplete="off"
               required
               maxLength={128}
               value={businessIdInput}
               onChange={(e) => setBusinessIdInput(e.target.value)}
               placeholder="e.g. biz_... or QR-77837092"
-              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-2xs placeholder:text-slate-400 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+              className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-2xs placeholder:font-normal placeholder:text-slate-400 outline-none transition focus:border-slate-800 focus:ring-4 focus:ring-slate-100"
             />
-            <p className="mt-1.5 text-[11px] text-slate-500">
+            <p className="mt-1.5 text-[11px] text-slate-500 font-medium">
               Your unique Business ID issued by Trustit Review-QR
             </p>
           </div>
@@ -116,7 +117,7 @@ export default function MerchantLoginForm() {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="text-xs font-bold text-blue-700 hover:text-blue-900 transition"
+              className="text-xs font-bold text-slate-600 hover:text-slate-900 transition"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
@@ -128,7 +129,7 @@ export default function MerchantLoginForm() {
             autoComplete="current-password"
             required
             placeholder="••••••••"
-            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-2xs placeholder:text-slate-400 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
+            className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-900 shadow-2xs placeholder:text-slate-400 outline-none transition focus:border-slate-800 focus:ring-4 focus:ring-slate-100"
           />
         </div>
 
@@ -136,7 +137,7 @@ export default function MerchantLoginForm() {
         <button
           type="submit"
           disabled={pending || (tab === "mobile" && mobileNumber.length < 10) || (tab === "biz_id" && !businessIdInput.trim())}
-          className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 px-5 py-3.5 text-sm font-black text-white shadow-[0_12px_24px_-10px_rgba(37,99,235,0.45)] transition hover:from-blue-700 hover:to-indigo-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3.5 text-sm font-bold text-white shadow-md hover:bg-slate-800 active:scale-[0.99] transition disabled:cursor-not-allowed disabled:opacity-50"
         >
           {pending ? (
             <>

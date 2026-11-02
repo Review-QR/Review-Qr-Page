@@ -258,20 +258,21 @@ export default function MyQrCode({
       const targetEl = (posterRef.current.querySelector(".card") as HTMLElement) || posterRef.current;
       const png = await domToPng(targetEl, {
         scale: 3,
-        backgroundColor: "#ffffff",
-        style: { borderRadius: "0px", boxShadow: "none" },
+        style: { boxShadow: "none" },
       });
-      const dimensions = { widthIn: 4, heightIn: 6, orientation: "portrait" as const };
+      // Standee 350x662 ratio = 0.5287 (4" x 7.57" exact acrylic standee proportions)
+      const widthIn = 4;
+      const heightIn = 7.57;
       const filename = `Trustit-${safeFilename(currentStandee.name)}-${safeFilename(businessName || businessId)}-Standee.${format}`;
       if (format === "pdf") {
         const { jsPDF } = await import("jspdf");
         const pdf = new jsPDF({
-          orientation: dimensions.orientation,
+          orientation: "portrait",
           unit: "in",
-          format: [dimensions.widthIn, dimensions.heightIn],
+          format: [widthIn, heightIn],
           compress: true,
         });
-        pdf.addImage(png, "PNG", 0, 0, dimensions.widthIn, dimensions.heightIn, undefined, "FAST");
+        pdf.addImage(png, "PNG", 0, 0, widthIn, heightIn, undefined, "FAST");
         pdf.save(filename);
       } else {
         const link = document.createElement("a");
@@ -346,7 +347,7 @@ export default function MyQrCode({
       try {
         const { domToPng } = await import("modern-screenshot");
         const targetEl = (posterRef.current.querySelector(".card") as HTMLElement) || posterRef.current;
-        const png = await domToPng(targetEl, { scale: 3, backgroundColor: "#ffffff" });
+        const png = await domToPng(targetEl, { scale: 3, style: { boxShadow: "none" } });
         const printWindow = window.open("", "_blank");
         if (!printWindow) {
           setMessageTone("error");
@@ -357,15 +358,19 @@ export default function MyQrCode({
           <html><head><title>${escapeHtml(businessName || "Review QR Standee")} · ${escapeHtml(currentTemplate.name)}</title>
           <style>
             * { box-sizing: border-box; }
-            body { margin: 0; padding: 20px; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #fff; font-family: sans-serif; text-align: center; }
-            img { max-width: 100%; height: auto; max-height: 94vh; object-fit: contain; }
+            html, body { margin: 0; padding: 0; width: 100%; min-height: 100vh; background: #ffffff; display: flex; align-items: center; justify-content: center; font-family: sans-serif; }
+            .print-container { display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; margin: auto; }
+            img { display: block; max-width: 90vw; max-height: 90vh; width: auto; height: auto; margin: auto; object-fit: contain; }
             @media print {
-              @page { size: 4in 6in; margin: 0; }
-              body { padding: 0; margin: 0; }
-              img { width: 100%; height: 100%; object-fit: contain; }
+              @page { size: portrait; margin: 12mm; }
+              html, body { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0; }
+              .print-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; page-break-inside: avoid; }
+              img { max-width: 100%; max-height: 94vh; width: auto; height: auto; margin: 0 auto; display: block; object-fit: contain; }
             }
           </style></head><body>
-            <img src="${png}" alt="Standee Poster for ${escapeHtml(businessName)}" />
+            <div class="print-container">
+              <img src="${png}" alt="Standee Poster for ${escapeHtml(businessName)}" />
+            </div>
           </body></html>`);
         printWindow.document.close();
         const image = printWindow.document.querySelector("img");
@@ -615,7 +620,7 @@ export default function MyQrCode({
               </button>
 
               <a
-                href={scanUrl || "#"}
+                href={scanUrl ? (scanUrl.includes("?") ? `${scanUrl}&test=1` : `${scanUrl}?test=1`) : "#"}
                 target="_blank"
                 rel="noreferrer"
                 aria-disabled={!scanUrl}
