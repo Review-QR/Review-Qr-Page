@@ -58,16 +58,16 @@ export const getActiveMerchant = cache(async (): Promise<MerchantContext | null>
     // Core business data query - strictly uses verified existing columns
     const { data: business, error: businessError } = await supabase
       .from("businesses")
-      .select("id, name, owner, phone, type, address, locality, city, district, state, pincode, discovery_location_verified_at, discovery_location_verified_by, discovery_location_verification_source, location_latitude, location_longitude, location_captured_at, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, logo_url, deleted_at")
+      .select("id, name, owner, phone, type, address, locality, city, district, state, pincode, discovery_location_verified_at, discovery_location_verified_by, discovery_location_verification_source, location_latitude, location_longitude, location_captured_at, status, merchant_status, plan, registration_date, qr_status, qr_template, expiry, review_link, logo_url, is_outlet_open, allow_taking_orders, is_taking_orders, deleted_at")
       .eq("id", mapping.business_id)
       .eq("merchant_status", "active")
       .is("deleted_at", null)
       .maybeSingle();
     if (businessError || !business) return null;
 
-    const isOutletOpen = true;
-    const allowTakingOrders = false;
-    const isTakingOrders = false;
+    const isOutletOpen = (business as { is_outlet_open?: boolean | null }).is_outlet_open !== false;
+    const allowTakingOrders = Boolean((business as { allow_taking_orders?: boolean | null }).allow_taking_orders);
+    const isTakingOrders = Boolean((business as { is_taking_orders?: boolean | null }).is_taking_orders);
 
     const { data: profile } = await supabase
       .from("merchant_profiles")

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useActionState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { merchantSignOutAction } from "@/app/merchant/login/actions";
 import { changeMerchantPasswordAction, type ChangePasswordResult } from "./profile/actions";
@@ -263,12 +264,17 @@ function ChangePasswordModal({
   businessId: string;
   onClose: () => void;
 }) {
+  const [mounted, setMounted] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showCurrent, setShowCurrent] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [state, formAction, isPending] = useActionState(
     async (prev: ChangePasswordResult | null, formData: FormData) => {
@@ -283,8 +289,10 @@ function ChangePasswordModal({
   const hasNumber = /[0-9]/.test(newPassword);
   const passwordsMatch = newPassword.length > 0 && newPassword === confirmPassword;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in-0 duration-150">
+  if (!mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-xs animate-in fade-in-0 duration-150">
       <div
         className="relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 shadow-2xl transition-all"
         onClick={(e) => e.stopPropagation()}
@@ -341,7 +349,7 @@ function ChangePasswordModal({
         )}
 
         {!state?.success && (
-          <form action={formAction} className="space-y-4">
+          <form action={formAction} className="space-y-4" autoComplete="off">
             {/* Current Password Field */}
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -351,6 +359,7 @@ function ChangePasswordModal({
                 <input
                   type={showCurrent ? "text" : "password"}
                   name="currentPassword"
+                  autoComplete="current-password"
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   placeholder="Enter current password"
@@ -373,6 +382,7 @@ function ChangePasswordModal({
                 <input
                   type={showNew ? "text" : "password"}
                   name="newPassword"
+                  autoComplete="new-password"
                   required
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -396,6 +406,7 @@ function ChangePasswordModal({
                 <input
                   type={showConfirm ? "text" : "password"}
                   name="confirmPassword"
+                  autoComplete="new-password"
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -451,6 +462,7 @@ function ChangePasswordModal({
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

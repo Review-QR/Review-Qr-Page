@@ -174,8 +174,10 @@ export function ModernStandee({
         alignItems: "center",
         justifyContent: "flex-start",
         width: "100%",
+        maxWidth: "100%",
         padding: "8px 0 16px",
-        overflow: "visible",
+        overflowX: "clip",
+        overflowY: "visible",
         ...(scale < 1
           ? {
               width: `${Math.round(350 * scale)}px`,

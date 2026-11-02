@@ -109,9 +109,9 @@ html, body {
 .merchant-logout-form button, .merchant-mobile-header form button { width: 100%; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 12px; color: #475569; background: #ffffff; font-size: 12px; font-weight: 600; transition: background .15s ease; }
 .merchant-logout-form button:hover, .merchant-mobile-header form button:hover { border-color: #cbd5e1; color: #0f172a; background: #f8fafc; }
 
-.merchant-main { min-width: 0; flex: 1; }
-.merchant-content { width: 100%; max-width: 1600px; margin: 0 auto; padding: 18px 20px 40px; }
-.merchant-dashboard-page, .merchant-qr-page { display: grid; min-width: 0; gap: 0; }
+.merchant-main { min-width: 0; flex: 1; overflow-x: hidden; }
+.merchant-content { width: 100%; max-width: 1600px; margin: 0 auto; padding: 18px 20px 40px; overflow-x: clip; }
+.merchant-dashboard-page, .merchant-qr-page { display: grid; min-width: 0; gap: 0; width: 100%; max-width: 100%; overflow-x: clip; }
 .merchant-mobile-header, .merchant-mobile-nav { display: none; }
 
 .merchant-hero {
@@ -160,7 +160,7 @@ html, body {
 .merchant-stat__copy small { display: block; margin-top: 4px; color: #737783; font-size: 11px; }
 
 /* The Workspace: Self-contained, full width, zero empty space */
-.merchant-workspace { display: block; margin-bottom: 20px; }
+.merchant-workspace { display: block; margin-bottom: 20px; width: 100%; max-width: 100%; }
 .merchant-dashboard-qr, .merchant-template-panel, .merchant-lower-panel { min-width: 0; border: 1px solid #e2e8f0; border-radius: 20px; background: #ffffff; box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.04); }
 .merchant-dashboard-qr { overflow: hidden; }
 .merchant-qr-card__header { display: flex; min-width: 0; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid #f1f5f9; background: #ffffff; }

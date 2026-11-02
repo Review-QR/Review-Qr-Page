@@ -73,7 +73,7 @@ export default async function MerchantQrPage() {
       </div>
 
       {/* ── CUSTOMER REVIEWS (Merged with QR Page) ── */}
-      <section id="customer-reviews" className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-2xs space-y-3.5">
+      <section id="customer-reviews" className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 shadow-2xs space-y-3.5 w-full max-w-full overflow-hidden">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">Customer feedback &amp; Ratings</span>
