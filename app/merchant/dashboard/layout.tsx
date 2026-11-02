@@ -2,21 +2,13 @@ import Link from "next/link";
 import { merchantSignOutAction } from "@/app/merchant/login/actions";
 import { requireActiveMerchant } from "@/lib/merchant-auth";
 import MerchantNavigation from "./merchant-navigation";
+import MerchantProfileDropdown from "./merchant-profile-dropdown";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 import { normalizePlanTier } from "@/lib/plan-rules";
 import PageCorrectionWidget from "./page-correction-widget";
 import "./dashboard.css";
 
 export const dynamic = "force-dynamic";
-
-function merchantIcon(businessType: string | null) {
-  const value = String(businessType ?? "").toLowerCase();
-  if (/(sweet|mithai|bakery|cake|dessert|food|restaurant|cafe)/.test(value)) return "✿";
-  if (/(medical|clinic|doctor|health)/.test(value)) return "+";
-  if (/(salon|beauty|spa|barber)/.test(value)) return "✦";
-  if (/(hotel|stay|resort)/.test(value)) return "⌂";
-  return "✦";
-}
 
 export default async function MerchantDashboardLayout({ children }: { children: React.ReactNode }) {
   const merchant = await requireActiveMerchant();
@@ -28,6 +20,12 @@ export default async function MerchantDashboardLayout({ children }: { children: 
     .eq("is_read", false);
   const hasUnreadNotifications = (unreadCount ?? 0) > 0;
   const isPremium = normalizePlanTier(merchant.plan) === "premium";
+
+  const vipCrown = isPremium && (
+    <span title="Trustit VIP Merchant" aria-label="VIP Merchant" className="inline-flex items-center text-amber-500 shrink-0">
+      👑
+    </span>
+  );
 
   return (
     <div className={`trustit-merchant-app${isPremium ? " is-premium-vip" : ""} flex flex-col min-h-screen bg-[#faf8ff]`}>
@@ -42,30 +40,16 @@ export default async function MerchantDashboardLayout({ children }: { children: 
             </span>
           </Link>
 
-          <div className="merchant-identity">
-            <div className="h-11 w-11 shrink-0 rounded-full border-2 border-[#b59363] ring-2 ring-amber-200/50 bg-[#1e140a] flex items-center justify-center overflow-hidden shadow-xs">
-              {merchant.logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={merchant.logoUrl} alt={merchant.businessName} className="h-full w-full object-cover" />
-              ) : (
-                <span className="text-amber-300 font-bold text-lg">{merchantIcon(merchant.businessType)}</span>
-              )}
-            </div>
-            <div className="merchant-identity__copy min-w-0 flex-1">
-              <span className="flex items-center gap-1.5">
-                <strong className="truncate block font-bold text-slate-900 text-xs sm:text-sm">{merchant.businessName}</strong>
-                {isPremium && (
-                  <span title="Trustit VIP Merchant" aria-label="VIP Merchant" className="inline-flex items-center text-amber-500 shrink-0">
-                    👑
-                  </span>
-                )}
-              </span>
-              <small className="font-mono text-[10px] text-slate-500 block truncate">{merchant.businessId}</small>
-              <span className="merchant-active-pill">
-                <i /> Active Merchant
-              </span>
-            </div>
-          </div>
+          {/* Interactive Merchant Profile & Action Dropdown (Sidebar) */}
+          <MerchantProfileDropdown
+            businessName={merchant.businessName}
+            businessId={merchant.businessId}
+            businessType={merchant.businessType}
+            logoUrl={merchant.logoUrl}
+            isPremium={isPremium}
+            crown={vipCrown}
+            variant="sidebar"
+          />
 
           <MerchantNavigation
             hasUnreadNotifications={hasUnreadNotifications}
@@ -101,6 +85,7 @@ export default async function MerchantDashboardLayout({ children }: { children: 
 
         {/* 3. Main Workspace Area */}
         <div className="merchant-main flex flex-col flex-1 min-w-0">
+          {/* Mobile Header with Profile Dropdown */}
           <div className="merchant-mobile-header">
             <Link href="/merchant/dashboard" className="merchant-brand">
               <img src="/trustit-icon.svg" alt="" width="36" height="36" />
@@ -109,10 +94,44 @@ export default async function MerchantDashboardLayout({ children }: { children: 
                 <small>Merchant Portal</small>
               </span>
             </Link>
-            <form action={merchantSignOutAction}>
-              <button type="submit">Log out</button>
-            </form>
+            <MerchantProfileDropdown
+              businessName={merchant.businessName}
+              businessId={merchant.businessId}
+              businessType={merchant.businessType}
+              logoUrl={merchant.logoUrl}
+              isPremium={isPremium}
+              crown={vipCrown}
+              variant="compact"
+            />
           </div>
+
+          {/* Desktop Top Header Bar with Context & Quick Profile Dropdown */}
+          <header className="hidden lg:flex items-center justify-between border-b border-slate-200/70 bg-white/70 px-8 py-3 backdrop-blur-md">
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-black uppercase tracking-wider text-blue-700">Merchant Portal</span>
+              <span className="text-slate-300">•</span>
+              <span className="text-xs font-semibold text-slate-600">Business Control Center</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link
+                href="/merchant/dashboard/support"
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition"
+              >
+                <span>🎧</span>
+                <span>24x7 Support</span>
+              </Link>
+              <MerchantProfileDropdown
+                businessName={merchant.businessName}
+                businessId={merchant.businessId}
+                businessType={merchant.businessType}
+                logoUrl={merchant.logoUrl}
+                isPremium={isPremium}
+                crown={vipCrown}
+                variant="header"
+              />
+            </div>
+          </header>
+
           <MerchantNavigation
             mobile
             hasUnreadNotifications={hasUnreadNotifications}

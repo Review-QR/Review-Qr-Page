@@ -133,3 +133,20 @@ test("merchant dashboard navigation keeps profile under the authenticated dashbo
   assert.match(css, /@media \(max-width: 860px\)/);
   assert.doesNotMatch(css, /merchant-qr-poster-frame\s*\{[^}]*max-height/s);
 });
+
+
+test("merchant identity dropdown surfaces Merchant Profile, Change Password, and Logout with secure password action", async () => {
+  const [dropdown, actions, layout] = await Promise.all([
+    read("../merchant-profile-dropdown.tsx"),
+    read("./actions.ts"),
+    read("../layout.tsx"),
+  ]);
+  assert.match(dropdown, /Merchant Profile/);
+  assert.match(dropdown, /Change Password/);
+  assert.match(dropdown, /Log Out/);
+  assert.match(dropdown, /changeMerchantPasswordAction/);
+  assert.match(dropdown, /merchantSignOutAction/);
+  assert.match(actions, /export async function changeMerchantPasswordAction/);
+  assert.match(actions, /updateUserById/);
+  assert.match(layout, /MerchantProfileDropdown/);
+});
