@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createMerchantServerClient } from "@/lib/supabase-merchant-server";
 
@@ -39,7 +40,7 @@ export type MerchantContext = {
   isTakingOrders: boolean;
 };
 
-export async function getActiveMerchant(): Promise<MerchantContext | null> {
+export const getActiveMerchant = cache(async (): Promise<MerchantContext | null> => {
   try {
     const supabase = await createMerchantServerClient();
     const { data: claimsData, error: claimsError } =
@@ -64,24 +65,9 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
       .maybeSingle();
     if (businessError || !business) return null;
 
-    // Optional outlet status query - fails gracefully if columns are not yet applied on remote DB
-    let isOutletOpen = true;
-    let allowTakingOrders = false;
-    let isTakingOrders = false;
-    try {
-      const { data: outletFlags } = await supabase
-        .from("businesses")
-        .select("is_outlet_open, allow_taking_orders, is_taking_orders")
-        .eq("id", mapping.business_id)
-        .maybeSingle();
-      if (outletFlags) {
-        if (typeof outletFlags.is_outlet_open === "boolean") isOutletOpen = outletFlags.is_outlet_open;
-        if (typeof outletFlags.allow_taking_orders === "boolean") allowTakingOrders = outletFlags.allow_taking_orders;
-        if (typeof outletFlags.is_taking_orders === "boolean") isTakingOrders = outletFlags.is_taking_orders;
-      }
-    } catch {
-      // Safe fallback: defaults remain true / false / false
-    }
+    const isOutletOpen = true;
+    const allowTakingOrders = false;
+    const isTakingOrders = false;
 
     const { data: profile } = await supabase
       .from("merchant_profiles")
@@ -137,10 +123,10 @@ export async function getActiveMerchant(): Promise<MerchantContext | null> {
     // Fail closed without exposing database or session details to the merchant.
     return null;
   }
-}
+});
 
-export async function requireActiveMerchant(): Promise<MerchantContext> {
+export const requireActiveMerchant = cache(async (): Promise<MerchantContext> => {
   const merchant = await getActiveMerchant();
   if (!merchant) redirect("/merchant/login");
   return merchant;
-}
+});

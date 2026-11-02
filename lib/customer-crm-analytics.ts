@@ -19,59 +19,65 @@ export type CustomerCrmMetrics = {
 /**
  * Aggregates customer data counts (mobiles entered, names entered, family members added,
  * birthdays, and anniversaries) for a merchant business WITHOUT exposing individual customer PII.
+ * Queries are executed in parallel for blazing fast response times.
  */
 export async function getMerchantCustomerCrmMetrics(businessId: string): Promise<CustomerCrmMetrics> {
   const admin = createSupabaseAdminClient();
 
   try {
-    // 1. Fetch reviews to get name and mobile coverage
-    const { data: reviews } = await admin
-      .from("trustit_reviews")
-      .select("customer_name, customer_mobile")
-      .eq("business_id", businessId)
-      .eq("status", "submitted");
+    // Execute all 4 queries in parallel for instant execution
+    const [reviewsResult, profilesResult, familyResult, occasionsResult] = await Promise.all([
+      admin
+        .from("trustit_reviews")
+        .select("customer_name, customer_mobile")
+        .eq("business_id", businessId)
+        .eq("status", "submitted"),
+      admin
+        .from("review_customer_profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("business_id", businessId),
+      admin
+        .from("review_family_members")
+        .select("id, customer_profile_id")
+        .eq("business_id", businessId),
+      admin
+        .from("review_special_occasions")
+        .select("occasion_key, customer_profile_id, family_member_id")
+        .eq("business_id", businessId),
+    ]);
 
-    const totalReviews = reviews?.length || 0;
+    const reviews = reviewsResult.data || [];
+    const totalReviews = reviews.length;
 
     // Count unique or valid mobile entries
-    const validMobiles = (reviews || []).filter((r) => {
+    const validMobiles = reviews.filter((r) => {
       if (!r.customer_mobile) return false;
       const digits = r.customer_mobile.replace(/\D/g, "");
       return digits.length >= 10;
     });
     const customersWithMobile = validMobiles.length;
 
-    const validNames = (reviews || []).filter(
+    const validNames = reviews.filter(
       (r) => Boolean(r.customer_name && r.customer_name.trim().length > 0)
     );
     const customersWithName = validNames.length;
 
-    // 2. Fetch customer profiles count
-    const { count: profileCount } = await admin
-      .from("review_customer_profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("business_id", businessId);
-    const totalProfiles = Math.max(profileCount || 0, customersWithMobile, customersWithName > 0 ? 1 : 0);
+    // Profiles count
+    const profileCount = profilesResult.count || 0;
+    const totalProfiles = Math.max(profileCount, customersWithMobile, customersWithName > 0 ? 1 : 0);
 
-    // 3. Fetch family members
-    const { data: familyMembers, count: famCount } = await admin
-      .from("review_family_members")
-      .select("id, customer_profile_id")
-      .eq("business_id", businessId);
-    const totalFamilyMembers = famCount || 0;
-    const customersWithFamily = new Set((familyMembers || []).map((m) => m.customer_profile_id)).size;
+    // Family members
+    const familyMembers = familyResult.data || [];
+    const totalFamilyMembers = familyResult.count || familyMembers.length;
+    const customersWithFamily = new Set(familyMembers.map((m) => m.customer_profile_id)).size;
 
-    // 4. Fetch special occasions
-    const { data: occasions } = await admin
-      .from("review_special_occasions")
-      .select("occasion_key, customer_profile_id, family_member_id")
-      .eq("business_id", businessId);
-
-    const birthdaysCount = (occasions || []).filter((o) => o.occasion_key === "birthday").length;
-    const anniversariesCount = (occasions || []).filter((o) => o.occasion_key === "anniversary").length;
+    // Special occasions
+    const occasions = occasionsResult.data || [];
+    const birthdaysCount = occasions.filter((o) => o.occasion_key === "birthday").length;
+    const anniversariesCount = occasions.filter((o) => o.occasion_key === "anniversary").length;
     const totalOccasions = birthdaysCount + anniversariesCount;
 
-    // 5. Smart Suggested Metrics
+    // Smart Suggested Metrics
     const dataCompletenessPercentage =
       totalReviews > 0
         ? Math.min(100, Math.round(((customersWithMobile + customersWithName) / (totalReviews * 2)) * 100))

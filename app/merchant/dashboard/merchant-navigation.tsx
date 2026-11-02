@@ -116,6 +116,7 @@ export default function MerchantNavigation({
         const link = (
           <Link
             href={item.href}
+            prefetch={true}
             aria-current={active ? "page" : undefined}
             className={`merchant-nav__link${active ? " is-active" : ""}`}
           >
