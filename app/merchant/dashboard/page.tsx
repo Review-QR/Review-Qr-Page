@@ -93,6 +93,19 @@ function getCategoryLauncher(type: string | null | undefined) {
       btnClass: "bg-indigo-600 hover:bg-indigo-700 text-white",
     };
   }
+  if (norm.includes("medical") || norm.includes("chemist") || norm.includes("pharmacy")) {
+    return {
+      emoji: "💊",
+      badge: "PRESCRIPTION RX & DRUG MASTER",
+      title: "Chemist Drug Master & Prescription Hub",
+      subtitle: "Verify doctor handwritten prescriptions, check salt compositions, and manage medicine inventory.",
+      cta: "Open Chemist Rx Console →",
+      href: "/merchant/dashboard/orders",
+      gradient: "from-teal-500/10 via-emerald-500/5 to-white",
+      borderColor: "border-teal-200",
+      btnClass: "bg-teal-600 hover:bg-teal-700 text-white",
+    };
+  }
   return {
     emoji: "⚡",
     badge: "HYPERLOCAL WORKSPACE",

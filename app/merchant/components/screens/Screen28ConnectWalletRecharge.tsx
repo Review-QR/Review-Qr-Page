@@ -1,0 +1,129 @@
+"use client";
+
+import React, { useState } from "react";
+
+interface Screen28Props {
+  onBack?: () => void;
+  onRechargeSuccess?: () => void;
+}
+
+export default function Screen28ConnectWalletRecharge({
+  onBack,
+  onRechargeSuccess,
+}: Screen28Props) {
+  const [selectedPack, setSelectedPack] = useState<number>(199);
+  const [recharging, setRecharging] = useState(false);
+
+  const packs = [
+    { price: 99, credits: 110, rate: "₹0.90 / msg", popular: false },
+    { price: 199, credits: 250, rate: "₹0.79 / msg", popular: true },
+    { price: 499, credits: 700, rate: "₹0.71 / msg", popular: false },
+  ];
+
+  const handleRecharge = () => {
+    setRecharging(true);
+    setTimeout(() => {
+      setRecharging(false);
+      onRechargeSuccess?.();
+    }, 1500);
+  };
+
+  return (
+    <div className="w-full h-full bg-[#FAF5FF] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto">
+      {/* Header */}
+      <div>
+        <div className="flex items-center justify-between pb-2.5 border-b border-purple-200">
+          <div>
+            <span className="text-[10px] font-black uppercase text-purple-700 tracking-wider">
+              WHATSAPP WALLET
+            </span>
+            <h1 className="text-xs font-black text-slate-900 leading-tight">
+              Connect Credits Wallet &amp; Top-Up
+            </h1>
+          </div>
+          <button
+            type="button"
+            onClick={onBack}
+            className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200"
+          >
+            ← Back
+          </button>
+        </div>
+
+        {/* Current Balance Card */}
+        <div className="mt-2.5 bg-white border border-amber-300 rounded-2xl p-3 shadow-xs flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl shadow-2xs">
+              🪙
+            </div>
+            <div>
+              <span className="text-[10px] font-bold uppercase text-slate-500">Available Credits</span>
+              <p className="text-base font-black text-slate-900 leading-tight">100 Connect Credits</p>
+              <span className="text-[9px] text-emerald-700 font-semibold">Active &amp; Ready for Occasions</span>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+            Never Expires
+          </span>
+        </div>
+
+        {/* Recharge Packs Selector */}
+        <div className="mt-3 space-y-2">
+          <span className="text-[10px] font-black uppercase text-slate-500 tracking-wider block">
+            Choose Recharge Package:
+          </span>
+
+          {packs.map((p) => (
+            <div
+              key={p.price}
+              onClick={() => setSelectedPack(p.price)}
+              className={`p-3 rounded-2xl border-2 transition cursor-pointer shadow-2xs flex items-center justify-between ${
+                selectedPack === p.price
+                  ? "bg-white border-purple-600 ring-2 ring-purple-500/20"
+                  : "bg-white border-slate-200 hover:border-slate-300"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                  selectedPack === p.price ? "border-purple-600 bg-purple-600" : "border-slate-300"
+                }`}>
+                  {selectedPack === p.price && <span className="w-1.5 h-1.5 rounded-full bg-white"></span>}
+                </span>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-mono text-xs font-black text-slate-900">₹{p.price}</span>
+                    <span className="text-xs font-black text-purple-700">({p.credits} Credits)</span>
+                  </div>
+                  <span className="text-[10px] text-slate-500">{p.rate}</span>
+                </div>
+              </div>
+
+              {p.popular && (
+                <span className="text-[9px] font-black uppercase tracking-wider bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full">
+                  Most Popular
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Footer Payment */}
+      <div className="pt-2">
+        {recharging ? (
+          <div className="w-full py-2.5 rounded-xl bg-purple-700 text-white font-bold text-xs text-center shadow-xs animate-pulse">
+            Processing Instant Cashfree UPI Recharge...
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleRecharge}
+            className="w-full py-3 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-black text-xs tracking-wider uppercase shadow-md transition flex items-center justify-center gap-1.5"
+          >
+            <span>💳 TOP-UP ₹{selectedPack} VIA CASHFREE UPI</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}

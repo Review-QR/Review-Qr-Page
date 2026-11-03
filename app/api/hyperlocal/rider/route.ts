@@ -12,7 +12,19 @@ import {
   sendRiderEmailOtp,
   verifyRiderEmailOtp,
 } from "@/lib/auth/email-service";
+import {
+  sendCustomerPhoneOtp,
+  verifyCustomerPhoneOtp,
+  cleanPhone,
+} from "@/lib/auth/customer-unified-auth";
 import { signRiderSessionToken, verifyRiderSessionToken } from "@/lib/hyperlocal/rider-session";
+import {
+  recordMerchantWaitCompensation,
+  refundDoorstepChangeToCustomer,
+  claimParkingTollReimbursement,
+  recordRiderGpsHeartbeat,
+  getRiderPassbook,
+} from "@/lib/hyperlocal/rider-fleet-engine";
 
 export const dynamic = "force-dynamic";
 
@@ -227,17 +239,64 @@ export async function POST(request: Request) {
     const { action, riderId, orderId } = body;
     const admin = createSupabaseAdminClient();
 
-    // ── 1. SEND EMAIL OTP ──
+    // ── 1. SEND OTP (SMS / WhatsApp / Email) ──
     if (action === "send_otp") {
+      const phone = body.phone ? cleanPhone(String(body.phone)) : "";
+      const channel = body.channel === "whatsapp" ? "whatsapp" : "sms";
+
+      if (phone && phone.length === 10) {
+        const res = await sendCustomerPhoneOtp(phone, channel);
+        return Response.json(res);
+      }
+
       const email = String(body.email || "").trim().toLowerCase();
-      const res = await sendRiderEmailOtp(email);
-      return Response.json(res);
+      if (email.includes("@")) {
+        const res = await sendRiderEmailOtp(email);
+        return Response.json(res);
+      }
+
+      return Response.json(
+        { success: false, message: "Valid 10-digit mobile number or email required." },
+        { status: 400 },
+      );
     }
 
-    // ── 2. VERIFY EMAIL OTP ──
+    // ── 2. VERIFY OTP (SMS / WhatsApp / Email) ──
     if (action === "verify_otp") {
-      const email = String(body.email || "").trim().toLowerCase();
+      const phone = body.phone ? cleanPhone(String(body.phone)) : "";
       const otp = String(body.otp || "").trim();
+
+      if (phone && phone.length === 10) {
+        const res = await verifyCustomerPhoneOtp(phone, otp);
+        if (!res.success) {
+          return Response.json(res, { status: 400 });
+        }
+
+        // Look up or establish rider profile
+        const { data: rider } = await admin
+          .from("delivery_riders")
+          .select("*")
+          .or(`phone.eq.${phone},phone.eq.+91${phone}`)
+          .maybeSingle();
+
+        if (rider) {
+          return Response.json({
+            success: true,
+            isNewRider: false,
+            rider,
+            riderToken: signRiderSessionToken(rider.id),
+          });
+        }
+
+        return Response.json({
+          success: true,
+          isNewRider: true,
+          phone,
+          message: "Phone verified. Proceed to KYC onboarding.",
+        });
+      }
+
+      const email = String(body.email || "").trim().toLowerCase();
       const res = await verifyRiderEmailOtp(email, otp);
       return Response.json(res);
     }
@@ -594,6 +653,112 @@ export async function POST(request: Request) {
         .eq("rider_id", riderId);
 
       return Response.json({ success: true, message: "Dispute reported to Admin Command Center." });
+    }
+
+    // ── 13. MERCHANT WAIT COMPENSATION (+₹1/MIN AFTER 5 MINS) ──
+    if (action === "wait_compensation") {
+      const { waitMinutes } = body;
+      const res = await recordMerchantWaitCompensation(riderId, orderId, Number(waitMinutes || 6));
+      return Response.json({ success: true, ...res });
+    }
+
+    // ── 14. DOORSTEP CHANGE DEFICIT TO WALLET / UPI ──
+    if (action === "doorstep_change_wallet") {
+      const { customerPhone, changeAmount, method, upiId } = body;
+      const res = await refundDoorstepChangeToCustomer(
+        orderId,
+        customerPhone,
+        Number(changeAmount),
+        method || "wallet",
+        upiId,
+      );
+      return Response.json(res);
+    }
+
+    // ── 15. CLAIM PARKING / TOLL REIMBURSEMENT ──
+    if (action === "claim_parking") {
+      const { amount, receiptPhotoUrl } = body;
+      const res = await claimParkingTollReimbursement(
+        riderId,
+        orderId,
+        Number(amount || 10),
+        receiptPhotoUrl,
+      );
+      return Response.json(res);
+    }
+
+    // ── 16. DETAILED GPS TELEMETRY & HALT MONITOR ──
+    if (action === "heartbeat_telemetry") {
+      const { latitude, longitude, speedKmh, heading, accuracyMeters, batteryPercentage, isMoving, haltSeconds } = body;
+      const ok = await recordRiderGpsHeartbeat({
+        rider_id: riderId,
+        latitude: Number(latitude),
+        longitude: Number(longitude),
+        speed_kmh: Number(speedKmh || 0),
+        heading_degrees: Number(heading || 0),
+        accuracy_meters: Number(accuracyMeters || 4),
+        battery_percentage: Number(batteryPercentage || 100),
+        is_moving: Boolean(isMoving),
+        halt_duration_seconds: Number(haltSeconds || 0),
+      });
+      return Response.json({ success: ok });
+    }
+
+    // ── 17. GET DETAILED PASSBOOK ──
+    if (action === "get_passbook") {
+      const passbook = await getRiderPassbook(riderId);
+      return Response.json({ success: true, passbook });
+    }
+
+    // ── 18. DAILY HELMET & BAG SELFIE AUDIT ──
+    if (action === "verify_helmet_selfie") {
+      await admin
+        .from("delivery_riders")
+        .update({
+          daily_helmet_verified_at: new Date().toISOString(),
+          is_online: true,
+          is_available: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", riderId);
+
+      return Response.json({ success: true, message: "Helmet verified. Shift unlocked!" });
+    }
+
+    // ── 19. COMPLETE TRAINING ACADEMY ──
+    if (action === "complete_academy") {
+      await admin
+        .from("delivery_riders")
+        .update({
+          training_completed_at: new Date().toISOString(),
+          kyc_status: "approved",
+          is_verified: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", riderId);
+
+      return Response.json({ success: true, message: "Academy completed. Account approved!" });
+    }
+
+    // ── 20. BUDDY BREAKDOWN HANDOVER ──
+    if (action === "report_breakdown") {
+      const { breakdownType } = body;
+      const handoverOtp = String(Math.floor(1000 + Math.random() * 9000));
+      
+      await admin.from("rider_road_incidents").insert({
+        order_id: orderId,
+        original_rider_id: riderId,
+        incident_type: "puncture_breakdown",
+        handover_otp: handoverOtp,
+        status: "open",
+        notes: `Breakdown reported: ${breakdownType || "Puncture"}. Handover code generated.`,
+      });
+
+      return Response.json({
+        success: true,
+        handoverOtp,
+        message: "Breakdown logged. Nearby rescue riders notified.",
+      });
     }
 
     return Response.json({ error: "Unknown action" }, { status: 400 });

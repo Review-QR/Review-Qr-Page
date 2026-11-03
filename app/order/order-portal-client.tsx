@@ -242,6 +242,14 @@ export default function CustomerSuperAppClient({
   const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
   const [loginStep, setLoginStep] = useState<"email" | "otp" | "name_prompt">("email");
   const [loginEmail, setLoginEmail] = useState<string>("");
+  const [loginPhone, setLoginPhone] = useState<string>("");
+  const [loginChannel, setLoginChannel] = useState<"sms" | "whatsapp">("sms");
+  const [authMode, setAuthMode] = useState<"phone" | "email">("phone");
+  const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
+  const [isStandeeModalOpen, setIsStandeeModalOpen] = useState<boolean>(false);
+  const [standeeRating, setStandeeRating] = useState<number>(5);
+  const [standeeFeedback, setStandeeFeedback] = useState<string>("");
+  const [isStandeeSubmitted, setIsStandeeSubmitted] = useState<boolean>(false);
   const [loginOtp, setLoginOtp] = useState<string>("");
   const [loginOtpCountdown, setLoginOtpCountdown] = useState<number>(0);
   const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
@@ -514,6 +522,8 @@ export default function CustomerSuperAppClient({
     setLoginInputPhone(customerPhone.length === 10 ? customerPhone : "");
     setLoginInputAddress(customerAddress);
     setLoginEmail(customerEmail);
+    setLoginPhone(customerPhone.length === 10 ? customerPhone : "");
+    setAuthMode("phone");
     setNewCustomerName("");
     setNewCustomerPhone("");
     setOtpError("");
@@ -529,16 +539,47 @@ export default function CustomerSuperAppClient({
     }
   };
 
-  const handleSendOtp = async (overrideEmail?: string) => {
-    const targetEmail = (overrideEmail || loginEmail || "").trim().toLowerCase();
-    if (!targetEmail || !targetEmail.includes("@") || !targetEmail.includes(".")) {
-      setOtpError("Please enter a valid email address (e.g. name@gmail.com)");
-      return;
-    }
+  const handleSendOtp = async (overrideIdentifier?: string, overrideChannel?: "sms" | "whatsapp") => {
+    const channelToUse = overrideChannel || loginChannel;
     setOtpError("");
     setOtpNotice("");
     setIsSendingOtp(true);
+
     try {
+      if (authMode === "phone" && !overrideIdentifier?.includes("@")) {
+        const raw = (overrideIdentifier || loginPhone || "").replace(/\D/g, "");
+        const phone10 = raw.length === 12 && raw.startsWith("91") ? raw.slice(2) : raw;
+        if (phone10.length !== 10) {
+          setOtpError("Please enter a valid 10-digit mobile number.");
+          setIsSendingOtp(false);
+          return;
+        }
+
+        const res = await fetch("/api/customer/auth/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: phone10, channel: channelToUse }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          setOtpError(data.message || "Could not send verification code. Please try again.");
+          return;
+        }
+        setLoginPhone(phone10);
+        setLoginOtp("");
+        setLoginStep("otp");
+        setLoginOtpCountdown(30);
+        setOtpNotice(data.message || `Verification code sent via ${channelToUse === "whatsapp" ? "WhatsApp" : "SMS"}`);
+        return;
+      }
+
+      // Email fallback
+      const targetEmail = (overrideIdentifier || loginEmail || "").trim().toLowerCase();
+      if (!targetEmail || !targetEmail.includes("@") || !targetEmail.includes(".")) {
+        setOtpError("Please enter a valid email address (e.g. name@gmail.com)");
+        setIsSendingOtp(false);
+        return;
+      }
       const res = await fetch("/api/customer/auth/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -561,6 +602,51 @@ export default function CustomerSuperAppClient({
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    setOtpError("");
+    setOtpNotice("");
+    try {
+      const emailToUse = loginEmail && loginEmail.includes("@") ? loginEmail : (loginPhone ? `user.${loginPhone}@gmail.com` : "customer.google@gmail.com");
+      const nameToUse = customerName || "Google Customer";
+      const res = await fetch("/api/customer/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "google_login",
+          email: emailToUse,
+          fullName: nameToUse,
+          phone: loginPhone || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.customer) {
+        const cust = data.customer;
+        setCustomerId(cust.id);
+        setCustomerEmail(cust.email);
+        const resolvedName = cust.fullName || "Customer";
+        setCustomerName(resolvedName);
+        setLoginInputName(resolvedName);
+        if (cust.phone) {
+          setCustomerPhone(cust.phone);
+          setLoginInputPhone(cust.phone);
+        }
+        saveCustomerProfile(resolvedName, cust.phone || "", customerAddress, cust.email, cust.id);
+        setOtpNotice(`Signed in with Google as ${resolvedName}!`);
+        setProfileTab("orders");
+        setIsCustomerEditing(false);
+        setLoginStep("email");
+        setIsCustomerLoginOpen(false);
+      } else {
+        setOtpError(data.message || "Google Sign-In failed.");
+      }
+    } catch {
+      setOtpError("Network error connecting with Google.");
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
+
   const handleVerifyOtp = async () => {
     const code = loginOtp.trim();
     if (code.length !== 6) {
@@ -570,13 +656,17 @@ export default function CustomerSuperAppClient({
     setOtpError("");
     setIsVerifyingOtp(true);
     try {
+      const verifyPayload: Record<string, string | undefined> = { otp: code };
+      if (authMode === "phone" && loginPhone) {
+        verifyPayload.phone = loginPhone;
+      } else {
+        verifyPayload.email = loginEmail;
+      }
+
       const res = await fetch("/api/customer/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: loginEmail,
-          otp: code,
-        }),
+        body: JSON.stringify(verifyPayload),
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
@@ -1911,16 +2001,17 @@ export default function CustomerSuperAppClient({
               <span className="text-[9.5px] mt-0.5">Categories</span>
             </button>
 
-            {/* 3. Center Elevated Smart Parcha Button */}
+            {/* 3. Center Elevated Trustit Standee QR & Parcha Button (Image 3 Spec) */}
             <button
               type="button"
-              onClick={handleOpenSmartParcha}
+              onClick={() => setIsStandeeModalOpen(true)}
               className="flex flex-col items-center justify-center py-0.5 -mt-3 group"
+              title="Scan Table Standee QR or Upload Grocery Parcha"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-purple-700 text-white shadow-md group-hover:scale-105 transition">
-                <span className="text-lg leading-none">📸</span>
+              <div className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-violet-500/40 group-hover:scale-105 active:scale-95 transition">
+                <span className="text-xl leading-none">📷</span>
               </div>
-              <span className="text-[9px] font-black text-purple-700 mt-0.5">Parcha</span>
+              <span className="text-[9px] font-black text-violet-700 mt-0.5">Scan QR</span>
             </button>
 
             {/* 4. Bookings & Orders */}
@@ -1951,6 +2042,145 @@ export default function CustomerSuperAppClient({
             </button>
           </div>
         </nav>
+      )}
+
+      {/* ── Trustit Table Standee QR Scanner & Quick Review Modal ── */}
+      {isStandeeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/70 p-0 sm:p-4 backdrop-blur-xs">
+          <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 bg-slate-900 text-white">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📷</span>
+                <div>
+                  <h3 className="text-xs font-black text-white">Trustit Standee Scanner</h3>
+                  <p className="text-[9.5px] text-slate-400">Point at table/counter standee or upload parcha</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsStandeeModalOpen(false);
+                  setIsStandeeSubmitted(false);
+                }}
+                className="grid h-7 w-7 place-items-center rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-4 space-y-4 overflow-y-auto">
+              {!isStandeeSubmitted ? (
+                <>
+                  {/* Camera Target Simulation */}
+                  <div className="w-full h-44 rounded-2xl bg-slate-950 border-2 border-dashed border-violet-500/80 relative flex flex-col items-center justify-center text-center p-3 overflow-hidden shadow-inner">
+                    <div className="absolute inset-x-4 top-2 h-0.5 bg-violet-400 animate-pulse"></div>
+                    <span className="text-3xl mb-1">🎯</span>
+                    <span className="text-xs font-black text-white">Scanning Table Standee...</span>
+                    <p className="text-[10px] text-slate-400 mt-0.5">
+                      Point camera at any Trustit physical QR poster on cafe tables or store counters.
+                    </p>
+                  </div>
+
+                  {/* Quick Action Toggle: Instant Review vs Grocery Parcha */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsStandeeModalOpen(false);
+                        handleOpenSmartParcha();
+                      }}
+                      className="p-2.5 rounded-xl border border-purple-200 bg-purple-50 text-left hover:bg-purple-100 transition"
+                    >
+                      <span className="text-base block">📝</span>
+                      <span className="text-xs font-black text-purple-900 block mt-0.5">Upload Parcha</span>
+                      <span className="text-[9px] text-purple-700">Send handwritten list</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        window.open("/bahraich/grocery-stores", "_blank");
+                      }}
+                      className="p-2.5 rounded-xl border border-blue-200 bg-blue-50 text-left hover:bg-blue-100 transition"
+                    >
+                      <span className="text-base block">🏪</span>
+                      <span className="text-xs font-black text-blue-900 block mt-0.5">Explore Outlets</span>
+                      <span className="text-[9px] text-blue-700">Browse verified stores</span>
+                    </button>
+                  </div>
+
+                  {/* Simulated Review Card */}
+                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-900">Rate Your Experience:</span>
+                      <span className="text-[10px] font-bold text-violet-700">Trustit Verified</span>
+                    </div>
+
+                    {/* 5-Star Interactive Selector */}
+                    <div className="flex items-center justify-center gap-2 py-1">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setStandeeRating(star)}
+                          className="text-2xl hover:scale-110 active:scale-95 transition"
+                        >
+                          {star <= standeeRating ? "⭐" : "☆"}
+                        </button>
+                      ))}
+                    </div>
+
+                    <p className="text-center text-[10px] font-semibold text-slate-500">
+                      {standeeRating >= 4
+                        ? "🌟 Great Rating! Will redirect to Google Maps Review."
+                        : "⚠️ Private Feedback: Directly alerts merchant management."}
+                    </p>
+
+                    <input
+                      type="text"
+                      placeholder="Write brief feedback (optional)..."
+                      value={standeeFeedback}
+                      onChange={(e) => setStandeeFeedback(e.target.value)}
+                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 outline-none focus:border-violet-600"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsStandeeSubmitted(true);
+                      }}
+                      className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition"
+                    >
+                      Submit Rating ({standeeRating}★)
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-6 space-y-3">
+                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 text-2xl flex items-center justify-center mx-auto">
+                    ✓
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900">Thank You For Your Review!</h4>
+                  <p className="text-xs text-slate-500">
+                    Your {standeeRating}-star rating has been registered on the Trustit network.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsStandeeModalOpen(false);
+                      setIsStandeeSubmitted(false);
+                    }}
+                    className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold"
+                  >
+                    Done
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── Store Menu Modal for Food & Sweets ── */}
@@ -3866,78 +4096,234 @@ export default function CustomerSuperAppClient({
                   )}
 
                   {loginStep === "email" ? (
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-0.5">
-                          Email Address (for 6-Digit OTP)
-                        </label>
-                        <div className="flex items-center rounded-xl border border-slate-200 px-2.5 py-1.5 focus-within:border-orange-500 focus-within:ring-1 focus-within:ring-orange-500">
-                          <span className="text-slate-400 text-xs mr-2">✉️</span>
-                          <input
-                            type="email"
-                            placeholder="e.g. yourname@gmail.com"
-                            value={loginEmail}
-                            onChange={(e) => setLoginEmail(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSendOtp();
-                            }}
-                            className="w-full text-xs text-slate-900 outline-none"
-                          />
+                    <div className="space-y-3.5">
+                      {/* Top Header Matching Reference Templates */}
+                      <div className="text-center pt-1 pb-1">
+                        <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-tr from-violet-600 to-indigo-600 text-white font-black text-lg shadow-md mb-1.5">
+                          ✓
                         </div>
+                        <h3 className="text-base font-black text-slate-900">Create Your Account</h3>
+                        <p className="text-[11px] text-slate-500">Get started with Trustit Super App</p>
                       </div>
 
+                      {/* Phone vs Email Tab Switcher */}
+                      <div className="flex items-center justify-center p-1 bg-slate-100 rounded-xl">
+                        <button
+                          type="button"
+                          onClick={() => setAuthMode("phone")}
+                          className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                            authMode === "phone" ? "bg-white text-violet-700 shadow-2xs" : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          📱 Mobile Number
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAuthMode("email")}
+                          className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition ${
+                            authMode === "email" ? "bg-white text-violet-700 shadow-2xs" : "text-slate-500 hover:text-slate-800"
+                          }`}
+                        >
+                          ✉️ Email Address
+                        </button>
+                      </div>
+
+                      {authMode === "phone" ? (
+                        <div className="space-y-2.5">
+                          <div>
+                            <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                              Mobile Number
+                            </label>
+                            <div className="flex items-center rounded-xl border-2 border-violet-200 focus-within:border-violet-600 bg-slate-50/70 px-3 py-2 transition">
+                              <span className="text-xs font-bold text-slate-700 mr-2 border-r border-slate-300 pr-2">
+                                🇮🇳 +91
+                              </span>
+                              <input
+                                type="tel"
+                                maxLength={10}
+                                placeholder="Enter 10-digit number"
+                                value={loginPhone}
+                                onChange={(e) => setLoginPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && loginPhone.length === 10) handleSendOtp();
+                                }}
+                                className="w-full text-xs font-semibold text-slate-900 bg-transparent outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Channel Toggle: SMS OTP vs WhatsApp OTP */}
+                          <div>
+                            <span className="block text-[10.5px] font-semibold text-slate-500 mb-1">
+                              Deliver Verification Code Via:
+                            </span>
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setLoginChannel("sms")}
+                                className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-bold transition ${
+                                  loginChannel === "sms"
+                                    ? "border-violet-600 bg-violet-50 text-violet-900 shadow-2xs"
+                                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                                }`}
+                              >
+                                <span>💬 SMS OTP</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setLoginChannel("whatsapp")}
+                                className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-bold transition ${
+                                  loginChannel === "whatsapp"
+                                    ? "border-emerald-600 bg-emerald-50 text-emerald-900 shadow-2xs"
+                                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                                }`}
+                              >
+                                <span>🟢 WhatsApp OTP</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                            Email Address
+                          </label>
+                          <div className="flex items-center rounded-xl border border-slate-200 px-3 py-2 focus-within:border-violet-600">
+                            <span className="text-slate-400 text-xs mr-2">✉️</span>
+                            <input
+                              type="email"
+                              placeholder="e.g. yourname@gmail.com"
+                              value={loginEmail}
+                              onChange={(e) => setLoginEmail(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSendOtp();
+                              }}
+                              className="w-full text-xs text-slate-900 outline-none"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Primary Get OTP CTA Button */}
                       <button
                         type="button"
-                        disabled={isSendingOtp || !loginEmail.trim()}
+                        disabled={isSendingOtp || (authMode === "phone" ? loginPhone.length < 10 : !loginEmail.trim())}
                         onClick={() => handleSendOtp()}
-                        className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2.5 text-xs font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
+                        className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 py-2.5 text-xs font-black text-white shadow-md shadow-violet-500/20 disabled:opacity-50 transition active:scale-98 flex items-center justify-center gap-1.5"
                       >
-                        {isSendingOtp ? "Sending Verification Code..." : "Send 6-Digit Verification Code →"}
+                        {isSendingOtp ? (
+                          <span>Sending Verification Code...</span>
+                        ) : (
+                          <>
+                            <span>Get OTP</span>
+                            <span>→</span>
+                          </>
+                        )}
                       </button>
 
+                      {/* Divider */}
+                      <div className="relative flex items-center justify-center my-1.5">
+                        <div className="border-t border-slate-200 w-full"></div>
+                        <span className="bg-white px-2 text-[10px] uppercase font-bold text-slate-400 absolute">
+                          or continue with
+                        </span>
+                      </div>
+
+                      {/* Social 1-Tap Logins: Google & WhatsApp */}
+                      <div className="space-y-2">
+                        {/* Google Button with Official 4-Color Icon */}
+                        <button
+                          type="button"
+                          disabled={isGoogleLoading}
+                          onClick={handleGoogleSignIn}
+                          className="w-full py-2 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 active:scale-98 font-bold text-xs text-slate-700 flex items-center justify-center gap-2 transition"
+                        >
+                          <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                          </svg>
+                          <span>{isGoogleLoading ? "Connecting Google..." : "Continue with Google"}</span>
+                        </button>
+
+                        {/* WhatsApp Direct Option */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAuthMode("phone");
+                            setLoginChannel("whatsapp");
+                            if (loginPhone.length === 10) {
+                              handleSendOtp(undefined, "whatsapp");
+                            }
+                          }}
+                          className="w-full py-2 px-3 rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/60 font-bold text-xs text-emerald-800 flex items-center justify-center gap-2 transition"
+                        >
+                          <span className="text-sm">💬</span>
+                          <span>Continue with WhatsApp</span>
+                        </button>
+                      </div>
+
                       {/* 1-Tap Quick Demo Profiles */}
-                      <div className="border-t border-slate-100 pt-2.5">
-                        <span className="block text-[10px] font-semibold text-slate-400 mb-1.5">
-                          ⚡ Quick 1-Tap Demo Profiles:
+                      <div className="border-t border-slate-100 pt-2">
+                        <span className="block text-[9.5px] font-semibold text-slate-400 mb-1">
+                          ⚡ Quick 1-Tap Demo Profiles (Instant Test):
                         </span>
                         <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
                             onClick={() => {
-                              const email = "customer@trustitreview.com";
-                              setLoginEmail(email);
-                              handleSendOtp(email);
+                              setAuthMode("phone");
+                              setLoginPhone("9118643415");
+                              handleSendOtp("9118643415", "sms");
                             }}
-                            className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-left hover:border-orange-400 hover:bg-orange-50/50 transition"
+                            className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-left hover:border-violet-400 hover:bg-violet-50/40 transition"
                           >
-                            <div className="text-[11px] font-black text-slate-900">Ramesh Kumar</div>
-                            <div className="text-[9px] text-slate-500 font-mono">customer@trustitreview.com</div>
+                            <div className="text-[10px] font-black text-slate-900">Ramesh Kumar</div>
+                            <div className="text-[8.5px] text-slate-500 font-mono">+91 91186 43415</div>
                           </button>
                           <button
                             type="button"
                             onClick={() => {
-                              const email = "demo@trustitreview.com";
-                              setLoginEmail(email);
-                              handleSendOtp(email);
+                              setAuthMode("phone");
+                              setLoginPhone("9876543210");
+                              handleSendOtp("9876543210", "whatsapp");
                             }}
-                            className="rounded-lg border border-slate-200 bg-slate-50 p-2 text-left hover:border-orange-400 hover:bg-orange-50/50 transition"
+                            className="rounded-lg border border-slate-200 bg-slate-50 p-1.5 text-left hover:border-emerald-400 hover:bg-emerald-50/40 transition"
                           >
-                            <div className="text-[11px] font-black text-slate-900">Priya Sharma</div>
-                            <div className="text-[9px] text-slate-500 font-mono">demo@trustitreview.com</div>
+                            <div className="text-[10px] font-black text-slate-900">Priya Sharma</div>
+                            <div className="text-[8.5px] text-slate-500 font-mono">WhatsApp 98765 43210</div>
                           </button>
                         </div>
                       </div>
+
+                      {/* Skip & Explore as Guest Link */}
+                      <div className="text-center pt-1.5 border-t border-slate-100">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsCustomerEditing(false);
+                            setIsCustomerLoginOpen(false);
+                          }}
+                          className="text-[11px] font-bold text-violet-600 hover:underline"
+                        >
+                          Skip & Explore as Guest →
+                        </button>
+                      </div>
                     </div>
                   ) : loginStep === "otp" ? (
-                    /* Step 2: 6-Digit OTP Entry */
-                    <div className="space-y-3">
+                    /* Step 2: 6-Digit OTP Entry Matching Template */
+                    <div className="space-y-3.5">
                       <div className="text-center space-y-1">
-                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-black uppercase text-orange-800">
-                          Step 2
-                        </span>
-                        <h4 className="text-sm font-extrabold text-slate-900">Enter 6-Digit Code</h4>
+                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-violet-100 text-violet-600 text-lg shadow-2xs mb-1">
+                          📱
+                        </div>
+                        <h4 className="text-base font-black text-slate-900">Verify Your Number</h4>
                         <p className="text-[11px] text-slate-500">
-                          Code sent to <span className="font-semibold text-slate-800">{loginEmail}</span>
+                          Enter the 6-digit code sent to <br />
+                          <span className="font-bold text-slate-800">
+                            {authMode === "phone" ? `+91 ${loginPhone}` : loginEmail}
+                          </span>
                         </p>
                         <button
                           type="button"
@@ -3946,9 +4332,9 @@ export default function CustomerSuperAppClient({
                             setOtpError("");
                             setOtpNotice("");
                           }}
-                          className="text-[10px] text-orange-600 hover:underline font-bold"
+                          className="text-[10.5px] text-violet-600 hover:underline font-bold inline-block mt-0.5"
                         >
-                          ← Change Email
+                          ← Change {authMode === "phone" ? "Mobile Number" : "Email"}
                         </button>
                       </div>
 
@@ -3963,21 +4349,40 @@ export default function CustomerSuperAppClient({
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && loginOtp.length === 6) handleVerifyOtp();
                           }}
-                          className="w-full rounded-xl border border-slate-300 py-2.5 text-center font-mono text-2xl font-black tracking-[0.35em] text-slate-900 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none"
+                          className="w-full rounded-xl border-2 border-violet-400 py-2.5 text-center font-mono text-2xl font-black tracking-[0.35em] text-violet-950 bg-violet-50/30 focus:border-violet-600 focus:ring-2 focus:ring-violet-200 outline-none"
                         />
                       </div>
 
-                      <div className="flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400">Didn&apos;t receive code?</span>
-                        {loginOtpCountdown > 0 ? (
-                          <span className="text-slate-400 font-mono">Resend in {loginOtpCountdown}s</span>
-                        ) : (
+                      {/* Resend & WhatsApp Channel Switch */}
+                      <div className="flex flex-col items-center gap-1.5 text-xs text-center">
+                        <div className="flex items-center justify-between w-full text-[11px] px-1">
+                          <span className="text-slate-400">Didn't receive code?</span>
+                          {loginOtpCountdown > 0 ? (
+                            <span className="text-slate-400 font-mono">Resend in {loginOtpCountdown}s</span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleSendOtp(undefined, loginChannel)}
+                              className="font-bold text-violet-600 hover:underline"
+                            >
+                              ↻ Resend Code
+                            </button>
+                          )}
+                        </div>
+
+                        {authMode === "phone" && (
                           <button
                             type="button"
-                            onClick={() => handleSendOtp()}
-                            className="font-bold text-orange-600 hover:underline"
+                            onClick={() => {
+                              const nextChan = loginChannel === "sms" ? "whatsapp" : "sms";
+                              setLoginChannel(nextChan);
+                              handleSendOtp(undefined, nextChan);
+                            }}
+                            className="text-[11px] font-bold text-emerald-600 hover:underline mt-1"
                           >
-                            ↻ Resend Code
+                            {loginChannel === "sms"
+                              ? "💬 Didn't get SMS? Send via WhatsApp OTP"
+                              : "📱 Didn't get WhatsApp? Send via SMS OTP"}
                           </button>
                         )}
                       </div>
@@ -3986,7 +4391,7 @@ export default function CustomerSuperAppClient({
                         type="button"
                         disabled={isVerifyingOtp || loginOtp.length !== 6}
                         onClick={handleVerifyOtp}
-                        className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2.5 text-xs font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
+                        className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 py-2.5 text-xs font-black text-white shadow-md shadow-violet-500/20 disabled:opacity-50 transition active:scale-98"
                       >
                         {isVerifyingOtp ? "Verifying Code..." : "Verify & Continue →"}
                       </button>

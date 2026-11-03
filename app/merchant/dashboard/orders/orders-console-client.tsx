@@ -131,6 +131,12 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
   const businessType = (business.businessType || "").toLowerCase();
   const isSalon = businessType.includes("salon") || businessType.includes("barber") || businessType.includes("beauty");
   const isCarWash = businessType.includes("wash") || businessType.includes("auto") || businessType.includes("mechanic") || businessType.includes("garage");
+  const isKirana = businessType.includes("kirana") || businessType.includes("grocery") || businessType.includes("supermarket") || businessType.includes("mart");
+  const isChemist = businessType.includes("chemist") || businessType.includes("medical") || businessType.includes("pharmacy");
+
+  // State for specialized vertical modals (Kirana Parcha & Chemist Rx)
+  const [parchaModalOrder, setParchaModalOrder] = useState<HyperlocalOrder | null>(null);
+  const [rxModalOrder, setRxModalOrder] = useState<HyperlocalOrder | null>(null);
 
   // Web Audio Continuous High-Ringing Siren for incoming confirmed orders (Swiggy / Zomato Kitchen Standard)
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -360,7 +366,15 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
           <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 mb-1">
             <span>🔴 LIVE</span>
             <span>
-              {isSalon ? "Salon Token & Chair Manager" : isCarWash ? "Wash Bay & Slot Queue" : "Restaurant Order Dispatch"}
+              {isSalon
+                ? "Salon Token & Chair Manager"
+                : isCarWash
+                ? "Wash Bay & Slot Queue"
+                : isKirana
+                ? "Kirana Parcha & Mandi Grocery Hub"
+                : isChemist
+                ? "Chemist Prescription (Rx) Verification"
+                : "Restaurant Kitchen KOT & Order Dispatch"}
             </span>
           </div>
           <h1 className="text-base sm:text-lg font-extrabold text-slate-900">{business.name}</h1>
@@ -368,8 +382,12 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
             {isSalon
               ? "Live waiting list and digital token appointments."
               : isCarWash
-                ? "Manage washing slots and vehicle readiness."
-                : "Continuous loud sound alert when customers place food/sweet orders."}
+              ? "Manage washing slots and vehicle readiness."
+              : isKirana
+              ? "Customer handwritten grocery parchas, weight calculations & mandi rates."
+              : isChemist
+              ? "Doctor prescription (Rx) dosage review & cold-chain inventory."
+              : "Continuous loud sound alert when customers place food/sweet orders."}
           </p>
         </div>
 

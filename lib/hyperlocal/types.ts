@@ -144,6 +144,102 @@ export interface DeliveryRider {
   kyc_status?: "pending" | "approved" | "rejected" | "suspended";
   total_deliveries_count?: number;
   total_earnings?: number;
+  cash_ceiling_limit?: number;
+  tier_status?: "bronze" | "silver" | "gold" | "diamond";
+  acceptance_rate?: number;
+  daily_helmet_verified_at?: string | null;
+  training_completed_at?: string | null;
+  insurance_policy_number?: string;
+  active_shift_id?: string | null;
+  opted_categories?: string[];
+  referral_code?: string;
+  referred_by_code?: string | null;
+  battery_level?: number;
+  is_battery_critical?: boolean;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+}
+
+export interface RiderGpsHeartbeat {
+  id: string;
+  rider_id: string;
+  latitude: number;
+  longitude: number;
+  speed_kmh: number;
+  heading_degrees?: number;
+  accuracy_meters: number;
+  battery_percentage: number;
+  is_moving: boolean;
+  halt_duration_seconds: number;
+  recorded_at: string;
+}
+
+export interface RiderPassbookTransaction {
+  id: string;
+  rider_id: string;
+  order_id?: string | null;
+  transaction_type:
+    | "base_fare"
+    | "distance_corridor_km"
+    | "heavy_payload_bonus"
+    | "wait_time_compensation"
+    | "customer_tip"
+    | "surge_rush_bonus"
+    | "cancellation_travel_pay"
+    | "parking_toll_reimbursement"
+    | "penalty_deduction"
+    | "dispute_refund"
+    | "minimum_guarantee_topup"
+    | "cash_remitted_escrow"
+    | "instant_upi_payout";
+  amount: number;
+  running_wallet_balance: number;
+  title: string;
+  description?: string;
+  metadata?: Record<string, unknown>;
+  status: "pending" | "settled" | "disputed" | "reversed";
+  created_at: string;
+}
+
+export interface RiderShiftBooking {
+  id: string;
+  rider_id: string;
+  shift_name: "lunch_rush" | "dinner_peak" | "night_owl";
+  booking_date: string;
+  shift_start_time: string;
+  shift_end_time: string;
+  minimum_guarantee_amount: number;
+  min_orders_required: number;
+  min_acceptance_rate: number;
+  orders_completed: number;
+  actual_acceptance_rate: number;
+  status: "booked" | "active" | "completed" | "missed" | "cancelled";
+  is_mg_paid: boolean;
+  created_at: string;
+}
+
+export interface RiderRoadIncident {
+  id: string;
+  order_id: string;
+  original_rider_id: string;
+  rescue_rider_id?: string | null;
+  incident_type:
+    | "puncture_breakdown"
+    | "accident_injury"
+    | "customer_unreachable"
+    | "customer_refused_cod"
+    | "railway_crossing_halt"
+    | "no_cash_change_wallet"
+    | "parking_toll_claim"
+    | "store_delay_wait";
+  handover_otp?: string | null;
+  status: "open" | "dispatched" | "resolved" | "closed";
+  proof_photo_url?: string | null;
+  notes?: string | null;
+  original_rider_payout: number;
+  rescue_rider_payout: number;
+  created_at: string;
+  resolved_at?: string | null;
 }
 
 export interface ServiceTokenSlot {

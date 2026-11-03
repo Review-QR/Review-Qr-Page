@@ -398,3 +398,41 @@ button {
 @media (prefers-reduced-motion: reduce) {
   .stat-card, .action-card, .logout-control button { transition: none; }
 }
+
+
+/* Hide scrollbar utility for simulators and device frames */
+.no-scrollbar::-webkit-scrollbar,
+.merchant-simulator-frame *::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar,
+.merchant-simulator-frame * {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+
+/* Rider phone frame scrollbar elimination */
+.rider-simulator-frame,
+.rider-simulator-frame *,
+.rider-phone-viewport,
+.rider-phone-viewport *,
+.phone-screen-container,
+.phone-screen-container * {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.rider-simulator-frame::-webkit-scrollbar,
+.rider-simulator-frame *::-webkit-scrollbar,
+.rider-phone-viewport::-webkit-scrollbar,
+.rider-phone-viewport *::-webkit-scrollbar,
+.phone-screen-container::-webkit-scrollbar,
+.phone-screen-container *::-webkit-scrollbar {
+  display: none !important;
+  width: 0px !important;
+  height: 0px !important;
+}

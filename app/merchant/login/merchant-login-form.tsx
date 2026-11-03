@@ -189,10 +189,10 @@ export default function MerchantLoginForm() {
           <p className="text-xs text-slate-600">
             New to Trustit?{" "}
             <Link
-              href="/register?new=1"
+              href="/partner"
               className="font-black text-blue-700 hover:underline hover:text-blue-900 transition"
             >
-              Register Your Business →
+              Become a Partner (Free) →
             </Link>
           </p>
         </div>
