@@ -5,11 +5,20 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(self)",
+    value: "camera=*, microphone=*, geolocation=*, display-capture=*",
   },
 ];
 
 const nextConfig: NextConfig = {
+  // Allow Cloudflare tunnel and local LAN IP access on mobile devices without blocking Next.js dev scripts
+  allowedDevOrigins: [
+    "*.trycloudflare.com",
+    "choices-crm-appropriations-reserve.trycloudflare.com",
+    "192.168.1.5",
+    "192.168.*",
+    "localhost",
+    "127.0.0.1",
+  ],
   typescript: {
     ignoreBuildErrors: true,
   },

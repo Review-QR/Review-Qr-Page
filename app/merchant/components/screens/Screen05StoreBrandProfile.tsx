@@ -5,17 +5,33 @@ import React, { useState } from "react";
 interface Screen05Props {
   onBack?: () => void;
   onSave?: () => void;
+  onSaveProfile?: (profile: { storeName: string; ownerName: string; businessType: string }) => void;
+  initialStoreName?: string;
+  initialOwnerName?: string;
+  initialBusinessType?: string;
+  initialPhone?: string;
 }
 
-export default function Screen05StoreBrandProfile({ onBack, onSave }: Screen05Props) {
-  const [storeName, setStoreName] = useState("Golden Blossom Cafe");
-  const [ownerName, setOwnerName] = useState("Supriya Verma");
-  const [businessType, setBusinessType] = useState("Cafe & Quick Service Restaurant");
-  const [phone, setPhone] = useState("9118643415");
+export default function Screen05StoreBrandProfile({
+  onBack,
+  onSave,
+  onSaveProfile,
+  initialStoreName = "Shri Balaji Daily Needs & General Store",
+  initialOwnerName = "Aman Sharma",
+  initialBusinessType = "Kirana & General Store",
+  initialPhone = "+919118643415",
+}: Screen05Props) {
+  const [storeName, setStoreName] = useState(initialStoreName);
+  const [ownerName, setOwnerName] = useState(initialOwnerName);
+  const [businessType, setBusinessType] = useState(initialBusinessType);
+  const [phone] = useState(initialPhone);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
     setSaved(true);
+    if (onSaveProfile) {
+      onSaveProfile({ storeName, ownerName, businessType });
+    }
     setTimeout(() => {
       setSaved(false);
       onSave?.();
@@ -48,7 +64,7 @@ export default function Screen05StoreBrandProfile({ onBack, onSave }: Screen05Pr
         <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs flex items-center gap-3.5">
           <div className="relative">
             <div className="w-16 h-16 rounded-2xl bg-amber-950 border-2 border-amber-800 text-amber-300 flex items-center justify-center font-black text-2xl shadow-sm">
-              ☕
+              🏬
             </div>
             <span className="absolute -bottom-1 -right-1 bg-blue-600 text-white rounded-full p-1 text-[9px] shadow">
               ✏️
@@ -114,7 +130,7 @@ export default function Screen05StoreBrandProfile({ onBack, onSave }: Screen05Pr
                 Registered Contact Mobile
               </label>
               <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                ✓ OTP Verified
+                ✓ WhatsApp Verified
               </span>
             </div>
             <input
@@ -137,7 +153,7 @@ export default function Screen05StoreBrandProfile({ onBack, onSave }: Screen05Pr
           <button
             type="button"
             onClick={handleSave}
-            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition"
+            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
           >
             Save Profile Changes
           </button>

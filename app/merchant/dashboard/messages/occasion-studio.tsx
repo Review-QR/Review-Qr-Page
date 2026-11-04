@@ -575,99 +575,152 @@ export default function OccasionStudio({
             </span>
           </div>
 
-          {/* SLIM TEMPLATE CARD */}
-          <div className="w-full max-w-[240px] mx-auto">
-            {templateStyle === "royal_gold" ? (
-              <div className="relative overflow-hidden rounded-xl border border-[#d4af37]/60 bg-gradient-to-b from-[#18140c] via-[#0d0c0a] to-[#1e170d] p-3 text-center shadow-xs transition flex flex-col justify-between min-h-[310px]">
-                {/* Top Section: Circular Medallion Logo + Business Name */}
-                <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#f5d77f] ring-1 ring-[#d4af37]/30 bg-[#140f09]">
-                    {logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-lg">{emblem.icon}</span>
-                    )}
-                  </div>
-                  <span className="mt-1 text-xs font-bold uppercase tracking-wider text-[#e5c158]">
-                    {businessName}
-                  </span>
-                  <span className="text-[9px] font-semibold text-[#d4af37]/80">
-                    {emblem.label}
-                  </span>
-                </div>
+          {/* SLIM TEMPLATE CARD SLIDER WITH SIDE BUTTONS */}
+          <div className="flex items-center justify-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setTemplateStyle((prev) => (prev === "royal_gold" ? "ivory_cream" : "royal_gold"))}
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition shrink-0 active:scale-90"
+              title="Previous Template"
+            >
+              ‹
+            </button>
 
-                {/* Middle Section: Occasion Icon + Headline */}
-                <div className="relative z-10 my-1">
-                  <span className="text-xl">{occasionIcon}</span>
-                  <h3 className="mt-0.5 text-xs font-bold text-white leading-snug">
-                    {headline}
-                  </h3>
-                  <p className="font-serif text-[10px] italic text-[#f0dfaa] px-1 mt-1 leading-snug line-clamp-2">
-                    &ldquo;{occasionSubtitle}&rdquo;
-                  </p>
-                </div>
-
-                {/* Bottom Section: Coupon Ticket Box */}
-                <div className="relative z-10 rounded-lg border border-[#d4af37]/40 bg-black/50 p-2 text-center">
-                  <span className="block text-[8px] font-semibold uppercase tracking-wider text-[#e5c158]">
-                    VALID {couponValidityDays} DAYS
-                  </span>
-                  <div className="mx-auto my-0.5 max-w-[150px] rounded bg-[#d4af37] py-0.5 px-2 font-mono text-[10px] font-bold text-[#1a1205]">
-                    FLAT {discountPercent}% OFF
+            {/* COMPACT & SLIM TEMPLATE CARD (Matching User Red Box) */}
+            <div className="w-[270px] shrink-0">
+              {templateStyle === "royal_gold" ? (
+                <div className="relative overflow-hidden rounded-xl border border-[#d4af37]/60 bg-gradient-to-b from-[#18140c] via-[#0d0c0a] to-[#1e170d] p-3 text-center shadow-xs transition flex flex-col justify-between h-[190px]">
+                  {/* Top Section: Circular Medallion Logo + Business Name in Compact Row */}
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-[#f5d77f] ring-1 ring-[#d4af37]/30 bg-[#140f09] shrink-0">
+                      {logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-sm">{emblem.icon}</span>
+                      )}
+                    </div>
+                    <div className="text-left leading-tight">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-[#e5c158] truncate max-w-[170px]">
+                        {businessName}
+                      </span>
+                      <span className="text-[8px] font-semibold text-[#d4af37]/80 block">
+                        {emblem.label}
+                      </span>
+                    </div>
                   </div>
-                  <span className="text-[9px] text-white block">On Your Visit</span>
-                </div>
-              </div>
-            ) : (
-              <div className="relative overflow-hidden rounded-xl border border-[#d8c7af] bg-gradient-to-b from-[#fdfbf7] via-[#f7f2ea] to-[#eee5d8] p-3 text-center shadow-xs transition flex flex-col justify-between min-h-[310px]">
-                {/* Top Section: Circular Medallion Logo + Business Name */}
-                <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#b59363] ring-1 ring-[#dfc698]/40 bg-[#1e140a]">
-                    {logoUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-lg">{emblem.icon}</span>
-                    )}
-                  </div>
-                  <span className="mt-1 text-xs font-bold uppercase tracking-wider text-[#2c1808]">
-                    {businessName}
-                  </span>
-                  <span className="text-[9px] font-semibold text-[#704d28]">
-                    {emblem.label}
-                  </span>
-                </div>
 
-                {/* Middle Section: Occasion Icon + Headline */}
-                <div className="relative z-10 my-1">
-                  <span className="text-xl">{occasionIcon}</span>
-                  <h3 className="mt-0.5 text-xs font-bold text-[#1e1107] leading-snug">
-                    {headline}
-                  </h3>
-                  <p className="font-serif text-[10px] italic text-[#2e1a0b] px-1 mt-1 leading-snug line-clamp-2">
-                    &ldquo;{occasionSubtitle}&rdquo;
-                  </p>
-                </div>
-
-                {/* Bottom Section: Stitched Coupon Box */}
-                <div className="relative z-10 rounded-lg border border-dashed border-[#bda278] bg-[#f8f2e7] p-2 text-center">
-                  <span className="block text-[8px] font-semibold uppercase tracking-wider text-[#42250d]">
-                    VALID {couponValidityDays} DAYS
-                  </span>
-                  <div className="mx-auto my-0.5 max-w-[150px] rounded bg-[#dfc698] py-0.5 px-2 font-mono text-[10px] font-bold text-[#281607] border border-[#cbb189]">
-                    FLAT {discountPercent}% OFF
+                  {/* Middle Section: Occasion Icon + Headline + Subtitle */}
+                  <div className="relative z-10 my-0.5">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span className="text-sm">{occasionIcon}</span>
+                      <h3 className="text-xs font-bold text-white leading-tight">
+                        {headline}
+                      </h3>
+                    </div>
+                    <p className="font-serif text-[9px] italic text-[#f0dfaa] px-1 mt-0.5 leading-tight line-clamp-1">
+                      &ldquo;{occasionSubtitle}&rdquo;
+                    </p>
                   </div>
-                  <span className="text-[9px] font-semibold text-[#1f1105] block">On Your Visit</span>
+
+                  {/* Bottom Section: Compact Coupon Badge */}
+                  <div className="relative z-10 rounded-lg border border-[#d4af37]/40 bg-black/60 px-2 py-1 text-center flex items-center justify-between">
+                    <span className="text-[8px] font-semibold uppercase tracking-wider text-[#e5c158]">
+                      VALID {couponValidityDays}D
+                    </span>
+                    <div className="rounded bg-[#d4af37] px-2 py-0.5 font-mono text-[9px] font-bold text-[#1a1205]">
+                      FLAT {discountPercent}% OFF
+                    </div>
+                    <span className="text-[8px] text-[#e5c158]">On Visit</span>
+                  </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                <div className="relative overflow-hidden rounded-xl border border-[#d8c7af] bg-gradient-to-b from-[#fdfbf7] via-[#f7f2ea] to-[#eee5d8] p-3 text-center shadow-xs transition flex flex-col justify-between h-[190px]">
+                  {/* Top Section: Circular Medallion Logo + Business Name in Compact Row */}
+                  <div className="relative z-10 flex items-center justify-center gap-2">
+                    <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-[#b59363] ring-1 ring-[#dfc698]/40 bg-[#1e140a] shrink-0">
+                      {logoUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-sm">{emblem.icon}</span>
+                      )}
+                    </div>
+                    <div className="text-left leading-tight">
+                      <span className="block text-[11px] font-bold uppercase tracking-wider text-[#2c1808] truncate max-w-[170px]">
+                        {businessName}
+                      </span>
+                      <span className="text-[8px] font-semibold text-[#704d28] block">
+                        {emblem.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Middle Section: Occasion Icon + Headline + Subtitle */}
+                  <div className="relative z-10 my-0.5">
+                    <div className="flex items-center justify-center gap-1.5">
+                      <span className="text-sm">{occasionIcon}</span>
+                      <h3 className="text-xs font-bold text-[#1e1107] leading-tight">
+                        {headline}
+                      </h3>
+                    </div>
+                    <p className="font-serif text-[9px] italic text-[#2e1a0b] px-1 mt-0.5 leading-tight line-clamp-1">
+                      &ldquo;{occasionSubtitle}&rdquo;
+                    </p>
+                  </div>
+
+                  {/* Bottom Section: Stitched Coupon Box */}
+                  <div className="relative z-10 rounded-lg border border-dashed border-[#bda278] bg-[#f8f2e7] px-2 py-1 text-center flex items-center justify-between">
+                    <span className="text-[8px] font-semibold uppercase tracking-wider text-[#42250d]">
+                      VALID {couponValidityDays}D
+                    </span>
+                    <div className="rounded bg-[#dfc698] px-2 py-0.5 font-mono text-[9px] font-bold text-[#281607] border border-[#cbb189]">
+                      FLAT {discountPercent}% OFF
+                    </div>
+                    <span className="text-[8px] font-semibold text-[#42250d]">On Visit</span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setTemplateStyle((prev) => (prev === "royal_gold" ? "ivory_cream" : "royal_gold"))}
+              className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition shrink-0 active:scale-90"
+              title="Next Template"
+            >
+              ›
+            </button>
           </div>
 
-          {/* ONLY 2 SOBER CONTROLS: Mobile Number + Test API */}
-          <div className="mt-3 pt-3 border-t border-slate-100">
-            <div className="flex items-center gap-1.5">
-              <div className="relative flex-1 min-w-0">
+          {/* SLIDER DOTS: 2 Compact Dots to Toggle Between Templates */}
+          <div className="mt-2.5 flex items-center justify-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setTemplateStyle("ivory_cream")}
+              className={`rounded-full transition-all ${
+                templateStyle === "ivory_cream"
+                  ? "h-1.5 w-4 bg-slate-800"
+                  : "h-1.5 w-1.5 bg-slate-300 hover:bg-slate-400"
+              }`}
+              title="Ivory Cream Template"
+            />
+            <button
+              type="button"
+              onClick={() => setTemplateStyle("royal_gold")}
+              className={`rounded-full transition-all ${
+                templateStyle === "royal_gold"
+                  ? "h-1.5 w-4 bg-slate-800"
+                  : "h-1.5 w-1.5 bg-slate-300 hover:bg-slate-400"
+              }`}
+              title="Royal Dark Gold Template"
+            />
+          </div>
+
+          {/* ONLY 2 SOBER CONTROLS: Compact Mobile Number (14-15 chars width) + Test API */}
+          <div className="mt-3 pt-3 border-t border-slate-100 flex flex-col items-center">
+            <div className="flex items-center justify-center gap-1.5">
+              <div className="relative w-[150px]">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400">
                   +91
                 </span>
@@ -676,8 +729,8 @@ export default function OccasionStudio({
                   value={testPhone}
                   maxLength={10}
                   onChange={(e) => setTestPhone(e.target.value.replace(/\D/g, ""))}
-                  placeholder="Mobile number"
-                  className="w-full rounded-lg border border-slate-300 bg-white pl-9 pr-2 py-1.5 text-xs text-slate-900 outline-none focus:border-slate-500 transition"
+                  placeholder="9876543210"
+                  className="w-full rounded-lg border border-slate-300 bg-white pl-9 pr-2 py-1.5 text-xs text-slate-900 outline-none focus:border-slate-500 font-mono transition"
                 />
               </div>
               <button
@@ -692,7 +745,7 @@ export default function OccasionStudio({
 
             {testNotice && (
               <div
-                className={`mt-2 rounded-lg p-2 text-[11px] font-medium ${
+                className={`mt-2 w-full rounded-lg p-2 text-[11px] font-medium text-center ${
                   testNotice.type === "success"
                     ? "bg-slate-100 text-slate-800"
                     : testNotice.type === "pending"

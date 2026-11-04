@@ -5,21 +5,53 @@ import React, { useState } from "react";
 interface Screen08Props {
   onBack?: () => void;
   onSave?: () => void;
+  onSaveOperatingHours?: (hours: {
+    openingTime: string;
+    closingTime: string;
+    festivalMode: boolean;
+    lunchPause: boolean;
+  }) => void;
+  initialOpening?: string;
+  initialClosing?: string;
+  initialFestival?: boolean;
+  initialLunchPause?: boolean;
 }
 
-export default function Screen08OperatingHours({ onBack, onSave }: Screen08Props) {
-  const [festivalMode, setFestivalMode] = useState<boolean>(false);
-  const [lunchPause, setLunchPause] = useState<boolean>(true);
+export default function Screen08OperatingHours({
+  onBack,
+  onSave,
+  onSaveOperatingHours,
+  initialOpening = "08:00 AM",
+  initialClosing = "10:30 PM",
+  initialFestival = false,
+  initialLunchPause = false,
+}: Screen08Props) {
+  const [festivalMode, setFestivalMode] = useState<boolean>(initialFestival);
+  const [lunchPause, setLunchPause] = useState<boolean>(initialLunchPause);
+  const [openingTime] = useState<string>(initialOpening);
+  const [closingTime] = useState<string>(initialClosing);
+  const [saved, setSaved] = useState(false);
 
   const days = [
-    { name: "Monday", open: "10:00 AM", close: "11:00 PM", active: true },
-    { name: "Tuesday", open: "10:00 AM", close: "11:00 PM", active: true },
-    { name: "Wednesday", open: "10:00 AM", close: "11:00 PM", active: true },
-    { name: "Thursday", open: "10:00 AM", close: "11:00 PM", active: true },
-    { name: "Friday", open: "10:00 AM", close: "11:00 PM", active: true },
-    { name: "Saturday", open: "09:30 AM", close: "11:30 PM", active: true },
-    { name: "Sunday", open: "09:30 AM", close: "11:30 PM", active: true },
+    { name: "Monday", open: "08:00 AM", close: "10:30 PM", active: true },
+    { name: "Tuesday", open: "08:00 AM", close: "10:30 PM", active: true },
+    { name: "Wednesday", open: "08:00 AM", close: "10:30 PM", active: true },
+    { name: "Thursday", open: "08:00 AM", close: "10:30 PM", active: true },
+    { name: "Friday", open: "08:00 AM", close: "10:30 PM", active: true },
+    { name: "Saturday", open: "08:00 AM", close: "11:00 PM", active: true },
+    { name: "Sunday", open: "08:00 AM", close: "11:00 PM", active: true },
   ];
+
+  const handleSave = () => {
+    setSaved(true);
+    if (onSaveOperatingHours) {
+      onSaveOperatingHours({ openingTime, closingTime, festivalMode, lunchPause });
+    }
+    setTimeout(() => {
+      setSaved(false);
+      onSave?.();
+    }, 1200);
+  };
 
   return (
     <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-4 text-[#0F172A] font-sans overflow-y-auto">
@@ -53,7 +85,7 @@ export default function Screen08OperatingHours({ onBack, onSave }: Screen08Props
             <button
               type="button"
               onClick={() => setFestivalMode(!festivalMode)}
-              className={`px-3 py-1 rounded-xl text-xs font-bold transition border ${
+              className={`px-3 py-1 rounded-xl text-xs font-bold transition border cursor-pointer ${
                 festivalMode
                   ? "bg-rose-600 text-white border-rose-500 shadow-xs"
                   : "bg-slate-100 text-slate-600 border-slate-300"
@@ -64,7 +96,7 @@ export default function Screen08OperatingHours({ onBack, onSave }: Screen08Props
           </div>
           {festivalMode && (
             <p className="text-[10px] text-rose-700 bg-rose-50 p-2 rounded-xl border border-rose-200">
-              ⚠️ Store will reopen automatically tomorrow at 10:00 AM.
+              ⚠️ Store will reopen automatically tomorrow at 08:00 AM.
             </p>
           )}
         </div>
@@ -72,17 +104,21 @@ export default function Screen08OperatingHours({ onBack, onSave }: Screen08Props
         {/* Afternoon Lunch Kitchen Pause */}
         <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex items-center justify-between">
           <div>
-            <span className="text-xs font-bold text-slate-900 block">Afternoon Kitchen Rest (Split Shift)</span>
-            <span className="text-[10px] text-slate-500">03:30 PM to 04:30 PM Daily Pause</span>
+            <span className="text-xs font-bold text-slate-900 block">Afternoon Rest / Prayer Pause</span>
+            <span className="text-[10px] text-slate-500">02:00 PM to 03:30 PM Daily Pause</span>
           </div>
           <button
             type="button"
             onClick={() => setLunchPause(!lunchPause)}
-            className={`w-9 h-5 rounded-full transition relative p-0.5 ${
+            className={`w-9 h-5 rounded-full transition relative p-0.5 cursor-pointer ${
               lunchPause ? "bg-blue-600" : "bg-slate-300"
             }`}
           >
-            <div className={`w-4 h-4 rounded-full bg-white transition ${lunchPause ? "translate-x-4" : "translate-x-0"}`}></div>
+            <div
+              className={`w-4 h-4 rounded-full bg-white transition ${
+                lunchPause ? "translate-x-4" : "translate-x-0"
+              }`}
+            ></div>
           </button>
         </div>
 
@@ -112,13 +148,19 @@ export default function Screen08OperatingHours({ onBack, onSave }: Screen08Props
 
       {/* Footer */}
       <div className="pt-3">
-        <button
-          type="button"
-          onClick={onSave}
-          className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition"
-        >
-          Save Operating Timings
-        </button>
+        {saved ? (
+          <div className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs text-center shadow-xs">
+            ✓ Operating Timings Saved!
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSave}
+            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
+          >
+            Save Operating Timings
+          </button>
+        )}
       </div>
     </div>
   );

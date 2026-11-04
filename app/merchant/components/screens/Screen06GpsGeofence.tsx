@@ -5,21 +5,61 @@ import React, { useState } from "react";
 interface Screen06Props {
   onBack?: () => void;
   onSave?: () => void;
+  onSaveLocation?: (loc: { radius: number; lat: string; lng: string }) => void;
+  initialRadius?: number;
+  initialLat?: string;
+  initialLng?: string;
 }
 
-export default function Screen06GpsGeofence({ onBack, onSave }: Screen06Props) {
-  const [radius, setRadius] = useState<number>(5.0);
+export default function Screen06GpsGeofence({
+  onBack,
+  onSave,
+  onSaveLocation,
+  initialRadius = 5.0,
+  initialLat = "27.5744",
+  initialLng = "81.5977",
+}: Screen06Props) {
+  const [radius, setRadius] = useState<number>(initialRadius);
   const [detecting, setDetecting] = useState<boolean>(false);
-  const [lat, setLat] = useState("27.5744");
-  const [lng, setLng] = useState("81.5977");
+  const [lat, setLat] = useState(initialLat);
+  const [lng, setLng] = useState(initialLng);
+  const [saved, setSaved] = useState(false);
 
   const handleDetect = () => {
     setDetecting(true);
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setLat(pos.coords.latitude.toFixed(4));
+          setLng(pos.coords.longitude.toFixed(4));
+          setDetecting(false);
+        },
+        () => {
+          // Fallback to Bahraich town coordinates
+          setLat("27.5751");
+          setLng("81.5982");
+          setDetecting(false);
+        },
+        { timeout: 5000 }
+      );
+    } else {
+      setTimeout(() => {
+        setLat("27.5751");
+        setLng("81.5982");
+        setDetecting(false);
+      }, 800);
+    }
+  };
+
+  const handleSave = () => {
+    setSaved(true);
+    if (onSaveLocation) {
+      onSaveLocation({ radius, lat, lng });
+    }
     setTimeout(() => {
-      setLat("27.5751");
-      setLng("81.5982");
-      setDetecting(false);
-    }, 800);
+      setSaved(false);
+      onSave?.();
+    }, 1200);
   };
 
   return (
@@ -47,7 +87,7 @@ export default function Screen06GpsGeofence({ onBack, onSave }: Screen06Props) {
         {/* Map Preview Simulation */}
         <div className="mt-3 relative rounded-2xl overflow-hidden border border-slate-300 shadow-xs h-36 bg-slate-200 flex items-center justify-center">
           <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] opacity-70"></div>
-          
+
           {/* Circular Radius Zone */}
           <div className="w-28 h-28 rounded-full border-2 border-blue-500 bg-blue-500/15 flex items-center justify-center animate-pulse">
             <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs shadow-md">
@@ -62,7 +102,7 @@ export default function Screen06GpsGeofence({ onBack, onSave }: Screen06Props) {
           <button
             type="button"
             onClick={handleDetect}
-            className="absolute bottom-2 right-2 bg-slate-900 hover:bg-slate-800 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-xs transition"
+            className="absolute bottom-2 right-2 bg-slate-900 hover:bg-slate-800 text-white px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-xs transition cursor-pointer"
           >
             {detecting ? "Locating..." : "📍 Re-Detect GPS"}
           </button>
@@ -72,16 +112,16 @@ export default function Screen06GpsGeofence({ onBack, onSave }: Screen06Props) {
         <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-2.5 text-xs">
           <div>
             <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
-              Store Address &amp; Street
+              Store Address &amp; Locality
             </label>
             <p className="font-bold text-slate-900">
-              Shop #4, Opp. KDC Inter College, Civil Lines
+              Civil Lines, Near Indira Gandhi Stadium, Bahraich
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
             <div>
               <span className="text-[10px] text-slate-500 block">Locality</span>
-              <span className="font-bold text-slate-800">KDC Road</span>
+              <span className="font-bold text-slate-800">Civil Lines</span>
             </div>
             <div>
               <span className="text-[10px] text-slate-500 block">City &amp; Pincode</span>
@@ -113,20 +153,26 @@ export default function Screen06GpsGeofence({ onBack, onSave }: Screen06Props) {
             <span>12.0 km (Max Outer)</span>
           </div>
           <p className="text-[10px] text-emerald-700 bg-emerald-50 p-2 rounded-xl border border-emerald-200 leading-tight">
-            ✓ Covers ~42,000 households across Bahraich within an estimated 25-minute delivery window.
+            ✓ Covers ~45,000 households across Bahraich within an estimated 25-minute delivery window.
           </p>
         </div>
       </div>
 
       {/* Footer */}
       <div className="pt-3">
-        <button
-          type="button"
-          onClick={onSave}
-          className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition"
-        >
-          Update Location Coordinates
-        </button>
+        {saved ? (
+          <div className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs text-center shadow-xs">
+            ✓ Location &amp; Radius Updated ({radius.toFixed(1)} KM)
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={handleSave}
+            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition cursor-pointer"
+          >
+            Update Location Coordinates
+          </button>
+        )}
       </div>
     </div>
   );

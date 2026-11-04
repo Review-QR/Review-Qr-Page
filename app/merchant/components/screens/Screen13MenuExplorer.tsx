@@ -7,28 +7,46 @@ interface Screen13Props {
   onAddProduct?: () => void;
   onStockToggle?: () => void;
   onBack?: () => void;
+  liveCatalog?: any[];
+  onToggleItemStock?: (itemId: string, isAvailable: boolean) => void;
+  onDeleteItem?: (itemId: string) => void;
 }
 
 export default function Screen13MenuExplorer({
   onAddProduct,
   onStockToggle,
   onBack,
+  liveCatalog,
+  onToggleItemStock,
+  onDeleteItem,
 }: Screen13Props) {
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(true);
   const [activeCategory, setActiveCategory] = useState("All");
   const [dietFilter, setDietFilter] = useState<"all" | "veg" | "non_veg">("all");
   const [search, setSearch] = useState("");
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState<boolean>(false);
 
-  const categories = ["All", "Beverages", "Snacks", "Sandwiches", "Combos"];
-
-  const items = [
-    { id: 1, name: "Hazelnut Cold Frappe", cat: "Beverages", price: 120, type: "veg", inStock: true, orders: 48 },
-    { id: 2, name: "Paneer Grilled Sandwich", cat: "Sandwiches", price: 100, type: "veg", inStock: true, orders: 36 },
-    { id: 3, name: "Peri-Peri Masala Fries", cat: "Snacks", price: 90, type: "veg", inStock: true, orders: 52 },
-    { id: 4, name: "Dark Chocolate Brownie", cat: "Snacks", price: 80, type: "veg", inStock: false, orders: 19 },
-    { id: 5, name: "Classic Chicken Burger", cat: "Snacks", price: 140, type: "non_veg", inStock: true, orders: 27 },
+  const defaultItems = [
+    { id: "1", name: "Madhur Pure Sugar (5kg Pack)", cat: "Kirana Mandi", price: 215, type: "veg", inStock: true, orders: 48 },
+    { id: "2", name: "Aashirvaad Shudh Chakki Atta (10kg)", cat: "Flour & Grains", price: 410, type: "veg", inStock: true, orders: 36 },
+    { id: "3", name: "Fortune Sunlite Sunflower Oil (1L)", cat: "Oils & Ghee", price: 135, type: "veg", inStock: true, orders: 52 },
+    { id: "4", name: "Tata Salt Vacuum Evaporated (1kg)", cat: "Spices & Salt", price: 28, type: "veg", inStock: true, orders: 19 },
+    { id: "5", name: "Surf Excel Quick Wash Detergent (1kg)", cat: "Cleaning", price: 140, type: "veg", inStock: false, orders: 27 },
   ];
+
+  const items = liveCatalog && liveCatalog.length > 0
+    ? liveCatalog.map((item) => ({
+        id: item.id,
+        name: item.name,
+        cat: item.category || "General",
+        price: Number(item.price) || 0,
+        type: item.item_type === "non_veg" ? "non_veg" : "veg",
+        inStock: Boolean(item.is_available),
+        orders: 24,
+      }))
+    : defaultItems;
+
+  const categories = ["All", ...Array.from(new Set(items.map((i) => i.cat)))];
 
   const filteredItems = items.filter((item) => {
     if (activeCategory !== "All" && item.cat !== activeCategory) return false;
@@ -47,14 +65,8 @@ export default function Screen13MenuExplorer({
               <span className="text-[10px] font-black uppercase text-blue-700 tracking-wider">
                 CATALOG &amp; PRICING MASTER
               </span>
-              <span
-                className={`text-[9px] font-extrabold px-2 py-0.2 rounded-full border ${
-                  isSubscribed
-                    ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                    : "bg-amber-50 text-amber-900 border-amber-300"
-                }`}
-              >
-                {isSubscribed ? "VIP Unlimited" : "Free Tier: 5 of 5 Items"}
+              <span className="text-[9px] font-extrabold px-2 py-0.2 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-300">
+                Live Supabase Synchronized ({items.length} Items)
               </span>
             </div>
             <h1 className="text-xs font-black text-slate-900 leading-tight">
@@ -63,19 +75,17 @@ export default function Screen13MenuExplorer({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* Quick Demo Mode Toggle */}
             <button
               type="button"
-              onClick={() => setIsSubscribed(!isSubscribed)}
-              className="text-[9px] font-bold px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs"
+              onClick={onAddProduct}
+              className="text-[10px] font-black px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white shadow-xs cursor-pointer"
             >
-              {isSubscribed ? "Test Free" : "Test VIP"}
+              + Add Item
             </button>
-
             <button
               type="button"
               onClick={onBack}
-              className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200"
+              className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200 cursor-pointer"
             >
               ← Back
             </button>
@@ -87,57 +97,33 @@ export default function Screen13MenuExplorer({
           <div className="flex-1 relative">
             <input
               type="text"
-              placeholder="Search dishes or items..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-7 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs font-medium bg-white focus:outline-hidden focus:border-blue-600 shadow-2xs"
+              placeholder="Search dishes or items..."
+              className="w-full pl-7 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs text-slate-800 bg-white placeholder-slate-400 focus:outline-hidden focus:border-blue-600"
             />
-            <span className="absolute left-2.5 top-2 text-xs text-slate-400">🔍</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+              🔍
+            </span>
           </div>
 
           <button
             type="button"
-            onClick={() => {
-              if (!isSubscribed) {
-                setIsUpgradeModalOpen(true);
-              } else {
-                onAddProduct?.();
-              }
-            }}
-            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-xs whitespace-nowrap transition flex items-center gap-1"
+            onClick={onStockToggle}
+            className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-bold text-[11px] shadow-2xs whitespace-nowrap cursor-pointer"
           >
-            <span>+ Add Item</span>
-            {!isSubscribed && <span className="text-[10px] opacity-90">🔒</span>}
+            ⚡ Out-of-Stock Switch
           </button>
         </div>
 
-        {/* Free Plan Limit Notice */}
-        {!isSubscribed && (
-          <div className="mt-2 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-2.5 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-sm">⚠️</span>
-              <p className="text-[10px] text-amber-900 font-bold">
-                Free Plan: 5/5 Items Used · Mandi Master Rates locked
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsUpgradeModalOpen(true)}
-              className="text-[10px] font-black text-amber-900 bg-amber-200 hover:bg-amber-300 px-2 py-1 rounded-lg transition"
-            >
-              Unlock 50+ Items (₹49) →
-            </button>
-          </div>
-        )}
-
         {/* Category Filter Pills */}
-        <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-bold">
+        <div className="mt-2 flex items-center gap-1.5 overflow-x-auto pb-1 text-[11px] font-bold [scrollbar-width:none]">
           {categories.map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setActiveCategory(cat)}
-              className={`px-2.5 py-1 rounded-lg whitespace-nowrap transition ${
+              className={`px-2.5 py-1 rounded-lg whitespace-nowrap transition cursor-pointer ${
                 activeCategory === cat
                   ? "bg-slate-900 text-white shadow-xs"
                   : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
@@ -154,32 +140,25 @@ export default function Screen13MenuExplorer({
             <button
               type="button"
               onClick={() => setDietFilter("all")}
-              className={`px-2 py-0.5 rounded ${dietFilter === "all" ? "bg-slate-200 text-slate-900" : "text-slate-500"}`}
+              className={`px-2 py-0.5 rounded cursor-pointer ${dietFilter === "all" ? "bg-slate-200 text-slate-900" : "text-slate-500"}`}
             >
               All Types
             </button>
             <button
               type="button"
               onClick={() => setDietFilter("veg")}
-              className={`px-2 py-0.5 rounded flex items-center gap-1 ${dietFilter === "veg" ? "bg-emerald-100 text-emerald-900" : "text-slate-500"}`}
+              className={`px-2 py-0.5 rounded flex items-center gap-1 cursor-pointer ${dietFilter === "veg" ? "bg-emerald-100 text-emerald-900" : "text-slate-500"}`}
             >
               <span>🟢</span> Veg
             </button>
             <button
               type="button"
               onClick={() => setDietFilter("non_veg")}
-              className={`px-2 py-0.5 rounded flex items-center gap-1 ${dietFilter === "non_veg" ? "bg-rose-100 text-rose-900" : "text-slate-500"}`}
+              className={`px-2 py-0.5 rounded flex items-center gap-1 cursor-pointer ${dietFilter === "non_veg" ? "bg-rose-100 text-rose-900" : "text-slate-500"}`}
             >
               <span>🔴</span> Non-Veg
             </button>
           </div>
-          <button
-            type="button"
-            onClick={onStockToggle}
-            className="text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 font-bold hover:bg-amber-100"
-          >
-            ⚡ Bulk 86-Stock
-          </button>
         </div>
 
         {/* Items List */}
@@ -199,29 +178,32 @@ export default function Screen13MenuExplorer({
                     <span className="font-bold text-slate-800 font-mono">₹{item.price}</span>
                     <span>•</span>
                     <span>{item.cat}</span>
-                    <span>•</span>
-                    <span className="text-emerald-700 font-semibold">{item.orders} sold</span>
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <span
-                  className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                <button
+                  type="button"
+                  onClick={() => onToggleItemStock?.(item.id, !item.inStock)}
+                  className={`px-2 py-0.5 rounded-full text-[9px] font-bold cursor-pointer transition ${
                     item.inStock
-                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                      : "bg-rose-50 text-rose-800 border border-rose-200"
+                      ? "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+                      : "bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100"
                   }`}
                 >
                   {item.inStock ? "In Stock" : "Out of Stock"}
-                </span>
-                <button
-                  type="button"
-                  onClick={onAddProduct}
-                  className="p-1 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100"
-                >
-                  ✏️
                 </button>
+                {onDeleteItem && (
+                  <button
+                    type="button"
+                    onClick={() => onDeleteItem(item.id)}
+                    className="p-1 rounded-lg text-slate-300 hover:text-rose-600 hover:bg-rose-50 cursor-pointer transition"
+                    title="Delete item"
+                  >
+                    🗑️
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -230,7 +212,7 @@ export default function Screen13MenuExplorer({
 
       {/* Footer Summary */}
       <div className="pt-2 text-center text-[10px] text-slate-500 font-mono">
-        5 Dishes Active • Synchronized with Consumer Hyperlocal Ordering App
+        {items.length} Products Synchronized with Hyperlocal Consumer Super-App
       </div>
 
       {/* Universal Upgrade Modal */}

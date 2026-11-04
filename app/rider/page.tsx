@@ -1,5 +1,41 @@
 "use client";
 
+// 🛡️ MOBILE TUNNEL RELOAD SHIELD
+// When running over Cloudflare Tunnel / mobile proxy, suppress Next.js dev HMR WebSocket disconnect loops
+// which aggressively invoke window.location.reload() every 3-4 seconds.
+if (typeof window !== "undefined") {
+  try {
+    const origWS = window.WebSocket;
+    if (origWS && !(window as any).__trustit_shield_installed) {
+      (window as any).__trustit_shield_installed = true;
+      (window as any).WebSocket = function (url: string | URL, protocols?: string | string[]) {
+        const urlStr = String(url);
+        // Intercept Next.js dev HMR WebSockets
+        if (
+          urlStr.includes("/_next/hmr") ||
+          urlStr.includes("/_next/webpack-hmr") ||
+          urlStr.includes("/_next/turbopack-hmr")
+        ) {
+          // Resilient dummy WebSocket that reports OPEN (readyState 1) and never triggers close/error
+          return {
+            readyState: 1, // OPEN
+            send: () => {},
+            close: () => {},
+            addEventListener: () => {},
+            removeEventListener: () => {},
+            dispatchEvent: () => true,
+            onopen: null,
+            onclose: null,
+            onerror: null,
+            onmessage: null,
+          } as any;
+        }
+        return new origWS(url, protocols);
+      };
+    }
+  } catch {}
+}
+
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRiderWorkflow } from "@/app/rider/hooks/useRiderWorkflow";
@@ -137,7 +173,18 @@ export default function StandaloneRiderProductionApp() {
   const [isBatteryCharging, setIsBatteryCharging] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(false);
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(4.2);
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number }>({ lat: 27.5745, lng: 81.5965 });
+  const [telemetrySyncState, setTelemetrySyncState] = useState<"synced" | "syncing" | "idle">("synced");
+  const [lastSyncTime, setLastSyncTime] = useState<string>("Active");
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showQuickHub, setShowQuickHub] = useState<boolean>(false);
+
+  // Background Telemetry Throttling Refs (Guarantees zero re-renders of the watcher)
+  const lastHeartbeatTimeRef = useRef<number>(0);
+  const batteryLevelRef = useRef<number>(batteryLevel);
+  useEffect(() => {
+    batteryLevelRef.current = batteryLevel;
+  }, [batteryLevel]);
 
   // PWA Install & Lockscreen Push State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -667,6 +714,58 @@ export default function StandaloneRiderProductionApp() {
           </button>
         </div>
       </header>
+
+      {/* ── Mobile 1-Tap Hardware Quick-Test Strip ── */}
+      <div className="bg-[#0B132B] border-b border-blue-900/60 px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none [&::-webkit-scrollbar]:hidden text-[11px] font-bold z-30 shrink-0 select-none">
+        <span className="text-slate-400 text-[9px] uppercase tracking-wider shrink-0 mr-1">
+          1-Tap Test:
+        </span>
+        <button
+          type="button"
+          onClick={() => setCurrentScreenId(4)}
+          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
+        >
+          <span>🤳 Selfie Cam (S04)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setCurrentScreenId(27)}
+          className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
+        >
+          <span>🪖 Helmet Check (S27)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            triggerIncomingOrderRadar(false);
+            setCurrentScreenId(10);
+          }}
+          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
+        >
+          <span>🚨 Loud Siren (S10)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setCurrentScreenId(40)}
+          className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
+        >
+          <span>🗺️ GPS HUD (S40)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setCurrentScreenId(13)}
+          className="px-2.5 py-1 rounded-lg bg-teal-600 hover:bg-teal-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
+        >
+          <span>🚪 Doorstep OTP (S13)</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setCurrentScreenId(15)}
+          className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
+        >
+          <span>💰 Passbook (S15)</span>
+        </button>
+      </div>
 
       {/* ── Native PWA Install Banner ── */}
       {showInstallBanner && (
