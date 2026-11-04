@@ -1,0 +1,25 @@
+{
+  "businessId": "m_9118643415_0601",
+  "storeName": "Shri Balaji Daily Needs & General Store",
+  "ownerName": "Aman Sharma",
+  "businessCategory": "kirana",
+  "phone": "+919118643415",
+  "address": "Civil Lines, Near Indira Gandhi Stadium, Bahraich",
+  "city": "Bahraich",
+  "isStoreOnline": true,
+  "latitude": 27.5744,
+  "longitude": 81.5977,
+  "deliveryRadiusKm": 5.5,
+  "openingTime": "08:00 AM",
+  "closingTime": "10:30 PM",
+  "googlePlaceId": "ChIJ_TrustitShriBalajiBahraich",
+  "reviewShortLink": "https://trustitreview.com/r/m_9118643415_0601",
+  "smartGatingMinStars": 4,
+  "bankAccount": {
+    "accountNumberMask": "•••• •••• 4091",
+    "ifsc": "SBIN0000024",
+    "holderName": "Shri Balaji Daily Needs",
+    "isVerified": true
+  },
+  "lastUpdatedAt": "2026-11-04T04:17:48.436Z"
+}
