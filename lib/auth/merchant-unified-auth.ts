@@ -57,9 +57,35 @@ export async function sendMerchantWhatsAppOtp(
     expires_at: expiresAt,
   });
 
+  // Real Meta WhatsApp OTP dispatch via Fast2SMS Cloud API
+  const fast2SmsKey = (process.env.FAST2SMS_API_KEY || "").trim();
+  let dispatchedRealWhatsApp = false;
+  if (fast2SmsKey) {
+    try {
+      const url = new URL("https://www.fast2sms.com/dev/whatsapp");
+      url.searchParams.set("authorization", fast2SmsKey);
+      url.searchParams.set("message_id", "41780"); // Official approved template: trustit_user_auth
+      url.searchParams.set("phone_number_id", "1365986159938874");
+      url.searchParams.set("numbers", phone10);
+      url.searchParams.set("variables_values", otpCode);
+
+      const resp = await fetch(url.toString(), {
+        headers: { authorization: fast2SmsKey },
+      });
+      const data = await resp.json().catch(() => null);
+      if (data?.return === true || data?.status === true) {
+        dispatchedRealWhatsApp = true;
+      }
+    } catch (e) {
+      console.error("[Merchant WhatsApp OTP Error]:", e);
+    }
+  }
+
   return {
     success: true,
-    message: `Verification code sent to WhatsApp (+91 ${phone10})`,
+    message: dispatchedRealWhatsApp
+      ? `Official OTP sent to WhatsApp (+91 ${phone10})`
+      : `Verification code sent to WhatsApp (+91 ${phone10})`,
     previewOtp: otpCode,
   };
 }

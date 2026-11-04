@@ -159,7 +159,6 @@ export default function MerchantNativeAppShell({
   const toggleStoreStatus = async () => {
     const next = !isStoreOnline;
     setIsStoreOnline(next);
-    merchantAudio.playDingDong();
     showToast(next ? "🟢 Dukaan ab ONLINE hai (Orders Active)" : "🔴 Dukaan ab OFFLINE hai (Orders Paused)");
     try {
       await fetch("/api/merchant/app-operations", {
@@ -205,7 +204,6 @@ export default function MerchantNativeAppShell({
 
   // 3. Accept Incoming Order
   const handleAcceptOrder = async (prepMins = 20) => {
-    merchantAudio.playCashRegister();
     showToast(`Order Accepted! Cooking Prep Time: ${prepMins} mins`);
     const orderId = activeIncomingOrder?.id || "ORD-7783-09";
     try {
@@ -245,7 +243,6 @@ export default function MerchantNativeAppShell({
 
   // 5. Add Product Handler
   const handleAddProduct = async (productData: any) => {
-    merchantAudio.playCashRegister();
     showToast(`"${productData.name}" item published to customer app!`);
     try {
       await fetch("/api/merchant/app-operations", {
@@ -260,7 +257,6 @@ export default function MerchantNativeAppShell({
 
   // 6. Toggle Stock Handler
   const handleToggleItemStock = async (itemId: string | number, isAvailable: boolean) => {
-    merchantAudio.playDingDong();
     showToast(isAvailable ? "Item marked IN-STOCK" : "Item marked OUT-OF-STOCK");
     try {
       await fetch("/api/merchant/app-operations", {
@@ -409,7 +405,6 @@ export default function MerchantNativeAppShell({
           <button
             type="button"
             onClick={() => {
-              merchantAudio.playDingDong();
               setActiveSubScreen(null);
             }}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black transition border border-slate-200 active:scale-95"
@@ -455,7 +450,6 @@ export default function MerchantNativeAppShell({
             <Screen11KotThermalReceipt
               onBack={() => setActiveSubScreen(null)}
               onPrintDone={() => {
-                merchantAudio.playDingDong();
                 showToast("Thermal KOT Print command dispatched!");
                 setActiveSubScreen(null);
               }}
@@ -465,7 +459,6 @@ export default function MerchantNativeAppShell({
             <Screen12RiderDispatchModal
               onBack={() => setActiveSubScreen(null)}
               onRiderAssigned={() => {
-                merchantAudio.playDingDong();
                 showToast("Rider assigned to order!");
                 setActiveSubScreen(null);
               }}
@@ -631,7 +624,6 @@ export default function MerchantNativeAppShell({
             <ScreenK02ParchaOrderViewer
               onBack={() => setActiveSubScreen(null)}
               onConfirmBill={() => {
-                merchantAudio.playCashRegister();
                 showToast("Parcha bill sent to customer WhatsApp!");
                 setActiveSubScreen(null);
               }}
@@ -676,7 +668,6 @@ export default function MerchantNativeAppShell({
             <ScreenS02LiveChairTokenQueue
               onBack={() => setActiveSubScreen(null)}
               onCallNext={() => {
-                merchantAudio.playDingDong();
                 showToast("Token #14 called for Haircut!");
               }}
             />
@@ -698,7 +689,6 @@ export default function MerchantNativeAppShell({
             <ScreenC02WashingBayQueue
               onBack={() => setActiveSubScreen(null)}
               onCompleteWash={() => {
-                merchantAudio.playDingDong();
                 showToast("Bay 1 vehicle wash inspection passed!");
                 setActiveSubScreen(null);
               }}
@@ -1230,7 +1220,6 @@ export default function MerchantNativeAppShell({
             <button
               type="button"
               onClick={() => {
-                merchantAudio.playDingDong();
                 setIsAuthenticated(false);
                 setAuthStep("login");
                 showToast("Merchant logged out successfully.");
@@ -1283,7 +1272,6 @@ export default function MerchantNativeAppShell({
               if (details?.category) setStoreCategory(details.category as MerchantCategory);
               setIsAuthenticated(true);
               setActiveTab("cockpit");
-              merchantAudio.playCashRegister();
               showToast(`Dukaan "${details?.storeName || storeName}" safalta se register ho gayi!`);
             }}
           />
@@ -1297,7 +1285,6 @@ export default function MerchantNativeAppShell({
               if (details?.storeName) setStoreName(details.storeName);
               setIsAuthenticated(true);
               setActiveTab("cockpit");
-              merchantAudio.playDingDong();
               showToast("Swagatam! Merchant Console me aapka swagat hai.");
             }}
           />
@@ -1416,7 +1403,6 @@ export default function MerchantNativeAppShell({
               <button
                 type="button"
                 onClick={() => {
-                  merchantAudio.playDingDong();
                   setActiveSubScreen(null);
                   setActiveTab("cockpit");
                 }}
@@ -1434,7 +1420,6 @@ export default function MerchantNativeAppShell({
               <button
                 type="button"
                 onClick={() => {
-                  merchantAudio.playDingDong();
                   setActiveSubScreen(null);
                   setActiveTab("orders");
                 }}
@@ -1457,7 +1442,6 @@ export default function MerchantNativeAppShell({
               <button
                 type="button"
                 onClick={() => {
-                  merchantAudio.playDingDong();
                   setActiveSubScreen(null);
                   setActiveTab("menu");
                 }}
@@ -1475,7 +1459,6 @@ export default function MerchantNativeAppShell({
               <button
                 type="button"
                 onClick={() => {
-                  merchantAudio.playDingDong();
                   setActiveSubScreen(null);
                   setActiveTab("standee");
                 }}
@@ -1493,7 +1476,6 @@ export default function MerchantNativeAppShell({
               <button
                 type="button"
                 onClick={() => {
-                  merchantAudio.playDingDong();
                   setActiveSubScreen(null);
                   setActiveTab("more");
                 }}
@@ -1577,7 +1559,6 @@ export default function MerchantNativeAppShell({
                 else if (cat === "salon") setStoreName("Looks Unisex Salon & Spa");
                 else if (cat === "carwash") setStoreName("SpeedX Auto Foam Detailing");
                 else setStoreName("Golden Blossom Cafe & Dining");
-                merchantAudio.playDingDong();
                 showToast(`Switched to ${cat.toUpperCase()} Cockpit`);
               }}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition capitalize ${
@@ -1621,7 +1602,6 @@ export default function MerchantNativeAppShell({
           <button
             type="button"
             onClick={() => {
-              merchantAudio.playDingDong();
               setIsAuthenticated(!isAuthenticated);
               setAuthStep(isAuthenticated ? "login" : "login");
             }}

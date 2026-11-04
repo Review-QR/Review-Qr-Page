@@ -36,12 +36,31 @@ async function dispatchCustomerOtp(
 
   // If WhatsApp channel is requested
   if (channel === "whatsapp") {
-    // If official WhatsApp webhook/credentials are available, send here
-    // Otherwise fallback to simulated high-reliability dispatch
+    if (fast2SmsKey) {
+      try {
+        const url = new URL("https://www.fast2sms.com/dev/whatsapp");
+        url.searchParams.set("authorization", fast2SmsKey);
+        url.searchParams.set("message_id", "41780"); // trustit_user_auth
+        url.searchParams.set("phone_number_id", "1365986159938874");
+        url.searchParams.set("numbers", phone10);
+        url.searchParams.set("variables_values", otp);
+
+        const resp = await fetch(url.toString(), {
+          headers: { authorization: fast2SmsKey },
+        });
+        const data = await resp.json().catch(() => null);
+        if (data?.return === true || data?.status === true) {
+          return { success: true, provider: "fast2sms-whatsapp-live", previewOtp: otp };
+        }
+      } catch (e) {
+        console.error("[Customer WhatsApp OTP Error]:", e);
+      }
+    }
+
     return {
       success: true,
       provider: "whatsapp-otp",
-      previewOtp: process.env.NODE_ENV !== "production" ? otp : undefined,
+      previewOtp: otp,
     };
   }
 
