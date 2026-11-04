@@ -4,15 +4,24 @@ import React, { useState } from "react";
 
 interface Screen11Props {
   onBack?: () => void;
+  onPrintDone?: () => void;
 }
 
-export default function Screen11KotThermalReceipt({ onBack }: Screen11Props) {
+export default function Screen11KotThermalReceipt({ onBack, onPrintDone }: Screen11Props) {
   const [printPaper, setPrintPaper] = useState<"80mm" | "58mm">("80mm");
   const [printed, setPrinted] = useState(false);
 
   const handlePrint = () => {
     setPrinted(true);
-    setTimeout(() => setPrinted(false), 2000);
+    if (typeof window !== "undefined") {
+      try {
+        window.print();
+      } catch {}
+    }
+    setTimeout(() => {
+      setPrinted(false);
+      onPrintDone?.();
+    }, 1500);
   };
 
   return (

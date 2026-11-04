@@ -112,6 +112,12 @@ export default function MerchantNativeAppShell({
   const [isStoreOnline, setIsStoreOnline] = useState<boolean>(true);
   const [unreadOrders, setUnreadOrders] = useState<number>(2);
 
+  // Live Data State
+  const [liveOrders, setLiveOrders] = useState<any[]>([]);
+  const [liveCatalog, setLiveCatalog] = useState<any[]>([]);
+  const [todayGrossEarnings, setTodayGrossEarnings] = useState<number>(8450);
+  const [activeIncomingOrder, setActiveIncomingOrder] = useState<any>(null);
+
   // Navigation State
   const [activeTab, setActiveTab] = useState<PrimaryTab>("cockpit");
   const [activeSubScreen, setActiveSubScreen] = useState<string | null>(null);
@@ -124,23 +130,146 @@ export default function MerchantNativeAppShell({
   // Notification helper
   const showToast = (msg: string) => {
     setStatusNotification(msg);
-    setTimeout(() => setStatusNotification(null), 3000);
+    setTimeout(() => setStatusNotification(null), 3500);
   };
 
-  // Sound triggers
-  const toggleStoreStatus = () => {
+  // Fetch Dashboard & Live Orders from Supabase
+  const fetchDashboard = async () => {
+    try {
+      const res = await fetch("/api/merchant/app-operations");
+      const data = await res.json();
+      if (data.success) {
+        if (data.business?.name) setStoreName(data.business.name);
+        if (data.business?.is_outlet_open !== undefined) setIsStoreOnline(data.business.is_outlet_open);
+        if (data.orders) setLiveOrders(data.orders);
+        if (data.catalog) setLiveCatalog(data.catalog);
+        if (data.stats?.todayEarnings) setTodayGrossEarnings(data.stats.todayEarnings);
+        if (data.stats?.pendingCount !== undefined) setUnreadOrders(data.stats.pendingCount);
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+    const timer = setInterval(fetchDashboard, 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // 1. Toggle Store Online / Offline Status
+  const toggleStoreStatus = async () => {
     const next = !isStoreOnline;
     setIsStoreOnline(next);
     merchantAudio.playDingDong();
     showToast(next ? "🟢 Dukaan ab ONLINE hai (Orders Active)" : "🔴 Dukaan ab OFFLINE hai (Orders Paused)");
+    try {
+      await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "toggle_outlet", data: { isOpen: next } }),
+      });
+    } catch {}
   };
 
-  const triggerTestSiren = () => {
+  // 2. Incoming Siren Alert & Real Simulation Order Trigger
+  const triggerTestSiren = async () => {
     setIsSirenActive(true);
-    merchantAudio.playIncomingOrderSiren(6);
+    merchantAudio.playIncomingOrderSiren(7);
+    showToast("🚨 Incoming Order Siren Alert Triggered!");
+    try {
+      const res = await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create_sample_order",
+          data: {
+            customerName: "Aman Sharma",
+            customerPhone: "9118643415",
+            customerAddress: "Civil Lines near Gandhi Park, Bahraich",
+            items: [
+              { name: storeCategory === "kirana" ? "Sharbati Chakki Atta (5kg)" : "Special Shahi Paneer", quantity: 1, price: 240 },
+              { name: storeCategory === "kirana" ? "Madhur Sugar (2kg)" : "Butter Naan (2 pcs)", quantity: 2, price: 90 },
+            ],
+          },
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.order) {
+        setActiveIncomingOrder(data.order);
+        setUnreadOrders((prev) => prev + 1);
+        fetchDashboard();
+      }
+    } catch {}
     setActiveSubScreen("s02");
-    showToast("🚨 Incoming Order Kitchen Siren Alert!");
-    setTimeout(() => setIsSirenActive(false), 6000);
+    setTimeout(() => setIsSirenActive(false), 7000);
+  };
+
+  // 3. Accept Incoming Order
+  const handleAcceptOrder = async (prepMins = 20) => {
+    merchantAudio.playCashRegister();
+    showToast(`Order Accepted! Cooking Prep Time: ${prepMins} mins`);
+    const orderId = activeIncomingOrder?.id || "ORD-7783-09";
+    try {
+      await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "order_accept",
+          orderId,
+          data: { prepTimeMinutes: prepMins },
+        }),
+      });
+      fetchDashboard();
+    } catch {}
+    setActiveSubScreen(null);
+    setActiveTab("orders");
+  };
+
+  // 4. Reject Incoming Order
+  const handleRejectOrder = async (reason = "Kitchen Rush") => {
+    showToast("Order Declined.");
+    const orderId = activeIncomingOrder?.id || "ORD-7783-09";
+    try {
+      await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "order_reject",
+          orderId,
+          data: { reason },
+        }),
+      });
+      fetchDashboard();
+    } catch {}
+    setActiveSubScreen(null);
+  };
+
+  // 5. Add Product Handler
+  const handleAddProduct = async (productData: any) => {
+    merchantAudio.playCashRegister();
+    showToast(`"${productData.name}" item published to customer app!`);
+    try {
+      await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add_product", data: productData }),
+      });
+      fetchDashboard();
+    } catch {}
+    setActiveSubScreen(null);
+  };
+
+  // 6. Toggle Stock Handler
+  const handleToggleItemStock = async (itemId: string | number, isAvailable: boolean) => {
+    merchantAudio.playDingDong();
+    showToast(isAvailable ? "Item marked IN-STOCK" : "Item marked OUT-OF-STOCK");
+    try {
+      await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "toggle_item_stock", itemId, data: { isAvailable } }),
+      });
+      fetchDashboard();
+    } catch {}
   };
 
   // Title formatting helper
@@ -303,21 +432,14 @@ export default function MerchantNativeAppShell({
         <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {activeSubScreen === "s02" && (
             <Screen02IncomingOrderSiren
-              onAccept={() => {
-                merchantAudio.playCashRegister();
-                setActiveSubScreen("s09");
-                setActiveTab("orders");
-              }}
-              onDecline={() => setActiveSubScreen(null)}
+              onAccept={handleAcceptOrder}
+              onDecline={() => handleRejectOrder("Kitchen Rush")}
               onBack={() => setActiveSubScreen(null)}
             />
           )}
           {activeSubScreen === "s03" && (
             <Screen03UrgentQueueDrawer
-              onAcceptOrder={() => {
-                setActiveSubScreen("s09");
-                setActiveTab("orders");
-              }}
+              onAcceptOrder={handleAcceptOrder}
               onOpenSiren={() => setActiveSubScreen("s02")}
               onBack={() => setActiveSubScreen(null)}
             />
@@ -344,7 +466,7 @@ export default function MerchantNativeAppShell({
               onBack={() => setActiveSubScreen(null)}
               onRiderAssigned={() => {
                 merchantAudio.playDingDong();
-                showToast("Rider assigned to order #TR-8821!");
+                showToast("Rider assigned to order!");
                 setActiveSubScreen(null);
               }}
             />
@@ -352,15 +474,15 @@ export default function MerchantNativeAppShell({
           {activeSubScreen === "s14" && (
             <Screen14AddProductModal
               onBack={() => setActiveSubScreen(null)}
-              onProductSaved={() => {
-                merchantAudio.playCashRegister();
-                showToast("Naya item catalog me safalta se jud gaya!");
-                setActiveSubScreen(null);
-              }}
+              onSaveProduct={handleAddProduct}
             />
           )}
           {activeSubScreen === "s15" && (
-            <Screen15OutOfStockSwitcher onBack={() => setActiveSubScreen(null)} />
+            <Screen15OutOfStockSwitcher
+              catalogItems={liveCatalog}
+              onToggleItem={handleToggleItemStock}
+              onBack={() => setActiveSubScreen(null)}
+            />
           )}
           {activeSubScreen === "s16" && (
             <Screen16CategoryMasterPreset onBack={() => setActiveSubScreen(null)} />
@@ -718,9 +840,13 @@ export default function MerchantNativeAppShell({
         {/* Master Kanban Orders Board */}
         <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Screen09OrdersMasterBoard
-            onOpenOrderDetail={() => setActiveSubScreen("s10")}
-            onOpenKot={() => setActiveSubScreen("s11")}
-            onOpenRiderDispatch={() => setActiveSubScreen("s12")}
+            liveOrders={liveOrders}
+            onInspectOrder={() => setActiveSubScreen("s10")}
+            onPrintKot={() => {
+              handleOrderReady(liveOrders[0]?.id || "ord_sample");
+              setActiveSubScreen("s11");
+            }}
+            onDispatchRider={() => setActiveSubScreen("s12")}
           />
         </div>
       </div>
@@ -921,9 +1047,11 @@ export default function MerchantNativeAppShell({
             </div>
             <div className="mt-3 flex items-baseline justify-between">
               <div>
-                <span className="text-2xl font-black text-slate-900">₹8,450.00</span>
+                <span className="text-2xl font-black text-slate-900">
+                  ₹{todayGrossEarnings.toLocaleString("en-IN")}.00
+                </span>
                 <span className="text-[11px] font-bold text-slate-500 block">
-                  34 Orders · Auto-settled via NEFT / UPI
+                  {liveOrders.length || 34} Orders · 0% Fee Auto-Settled via NEFT / UPI
                 </span>
               </div>
               <button

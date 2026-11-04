@@ -4,20 +4,38 @@ import React, { useState } from "react";
 
 interface Screen15Props {
   onBack?: () => void;
+  catalogItems?: Array<{ id: string | number; name: string; category?: string; is_available?: boolean }>;
+  onToggleItem?: (id: string | number, isAvailable: boolean) => void;
 }
 
-export default function Screen15OutOfStockSwitcher({ onBack }: Screen15Props) {
-  const [items, setItems] = useState([
-    { id: 1, name: "Hazelnut Cold Frappe", cat: "Beverages", inStock: true },
-    { id: 2, name: "Paneer Grilled Sandwich", cat: "Sandwiches", inStock: true },
-    { id: 3, name: "Dark Chocolate Brownie", cat: "Desserts", inStock: false },
-    { id: 4, name: "Classic French Fries", cat: "Snacks", inStock: true },
-    { id: 5, name: "Cold Coffee with Ice Cream", cat: "Beverages", inStock: true },
-  ]);
+export default function Screen15OutOfStockSwitcher({ onBack, catalogItems, onToggleItem }: Screen15Props) {
+  const initialList = catalogItems && catalogItems.length > 0
+    ? catalogItems.map((c) => ({
+        id: c.id,
+        name: c.name,
+        cat: c.category || "General",
+        inStock: c.is_available !== false,
+      }))
+    : [
+        { id: 1, name: "Special Shahi Paneer", cat: "Main Course", inStock: true },
+        { id: 2, name: "Butter Naan", cat: "Breads", inStock: true },
+        { id: 3, name: "Special Kaju Katli", cat: "Sweets", inStock: true },
+        { id: 4, name: "Desi Ghee Gulab Jamun", cat: "Sweets", inStock: true },
+        { id: 5, name: "Spongy Rasgulla", cat: "Sweets", inStock: false },
+      ];
 
-  const toggleStock = (id: number) => {
+  const [items, setItems] = useState(initialList);
+
+  const toggleStock = (id: string | number) => {
     setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, inStock: !item.inStock } : item))
+      prev.map((item) => {
+        if (item.id === id) {
+          const nextStock = !item.inStock;
+          onToggleItem?.(id, nextStock);
+          return { ...item, inStock: nextStock };
+        }
+        return item;
+      })
     );
   };
 

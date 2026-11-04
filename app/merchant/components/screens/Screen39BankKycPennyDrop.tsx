@@ -13,17 +13,29 @@ export default function Screen39BankKycPennyDrop({
 }: Screen39Props) {
   const [accountNo, setAccountNo] = useState("50100482914091");
   const [ifsc, setIfsc] = useState("HDFC0001892");
-  const [beneficiary, setBeneficiary] = useState("SUPRIYA VERMA T/A GOLDEN BLOSSOM");
+  const [beneficiary, setBeneficiary] = useState("RAMESH GUPTA T/A GUPTA STORE");
   const [checking, setChecking] = useState(false);
   const [verified, setVerified] = useState(true);
 
-  const handlePennyDrop = () => {
+  const handlePennyDrop = async () => {
     setChecking(true);
-    setTimeout(() => {
-      setChecking(false);
+    try {
+      await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify_bank_kyc",
+          data: {
+            accountNumber: accountNo,
+            ifsc,
+            holderName: beneficiary,
+          },
+        }),
+      });
       setVerified(true);
       onVerifySuccess?.();
-    }, 1500);
+    } catch {}
+    setChecking(false);
   };
 
   return (

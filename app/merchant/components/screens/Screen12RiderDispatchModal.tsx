@@ -5,6 +5,7 @@ import React, { useState } from "react";
 interface Screen12Props {
   onBack?: () => void;
   onConfirmDispatch?: () => void;
+  onRiderAssigned?: () => void;
 }
 
 export default function Screen12RiderDispatchModal({
@@ -153,7 +154,10 @@ export default function Screen12RiderDispatchModal({
       <div className="pt-3">
         <button
           type="button"
-          onClick={onConfirmDispatch}
+          onClick={() => {
+            onConfirmDispatch?.();
+            onRiderAssigned?.();
+          }}
           className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition"
         >
           Confirm Package Handover &amp; Dispatch

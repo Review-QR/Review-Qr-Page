@@ -5,15 +5,35 @@ import React, { useState } from "react";
 interface Screen14Props {
   onBack?: () => void;
   onSave?: () => void;
+  onSaveProduct?: (product: { name: string; price: number; category: string; itemType: string; prepTime: string }) => void;
 }
 
-export default function Screen14AddProductModal({ onBack, onSave }: Screen14Props) {
-  const [title, setTitle] = useState("Hazelnut Cold Frappe");
-  const [price, setPrice] = useState("120");
-  const [mrp, setMrp] = useState("150");
-  const [category, setCategory] = useState("Beverages");
-  const [prepTime, setPrepTime] = useState("10");
+export default function Screen14AddProductModal({ onBack, onSave, onSaveProduct }: Screen14Props) {
+  const [title, setTitle] = useState("Special Paneer Tikka");
+  const [price, setPrice] = useState("220");
+  const [mrp, setMrp] = useState("260");
+  const [category, setCategory] = useState("Starters");
+  const [prepTime, setPrepTime] = useState("15");
   const [itemType, setItemType] = useState<"veg" | "non_veg" | "egg">("veg");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!title.trim() || !price) return;
+    setIsSaving(true);
+    const itemData = {
+      name: title.trim(),
+      price: Number(price),
+      category: category.trim(),
+      itemType,
+      prepTime,
+    };
+    if (onSaveProduct) {
+      onSaveProduct(itemData);
+    } else if (onSave) {
+      onSave();
+    }
+    setIsSaving(false);
+  };
 
   return (
     <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto">
@@ -167,10 +187,11 @@ export default function Screen14AddProductModal({ onBack, onSave }: Screen14Prop
       <div className="pt-2">
         <button
           type="button"
-          onClick={onSave}
-          className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition"
+          disabled={isSaving}
+          onClick={handleSubmit}
+          className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition disabled:opacity-50"
         >
-          Save &amp; Publish Item to Consumer App
+          {isSaving ? "Saving to Database..." : "Save & Publish Item to Consumer App"}
         </button>
       </div>
     </div>

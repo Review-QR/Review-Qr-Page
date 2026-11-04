@@ -15,6 +15,33 @@ export default function ScreenK03KiranaMasterRates({ onBack, onSave }: ScreenK03
     { item: "Desi Arhar Dal (Tuvar)", unit: "Per Kg", rate: 156, mandiTrend: "Stable" },
     { item: "India Gate Basmati Rice", unit: "Per Kg", rate: 95, mandiTrend: "Stable" },
   ]);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleRateChange = (idx: number, newRate: number) => {
+    setRates((prev) => {
+      const copy = [...prev];
+      copy[idx] = { ...copy[idx], rate: newRate };
+      return copy;
+    });
+  };
+
+  const handleSaveRates = async () => {
+    setIsSaving(true);
+    try {
+      await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_mandi_rates",
+          data: {
+            rates: rates.map((r) => ({ name: r.item, price: r.rate })),
+          },
+        }),
+      });
+      onSave?.();
+    } catch {}
+    setIsSaving(false);
+  };
 
   return (
     <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -74,7 +101,8 @@ export default function ScreenK03KiranaMasterRates({ onBack, onSave }: ScreenK03
                   <span className="text-xs font-bold text-slate-500">₹</span>
                   <input
                     type="number"
-                    defaultValue={r.rate}
+                    value={r.rate}
+                    onChange={(e) => handleRateChange(i, Number(e.target.value) || 0)}
                     className="w-14 px-2 py-1 rounded-lg border border-slate-300 font-bold text-slate-900 text-right bg-slate-50"
                   />
                 </div>
@@ -88,10 +116,11 @@ export default function ScreenK03KiranaMasterRates({ onBack, onSave }: ScreenK03
       <div className="pt-2">
         <button
           type="button"
-          onClick={onSave}
-          className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition"
+          disabled={isSaving}
+          onClick={handleSaveRates}
+          className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition disabled:opacity-50"
         >
-          Update Mandi Rates for All Online Parchas
+          {isSaving ? "Saving Mandi Rates..." : "Update Mandi Rates for All Online Parchas"}
         </button>
       </div>
     </div>

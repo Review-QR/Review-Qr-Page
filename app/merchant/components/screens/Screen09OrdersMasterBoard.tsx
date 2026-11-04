@@ -7,6 +7,7 @@ interface Screen09Props {
   onPrintKot?: (orderId: string) => void;
   onDispatchRider?: (orderId: string) => void;
   onBack?: () => void;
+  liveOrders?: any[];
 }
 
 export default function Screen09OrdersMasterBoard({
@@ -14,11 +15,12 @@ export default function Screen09OrdersMasterBoard({
   onPrintKot,
   onDispatchRider,
   onBack,
+  liveOrders,
 }: Screen09Props) {
   const [dateFilter, setDateFilter] = useState<"today" | "yesterday" | "week" | "month" | "all">("today");
   const [statusTab, setStatusTab] = useState<"all" | "placed" | "prep" | "ready" | "delivered">("placed");
 
-  const orders = [
+  const defaultOrders = [
     {
       id: "ORD-7783-09",
       customer: "Aman Sharma",
@@ -56,6 +58,21 @@ export default function Screen09OrdersMasterBoard({
       prepCountdown: "Ready",
     },
   ];
+
+  const orders = liveOrders && liveOrders.length > 0
+    ? liveOrders.map((o) => ({
+        id: o.id,
+        customer: o.customer_name || "Aman Sharma",
+        status: o.status === "accepted" || o.status === "preparing" ? "prep" : o.status === "ready_for_pickup" || o.status === "food_ready" ? "ready" : o.status === "delivered" ? "delivered" : "placed",
+        amount: `₹${o.total_amount || 340}`,
+        itemsCount: Array.isArray(o.items) ? o.items.length : 2,
+        items: Array.isArray(o.items) && o.items.length > 0 ? o.items.map((i: any) => `${i.quantity || 1}x ${i.name || i.item_name || 'Item'}`).join(", ") : "Special Shahi Paneer, Butter Naan",
+        time: o.created_at ? new Date(o.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Just now",
+        payment: o.payment_mode === "cod" ? "Cash on Delivery" : "Online Paid (Cashfree UPI)",
+        isPaid: o.payment_status === "paid" || o.payment_mode !== "cod",
+        prepCountdown: o.prep_time_minutes ? `${o.prep_time_minutes} mins` : "15 mins",
+      }))
+    : defaultOrders;
 
   const filteredOrders = statusTab === "all" ? orders : orders.filter((o) => o.status === statusTab);
 
