@@ -1,9 +1,9 @@
 {
-  "appId": "com.trustit.partner",
-  "appName": "Trustit Partner",
+  "appId": "com.trustit.rider",
+  "appName": "Trustit Rider",
   "webDir": "public",
   "server": {
-    "url": "https://trustitreview.com/partner",
+    "url": "https://trustitreview.com/rider",
     "cleartext": true
   },
   "android": {

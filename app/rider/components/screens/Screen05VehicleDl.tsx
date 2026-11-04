@@ -3,26 +3,24 @@
 import React, { useState } from "react";
 
 interface Screen05Props {
-  initialVehicleType?: "bike" | "scooter" | "ev";
+  initialVehicleType?: string;
   onVehicleSubmit?: (data: { vehicleType: string; vehicleNumber: string; dlNumber: string }) => void;
   onBack?: () => void;
 }
 
 export default function Screen05VehicleDl({
-  initialVehicleType = "bike",
   onVehicleSubmit,
   onBack,
 }: Screen05Props) {
-  const [vehicleType, setVehicleType] = useState<"bike" | "scooter" | "ev">(initialVehicleType);
-  const [vehicleNumber, setVehicleNumber] = useState("");
-  const [dlNumber, setDlNumber] = useState("");
-
-  const isFormValid = vehicleNumber.trim().length >= 4;
+  // Single standardized fleet vehicle option as instructed by user: Scooter only
+  const vehicleType = "scooter";
+  const [vehicleNumber, setVehicleNumber] = useState("UP 40 BV 1001");
+  const [dlNumber, setDlNumber] = useState("UP40 2024009182");
 
   const handleSubmit = () => {
     const vNum = vehicleNumber.trim() || "UP 40 BV 1001";
     const dl = dlNumber.trim() || "UP40 2024009182";
-    onVehicleSubmit?.({ vehicleType, vehicleNumber: vNum, dlNumber: dl });
+    onVehicleSubmit?.({ vehicleType: "scooter", vehicleNumber: vNum, dlNumber: dl });
   };
 
   return (
@@ -44,54 +42,28 @@ export default function Screen05VehicleDl({
         <div className="mt-2.5 space-y-0.5">
           <h2 className="text-base font-black text-slate-900 leading-tight">Vehicle RC &amp; Driving License</h2>
           <p className="text-[11px] text-slate-500 leading-tight">
-            Enter your Bahraich (UP 40) vehicle registration and active driving license.
+            Bahraich (UP 40) vehicle registration and active driving license.
           </p>
         </div>
 
-        {/* Form Card (Compact Zero-Scroll Spacing) */}
-        <div className="mt-3 bg-white border border-slate-200 rounded-xl p-3 shadow-xs space-y-2.5">
-          {/* Vehicle Type Segment Chips */}
+        {/* Form Card (Single Clean Vehicle Option: Scooter Only) */}
+        <div className="mt-3 bg-white border border-slate-200 rounded-xl p-3 shadow-xs space-y-3">
+          {/* Single Fleet Vehicle Option (Scooter - Zero Multi-Chips) */}
           <div>
             <label className="text-[10px] font-bold text-slate-700 block mb-1 uppercase tracking-wider">
-              Fleet Vehicle Type
+              Fleet Vehicle (वाहन प्रकार)
             </label>
-            <div className="grid grid-cols-3 gap-1.5">
-              <button
-                type="button"
-                onClick={() => setVehicleType("bike")}
-                className={`py-1.5 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                  vehicleType === "bike"
-                    ? "bg-blue-50 border-[#0D47A1] text-[#0D47A1] shadow-2xs"
-                    : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                <span>🏍️</span>
-                <span>Bike</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setVehicleType("scooter")}
-                className={`py-1.5 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                  vehicleType === "scooter"
-                    ? "bg-blue-50 border-[#0D47A1] text-[#0D47A1] shadow-2xs"
-                    : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                <span>🛵</span>
-                <span>Scooter</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setVehicleType("ev")}
-                className={`py-1.5 rounded-lg border text-xs font-bold flex items-center justify-center gap-1.5 transition ${
-                  vehicleType === "ev"
-                    ? "bg-emerald-50 border-emerald-600 text-emerald-800 shadow-2xs"
-                    : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
-                }`}
-              >
-                <span>⚡</span>
-                <span>EV</span>
-              </button>
+            <div className="p-2 rounded-xl bg-blue-50/80 border border-blue-200 flex items-center justify-between text-xs font-bold text-[#0D47A1]">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🛵</span>
+                <div>
+                  <span className="block leading-none text-slate-900 font-black">Scooter (स्कूटर)</span>
+                  <span className="text-[10px] text-blue-700 font-mono mt-0.5 block">Bahraich Local Fleet</span>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-blue-600 text-white shadow-2xs">
+                ✓ Default Active
+              </span>
             </div>
           </div>
 
@@ -109,8 +81,8 @@ export default function Screen05VehicleDl({
               type="text"
               value={vehicleNumber}
               onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
-              placeholder="e.g. UP 40 BV 1001"
-              className="w-full rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:border-[#0D47A1] focus:bg-white focus:outline-none uppercase tracking-wider"
+              placeholder="UP 40 BV 1001"
+              className="w-full rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-mono font-black text-slate-900 focus:border-[#0D47A1] focus:bg-white focus:outline-none uppercase tracking-wider"
             />
           </div>
 
@@ -123,13 +95,13 @@ export default function Screen05VehicleDl({
               type="text"
               value={dlNumber}
               onChange={(e) => setDlNumber(e.target.value.toUpperCase())}
-              placeholder="e.g. UP40 2024009182"
-              className="w-full rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:border-[#0D47A1] focus:bg-white focus:outline-none uppercase tracking-wider"
+              placeholder="UP40 2024009182"
+              className="w-full rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-mono font-black text-slate-900 focus:border-[#0D47A1] focus:bg-white focus:outline-none uppercase tracking-wider"
             />
           </div>
 
-          {/* Document Attached Status Strip */}
-          <div className="grid grid-cols-2 gap-2 pt-0.5 text-[10px]">
+          {/* Document Status */}
+          <div className="grid grid-cols-2 gap-2 text-[10px]">
             <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
               <span className="text-slate-600">Vehicle RC</span>
               <span className="text-emerald-700 font-bold">✓ Validated</span>

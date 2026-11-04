@@ -4,11 +4,11 @@ android {
     namespace "com.trustit.partner"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.trustit.partner"
+        applicationId "com.trustit.rider"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode 4
+        versionName "2.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~:downloads:*.apk'
