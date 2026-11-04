@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Trustit Rider</string>
-    <string name="title_activity_main">Trustit Rider</string>
-    <string name="package_name">com.trustit.rider</string>
-    <string name="custom_url_scheme">com.trustit.rider</string>
+    <string name="app_name">Trustit Partner</string>
+    <string name="title_activity_main">Trustit Partner</string>
+    <string name="package_name">com.trustit.partner</string>
+    <string name="custom_url_scheme">com.trustit.partner</string>
 </resources>

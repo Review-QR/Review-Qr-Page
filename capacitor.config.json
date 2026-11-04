@@ -1,21 +1,21 @@
 {
-  "appId": "com.trustit.rider",
-  "appName": "Trustit Rider",
+  "appId": "com.trustit.partner",
+  "appName": "Trustit Partner",
   "webDir": "public",
   "server": {
-    "url": "https://trustitreview.com/rider",
+    "url": "https://trustitreview.com/partner",
     "cleartext": true
   },
   "android": {
     "allowMixedContent": true,
     "captureInput": true,
-    "backgroundColor": "#064E3B"
+    "backgroundColor": "#7C2D12"
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2200,
       "launchAutoHide": true,
-      "backgroundColor": "#064E3B",
+      "backgroundColor": "#7C2D12",
       "androidSplashResourceName": "splash",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": true,

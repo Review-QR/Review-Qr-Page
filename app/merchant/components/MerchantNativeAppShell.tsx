@@ -1523,8 +1523,11 @@ export default function MerchantNativeAppShell({
             <button
               type="button"
               onClick={() => {
+                if (typeof window !== "undefined") {
+                  localStorage.removeItem("trustit_merchant_session");
+                }
                 setIsAuthenticated(false);
-                setAuthStep("login");
+                setAuthStep("pitch");
                 showToast("Merchant logged out successfully.");
               }}
               className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-700 text-slate-600 font-bold text-xs transition border border-slate-200 flex items-center justify-center gap-1.5"
@@ -1574,16 +1577,30 @@ export default function MerchantNativeAppShell({
               if (details?.storeName) setStoreName(details.storeName);
               if (details?.ownerName) setOwnerName(details.ownerName);
               if (details?.phone) setMerchantPhone(details.phone);
+              let cat: MerchantCategory = "kirana";
               if (details?.category) {
                 const rawCat = (details.category || "").toLowerCase();
-                if (rawCat.includes("kirana") || rawCat.includes("groc")) setStoreCategory("kirana");
-                else if (rawCat.includes("chem") || rawCat.includes("pharm") || rawCat.includes("med")) setStoreCategory("chemist");
-                else if (rawCat.includes("salon") || rawCat.includes("spa") || rawCat.includes("beauty")) setStoreCategory("salon");
-                else if (rawCat.includes("car") || rawCat.includes("auto") || rawCat.includes("wash")) setStoreCategory("carwash");
-                else setStoreCategory("restaurant");
+                if (rawCat.includes("kirana") || rawCat.includes("groc")) cat = "kirana";
+                else if (rawCat.includes("chem") || rawCat.includes("pharm") || rawCat.includes("med")) cat = "chemist";
+                else if (rawCat.includes("salon") || rawCat.includes("spa") || rawCat.includes("beauty")) cat = "salon";
+                else if (rawCat.includes("car") || rawCat.includes("auto") || rawCat.includes("wash")) cat = "carwash";
+                else cat = "restaurant";
+                setStoreCategory(cat);
               }
               setIsAuthenticated(true);
               setActiveTab("cockpit");
+              if (typeof window !== "undefined") {
+                localStorage.setItem(
+                  "trustit_merchant_session",
+                  JSON.stringify({
+                    isAuthenticated: true,
+                    storeName: details?.storeName || storeName,
+                    ownerName: details?.ownerName || ownerName,
+                    phone: details?.phone || merchantPhone,
+                    category: details?.category ? cat : storeCategory,
+                  })
+                );
+              }
               showToast(`Dukaan "${details?.storeName || storeName}" safalta se register ho gayi!`);
             }}
           />
@@ -1599,6 +1616,18 @@ export default function MerchantNativeAppShell({
               if (details?.phone) setMerchantPhone(details.phone);
               setIsAuthenticated(true);
               setActiveTab("cockpit");
+              if (typeof window !== "undefined") {
+                localStorage.setItem(
+                  "trustit_merchant_session",
+                  JSON.stringify({
+                    isAuthenticated: true,
+                    storeName: details?.storeName || storeName,
+                    ownerName: details?.ownerName || ownerName,
+                    phone: details?.phone || merchantPhone,
+                    category: storeCategory,
+                  })
+                );
+              }
               showToast("Swagatam! Merchant Console me aapka swagat hai.");
             }}
           />
@@ -1613,19 +1642,21 @@ export default function MerchantNativeAppShell({
   const renderPhoneApp = () => {
     return (
       <div className="flex flex-col h-full bg-[#F8FAFC] text-slate-900 font-sans select-none overflow-hidden relative">
-        {/* Realistic Mobile Status Bar (9:41, 5G, Battery) */}
-        <div className="bg-slate-950 text-white px-5 pt-2 pb-1.5 flex items-center justify-between text-[11px] font-black tracking-tight shrink-0">
-          <span>9:41 AM</span>
-          <div className="w-24 h-4 bg-black rounded-full mx-auto flex items-center justify-center gap-1.5 px-2">
-            <span className="w-2 h-2 rounded-full bg-slate-800"></span>
-            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+        {/* Realistic Mobile Status Bar (9:41, 5G, Battery) - only shown when simulating in browser */}
+        {!forceStandalone && (
+          <div className="bg-slate-950 text-white px-5 pt-2 pb-1.5 flex items-center justify-between text-[11px] font-black tracking-tight shrink-0">
+            <span>9:41 AM</span>
+            <div className="w-24 h-4 bg-black rounded-full mx-auto flex items-center justify-center gap-1.5 px-2">
+              <span className="w-2 h-2 rounded-full bg-slate-800"></span>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px]">5G</span>
+              <span className="w-2.5 h-2 bg-white rounded-xs"></span>
+              <span className="text-emerald-400 font-bold">100%</span>
+            </div>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px]">5G</span>
-            <span className="w-2.5 h-2 bg-white rounded-xs"></span>
-            <span className="text-emerald-400 font-bold">100%</span>
-          </div>
-        </div>
+        )}
 
         {/* Global Floating Toast Alert */}
         {statusNotification && (
@@ -1800,7 +1831,7 @@ export default function MerchantNativeAppShell({
   // ============================================================
   // ROOT RENDER: LAPTOP SIMULATOR VS FULL SCREEN
   // ============================================================
-  if (!isSimulatorFrame) {
+  if (forceStandalone || !isSimulatorFrame) {
     return (
       <div className="w-full h-screen bg-[#F8FAFC]">
         {!forceStandalone && (

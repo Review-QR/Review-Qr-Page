@@ -4,7 +4,7 @@ android {
     namespace "com.trustit.partner"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.trustit.rider"
+        applicationId "com.trustit.partner"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 10

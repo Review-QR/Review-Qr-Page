@@ -1,26 +1,80 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import MerchantNativeAppShell from "@/app/merchant/components/MerchantNativeAppShell";
+import MerchantNativeAppShell, { MerchantCategory } from "@/app/merchant/components/MerchantNativeAppShell";
 
 export const dynamic = "force-dynamic";
 
+interface StoredSession {
+  ready: boolean;
+  isAuthenticated: boolean;
+  category: MerchantCategory;
+  storeName: string;
+  ownerName: string;
+}
+
 export default function PartnerPage() {
-  const [isMobile, setIsMobile] = useState<boolean>(false);
+  const [session, setSession] = useState<StoredSession>({
+    ready: false,
+    isAuthenticated: false,
+    category: "kirana",
+    storeName: "Gupta Kirana & General Store",
+    ownerName: "Merchant Partner",
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setIsMobile(window.innerWidth < 768);
-      const handleResize = () => setIsMobile(window.innerWidth < 768);
-      window.addEventListener("resize", handleResize);
-      return () => window.removeEventListener("resize", handleResize);
+      try {
+        const raw = localStorage.getItem("trustit_merchant_session");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed && parsed.isAuthenticated) {
+            setSession({
+              ready: true,
+              isAuthenticated: true,
+              category: (parsed.category as MerchantCategory) || "kirana",
+              storeName: parsed.storeName || "My Store",
+              ownerName: parsed.ownerName || "Merchant Partner",
+            });
+            return;
+          }
+        }
+      } catch (err) {
+        console.error("Failed to parse merchant session:", err);
+      }
+
+      // No active session: Start at fresh onboarding pitch
+      setSession({
+        ready: true,
+        isAuthenticated: false,
+        category: "kirana",
+        storeName: "Gupta Kirana & General Store",
+        ownerName: "Merchant Partner",
+      });
     }
   }, []);
 
+  // Fast loading state before hydration/localStorage inspection
+  if (!session.ready) {
+    return (
+      <div className="w-full h-screen bg-[#FAF9F6] flex flex-col items-center justify-center font-sans select-none">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-amber-600 to-orange-600 text-white flex items-center justify-center font-black text-2xl shadow-xl animate-pulse mb-3">
+          T
+        </div>
+        <span className="text-xs font-black text-slate-800 tracking-tight">TRUSTIT PARTNER</span>
+        <span className="text-[10px] text-slate-500 mt-1 font-medium">Starting Merchant Suite...</span>
+      </div>
+    );
+  }
+
   return (
     <MerchantNativeAppShell
-      initialAuth={true}
-      forceStandalone={isMobile}
+      initialAuth={session.isAuthenticated}
+      initialAuthStep="pitch"
+      initialCategory={session.category}
+      initialStoreName={session.storeName}
+      initialOwnerName={session.ownerName}
+      forceStandalone={true}
     />
   );
 }

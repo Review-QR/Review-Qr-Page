@@ -319,12 +319,18 @@ function buildApp(app) {
 }
 
 async function run() {
-  console.log("Starting Full Signed Production Build for all 3 apps...");
-  for (const app of apps) {
+  const targetAppId = process.argv[2];
+  const appsToBuild = targetAppId ? apps.filter(a => a.id === targetAppId) : apps;
+  if (appsToBuild.length === 0) {
+    console.error(`App '${targetAppId}' not found. Available: ${apps.map(a => a.id).join(', ')}`);
+    process.exit(1);
+  }
+  console.log(`Starting Signed Production Build for ${appsToBuild.map(a => a.appName).join(', ')}...`);
+  for (const app of appsToBuild) {
     buildApp(app);
   }
   console.log("\n======================================================");
-  console.log("✅ ALL 3 SIGNED PRODUCTION APPS BUILT WITH NATIVE SPLASH & KEYSTORE!");
+  console.log("✅ BUILD COMPLETE!");
   console.log("======================================================");
 }
 
