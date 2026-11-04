@@ -6,15 +6,19 @@ interface Screen26Props {
   onBack?: () => void;
   onPayViaUpi?: () => void;
   onNavigateHub?: (hubName: string) => void;
+  cashDueProp?: number;
+  cashCeilingProp?: number;
 }
 
 export default function Screen26CashRemittanceHubs({
   onBack,
   onPayViaUpi,
   onNavigateHub,
+  cashDueProp = 680,
+  cashCeilingProp = 1500,
 }: Screen26Props) {
   const [method, setMethod] = useState<"upi" | "cash_hub">("upi");
-  const [cashDue] = useState<number>(1420); // Close to ₹1500 ceiling
+  const cashDue = cashDueProp;
 
   const hubs = [
     { name: "Deepak Sweets Cash Hub", distance: "0.6 km away", area: "Civil Lines, Bahraich", timing: "Open till 10 PM" },
@@ -52,10 +56,13 @@ export default function Screen26CashRemittanceHubs({
             <span className="text-xl font-black text-amber-300">₹{cashDue}.00</span>
           </div>
           <div className="mt-2 w-full bg-black/30 h-2 rounded-full overflow-hidden">
-            <div className="bg-amber-400 h-full" style={{ width: `${(cashDue / 1500) * 100}%` }}></div>
+            <div
+              className="bg-amber-400 h-full transition-all duration-300"
+              style={{ width: `${Math.min(100, (cashDue / cashCeilingProp) * 100)}%` }}
+            ></div>
           </div>
           <p className="text-[11px] text-red-100 mt-2">
-            ⚠️ Hard Ceiling: ₹1,500.00. Duty will automatically lock in ₹80 unless remitted.
+            ⚠️ Hard Ceiling: ₹{cashCeilingProp}.00. {cashDue >= cashCeilingProp ? "Duty is currently LOCKED until remitted." : `Duty will lock once cash exceeds ₹${cashCeilingProp}.`}
           </p>
         </div>
 
@@ -105,9 +112,9 @@ export default function Screen26CashRemittanceHubs({
             <button
               type="button"
               onClick={onPayViaUpi}
-              className="w-full py-3 rounded-xl bg-[#0D47A1] text-white font-extrabold text-xs shadow-md hover:bg-blue-800 transition flex items-center justify-center gap-2"
+              className="w-full py-3 rounded-xl bg-[#0D47A1] text-white font-extrabold text-xs shadow-md hover:bg-blue-800 transition flex items-center justify-center gap-2 active:scale-98"
             >
-              <span>Pay ₹{cashDue} via UPI Now</span>
+              <span>Pay ₹{cashDue} via UPI Now (Clear Ceiling)</span>
               <span>⚡</span>
             </button>
           </div>

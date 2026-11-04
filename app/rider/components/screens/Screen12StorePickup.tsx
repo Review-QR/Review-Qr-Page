@@ -12,8 +12,9 @@ export default function Screen12StorePickup({ onPickupConfirmed, onBack, onMerch
   const [itemsChecked, setItemsChecked] = useState({
     burger: true,
     fries: true,
-    coffee: false,
+    coffee: true,
   });
+  const [kotOtp, setKotOtp] = useState("8821");
   const [waitTimerSeconds, setWaitTimerSeconds] = useState(240); // 4 mins
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export default function Screen12StorePickup({ onPickupConfirmed, onBack, onMerch
     return () => clearInterval(t);
   }, []);
 
-  const allItemsVerified = itemsChecked.burger && itemsChecked.fries && itemsChecked.coffee;
+  const allItemsVerified = itemsChecked.burger && itemsChecked.fries && itemsChecked.coffee && kotOtp.length === 4;
   const waitMinutes = Math.floor(waitTimerSeconds / 60);
   const waitRemainderSeconds = waitTimerSeconds % 60;
   const compensationRupees = waitMinutes >= 5 ? waitMinutes - 5 + 1 : 0;
@@ -148,6 +149,35 @@ export default function Screen12StorePickup({ onPickupConfirmed, onBack, onMerch
           <div className="p-2 rounded-xl bg-blue-50/70 border border-blue-200 text-[10px] text-blue-900 flex items-center gap-2">
             <span>🔒</span>
             <span>Security Seal: Ensure restaurant paper tamper seal is intact.</span>
+          </div>
+        </div>
+
+        {/* Merchant KOT Handover OTP Verification */}
+        <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3.5 shadow-sm space-y-2">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                Merchant KOT OTP Verification
+              </span>
+              <strong className="text-xs font-black text-slate-900">Enter 4-Digit KOT Slip Code:</strong>
+            </div>
+            <span className="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-lg border border-blue-200">
+              Slip #8821
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              maxLength={4}
+              value={kotOtp}
+              onChange={(e) => setKotOtp(e.target.value.replace(/\D/g, ""))}
+              className="w-32 text-center text-lg font-black font-mono tracking-widest border-2 border-slate-300 rounded-xl py-1.5 focus:border-[#0D47A1] focus:outline-none"
+              placeholder="8821"
+            />
+            <span className="text-[10px] text-slate-500 leading-tight">
+              Dukan ke KOT thermal receipt se 4-digit code verify karein.
+            </span>
           </div>
         </div>
       </div>

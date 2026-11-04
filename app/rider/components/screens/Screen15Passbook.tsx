@@ -9,6 +9,9 @@ interface Screen15Props {
   onClaimParking?: () => void;
   onDisputePenalty?: () => void;
   onMilestones?: () => void;
+  walletBalanceProp?: number;
+  todayEarningsProp?: number;
+  todayTripsCountProp?: number;
 }
 
 export default function Screen15Passbook({
@@ -18,6 +21,9 @@ export default function Screen15Passbook({
   onClaimParking,
   onDisputePenalty,
   onMilestones,
+  walletBalanceProp = 840,
+  todayEarningsProp = 520,
+  todayTripsCountProp = 14,
 }: Screen15Props) {
   const [trips] = useState([
     {
@@ -92,7 +98,7 @@ export default function Screen15Passbook({
               <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">
                 Withdrawable Net Balance
               </span>
-              <strong className="text-2xl font-black block mt-0.5">₹840.00</strong>
+              <strong className="text-2xl font-black block mt-0.5">₹{walletBalanceProp}.00</strong>
             </div>
             <button
               type="button"
@@ -106,11 +112,11 @@ export default function Screen15Passbook({
           <div className="pt-2 border-t border-blue-800/80 grid grid-cols-3 gap-1 text-center text-[10px]">
             <div>
               <span className="text-blue-200 block">Trips Today</span>
-              <strong className="text-white text-xs font-mono">14</strong>
+              <strong className="text-white text-xs font-mono">{todayTripsCountProp}</strong>
             </div>
             <div>
-              <span className="text-blue-200 block">Customer Tips</span>
-              <strong className="text-emerald-300 text-xs font-mono">₹60</strong>
+              <span className="text-blue-200 block">Today Earned</span>
+              <strong className="text-emerald-300 text-xs font-mono">₹{todayEarningsProp}</strong>
             </div>
             <div>
               <span className="text-blue-200 block">Wait Comp.</span>
@@ -128,7 +134,7 @@ export default function Screen15Passbook({
             <span className="text-[10px] font-bold text-blue-700">Detailed Ledger</span>
           </div>
 
-          <div className="space-y-2 max-h-[260px] overflow-y-auto no-scrollbar scrollbar-none [&::-webkit-scrollbar]:hidden pr-1" style={{ scrollbarWidth: "none" }}>
+          <div className="space-y-2 max-h-[240px] overflow-y-auto no-scrollbar scrollbar-none [&::-webkit-scrollbar]:hidden pr-1" style={{ scrollbarWidth: "none" }}>
             {trips.map((trip) => (
               <div
                 key={trip.id}
@@ -171,28 +177,28 @@ export default function Screen15Passbook({
           <button
             type="button"
             onClick={onRemitCash}
-            className="py-1 px-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-200 text-center"
+            className="py-1.5 px-1 bg-red-50 hover:bg-red-100 text-red-700 rounded-lg border border-red-200 text-center transition"
           >
             💵 Remit (S26)
           </button>
           <button
             type="button"
             onClick={onClaimParking}
-            className="py-1 px-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg border border-amber-200 text-center"
+            className="py-1.5 px-1 bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-lg border border-amber-200 text-center transition"
           >
             🎫 Toll (S47)
           </button>
           <button
             type="button"
             onClick={onDisputePenalty}
-            className="py-1 px-1 bg-blue-50 hover:bg-blue-100 text-[#0D47A1] rounded-lg border border-blue-200 text-center"
+            className="py-1.5 px-1 bg-blue-50 hover:bg-blue-100 text-[#0D47A1] rounded-lg border border-blue-200 text-center transition"
           >
             ⚖️ Dispute (S31)
           </button>
           <button
             type="button"
             onClick={onMilestones}
-            className="py-1 px-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg border border-purple-200 text-center"
+            className="py-1.5 px-1 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg border border-purple-200 text-center transition"
           >
             🎯 Goal (S16)
           </button>
@@ -204,9 +210,9 @@ export default function Screen15Passbook({
         <button
           type="button"
           onClick={onInstantPayout}
-          className="w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 bg-[#10B981] hover:bg-emerald-700 text-white shadow-sm transition"
+          className="w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 bg-[#10B981] hover:bg-emerald-700 text-white shadow-sm transition active:scale-98"
         >
-          <span>⚡ Cashfree Instant Payout to arjun.singh@okhdfcbank</span>
+          <span>⚡ Cashfree Instant Payout (₹{walletBalanceProp}.00)</span>
           <span>➔</span>
         </button>
       </div>

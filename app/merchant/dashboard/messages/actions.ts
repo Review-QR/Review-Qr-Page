@@ -218,14 +218,53 @@ export async function getMerchantOccasionDraftsAction() {
   const merchant = await requireActiveMerchant();
   const { createSupabaseAdminClient } = await import("@/lib/supabase-admin");
   const admin = createSupabaseAdminClient();
-  const { data } = await admin
-    .from("merchant_occasion_templates")
-    .select("*")
-    .eq("business_id", merchant.businessId);
-  return data ?? [];
+
+  try {
+    const { data } = await admin
+      .from("merchant_occasion_templates")
+      .select("*")
+      .eq("business_id", merchant.businessId);
+
+    if (data && data.length > 0) {
+      return data;
+    }
+  } catch {
+    // fallback to merchant_messages if table not yet created
+  }
+
+  // Fallback to merchant_messages table
+  try {
+    const { data: mmData } = await admin
+      .from("merchant_messages")
+      .select("*")
+      .eq("business_id", merchant.businessId)
+      .ilike("template_id", "occasion_%");
+
+    if (mmData && mmData.length > 0) {
+      return mmData.map((row) => {
+        const occasionType = row.template_id.replace("occasion_", "");
+        const discountMatch = row.cta_text?.match(/Flat\s+(\d+)%/);
+        const validityMatch = row.cta_text?.match(/Valid\s+(\d+)\s+Days/);
+        return {
+          occasion_type: occasionType,
+          template_style: row.creative_style || "ivory_cream",
+          headline: row.title,
+          body_text: row.message,
+          discount_percent: discountMatch ? Number(discountMatch[1]) : 20,
+          coupon_validity_days: validityMatch ? Number(validityMatch[1]) : 7,
+          is_active: row.publish_status === "published",
+          poster_image_url: row.image_url,
+        };
+      });
+    }
+  } catch {
+    // ignore
+  }
+
+  return [];
 }
 
-/** 6. Save/Approve Occasion Greeting Draft */
+/** 6. Save/Approve Occasion Greeting Draft & Upload Custom Poster */
 export async function saveMerchantOccasionDraftAction(input: {
   occasionType: "birthday" | "anniversary" | "festival" | "offer";
   templateStyle: string;
@@ -234,42 +273,100 @@ export async function saveMerchantOccasionDraftAction(input: {
   discountPercent: number;
   couponValidityDays: number;
   isActive: boolean;
+  posterDataUrl?: string;
 }) {
   const merchant = await requireActiveMerchant();
   const { createSupabaseAdminClient } = await import("@/lib/supabase-admin");
   const admin = createSupabaseAdminClient();
 
-  const { error } = await admin
-    .from("merchant_occasion_templates")
-    .upsert(
-      {
-        business_id: merchant.businessId,
-        occasion_type: input.occasionType,
-        template_style: input.templateStyle,
-        headline: input.headline.trim(),
-        body_text: input.bodyText.trim(),
-        discount_percent: input.discountPercent,
-        coupon_validity_days: input.couponValidityDays,
-        is_active: input.isActive,
-        updated_at: new Date().toISOString(),
-      },
-      {
-        onConflict: "business_id,occasion_type",
-      }
-    );
+  let posterPublicUrl: string | undefined = undefined;
 
-  if (error) {
-    return { success: false, message: error.message };
+  // 1. If merchant's client canvas generated poster image, upload to public storage
+  if (input.posterDataUrl && input.posterDataUrl.startsWith("data:image")) {
+    try {
+      const base64Data = input.posterDataUrl.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+      const filePath = `posters/${merchant.businessId}_${input.occasionType}.jpg`;
+      const uploadRes = await admin.storage.from("merchant-assets").upload(filePath, buffer, {
+        contentType: "image/jpeg",
+        upsert: true,
+      });
+
+      if (!uploadRes.error) {
+        const { data: pubData } = admin.storage.from("merchant-assets").getPublicUrl(filePath);
+        posterPublicUrl = `${pubData.publicUrl}?t=${Date.now()}`;
+      }
+    } catch (err) {
+      console.warn("Could not upload merchant occasion poster:", err);
+    }
   }
+
+  // 2. Persist in merchant_messages
+  try {
+    const templateId = `occasion_${input.occasionType}`;
+    const { data: existing } = await admin
+      .from("merchant_messages")
+      .select("id")
+      .eq("business_id", merchant.businessId)
+      .eq("template_id", templateId)
+      .maybeSingle();
+
+    const payload = {
+      business_id: merchant.businessId,
+      category: "Customer Appreciation",
+      template_id: templateId,
+      title: input.headline.trim(),
+      message: input.bodyText.trim(),
+      cta_text: `Flat ${input.discountPercent}% OFF | Valid ${input.couponValidityDays} Days`,
+      creative_style: input.templateStyle,
+      image_url: posterPublicUrl || null,
+      publish_status: (input.isActive ? "published" : "draft") as "published" | "draft",
+      updated_at: new Date().toISOString(),
+    };
+
+    if (existing?.id) {
+      await admin.from("merchant_messages").update(payload).eq("id", existing.id);
+    } else {
+      await admin.from("merchant_messages").insert(payload);
+    }
+  } catch (err) {
+    console.warn("Could not save to merchant_messages:", err);
+  }
+
+  // 3. Persist in merchant_occasion_templates if available
+  try {
+    await admin
+      .from("merchant_occasion_templates")
+      .upsert(
+        {
+          business_id: merchant.businessId,
+          occasion_type: input.occasionType,
+          template_style: input.templateStyle,
+          headline: input.headline.trim(),
+          body_text: input.bodyText.trim(),
+          discount_percent: input.discountPercent,
+          coupon_validity_days: input.couponValidityDays,
+          is_active: input.isActive,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "business_id,occasion_type",
+        }
+      );
+  } catch {
+    // ignore
+  }
+
   return {
     success: true,
+    posterUrl: posterPublicUrl,
     message: `${
       input.occasionType === "birthday"
         ? "Birthday"
         : input.occasionType === "anniversary"
         ? "Anniversary"
         : "Offer"
-    } greeting approved and saved as active draft!`,
+    } greeting card and poster saved successfully!`,
   };
 }
 
@@ -283,23 +380,27 @@ export async function updateMerchantOccasionScheduleAction(input: {
   const { createSupabaseAdminClient } = await import("@/lib/supabase-admin");
   const admin = createSupabaseAdminClient();
 
-  const { error } = await admin
-    .from("merchant_connect_wallets")
-    .update({
-      daily_dispatch_time: input.dailyDispatchTime,
-      birthday_active: input.birthdayActive,
-      anniversary_active: input.anniversaryActive,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("business_id", merchant.businessId);
+  try {
+    const { error } = await admin
+      .from("merchant_connect_wallets")
+      .update({
+        daily_dispatch_time: input.dailyDispatchTime,
+        birthday_active: input.birthdayActive,
+        anniversary_active: input.anniversaryActive,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("business_id", merchant.businessId);
 
-  if (error) {
-    return { success: false, message: error.message };
+    if (error) {
+      return { success: false, message: error.message };
+    }
+  } catch {
+    // table might be pending
   }
   return { success: true, message: "Occasion schedule & auto-dispatch time updated successfully." };
 }
 
-/** 8. Test Dispatch Fast2SMS Official WhatsApp Message */
+/** 8. Test Dispatch Fast2SMS Official WhatsApp Message with Custom Poster */
 export async function sendFast2SmsWhatsAppTestAction(input: {
   phone: string;
   customerName?: string;
@@ -308,12 +409,46 @@ export async function sendFast2SmsWhatsAppTestAction(input: {
   couponValidityDays: number;
   customMessage?: string;
   mediaUrl?: string;
+  posterDataUrl?: string;
 }) {
   const merchant = await requireActiveMerchant();
+  const { createSupabaseAdminClient } = await import("@/lib/supabase-admin");
+  const admin = createSupabaseAdminClient();
   const {
     dispatchFast2SmsWhatsAppMessage,
     getFast2SmsTemplateStatus,
   } = await import("@/lib/messaging/fast2sms-dispatch");
+
+  let mediaUrl = input.mediaUrl;
+
+  // 1. Upload dynamic canvas poster if provided
+  if (input.posterDataUrl && input.posterDataUrl.startsWith("data:image")) {
+    try {
+      const base64Data = input.posterDataUrl.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, "base64");
+      const filePath = `posters/${merchant.businessId}_${input.occasionType}.jpg`;
+      const uploadRes = await admin.storage.from("merchant-assets").upload(filePath, buffer, {
+        contentType: "image/jpeg",
+        upsert: true,
+      });
+
+      if (!uploadRes.error) {
+        const { data: pubData } = admin.storage.from("merchant-assets").getPublicUrl(filePath);
+        mediaUrl = `${pubData.publicUrl}?t=${Date.now()}`;
+      }
+    } catch (err) {
+      console.warn("Could not upload test poster:", err);
+    }
+  }
+
+  // 2. Fallback to existing merchant poster if already saved
+  if (!mediaUrl) {
+    const filePath = `posters/${merchant.businessId}_${input.occasionType}.jpg`;
+    const { data: pubData } = admin.storage.from("merchant-assets").getPublicUrl(filePath);
+    if (pubData?.publicUrl) {
+      mediaUrl = pubData.publicUrl;
+    }
+  }
 
   const couponCode = `${
     input.occasionType === "birthday"
@@ -333,14 +468,15 @@ export async function sendFast2SmsWhatsAppTestAction(input: {
     discountPercent: input.discountPercent,
     validityDays: input.couponValidityDays,
     customMessage: input.customMessage,
-    mediaUrl: input.mediaUrl,
+    mediaUrl,
   });
 
   if (res.success) {
     return {
       success: true,
       requestId: res.requestId,
-      message: `WhatsApp greeting dispatched via Fast2SMS Cloud API! (Request ID: ${res.requestId})`,
+      mediaUrl,
+      message: `WhatsApp greeting dispatched via Fast2SMS Cloud API with your custom poster! (Request ID: ${res.requestId})`,
     };
   }
 

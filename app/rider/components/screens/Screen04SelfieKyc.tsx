@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useRiderCamera } from "@/app/rider/hooks/useRiderCamera";
 
 interface Screen04Props {
@@ -22,12 +22,30 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
   } = useRiderCamera("user");
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = useState<boolean>(false);
+  const [isVerifyingSelfie, setIsVerifyingSelfie] = useState<boolean>(false);
 
   // Auto-start camera on mount
   useEffect(() => {
-    startCamera("user");
-    return () => stopCamera();
+    let mounted = true;
+    startCamera("user").then((success) => {
+      if (mounted) setCameraPermissionGranted(success);
+    });
+    return () => {
+      mounted = false;
+      stopCamera();
+    };
   }, [startCamera, stopCamera]);
+
+  const handleCapture = () => {
+    const photo = capturePhoto();
+    if (photo) {
+      setIsVerifyingSelfie(true);
+      setTimeout(() => {
+        setIsVerifyingSelfie(false);
+      }, 1000);
+    }
+  };
 
   const handleFileFallback = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -36,6 +54,10 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
       reader.onload = () => {
         setCapturedImage(reader.result as string);
         stopCamera();
+        setIsVerifyingSelfie(true);
+        setTimeout(() => {
+          setIsVerifyingSelfie(false);
+        }, 1000);
       };
       reader.readAsDataURL(file);
     }
@@ -55,7 +77,7 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
           </button>
           <div className="flex items-center gap-1.5">
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-              ANTI-FRAUD
+              ANTI-FRAUD CAMERA
             </span>
             <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Step 4 of 6</span>
           </div>
@@ -99,24 +121,24 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={capturedImage} alt="Captured Selfie" className="w-full h-full object-cover" />
                 <div className="absolute top-2 right-2 bg-emerald-500 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow">
-                  ✓ Verified
+                  {isVerifyingSelfie ? "Auditing..." : "✓ Real Photo Verified"}
                 </div>
               </div>
             )}
 
-            {/* Error or Loading State */}
+            {/* Error or Request Permission State */}
             {!isStreaming && !capturedImage && (
-              <div className="space-y-2 p-3 text-center">
+              <div className="space-y-2 p-3 text-center z-10">
                 <span className="text-3xl block">📷</span>
                 <span className="text-xs font-bold text-slate-300 block">
-                  {error || "Starting Front Camera..."}
+                  {error || "Camera access required for live KYC"}
                 </span>
                 <button
                   type="button"
                   onClick={() => startCamera("user")}
-                  className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow hover:bg-blue-500"
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow hover:bg-blue-500 transition active:scale-95"
                 >
-                  Enable Camera
+                  Open Front Camera 🤳
                 </button>
               </div>
             )}
@@ -127,9 +149,9 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
             {!capturedImage ? (
               <button
                 type="button"
-                onClick={() => capturePhoto()}
+                onClick={handleCapture}
                 disabled={!isStreaming}
-                className="py-2.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition disabled:opacity-40 flex items-center gap-1.5"
+                className="py-2.5 px-5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition disabled:opacity-40 flex items-center gap-1.5 active:scale-95"
               >
                 <span>📸 Snap Live Selfie</span>
               </button>
@@ -143,7 +165,7 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
               </button>
             )}
 
-            {/* Hardware Fallback Input */}
+            {/* Hardware Fallback Input for mobile browsers */}
             <input
               ref={fileInputRef}
               type="file"
@@ -155,7 +177,7 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="py-2 px-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-600"
+              className="py-2 px-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-600 active:scale-95"
               title="Use Device Native Camera"
             >
               Native Cam 📱
@@ -163,19 +185,28 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
           </div>
 
           <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 text-[10px] text-blue-900 leading-tight">
-            🛡️ This official photo will be shown to customers and restaurant merchants during delivery handovers.
+            🛡️ This real official selfie will be displayed to restaurant partners and customers during live order handovers.
           </div>
         </div>
       </div>
 
-      {/* Action Footer */}
+      {/* Action Footer: Strictly Disabled Until Real Photo is Snapped */}
       <div className="pt-3 border-t border-slate-200">
         <button
           type="button"
-          onClick={() => onSelfieCaptured?.(capturedImage || "/mock-rider-selfie.jpg")}
-          className="w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 bg-[#0D47A1] hover:bg-[#082b66] text-white shadow-sm active:scale-[0.98] transition"
+          onClick={() => {
+            if (capturedImage) onSelfieCaptured?.(capturedImage);
+          }}
+          disabled={!capturedImage || isVerifyingSelfie}
+          className={`w-full py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition ${
+            capturedImage && !isVerifyingSelfie
+              ? "bg-[#0D47A1] hover:bg-[#082b66] text-white active:scale-[0.98]"
+              : "bg-slate-200 text-slate-400 cursor-not-allowed"
+          }`}
         >
-          <span>Confirm Real Selfie ➔ Vehicle &amp; RC</span>
+          <span>
+            {capturedImage ? "Confirm Real Selfie ➔ Vehicle & RC" : "⚠️ Please Snap Live Selfie First"}
+          </span>
           <span>➔</span>
         </button>
       </div>

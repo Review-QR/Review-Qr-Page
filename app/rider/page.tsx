@@ -63,6 +63,8 @@ import Screen46MidTripCancellation from "@/app/rider/components/screens/Screen46
 import Screen47ParkingTollClaim from "@/app/rider/components/screens/Screen47ParkingTollClaim";
 import Screen48LowBatterySafeMode from "@/app/rider/components/screens/Screen48LowBatterySafeMode";
 
+type TabKey = "cockpit" | "orders" | "earnings" | "navigation" | "profile";
+
 export default function StandaloneRiderProductionApp() {
   const workflow = useRiderWorkflow();
   const {
@@ -76,10 +78,9 @@ export default function StandaloneRiderProductionApp() {
     todayEarnings,
     todayTripsCount,
     activeOrder,
-    incomingOrder,
-    isSirenPlaying,
     soundEnabled,
     setSoundEnabled,
+    remoteConfig,
     toggleDuty,
     triggerIncomingOrderRadar,
     acceptOrder,
@@ -90,7 +91,12 @@ export default function StandaloneRiderProductionApp() {
     refundDoorstepChange,
     claimParkingReimbursement,
     remitCash,
+    handleGoogleLogin,
+    requestInstantPayout,
   } = workflow;
+
+  // Active Bottom Tab
+  const [activeTab, setActiveTab] = useState<TabKey>("cockpit");
 
   // Dynamic Auth State
   const [authPhone, setAuthPhone] = useState<string>("9876543210");
@@ -125,7 +131,7 @@ export default function StandaloneRiderProductionApp() {
     }
   };
 
-  // Step 2 & 3 & 4 Hardware & Telemetry State
+  // Hardware & Telemetry State
   const [isWakeLockActive, setIsWakeLockActive] = useState<boolean>(false);
   const [batteryLevel, setBatteryLevel] = useState<number>(94);
   const [isBatteryCharging, setIsBatteryCharging] = useState<boolean>(false);
@@ -192,7 +198,7 @@ export default function StandaloneRiderProductionApp() {
   };
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 2: SCREEN WAKE LOCK API (NEVER TURN OFF SCREEN ON ROAD)
+  // 1. SCREEN WAKE LOCK API (NEVER TURN OFF SCREEN ON ROAD)
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     let sentinel: any = null;
@@ -225,7 +231,7 @@ export default function StandaloneRiderProductionApp() {
   }, [isOnline]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 3A: REAL BATTERY SENSOR & AUTO CRITICAL SAFE MODE (<15%)
+  // 2. REAL BATTERY SENSOR & AUTO CRITICAL SAFE MODE (<15%)
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (typeof window !== "undefined" && "getBattery" in navigator) {
@@ -235,7 +241,6 @@ export default function StandaloneRiderProductionApp() {
           setBatteryLevel(level);
           setIsBatteryCharging(Boolean(battery.charging));
 
-          // Auto-trigger Screen 48 (Safe Mode) if battery drops below 15% and not plugged in
           if (level <= 15 && !battery.charging && currentScreenId !== 48) {
             setCurrentScreenId(48);
           }
@@ -249,7 +254,7 @@ export default function StandaloneRiderProductionApp() {
   }, [currentScreenId, setCurrentScreenId]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 3B: REAL GPS TELEMETRY WATCHER (±4.2m ANTI-SPOOF SYNC)
+  // 3. REAL GPS TELEMETRY WATCHER (±4.2m ANTI-SPOOF SYNC)
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined" || !("geolocation" in navigator) || !isOnline) return;
@@ -259,7 +264,6 @@ export default function StandaloneRiderProductionApp() {
         const { latitude, longitude, accuracy, speed } = pos.coords;
         setGpsAccuracy(accuracy ? Number(accuracy.toFixed(1)) : 4.2);
 
-        // Sync telemetry to server database
         fetch("/api/hyperlocal/rider", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -289,7 +293,7 @@ export default function StandaloneRiderProductionApp() {
   }, [isOnline, rider.id, batteryLevel]);
 
   // ─────────────────────────────────────────────────────────────
-  // STEP 4: OFFLINE DEAD-ZONE CACHING (BAHRAICH 2G RESILIENCE)
+  // 4. OFFLINE DEAD-ZONE CACHING (BAHRAICH 2G RESILIENCE)
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -308,7 +312,6 @@ export default function StandaloneRiderProductionApp() {
     };
   }, []);
 
-  // Cache trip details locally whenever activeOrder changes
   useEffect(() => {
     if (typeof window !== "undefined") {
       if (activeOrder) {
@@ -317,8 +320,31 @@ export default function StandaloneRiderProductionApp() {
     }
   }, [activeOrder]);
 
+  // 5 Permanent Navigation Tabs Mapping
+  const tabConfigs = [
+    { key: "cockpit" as TabKey, label: "Cockpit", icon: "🛵", screens: [7, 8, 9, 25, 33, 39] },
+    { key: "orders" as TabKey, label: "Live Orders", icon: "⚡", screens: [10, 21, 22, 11, 12, 23, 35, 36, 37, 38, 13, 14, 24, 28, 29, 30, 45, 46] },
+    { key: "earnings" as TabKey, label: "Passbook", icon: "💰", screens: [15, 16, 26, 6, 31, 34, 47] },
+    { key: "navigation" as TabKey, label: "Navigation", icon: "🗺️", screens: [40, 41, 42, 44, 48] },
+    { key: "profile" as TabKey, label: "Fleet ID", icon: "👤", screens: [18, 43, 32, 17, 1, 2, 3, 4, 5, 19, 20, 27] },
+  ];
+
+  const handleTabClick = (tabKey: TabKey) => {
+    setActiveTab(tabKey);
+    const targetTab = tabConfigs.find((t) => t.key === tabKey);
+    if (targetTab && !targetTab.screens.includes(currentScreenId)) {
+      setCurrentScreenId(targetTab.screens[0]);
+    }
+  };
+
+  // Sync activeTab when screen changes
+  useEffect(() => {
+    const found = tabConfigs.find((t) => t.screens.includes(currentScreenId));
+    if (found) setActiveTab(found.key);
+  }, [currentScreenId]);
+
   // ─────────────────────────────────────────────────────────────
-  // ALL 48 SCREENS MASTER MAP (COMPLETELY WIRED)
+  // ALL 48 SCREENS MASTER MAP (100% REAL HARDWARE WIRED)
   // ─────────────────────────────────────────────────────────────
   const screens = [
     // Stage 1: Onboarding Core
@@ -336,7 +362,10 @@ export default function StandaloneRiderProductionApp() {
             }
             setCurrentScreenId(2);
           }}
-          onGoogleLogin={() => setIsGoogleModalOpen(true)}
+          onGoogleLogin={async () => {
+            const ok = await handleGoogleLogin();
+            if (ok) setCurrentScreenId(7);
+          }}
         />
       ),
     },
@@ -376,6 +405,9 @@ export default function StandaloneRiderProductionApp() {
       component: (
         <Screen07DutyCockpit
           isOnlineProp={isOnline}
+          cashInHandProp={cashInHand}
+          cashCeilingProp={cashCeiling}
+          remoteConfig={remoteConfig}
           onGoOnline={toggleDuty}
           onOpenRadar={() => triggerIncomingOrderRadar(false)}
           onOpenPassbook={() => setCurrentScreenId(15)}
@@ -385,26 +417,39 @@ export default function StandaloneRiderProductionApp() {
           onOpenHeatmap={() => setCurrentScreenId(33)}
           onOpenProfile={() => setCurrentScreenId(18)}
           onOpenSos={() => setCurrentScreenId(17)}
+          onOpenRemit={() => setCurrentScreenId(26)}
+          onOpenTargetScreen={(id) => setCurrentScreenId(id)}
         />
       ),
     },
     { id: 8, title: "08. Shift Scorecard & Telemetry", component: <Screen08ShiftScorecard onBack={() => setCurrentScreenId(7)} onOpenCeiling={() => setCurrentScreenId(9)} /> },
-    { id: 9, title: "09. ₹1,500 Cash Ceiling Guard", component: <Screen09CashCeiling onBack={() => setCurrentScreenId(7)} onRemit={() => setCurrentScreenId(26)} /> },
+    {
+      id: 9,
+      title: "09. ₹1,500 Cash Ceiling Guard",
+      component: (
+        <Screen09CashCeiling
+          cashInHandProp={cashInHand}
+          cashCeilingProp={cashCeiling}
+          onBack={() => setCurrentScreenId(7)}
+          onRemit={() => setCurrentScreenId(26)}
+        />
+      ),
+    },
     { id: 25, title: "25. Shift Slot Booking & Min Guarantee", component: <Screen25ShiftBookingMg onBack={() => setCurrentScreenId(7)} /> },
     { id: 33, title: "33. Bahraich Demand Heatmap & Alerts", component: <Screen33HeatmapSurge onBack={() => setCurrentScreenId(7)} onNavigateToSurgeZone={() => triggerIncomingOrderRadar(false)} /> },
+    { id: 39, title: "39. Delivery Category Opt-In Toggles", component: <Screen39CategoryToggles onBack={() => setCurrentScreenId(18)} onSavePreferences={() => setCurrentScreenId(7)} /> },
 
     // Stage 4: Radar, Siren & Batching
-    { id: 10, title: "10. 30s Proximity Siren Radar", component: <Screen10Radar onAccept={() => acceptOrder()} onDecline={() => declineOrder()} /> },
-    { id: 21, title: "21. Lockscreen High-Siren Order Pop", component: <Screen21LockscreenOrderPop onAccept={() => acceptOrder()} onDecline={() => declineOrder()} /> },
-    { id: 22, title: "22. 2-Order Same-Route Batch Radar", component: <Screen22MultiOrderBatch onAcceptBatch={() => acceptOrder()} onDecline={() => declineOrder()} /> },
-    { id: 11, title: "11. Slide to Accept Order", component: <Screen11SlideAccept onAccepted={() => acceptOrder()} onBack={() => setCurrentScreenId(10)} /> },
+    { id: 10, title: "10. 30s Proximity Siren Radar", component: <Screen10Radar onAccept={() => { acceptOrder(); setCurrentScreenId(12); }} onDecline={() => { declineOrder(); setCurrentScreenId(7); }} /> },
+    { id: 21, title: "21. Lockscreen High-Siren Order Pop", component: <Screen21LockscreenOrderPop onAccept={() => { acceptOrder(); setCurrentScreenId(12); }} onDecline={() => { declineOrder(); setCurrentScreenId(7); }} /> },
+    { id: 22, title: "22. 2-Order Same-Route Batch Radar", component: <Screen22MultiOrderBatch onAcceptBatch={() => { acceptOrder(); setCurrentScreenId(12); }} onDecline={() => { declineOrder(); setCurrentScreenId(7); }} /> },
+    { id: 11, title: "11. Slide to Accept Order", component: <Screen11SlideAccept onAccepted={() => { acceptOrder(); setCurrentScreenId(12); }} onBack={() => setCurrentScreenId(10)} /> },
 
     // Stage 5: Multi-Category Specialist Runs
-    { id: 35, title: "35. Pharmacy Rx & Medical Verification", component: <Screen35PharmacyRxPickup onBack={() => setCurrentScreenId(12)} onConfirmPickup={() => confirmPickup()} /> },
-    { id: 36, title: "36. Heavy Grocery Crate & Weight Bonus", component: <Screen36HeavyGroceryCrate onBack={() => setCurrentScreenId(12)} onConfirmCratePickup={() => confirmPickup()} /> },
-    { id: 37, title: "37. P2P Genie Courier (Dual-OTP)", component: <Screen37P2pGenieCourier onBack={() => setCurrentScreenId(12)} onProceedToDrop={() => confirmPickup()} /> },
-    { id: 38, title: "38. Fragile Cake & Bakery Guard", component: <Screen38FragileCakeGuard onBack={() => setCurrentScreenId(12)} onConfirmCakePickup={() => confirmPickup()} /> },
-    { id: 39, title: "39. Delivery Category Opt-In Toggles", component: <Screen39CategoryToggles onBack={() => setCurrentScreenId(18)} onSavePreferences={() => setCurrentScreenId(7)} /> },
+    { id: 35, title: "35. Pharmacy Rx & Medical Verification", component: <Screen35PharmacyRxPickup onBack={() => setCurrentScreenId(12)} onConfirmPickup={() => { confirmPickup(); setCurrentScreenId(40); }} /> },
+    { id: 36, title: "36. Heavy Grocery Crate & Weight Bonus", component: <Screen36HeavyGroceryCrate onBack={() => setCurrentScreenId(12)} onConfirmCratePickup={() => { confirmPickup(); setCurrentScreenId(40); }} /> },
+    { id: 37, title: "37. P2P Genie Courier (Dual-OTP)", component: <Screen37P2pGenieCourier onBack={() => setCurrentScreenId(12)} onProceedToDrop={() => { confirmPickup(); setCurrentScreenId(40); }} /> },
+    { id: 38, title: "38. Fragile Cake & Bakery Guard", component: <Screen38FragileCakeGuard onBack={() => setCurrentScreenId(12)} onConfirmCakePickup={() => { confirmPickup(); setCurrentScreenId(40); }} /> },
 
     // Stage 6: Store Pickup & Delays
     {
@@ -412,13 +457,13 @@ export default function StandaloneRiderProductionApp() {
       title: "12. Store Pickup & Verification Checklist",
       component: (
         <Screen12StorePickup
-          onPickupConfirmed={() => confirmPickup()}
+          onPickupConfirmed={() => { confirmPickup(); setCurrentScreenId(40); }}
           onBack={() => setCurrentScreenId(11)}
           onMerchantDelay={() => setCurrentScreenId(23)}
         />
       ),
     },
-    { id: 23, title: "23. Merchant Delay & Wait Compensation", component: <Screen23MerchantDelay onBack={() => setCurrentScreenId(12)} onConfirmReady={() => confirmPickup()} onRequestReassign={() => declineOrder()} /> },
+    { id: 23, title: "23. Merchant Delay & Wait Compensation", component: <Screen23MerchantDelay onBack={() => setCurrentScreenId(12)} onConfirmReady={() => { confirmPickup(); setCurrentScreenId(40); }} onRequestReassign={() => { declineOrder(); setCurrentScreenId(7); }} /> },
 
     // Stage 7: Turn-by-Turn Navigation & On-Road Special
     {
@@ -438,7 +483,7 @@ export default function StandaloneRiderProductionApp() {
     },
     { id: 41, title: "41. Last 100m Alleyway & Gate Rescue", component: <Screen41Last100mLandmark onBack={() => setCurrentScreenId(40)} onContinueNavigation={() => setCurrentScreenId(13)} /> },
     { id: 42, title: "42. Railway Halt & Dynamic Reroute", component: <Screen42TrafficReroute onBack={() => setCurrentScreenId(40)} onAcceptReroute={() => setCurrentScreenId(40)} onStayOnCurrentRoute={() => setCurrentScreenId(40)} /> },
-    { id: 43, title: "43. Digital Fleet ID & Police Pass", component: <Screen43DigitalFleetIdPass onBack={() => setCurrentScreenId(40)} /> },
+    { id: 43, title: "43. Digital Fleet ID & Police Pass", component: <Screen43DigitalFleetIdPass onBack={() => setCurrentScreenId(18)} /> },
     { id: 44, title: "44. In-App Masked Customer Chat", component: <Screen44InAppMaskedChat onBack={() => setCurrentScreenId(40)} /> },
 
     // Stage 8: Doorstep Delivery & Rescues
@@ -448,7 +493,7 @@ export default function StandaloneRiderProductionApp() {
       component: (
         <Screen13Doorstep
           onShowDynamicQr={() => setCurrentScreenId(14)}
-          onDelivered={(otp) => completeDeliveryWithOtp(otp)}
+          onDelivered={(otp) => { completeDeliveryWithOtp(otp); setCurrentScreenId(15); }}
           onBack={() => setCurrentScreenId(40)}
           onDoorstepChangeRefund={() => setCurrentScreenId(45)}
           onCustomerUnreachable={() => setCurrentScreenId(24)}
@@ -456,11 +501,11 @@ export default function StandaloneRiderProductionApp() {
         />
       ),
     },
-    { id: 14, title: "14. Dynamic Cashfree UPI QR (COD)", component: <Screen14DynamicQr onPaymentReceived={() => completeDeliveryWithOtp("4492")} onBack={() => setCurrentScreenId(13)} /> },
+    { id: 14, title: "14. Dynamic Cashfree UPI QR (COD)", component: <Screen14DynamicQr onPaymentReceived={() => { completeDeliveryWithOtp("4492"); setCurrentScreenId(15); }} onBack={() => setCurrentScreenId(13)} /> },
     { id: 24, title: "24. Customer Unreachable 5-Min Rescue", component: <Screen24CustomerUnreachable onBack={() => setCurrentScreenId(13)} onCompleteCancellation={() => setCurrentScreenId(15)} /> },
     { id: 28, title: "28. Breakdown & Buddy Handover Desk", component: <Screen28BreakdownRescue onBack={() => setCurrentScreenId(13)} onHandoverComplete={() => setCurrentScreenId(15)} /> },
     { id: 29, title: "29. Customer Refused (RTO Return Flow)", component: <Screen29CustomerRefusalRto onBack={() => setCurrentScreenId(13)} onConfirmMerchantReturn={() => setCurrentScreenId(15)} /> },
-    { id: 30, title: "30. Contactless Photo POD Watermark", component: <Screen30ContactlessPhotoPod onBack={() => setCurrentScreenId(13)} onConfirmPod={() => completeDeliveryWithOtp("4492")} /> },
+    { id: 30, title: "30. Contactless Photo POD Watermark", component: <Screen30ContactlessPhotoPod onBack={() => setCurrentScreenId(13)} onConfirmPod={() => { completeDeliveryWithOtp("4492"); setCurrentScreenId(15); }} /> },
 
     // Stage 9: Ground-Zero Dilemmas & Rescues
     {
@@ -472,6 +517,7 @@ export default function StandaloneRiderProductionApp() {
           onConfirmChangeRefund={(amt, method) => {
             refundDoorstepChange(amt, method);
             completeDeliveryWithOtp("4492");
+            setCurrentScreenId(15);
           }}
         />
       ),
@@ -499,32 +545,71 @@ export default function StandaloneRiderProductionApp() {
       component: (
         <Screen15Passbook
           onBack={() => setCurrentScreenId(7)}
-          onInstantPayout={() => setCurrentScreenId(6)}
+          onInstantPayout={() => requestInstantPayout()}
           onRemitCash={() => setCurrentScreenId(26)}
           onClaimParking={() => setCurrentScreenId(47)}
           onDisputePenalty={() => setCurrentScreenId(31)}
           onMilestones={() => setCurrentScreenId(16)}
+          walletBalanceProp={walletBalance}
+          todayEarningsProp={todayEarnings}
+          todayTripsCountProp={todayTripsCount}
         />
       ),
     },
     { id: 16, title: "16. Milestone Targets & Rush Surge", component: <Screen16Milestones onBack={() => setCurrentScreenId(7)} /> },
-    { id: 26, title: "26. Cash Remittance & Deposit Hubs", component: <Screen26CashRemittanceHubs onBack={() => setCurrentScreenId(9)} onPayViaUpi={() => remitCash()} /> },
-    { id: 31, title: "31. Deduction & Detour Dispute Desk", component: <Screen31PenaltyDispute onBack={() => setCurrentScreenId(15)} onSubmitDispute={() => setCurrentScreenId(15)} /> },
+    {
+      id: 26,
+      title: "26. Cash Remittance & Deposit Hubs",
+      component: (
+        <Screen26CashRemittanceHubs
+          onBack={() => setCurrentScreenId(9)}
+          onPayViaUpi={() => remitCash()}
+          cashDueProp={cashInHand}
+          cashCeilingProp={cashCeiling}
+        />
+      ),
+    },
+    {
+      id: 31,
+      title: "31. Deduction & Detour Dispute Desk",
+      component: (
+        <Screen31PenaltyDispute
+          onBack={() => setCurrentScreenId(15)}
+          onSubmitDispute={() => {
+            setCurrentScreenId(15);
+          }}
+        />
+      ),
+    },
     { id: 34, title: "34. Tier Badges & Refer ₹500", component: <Screen34ReferAndBadges onBack={() => setCurrentScreenId(18)} /> },
 
     // Stage 11: Safety, Insurance & Profile
     { id: 17, title: "17. Red 24x7 Safety SOS Shield", component: <Screen17SafetySos onBack={() => setCurrentScreenId(7)} /> },
     { id: 32, title: "32. Safe Driving Rules & Road Code", component: <Screen32AccidentInsurance onBack={() => setCurrentScreenId(18)} onConsentAccepted={() => setCurrentScreenId(7)} /> },
-    { id: 18, title: "18. Rider Profile & Safe Shift Logout", component: <Screen18Profile onBack={() => setCurrentScreenId(7)} onLogout={() => setCurrentScreenId(1)} /> },
+    {
+      id: 18,
+      title: "18. Rider Profile & Safe Shift Logout",
+      component: (
+        <Screen18Profile
+          onBack={() => setCurrentScreenId(7)}
+          onLogout={() => setCurrentScreenId(1)}
+          onEditKyc={() => setCurrentScreenId(4)}
+          onOpenPayoutSetup={() => setCurrentScreenId(6)}
+          onOpenDisputes={() => setCurrentScreenId(31)}
+          onOpenSafetyRules={() => setCurrentScreenId(32)}
+          onOpenFleetId={() => setCurrentScreenId(43)}
+        />
+      ),
+    },
   ];
 
-  const activeScreenObj = screens.find((s) => s.id === currentScreenId) || screens[6]; // Default to S07 Cockpit
+  const activeScreenObj = screens.find((s) => s.id === currentScreenId) || screens[6];
 
   return (
     <div className="min-h-screen w-full bg-[#FAF8FF] text-[#0F172A] font-sans flex flex-col justify-between selection:bg-[#0D47A1] selection:text-white relative">
       
       {/* ── Native Sticky Header & Hardware Telemetry Notch ── */}
-      <header className="sticky top-0 z-40 bg-slate-950 text-white px-4 py-2 flex items-center justify-between text-xs select-none shadow-md">
+      <header className="sticky top-0 z-40 bg-slate-950 text-white px-3.5 py-2 flex items-center justify-between text-xs select-none shadow-md">
         
         {/* Left: Online Status & WakeLock Beacon */}
         <div className="flex items-center gap-2">
@@ -534,7 +619,7 @@ export default function StandaloneRiderProductionApp() {
           </span>
           {isWakeLockActive && (
             <span className="hidden sm:inline-block text-[9px] px-1.5 py-0.2 rounded bg-blue-900/80 text-blue-300 font-mono" title="Screen WakeLock Active">
-              ☀️ Lock Awake
+              ☀️ Screen Awake
             </span>
           )}
         </div>
@@ -543,16 +628,15 @@ export default function StandaloneRiderProductionApp() {
         <div className="text-center font-mono text-[10px]">
           {gpsAccuracy ? (
             <span className="text-emerald-400 font-bold">
-              GPS ±{gpsAccuracy}m · Bahraich
+              GPS ±{gpsAccuracy}m · UP 40
             </span>
           ) : (
             <span className="text-amber-400">GPS Syncing...</span>
           )}
         </div>
 
-        {/* Right: Sound, Offline & Real Battery */}
+        {/* Right: Sound, Cash Ceiling & Real Battery */}
         <div className="flex items-center gap-2 font-mono text-[11px]">
-          {/* Sound Toggle */}
           <button
             type="button"
             onClick={() => {
@@ -562,12 +646,12 @@ export default function StandaloneRiderProductionApp() {
               else riderAudio.stopSiren();
             }}
             className="text-xs hover:scale-110 transition"
-            title="Toggle Loud Proximity Siren"
+            title="Toggle Loud Siren"
           >
             {soundEnabled ? "🔊" : "🔇"}
           </button>
 
-          {/* Battery Status */}
+          {/* Real Device Battery Level */}
           <span className={`flex items-center gap-0.5 ${batteryLevel <= 20 ? "text-red-400 font-bold animate-pulse" : "text-slate-300"}`}>
             {isBatteryCharging ? "⚡" : "🔋"} {batteryLevel}%
           </span>
@@ -613,7 +697,7 @@ export default function StandaloneRiderProductionApp() {
         </div>
       )}
 
-      {/* ── Notification & Siren Permission Banner (If Not Granted Yet) ── */}
+      {/* ── Notification & Siren Permission Banner ── */}
       {notificationPermission !== "granted" && (
         <div className="bg-slate-900 text-slate-200 border-b border-slate-800 px-4 py-1.5 flex items-center justify-between text-[11px] z-30">
           <span className="flex items-center gap-1.5 text-[10px]">
@@ -630,7 +714,7 @@ export default function StandaloneRiderProductionApp() {
         </div>
       )}
 
-      {/* ── Offline Dead-Zone Warning Banner (When 2G / No Signal in Bahraich) ── */}
+      {/* ── Offline Dead-Zone Warning Banner ── */}
       {isOffline && (
         <div className="bg-amber-500 text-slate-950 px-4 py-1.5 text-center text-[11px] font-black tracking-tight flex items-center justify-center gap-2 shadow-inner z-30">
           <span>⚠️</span>
@@ -664,17 +748,30 @@ export default function StandaloneRiderProductionApp() {
         {activeScreenObj.component}
       </main>
 
-      {/* ── Persistent Floating SOS & Switcher (Subtle Native Assist) ── */}
-      <div className="fixed bottom-3 right-3 z-30 flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => setCurrentScreenId(17)}
-          className="w-10 h-10 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-xl flex items-center justify-center text-sm font-black active:scale-95 transition border-2 border-white"
-          title="Emergency 24x7 Safety SOS"
-        >
-          🛡️
-        </button>
-      </div>
+      {/* ── 5 Permanent Mobile Bottom Navigation Tabs ── */}
+      <nav className="sticky bottom-0 bg-white border-t border-slate-200 px-1 py-1 grid grid-cols-5 text-center shadow-lg z-30">
+        {tabConfigs.map((tab) => {
+          const isTabActive = activeTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => handleTabClick(tab.key)}
+              className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition ${
+                isTabActive ? "text-[#0D47A1]" : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <span className="text-base leading-none block">{tab.icon}</span>
+              <span className={`text-[9px] mt-0.5 block truncate max-w-full ${isTabActive ? "font-black" : "font-semibold"}`}>
+                {tab.label}
+              </span>
+              {isTabActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0D47A1] mt-0.5 block"></span>
+              )}
+            </button>
+          );
+        })}
+      </nav>
 
       {/* ── Google 1-Tap Auto-Login Consent Modal ── */}
       <GoogleConsentModal

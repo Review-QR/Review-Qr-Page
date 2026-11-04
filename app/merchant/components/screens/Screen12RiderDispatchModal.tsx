@@ -11,6 +11,7 @@ interface Screen12Props {
 export default function Screen12RiderDispatchModal({
   onBack,
   onConfirmDispatch,
+  onRiderAssigned,
 }: Screen12Props) {
   const [dispatchMode, setDispatchMode] = useState<"fleet" | "self">("fleet");
   const [dispatched, setDispatched] = useState<boolean>(true);

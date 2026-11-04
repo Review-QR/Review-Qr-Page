@@ -244,6 +244,24 @@ export default function OccasionStudio({
     setSaveMsg(null);
     setSaving(true);
     try {
+      let posterDataUrl: string | undefined = undefined;
+      if (testCanvasRef.current) {
+        renderOccasionGreetingPoster({
+          canvas: testCanvasRef.current,
+          style: templateStyle,
+          businessName,
+          businessType,
+          logoImg: logoImgRef.current,
+          occasionType,
+          headline,
+          subtitle: occasionSubtitle,
+          couponCode,
+          discountPercent,
+          couponValidityDays,
+        });
+        posterDataUrl = testCanvasRef.current.toDataURL("image/jpeg", 0.9);
+      }
+
       const activeState = occasionType === "birthday" ? autoBirthday : autoAnniversary;
       const res = await saveMerchantOccasionDraftAction({
         occasionType,
@@ -253,6 +271,7 @@ export default function OccasionStudio({
         discountPercent,
         couponValidityDays,
         isActive: activeState,
+        posterDataUrl,
       });
 
       if (res.success) {
@@ -409,6 +428,24 @@ export default function OccasionStudio({
     setTestingFast2Sms(true);
     setTestNotice(null);
     try {
+      let posterDataUrl: string | undefined = undefined;
+      if (testCanvasRef.current) {
+        renderOccasionGreetingPoster({
+          canvas: testCanvasRef.current,
+          style: templateStyle,
+          businessName,
+          businessType,
+          logoImg: logoImgRef.current,
+          occasionType,
+          headline,
+          subtitle: occasionSubtitle,
+          couponCode,
+          discountPercent,
+          couponValidityDays,
+        });
+        posterDataUrl = testCanvasRef.current.toDataURL("image/jpeg", 0.9);
+      }
+
       const res = await sendFast2SmsWhatsAppTestAction({
         phone: clean,
         customerName: "Lucky Ji",
@@ -416,12 +453,14 @@ export default function OccasionStudio({
         discountPercent,
         couponValidityDays,
         customMessage: bodyText,
+        posterDataUrl,
       });
 
       if (res.success) {
         setTestNotice({
           type: "success",
           text: `Fast2SMS WhatsApp Gateway Success! (Request ID: ${res.requestId || "Dispatched"})`,
+          details: res.mediaUrl ? `Delivered Custom Poster: ${res.mediaUrl}` : undefined,
         });
       } else if (res.isPendingMetaApproval) {
         setTestNotice({
@@ -450,511 +489,258 @@ export default function OccasionStudio({
       {/* Offscreen Canvas for HD Poster Rendering */}
       <canvas ref={testCanvasRef} className="hidden" />
       {/* Occasion Selection Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 text-2xl text-white shadow-md">
-            ✨
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800 font-bold">
+            🎉
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-900">Occasion Greeting Studio &amp; Auto-Drafts</h2>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">Customer Occasion Greetings</h2>
             <p className="text-xs text-slate-500">
-              Approved drafts are automatically dispatched to customers on WhatsApp on their special day.
+              Configure greeting template and daily automatic dispatch for registered customers.
             </p>
           </div>
         </div>
 
         {/* Connect Credits Pill */}
-        <div className="flex items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-3.5 py-2">
-          <span className="text-lg">🪙</span>
-          <div>
-            <div className="text-xs font-bold text-amber-900">{creditsBalance} Connect Credits</div>
-            <div className="text-[10px] text-amber-700">1 Credit / Dispatched Wish</div>
-          </div>
+        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+          <span>Balance:</span>
+          <span className="font-bold text-slate-900">{creditsBalance} Credits</span>
         </div>
       </div>
 
-      {/* Occasion Types Tab Bar (4 Categories - Compact & Rounded) */}
+      {/* Occasion Types Tab Bar (4 Categories - Formal & Rounded) */}
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <button
           type="button"
           onClick={() => handleOccasionSwitch("birthday")}
-          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
             occasionType === "birthday"
-              ? "border-orange-500 bg-orange-600 text-white shadow-xs"
+              ? "border-slate-900 bg-slate-900 text-white shadow-xs"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <span className="text-sm">🎂</span>
-          <span>Birthday (Auto)</span>
-          {draftsMap.birthday && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
+          <span>🎂 Birthday</span>
+          {draftsMap.birthday && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
         </button>
 
         <button
           type="button"
           onClick={() => handleOccasionSwitch("anniversary")}
-          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
             occasionType === "anniversary"
-              ? "border-rose-500 bg-rose-600 text-white shadow-xs"
+              ? "border-slate-900 bg-slate-900 text-white shadow-xs"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <span className="text-sm">💍</span>
-          <span>Anniversary (Auto)</span>
-          {draftsMap.anniversary && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
+          <span>💍 Anniversary</span>
+          {draftsMap.anniversary && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
         </button>
 
         <button
           type="button"
           onClick={() => handleOccasionSwitch("festival")}
-          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
             occasionType === "festival"
-              ? "border-indigo-500 bg-indigo-600 text-white shadow-xs"
+              ? "border-slate-900 bg-slate-900 text-white shadow-xs"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <span className="text-sm">🪔</span>
-          <span>Festivals (Manual)</span>
-          {draftsMap.festival && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
+          <span>🪔 Festivals</span>
+          {draftsMap.festival && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
         </button>
 
         <button
           type="button"
           onClick={() => handleOccasionSwitch("offer")}
-          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition shadow-2xs ${
+          className={`flex items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-bold transition ${
             occasionType === "offer"
-              ? "border-emerald-500 bg-emerald-600 text-white shadow-xs"
+              ? "border-slate-900 bg-slate-900 text-white shadow-xs"
               : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
           }`}
         >
-          <span className="text-sm">🔥</span>
-          <span>Today&apos;s Special</span>
-          {draftsMap.offer && <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />}
+          <span>🔥 Special Offer</span>
+          {draftsMap.offer && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />}
         </button>
       </div>
 
       {/* Main Designer Grid */}
       <div className="grid gap-6 lg:grid-cols-12 items-start">
-        {/* Left Column: WhatsApp Sticker Poster Preview + Bottom Dots Carousel (5 Cols) */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="rounded-3xl border border-slate-200 bg-slate-900 p-5 text-white shadow-xl">
-            <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-2.5 text-xs text-slate-400">
-              <span className="flex items-center gap-2 font-bold text-amber-300 text-sm">
-                <span>📱</span> WhatsApp Greeting Poster
-              </span>
-              <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[11px] font-bold text-emerald-300">
-                Sticker Fit
-              </span>
-            </div>
+        {/* Left Column: Slim Template Card + Mobile Test Dispatch (5 Cols) */}
+        <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
+          <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 text-xs font-bold text-slate-700">
+            <span>Template Preview</span>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
+              Formal Pass
+            </span>
+          </div>
 
-            {/* CARD 1: ROYAL DARK GOLD LUXURY */}
-            {templateStyle === "royal_gold" && (
-              <div className="relative overflow-hidden rounded-3xl border-2 border-[#d4af37]/70 bg-gradient-to-b from-[#18140c] via-[#0d0c0a] to-[#1e170d] p-6 text-center shadow-[0_12px_40px_rgba(212,175,55,0.28)] transition min-h-[470px] flex flex-col justify-between">
-                {/* Curved Gold Ribbon Waves on Top Corners */}
-                <div className="pointer-events-none absolute -left-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-br from-[#f5d77f]/30 via-[#d4af37]/20 to-transparent blur-xl" />
-                <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-gradient-to-bl from-[#f5d77f]/30 via-[#d4af37]/20 to-transparent blur-xl" />
-                <div className="pointer-events-none absolute -bottom-10 -right-10 h-36 w-36 rounded-full bg-gradient-to-tl from-[#d4af37]/25 to-transparent blur-xl" />
-
-                {/* Top Section: Circular Medallion Logo + Business Name + Category Emblem */}
+          {/* SLIM TEMPLATE CARD */}
+          <div className="w-full max-w-[240px] mx-auto">
+            {templateStyle === "royal_gold" ? (
+              <div className="relative overflow-hidden rounded-xl border border-[#d4af37]/60 bg-gradient-to-b from-[#18140c] via-[#0d0c0a] to-[#1e170d] p-3 text-center shadow-xs transition flex flex-col justify-between min-h-[310px]">
+                {/* Top Section: Circular Medallion Logo + Business Name */}
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-[#f5d77f] ring-4 ring-[#d4af37]/35 bg-[#140f09] shadow-[0_8px_25px_rgba(212,175,55,0.45)]">
+                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#f5d77f] ring-1 ring-[#d4af37]/30 bg-[#140f09]">
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
                     ) : (
-                      <span className="text-3xl">{emblem.icon}</span>
+                      <span className="text-lg">{emblem.icon}</span>
                     )}
                   </div>
-                  <span className="mt-2 text-xs sm:text-sm font-black uppercase tracking-[0.22em] text-[#e5c158] drop-shadow-sm">
+                  <span className="mt-1 text-xs font-bold uppercase tracking-wider text-[#e5c158]">
                     {businessName}
                   </span>
-                  <span className="mt-0.5 text-[10px] font-bold uppercase tracking-widest text-[#d4af37]/80">
-                    ✦ {emblem.label} ✦
+                  <span className="text-[9px] font-semibold text-[#d4af37]/80">
+                    {emblem.label}
                   </span>
                 </div>
 
-                {/* Middle Section: Occasion Icon + Headline + Ornate Divider */}
-                <div className="relative z-10 my-3">
-                  <span className="text-5xl drop-shadow-md">{occasionIcon}</span>
-
-                  {/* Headline */}
-                  <h3 className="mt-2.5 text-xl sm:text-2xl font-black tracking-tight text-white drop-shadow-md leading-snug">
+                {/* Middle Section: Occasion Icon + Headline */}
+                <div className="relative z-10 my-1">
+                  <span className="text-xl">{occasionIcon}</span>
+                  <h3 className="mt-0.5 text-xs font-bold text-white leading-snug">
                     {headline}
                   </h3>
-
-                  {/* Golden Ornate Divider */}
-                  <div className="my-2.5 flex items-center justify-center gap-2 text-[#d4af37]">
-                    <span className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#d4af37]" />
-                    <span className="text-sm">‹ ❖ ›</span>
-                    <span className="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#d4af37]" />
-                  </div>
-
-                  {/* Subtitle / Wishes */}
-                  <p className="font-serif text-xs sm:text-sm italic text-[#f0dfaa] px-2 leading-relaxed">
+                  <p className="font-serif text-[10px] italic text-[#f0dfaa] px-1 mt-1 leading-snug line-clamp-2">
                     &ldquo;{occasionSubtitle}&rdquo;
                   </p>
                 </div>
 
                 {/* Bottom Section: Coupon Ticket Box */}
-                <div className="relative z-10 rounded-2xl border border-[#d4af37]/60 bg-black/50 p-3.5 backdrop-blur-sm shadow-inner">
-                  <span className="block text-[10px] font-black uppercase tracking-wider text-[#e5c158]">
-                    EXCLUSIVE GIFT COUPON (VALID {couponValidityDays} DAYS)
+                <div className="relative z-10 rounded-lg border border-[#d4af37]/40 bg-black/50 p-2 text-center">
+                  <span className="block text-[8px] font-semibold uppercase tracking-wider text-[#e5c158]">
+                    VALID {couponValidityDays} DAYS
                   </span>
-
-                  {/* Universal VIP Ticket Pill */}
-                  <div className="relative mx-auto my-1.5 max-w-[230px] rounded-xl bg-gradient-to-r from-[#d4af37] via-[#f7e8b6] to-[#d4af37] py-1.5 px-4 font-mono text-sm sm:text-base font-black tracking-wider text-[#1a1205] shadow-[0_4px_12px_rgba(212,175,55,0.4)]">
-                    VIP PASS · FLAT {discountPercent}% OFF
+                  <div className="mx-auto my-0.5 max-w-[150px] rounded bg-[#d4af37] py-0.5 px-2 font-mono text-[10px] font-bold text-[#1a1205]">
+                    FLAT {discountPercent}% OFF
                   </div>
-
-                  <span className="text-xs font-bold text-white block">Flat {discountPercent}% OFF On Your Visit!</span>
-                  <span className="text-[10px] text-amber-200/80 block mt-0.5">Show message code below to redeem</span>
-                </div>
-
-                {/* Golden Ribbon Bow at the Bottom Center */}
-                <div className="relative z-10 -mb-2 mt-2 flex justify-center">
-                  <div className="flex items-center justify-center text-2xl drop-shadow-[0_2px_8px_rgba(212,175,55,0.5)]">
-                    🎀
-                  </div>
+                  <span className="text-[9px] text-white block">On Your Visit</span>
                 </div>
               </div>
-            )}
-
-            {/* CARD 1 (DEFAULT): WARM IVORY CREAM ELEGANCE */}
-            {templateStyle === "ivory_cream" && (
-              <div className="relative overflow-hidden rounded-3xl border-2 border-[#cfb894] bg-gradient-to-b from-[#fdfbf7] via-[#f7f2ea] to-[#eee5d8] p-6 text-center shadow-[0_12px_40px_rgba(180,150,110,0.25)] transition min-h-[470px] flex flex-col justify-between">
-                {/* Botanical Leaves Accents on Corners */}
-                <div className="pointer-events-none absolute -right-2 -top-2 text-4xl opacity-80">
-                  🌿
-                </div>
-                <div className="pointer-events-none absolute -left-2 -bottom-2 text-4xl opacity-80">
-                  🍃
-                </div>
-
-                {/* Top Section: Circular Medallion Logo + Dominant Business Name + Category Emblem */}
+            ) : (
+              <div className="relative overflow-hidden rounded-xl border border-[#d8c7af] bg-gradient-to-b from-[#fdfbf7] via-[#f7f2ea] to-[#eee5d8] p-3 text-center shadow-xs transition flex flex-col justify-between min-h-[310px]">
+                {/* Top Section: Circular Medallion Logo + Business Name */}
                 <div className="relative z-10 flex flex-col items-center">
-                  <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-2 border-[#b59363] ring-4 ring-[#dfc698]/50 bg-[#1e140a] shadow-[0_8px_25px_rgba(140,105,65,0.28)]">
+                  <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#b59363] ring-1 ring-[#dfc698]/40 bg-[#1e140a]">
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={logoUrl} alt={businessName} className="h-full w-full object-cover" />
                     ) : (
-                      <span className="text-3xl">{emblem.icon}</span>
+                      <span className="text-lg">{emblem.icon}</span>
                     )}
                   </div>
-                  {/* Dominant Bolder Business Name */}
-                  <span className="mt-2.5 text-base sm:text-lg font-black uppercase tracking-[0.16em] text-[#2c1808] drop-shadow-xs">
+                  <span className="mt-1 text-xs font-bold uppercase tracking-wider text-[#2c1808]">
                     {businessName}
                   </span>
-                  <span className="mt-0.5 text-[11px] font-extrabold uppercase tracking-widest text-[#6d4d29]">
-                    ✦ {emblem.label} ✦
+                  <span className="text-[9px] font-semibold text-[#704d28]">
+                    {emblem.label}
                   </span>
                 </div>
 
-                {/* Middle Section: Occasion Icon + Darker Headline + Divider */}
-                <div className="relative z-10 my-3">
-                  <span className="text-5xl drop-shadow-sm">{occasionIcon}</span>
-
-                  {/* Headline (Darker, rich tone) */}
-                  <h3 className="mt-2 text-xl sm:text-2xl font-black tracking-tight text-[#1e1107] leading-snug drop-shadow-xs">
+                {/* Middle Section: Occasion Icon + Headline */}
+                <div className="relative z-10 my-1">
+                  <span className="text-xl">{occasionIcon}</span>
+                  <h3 className="mt-0.5 text-xs font-bold text-[#1e1107] leading-snug">
                     {headline}
                   </h3>
-
-                  {/* Warm Bronze Ornate Divider */}
-                  <div className="my-2.5 flex items-center justify-center gap-2 text-[#997340]">
-                    <span className="h-[1.5px] w-12 bg-gradient-to-r from-transparent to-[#997340]" />
-                    <span className="text-sm font-bold">‹ ❖ ›</span>
-                    <span className="h-[1.5px] w-12 bg-gradient-to-l from-transparent to-[#997340]" />
-                  </div>
-
-                  {/* Subtitle / Wishes (Darker, crisper readability) */}
-                  <p className="font-serif text-sm sm:text-[15px] font-semibold italic text-[#2e1a0b] px-2 leading-relaxed">
+                  <p className="font-serif text-[10px] italic text-[#2e1a0b] px-1 mt-1 leading-snug line-clamp-2">
                     &ldquo;{occasionSubtitle}&rdquo;
                   </p>
                 </div>
 
                 {/* Bottom Section: Stitched Coupon Box */}
-                <div className="relative z-10 rounded-2xl border-2 border-dashed border-[#bda278] bg-[#f8f2e7] p-3.5 shadow-sm">
-                  <span className="block text-[10px] font-black uppercase tracking-wider text-[#42250d]">
-                    EXCLUSIVE GIFT COUPON (VALID {couponValidityDays} DAYS)
+                <div className="relative z-10 rounded-lg border border-dashed border-[#bda278] bg-[#f8f2e7] p-2 text-center">
+                  <span className="block text-[8px] font-semibold uppercase tracking-wider text-[#42250d]">
+                    VALID {couponValidityDays} DAYS
                   </span>
-
-                  {/* Universal Cream/Golden Ticket Pill */}
-                  <div className="relative mx-auto my-1.5 max-w-[240px] rounded-xl bg-gradient-to-r from-[#edd39f] via-[#fae6c3] to-[#e4c287] py-1.5 px-4 font-mono text-sm sm:text-base font-black tracking-wider text-[#281607] shadow-sm border border-[#d2b37c]">
-                    VIP PASS · FLAT {discountPercent}% OFF
+                  <div className="mx-auto my-0.5 max-w-[150px] rounded bg-[#dfc698] py-0.5 px-2 font-mono text-[10px] font-bold text-[#281607] border border-[#cbb189]">
+                    FLAT {discountPercent}% OFF
                   </div>
-
-                  <span className="text-xs font-black text-[#1f1105] block">Flat {discountPercent}% OFF On Your Visit!</span>
-                  <span className="text-[10px] font-medium text-[#4a2b10] block mt-0.5">Show message code below to redeem</span>
+                  <span className="text-[9px] font-semibold text-[#1f1105] block">On Your Visit</span>
                 </div>
               </div>
             )}
+          </div>
 
-            {/* CAROUSEL SLIDER POINTS (Directly underneath the card) */}
-            <div className="mt-4 flex flex-col items-center gap-2 border-t border-white/10 pt-3">
-              {/* Pagination Dots: Dot 1 = Ivory Cream (Default), Dot 2 = Royal Dark Gold */}
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setTemplateStyle("ivory_cream")}
-                  className={`h-3 rounded-full transition-all duration-300 ${
-                    templateStyle === "ivory_cream"
-                      ? "w-8 bg-amber-400 shadow-md ring-2 ring-amber-300/40"
-                      : "w-3 bg-slate-600 hover:bg-slate-500"
-                  }`}
-                  aria-label="Card 1: Ivory Cream (Default)"
-                />
-                <button
-                  type="button"
-                  onClick={() => setTemplateStyle("royal_gold")}
-                  className={`h-3 rounded-full transition-all duration-300 ${
-                    templateStyle === "royal_gold"
-                      ? "w-8 bg-amber-400 shadow-md ring-2 ring-amber-300/40"
-                      : "w-3 bg-slate-600 hover:bg-slate-500"
-                  }`}
-                  aria-label="Card 2: Royal Dark Gold"
+          {/* ONLY 2 SOBER CONTROLS: Mobile Number + Test API */}
+          <div className="mt-3 pt-3 border-t border-slate-100">
+            <div className="flex items-center gap-1.5">
+              <div className="relative flex-1 min-w-0">
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs font-medium text-slate-400">
+                  +91
+                </span>
+                <input
+                  type="tel"
+                  value={testPhone}
+                  maxLength={10}
+                  onChange={(e) => setTestPhone(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Mobile number"
+                  className="w-full rounded-lg border border-slate-300 bg-white pl-9 pr-2 py-1.5 text-xs text-slate-900 outline-none focus:border-slate-500 transition"
                 />
               </div>
-
-              {/* Sub-label & slide hints */}
-              <div className="flex items-center justify-between w-full max-w-[280px] text-[11px] font-bold">
-                <button
-                  type="button"
-                  onClick={() => setTemplateStyle("ivory_cream")}
-                  className={`transition ${
-                    templateStyle === "ivory_cream"
-                      ? "text-amber-300 font-extrabold"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  ‹ 1. Ivory Cream (Default)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setTemplateStyle("royal_gold")}
-                  className={`transition ${
-                    templateStyle === "royal_gold"
-                      ? "text-amber-300 font-extrabold"
-                      : "text-slate-400 hover:text-slate-200"
-                  }`}
-                >
-                  2. Royal Dark Gold ›
-                </button>
-              </div>
-              <p className="text-[10px] text-slate-400">
-                👆 Slide / click dots below card to switch style
-              </p>
+              <button
+                type="button"
+                disabled={testingFast2Sms}
+                onClick={handleSendFast2SmsApiTest}
+                className="shrink-0 rounded-lg border border-slate-300 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-900 active:scale-95 transition disabled:opacity-50"
+              >
+                {testingFast2Sms ? "Testing..." : "Test API"}
+              </button>
             </div>
 
-            {/* Simulated WhatsApp Caption Text */}
-            <div className="mt-4 rounded-2xl border border-white/15 bg-white/10 p-4 text-left text-xs sm:text-sm leading-relaxed text-slate-100 shadow-md">
-              <div className="mb-2 flex items-center justify-between border-b border-white/10 pb-1.5">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-300">
-                  📱 WhatsApp Caption Sent Below Poster:
-                </span>
-                <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
-                  Auto-Personalized
-                </span>
+            {testNotice && (
+              <div
+                className={`mt-2 rounded-lg p-2 text-[11px] font-medium ${
+                  testNotice.type === "success"
+                    ? "bg-slate-100 text-slate-800"
+                    : testNotice.type === "pending"
+                    ? "bg-slate-100 text-slate-700"
+                    : "bg-rose-50 text-rose-700"
+                }`}
+              >
+                {testNotice.text}
               </div>
-              <p className="font-medium text-slate-100">
-                <strong className="text-amber-300">{businessName}:</strong> Dear <span className="font-bold underline text-amber-200">[Customer Name 👤]</span> ji, {bodyText}
-              </p>
-              <div className="mt-3 rounded-xl bg-amber-950/70 border border-amber-400/40 p-2.5 text-xs text-amber-200">
-                🎁 <strong>Special Gift Code:</strong> {couponCode} (Valid {couponValidityDays} days)
-              </div>
-            </div>
-
-            {/* Interactive Real Test on WhatsApp Panel via Cloud API */}
-            <div className="mt-4 rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-emerald-950/70 to-slate-900 p-4 text-left shadow-lg">
-              <div className="flex items-center justify-between">
-                <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-300">
-                  <span>📱</span> Fast2SMS WhatsApp Cloud API &amp; Test
-                </span>
-                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
-                  Official Gateway
-                </span>
-              </div>
-              <p className="mt-1 text-[11px] text-slate-300">
-                Type mobile number to test WhatsApp greeting with dynamic coupon code:
-              </p>
-
-              <div className="mt-3 flex flex-col sm:flex-row gap-2">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-2.5 text-xs text-emerald-400 font-bold">+91</span>
-                  <input
-                    type="tel"
-                    value={testPhone}
-                    maxLength={10}
-                    onChange={(e) => setTestPhone(e.target.value.replace(/\D/g, ""))}
-                    placeholder="Enter mobile number"
-                    className="w-full rounded-xl border border-emerald-500/40 bg-slate-950/80 pl-11 pr-3 py-2 text-xs font-bold text-white placeholder-slate-500 outline-none focus:border-emerald-400 focus:ring-1 focus:ring-emerald-400"
-                  />
-                </div>
-                <div className="flex gap-1.5">
-                  <button
-                    type="button"
-                    disabled={testingFast2Sms}
-                    onClick={handleSendFast2SmsApiTest}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-3.5 py-2 text-xs font-bold text-white shadow-md hover:from-emerald-700 hover:to-teal-700 active:scale-95 transition disabled:opacity-50"
-                  >
-                    <span>⚡</span>
-                    <span>{testingFast2Sms ? "Dispatching..." : "Send via API"}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSendWhatsAppTest}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-950/80 px-3 py-2 text-xs font-bold text-emerald-200 hover:bg-emerald-900/60 active:scale-95 transition"
-                    title="Open directly in WhatsApp Web or App"
-                  >
-                    <span>📲</span>
-                    <span>Open in WhatsApp</span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="mt-2.5 flex items-center justify-between pt-2 border-t border-white/10 text-[11px]">
-                <button
-                  type="button"
-                  onClick={handleDownloadPosterImage}
-                  className="inline-flex items-center gap-1 font-bold text-amber-300 hover:text-amber-200 transition"
-                >
-                  <span>⬇️</span> Download HD Card Poster
-                </button>
-                <span className="text-[10px] text-slate-400">
-                  Fast2SMS Official Cloud API
-                </span>
-              </div>
-
-              {testNotice && (
-                <div
-                  className={`mt-2.5 rounded-xl border p-2.5 text-[11px] font-medium leading-relaxed ${
-                    testNotice.type === "success"
-                      ? "bg-emerald-900/60 border-emerald-500/50 text-emerald-200"
-                      : testNotice.type === "pending"
-                      ? "bg-amber-950/70 border-amber-500/50 text-amber-200"
-                      : testNotice.type === "info"
-                      ? "bg-blue-950/60 border-blue-500/50 text-blue-200"
-                      : "bg-rose-950/60 border-rose-500/50 text-rose-200"
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <span>
-                      {testNotice.type === "success"
-                        ? "✓"
-                        : testNotice.type === "pending"
-                        ? "⏳"
-                        : testNotice.type === "info"
-                        ? "ℹ️"
-                        : "⚠️"}
-                    </span>
-                    <span>{testNotice.text}</span>
-                  </div>
-                  {testNotice.details && (
-                    <p className="mt-1 text-[10px] text-amber-100/90 border-t border-amber-500/20 pt-1">
-                      {testNotice.details}
-                    </p>
-                  )}
-                  {testNotice.type === "pending" && (
-                    <div className="mt-2 flex items-center justify-between border-t border-amber-500/30 pt-1.5">
-                      <span className="text-[10px] text-amber-300">Live test WhatsApp par karein:</span>
-                      <button
-                        type="button"
-                        onClick={handleSendWhatsAppTest}
-                        className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2.5 py-1 text-[10px] font-bold text-white shadow hover:bg-emerald-700 transition"
-                      >
-                        <span>📲</span> Open Direct in WhatsApp
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
         {/* Right Column: Customization Controls & Approved Draft Actions (7 Cols) */}
-        <div className="lg:col-span-7 space-y-5">
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-              <div>
-                <h3 className="text-base font-bold text-slate-900">Customize Draft &amp; Styling</h3>
-                <p className="text-xs text-slate-500">Edit headline, greetings, and discount coupon for {occasionType}.</p>
-              </div>
-              <button
-                type="button"
-                onClick={handleRegenerateText}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-orange-200 bg-orange-50 px-3.5 py-2 text-xs font-bold text-orange-800 hover:bg-orange-100 shadow-sm transition"
-              >
-                <span>🔄 Regenerate AI Copy</span>
-              </button>
+        <div className="lg:col-span-7 space-y-4">
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
+            <div className="border-b border-slate-100 pb-3">
+              <h3 className="text-base font-bold text-slate-900">Customize Greeting Template</h3>
+              <p className="text-xs text-slate-500">Edit headline, greeting wish message, and discount offer for {occasionType}.</p>
             </div>
 
             <div className="mt-4 space-y-4">
-              {/* Headline (Free Text Input for Universal Card Poster) */}
+              {/* Headline */}
               <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
-                    Greeting Card Headline:
-                  </label>
-                  <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1">
-                    <span>{templateStyle === "ivory_cream" ? "🌿" : "👑"}</span>
-                    <span>
-                      {templateStyle === "ivory_cream"
-                        ? "Universal Ivory Elegance Poster"
-                        : "Universal Royal Dark Gold Poster"}
-                    </span>
-                  </span>
-                </div>
+                <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                  Greeting Headline:
+                </label>
                 <input
                   type="text"
                   value={headline}
                   onChange={(e) => setHeadline(e.target.value)}
-                  placeholder="e.g. 🎉 Happy Birthday!"
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                  placeholder="e.g. Happy Birthday!"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-300"
                 />
-                <span className="mt-1 block text-[11px] text-slate-500">
-                  Yeh headline aapke universal poster par print hogi (sab customer ke liye timeless aur consistent).
-                </span>
               </div>
 
-              {/* Message Body with Dynamic Customer Personalization */}
+              {/* Message Body */}
               <div>
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
-                    Greeting Message Body:
-                  </label>
-                  <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
-                    <span>⚡</span> Smart Personalization
-                  </span>
-                </div>
-
-                {/* Personalization Info Box */}
-                <div className="mt-1.5 flex flex-col gap-1.5 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-3">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-200 px-2.5 py-1 text-xs font-black text-emerald-950 border border-emerald-300 shadow-sm">
-                      👤 [ Customer Name (Auto-Inserted in WhatsApp) ]
-                    </span>
-                    <span className="text-xs font-bold text-slate-700">+ Aapka Customized Message Niche:</span>
-                  </div>
-                  <p className="text-[11px] text-emerald-900">
-                    💡 <strong>Universal Card + Dynamic Personalization:</strong> Card poster ek timeless luxury poster rahega, jabki customer ka personal naam (jaise: <strong>Rahul ji</strong> ya <strong>Priya ji</strong>) WhatsApp message me har customer ke hisab se dynamically deliver hoga!
-                  </p>
-                </div>
-
+                <label className="text-xs font-bold uppercase tracking-wide text-slate-700">
+                  Greeting Message Body:
+                </label>
                 <textarea
                   rows={3}
                   value={bodyText}
                   onChange={(e) => setBodyText(e.target.value)}
-                  placeholder="Yahan aapna shubh-kamna sandesh likhein..."
-                  className="mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 shadow-sm"
+                  placeholder="Enter greeting wish message..."
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400 focus:ring-1 focus:ring-slate-300 shadow-xs"
                 />
-
-                {/* Language Selector: English (Auto-Selected Permanently) */}
-                <div className="mt-2.5 flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50/90 px-3.5 py-2 shadow-2xs">
-                  <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <span>🌐</span> Language:
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-extrabold text-slate-800 shadow-2xs">
-                    <span>🇬🇧</span> English (Auto-Selected)
-                  </span>
-                </div>
               </div>
 
               {/* Discount Coupon Settings */}
@@ -966,7 +752,7 @@ export default function OccasionStudio({
                   <select
                     value={discountPercent}
                     onChange={(e) => setDiscountPercent(Number(e.target.value))}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-orange-500"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-slate-400"
                   >
                     <option value={10}>10% OFF</option>
                     <option value={15}>15% OFF (Recommended)</option>
@@ -982,7 +768,7 @@ export default function OccasionStudio({
                   <select
                     value={couponValidityDays}
                     onChange={(e) => setCouponValidityDays(Number(e.target.value))}
-                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm font-semibold text-slate-900 outline-none focus:border-orange-500"
+                    className="mt-1.5 w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-900 outline-none focus:border-slate-400"
                   >
                     <option value={3}>3 Days</option>
                     <option value={5}>5 Days</option>
@@ -994,7 +780,7 @@ export default function OccasionStudio({
 
               {saveMsg && (
                 <div
-                  className={`rounded-2xl border p-3 text-xs font-semibold ${
+                  className={`rounded-xl border p-3 text-xs font-semibold ${
                     saveMsg.error
                       ? "border-rose-200 bg-rose-50 text-rose-700"
                       : "border-emerald-200 bg-emerald-50 text-emerald-800"
@@ -1010,19 +796,19 @@ export default function OccasionStudio({
                   type="button"
                   disabled={saving}
                   onClick={handleSaveDraft}
-                  className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 py-3.5 text-sm font-bold text-white shadow-md hover:from-orange-700 hover:to-amber-700 disabled:opacity-50 transition"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-slate-900 py-3 text-sm font-bold text-white shadow-xs hover:bg-slate-800 disabled:opacity-50 transition"
                 >
-                  {saving ? "Saving Draft..." : `✓ Approve & Save ${occasionType.toUpperCase()} Draft`}
+                  {saving ? "Saving Draft..." : `Save ${occasionType.toUpperCase()} Draft`}
                 </button>
               </div>
             </div>
           </div>
 
           {/* Daily Timing & Auto-Schedule Configuration Card */}
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-            <h4 className="text-sm font-bold text-slate-900">⏰ Daily Auto-Dispatch Schedule &amp; Controls</h4>
+          <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
+            <h4 className="text-sm font-bold text-slate-900">Daily Auto-Dispatch Schedule</h4>
             <p className="mt-0.5 text-xs text-slate-500">
-              Trustit will check your customers every morning and dispatch greetings at your selected time.
+              Automatically dispatches approved greetings each morning at your selected time.
             </p>
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-4">

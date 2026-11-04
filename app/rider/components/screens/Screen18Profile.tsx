@@ -5,10 +5,22 @@ import React from "react";
 interface Screen18Props {
   onBack?: () => void;
   onLogout?: () => void;
-  onEditProfile?: () => void;
+  onEditKyc?: () => void;
+  onOpenPayoutSetup?: () => void;
+  onOpenDisputes?: () => void;
+  onOpenSafetyRules?: () => void;
+  onOpenFleetId?: () => void;
 }
 
-export default function Screen18Profile({ onBack, onLogout, onEditProfile }: Screen18Props) {
+export default function Screen18Profile({
+  onBack,
+  onLogout,
+  onEditKyc,
+  onOpenPayoutSetup,
+  onOpenDisputes,
+  onOpenSafetyRules,
+  onOpenFleetId,
+}: Screen18Props) {
   return (
     <div className="w-full h-full bg-[#FAF8FF] flex flex-col justify-between p-4 sm:p-5 text-[#0F172A] font-sans">
       <div>
@@ -21,7 +33,7 @@ export default function Screen18Profile({ onBack, onLogout, onEditProfile }: Scr
           >
             <span>← Cockpit</span>
           </button>
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Rider Partner</span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Rider Fleet ID</span>
         </div>
 
         {/* Profile Card */}
@@ -46,10 +58,10 @@ export default function Screen18Profile({ onBack, onLogout, onEditProfile }: Scr
           </div>
         </div>
 
-        {/* Settings Navigation List */}
+        {/* Settings Navigation List (Zero Dummy Clicks) */}
         <div className="mt-4 bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 text-xs">
           <div
-            onClick={onEditProfile}
+            onClick={onEditKyc}
             className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition"
           >
             <div className="flex items-center gap-2.5">
@@ -59,40 +71,63 @@ export default function Screen18Profile({ onBack, onLogout, onEditProfile }: Scr
                 <span className="text-[10px] text-slate-400">RC, Driving License, Real Selfie Photo</span>
               </div>
             </div>
-            <span className="text-slate-400">➔</span>
+            <span className="text-slate-400 font-bold text-xs">➔</span>
           </div>
 
-          <div className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition">
+          <div
+            onClick={onOpenPayoutSetup}
+            className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition"
+          >
             <div className="flex items-center gap-2.5">
               <span className="text-base">⚡</span>
               <div>
-                <strong className="text-slate-900 font-bold block text-xs">Cashfree UPI Settlement Account</strong>
+                <strong className="text-slate-900 font-bold block text-xs">Cashfree Instant UPI Payout</strong>
                 <span className="text-[10px] text-slate-400 font-mono">arjun.singh@okhdfcbank</span>
               </div>
             </div>
-            <span className="text-slate-400">➔</span>
+            <span className="text-slate-400 font-bold text-xs">➔</span>
           </div>
 
-          <div className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition">
+          <div
+            onClick={onOpenFleetId}
+            className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition"
+          >
+            <div className="flex items-center gap-2.5">
+              <span className="text-base">🪪</span>
+              <div>
+                <strong className="text-slate-900 font-bold block text-xs">Digital Fleet ID &amp; Police Pass</strong>
+                <span className="text-[10px] text-slate-400">Official Bahraich Night Transit Permit</span>
+              </div>
+            </div>
+            <span className="text-slate-400 font-bold text-xs">➔</span>
+          </div>
+
+          <div
+            onClick={onOpenSafetyRules}
+            className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition"
+          >
             <div className="flex items-center gap-2.5">
               <span className="text-base">🛡️</span>
               <div>
-                <strong className="text-slate-900 font-bold block text-xs">Dispute &amp; Toll Reassignment Desk</strong>
-                <span className="text-[10px] text-slate-400">0 Open Disputes · All trips settled</span>
+                <strong className="text-slate-900 font-bold block text-xs">Safe Driving Rules &amp; Road Code</strong>
+                <span className="text-[10px] text-slate-400">35 km/h town speed limit &amp; helmet compliance</span>
               </div>
             </div>
-            <span className="text-slate-400">➔</span>
+            <span className="text-slate-400 font-bold text-xs">➔</span>
           </div>
 
-          <div className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition">
+          <div
+            onClick={onOpenDisputes}
+            className="p-3.5 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition"
+          >
             <div className="flex items-center gap-2.5">
-              <span className="text-base">🔒</span>
+              <span className="text-base">⚖️</span>
               <div>
-                <strong className="text-slate-900 font-bold block text-xs">Privacy &amp; Telephony Call Masking</strong>
-                <span className="text-[10px] text-slate-400">Your personal phone number is shielded</span>
+                <strong className="text-slate-900 font-bold block text-xs">Penalty &amp; Detour Dispute Desk</strong>
+                <span className="text-[10px] text-slate-400">100% human review for unjust deductions</span>
               </div>
             </div>
-            <span className="text-slate-400">➔</span>
+            <span className="text-slate-400 font-bold text-xs">➔</span>
           </div>
         </div>
       </div>
@@ -102,7 +137,7 @@ export default function Screen18Profile({ onBack, onLogout, onEditProfile }: Scr
         <button
           type="button"
           onClick={onLogout}
-          className="w-full py-3 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition"
+          className="w-full py-3 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition active:scale-98"
         >
           <span>🚪 End Shift Duty &amp; Log Out</span>
         </button>

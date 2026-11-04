@@ -16,7 +16,7 @@ const FAST2SMS_BACKUP_TOKEN = Buffer.from(
 ).toString("utf-8");
 
 const DEFAULT_CELEBRATION_BANNER =
-  "https://scontent.whatsapp.net/v/t61.29466-34/880957012_1167177389013118_2849626605633755657_n.jpg?ccb=1-7&_nc_sid=8b1bef&_nc_ohc=0iP-DtboEswQ7kNvwH7yriv&_nc_oc=Adof93WLHwfZKorC-Tl_DWdABSD3yoTSfSnjLLw1E8r8AFGdD-qVZSONHkYAjTyr5uTEfupefXuGXWDEgcu_IqYv&_nc_zt=3&_nc_ht=scontent.whatsapp.net&edm=AH51TzQEAAAA&_nc_gid=ORYbwfYZhlF7ptEBW-PlvA&_nc_tpa=Q5bMBQJ6oZDRRCiA9S0XXQZYuXBjHswaqPjf5igxRcwRZ20HkeTmTcZYSB0nJroVWUF5kd4Bu9tS9pBJ&oh=01_Q5Aa6AEgn6hXVCEuxKjFJCBp5NmcFhuu82o8vQXZDMhxXtTecw&oe=6B119233";
+  "https://piqwsyzktzjhafkcstjl.supabase.co/storage/v1/object/public/merchant-assets/banners/trustit_default_banner.png";
 
 export interface Fast2SmsTemplateDetails {
   connected: boolean;
@@ -400,6 +400,11 @@ export async function runDailyOccasionAutoDispatcher(): Promise<{
 
       const customGreetingBody = (isBirthday ? bTemplate?.body_text : aTemplate?.body_text) || undefined;
 
+      // Get merchant's custom poster from storage if saved
+      const posterPath = `posters/${businessId}_${isBirthday ? "birthday" : "anniversary"}.jpg`;
+      const { data: pubData } = admin.storage.from("merchant-assets").getPublicUrl(posterPath);
+      const merchantMediaUrl = pubData?.publicUrl || undefined;
+
       // 1. Fast2SMS WhatsApp Template API
       const waRes = await dispatchFast2SmsWhatsAppMessage({
         phone,
@@ -409,6 +414,7 @@ export async function runDailyOccasionAutoDispatcher(): Promise<{
         discountPercent: discount,
         validityDays: validity,
         customMessage: customGreetingBody,
+        mediaUrl: merchantMediaUrl,
       });
 
       if (waRes.success) {
