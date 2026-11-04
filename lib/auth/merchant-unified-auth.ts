@@ -6,6 +6,7 @@ import { createMerchantActionClient } from "@/lib/supabase-merchant-server";
 import { cleanPhone } from "@/lib/auth/customer-unified-auth";
 import { checkRateLimit } from "@/lib/rate-limiter";
 import { normalizeTrustitPhone } from "@/lib/trustit-onboarding";
+import { updateMerchantRemoteConfig } from "@/lib/merchant/merchant-remote-config";
 
 const OTP_EXPIRY_MINUTES = 5;
 
@@ -239,6 +240,21 @@ export async function registerMerchantProfile(params: {
 
   const finalBizId = createdBiz?.id || businessId;
   await establishMerchantAuthSession(finalBizId, `merchant.${phone10}@trustitreview.com`, phone10);
+
+  // Update remote runtime config with fresh merchant details
+  try {
+    updateMerchantRemoteConfig({
+      businessId: finalBizId,
+      storeName,
+      ownerName,
+      phone: `+91${phone10}`,
+      businessCategory: (category as "kirana" | "restaurant" | "chemist" | "salon" | "carwash") || "kirana",
+      city,
+      address: params.address || `${storeName}, ${city}`,
+      isStoreOnline: true,
+      lastUpdatedAt: new Date().toISOString(),
+    });
+  } catch {}
 
   return {
     success: true,

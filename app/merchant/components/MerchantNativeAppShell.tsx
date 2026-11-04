@@ -106,7 +106,7 @@ export default function MerchantNativeAppShell({
 }: MerchantNativeAppShellProps) {
   // Authentication & Profile State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(initialAuth);
-  const [authStep, setAuthStep] = useState<"pitch" | "category" | "kyc" | "login">("login");
+  const [authStep, setAuthStep] = useState<"pitch" | "category" | "kyc" | "login">("pitch");
   const [storeCategory, setStoreCategory] = useState<MerchantCategory>(initialCategory);
   const [storeName, setStoreName] = useState<string>(initialStoreName);
   const [isStoreOnline, setIsStoreOnline] = useState<boolean>(true);

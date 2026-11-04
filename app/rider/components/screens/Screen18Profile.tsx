@@ -3,6 +3,14 @@
 import React from "react";
 
 interface Screen18Props {
+  riderProp?: {
+    full_name?: string;
+    phone?: string;
+    vehicle_number?: string;
+    rating?: number;
+    profile_image_url?: string | null;
+    upi_id?: string | null;
+  };
   onBack?: () => void;
   onLogout?: () => void;
   onEditKyc?: () => void;
@@ -13,6 +21,7 @@ interface Screen18Props {
 }
 
 export default function Screen18Profile({
+  riderProp,
   onBack,
   onLogout,
   onEditKyc,
@@ -21,6 +30,11 @@ export default function Screen18Profile({
   onOpenSafetyRules,
   onOpenFleetId,
 }: Screen18Props) {
+  const riderName = riderProp?.full_name?.trim() || "New Delivery Partner";
+  const phoneText = riderProp?.phone?.trim() || "+91 Mobile Pending";
+  const vehicleText = riderProp?.vehicle_number?.trim() || "UP 40 TEMP";
+  const ratingText = riderProp?.rating ? `★ ${riderProp.rating} Rating` : "★ 5.0 New Rider";
+
   return (
     <div className="w-full h-full bg-[#FAF8FF] flex flex-col justify-between p-4 sm:p-5 text-[#0F172A] font-sans">
       <div>
@@ -38,21 +52,26 @@ export default function Screen18Profile({
 
         {/* Profile Card */}
         <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center gap-3.5">
-          <div className="w-14 h-14 rounded-2xl border-2 border-emerald-400 bg-slate-900 flex items-center justify-center text-3xl shadow-sm">
-            👨‍🦱
+          <div className="w-14 h-14 rounded-2xl border-2 border-emerald-400 bg-slate-900 flex items-center justify-center text-3xl shadow-sm overflow-hidden">
+            {riderProp?.profile_image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={riderProp.profile_image_url} alt="Profile Selfie" className="w-full h-full object-cover" />
+            ) : (
+              <span>👨‍🦱</span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
-              <h3 className="text-sm font-black text-slate-900 truncate">Arjun Singh</h3>
+              <h3 className="text-sm font-black text-slate-900 truncate">{riderName}</h3>
               <span className="text-emerald-600 text-xs font-bold">✓ Verified</span>
             </div>
-            <span className="text-[11px] text-slate-500 block font-mono">+91 98765 43210</span>
+            <span className="text-[11px] text-slate-500 block font-mono">{phoneText}</span>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[9px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200 font-mono">
-                UP 40 AB 2345
+                {vehicleText}
               </span>
               <span className="text-[9px] font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
-                ★ 4.92 Rating
+                {ratingText}
               </span>
             </div>
           </div>
@@ -82,7 +101,7 @@ export default function Screen18Profile({
               <span className="text-base">⚡</span>
               <div>
                 <strong className="text-slate-900 font-bold block text-xs">Cashfree Instant UPI Payout</strong>
-                <span className="text-[10px] text-slate-400 font-mono">arjun.singh@okhdfcbank</span>
+                <span className="text-[10px] text-slate-400 font-mono">{riderProp?.upi_id || "Configure UPI Payout Handle"}</span>
               </div>
             </div>
             <span className="text-slate-400 font-bold text-xs">➔</span>

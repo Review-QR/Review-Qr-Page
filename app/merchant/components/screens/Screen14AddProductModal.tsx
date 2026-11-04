@@ -9,11 +9,11 @@ interface Screen14Props {
 }
 
 export default function Screen14AddProductModal({ onBack, onSave, onSaveProduct }: Screen14Props) {
-  const [title, setTitle] = useState("Special Paneer Tikka");
-  const [price, setPrice] = useState("220");
-  const [mrp, setMrp] = useState("260");
-  const [category, setCategory] = useState("Starters");
-  const [prepTime, setPrepTime] = useState("15");
+  const [title, setTitle] = useState("");
+  const [price, setPrice] = useState("");
+  const [mrp, setMrp] = useState("");
+  const [category, setCategory] = useState("Grocery");
+  const [prepTime, setPrepTime] = useState("10");
   const [itemType, setItemType] = useState<"veg" | "non_veg" | "egg">("veg");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -81,6 +81,7 @@ export default function Screen14AddProductModal({ onBack, onSave, onSaveProduct 
             <input
               type="text"
               value={title}
+              placeholder="e.g. Rin Ala / Surf Excel / Arhar Dal"
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-slate-50 focus:outline-hidden focus:border-blue-600"
             />
@@ -95,6 +96,7 @@ export default function Screen14AddProductModal({ onBack, onSave, onSaveProduct 
               <input
                 type="number"
                 value={price}
+                placeholder="e.g. 140"
                 onChange={(e) => setPrice(e.target.value)}
                 className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 bg-slate-50 focus:outline-hidden"
               />
@@ -106,6 +108,7 @@ export default function Screen14AddProductModal({ onBack, onSave, onSaveProduct 
               <input
                 type="number"
                 value={mrp}
+                placeholder="e.g. 150"
                 onChange={(e) => setMrp(e.target.value)}
                 className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-400 bg-slate-50 focus:outline-hidden"
               />

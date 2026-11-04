@@ -17,19 +17,9 @@ export default function ScreenAuth03MobileKycRegistration({
   onRegisterComplete,
   disableRedirect = false,
 }: ScreenAuth03Props) {
-  const [storeName, setStoreName] = useState(
-    category === "kirana"
-      ? "Shri Ram Kirana & Supermarket"
-      : category === "chemist"
-      ? "Sanjivani Medicos & Pharmacy"
-      : category === "salon"
-      ? "Looks Unisex Salon & Spa"
-      : category === "carwash"
-      ? "SpeedX Auto Foam Detailing"
-      : "Golden Blossom Cafe"
-  );
-  const [ownerName, setOwnerName] = useState("Lucky Shukla");
-  const [phone, setPhone] = useState("9118643415");
+  const [storeName, setStoreName] = useState("");
+  const [ownerName, setOwnerName] = useState("");
+  const [phone, setPhone] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otp, setOtp] = useState<string[]>(["", "", "", "", "", ""]);
   const [activeWhatsAppOtp, setActiveWhatsAppOtp] = useState<string | null>(null);
@@ -188,6 +178,7 @@ export default function ScreenAuth03MobileKycRegistration({
             <input
               type="text"
               value={storeName}
+              placeholder="e.g. Ankit Shukla Grocery Store"
               onChange={(e) => setStoreName(e.target.value)}
               className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-slate-50 focus:outline-hidden focus:border-blue-600"
             />
@@ -200,6 +191,7 @@ export default function ScreenAuth03MobileKycRegistration({
             <input
               type="text"
               value={ownerName}
+              placeholder="e.g. अंकित शुक्ला (Ankit Shukla)"
               onChange={(e) => setOwnerName(e.target.value)}
               className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-slate-50 focus:outline-hidden focus:border-blue-600"
             />
@@ -217,6 +209,7 @@ export default function ScreenAuth03MobileKycRegistration({
                 type="tel"
                 maxLength={10}
                 value={phone}
+                placeholder="10-digit mobile number"
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
                 className="w-full text-xs font-mono font-bold text-slate-900 bg-transparent focus:outline-hidden tracking-wider"
               />

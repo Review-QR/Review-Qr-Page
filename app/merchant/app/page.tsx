@@ -6,5 +6,5 @@ import MerchantNativeAppShell from "@/app/merchant/components/MerchantNativeAppS
 export const dynamic = "force-dynamic";
 
 export default function MerchantAppStandalonePage() {
-  return <MerchantNativeAppShell initialAuth={true} forceStandalone={false} />;
+  return <MerchantNativeAppShell initialAuth={false} forceStandalone={false} />;
 }

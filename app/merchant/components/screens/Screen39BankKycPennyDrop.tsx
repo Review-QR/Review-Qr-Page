@@ -11,11 +11,11 @@ export default function Screen39BankKycPennyDrop({
   onBack,
   onVerifySuccess,
 }: Screen39Props) {
-  const [accountNo, setAccountNo] = useState("50100482914091");
-  const [ifsc, setIfsc] = useState("HDFC0001892");
-  const [beneficiary, setBeneficiary] = useState("RAMESH GUPTA T/A GUPTA STORE");
+  const [accountNo, setAccountNo] = useState("");
+  const [ifsc, setIfsc] = useState("");
+  const [beneficiary, setBeneficiary] = useState("");
   const [checking, setChecking] = useState(false);
-  const [verified, setVerified] = useState(true);
+  const [verified, setVerified] = useState(false);
 
   const handlePennyDrop = async () => {
     setChecking(true);
@@ -61,20 +61,28 @@ export default function Screen39BankKycPennyDrop({
         </div>
 
         {/* Verification Status Banner */}
-        <div className="mt-2.5 bg-emerald-50 border border-emerald-300 rounded-2xl p-3 flex items-center justify-between shadow-xs">
+        <div className={`mt-2.5 rounded-2xl p-3 flex items-center justify-between shadow-xs border ${
+          verified ? "bg-emerald-50 border-emerald-300" : "bg-amber-50 border-amber-300"
+        }`}>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-              ✓
+            <div className={`w-8 h-8 rounded-full text-white flex items-center justify-center font-bold text-sm shadow-xs ${
+              verified ? "bg-emerald-600" : "bg-amber-500"
+            }`}>
+              {verified ? "✓" : "⏳"}
             </div>
             <div>
-              <h3 className="text-xs font-black text-emerald-950">Penny Drop Verified</h3>
-              <p className="text-[10px] text-emerald-800">
-                ₹1.00 test deposit confirmed via NPCI IMPS
+              <h3 className={`text-xs font-black ${verified ? "text-emerald-950" : "text-amber-950"}`}>
+                {verified ? "Penny Drop Verified" : "Verification Pending"}
+              </h3>
+              <p className={`text-[10px] ${verified ? "text-emerald-800" : "text-amber-800"}`}>
+                {verified ? "₹1.00 test deposit confirmed via NPCI IMPS" : "Enter bank details and verify with ₹1 IMPS test"}
               </p>
             </div>
           </div>
-          <span className="text-[9px] font-bold bg-white text-emerald-800 px-2 py-0.5 rounded border border-emerald-200">
-            Active Payout Route
+          <span className={`text-[9px] font-bold px-2 py-0.5 rounded border bg-white ${
+            verified ? "text-emerald-800 border-emerald-200" : "text-amber-800 border-amber-200"
+          }`}>
+            {verified ? "Active Payout Route" : "Awaiting Details"}
           </span>
         </div>
 
@@ -87,6 +95,7 @@ export default function Screen39BankKycPennyDrop({
             <input
               type="text"
               value={beneficiary}
+              placeholder="e.g. Ankit Shukla"
               onChange={(e) => setBeneficiary(e.target.value)}
               className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-slate-50 focus:outline-hidden"
             />
@@ -99,6 +108,7 @@ export default function Screen39BankKycPennyDrop({
             <input
               type="text"
               value={accountNo}
+              placeholder="e.g. 9956726957"
               onChange={(e) => setAccountNo(e.target.value)}
               className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 bg-slate-50 focus:outline-hidden"
             />
@@ -111,6 +121,7 @@ export default function Screen39BankKycPennyDrop({
             <input
               type="text"
               value={ifsc}
+              placeholder="e.g. IDIB0004866"
               onChange={(e) => setIfsc(e.target.value)}
               className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 bg-slate-50 focus:outline-hidden uppercase"
             />

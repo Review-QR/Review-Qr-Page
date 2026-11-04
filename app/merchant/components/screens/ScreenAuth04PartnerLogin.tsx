@@ -16,8 +16,8 @@ export default function ScreenAuth04PartnerLogin({
   disableRedirect = false,
 }: ScreenAuth04Props) {
   const [tab, setTab] = useState<"whatsapp" | "biz_id">("whatsapp");
-  const [mobile, setMobile] = useState("9118643415");
-  const [bizId, setBizId] = useState("QR-77837892");
+  const [mobile, setMobile] = useState("");
+  const [bizId, setBizId] = useState("");
   const [password, setPassword] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
