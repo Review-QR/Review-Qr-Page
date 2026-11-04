@@ -26,8 +26,8 @@ export default function AppPage() {
       downloadUrl: "/downloads/Trustit-Rider-Partner.apk",
       webUrl: "/rider",
       webLabel: "Open Web App",
-      size: "2.1 MB",
-      version: "v2.4.0 (Latest)",
+      size: "93 MB (Native Standalone)",
+      version: "v3.0.0 (Native Release)",
     },
     {
       id: "merchant",
@@ -47,8 +47,8 @@ export default function AppPage() {
       downloadUrl: "/downloads/Trustit-Merchant-Partner.apk",
       webUrl: "/merchant/dashboard/orders",
       webLabel: "Open Console",
-      size: "2.1 MB",
-      version: "v2.4.0 (Latest)",
+      size: "93 MB (Native Standalone)",
+      version: "v3.0.0 (Native Release)",
     },
     {
       id: "customer",
@@ -68,8 +68,8 @@ export default function AppPage() {
       downloadUrl: "/downloads/Trustit-Customer.apk",
       webUrl: "/order",
       webLabel: "Order Online Now",
-      size: "2.1 MB",
-      version: "v2.4.0 (Latest)",
+      size: "93 MB (Native Standalone)",
+      version: "v3.0.0 (Native Release)",
     },
   ];
 

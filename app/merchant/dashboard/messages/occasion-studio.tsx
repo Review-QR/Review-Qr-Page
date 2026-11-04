@@ -415,6 +415,7 @@ export default function OccasionStudio({
         occasionType,
         discountPercent,
         couponValidityDays,
+        customMessage: bodyText,
       });
 
       if (res.success) {

@@ -1,0 +1,14 @@
+{
+  "appId": "com.trustit.partner",
+  "appName": "Trustit Partner",
+  "webDir": "public",
+  "server": {
+    "url": "https://trustitreview.com/partner",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "backgroundColor": "#0F172A"
+  }
+}

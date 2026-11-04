@@ -214,7 +214,7 @@ export default function AppsHubInstallationPage() {
                   download
                   className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-xs transition flex items-center justify-center gap-2"
                 >
-                  <span>📥 Download APK (2.1 MB)</span>
+                  <span>📥 Download Native APK (93 MB)</span>
                 </a>
 
                 {/* Phone Local Link Copy */}

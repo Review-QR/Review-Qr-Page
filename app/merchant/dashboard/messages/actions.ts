@@ -306,6 +306,8 @@ export async function sendFast2SmsWhatsAppTestAction(input: {
   occasionType: string;
   discountPercent: number;
   couponValidityDays: number;
+  customMessage?: string;
+  mediaUrl?: string;
 }) {
   const merchant = await requireActiveMerchant();
   const {
@@ -330,6 +332,8 @@ export async function sendFast2SmsWhatsAppTestAction(input: {
     couponCode,
     discountPercent: input.discountPercent,
     validityDays: input.couponValidityDays,
+    customMessage: input.customMessage,
+    mediaUrl: input.mediaUrl,
   });
 
   if (res.success) {
