@@ -13,6 +13,9 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const requestedBizId = searchParams.get("businessId");
+    const requestedPhone = searchParams.get("phone");
+
+    const config = getMerchantRemoteConfig(requestedBizId || undefined);
 
     // 1. Resolve merchant business
     let businessId = requestedBizId;
@@ -25,18 +28,11 @@ export async function GET(request: NextRequest) {
       } catch {}
     }
 
-    const admin = createSupabaseAdminClient();
-
-    // If still no businessId, look up first active business or default
     if (!businessId) {
-      const { data: firstBiz } = await admin
-        .from("businesses")
-        .select("id, name, owner, phone, type, address, city")
-        .eq("merchant_status", "active")
-        .limit(1)
-        .maybeSingle();
-      businessId = firstBiz?.id || "m_9118643415_0601";
+      businessId = config.businessId || "bhr-groc-01";
     }
+
+    const admin = createSupabaseAdminClient();
 
     // 2. Fetch business profile
     const { data: dbBusiness } = await admin
@@ -44,8 +40,6 @@ export async function GET(request: NextRequest) {
       .select("id, name, owner, phone, type, address, city, pincode, plan, review_link, location_latitude, location_longitude")
       .eq("id", businessId)
       .maybeSingle();
-
-    const config = getMerchantRemoteConfig(businessId || undefined);
 
     // 3. Fetch live orders with items
     const { data: orders } = await admin
@@ -72,11 +66,18 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: false })
       .limit(30);
 
+    const effectiveBizId =
+      businessId && businessId.startsWith("bhr-")
+        ? businessId
+        : config.businessCategory === "kirana"
+        ? "bhr-groc-01"
+        : "bhr-sweet-01";
+
     // 4. Fetch catalog items
     let { data: catalogItems } = await admin
       .from("business_catalog_items")
       .select("id, name, category, price, is_available, item_type, description, image_url, unit")
-      .eq("business_id", businessId)
+      .eq("business_id", effectiveBizId)
       .order("created_at", { ascending: false });
 
     // Fallback if this business doesn't have items yet: fetch common items or sample

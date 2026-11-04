@@ -86,6 +86,13 @@ function saveToDisk() {
 }
 
 export function getMerchantRemoteConfig(bizId?: string): MerchantRemoteConfig {
+  try {
+    if (fs.existsSync(PERSIST_FILE)) {
+      const raw = fs.readFileSync(PERSIST_FILE, "utf8");
+      activeConfig = { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
+    }
+  } catch {}
+
   if (bizId && bizId !== activeConfig.businessId) {
     return {
       ...activeConfig,
