@@ -5,13 +5,15 @@ import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
 import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotificationBanner";
 
 interface ScreenAuth04Props {
-  onLoginSuccess?: () => void;
+  onLoginSuccess?: (details?: { storeName?: string; phone?: string }) => void;
   onGoToRegister?: () => void;
+  disableRedirect?: boolean;
 }
 
 export default function ScreenAuth04PartnerLogin({
   onLoginSuccess,
   onGoToRegister,
+  disableRedirect = false,
 }: ScreenAuth04Props) {
   const [tab, setTab] = useState<"whatsapp" | "biz_id">("whatsapp");
   const [mobile, setMobile] = useState("9118643415");
@@ -82,9 +84,9 @@ export default function ScreenAuth04PartnerLogin({
         // Redirect to register wizard
         onGoToRegister?.();
       } else {
-        onLoginSuccess?.();
-        if (typeof window !== "undefined") {
-          window.location.href = data.redirectUrl || "/merchant/dashboard";
+        onLoginSuccess?.({ storeName: data.businessName || "Gupta Kirana & General Store", phone: mobile });
+        if (!disableRedirect && typeof window !== "undefined") {
+          window.location.href = data.redirectUrl || "/merchant/app";
         }
       }
     } catch (err: unknown) {
@@ -111,9 +113,9 @@ export default function ScreenAuth04PartnerLogin({
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        onLoginSuccess?.();
-        if (typeof window !== "undefined") {
-          window.location.href = data.redirectUrl || "/merchant/dashboard";
+        onLoginSuccess?.({ storeName: data.businessName || "Gupta Kirana & General Store", phone: mobile });
+        if (!disableRedirect && typeof window !== "undefined") {
+          window.location.href = data.redirectUrl || "/merchant/app";
         }
       } else {
         throw new Error(data.message || "Google sign-in failed.");

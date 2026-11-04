@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function MerchantLoginPage() {
   const merchant = await getActiveMerchant();
   if (merchant) {
-    redirect("/merchant/dashboard");
+    redirect("/merchant/app");
   }
 
   return (

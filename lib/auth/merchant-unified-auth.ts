@@ -159,7 +159,7 @@ export async function verifyMerchantWhatsAppOtp(
     isNewMerchant: false,
     businessId: business.id,
     businessName: business.name,
-    redirectUrl: "/merchant/dashboard",
+    redirectUrl: "/merchant/app",
     message: `Welcome back to ${business.name}!`,
   };
 }
@@ -218,7 +218,7 @@ export async function registerMerchantProfile(params: {
     success: true,
     message: `Store "${storeName}" registered successfully!`,
     businessId: finalBizId,
-    redirectUrl: "/merchant/dashboard",
+    redirectUrl: "/merchant/app",
   };
 }
 
@@ -261,7 +261,7 @@ export async function authenticateMerchantWithGoogle(
         success: true,
         message: `Welcome back, ${cleanName}!`,
         businessId: mapping.business_id,
-        redirectUrl: "/merchant/dashboard",
+        redirectUrl: "/merchant/app",
       };
     }
   }
@@ -281,7 +281,7 @@ export async function authenticateMerchantWithGoogle(
       success: true,
       message: `Welcome back to ${existingBiz[0].name}!`,
       businessId: existingBiz[0].id,
-      redirectUrl: "/merchant/dashboard",
+      redirectUrl: "/merchant/app",
     };
   }
 
@@ -312,7 +312,7 @@ export async function authenticateMerchantWithGoogle(
     success: true,
     message: `Store "${storeName}" created via Google!`,
     businessId,
-    redirectUrl: "/merchant/dashboard",
+    redirectUrl: "/merchant/app",
   };
 }
 

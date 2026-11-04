@@ -236,6 +236,35 @@ export default async function MerchantDashboardPage() {
 
   return (
     <div className="merchant-dashboard-page space-y-6">
+      {/* 🚀 Switch to Modern Mobile App Banner */}
+      <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white rounded-3xl p-4 sm:p-5 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border border-blue-500/30">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-2xl border border-white/20 shrink-0">
+            📱
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-amber-300 bg-amber-400/20 px-2 py-0.5 rounded-full border border-amber-300/30">
+                New Experience Ready
+              </span>
+              <span className="text-xs font-bold text-blue-200">68 Modular Screens</span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black text-white mt-0.5">
+              Switch to Trustit Merchant Partner Mobile App
+            </h3>
+            <p className="text-xs text-blue-100 mt-0.5">
+              Pure native mobile app experience with bottom tabs, category cockpits, and kitchen audio sirens.
+            </p>
+          </div>
+        </div>
+        <Link
+          href="/merchant/app"
+          className="px-5 py-3 rounded-2xl bg-white hover:bg-blue-50 text-blue-900 font-black text-xs shadow-md transition shrink-0 flex items-center gap-2 active:scale-95"
+        >
+          <span>Open Mobile App Studio</span>
+          <span>→</span>
+        </Link>
+      </div>
       {/* 2-Column Hero Grid: Left = Storefront Identity & Controls (50%), Right = Review & Rating Intelligence (50%) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-6">
         {/* Left Column (50%): Storefront Identity & Controls */}

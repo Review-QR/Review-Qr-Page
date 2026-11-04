@@ -7,13 +7,15 @@ import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotifica
 interface ScreenAuth03Props {
   category?: string;
   onBack?: () => void;
-  onRegisterComplete?: () => void;
+  onRegisterComplete?: (details?: { storeName: string; ownerName: string; phone: string; category: string }) => void;
+  disableRedirect?: boolean;
 }
 
 export default function ScreenAuth03MobileKycRegistration({
   category = "kirana",
   onBack,
   onRegisterComplete,
+  disableRedirect = false,
 }: ScreenAuth03Props) {
   const [storeName, setStoreName] = useState(
     category === "kirana"
@@ -105,9 +107,9 @@ export default function ScreenAuth03MobileKycRegistration({
         throw new Error(regData.message || "Registration failed.");
       }
 
-      onRegisterComplete?.();
-      if (typeof window !== "undefined") {
-        window.location.href = regData.redirectUrl || "/merchant/dashboard";
+      onRegisterComplete?.({ storeName, ownerName, phone, category });
+      if (!disableRedirect && typeof window !== "undefined") {
+        window.location.href = regData.redirectUrl || "/merchant/app";
       }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Failed to register.");
@@ -133,9 +135,9 @@ export default function ScreenAuth03MobileKycRegistration({
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        onRegisterComplete?.();
-        if (typeof window !== "undefined") {
-          window.location.href = data.redirectUrl || "/merchant/dashboard";
+        onRegisterComplete?.({ storeName, ownerName: googleUser.fullName, phone, category });
+        if (!disableRedirect && typeof window !== "undefined") {
+          window.location.href = data.redirectUrl || "/merchant/app";
         }
       } else {
         throw new Error(data.message || "Google sign-in failed.");

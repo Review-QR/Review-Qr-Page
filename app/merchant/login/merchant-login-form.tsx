@@ -79,7 +79,7 @@ export default function MerchantLoginForm() {
       if (data.isNewMerchant) {
         window.location.href = "/partner";
       } else {
-        window.location.href = data.redirectUrl || "/merchant/dashboard";
+        window.location.href = data.redirectUrl || "/merchant/app";
       }
     } catch (err: unknown) {
       setAuthError(err instanceof Error ? err.message : "Verification failed.");
@@ -105,7 +105,7 @@ export default function MerchantLoginForm() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        window.location.href = data.redirectUrl || "/merchant/dashboard";
+        window.location.href = data.redirectUrl || "/merchant/app";
       } else {
         throw new Error(data.message || "Google sign-in failed.");
       }
