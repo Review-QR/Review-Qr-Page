@@ -565,9 +565,9 @@ export default function OccasionStudio({
       </div>
 
       {/* Main Designer Grid */}
-      <div className="grid gap-6 lg:grid-cols-12 items-start">
-        {/* Left Column: Slim Template Card + Mobile Test Dispatch (5 Cols) */}
-        <div className="lg:col-span-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 shadow-xs">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {/* Left Column: Compact Template Preview Dock (fits card snugly) */}
+        <div className="w-full lg:w-[320px] shrink-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs">
           <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-2 text-xs font-bold text-slate-700">
             <span>Template Preview</span>
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600">
@@ -575,19 +575,20 @@ export default function OccasionStudio({
             </span>
           </div>
 
-          {/* SLIM TEMPLATE CARD SLIDER WITH SIDE BUTTONS */}
-          <div className="flex items-center justify-center gap-1.5">
+          {/* SLIM TEMPLATE CARD SLIDER WITH OVERLAY SIDE BUTTONS */}
+          <div className="relative mx-auto w-full max-w-[270px]">
+            {/* Left Arrow Button */}
             <button
               type="button"
               onClick={() => setTemplateStyle((prev) => (prev === "royal_gold" ? "ivory_cream" : "royal_gold"))}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition shrink-0 active:scale-90"
+              className="absolute -left-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-md hover:bg-slate-100 active:scale-90 transition z-20"
               title="Previous Template"
             >
               ‹
             </button>
 
             {/* COMPACT & SLIM TEMPLATE CARD (Matching User Red Box) */}
-            <div className="w-[270px] shrink-0">
+            <div className="w-full">
               {templateStyle === "royal_gold" ? (
                 <div className="relative overflow-hidden rounded-xl border border-[#d4af37]/60 bg-gradient-to-b from-[#18140c] via-[#0d0c0a] to-[#1e170d] p-3 text-center shadow-xs transition flex flex-col justify-between h-[190px]">
                   {/* Top Section: Circular Medallion Logo + Business Name in Compact Row */}
@@ -683,10 +684,11 @@ export default function OccasionStudio({
               )}
             </div>
 
+            {/* Right Arrow Button */}
             <button
               type="button"
               onClick={() => setTemplateStyle((prev) => (prev === "royal_gold" ? "ivory_cream" : "royal_gold"))}
-              className="flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 shadow-xs transition shrink-0 active:scale-90"
+              className="absolute -right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-md hover:bg-slate-100 active:scale-90 transition z-20"
               title="Next Template"
             >
               ›
@@ -759,8 +761,8 @@ export default function OccasionStudio({
           </div>
         </div>
 
-        {/* Right Column: Customization Controls & Approved Draft Actions (7 Cols) */}
-        <div className="lg:col-span-7 space-y-4">
+        {/* Right Column: Customization Controls & Approved Draft Actions */}
+        <div className="flex-1 min-w-0 space-y-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6 shadow-xs">
             <div className="border-b border-slate-100 pb-3">
               <h3 className="text-base font-bold text-slate-900">Customize Greeting Template</h3>
