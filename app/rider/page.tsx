@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRiderWorkflow } from "@/app/rider/hooks/useRiderWorkflow";
 import { riderAudio } from "@/lib/audio/rider-siren";
+import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
+import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotificationBanner";
 
 // 18 Core Screens
 import Screen01AuthStart from "@/app/rider/components/screens/Screen01AuthStart";
@@ -92,8 +94,36 @@ export default function StandaloneRiderProductionApp() {
 
   // Dynamic Auth State
   const [authPhone, setAuthPhone] = useState<string>("9876543210");
-  const [authChannel, setAuthChannel] = useState<"sms" | "whatsapp">("sms");
+  const [authChannel, setAuthChannel] = useState<"sms" | "whatsapp">("whatsapp");
   const [previewOtp, setPreviewOtp] = useState<string>("547291");
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState<boolean>(false);
+  const [activeWhatsAppOtp, setActiveWhatsAppOtp] = useState<string | null>(null);
+
+  const handleRiderGoogleLogin = async (googleUser: { email: string; fullName: string }) => {
+    try {
+      const res = await fetch("/api/hyperlocal/rider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "google_login",
+          email: googleUser.email,
+          fullName: googleUser.fullName,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.rider) {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("trustit_rider_profile", JSON.stringify(data.rider));
+          if (data.riderToken) {
+            localStorage.setItem("trustit_rider_session_token", data.riderToken);
+          }
+        }
+        setCurrentScreenId(7); // Jump straight to Duty Cockpit!
+      }
+    } catch (err) {
+      console.error("Google rider login error", err);
+    }
+  };
 
   // Step 2 & 3 & 4 Hardware & Telemetry State
   const [isWakeLockActive, setIsWakeLockActive] = useState<boolean>(false);
@@ -300,9 +330,13 @@ export default function StandaloneRiderProductionApp() {
           onContinue={(phone, channel, otp) => {
             setAuthPhone(phone);
             setAuthChannel(channel);
-            if (otp) setPreviewOtp(otp);
+            if (otp) {
+              setPreviewOtp(otp);
+              setActiveWhatsAppOtp(otp);
+            }
             setCurrentScreenId(2);
           }}
+          onGoogleLogin={() => setIsGoogleModalOpen(true)}
         />
       ),
     },
@@ -641,6 +675,26 @@ export default function StandaloneRiderProductionApp() {
           🛡️
         </button>
       </div>
+
+      {/* ── Google 1-Tap Auto-Login Consent Modal ── */}
+      <GoogleConsentModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        role="rider"
+        defaultName="Lucky Shukla (Rider)"
+        defaultEmail="lucky.rider@gmail.com"
+        onSuccess={handleRiderGoogleLogin}
+      />
+
+      {/* ── WhatsApp Incoming Notification Banner with 1-Tap Auto-Fill ── */}
+      <WhatsAppOtpNotificationBanner
+        otpCode={activeWhatsAppOtp}
+        phone={authPhone}
+        onAutoFill={(code) => {
+          setPreviewOtp(code);
+        }}
+        onDismiss={() => setActiveWhatsAppOtp(null)}
+      />
 
     </div>
   );

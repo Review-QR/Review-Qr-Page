@@ -222,11 +222,18 @@ export default function PublicPartnerRegistrationPage() {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
               <Link
-                href="/merchant-preview"
+                href="/merchant/dashboard"
                 className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-sm shadow-lg shadow-blue-500/25 transition flex items-center justify-center gap-2"
               >
                 <span>Dukaan Dashboard Kholein</span>
                 <span>→</span>
+              </Link>
+
+              <Link
+                href="/merchant-preview"
+                className="w-full sm:w-auto px-5 py-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-sm transition flex items-center justify-center gap-2"
+              >
+                <span>📱 68-Screen Gallery Preview</span>
               </Link>
 
               <button

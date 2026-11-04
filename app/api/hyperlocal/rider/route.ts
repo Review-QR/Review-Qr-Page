@@ -241,8 +241,18 @@ export async function POST(request: Request) {
 
     // ── 1. SEND OTP (SMS / WhatsApp / Email) ──
     if (action === "send_otp") {
+      if (body.channel === "sms") {
+        return Response.json(
+          {
+            success: false,
+            message: "SMS OTP is currently disabled (DLT registration pending). Please use WhatsApp OTP.",
+          },
+          { status: 400 }
+        );
+      }
+
       const phone = body.phone ? cleanPhone(String(body.phone)) : "";
-      const channel = body.channel === "whatsapp" ? "whatsapp" : "sms";
+      const channel = "whatsapp";
 
       if (phone && phone.length === 10) {
         const res = await sendCustomerPhoneOtp(phone, channel);
@@ -259,6 +269,77 @@ export async function POST(request: Request) {
         { success: false, message: "Valid 10-digit mobile number or email required." },
         { status: 400 },
       );
+    }
+
+    // ── 1B. 1-TAP GOOGLE SIGN-IN FOR RIDERS ──
+    if (action === "google_login") {
+      const email = String(body.email || "").trim().toLowerCase();
+      const fullName = String(body.fullName || "Google Rider").trim();
+      const phone = body.phone ? cleanPhone(String(body.phone)) : "";
+
+      if (!email || !email.includes("@")) {
+        return Response.json(
+          { success: false, message: "Valid email is required for Google Sign-In." },
+          { status: 400 }
+        );
+      }
+
+      // Check if rider exists by email or phone
+      let query = admin.from("delivery_riders").select("*");
+      if (phone && phone.length === 10) {
+        query = query.or(`email.eq.${email},phone.eq.+91${phone},phone.eq.${phone}`);
+      } else {
+        query = query.eq("email", email);
+      }
+
+      const { data: existingRider } = await query.maybeSingle();
+
+      if (existingRider) {
+        return Response.json({
+          success: true,
+          message: `Welcome back, ${existingRider.full_name}!`,
+          isNewRider: false,
+          rider: existingRider,
+          riderToken: signRiderSessionToken(existingRider.id),
+        });
+      }
+
+      // Auto-register rider profile
+      const riderId = crypto.randomUUID();
+      const fallbackPhone = phone && phone.length === 10 ? `+91${phone}` : `+9198765${Math.floor(10000 + Math.random() * 90000)}`;
+      const newRiderPayload = {
+        id: riderId,
+        full_name: fullName,
+        email: email,
+        phone: fallbackPhone,
+        vehicle_type: "bike",
+        vehicle_number: "UP-40-TEMP",
+        driving_license_number: "DL-UP40-TEMP",
+        is_verified: true,
+        kyc_status: "approved",
+        is_online: false,
+        is_available: true,
+        rating: 5.0,
+        wallet_balance: 0,
+        cash_in_hand: 0,
+        city: "Bahraich",
+        created_at: new Date().toISOString(),
+      };
+
+      const { data: createdRider, error: insertErr } = await admin
+        .from("delivery_riders")
+        .insert(newRiderPayload)
+        .select("*")
+        .single();
+
+      const finalRider = createdRider || newRiderPayload;
+      return Response.json({
+        success: true,
+        message: `Welcome to Trustit Fleet, ${fullName}!`,
+        isNewRider: false,
+        rider: finalRider,
+        riderToken: signRiderSessionToken(finalRider.id),
+      });
     }
 
     // ── 2. VERIFY OTP (SMS / WhatsApp / Email) ──

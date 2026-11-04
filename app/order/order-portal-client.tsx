@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo, useTransition } from "react";
 import Link from "next/link";
 import { formatDisplayOrderNumber, formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
+import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
+import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotificationBanner";
 
 type CashfreeCheckoutSdk = (options: { mode: "sandbox" | "production" }) => {
   checkout: (options: {
@@ -243,9 +245,11 @@ export default function CustomerSuperAppClient({
   const [loginStep, setLoginStep] = useState<"email" | "otp" | "name_prompt">("email");
   const [loginEmail, setLoginEmail] = useState<string>("");
   const [loginPhone, setLoginPhone] = useState<string>("");
-  const [loginChannel, setLoginChannel] = useState<"sms" | "whatsapp">("sms");
+  const [loginChannel, setLoginChannel] = useState<"sms" | "whatsapp">("whatsapp");
   const [authMode, setAuthMode] = useState<"phone" | "email">("phone");
   const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState<boolean>(false);
+  const [activeWhatsAppOtp, setActiveWhatsAppOtp] = useState<string | null>(null);
   const [isStandeeModalOpen, setIsStandeeModalOpen] = useState<boolean>(false);
   const [standeeRating, setStandeeRating] = useState<number>(5);
   const [standeeFeedback, setStandeeFeedback] = useState<string>("");
@@ -569,6 +573,9 @@ export default function CustomerSuperAppClient({
         setLoginOtp("");
         setLoginStep("otp");
         setLoginOtpCountdown(30);
+        if (data.previewOtp) {
+          setActiveWhatsAppOtp(data.previewOtp);
+        }
         setOtpNotice(data.message || `Verification code sent via ${channelToUse === "whatsapp" ? "WhatsApp" : "SMS"}`);
         return;
       }
@@ -602,13 +609,13 @@ export default function CustomerSuperAppClient({
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = async (overrideEmail?: string, overrideName?: string) => {
     setIsGoogleLoading(true);
     setOtpError("");
     setOtpNotice("");
     try {
-      const emailToUse = loginEmail && loginEmail.includes("@") ? loginEmail : (loginPhone ? `user.${loginPhone}@gmail.com` : "customer.google@gmail.com");
-      const nameToUse = customerName || "Google Customer";
+      const emailToUse = overrideEmail || (loginEmail && loginEmail.includes("@") ? loginEmail : (loginPhone ? `user.${loginPhone}@gmail.com` : "customer.google@gmail.com"));
+      const nameToUse = overrideName || customerName || "Google Customer";
       const res = await fetch("/api/customer/auth/verify-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -4158,27 +4165,25 @@ export default function CustomerSuperAppClient({
                               Deliver Verification Code Via:
                             </span>
                             <div className="grid grid-cols-2 gap-2">
+                              {/* SMS OTP: Disabled because DLT is pending */}
                               <button
                                 type="button"
-                                onClick={() => setLoginChannel("sms")}
-                                className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-bold transition ${
-                                  loginChannel === "sms"
-                                    ? "border-violet-600 bg-violet-50 text-violet-900 shadow-2xs"
-                                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                                }`}
+                                disabled={true}
+                                title="SMS OTP is currently disabled pending TRAI DLT registration. Please use WhatsApp OTP."
+                                className="flex items-center justify-center gap-1 p-2 rounded-xl border border-slate-200 bg-slate-100/90 text-slate-400 text-[11px] font-bold cursor-not-allowed opacity-75"
                               >
-                                <span>💬 SMS OTP</span>
+                                <span>💬 SMS</span>
+                                <span className="text-[8.5px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-black">DLT Pending</span>
                               </button>
+
+                              {/* WhatsApp OTP: Active & Instant */}
                               <button
                                 type="button"
                                 onClick={() => setLoginChannel("whatsapp")}
-                                className={`flex items-center justify-center gap-1.5 p-2 rounded-xl border text-xs font-bold transition ${
-                                  loginChannel === "whatsapp"
-                                    ? "border-emerald-600 bg-emerald-50 text-emerald-900 shadow-2xs"
-                                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-                                }`}
+                                className="flex items-center justify-center gap-1 p-2 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-950 text-[11px] font-black shadow-xs"
                               >
                                 <span>🟢 WhatsApp OTP</span>
+                                <span className="text-[8.5px] bg-emerald-200 text-emerald-900 px-1 py-0.5 rounded font-black">Active</span>
                               </button>
                             </div>
                           </div>
@@ -4209,13 +4214,13 @@ export default function CustomerSuperAppClient({
                         type="button"
                         disabled={isSendingOtp || (authMode === "phone" ? loginPhone.length < 10 : !loginEmail.trim())}
                         onClick={() => handleSendOtp()}
-                        className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 py-2.5 text-xs font-black text-white shadow-md shadow-violet-500/20 disabled:opacity-50 transition active:scale-98 flex items-center justify-center gap-1.5"
+                        className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 py-2.5 text-xs font-black text-white shadow-md shadow-emerald-500/20 disabled:opacity-50 transition active:scale-98 flex items-center justify-center gap-1.5"
                       >
                         {isSendingOtp ? (
-                          <span>Sending Verification Code...</span>
+                          <span>Sending WhatsApp OTP...</span>
                         ) : (
                           <>
-                            <span>Get OTP</span>
+                            <span>Get WhatsApp OTP</span>
                             <span>→</span>
                           </>
                         )}
@@ -4235,7 +4240,7 @@ export default function CustomerSuperAppClient({
                         <button
                           type="button"
                           disabled={isGoogleLoading}
-                          onClick={handleGoogleSignIn}
+                          onClick={() => setIsGoogleModalOpen(true)}
                           className="w-full py-2 px-3 rounded-xl border border-slate-200 hover:bg-slate-50 active:scale-98 font-bold text-xs text-slate-700 flex items-center justify-center gap-2 transition"
                         >
                           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -4244,7 +4249,7 @@ export default function CustomerSuperAppClient({
                             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
                             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
                           </svg>
-                          <span>{isGoogleLoading ? "Connecting Google..." : "Continue with Google"}</span>
+                          <span>{isGoogleLoading ? "Connecting Google..." : "Continue with Google (1-Tap)"}</span>
                         </button>
 
                         {/* WhatsApp Direct Option */}
@@ -4633,6 +4638,26 @@ export default function CustomerSuperAppClient({
           </div>
         </div>
       )}
+
+      {/* Google 1-Tap Consent Modal */}
+      <GoogleConsentModal
+        isOpen={isGoogleModalOpen}
+        onClose={() => setIsGoogleModalOpen(false)}
+        role="customer"
+        defaultName={customerName || "Lucky Shukla"}
+        defaultEmail={customerEmail || "lucky.trustit@gmail.com"}
+        onSuccess={({ email, fullName }) => {
+          handleGoogleSignIn(email, fullName);
+        }}
+      />
+
+      {/* Realistic WhatsApp Notification Banner with 1-Tap Auto-Fill */}
+      <WhatsAppOtpNotificationBanner
+        otpCode={activeWhatsAppOtp}
+        phone={loginPhone}
+        onAutoFill={(code) => setLoginOtp(code)}
+        onDismiss={() => setActiveWhatsAppOtp(null)}
+      />
 
     </div>
   );

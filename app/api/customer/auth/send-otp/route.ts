@@ -7,11 +7,21 @@ export const dynamic = "force-dynamic";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, phone, channel = "sms" } = body;
+    const { email, phone, channel = "whatsapp" } = body;
 
     // 1. If mobile number is provided -> dispatch via SMS or WhatsApp OTP
     if (phone && typeof phone === "string") {
-      const result = await sendCustomerPhoneOtp(phone, channel === "whatsapp" ? "whatsapp" : "sms");
+      if (channel === "sms") {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "SMS OTP is currently disabled (DLT registration pending). Please use WhatsApp OTP.",
+          },
+          { status: 400 }
+        );
+      }
+
+      const result = await sendCustomerPhoneOtp(phone, "whatsapp");
       if (!result.success) {
         return NextResponse.json(result, { status: 429 });
       }
