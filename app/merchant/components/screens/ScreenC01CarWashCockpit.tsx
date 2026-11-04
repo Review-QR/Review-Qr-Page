@@ -1,65 +1,100 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
+import DongleSliderSwitch from "../DongleSliderSwitch";
 
-interface ScreenC01Props {
+export interface ScreenC01Props {
+  storeName?: string;
+  ownerName?: string;
+  phone?: string;
+  isStoreOnline?: boolean;
+  onToggleStoreOnline?: () => void;
+  liveOrdersCount?: number;
+  catalogCount?: number;
+  todayEarnings?: number;
   onOpenBays?: () => void;
   onOpenPackages?: () => void;
   onOpenStandee?: () => void;
   onBack?: () => void;
 }
 
+/**
+ * ScreenC01: Pure Multi-Tenant Car Wash & Detailing Cockpit.
+ * Zero hardcoded personas (No Virendra ji) - 100% dynamic multi-tenant auto service station.
+ * Hardware DongleSliderSwitch for Bay Status.
+ */
 export default function ScreenC01CarWashCockpit({
+  storeName = "Auto Foam & Detailing Hub",
+  ownerName = "Garage Partner",
+  phone = "",
+  isStoreOnline = true,
+  onToggleStoreOnline,
+  liveOrdersCount = 2,
+  catalogCount = 12,
+  todayEarnings = 5400,
   onOpenBays,
   onOpenPackages,
   onOpenStandee,
   onBack,
 }: ScreenC01Props) {
-  const [garageOpen, setGarageOpen] = useState(true);
+  const displayPhone = phone.replace(/\D/g, "");
+  const formattedPhone = displayPhone.length === 10
+    ? `+91 ${displayPhone.slice(0, 5)} ${displayPhone.slice(5)}`
+    : phone || "+91 Auto Partner";
 
   return (
-    <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {/* Header */}
+    <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans select-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* Top Header */}
       <div>
         <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
-          <div className="flex items-center gap-2">
-            <div className="w-9 h-9 rounded-xl bg-cyan-800 text-cyan-200 flex items-center justify-center font-black text-sm shadow-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-cyan-800 text-cyan-200 flex items-center justify-center font-black text-sm shadow-xs shrink-0">
               🚗
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-1.5">
-                <h2 className="text-xs font-black text-slate-900 leading-tight">
-                  SpeedX Auto Foam &amp; Detailing
+                <h2 className="text-xs font-black text-slate-900 leading-tight truncate">
+                  {storeName}
                 </h2>
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className={`w-2 h-2 rounded-full shrink-0 ${isStoreOnline ? "bg-emerald-500 animate-pulse" : "bg-rose-500"}`} />
               </div>
-              <p className="text-[10px] text-slate-500 font-mono">ID: CARWASH-9914 • Highway Bypass Hub</p>
+              <p className="text-[10px] text-slate-500 font-mono truncate">
+                {formattedPhone} • Auto Detailing Hub
+              </p>
             </div>
           </div>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-cyan-50 text-cyan-900 border border-cyan-200">
-            Automobile Partner
-          </span>
+
+          <div className="shrink-0">
+            <DongleSliderSwitch
+              isOn={isStoreOnline}
+              onToggle={() => onToggleStoreOnline?.()}
+            />
+          </div>
         </div>
 
-        {/* Greeting & Bays Shortcut */}
+        {/* Dynamic Greeting & Bays Shortcut */}
         <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3 shadow-xs space-y-2.5">
           <div className="flex items-start justify-between">
             <div>
-              <span className="text-[10px] font-black uppercase text-cyan-700 tracking-wider">
+              <span className="text-[10px] font-black uppercase text-cyan-700 tracking-wider block">
                 Washing Bay Command Desk
               </span>
-              <h1 className="text-sm font-black text-slate-900">Namaste, Virendra ji! 🙏</h1>
-              <p className="text-[11px] text-slate-500">3 Bays Active • 2 Cars Waiting in Parking.</p>
+              <h1 className="text-sm font-black text-slate-900 mt-0.5">
+                Namaste, {ownerName}! 🙏
+              </h1>
+              <p className="text-[11px] text-slate-500">
+                {liveOrdersCount} Vehicles in Queue • Bays Active
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setGarageOpen(!garageOpen)}
-              className={`px-2 py-1 rounded-lg text-[10px] font-bold border ${
-                garageOpen ? "bg-emerald-50 text-emerald-800 border-emerald-300" : "bg-slate-100 text-slate-500"
-              }`}
-            >
-              {garageOpen ? "Bays: OPEN ✓" : "Bays: FULL ⏸"}
-            </button>
+            <div className="text-right">
+              <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border ${
+                isStoreOnline
+                  ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                  : "bg-rose-50 text-rose-800 border-rose-300"
+              }`}>
+                {isStoreOnline ? "Bays: OPEN ✓" : "Bays: FULL ⏸"}
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
@@ -75,7 +110,7 @@ export default function ScreenC01CarWashCockpit({
               onClick={onOpenPackages}
               className="py-2 px-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-[11px] font-bold shadow-2xs flex items-center justify-center gap-1.5 transition"
             >
-              <span>🚙 Wash Packages</span>
+              <span>🚙 Wash Packages ({catalogCount})</span>
             </button>
           </div>
         </div>
@@ -109,14 +144,14 @@ export default function ScreenC01CarWashCockpit({
 
             <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-2">
               <span className="text-[10px] font-bold text-amber-900 block">🅿️ In Queue (Lot)</span>
-              <p className="text-base font-black text-amber-950 mt-0.5">2 Vehicles</p>
-              <span className="text-[9px] font-medium text-amber-700">Swift &amp; Royal Enfield</span>
+              <p className="text-base font-black text-amber-950 mt-0.5">{liveOrdersCount} Vehicles</p>
+              <span className="text-[9px] font-medium text-amber-700">Digital Token Queue</span>
             </div>
 
             <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-2">
               <span className="text-[10px] font-bold text-emerald-900 block">✅ Washed Today</span>
-              <p className="text-base font-black text-emerald-950 mt-0.5">14 Rides</p>
-              <span className="text-[9px] font-bold text-emerald-700">₹5,400 Collected</span>
+              <p className="text-base font-black text-emerald-950 mt-0.5">₹{todayEarnings.toLocaleString("en-IN")}</p>
+              <span className="text-[9px] font-bold text-emerald-700">Auto Settled</span>
             </div>
           </div>
         </div>

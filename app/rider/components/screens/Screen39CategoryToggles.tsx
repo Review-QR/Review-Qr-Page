@@ -50,7 +50,7 @@ export default function Screen39CategoryToggles({
         <div className="mt-4 bg-gradient-to-r from-blue-900 to-indigo-950 text-white rounded-2xl p-4 shadow-md flex items-center justify-between">
           <div>
             <span className="text-[10px] font-bold text-blue-200 uppercase">Registered Vehicle</span>
-            <h3 className="text-sm font-black">Honda Activa 6G (UP 40 AB 2345)</h3>
+            <h3 className="text-sm font-black">Two-Wheeler Partner (UP 40 Verified)</h3>
             <p className="text-[11px] text-blue-200 mt-0.5">Equipped with front footboard for heavy loads</p>
           </div>
           <span className="text-2xl">🛵</span>

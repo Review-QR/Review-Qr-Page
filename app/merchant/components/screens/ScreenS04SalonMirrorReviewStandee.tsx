@@ -3,14 +3,25 @@
 import React from "react";
 
 interface ScreenS04Props {
+  storeName?: string;
+  ownerName?: string;
+  phone?: string;
   onBack?: () => void;
   onDownloadStandee?: () => void;
 }
 
 export default function ScreenS04SalonMirrorReviewStandee({
+  storeName = "Looks Salon & Spa",
+  ownerName = "Stylist Partner",
+  phone = "",
   onBack,
   onDownloadStandee,
 }: ScreenS04Props) {
+  const displayPhone = phone.replace(/\D/g, "");
+  const formattedPhone = displayPhone.length === 10
+    ? `+91 ${displayPhone.slice(0, 5)} ${displayPhone.slice(5)}`
+    : phone || "+91 Salon Desk";
+
   return (
     <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {/* Header */}
@@ -40,15 +51,15 @@ export default function ScreenS04SalonMirrorReviewStandee({
           </span>
 
           {/* Standee Body */}
-          <div className="w-44 bg-rose-950 text-white rounded-2xl p-3 border-4 border-rose-400 shadow-xl space-y-2">
+          <div className="w-48 bg-rose-950 text-white rounded-2xl p-3 border-4 border-rose-400 shadow-xl space-y-2">
             <div>
               <div className="w-7 h-7 mx-auto rounded-lg bg-rose-800 flex items-center justify-center text-sm shadow-xs">
                 ✂️
               </div>
-              <h3 className="text-xs font-black uppercase tracking-wider text-rose-200 mt-1 leading-tight">
-                Looks Salon &amp; Spa
+              <h3 className="text-xs font-black uppercase tracking-wider text-rose-200 mt-1 leading-tight truncate">
+                {storeName}
               </h3>
-              <p className="text-[8px] text-rose-300">Civil Lines • Bahraich</p>
+              <p className="text-[8px] text-rose-300 truncate">{formattedPhone} • Salon Desk</p>
             </div>
 
             {/* QR Pattern on Standee */}
@@ -58,32 +69,36 @@ export default function ScreenS04SalonMirrorReviewStandee({
               </div>
             </div>
 
-            {/* Slogan */}
-            <div className="space-y-0.5 text-[8px] text-rose-100 font-medium">
-              <p className="font-bold text-rose-300 uppercase tracking-wide">
-                "Loved Your New Look?"
-              </p>
-              <p className="text-[7px] text-white/80">Scan to post 5★ Google Review &amp; get ₹50 off next cut!</p>
+            {/* Review Incentive Box */}
+            <div className="bg-rose-900/80 rounded-xl p-1.5 border border-rose-500/50 text-[8px] text-rose-100">
+              <span className="font-bold text-rose-200 block">5-Star Google Rating</span>
+              Review dekar payein ₹50 agle haircut par
             </div>
 
-            {/* Google Rating Emblem */}
-            <div className="pt-1 border-t border-rose-800/80 flex items-center justify-center gap-1 text-[8px] text-rose-300 font-bold">
-              <span>⭐ 4.9 on Google Maps (180+ Reviews)</span>
+            {/* Partner Branding Footer */}
+            <div className="pt-0.5 border-t border-rose-800/80 flex items-center justify-between text-[7px] text-rose-400 font-mono">
+              <span>Trustit Style</span>
+              <span>NPCI UPI 2.0</span>
             </div>
           </div>
-
-          {/* Standee Base Plate */}
-          <div className="w-48 h-3.5 bg-rose-300/60 rounded-full border border-rose-400 shadow-md -mt-1.5"></div>
         </div>
 
-        {/* Counter Placement Guide */}
-        <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3 shadow-xs space-y-1.5 text-xs text-slate-700">
-          <span className="font-bold text-slate-900 block text-[10px] uppercase">
-            Where to stick this in Salon:
-          </span>
-          <p className="text-[11px] leading-relaxed">
-            Stick at eye-level on the bottom right corner of each haircut mirror so clients scan while admiring their fresh haircut.
-          </p>
+        {/* Specifications List */}
+        <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3 shadow-xs space-y-2 text-xs">
+          <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 text-[11px]">
+            <span className="text-slate-500">Material Specification</span>
+            <span className="font-bold text-slate-800">Static Cling Mirror Decal + Acrylic Stand</span>
+          </div>
+          <div className="flex items-center justify-between pb-1.5 border-b border-slate-100 text-[11px]">
+            <span className="text-slate-500">Print Quality</span>
+            <span className="font-bold text-slate-800">Waterproof Metallic Foiling</span>
+          </div>
+          <div className="flex items-center justify-between text-[11px]">
+            <span className="text-slate-500">Standee Status</span>
+            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 text-[10px]">
+              Active &amp; Ready
+            </span>
+          </div>
         </div>
       </div>
 
@@ -92,9 +107,9 @@ export default function ScreenS04SalonMirrorReviewStandee({
         <button
           type="button"
           onClick={onDownloadStandee}
-          className="w-full py-2.5 rounded-xl bg-rose-700 hover:bg-rose-600 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5"
+          className="w-full py-2.5 rounded-xl bg-rose-800 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5"
         >
-          <span>📥 Download Mirror Decal &amp; Standee PDF</span>
+          <span>📥 Download Print-Ready High-Res PDF Standee</span>
         </button>
       </div>
     </div>

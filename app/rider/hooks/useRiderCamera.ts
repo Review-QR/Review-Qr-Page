@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback } from "react";
 
 export interface RiderCameraState {
   isStreaming: boolean;
@@ -12,6 +12,7 @@ export interface RiderCameraState {
   capturePhoto: () => string | null;
   resetPhoto: () => void;
   videoRef: React.RefObject<HTMLVideoElement | null>;
+  setCapturedImage: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export function useRiderCamera(initialFacingMode: "user" | "environment" = "user") {
@@ -22,27 +23,41 @@ export function useRiderCamera(initialFacingMode: "user" | "environment" = "user
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const facingModeRef = useRef<"user" | "environment">(initialFacingMode);
 
   const stopCamera = useCallback(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track) => track.stop());
+      try {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      } catch {}
       streamRef.current = null;
     }
     if (videoRef.current) {
-      videoRef.current.srcObject = null;
+      try {
+        videoRef.current.srcObject = null;
+      } catch {}
     }
     setIsStreaming(false);
   }, []);
 
   const startCamera = useCallback(
     async (mode?: "user" | "environment"): Promise<boolean> => {
-      stopCamera();
-      const targetMode = mode || facingMode;
+      // 1. Cleanly stop any existing stream
+      if (streamRef.current) {
+        try {
+          streamRef.current.getTracks().forEach((t) => t.stop());
+        } catch {}
+        streamRef.current = null;
+      }
+
+      const targetMode = mode || facingModeRef.current || "user";
+      facingModeRef.current = targetMode;
       setFacingMode(targetMode);
       setError(null);
 
-      if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia) {
-        setError("Camera not supported on this device/browser.");
+      if (typeof window === "undefined" || !navigator?.mediaDevices?.getUserMedia) {
+        setError("Camera is not supported on this device or insecure context.");
+        setIsStreaming(false);
         return false;
       }
 
@@ -59,18 +74,23 @@ export function useRiderCamera(initialFacingMode: "user" | "environment" = "user
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
-          videoRef.current.setAttribute("playsinline", "true"); // Required for iOS
-          await videoRef.current.play();
+          videoRef.current.setAttribute("playsinline", "true");
+          try {
+            await videoRef.current.play();
+          } catch {
+            // Autoplay might need user interaction; stream is still active
+          }
         }
         setIsStreaming(true);
         return true;
       } catch (err: any) {
-        setError(err.name === "NotAllowedError" ? "Camera permission denied." : "Unable to access camera.");
+        const isDenied = err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError";
+        setError(isDenied ? "Camera permission denied. Please allow camera in Chrome settings." : "Unable to open camera hardware.");
         setIsStreaming(false);
         return false;
       }
     },
-    [facingMode, stopCamera]
+    [] // Stable reference - NEVER re-creates!
   );
 
   const capturePhoto = useCallback((): string | null => {
@@ -86,7 +106,7 @@ export function useRiderCamera(initialFacingMode: "user" | "environment" = "user
       if (!ctx) return null;
 
       // Draw mirrored if front camera
-      if (facingMode === "user") {
+      if (facingModeRef.current === "user") {
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
       }
@@ -100,19 +120,13 @@ export function useRiderCamera(initialFacingMode: "user" | "environment" = "user
     } catch {
       return null;
     }
-  }, [facingMode, stopCamera]);
+  }, [stopCamera]);
 
   const resetPhoto = useCallback(() => {
     setCapturedImage(null);
-    startCamera(facingMode);
-  }, [facingMode, startCamera]);
-
-  // Clean up stream on unmount
-  useEffect(() => {
-    return () => {
-      stopCamera();
-    };
-  }, [stopCamera]);
+    setError(null);
+    startCamera(facingModeRef.current);
+  }, [startCamera]);
 
   return {
     isStreaming,

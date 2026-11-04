@@ -3,43 +3,70 @@
 import React, { useState } from "react";
 
 interface Screen39Props {
+  initialAccountNo?: string;
+  initialIfsc?: string;
+  initialBeneficiary?: string;
+  isInitiallyVerified?: boolean;
   onBack?: () => void;
-  onVerifySuccess?: () => void;
+  onVerifySuccess?: (bankData?: any) => void;
 }
 
 export default function Screen39BankKycPennyDrop({
+  initialAccountNo = "",
+  initialIfsc = "",
+  initialBeneficiary = "",
+  isInitiallyVerified = false,
   onBack,
   onVerifySuccess,
 }: Screen39Props) {
-  const [accountNo, setAccountNo] = useState("");
-  const [ifsc, setIfsc] = useState("");
-  const [beneficiary, setBeneficiary] = useState("");
+  const [accountNo, setAccountNo] = useState(initialAccountNo);
+  const [ifsc, setIfsc] = useState(initialIfsc);
+  const [beneficiary, setBeneficiary] = useState(initialBeneficiary);
   const [checking, setChecking] = useState(false);
-  const [verified, setVerified] = useState(false);
+  const [verified, setVerified] = useState(isInitiallyVerified);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handlePennyDrop = async () => {
+    setErrorMsg(null);
+    if (!accountNo.trim() || accountNo.replace(/\D/g, "").length < 8) {
+      setErrorMsg("Kripya sahi Bank Account Number darj karein.");
+      return;
+    }
+    if (!ifsc.trim() || ifsc.trim().length < 8) {
+      setErrorMsg("Kripya valid Bank IFSC code dalein.");
+      return;
+    }
+
     setChecking(true);
     try {
-      await fetch("/api/merchant/app-operations", {
+      const res = await fetch("/api/merchant/app-operations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "verify_bank_kyc",
           data: {
-            accountNumber: accountNo,
-            ifsc,
-            holderName: beneficiary,
+            accountNumber: accountNo.trim(),
+            ifsc: ifsc.trim().toUpperCase(),
+            holderName: beneficiary.trim() || "Verified Partner",
           },
         }),
       });
-      setVerified(true);
-      onVerifySuccess?.();
-    } catch {}
-    setChecking(false);
+      const data = await res.json();
+      if (data.success) {
+        setVerified(true);
+        onVerifySuccess?.(data.bankAccount);
+      } else {
+        setErrorMsg(data.message || "Penny drop verification failed.");
+      }
+    } catch {
+      setErrorMsg("Network error. Please try again.");
+    } finally {
+      setChecking(false);
+    }
   };
 
   return (
-    <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto">
+    <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {/* Header */}
       <div>
         <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
@@ -54,7 +81,7 @@ export default function Screen39BankKycPennyDrop({
           <button
             type="button"
             onClick={onBack}
-            className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200"
+            className="text-xs text-slate-500 hover:text-slate-900 px-2.5 py-1 rounded-lg bg-white border border-slate-200 shadow-2xs"
           >
             ← Back
           </button>
@@ -86,6 +113,12 @@ export default function Screen39BankKycPennyDrop({
           </span>
         </div>
 
+        {errorMsg && (
+          <div className="mt-2 p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-medium">
+            ⚠️ {errorMsg}
+          </div>
+        )}
+
         {/* Form Inputs */}
         <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-2.5">
           <div>
@@ -96,8 +129,10 @@ export default function Screen39BankKycPennyDrop({
               type="text"
               value={beneficiary}
               placeholder="e.g. Ankit Shukla"
+              autoComplete="off"
+              spellCheck={false}
               onChange={(e) => setBeneficiary(e.target.value)}
-              className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-slate-50 focus:outline-hidden"
+              className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 bg-slate-50 focus:outline-hidden focus:border-blue-600"
             />
           </div>
 
@@ -109,8 +144,10 @@ export default function Screen39BankKycPennyDrop({
               type="text"
               value={accountNo}
               placeholder="e.g. 9956726957"
+              autoComplete="off"
+              spellCheck={false}
               onChange={(e) => setAccountNo(e.target.value)}
-              className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 bg-slate-50 focus:outline-hidden"
+              className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 bg-slate-50 focus:outline-hidden focus:border-blue-600"
             />
           </div>
 
@@ -122,13 +159,15 @@ export default function Screen39BankKycPennyDrop({
               type="text"
               value={ifsc}
               placeholder="e.g. IDIB0004866"
+              autoComplete="off"
+              spellCheck={false}
               onChange={(e) => setIfsc(e.target.value)}
-              className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 bg-slate-50 focus:outline-hidden uppercase"
+              className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-mono font-bold text-slate-900 bg-slate-50 focus:outline-hidden uppercase focus:border-blue-600"
             />
           </div>
 
           <div className="pt-1 text-[10px] text-slate-500">
-            Bank Branch: <strong>HDFC Bank Ltd, Civil Lines Bahraich Branch, UP</strong>
+            NPCI Instant Settlement: <strong>Same Day T+0 / Next Morning Automated IMPS Payouts</strong>
           </div>
         </div>
       </div>
@@ -143,9 +182,9 @@ export default function Screen39BankKycPennyDrop({
           <button
             type="button"
             onClick={handlePennyDrop}
-            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition"
+            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition active:scale-[0.99]"
           >
-            Re-Verify Bank Account (Penny Drop ₹1)
+            {verified ? "Update & Re-Verify Bank Details (Penny Drop ₹1)" : "Verify Bank Account (Penny Drop ₹1) →"}
           </button>
         )}
       </div>

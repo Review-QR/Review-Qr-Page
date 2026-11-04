@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface Screen40Props {
   onBack?: () => void;
@@ -23,213 +23,232 @@ export default function Screen40TurnByTurnNav({
   onPolicePass,
   onLowBattery,
 }: Screen40Props) {
-  const [isVoiceMuted, setIsVoiceMuted] = useState<boolean>(false);
-  const [isNightMode, setIsNightMode] = useState<boolean>(false);
-  const [speed] = useState<number>(34);
+  const [vehicleMode, setVehicleMode] = useState<"bike" | "cab">("bike");
+  const [progress, setProgress] = useState<number>(45); // percentage along the route (0 - 100)
+  const [speed, setSpeed] = useState<number>(28);
+
+  // Subtle speed & position animation to simulate street movement
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress((p) => (p >= 88 ? 30 : p + 2));
+      setSpeed((s) => Math.floor(26 + Math.random() * 8));
+    }, 1800);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleLaunchGoogleMaps = () => {
+    if (onOpenGoogleMaps) {
+      onOpenGoogleMaps();
+      return;
+    }
+    // Deep-link to native Google Maps navigation with two-wheeler mode
+    const origin = "27.5745,81.5965"; // Deepak Sweets & Bakers, Civil Lines
+    const destination = "27.5760,81.5980"; // Customer Home, Peepal Chauraha
+    const travelmode = vehicleMode === "bike" ? "two_wheeler" : "driving";
+    const mapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=${travelmode}`;
+    window.open(mapsUrl, "_blank");
+  };
 
   return (
-    <div
-      className={`w-full h-full flex flex-col justify-between font-sans transition-colors duration-300 ${
-        isNightMode ? "bg-[#090D16] text-white" : "bg-[#FAF8FF] text-[#0F172A]"
-      }`}
-    >
-      {/* 1. Top Green Maneuver Card (Turn-by-Turn Header) */}
-      <div className="p-3 sm:p-4 pb-0 z-20">
-        <div className="bg-[#15803D] text-white rounded-2xl p-3.5 shadow-lg flex items-center justify-between border border-emerald-600">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-2xl font-black shrink-0">
-              ↱
-            </div>
+    <div className="w-full h-full max-h-[600px] bg-[#0A0F1D] text-white flex flex-col justify-between p-3 select-none font-sans">
+      {/* 1. Header Bar: LIVE GPS TRACKING & Telemetry Strip */}
+      <div>
+        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono font-black text-emerald-200 uppercase tracking-wider">
-                  In 200 Meters
+              <div className="flex items-center gap-1">
+                <span className="text-xs font-black text-emerald-400 uppercase tracking-wider">
+                  LIVE GPS TRACKING
                 </span>
-                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-white/20 text-white">
-                  Kachehri Road
-                </span>
+                <span className="text-[10px] text-slate-400 font-hindi">(बहराइच)</span>
               </div>
-              <h3 className="text-sm font-black text-white leading-tight mt-0.5">
-                Turn Right at Peepal Tiraha (पीपल तिराहे से दाएं मुड़ें)
-              </h3>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsVoiceMuted(!isVoiceMuted)}
-            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs hover:bg-white/30 shrink-0"
-            title="Toggle Voice Navigation"
-          >
-            {isVoiceMuted ? "🔇" : "🔊"}
-          </button>
+
+          {/* Speed & Distance Pill */}
+          <div className="flex items-center gap-2 bg-slate-900/90 border border-slate-700 px-2.5 py-1 rounded-full text-[11px] font-mono">
+            <span className="text-amber-400 font-bold">⚡ {speed} km/h</span>
+            <span className="text-slate-500">•</span>
+            <span className="text-slate-300 font-bold">1.1 km</span>
+          </div>
+        </div>
+
+        {/* Vehicle Switcher: Bike vs Cab (Requested by user) */}
+        <div className="flex items-center justify-between mt-2 px-1">
+          <span className="text-[10px] font-bold text-slate-400 uppercase">Fleet Mode</span>
+          <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+            <button
+              type="button"
+              onClick={() => setVehicleMode("bike")}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold transition ${
+                vehicleMode === "bike"
+                  ? "bg-emerald-500 text-slate-950 font-black"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🏍️ Bike (2W)
+            </button>
+            <button
+              type="button"
+              onClick={() => setVehicleMode("cab")}
+              className={`px-2 py-0.5 rounded text-[10px] font-bold transition ${
+                vehicleMode === "cab"
+                  ? "bg-amber-400 text-slate-950 font-black"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              🚖 Cab (4W)
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 2. Interactive Map Viewport Simulator */}
-      <div className="relative flex-1 m-3 sm:m-4 my-2 rounded-3xl overflow-hidden border-2 border-slate-700/30 shadow-inner flex flex-col justify-between p-3 select-none">
-        {/* Simulated Map Canvas Background */}
+      {/* 2. Interactive Street Route Viewport (Bahraich In-App Map) */}
+      <div className="relative my-2 h-[220px] rounded-2xl bg-[#0F172A] border border-slate-800 overflow-hidden shadow-inner flex flex-col justify-between p-3">
+        {/* Subtle Map Grid Background */}
+        <div className="absolute inset-0 bg-[radial-gradient(#334155_1px,transparent_1px)] [background-size:16px_16px] opacity-40"></div>
+
+        {/* Curved Street Route SVG */}
+        <svg className="w-full h-full absolute inset-0 pointer-events-none" viewBox="0 0 320 200">
+          <defs>
+            <linearGradient id="routeGradient" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1E293B" />
+              <stop offset="40%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#10B981" />
+            </linearGradient>
+          </defs>
+
+          {/* Road Outline */}
+          <path
+            d="M 45 155 Q 110 160, 160 115 T 275 45"
+            fill="none"
+            stroke="#1E293B"
+            strokeWidth="20"
+            strokeLinecap="round"
+          />
+          {/* Active Street Route */}
+          <path
+            d="M 45 155 Q 110 160, 160 115 T 275 45"
+            fill="none"
+            stroke="url(#routeGradient)"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray="6 3"
+          />
+        </svg>
+
+        {/* Origin Store Pin: Deepak Sweets & Bakers (Civil Lines, Bahraich) */}
+        <div className="relative z-10 self-start mt-auto flex items-center gap-2">
+          <div className="w-9 h-9 rounded-xl bg-blue-600 border border-blue-400 shadow-md flex items-center justify-center text-sm">
+            🏬
+          </div>
+          <div>
+            <strong className="text-[11px] font-black text-white block leading-tight">
+              Deepak Sweets &amp; Bakers
+            </strong>
+            <span className="text-[9px] text-blue-300 font-medium block">Civil Lines, Bahraich</span>
+          </div>
+        </div>
+
+        {/* Dynamic Moving Vehicle Pin (Bike / Cab) */}
         <div
-          className={`absolute inset-0 ${
-            isNightMode
-              ? "bg-[#0B132B] opacity-95"
-              : "bg-[#E2E8F0] bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:20px_20px]"
-          }`}
+          className="absolute z-20 pointer-events-none flex flex-col items-center transition-all duration-1000 ease-out"
+          style={{
+            left: `${progress}%`,
+            top: `${Math.max(25, 80 - progress * 0.65)}%`,
+            transform: "translate(-50%, -50%)",
+          }}
         >
-          {/* Simulated Street Polyline */}
-          <svg className="w-full h-full absolute inset-0 pointer-events-none">
-            {/* Street Lines */}
-            <path
-              d="M 60 480 Q 120 320, 180 260 T 260 120"
-              fill="none"
-              stroke={isNightMode ? "#1E293B" : "#CBD5E1"}
-              strokeWidth="24"
-              strokeLinecap="round"
-            />
-            {/* Active Route Polyline (Green = Clear Traffic) */}
-            <path
-              d="M 60 480 Q 120 320, 180 260 T 260 120"
-              fill="none"
-              stroke="#22C55E"
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeDasharray="8 4"
-              className="animate-pulse"
-            />
-          </svg>
-        </div>
-
-        {/* Top Controls Overlay on Map */}
-        <div className="relative z-10 flex items-center justify-between">
-          {/* Speedometer Badge */}
-          <div
-            className={`px-3 py-1.5 rounded-xl border shadow-md flex items-center gap-2 ${
-              isNightMode ? "bg-slate-900/90 border-slate-700 text-white" : "bg-white/95 border-slate-200 text-slate-900"
-            }`}
-          >
-            <div className="text-center">
-              <span className="text-base font-black font-mono leading-none block">{speed}</span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase">KM/H</span>
+          <div className="relative">
+            {/* Glowing Pulse Ring */}
+            <div className="absolute inset-0 rounded-full bg-emerald-400 animate-ping opacity-50"></div>
+            <div className="relative w-10 h-10 rounded-full bg-[#10B981] text-white border-2 border-white shadow-xl flex items-center justify-center text-lg">
+              {vehicleMode === "bike" ? "🏍️" : "🚖"}
             </div>
-            <div className="h-5 w-px bg-slate-300"></div>
-            <span className="text-[10px] font-bold text-emerald-600">Limit 40</span>
           </div>
-
-          {/* Quick Map Action Pills */}
-          <div className="flex items-center gap-1.5">
-            <button
-              type="button"
-              onClick={() => setIsNightMode(!isNightMode)}
-              className={`p-2 rounded-xl text-xs font-bold border shadow-xs transition ${
-                isNightMode
-                  ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                  : "bg-white/90 text-slate-700 border-slate-200 hover:bg-white"
-              }`}
-              title="Toggle Night / Day OLED Map"
-            >
-              {isNightMode ? "☀️ Day" : "🌙 OLED"}
-            </button>
-            <button
-              type="button"
-              onClick={onOpenGoogleMaps}
-              className="px-2.5 py-1.5 rounded-xl bg-white/95 text-slate-800 text-[11px] font-bold border border-slate-200 shadow-xs hover:bg-white flex items-center gap-1"
-            >
-              <span>🗺️ Google Maps</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Moving Motorcycle Marker on Center */}
-        <div className="relative z-10 my-auto flex flex-col items-center justify-center pointer-events-none">
-          <div className="w-12 h-12 rounded-full bg-[#0D47A1] text-white border-2 border-white shadow-2xl flex items-center justify-center text-xl animate-bounce">
-            🛵
-          </div>
-          <span className="mt-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase bg-black/70 text-white backdrop-blur-xs">
-            Arjun (You)
+          <span className="mt-1 px-1.5 py-0.2 rounded text-[9px] font-black bg-slate-950/90 text-emerald-300 border border-emerald-500/40 shadow backdrop-blur-xs">
+            Amit (6 mins)
           </span>
         </div>
 
-        {/* Floating Alleyway Warning Banner */}
-        <div className="relative z-10 space-y-1.5">
-          <button
-            type="button"
-            onClick={onViewLandmarks}
-            className="w-full p-2.5 rounded-xl bg-amber-500/95 text-white font-black text-xs shadow-md flex items-center justify-between border border-amber-400 hover:brightness-105 transition"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-base">📍</span>
-              <div className="text-left">
-                <span className="block text-[11px]">Approaching Narrow Alleyway!</span>
-                <span className="text-[9px] text-amber-100 font-medium">Tap to view Customer Gate Photo &amp; Audio Clue</span>
-              </div>
-            </div>
-            <span className="text-xs bg-white/20 px-2 py-1 rounded-lg">View ➔</span>
-          </button>
+        {/* Destination Pin: Customer Home (Peepal Chauraha) */}
+        <div className="relative z-10 self-end mb-auto flex items-center gap-2 text-right">
+          <div>
+            <strong className="text-[11px] font-black text-amber-400 block leading-tight">
+              Customer Home
+            </strong>
+            <span className="text-[9px] text-slate-300 font-medium block">Peepal Chauraha</span>
+          </div>
+          <div className="w-9 h-9 rounded-xl bg-amber-500 border border-amber-300 shadow-md flex items-center justify-center text-sm">
+            🏠
+          </div>
+        </div>
 
-          {/* Quick Road Assist Hub */}
-          <div className="grid grid-cols-4 gap-1 text-[9px] font-bold">
-            <button
-              type="button"
-              onClick={onTrafficReroute}
-              className="py-1 px-1 bg-black/70 hover:bg-black/90 text-white rounded-lg backdrop-blur-xs border border-white/20 text-center"
-            >
-              🚆 Reroute (S42)
-            </button>
-            <button
-              type="button"
-              onClick={onInAppChat}
-              className="py-1 px-1 bg-black/70 hover:bg-black/90 text-white rounded-lg backdrop-blur-xs border border-white/20 text-center"
-            >
-              💬 Chat (S44)
-            </button>
-            <button
-              type="button"
-              onClick={onPolicePass}
-              className="py-1 px-1 bg-black/70 hover:bg-black/90 text-white rounded-lg backdrop-blur-xs border border-white/20 text-center"
-            >
-              🪪 Pass (S43)
-            </button>
-            <button
-              type="button"
-              onClick={onLowBattery}
-              className="py-1 px-1 bg-red-950/80 hover:bg-red-900 text-red-300 rounded-lg backdrop-blur-xs border border-red-500/30 text-center"
-            >
-              🪫 Safe (S48)
-            </button>
+        {/* 4-Step Progress Ribbon (Matching Customer App Tracking) */}
+        <div className="relative z-10 mt-auto pt-2 border-t border-slate-800/80">
+          <div className="grid grid-cols-4 gap-1 text-center text-[9px] font-bold">
+            <div className="text-emerald-400 border-t-2 border-emerald-500 pt-0.5">1. Placed</div>
+            <div className="text-emerald-400 border-t-2 border-emerald-500 pt-0.5">2. Packed</div>
+            <div className="text-emerald-300 font-black border-t-2 border-emerald-400 pt-0.5 flex items-center justify-center gap-0.5">
+              <span>3. On Road</span>
+              <span>🛵</span>
+            </div>
+            <div className="text-slate-500 border-t-2 border-slate-700 pt-0.5">4. Doorstep</div>
           </div>
         </div>
       </div>
 
-      {/* 3. Bottom ETA & Handover Action Cockpit */}
-      <div
-        className={`p-3 sm:p-4 pt-2 border-t transition-colors ${
-          isNightMode ? "bg-[#090D16] border-slate-800" : "bg-white border-slate-200"
-        } space-y-2.5`}
-      >
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-black text-emerald-600 font-mono">1.8 KM · 6 Mins</span>
-              <span className="px-2 py-0.2 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                Smooth Traffic
-              </span>
-            </div>
-            <p className={`text-xs font-bold mt-0.5 ${isNightMode ? "text-slate-300" : "text-slate-700"}`}>
-              Drop: Riya Sharma · Civil Lines, Bahraich
-            </p>
-          </div>
-          <a
-            href="tel:+919876543210"
-            className="px-3 py-2 rounded-xl bg-blue-50 text-[#0D47A1] font-bold text-xs border border-blue-200 flex items-center gap-1.5"
+      {/* 3. Action Deck: Google Maps Launcher & Road Assist Pills */}
+      <div className="space-y-2">
+        {/* Prominent Google Maps 1-Tap Launcher Button (Requested by User) */}
+        <button
+          type="button"
+          onClick={handleLaunchGoogleMaps}
+          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 active:scale-[0.99] transition border border-blue-400/30"
+        >
+          <span className="text-base leading-none">🗺️</span>
+          <span>Open in Google Maps (गूगल मैप्स में खोलें)</span>
+          <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded font-mono">2W Navigation ➔</span>
+        </button>
+
+        {/* 4 Road Assist Pills */}
+        <div className="grid grid-cols-4 gap-1.5 text-[9px] font-bold">
+          <button
+            type="button"
+            onClick={onViewLandmarks}
+            className="py-1.5 px-1 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg border border-slate-800 text-center transition"
           >
-            <span>📞 Call</span>
-          </a>
+            📍 Gate Clue
+          </button>
+          <button
+            type="button"
+            onClick={onTrafficReroute}
+            className="py-1.5 px-1 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg border border-slate-800 text-center transition"
+          >
+            🚆 Reroute
+          </button>
+          <button
+            type="button"
+            onClick={onInAppChat}
+            className="py-1.5 px-1 bg-slate-900 hover:bg-slate-800 text-slate-200 rounded-lg border border-slate-800 text-center transition"
+          >
+            💬 Chat
+          </button>
+          <button
+            type="button"
+            onClick={onLowBattery}
+            className="py-1.5 px-1 bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 rounded-lg border border-rose-900/40 text-center transition"
+          >
+            🪫 Safe
+          </button>
         </div>
 
-        {/* Slide to Arrived Slider */}
+        {/* Slim Primary CTA: Arrived at Doorstep */}
         <button
           type="button"
           onClick={onArrivedAtLocation}
-          className="w-full py-3.5 rounded-2xl bg-[#0D47A1] text-white font-black text-sm shadow-md hover:bg-blue-800 active:scale-98 transition flex items-center justify-center gap-2"
+          className="w-full py-2.5 rounded-lg bg-[#10B981] hover:bg-emerald-600 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition"
         >
           <span>I Have Arrived at Doorstep</span>
           <span>🏁</span>

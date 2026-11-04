@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { merchantAudio } from "@/lib/audio/merchant-siren";
+import DongleSliderSwitch from "./DongleSliderSwitch";
 
 // ============================================================
 // ALL 68 MODULAR PRODUCTION SCREENS
@@ -109,6 +110,8 @@ export default function MerchantNativeAppShell({
   const [authStep, setAuthStep] = useState<"pitch" | "category" | "kyc" | "login">("pitch");
   const [storeCategory, setStoreCategory] = useState<MerchantCategory>(initialCategory);
   const [storeName, setStoreName] = useState<string>(initialStoreName);
+  const [ownerName, setOwnerName] = useState<string>("Merchant Partner");
+  const [merchantPhone, setMerchantPhone] = useState<string>("");
   const [isStoreOnline, setIsStoreOnline] = useState<boolean>(true);
   const [unreadOrders, setUnreadOrders] = useState<number>(2);
 
@@ -141,8 +144,29 @@ export default function MerchantNativeAppShell({
       const res = await fetch("/api/merchant/app-operations");
       const data = await res.json();
       if (data.success) {
-        if (data.config) setMerchantConfig(data.config);
+        if (data.config) {
+          setMerchantConfig(data.config);
+          if (data.config.ownerName) setOwnerName(data.config.ownerName);
+          if (data.config.phone) setMerchantPhone(data.config.phone);
+          if (data.config.businessCategory) {
+            const rawCat = (data.config.businessCategory || "").toLowerCase();
+            if (rawCat.includes("kirana") || rawCat.includes("groc")) setStoreCategory("kirana");
+            else if (rawCat.includes("chem") || rawCat.includes("pharm") || rawCat.includes("med")) setStoreCategory("chemist");
+            else if (rawCat.includes("salon") || rawCat.includes("spa") || rawCat.includes("beauty")) setStoreCategory("salon");
+            else if (rawCat.includes("car") || rawCat.includes("auto") || rawCat.includes("wash")) setStoreCategory("carwash");
+            else setStoreCategory("restaurant");
+          }
+        }
         if (data.business?.name) setStoreName(data.business.name);
+        if (data.business?.owner) setOwnerName(data.business.owner);
+        if (data.business?.phone) setMerchantPhone(data.business.phone);
+        if (data.business?.type) {
+          const rawType = (data.business.type || "").toLowerCase();
+          if (rawType.includes("kirana") || rawType.includes("groc")) setStoreCategory("kirana");
+          else if (rawType.includes("chem") || rawType.includes("pharm") || rawType.includes("med")) setStoreCategory("chemist");
+          else if (rawType.includes("salon") || rawType.includes("spa") || rawType.includes("beauty")) setStoreCategory("salon");
+          else if (rawType.includes("car") || rawType.includes("auto") || rawType.includes("wash")) setStoreCategory("carwash");
+        }
         if (data.business?.is_outlet_open !== undefined) setIsStoreOnline(data.business.is_outlet_open);
         if (data.orders) setLiveOrders(data.orders);
         if (data.catalog) setLiveCatalog(data.catalog);
@@ -740,9 +764,14 @@ export default function MerchantNativeAppShell({
           )}
           {activeSubScreen === "s39" && (
             <Screen39BankKycPennyDrop
+              initialAccountNo={merchantConfig?.bankAccount?.accountNumberMask || ""}
+              initialIfsc={merchantConfig?.bankAccount?.ifsc || ""}
+              initialBeneficiary={merchantConfig?.bankAccount?.holderName || ownerName || ""}
+              isInitiallyVerified={Boolean(merchantConfig?.bankAccount?.isVerified)}
               onBack={() => setActiveSubScreen(null)}
               onVerifySuccess={() => {
-                showToast("₹1 Penny Drop verification successful!");
+                showToast("₹1 Penny Drop verification successful! Bank account linked.");
+                fetchDashboard();
                 setActiveSubScreen(null);
               }}
             />
@@ -757,7 +786,11 @@ export default function MerchantNativeAppShell({
             <Screen42MultiOutletSwitcher onBack={() => setActiveSubScreen(null)} />
           )}
           {activeSubScreen === "s43" && (
-            <Screen43StaffRolesMatrix onBack={() => setActiveSubScreen(null)} />
+            <Screen43StaffRolesMatrix
+              ownerName={ownerName}
+              phone={merchantPhone}
+              onBack={() => setActiveSubScreen(null)}
+            />
           )}
           {activeSubScreen === "s44" && (
             <Screen44AuditSessionsLog onBack={() => setActiveSubScreen(null)} />
@@ -840,6 +873,9 @@ export default function MerchantNativeAppShell({
           )}
           {activeSubScreen === "kirana_04" && (
             <ScreenK04KiranaReviewStandee
+              storeName={storeName}
+              ownerName={ownerName}
+              phone={merchantPhone}
               onBack={() => setActiveSubScreen(null)}
               onDownloadStandee={() => showToast("Kirana Counter Standee PDF Ready!")}
             />
@@ -859,6 +895,9 @@ export default function MerchantNativeAppShell({
           )}
           {activeSubScreen === "chemist_04" && (
             <ScreenM04ChemistReviewStandee
+              storeName={storeName}
+              ownerName={ownerName}
+              phone={merchantPhone}
               onBack={() => setActiveSubScreen(null)}
               onDownloadStandee={() => showToast("Pharmacy Glass Standee PDF Ready!")}
             />
@@ -880,6 +919,9 @@ export default function MerchantNativeAppShell({
           )}
           {activeSubScreen === "salon_04" && (
             <ScreenS04SalonMirrorReviewStandee
+              storeName={storeName}
+              ownerName={ownerName}
+              phone={merchantPhone}
               onBack={() => setActiveSubScreen(null)}
               onDownloadStandee={() => showToast("Salon Mirror Decal PDF Ready!")}
             />
@@ -902,6 +944,9 @@ export default function MerchantNativeAppShell({
           )}
           {activeSubScreen === "carwash_04" && (
             <ScreenC04CarWashReviewStandee
+              storeName={storeName}
+              ownerName={ownerName}
+              phone={merchantPhone}
               onBack={() => setActiveSubScreen(null)}
               onDownloadStandee={() => showToast("Car Wash Lounge Standee PDF Ready!")}
             />
@@ -917,10 +962,21 @@ export default function MerchantNativeAppShell({
 
   // Tab 1: Industry-Specific Cockpit
   const renderCockpitTab = () => {
+    const activeOwner = ownerName || merchantConfig?.ownerName || (storeName ? storeName.split(" ")[0] : "Merchant Partner");
+    const activePhone = merchantPhone || merchantConfig?.phone || "";
+
     switch (storeCategory) {
       case "kirana":
         return (
           <ScreenK01KiranaCockpit
+            storeName={storeName}
+            ownerName={activeOwner}
+            phone={activePhone}
+            isStoreOnline={isStoreOnline}
+            onToggleStoreOnline={toggleStoreStatus}
+            liveOrdersCount={unreadOrders}
+            catalogCount={liveCatalog.length}
+            todayEarnings={todayGrossEarnings}
             onOpenParcha={() => setActiveSubScreen("kirana_02")}
             onOpenRates={() => setActiveSubScreen("kirana_03")}
             onOpenStandee={() => setActiveSubScreen("kirana_04")}
@@ -930,6 +986,11 @@ export default function MerchantNativeAppShell({
       case "chemist":
         return (
           <ScreenM01ChemistCockpit
+            storeName={storeName}
+            ownerName={activeOwner}
+            phone={activePhone}
+            isStoreOnline={isStoreOnline}
+            onToggleStoreOnline={toggleStoreStatus}
             onOpenRx={() => setActiveSubScreen("chemist_02")}
             onOpenMedicines={() => setActiveSubScreen("chemist_03")}
             onOpenStandee={() => setActiveSubScreen("chemist_04")}
@@ -939,6 +1000,14 @@ export default function MerchantNativeAppShell({
       case "salon":
         return (
           <ScreenS01SalonCockpit
+            storeName={storeName}
+            ownerName={activeOwner}
+            phone={activePhone}
+            isStoreOnline={isStoreOnline}
+            onToggleStoreOnline={toggleStoreStatus}
+            liveOrdersCount={unreadOrders}
+            catalogCount={liveCatalog.length}
+            todayEarnings={todayGrossEarnings}
             onOpenQueue={() => setActiveSubScreen("salon_02")}
             onOpenServices={() => setActiveSubScreen("salon_03")}
             onOpenStandee={() => setActiveSubScreen("salon_04")}
@@ -948,6 +1017,14 @@ export default function MerchantNativeAppShell({
       case "carwash":
         return (
           <ScreenC01CarWashCockpit
+            storeName={storeName}
+            ownerName={activeOwner}
+            phone={activePhone}
+            isStoreOnline={isStoreOnline}
+            onToggleStoreOnline={toggleStoreStatus}
+            liveOrdersCount={unreadOrders}
+            catalogCount={liveCatalog.length}
+            todayEarnings={todayGrossEarnings}
             onOpenBays={() => setActiveSubScreen("carwash_02")}
             onOpenPackages={() => setActiveSubScreen("carwash_03")}
             onOpenStandee={() => setActiveSubScreen("carwash_04")}
@@ -958,6 +1035,14 @@ export default function MerchantNativeAppShell({
       default:
         return (
           <Screen01MainCockpit
+            storeName={storeName}
+            ownerName={activeOwner}
+            phone={activePhone}
+            isStoreOnline={isStoreOnline}
+            onToggleStoreOnline={toggleStoreStatus}
+            liveOrdersCount={unreadOrders}
+            catalogCount={liveCatalog.length}
+            todayEarnings={todayGrossEarnings}
             onOpenOrders={() => setActiveTab("orders")}
             onOpenMenu={() => setActiveTab("menu")}
             onOpenSiren={() => setActiveSubScreen("s02")}
@@ -1481,7 +1566,16 @@ export default function MerchantNativeAppShell({
             onBack={() => setAuthStep("category")}
             onRegisterComplete={(details) => {
               if (details?.storeName) setStoreName(details.storeName);
-              if (details?.category) setStoreCategory(details.category as MerchantCategory);
+              if (details?.ownerName) setOwnerName(details.ownerName);
+              if (details?.phone) setMerchantPhone(details.phone);
+              if (details?.category) {
+                const rawCat = (details.category || "").toLowerCase();
+                if (rawCat.includes("kirana") || rawCat.includes("groc")) setStoreCategory("kirana");
+                else if (rawCat.includes("chem") || rawCat.includes("pharm") || rawCat.includes("med")) setStoreCategory("chemist");
+                else if (rawCat.includes("salon") || rawCat.includes("spa") || rawCat.includes("beauty")) setStoreCategory("salon");
+                else if (rawCat.includes("car") || rawCat.includes("auto") || rawCat.includes("wash")) setStoreCategory("carwash");
+                else setStoreCategory("restaurant");
+              }
               setIsAuthenticated(true);
               setActiveTab("cockpit");
               showToast(`Dukaan "${details?.storeName || storeName}" safalta se register ho gayi!`);
@@ -1495,6 +1589,8 @@ export default function MerchantNativeAppShell({
             onGoToRegister={() => setAuthStep("pitch")}
             onLoginSuccess={(details) => {
               if (details?.storeName) setStoreName(details.storeName);
+              if (details?.ownerName) setOwnerName(details.ownerName);
+              if (details?.phone) setMerchantPhone(details.phone);
               setIsAuthenticated(true);
               setActiveTab("cockpit");
               showToast("Swagatam! Merchant Console me aapka swagat hai.");
@@ -1564,24 +1660,12 @@ export default function MerchantNativeAppShell({
                 </div>
               </div>
 
-              {/* Online / Offline Status Toggle Button */}
+              {/* Online / Offline Status Hardware Dongle Slider Switch */}
               <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={toggleStoreStatus}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-black transition border flex items-center gap-1 shadow-2xs active:scale-95 ${
-                    isStoreOnline
-                      ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                      : "bg-rose-50 text-rose-800 border-rose-300"
-                  }`}
-                >
-                  <span
-                    className={`w-2 h-2 rounded-full ${
-                      isStoreOnline ? "bg-emerald-500 animate-pulse" : "bg-rose-500"
-                    }`}
-                  ></span>
-                  <span>{isStoreOnline ? "Khuli Hai" : "Band Hai"}</span>
-                </button>
+                <DongleSliderSwitch
+                  isOn={isStoreOnline}
+                  onToggle={toggleStoreStatus}
+                />
 
                 <button
                   type="button"

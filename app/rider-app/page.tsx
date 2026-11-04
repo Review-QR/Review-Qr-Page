@@ -93,6 +93,7 @@ export default function RiderAppShellPage() {
     remitCash,
     handleGoogleLogin,
     requestInstantPayout,
+    resetToNewRider,
   } = workflow;
 
   // Active Bottom Tab
@@ -101,9 +102,10 @@ export default function RiderAppShellPage() {
   const [showRemoteDeck, setShowRemoteDeck] = useState<boolean>(true);
   const [activeDeckTab, setActiveDeckTab] = useState<"ota" | "workflow" | "screens">("ota");
   const [showQrModal, setShowQrModal] = useState<boolean>(false);
+  const [copiedMobileLink, setCopiedMobileLink] = useState<boolean>(false);
 
   // Dynamic Auth State for Testing
-  const [authPhone, setAuthPhone] = useState<string>("9876543210");
+  const [authPhone, setAuthPhone] = useState<string>("");
   const [authChannel, setAuthChannel] = useState<"sms" | "whatsapp">("whatsapp");
   const [previewOtp, setPreviewOtp] = useState<string>("547291");
 
@@ -201,10 +203,18 @@ export default function RiderAppShellPage() {
       tab: "profile",
       component: (
         <Screen01AuthStart
-          onContinue={(phone, channel, otp) => {
+          onContinue={(phone, channel, otp, meta) => {
             setAuthPhone(phone);
             setAuthChannel(channel);
             if (otp) setPreviewOtp(otp);
+            if (meta?.fullName || meta?.vehicleType) {
+              workflow.setRider((prev) => ({
+                ...prev,
+                full_name: meta.fullName || prev?.full_name,
+                vehicle_type: (meta.vehicleType as any) || prev?.vehicle_type,
+                phone: phone || prev?.phone,
+              }));
+            }
             handleSelectScreen(2);
           }}
           onGoogleLogin={async () => {
@@ -235,14 +245,72 @@ export default function RiderAppShellPage() {
       ),
     },
     { id: 3, title: "03. Terms & Road Safety", tab: "profile", component: <Screen03Consent onAgree={() => handleSelectScreen(4)} onBack={() => handleSelectScreen(2)} /> },
-    { id: 4, title: "04. Real Selfie KYC (Live Camera)", tab: "profile", component: <Screen04SelfieKyc onSelfieCaptured={() => handleSelectScreen(5)} onBack={() => handleSelectScreen(3)} /> },
-    { id: 5, title: "05. Vehicle RC & DL (UP 40)", tab: "profile", component: <Screen05VehicleDl onVehicleSubmit={() => handleSelectScreen(6)} onBack={() => handleSelectScreen(4)} /> },
-    { id: 6, title: "06. Cashfree UPI Payout Setup", tab: "earnings", component: <Screen06PayoutSetup onPayoutConfigured={() => handleSelectScreen(19)} onBack={() => handleSelectScreen(5)} /> },
+    {
+      id: 4,
+      title: "04. Real Selfie KYC (Live Camera)",
+      tab: "profile",
+      component: (
+        <Screen04SelfieKyc
+          onSelfieCaptured={(img) => {
+            workflow.setRider((prev) => ({ ...prev, profile_image_url: img }));
+            handleSelectScreen(5);
+          }}
+          onBack={() => handleSelectScreen(3)}
+        />
+      ),
+    },
+    {
+      id: 5,
+      title: "05. Vehicle RC & DL (UP 40)",
+      tab: "profile",
+      component: (
+        <Screen05VehicleDl
+          initialVehicleType={(rider?.vehicle_type as any) || "bike"}
+          onVehicleSubmit={(vehData) => {
+            workflow.setRider((prev) => ({
+              ...prev,
+              vehicle_type: vehData.vehicleType as any,
+              vehicle_number: vehData.vehicleNumber,
+              driving_license_number: vehData.dlNumber,
+            }));
+            handleSelectScreen(6);
+          }}
+          onBack={() => handleSelectScreen(4)}
+        />
+      ),
+    },
+    {
+      id: 6,
+      title: "06. Cashfree UPI Payout Setup",
+      tab: "earnings",
+      component: (
+        <Screen06PayoutSetup
+          onPayoutConfigured={(upi) => {
+            workflow.setRider((prev) => ({ ...prev, upi_id: upi }));
+            handleSelectScreen(19);
+          }}
+          onBack={() => handleSelectScreen(5)}
+        />
+      ),
+    },
     { id: 19, title: "19. Verification In-Progress Room", tab: "profile", component: <Screen19VerificationPending onBack={() => handleSelectScreen(6)} onProceedToAcademy={() => handleSelectScreen(20)} /> },
 
     // Stage 2: Training & Daily Gate
     { id: 20, title: "20. Rider Training Academy & Quiz", tab: "profile", component: <Screen20TrainingAcademy onBack={() => handleSelectScreen(19)} onCompleteAcademy={() => handleSelectScreen(27)} /> },
-    { id: 27, title: "27. Daily Morning Helmet Selfie Gate", tab: "profile", component: <Screen27MorningHelmetSelfie onBack={() => handleSelectScreen(20)} onSelfieApproved={() => handleSelectScreen(7)} /> },
+    {
+      id: 27,
+      title: "27. Daily Morning Helmet Selfie Gate",
+      tab: "profile",
+      component: (
+        <Screen27MorningHelmetSelfie
+          onBack={() => handleSelectScreen(20)}
+          onSelfieApproved={() => {
+            workflow.setRider((prev) => ({ ...prev, is_verified: true, kyc_status: "approved" }));
+            handleSelectScreen(7);
+          }}
+        />
+      ),
+    },
 
     // Stage 3: Cockpit, Shifts & Heatmap (Tab 1: Cockpit)
     {
@@ -251,6 +319,7 @@ export default function RiderAppShellPage() {
       tab: "cockpit",
       component: (
         <Screen07DutyCockpit
+          riderProp={rider}
           isOnlineProp={isOnline}
           cashInHandProp={cashInHand}
           cashCeilingProp={cashCeiling}
@@ -336,7 +405,7 @@ export default function RiderAppShellPage() {
     },
     { id: 41, title: "41. Last 100m Alleyway & Gate Rescue", tab: "navigation", component: <Screen41Last100mLandmark onBack={() => handleSelectScreen(40)} onContinueNavigation={() => handleSelectScreen(13)} /> },
     { id: 42, title: "42. Railway Halt & Dynamic Reroute", tab: "navigation", component: <Screen42TrafficReroute onBack={() => handleSelectScreen(40)} onAcceptReroute={() => handleSelectScreen(40)} onStayOnCurrentRoute={() => handleSelectScreen(40)} /> },
-    { id: 43, title: "43. Digital Fleet ID & Police Pass", tab: "profile", component: <Screen43DigitalFleetIdPass onBack={() => handleSelectScreen(18)} /> },
+    { id: 43, title: "43. Digital Fleet ID & Police Pass", tab: "profile", component: <Screen43DigitalFleetIdPass riderProp={rider} onBack={() => handleSelectScreen(18)} /> },
     { id: 44, title: "44. In-App Masked Customer Chat", tab: "navigation", component: <Screen44InAppMaskedChat onBack={() => handleSelectScreen(40)} /> },
 
     // Stage 8: Doorstep Delivery & Rescues (Tab 2: Orders)
@@ -452,8 +521,12 @@ export default function RiderAppShellPage() {
       tab: "profile",
       component: (
         <Screen18Profile
+          riderProp={rider}
           onBack={() => handleSelectScreen(7)}
-          onLogout={() => handleSelectScreen(1)}
+          onLogout={() => {
+            resetToNewRider();
+            handleSelectScreen(1);
+          }}
           onEditKyc={() => handleSelectScreen(4)}
           onOpenPayoutSetup={() => handleSelectScreen(6)}
           onOpenDisputes={() => handleSelectScreen(31)}
@@ -490,13 +563,42 @@ export default function RiderAppShellPage() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* 1-Tap Copy Mobile Link Button */}
+          <button
+            type="button"
+            onClick={() => {
+              navigator.clipboard.writeText("https://choices-crm-appropriations-reserve.trycloudflare.com/rider?v=3");
+              setCopiedMobileLink(true);
+              setTimeout(() => setCopiedMobileLink(false), 2500);
+            }}
+            className={`px-3 py-1.5 rounded-xl font-black text-xs shadow-md transition flex items-center gap-1.5 active:scale-95 ${
+              copiedMobileLink ? "bg-emerald-500 text-slate-950" : "bg-blue-600 hover:bg-blue-500 text-white"
+            }`}
+            title="Copy Direct Link for Mobile Browser"
+          >
+            <span>{copiedMobileLink ? "✓ Link Copied!" : "📋 1-Tap Copy Link"}</span>
+          </button>
+
+          {/* Share on WhatsApp */}
+          <a
+            href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+              "Trustit Rider Partner App Mobile Link: https://choices-crm-appropriations-reserve.trycloudflare.com/rider?v=2"
+            )}`}
+            target="_blank"
+            rel="noreferrer"
+            className="px-3 py-1.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black text-xs shadow-md transition flex items-center gap-1.5 active:scale-95"
+            title="Send Link to Mobile via WhatsApp"
+          >
+            <span>💬 WhatsApp</span>
+          </a>
+
           {/* Real Mobile Device Test Button */}
           <button
             type="button"
             onClick={() => setShowQrModal(true)}
-            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition flex items-center gap-1.5 active:scale-95 animate-pulse"
+            className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition flex items-center gap-1.5 active:scale-95"
           >
-            <span>📱 Test on Real Mobile (Scan QR)</span>
+            <span>📱 QR Code</span>
           </button>
 
           {/* Sound / Siren Engine Switch */}
@@ -684,7 +786,7 @@ export default function RiderAppShellPage() {
                 <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                   <div>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Fleet Partner</span>
-                    <strong className="text-sm font-black text-white block mt-0.5">Arjun Singh · UP 40 AB 2345</strong>
+                    <strong className="text-sm font-black text-white block mt-0.5">{rider.full_name || "New Fleet Partner"} · {rider.vehicle_number || "UP 40"}</strong>
                     <span className="text-[10px] text-emerald-400 font-bold">Gold Tier ⭐ 4.92 · Civil Lines</span>
                   </div>
 
@@ -1012,16 +1114,44 @@ export default function RiderAppShellPage() {
               />
             </div>
 
-            {/* Direct HTTPS Link */}
+            {/* Direct HTTPS Link & 1-Tap Copy Box */}
             <div className="space-y-2">
-              <a
-                href="https://choices-crm-appropriations-reserve.trycloudflare.com/rider"
-                target="_blank"
-                rel="noreferrer"
-                className="block text-xs font-mono font-bold text-blue-400 hover:text-blue-300 underline break-all"
-              >
-                https://choices-crm-appropriations-reserve.trycloudflare.com/rider
-              </a>
+              <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-between gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value="https://choices-crm-appropriations-reserve.trycloudflare.com/rider"
+                  className="bg-transparent text-[11px] font-mono text-blue-300 w-full focus:outline-none select-all"
+                />
+              </div>
+
+              {/* 1-Tap Actions */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText("https://choices-crm-appropriations-reserve.trycloudflare.com/rider?v=2");
+                    setCopiedMobileLink(true);
+                    setTimeout(() => setCopiedMobileLink(false), 2500);
+                  }}
+                  className={`py-2 px-3 rounded-xl font-black text-xs shadow-md transition flex items-center justify-center gap-1 active:scale-95 ${
+                    copiedMobileLink ? "bg-emerald-500 text-slate-950" : "bg-blue-600 hover:bg-blue-500 text-white"
+                  }`}
+                >
+                  <span>{copiedMobileLink ? "✓ Copied!" : "📋 Copy Link"}</span>
+                </button>
+
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                    "Trustit Rider Partner App Mobile Link: https://choices-crm-appropriations-reserve.trycloudflare.com/rider?v=2"
+                  )}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-2 px-3 rounded-xl bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black text-xs shadow-md transition flex items-center justify-center gap-1 active:scale-95"
+                >
+                  <span>💬 WhatsApp</span>
+                </a>
+              </div>
 
               {/* Hardware Features Checklist */}
               <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 text-left text-[11px] text-slate-300 space-y-1">

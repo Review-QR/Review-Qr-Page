@@ -3,11 +3,20 @@
 import React, { useState } from "react";
 
 interface Screen23Props {
+  storeName?: string;
+  ownerName?: string;
+  phone?: string;
   onBack?: () => void;
   onPaySuccess?: () => void;
 }
 
-export default function Screen23CartCheckout({ onBack, onPaySuccess }: Screen23Props) {
+export default function Screen23CartCheckout({
+  storeName = "Verified Store Outlet",
+  ownerName = "Merchant Partner",
+  phone = "+91 Verified Contact",
+  onBack,
+  onPaySuccess,
+}: Screen23Props) {
   const [paying, setPaying] = useState(false);
 
   const handlePay = () => {
@@ -44,17 +53,17 @@ export default function Screen23CartCheckout({ onBack, onPaySuccess }: Screen23P
         <div className="mt-2.5 bg-white border border-slate-200 rounded-2xl p-3 shadow-xs space-y-1.5 text-xs">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase text-slate-500">
-              Delivery Destination (Cafe Address)
+              Delivery Destination (Store Address)
             </span>
             <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
               Verified
             </span>
           </div>
-          <p className="font-bold text-slate-900">Golden Blossom Cafe (Attn: Supriya Verma)</p>
+          <p className="font-bold text-slate-900">{storeName} (Attn: {ownerName})</p>
           <p className="text-[10px] text-slate-500 leading-relaxed">
-            Shop #4, Opp. KDC Inter College, Civil Lines, Bahraich, Uttar Pradesh - 271801
+            Bahraich Market Center, Uttar Pradesh - 271801
           </p>
-          <p className="text-[10px] text-slate-700 font-mono font-bold">Contact: +91 9118643415</p>
+          <p className="text-[10px] text-slate-700 font-mono font-bold">Contact: {phone}</p>
         </div>
 
         {/* Cart Item Summary */}

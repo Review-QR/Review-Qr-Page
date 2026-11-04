@@ -3,16 +3,20 @@
 import React, { useState } from "react";
 
 interface Screen43Props {
+  ownerName?: string;
+  phone?: string;
   onBack?: () => void;
   onInviteStaff?: () => void;
 }
 
 export default function Screen43StaffRolesMatrix({
+  ownerName = "Store Owner",
+  phone = "+91 Primary Admin",
   onBack,
   onInviteStaff,
 }: Screen43Props) {
   const staff = [
-    { name: "Supriya Verma", role: "Owner (Admin)", phone: "+91 9118643415", access: "Full Master Access", badge: "bg-purple-100 text-purple-900" },
+    { name: ownerName, role: "Owner (Admin)", phone, access: "Full Master Access", badge: "bg-purple-100 text-purple-900" },
     { name: "Ramesh Kumar", role: "Counter Cashier", phone: "+91 94501 23456", access: "Live Orders & Menu Only", badge: "bg-blue-100 text-blue-900" },
     { name: "Chef Dinesh", role: "Kitchen Master", phone: "+91 87654 32109", access: "KOT Screen Only", badge: "bg-amber-100 text-amber-900" },
   ];

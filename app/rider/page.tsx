@@ -1,41 +1,5 @@
 "use client";
 
-// 🛡️ MOBILE TUNNEL RELOAD SHIELD
-// When running over Cloudflare Tunnel / mobile proxy, suppress Next.js dev HMR WebSocket disconnect loops
-// which aggressively invoke window.location.reload() every 3-4 seconds.
-if (typeof window !== "undefined") {
-  try {
-    const origWS = window.WebSocket;
-    if (origWS && !(window as any).__trustit_shield_installed) {
-      (window as any).__trustit_shield_installed = true;
-      (window as any).WebSocket = function (url: string | URL, protocols?: string | string[]) {
-        const urlStr = String(url);
-        // Intercept Next.js dev HMR WebSockets
-        if (
-          urlStr.includes("/_next/hmr") ||
-          urlStr.includes("/_next/webpack-hmr") ||
-          urlStr.includes("/_next/turbopack-hmr")
-        ) {
-          // Resilient dummy WebSocket that reports OPEN (readyState 1) and never triggers close/error
-          return {
-            readyState: 1, // OPEN
-            send: () => {},
-            close: () => {},
-            addEventListener: () => {},
-            removeEventListener: () => {},
-            dispatchEvent: () => true,
-            onopen: null,
-            onclose: null,
-            onerror: null,
-            onmessage: null,
-          } as any;
-        }
-        return new origWS(url, protocols);
-      };
-    }
-  } catch {}
-}
-
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRiderWorkflow } from "@/app/rider/hooks/useRiderWorkflow";
@@ -129,13 +93,14 @@ export default function StandaloneRiderProductionApp() {
     remitCash,
     handleGoogleLogin,
     requestInstantPayout,
+    resetToNewRider,
   } = workflow;
 
   // Active Bottom Tab
   const [activeTab, setActiveTab] = useState<TabKey>("cockpit");
 
   // Dynamic Auth State
-  const [authPhone, setAuthPhone] = useState<string>("9876543210");
+  const [authPhone, setAuthPhone] = useState<string>("");
   const [authChannel, setAuthChannel] = useState<"sms" | "whatsapp">("whatsapp");
   const [previewOtp, setPreviewOtp] = useState<string>("547291");
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState<boolean>(false);
@@ -160,12 +125,31 @@ export default function StandaloneRiderProductionApp() {
             localStorage.setItem("trustit_rider_session_token", data.riderToken);
           }
         }
-        setCurrentScreenId(7); // Jump straight to Duty Cockpit!
+        if (data.rider?.is_verified && data.rider?.vehicle_number && data.rider.vehicle_number !== "UP-40-TEMP") {
+          setCurrentScreenId(7); // Already verified partner -> Cockpit
+        } else {
+          setCurrentScreenId(3); // New partner -> Terms, Road Safety & KYC!
+        }
       }
     } catch (err) {
       console.error("Google rider login error", err);
     }
   };
+
+  // Auto-reset when testing as fresh new rider (?v=2 or ?fresh=1 or if legacy Arjun was cached)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const saved = localStorage.getItem("trustit_rider_profile");
+      const isLegacy = saved && (saved.includes("Arjun") || saved.includes("2345") || saved.includes("9876543210"));
+      if (params.get("fresh") === "1" || params.get("v") === "3" || params.get("v") === "2" || params.get("new") === "1" || isLegacy) {
+        localStorage.removeItem("trustit_rider_profile");
+        localStorage.removeItem("trustit_rider_session_token");
+        localStorage.removeItem("trustit_cached_trip");
+        resetToNewRider();
+      }
+    }
+  }, [resetToNewRider]);
 
   // Hardware & Telemetry State
   const [isWakeLockActive, setIsWakeLockActive] = useState<boolean>(false);
@@ -191,15 +175,8 @@ export default function StandaloneRiderProductionApp() {
   const [showInstallBanner, setShowInstallBanner] = useState<boolean>(false);
   const [notificationPermission, setNotificationPermission] = useState<string>("default");
 
-  // Register PWA Service Worker & Install Prompt
+  // Check Notification & PWA Install Prompt (Zero auto-registration interference)
   useEffect(() => {
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw-rider.js")
-        .then(() => {})
-        .catch(() => {});
-    }
-
     if (typeof window !== "undefined" && "Notification" in window) {
       setNotificationPermission(Notification.permission);
     }
@@ -231,14 +208,17 @@ export default function StandaloneRiderProductionApp() {
       setNotificationPermission(perm);
       if (perm === "granted") {
         riderAudio.playCashChime();
-        if (navigator.serviceWorker.controller) {
-          navigator.serviceWorker.ready.then((reg) => {
-            reg.showNotification("🚨 Trustit Siren Alerts Active", {
-              body: "Order notifications & sirens enabled even when phone is locked.",
-              icon: "/rider-icon-192.png",
-              tag: "test-alert",
-            });
-          });
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker
+            .register("/sw-rider.js", { scope: "/rider" })
+            .then((reg) => {
+              reg.showNotification("🚨 Trustit Siren Alerts Active", {
+                body: "Order notifications & sirens enabled even when phone is locked.",
+                icon: "/rider-icon-192.png",
+                tag: "test-alert",
+              });
+            })
+            .catch(() => {});
         }
       }
     }
@@ -301,7 +281,7 @@ export default function StandaloneRiderProductionApp() {
   }, [currentScreenId, setCurrentScreenId]);
 
   // ─────────────────────────────────────────────────────────────
-  // 3. REAL GPS TELEMETRY WATCHER (±4.2m ANTI-SPOOF SYNC)
+  // 3. REAL GPS TELEMETRY WATCHER (SILENT BACKGROUND SYNC, ZERO RE-RENDERS)
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
     if (typeof window === "undefined" || !("geolocation" in navigator) || !isOnline) return;
@@ -309,35 +289,53 @@ export default function StandaloneRiderProductionApp() {
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
         const { latitude, longitude, accuracy, speed } = pos.coords;
-        setGpsAccuracy(accuracy ? Number(accuracy.toFixed(1)) : 4.2);
+        const now = Date.now();
 
-        fetch("/api/hyperlocal/rider", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "heartbeat_telemetry",
-            riderId: rider.id,
-            latitude,
-            longitude,
-            accuracyMeters: accuracy || 4.2,
-            speedKmh: speed ? Math.round(speed * 3.6) : 0,
-            batteryPercentage: batteryLevel,
-            isMoving: Boolean(speed && speed > 0.5),
-          }),
-        }).catch(() => {});
+        // Update local HUD state silently
+        setGpsAccuracy(accuracy ? Number(accuracy.toFixed(1)) : 4.2);
+        setGpsCoords({ lat: latitude, lng: longitude });
+
+        // Throttle backend heartbeat to once every 6 seconds to prevent network spam
+        if (now - lastHeartbeatTimeRef.current >= 6000) {
+          lastHeartbeatTimeRef.current = now;
+          setTelemetrySyncState("syncing");
+
+          fetch("/api/hyperlocal/rider", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            keepalive: true,
+            body: JSON.stringify({
+              action: "heartbeat_telemetry",
+              riderId: rider.id,
+              latitude,
+              longitude,
+              accuracyMeters: accuracy || 4.2,
+              speedKmh: speed ? Math.round(speed * 3.6) : 0,
+              batteryPercentage: batteryLevelRef.current,
+              isMoving: Boolean(speed && speed > 0.5),
+            }),
+          })
+            .then(() => {
+              setTelemetrySyncState("synced");
+              setLastSyncTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+            })
+            .catch(() => {
+              setTelemetrySyncState("idle");
+            });
+        }
       },
       () => {
-        setGpsAccuracy(null);
+        // Fallback gracefully without throwing
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 10000,
-        timeout: 15000,
+        maximumAge: 5000,
+        timeout: 12000,
       }
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [isOnline, rider.id, batteryLevel]);
+  }, [isOnline, rider.id]);
 
   // ─────────────────────────────────────────────────────────────
   // 4. OFFLINE DEAD-ZONE CACHING (BAHRAICH 2G RESILIENCE)
@@ -400,18 +398,26 @@ export default function StandaloneRiderProductionApp() {
       title: "01. Auth & Mobile Entry",
       component: (
         <Screen01AuthStart
-          onContinue={(phone, channel, otp) => {
+          onContinue={(phone, channel, otp, meta) => {
             setAuthPhone(phone);
             setAuthChannel(channel);
             if (otp) {
               setPreviewOtp(otp);
               setActiveWhatsAppOtp(otp);
             }
+            if (meta?.fullName || meta?.vehicleType) {
+              workflow.setRider((prev) => ({
+                ...prev,
+                full_name: meta.fullName || prev?.full_name,
+                vehicle_type: (meta.vehicleType as any) || prev?.vehicle_type,
+                phone: phone || prev?.phone,
+              }));
+            }
             setCurrentScreenId(2);
           }}
           onGoogleLogin={async () => {
             const ok = await handleGoogleLogin();
-            if (ok) setCurrentScreenId(7);
+            if (ok) setCurrentScreenId(3); // Direct new rider into Consent & KYC!
           }}
         />
       ),
@@ -425,25 +431,64 @@ export default function StandaloneRiderProductionApp() {
           channel={authChannel}
           previewOtp={previewOtp}
           onVerified={(otp, riderObj) => {
-            if (riderObj) {
-              setCurrentScreenId(7);
-            } else {
-              setCurrentScreenId(3);
-            }
+            // As a new partner, proceed into full onboarding flow: Terms -> Selfie KYC -> Vehicle RC -> Payout!
+            setCurrentScreenId(3);
           }}
           onBack={() => setCurrentScreenId(1)}
         />
       ),
     },
     { id: 3, title: "03. Terms & Road Safety", component: <Screen03Consent onAgree={() => setCurrentScreenId(4)} onBack={() => setCurrentScreenId(2)} /> },
-    { id: 4, title: "04. Real Selfie KYC (Live Camera)", component: <Screen04SelfieKyc onSelfieCaptured={() => setCurrentScreenId(5)} onBack={() => setCurrentScreenId(3)} /> },
-    { id: 5, title: "05. Vehicle RC & DL (UP 40)", component: <Screen05VehicleDl onVehicleSubmit={() => setCurrentScreenId(6)} onBack={() => setCurrentScreenId(4)} /> },
-    { id: 6, title: "06. Cashfree UPI Payout Setup", component: <Screen06PayoutSetup onPayoutConfigured={() => setCurrentScreenId(19)} onBack={() => setCurrentScreenId(5)} /> },
+    { id: 4, title: "04. Real Selfie KYC (Live Camera)", component: <Screen04SelfieKyc onSelfieCaptured={(img) => { workflow.setRider((prev) => ({ ...prev, profile_image_url: img })); setCurrentScreenId(5); }} onBack={() => setCurrentScreenId(3)} /> },
+    {
+      id: 5,
+      title: "05. Vehicle RC & DL (UP 40)",
+      component: (
+        <Screen05VehicleDl
+          initialVehicleType={(rider?.vehicle_type as any) || "bike"}
+          onVehicleSubmit={(vehData) => {
+            workflow.setRider((prev) => ({
+              ...prev,
+              vehicle_type: vehData.vehicleType as any,
+              vehicle_number: vehData.vehicleNumber,
+              driving_license_number: vehData.dlNumber,
+            }));
+            setCurrentScreenId(6);
+          }}
+          onBack={() => setCurrentScreenId(4)}
+        />
+      ),
+    },
+    {
+      id: 6,
+      title: "06. Cashfree UPI Payout Setup",
+      component: (
+        <Screen06PayoutSetup
+          onPayoutConfigured={(upi) => {
+            workflow.setRider((prev) => ({ ...prev, upi_id: upi }));
+            setCurrentScreenId(19);
+          }}
+          onBack={() => setCurrentScreenId(5)}
+        />
+      ),
+    },
     { id: 19, title: "19. Verification In-Progress Room", component: <Screen19VerificationPending onBack={() => setCurrentScreenId(6)} onProceedToAcademy={() => setCurrentScreenId(20)} /> },
 
     // Stage 2: Training & Daily Gate
     { id: 20, title: "20. Rider Training Academy & Quiz", component: <Screen20TrainingAcademy onBack={() => setCurrentScreenId(19)} onCompleteAcademy={() => setCurrentScreenId(27)} /> },
-    { id: 27, title: "27. Daily Morning Helmet Selfie Gate", component: <Screen27MorningHelmetSelfie onBack={() => setCurrentScreenId(20)} onSelfieApproved={() => setCurrentScreenId(7)} /> },
+    {
+      id: 27,
+      title: "27. Daily Morning Helmet Selfie Gate",
+      component: (
+        <Screen27MorningHelmetSelfie
+          onBack={() => setCurrentScreenId(20)}
+          onSelfieApproved={() => {
+            workflow.setRider((prev) => ({ ...prev, is_verified: true, kyc_status: "approved" }));
+            setCurrentScreenId(7);
+          }}
+        />
+      ),
+    },
 
     // Stage 3: Cockpit, Shifts & Heatmap
     {
@@ -451,6 +496,7 @@ export default function StandaloneRiderProductionApp() {
       title: "07. Duty Cockpit (Home)",
       component: (
         <Screen07DutyCockpit
+          riderProp={rider}
           isOnlineProp={isOnline}
           cashInHandProp={cashInHand}
           cashCeilingProp={cashCeiling}
@@ -530,7 +576,7 @@ export default function StandaloneRiderProductionApp() {
     },
     { id: 41, title: "41. Last 100m Alleyway & Gate Rescue", component: <Screen41Last100mLandmark onBack={() => setCurrentScreenId(40)} onContinueNavigation={() => setCurrentScreenId(13)} /> },
     { id: 42, title: "42. Railway Halt & Dynamic Reroute", component: <Screen42TrafficReroute onBack={() => setCurrentScreenId(40)} onAcceptReroute={() => setCurrentScreenId(40)} onStayOnCurrentRoute={() => setCurrentScreenId(40)} /> },
-    { id: 43, title: "43. Digital Fleet ID & Police Pass", component: <Screen43DigitalFleetIdPass onBack={() => setCurrentScreenId(18)} /> },
+    { id: 43, title: "43. Digital Fleet ID & Police Pass", component: <Screen43DigitalFleetIdPass riderProp={rider} onBack={() => setCurrentScreenId(18)} /> },
     { id: 44, title: "44. In-App Masked Customer Chat", component: <Screen44InAppMaskedChat onBack={() => setCurrentScreenId(40)} /> },
 
     // Stage 8: Doorstep Delivery & Rescues
@@ -638,8 +684,9 @@ export default function StandaloneRiderProductionApp() {
       title: "18. Rider Profile & Safe Shift Logout",
       component: (
         <Screen18Profile
+          riderProp={rider}
           onBack={() => setCurrentScreenId(7)}
-          onLogout={() => setCurrentScreenId(1)}
+          onLogout={resetToNewRider}
           onEditKyc={() => setCurrentScreenId(4)}
           onOpenPayoutSetup={() => setCurrentScreenId(6)}
           onOpenDisputes={() => setCurrentScreenId(31)}
@@ -715,11 +762,75 @@ export default function StandaloneRiderProductionApp() {
         </div>
       </header>
 
+      {/* ── Live Silent Telemetry HUD Banner (No Full Page Reloads) ── */}
+      <div className="bg-[#040814] border-b border-emerald-950/60 px-3 py-1 flex items-center justify-between text-[11px] font-mono select-none">
+        <div className="flex items-center gap-2">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span className="text-emerald-400 font-bold text-[10px] tracking-tight">
+            📍 {gpsCoords.lat.toFixed(4)}° N, {gpsCoords.lng.toFixed(4)}° E
+          </span>
+          <span className="text-slate-400 text-[9px]">
+            (±{gpsAccuracy || 4.2}m)
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5 text-[10px]">
+          {telemetrySyncState === "syncing" ? (
+            <span className="text-amber-400 font-bold animate-pulse text-[9px]">📡 Syncing...</span>
+          ) : (
+            <span className="text-emerald-400 font-semibold text-[9px]">🟢 Synced ({lastSyncTime})</span>
+          )}
+        </div>
+      </div>
+
       {/* ── Mobile 1-Tap Hardware Quick-Test Strip ── */}
       <div className="bg-[#0B132B] border-b border-blue-900/60 px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none [&::-webkit-scrollbar]:hidden text-[11px] font-bold z-30 shrink-0 select-none">
         <span className="text-slate-400 text-[9px] uppercase tracking-wider shrink-0 mr-1">
           1-Tap Test:
         </span>
+        
+        {/* Reset as Brand New Rider Button */}
+        <button
+          type="button"
+          onClick={resetToNewRider}
+          className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
+          title="Reset completely to Screen 01 as a brand new rider"
+        >
+          <span>🆕 New Rider (S01)</span>
+        </button>
+
+        {/* 1-Tap Copy Link Button */}
+        <button
+          type="button"
+          onClick={() => {
+            const url = typeof window !== "undefined" ? window.location.href : "https://choices-crm-appropriations-reserve.trycloudflare.com/rider?v=3";
+            navigator.clipboard.writeText(url);
+            setCopiedLink(true);
+            setTimeout(() => setCopiedLink(false), 2500);
+          }}
+          className={`px-2.5 py-1 rounded-lg text-white font-black shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1 ${
+            copiedLink ? "bg-emerald-500 text-slate-950" : "bg-blue-600 hover:bg-blue-500"
+          }`}
+          title="1-Tap Copy Link to Clipboard"
+        >
+          <span>{copiedLink ? "✓ Copied!" : "📋 Copy Link"}</span>
+        </button>
+
+        {/* 1-Tap WhatsApp Share */}
+        <a
+          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+            "Trustit Rider Partner App Live Link: " + (typeof window !== "undefined" ? window.location.href : "https://choices-crm-appropriations-reserve.trycloudflare.com/rider")
+          )}`}
+          target="_blank"
+          rel="noreferrer"
+          className="px-2.5 py-1 rounded-lg bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
+          title="Share via WhatsApp"
+        >
+          <span>💬 WhatsApp</span>
+        </a>
+
         <button
           type="button"
           onClick={() => setCurrentScreenId(4)}

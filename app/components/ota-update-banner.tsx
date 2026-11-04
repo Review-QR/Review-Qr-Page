@@ -1,14 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 export function OtaUpdateBanner() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
 
-    // Register service worker
+    // Isolate Rider Partner and Merchant native apps from root SW conflicts
+    if (
+      pathname?.startsWith("/rider") ||
+      pathname?.startsWith("/rider-app") ||
+      pathname?.startsWith("/share") ||
+      pathname?.startsWith("/partner") ||
+      pathname?.startsWith("/merchant")
+    ) {
+      return;
+    }
+
+    // Register root service worker only for customer web portal
     navigator.serviceWorker
       .register("/sw.js")
       .then((registration) => {
@@ -27,14 +40,10 @@ export function OtaUpdateBanner() {
         // Optional in development
       });
 
-    let refreshing = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (!refreshing) {
-        refreshing = true;
-        window.location.reload();
-      }
-    });
-  }, []);
+    // CRITICAL: NEVER automatically call window.location.reload() inside controllerchange!
+    // Auto-reloads create catastrophic 3-4 second infinite refresh storms on mobile browsers.
+    // When an update is ready, we simply display the user banner so the user can refresh when ready.
+  }, [pathname]);
 
   if (!updateAvailable) return null;
 

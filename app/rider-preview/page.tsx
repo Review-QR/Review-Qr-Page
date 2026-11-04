@@ -96,7 +96,7 @@ export default function RiderPreviewGalleryPage() {
   const [currentTime, setCurrentTime] = useState<string>("19:04");
 
   // Dynamic Auth State
-  const [authPhone, setAuthPhone] = useState<string>("9876543210");
+  const [authPhone, setAuthPhone] = useState<string>("");
   const [authChannel, setAuthChannel] = useState<"sms" | "whatsapp">("sms");
   const [previewOtp, setPreviewOtp] = useState<string>("547291");
 
@@ -530,7 +530,7 @@ export default function RiderPreviewGalleryPage() {
                   <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Fleet Partner</span>
-                      <strong className="text-sm font-black text-white block mt-0.5">Arjun Singh · UP 40 AB 2345</strong>
+                      <strong className="text-sm font-black text-white block mt-0.5">{rider.full_name || "New Fleet Partner"} · {rider.vehicle_number || "UP 40"}</strong>
                       <span className="text-[10px] text-emerald-400 font-bold">Gold Tier ⭐ 4.92 (Bahraich Fleet)</span>
                     </div>
 

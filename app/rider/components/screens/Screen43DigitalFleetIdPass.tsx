@@ -3,16 +3,26 @@
 import React from "react";
 
 interface Screen43Props {
+  riderProp?: {
+    full_name?: string | null;
+    vehicle_number?: string | null;
+    driving_license_number?: string | null;
+    profile_image_url?: string | null;
+  };
   onBack?: () => void;
   onCallPolice?: () => void;
   onCallFleetLead?: () => void;
 }
 
 export default function Screen43DigitalFleetIdPass({
+  riderProp,
   onBack,
   onCallPolice,
   onCallFleetLead,
 }: Screen43Props) {
+  const riderName = riderProp?.full_name?.trim() || "Verified Partner";
+  const vehicleText = riderProp?.vehicle_number?.trim() || "UP 40 BV 1001";
+  const dlText = riderProp?.driving_license_number?.trim() || "UP40 2024009182";
   return (
     <div className="w-full h-full bg-[#FAF8FF] flex flex-col justify-between p-4 sm:p-5 text-[#0F172A] font-sans">
       {/* Header */}
@@ -61,15 +71,22 @@ export default function Screen43DigitalFleetIdPass({
           {/* Rider Profile & Photo */}
           <div className="mt-3 flex items-start gap-3.5">
             <div className="w-16 h-20 rounded-2xl bg-slate-900 border-2 border-slate-700 flex flex-col items-center justify-center text-white shrink-0 overflow-hidden shadow-xs">
-              <span className="text-3xl">🧑‍🚀</span>
-              <span className="text-[8px] font-bold text-emerald-400 mt-1 uppercase">Verified</span>
+              {riderProp?.profile_image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={riderProp.profile_image_url} alt="Rider" className="w-full h-full object-cover" />
+              ) : (
+                <>
+                  <span className="text-3xl">🧑‍🚀</span>
+                  <span className="text-[8px] font-bold text-emerald-400 mt-1 uppercase">Verified</span>
+                </>
+              )}
             </div>
 
             <div className="flex-1 min-w-0 space-y-0.5">
-              <h3 className="text-base font-black text-slate-900">Arjun Singh</h3>
+              <h3 className="text-base font-black text-slate-900">{riderName}</h3>
               <p className="text-xs font-mono font-bold text-[#0D47A1]">ID: #TR-BHR-4091</p>
-              <p className="text-[11px] text-slate-600 font-medium">Vehicle: Honda Activa (UP 40 AB 2345)</p>
-              <p className="text-[10px] text-slate-500">DL No: UP402021004921</p>
+              <p className="text-[11px] text-slate-600 font-medium">Vehicle: {vehicleText}</p>
+              <p className="text-[10px] text-slate-500">DL No: {dlText}</p>
             </div>
           </div>
 

@@ -37,6 +37,33 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
           rel="stylesheet"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var p = window.location.pathname;
+                  if (p.indexOf('/rider') === 0 || p.indexOf('/partner') === 0 || p.indexOf('/share') === 0 || p.indexOf('/merchant') === 0) {
+                    if ('serviceWorker' in navigator) {
+                      navigator.serviceWorker.getRegistrations().then(function(regs) {
+                        for (var i = 0; i < regs.length; i++) {
+                          regs[i].unregister().catch(function() {});
+                        }
+                      }).catch(function() {});
+                    }
+                    if ('caches' in window) {
+                      caches.keys().then(function(names) {
+                        for (var j = 0; j < names.length; j++) {
+                          caches.delete(names[j]).catch(function() {});
+                        }
+                      }).catch(function() {});
+                    }
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         <Suspense fallback={null}>

@@ -24,28 +24,28 @@ export interface RiderWorkflowState {
   remoteConfig: RiderRemoteConfig;
 }
 
-const DEFAULT_RIDER: DeliveryRider = {
-  id: "7f4c83b0-a2fc-44af-af86-3579843006bb",
-  full_name: "Arjun Singh",
-  phone: "+919876543210",
-  email: "arjun.singh@trustit.in",
+const BLANK_NEW_RIDER: DeliveryRider = {
+  id: "rider_new_partner",
+  full_name: "New Partner",
+  phone: "",
+  email: "",
   vehicle_type: "bike",
-  vehicle_number: "UP-40-AB-2345",
-  is_online: true,
-  is_available: true,
+  vehicle_number: "UP-40-TEMP",
+  is_online: false,
+  is_available: false,
   current_latitude: 27.5745,
   current_longitude: 81.5965,
-  cash_in_hand: 680,
+  cash_in_hand: 0,
   cash_ceiling_limit: 1500,
-  wallet_balance: 840,
-  rating: 4.92,
-  is_verified: true,
-  kyc_status: "approved",
-  tier_status: "gold",
+  wallet_balance: 0,
+  rating: 5.0,
+  is_verified: false,
+  kyc_status: "pending",
+  tier_status: "bronze",
   created_at: new Date().toISOString(),
   profile_image_url: null,
-  driving_license_number: "UP40 20210008492",
-  upi_id: "arjun.singh@okhdfcbank",
+  driving_license_number: "",
+  upi_id: "",
 };
 
 const SAMPLE_ACTIVE_ORDER: HyperlocalOrder = {
@@ -85,14 +85,14 @@ const SAMPLE_ACTIVE_ORDER: HyperlocalOrder = {
 };
 
 export function useRiderWorkflow() {
-  const [currentScreenId, setCurrentScreenId] = useState<number>(7); // Start at Cockpit
-  const [rider, setRider] = useState<DeliveryRider>(DEFAULT_RIDER);
-  const [isOnline, setIsOnline] = useState<boolean>(true);
-  const [cashInHand, setCashInHand] = useState<number>(680);
-  const [walletBalance, setWalletBalance] = useState<number>(840);
-  const [todayEarnings, setTodayEarnings] = useState<number>(520);
-  const [todayTripsCount, setTodayTripsCount] = useState<number>(14);
-  const [activeOrder, setActiveOrder] = useState<HyperlocalOrder | null>(SAMPLE_ACTIVE_ORDER);
+  const [currentScreenId, setCurrentScreenId] = useState<number>(1); // Start at Screen 01 (Auth Entry for New Rider)
+  const [rider, setRider] = useState<DeliveryRider>(BLANK_NEW_RIDER);
+  const [isOnline, setIsOnline] = useState<boolean>(false);
+  const [cashInHand, setCashInHand] = useState<number>(0);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [todayEarnings, setTodayEarnings] = useState<number>(0);
+  const [todayTripsCount, setTodayTripsCount] = useState<number>(0);
+  const [activeOrder, setActiveOrder] = useState<HyperlocalOrder | null>(null);
   const [incomingOrder, setIncomingOrder] = useState<(HyperlocalOrder & { secondsRemaining: number }) | null>(null);
   const [isSirenPlaying, setIsSirenPlaying] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -116,25 +116,33 @@ export function useRiderWorkflow() {
     loadRemoteConfig();
   }, []);
 
-  // 2. Fetch Live Rider Telemetry from API
+  // 2. Only restore saved session if explicitly saved in localStorage by the rider
   useEffect(() => {
-    async function fetchRiderTelemetry() {
-      try {
-        const res = await fetch(`/api/hyperlocal/rider?phone=9876543210`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.rider) {
-            setRider((prev) => ({ ...prev, ...data.rider }));
-            setIsOnline(Boolean(data.rider.is_online));
-            if (typeof data.rider.cash_in_hand === "number") setCashInHand(data.rider.cash_in_hand);
-            if (typeof data.rider.wallet_balance === "number") setWalletBalance(data.rider.wallet_balance);
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("trustit_rider_profile");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          // Purge any legacy dummy Arjun Singh session completely
+          if (
+            parsed?.full_name?.toLowerCase().includes("arjun") ||
+            parsed?.vehicle_number?.includes("2345") ||
+            parsed?.phone === "9876543210"
+          ) {
+            localStorage.removeItem("trustit_rider_profile");
+            localStorage.removeItem("trustit_rider_session_token");
+            return;
           }
-        }
-      } catch {
-        // Non-blocking catch
+          if (parsed && parsed.id && parsed.full_name && parsed.id !== "rider_new_partner" && parsed.is_verified) {
+            setRider(parsed);
+            setCurrentScreenId(7); // Jump to Cockpit if already onboarded
+            setIsOnline(Boolean(parsed.is_online));
+            if (typeof parsed.cash_in_hand === "number") setCashInHand(parsed.cash_in_hand);
+            if (typeof parsed.wallet_balance === "number") setWalletBalance(parsed.wallet_balance);
+          }
+        } catch {}
       }
     }
-    fetchRiderTelemetry();
   }, []);
 
   /**
@@ -329,29 +337,42 @@ export function useRiderWorkflow() {
   }, []);
 
   /**
-   * 11. Google 1-Tap Auto Login
+   * 11. Google 1-Tap Partner Onboarding Login
    */
-  const handleGoogleLogin = useCallback(async () => {
+  const handleGoogleLogin = useCallback(async (user?: { email?: string; fullName?: string }) => {
+    const partnerName = user?.fullName || "New Fleet Partner";
+    const partnerEmail = user?.email || "new.partner@trustit.in";
+
     try {
       const res = await fetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "google_login",
-          email: "arjun.singh@trustit.in",
-          fullName: "Arjun Singh (UP 40)",
-          phone: "9876543210",
+          email: partnerEmail,
+          fullName: partnerName,
         }),
       });
       const data = await res.json();
       if (data.success && data.rider) {
-        setRider((prev) => ({ ...prev, ...data.rider }));
-        setCurrentScreenId(7); // Advance directly to Cockpit!
+        setRider((prev) => ({
+          ...prev,
+          ...data.rider,
+          full_name: partnerName,
+          email: partnerEmail,
+        }));
+        // Direct new rider into Terms, Road Safety & Live Selfie KYC!
+        setCurrentScreenId(3);
         return { success: true };
       }
     } catch {
-      // In-memory fallback
-      setCurrentScreenId(7);
+      // In-memory fallback: new partner into Screen 03
+      setRider((prev) => ({
+        ...prev,
+        full_name: partnerName,
+        email: partnerEmail,
+      }));
+      setCurrentScreenId(3);
       return { success: true };
     }
     return { success: false };
@@ -405,6 +426,26 @@ export function useRiderWorkflow() {
     } catch {}
   }, [remoteConfig]);
 
+  /**
+   * 14. Reset to Brand New Unregistered Rider Session
+   */
+  const resetToNewRider = useCallback(() => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("trustit_rider_profile");
+      localStorage.removeItem("trustit_rider_session_token");
+      localStorage.removeItem("trustit_cached_trip");
+    }
+    setRider(BLANK_NEW_RIDER);
+    setIsOnline(false);
+    setCashInHand(0);
+    setWalletBalance(0);
+    setTodayEarnings(0);
+    setTodayTripsCount(0);
+    setActiveOrder(null);
+    setIncomingOrder(null);
+    setCurrentScreenId(1);
+  }, []);
+
   return {
     currentScreenId,
     setCurrentScreenId,
@@ -437,5 +478,6 @@ export function useRiderWorkflow() {
     remitCash,
     handleGoogleLogin,
     requestInstantPayout,
+    resetToNewRider,
   };
 }
