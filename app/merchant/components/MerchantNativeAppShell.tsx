@@ -94,23 +94,29 @@ export type PrimaryTab = "cockpit" | "orders" | "menu" | "standee" | "more";
 
 interface MerchantNativeAppShellProps {
   initialAuth?: boolean;
+  initialAuthStep?: "pitch" | "category" | "kyc" | "login";
   initialCategory?: MerchantCategory;
   initialStoreName?: string;
+  initialOwnerName?: string;
+  initialSubScreen?: string | null;
   forceStandalone?: boolean; // When true, forces full viewport (for APK)
 }
 
 export default function MerchantNativeAppShell({
   initialAuth = true,
+  initialAuthStep = "pitch",
   initialCategory = "kirana",
   initialStoreName = "Gupta Kirana & General Store",
+  initialOwnerName = "Merchant Partner",
+  initialSubScreen = null,
   forceStandalone = false,
 }: MerchantNativeAppShellProps) {
   // Authentication & Profile State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(initialAuth);
-  const [authStep, setAuthStep] = useState<"pitch" | "category" | "kyc" | "login">("pitch");
+  const [authStep, setAuthStep] = useState<"pitch" | "category" | "kyc" | "login">(initialAuthStep);
   const [storeCategory, setStoreCategory] = useState<MerchantCategory>(initialCategory);
   const [storeName, setStoreName] = useState<string>(initialStoreName);
-  const [ownerName, setOwnerName] = useState<string>("Merchant Partner");
+  const [ownerName, setOwnerName] = useState<string>(initialOwnerName);
   const [merchantPhone, setMerchantPhone] = useState<string>("");
   const [isStoreOnline, setIsStoreOnline] = useState<boolean>(true);
   const [unreadOrders, setUnreadOrders] = useState<number>(2);
@@ -125,7 +131,7 @@ export default function MerchantNativeAppShell({
 
   // Navigation State
   const [activeTab, setActiveTab] = useState<PrimaryTab>("cockpit");
-  const [activeSubScreen, setActiveSubScreen] = useState<string | null>(null);
+  const [activeSubScreen, setActiveSubScreen] = useState<string | null>(initialSubScreen);
 
   // Laptop Simulator View State
   const [isSimulatorFrame, setIsSimulatorFrame] = useState<boolean>(!forceStandalone);
@@ -146,7 +152,7 @@ export default function MerchantNativeAppShell({
       if (data.success) {
         if (data.config) {
           setMerchantConfig(data.config);
-          if (data.config.ownerName) setOwnerName(data.config.ownerName);
+          if (data.config.ownerName && initialOwnerName === "Merchant Partner") setOwnerName(data.config.ownerName);
           if (data.config.phone) setMerchantPhone(data.config.phone);
           if (data.config.businessCategory) {
             const rawCat = (data.config.businessCategory || "").toLowerCase();
@@ -157,8 +163,8 @@ export default function MerchantNativeAppShell({
             else setStoreCategory("restaurant");
           }
         }
-        if (data.business?.name) setStoreName(data.business.name);
-        if (data.business?.owner) setOwnerName(data.business.owner);
+        if (data.business?.name && initialStoreName === "Gupta Kirana & General Store") setStoreName(data.business.name);
+        if (data.business?.owner && initialOwnerName === "Merchant Partner") setOwnerName(data.business.owner);
         if (data.business?.phone) setMerchantPhone(data.business.phone);
         if (data.business?.type) {
           const rawType = (data.business.type || "").toLowerCase();
@@ -1797,21 +1803,22 @@ export default function MerchantNativeAppShell({
   if (!isSimulatorFrame) {
     return (
       <div className="w-full h-screen bg-[#F8FAFC]">
-        {/* Top Control Bar to toggle back to simulator */}
-        <div className="bg-slate-900 text-white px-4 py-2 flex items-center justify-between text-xs font-bold">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>Trustit Merchant Mobile App (Full Screen View)</span>
+        {!forceStandalone && (
+          <div className="bg-slate-900 text-white px-4 py-2 flex items-center justify-between text-xs font-bold">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>Trustit Merchant Mobile App</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsSimulatorFrame(true)}
+              className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black transition"
+            >
+              📱 Switch to Laptop Phone Simulator
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsSimulatorFrame(true)}
-            className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black transition"
-          >
-            📱 Switch to Laptop Phone Simulator
-          </button>
-        </div>
-        <div className="h-[calc(100vh-36px)] max-w-md mx-auto shadow-2xl border-x border-slate-200">
+        )}
+        <div className={`w-full ${!forceStandalone ? "h-[calc(100vh-36px)] max-w-md mx-auto shadow-2xl border-x border-slate-200" : "h-full"}`}>
           {renderPhoneApp()}
         </div>
       </div>
