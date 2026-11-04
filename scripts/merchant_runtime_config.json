@@ -1,10 +1,10 @@
 {
-  "businessId": "m_new_unregistered",
-  "storeName": "Shri Balaji Daily Needs & General Store",
-  "ownerName": "Aman Sharma",
+  "businessId": "m_9118643415_6364",
+  "storeName": "Asirwad genral",
+  "ownerName": "deepakm",
   "businessCategory": "kirana",
-  "phone": "",
-  "address": "Civil Lines, Near Indira Gandhi Stadium, Bahraich",
+  "phone": "+919118643415",
+  "address": "Asirwad genral, Bahraich",
   "city": "Bahraich",
   "isStoreOnline": true,
   "latitude": 27.5744,
@@ -23,5 +23,5 @@
     "holderName": "Shri Balaji Daily Needs",
     "isVerified": true
   },
-  "lastUpdatedAt": "2026-11-04T05:05:15.010Z"
+  "lastUpdatedAt": "2026-11-04T11:49:51.530Z"
 }

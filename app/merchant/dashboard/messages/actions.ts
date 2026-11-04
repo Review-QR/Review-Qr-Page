@@ -460,15 +460,23 @@ export async function sendFast2SmsWhatsAppTestAction(input: {
       : "SPECIAL"
   }-TEST-${input.discountPercent}`;
 
+  const messageId = input.occasionType === "anniversary"
+    ? (process.env.FAST2SMS_ANNIVERSARY_MESSAGE_ID || "41927")
+    : (process.env.FAST2SMS_WHATSAPP_MESSAGE_ID || "41792");
+
+  const defaultName = input.occasionType === "anniversary" ? "Mr. & Mrs. Sharma" : "Lucky Ji";
+
   const res = await dispatchFast2SmsWhatsAppMessage({
     phone: input.phone,
-    customerName: input.customerName || "Lucky Ji",
+    customerName: input.customerName || defaultName,
     businessName: merchant.businessName,
     couponCode,
     discountPercent: input.discountPercent,
     validityDays: input.couponValidityDays,
     customMessage: input.customMessage,
     mediaUrl,
+    messageId,
+    occasionType: input.occasionType,
   });
 
   if (res.success) {

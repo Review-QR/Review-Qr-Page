@@ -29,4 +29,12 @@ android/.idea/
 android/*.iml
 android/app/*.iml
 
+# Temporary files
+loom*
+apollo*
+scratch/
+test_*.png
+temp_*.png
+temp_*.html
+
 

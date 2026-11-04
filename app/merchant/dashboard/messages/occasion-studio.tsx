@@ -345,7 +345,7 @@ export default function OccasionStudio({
   // Canvas and WhatsApp Test Dispatch
   const testCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const logoImgRef = useRef<HTMLImageElement | null>(null);
-  const [testPhone, setTestPhone] = useState(merchantPhone || "7388184925");
+  const [testPhone, setTestPhone] = useState(merchantPhone || "9118643415");
   const [testNotice, setTestNotice] = useState<{
     type: "success" | "pending" | "error" | "info";
     text: string;
@@ -448,7 +448,7 @@ export default function OccasionStudio({
 
       const res = await sendFast2SmsWhatsAppTestAction({
         phone: clean,
-        customerName: "Lucky Ji",
+        customerName: occasionType === "anniversary" ? "Mr. & Mrs. Sharma" : "Lucky Ji",
         occasionType,
         discountPercent,
         couponValidityDays,

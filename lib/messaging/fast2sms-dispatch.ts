@@ -102,6 +102,7 @@ export async function dispatchFast2SmsWhatsAppMessage(params: {
   mediaUrl?: string;
   messageId?: string;
   phoneNumberId?: string;
+  occasionType?: string;
 }): Promise<{
   success: boolean;
   error?: string;
@@ -121,27 +122,24 @@ export async function dispatchFast2SmsWhatsAppMessage(params: {
   }
 
   // Priority: 1. Passed in params -> 2. Environment override -> 3. Auto-detected from Fast2SMS WABA status -> 4. Fallback defaults
-  let messageId = params.messageId || process.env.FAST2SMS_WHATSAPP_MESSAGE_ID;
-  let phoneNumberId = params.phoneNumberId || process.env.FAST2SMS_PHONE_NUMBER_ID;
-
-  if (!messageId || !phoneNumberId) {
-    const status = await getFast2SmsTemplateStatus();
-    if (!messageId && status.messageId) {
-      messageId = String(status.messageId);
-    }
-    if (!phoneNumberId && status.phoneNumberId) {
-      phoneNumberId = status.phoneNumberId;
+  let messageId = params.messageId;
+  if (!messageId) {
+    if (params.occasionType === "anniversary") {
+      messageId = process.env.FAST2SMS_ANNIVERSARY_MESSAGE_ID || "41927";
+    } else {
+      messageId = process.env.FAST2SMS_WHATSAPP_MESSAGE_ID || "41792";
     }
   }
 
-  messageId = messageId || "41792";
-  phoneNumberId = phoneNumberId || "1365986159938874";
+  let phoneNumberId = params.phoneNumberId || process.env.FAST2SMS_PHONE_NUMBER_ID || "1365986159938874";
 
   const customGreeting =
     params.customMessage?.trim() ||
-    `Wishing you a very Happy Birthday! May this year bring you immense success, good health, and joyful moments.`;
+    (params.occasionType === "anniversary"
+      ? `Wishing you both a lifetime of love, joy, and togetherness! May your special bond grow stronger with each passing year.`
+      : `Wishing you a very Happy Birthday! May this year bring you immense success, good health, and joyful moments.`);
 
-  // trustit_birthday_wish (41792) has 6 variables:
+  // 6 dynamic variables for trustit_birthday_wish (41792) and trustit_anniversary_wish (41927):
   // {{1}} Customer Name
   // {{2}} Custom Message Body (from Merchant Dashboard)
   // {{3}} Coupon Code
@@ -415,6 +413,10 @@ export async function runDailyOccasionAutoDispatcher(): Promise<{
         validityDays: validity,
         customMessage: customGreetingBody,
         mediaUrl: merchantMediaUrl,
+        occasionType: isBirthday ? "birthday" : "anniversary",
+        messageId: isBirthday
+          ? (process.env.FAST2SMS_WHATSAPP_MESSAGE_ID || "41792")
+          : (process.env.FAST2SMS_ANNIVERSARY_MESSAGE_ID || "41927"),
       });
 
       if (waRes.success) {
