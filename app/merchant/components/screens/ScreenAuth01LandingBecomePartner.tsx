@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 interface ScreenAuth01Props {
   onStartRegistration?: () => void;
@@ -29,6 +30,8 @@ export default function ScreenAuth01LandingBecomePartner({
     if (initialVariant) {
       setActiveVariant(normalizeVariant(initialVariant));
     }
+    // Instant OTA check on first screen load
+    TrustitNative.checkAndApplyOta({ app: "partner" }).catch(() => {});
   }, [initialVariant]);
 
   return (
@@ -56,10 +59,10 @@ export default function ScreenAuth01LandingBecomePartner({
               <button
                 type="button"
                 onClick={onGoToLogin}
-                className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-white hover:bg-amber-50 text-slate-800 border border-amber-200/80 shadow-2xs transition flex items-center gap-1 active:scale-95"
+                className="px-3 py-1.5 rounded-lg text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs transition flex items-center gap-1 active:scale-95"
               >
-                <span>Partner Login</span>
-                <span className="text-amber-700 font-black">→</span>
+                <span>लॉगिन · Login</span>
+                <span className="text-emerald-700 font-black">→</span>
               </button>
             </div>
 
@@ -167,9 +170,9 @@ export default function ScreenAuth01LandingBecomePartner({
             <button
               type="button"
               onClick={onStartRegistration}
-              className="w-full py-3 rounded-2xl bg-slate-950 hover:bg-slate-900 text-white text-xs font-black shadow-lg flex items-center justify-center gap-2 transition active:scale-98"
+              className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-lg shadow-emerald-600/30 border border-emerald-500 flex items-center justify-center gap-2 transition active:scale-98"
             >
-              <span>🚀 Dukaan Register Karein (Naya Merchant)</span>
+              <span>🟢 रजिस्टर करें · Register Your Business</span>
               <span>→</span>
             </button>
             <p className="text-[9px] text-center text-slate-500 leading-none">

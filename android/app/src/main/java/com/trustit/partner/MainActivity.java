@@ -24,6 +24,11 @@ public class MainActivity extends BridgeActivity {
             }
         } catch (Exception ignored) {}
 
+        // Cold-boot silent background OTA synchronization (Swiggy/Zomato architecture)
+        try {
+            TrustitNativeBridge.performBackgroundOtaSync(this, getBridge());
+        } catch (Exception ignored) {}
+
         // Turn on screen and show when locked for counter tablet alerts
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true);

@@ -313,6 +313,92 @@ public class TrustitNativeBridge extends Plugin {
     }
 
     // ── LIVE SELF-HOSTED OTA UPDATE ENGINE (SWIGGY/ZOMATO STANDARD) ──
+    public static void performBackgroundOtaSync(Context ctx, com.getcapacitor.Bridge bridge) {
+        new Thread(() -> {
+            try {
+                final String appName = ctx.getPackageName().contains("rider") ? "rider" : "partner";
+                final String manifestUrl = "https://trustitreview.com/api/hyperlocal/ota?app=" + appName;
+                android.content.SharedPreferences otaPrefs = ctx.getSharedPreferences("TrustitOtaSettings", Context.MODE_PRIVATE);
+                String activeOtaVersion = otaPrefs.getString("activeVersion", "2.2.0");
+
+                java.net.URL url = new java.net.URL(manifestUrl + "&current=" + activeOtaVersion);
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+                conn.setRequestMethod("GET");
+                conn.setConnectTimeout(10000);
+                conn.setReadTimeout(10000);
+
+                if (conn.getResponseCode() != 200) return;
+
+                java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) sb.append(line);
+                reader.close();
+                conn.disconnect();
+
+                org.json.JSONObject manifest = new org.json.JSONObject(sb.toString());
+                boolean hasUpdate = manifest.optBoolean("hasUpdate", false);
+                String latestVersion = manifest.optString("version", "");
+                String bundleUrl = manifest.optString("bundleUrl", "");
+
+                if (!hasUpdate || latestVersion.isEmpty() || latestVersion.equals(activeOtaVersion) || bundleUrl.isEmpty()) {
+                    return;
+                }
+
+                java.io.File otaBaseDir = new java.io.File(ctx.getFilesDir(), "trustit_ota");
+                if (!otaBaseDir.exists()) otaBaseDir.mkdirs();
+
+                java.io.File targetDir = new java.io.File(otaBaseDir, "v_" + latestVersion.replace(".", "_"));
+                if (!targetDir.exists()) targetDir.mkdirs();
+
+                java.net.URL zipUrl = new java.net.URL(bundleUrl);
+                java.net.HttpURLConnection zipConn = (java.net.HttpURLConnection) zipUrl.openConnection();
+                zipConn.setConnectTimeout(30000);
+                zipConn.setReadTimeout(60000);
+                if (zipConn.getResponseCode() != 200) return;
+
+                try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(zipConn.getInputStream())) {
+                    java.util.zip.ZipEntry entry;
+                    byte[] buf = new byte[8192];
+                    while ((entry = zis.getNextEntry()) != null) {
+                        java.io.File destFile = new java.io.File(targetDir, entry.getName());
+                        if (entry.isDirectory()) {
+                            destFile.mkdirs();
+                        } else {
+                            java.io.File parent = destFile.getParentFile();
+                            if (parent != null && !parent.exists()) parent.mkdirs();
+                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(destFile)) {
+                                int count;
+                                while ((count = zis.read(buf)) != -1) {
+                                    fos.write(buf, 0, count);
+                                }
+                            }
+                        }
+                        zis.closeEntry();
+                    }
+                }
+                zipConn.disconnect();
+
+                java.io.File indexFile = new java.io.File(targetDir, "index.html");
+                if (!indexFile.exists()) return;
+
+                otaPrefs.edit().putString("activeVersion", latestVersion).apply();
+
+                android.content.SharedPreferences capPrefs = ctx.getSharedPreferences("CapWebViewSettings", Context.MODE_PRIVATE);
+                capPrefs.edit().putString("serverBasePath", targetDir.getAbsolutePath()).apply();
+
+                if (bridge != null && bridge.getActivity() != null) {
+                    bridge.getActivity().runOnUiThread(() -> {
+                        bridge.setServerBasePath(targetDir.getAbsolutePath());
+                        try {
+                            if (bridge.getWebView() != null) bridge.getWebView().reload();
+                        } catch (Exception ignored) {}
+                    });
+                }
+            } catch (Exception ignored) {}
+        }).start();
+    }
+
     @PluginMethod
     public void checkAndApplyOta(PluginCall call) {
         final String appName = getContext().getPackageName().contains("rider") ? "rider" : "partner";
@@ -326,7 +412,8 @@ public class TrustitNativeBridge extends Plugin {
                 android.content.SharedPreferences otaPrefs = ctx.getSharedPreferences("TrustitOtaSettings", Context.MODE_PRIVATE);
                 String activeOtaVersion = otaPrefs.getString("activeVersion", currentVersion);
 
-                java.net.URL url = new java.net.URL(manifestUrl + "&current=" + activeOtaVersion);
+                String sep = manifestUrl.contains("?") ? "&" : "?";
+                java.net.URL url = new java.net.URL(manifestUrl + sep + "current=" + activeOtaVersion);
                 conn = (java.net.HttpURLConnection) url.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setConnectTimeout(15000);

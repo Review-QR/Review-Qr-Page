@@ -1,8 +1,8 @@
 {
-  "version": "2.2.9986",
+  "version": "2.2.9987",
   "minAppVersion": "2.2.0",
-  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1793851132372",
-  "updatedAt": "2026-11-05T03:58:52.372Z",
-  "notes": "Emerald Green Register Business button live OTA",
-  "sizeBytes": 3618812
+  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1793851985806",
+  "updatedAt": "2026-11-05T04:13:05.806Z",
+  "notes": "Landing screen green register button and native Java boot sync",
+  "sizeBytes": 3619632
 }
