@@ -1,8 +1,8 @@
 {
-  "version": "2.2.9987",
+  "version": "3.2.1",
   "minAppVersion": "2.2.0",
-  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1793851985806",
-  "updatedAt": "2026-11-05T04:13:05.806Z",
-  "notes": "Landing screen green register button and native Java boot sync",
-  "sizeBytes": 3619632
+  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1793861102846",
+  "updatedAt": "2026-11-05T06:45:02.846Z",
+  "notes": "Official Trustit Merchant Partner true native release with emerald green register button and WhatsApp OTP socket bridge",
+  "sizeBytes": 3537220
 }
