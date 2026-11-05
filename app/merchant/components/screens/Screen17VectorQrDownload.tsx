@@ -115,6 +115,36 @@ export default function Screen17VectorQrDownload({
   const handleExport = (type: "png" | "pdf" | "print") => {
     setIsExporting(true);
     setStatusMessage(`${type.toUpperCase()} file ready for download!`);
+
+    try {
+      if (type === "print") {
+        window.print();
+      } else {
+        const svgContent = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" width="400" height="600">
+          <rect width="400" height="600" rx="32" fill="#ffffff" stroke="#cbd5e1" stroke-width="4"/>
+          <text x="200" y="70" font-family="sans-serif" font-size="22" font-weight="900" fill="#0f172a" text-anchor="middle">TRUSTIT SMART STANDEE</text>
+          <text x="200" y="100" font-family="sans-serif" font-size="14" font-weight="700" fill="${currentTheme.primary}" text-anchor="middle">${currentTheme.tagline}</text>
+          <rect x="75" y="140" width="250" height="250" rx="20" fill="#f8fafc" stroke="#e2e8f0" stroke-width="2"/>
+          <text x="200" y="270" font-family="sans-serif" font-size="14" font-weight="bold" fill="#64748b" text-anchor="middle">[ Official NPCI + Google QR ]</text>
+          <text x="200" y="440" font-family="sans-serif" font-size="16" font-weight="900" fill="#0f172a" text-anchor="middle">Scan with Any UPI App</text>
+          <text x="200" y="470" font-family="sans-serif" font-size="13" font-weight="700" fill="#475569" text-anchor="middle">Google Pay • PhonePe • Paytm</text>
+          <text x="200" y="550" font-family="sans-serif" font-size="11" font-weight="bold" fill="#94a3b8" text-anchor="middle">TRUSTIT HYPERLOCAL COMMERCE</text>
+        </svg>`;
+
+        const blob = new Blob([svgContent], { type: "image/svg+xml;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `Trustit_Standee_${currentTheme.id}.${type === "pdf" ? "svg" : "svg"}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }
+    } catch {
+      // ignore
+    }
+
     setTimeout(() => {
       setIsExporting(false);
       setTimeout(() => setStatusMessage(null), 3000);

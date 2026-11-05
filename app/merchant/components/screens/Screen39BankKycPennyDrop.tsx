@@ -25,9 +25,11 @@ export default function Screen39BankKycPennyDrop({
   const [checking, setChecking] = useState(false);
   const [verified, setVerified] = useState(isInitiallyVerified);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const handlePennyDrop = async () => {
     setErrorMsg(null);
+    setSuccessMsg(null);
     if (!accountNo.trim() || accountNo.replace(/\D/g, "").length < 8) {
       setErrorMsg("Kripya sahi Bank Account Number darj karein.");
       return;
@@ -54,6 +56,7 @@ export default function Screen39BankKycPennyDrop({
       const data = await res.json();
       if (data.success) {
         setVerified(true);
+        setSuccessMsg(data.message || "Bank details successfully verified and saved!");
         onVerifySuccess?.(data.bankAccount);
       } else {
         setErrorMsg(data.message || "Penny drop verification failed.");
@@ -116,6 +119,12 @@ export default function Screen39BankKycPennyDrop({
         {errorMsg && (
           <div className="mt-2 p-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[11px] font-medium">
             ⚠️ {errorMsg}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-semibold leading-relaxed">
+            ✓ {successMsg}
           </div>
         )}
 

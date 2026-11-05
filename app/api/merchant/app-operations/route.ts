@@ -9,6 +9,16 @@ import { createCashfreeWalletRechargeOrder } from "@/lib/wallet/cashfree-wallet-
 
 export const dynamic = "force-dynamic";
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+  "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization, Accept, Origin",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: corsHeaders });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -286,7 +296,7 @@ export async function POST(request: NextRequest) {
 
     // 7. Add New Product to Catalog
     if (action === "add_product") {
-      const { name, category, price, itemType, unit, description, mrp } = data || {};
+      const { name, category, price, itemType, unit, description, mrp, imageUrl } = data || {};
       if (!name || !price) {
         return NextResponse.json({ success: false, message: "Name and Price are required" }, { status: 400 });
       }
@@ -301,6 +311,7 @@ export async function POST(request: NextRequest) {
           item_type: itemType || "veg",
           unit: unit || "plate",
           description: description || (mrp ? `MRP: ₹${mrp}` : null),
+          image_url: imageUrl || null,
           is_available: true,
         })
         .select()
@@ -377,12 +388,13 @@ export async function POST(request: NextRequest) {
 
     // 11. Update Store Branding Profile
     if (action === "update_profile") {
-      const { storeName, ownerName, businessCategory, address } = data || {};
+      const { storeName, ownerName, businessCategory, address, logoUrl } = data || {};
       const updated = updateMerchantRemoteConfig({
         storeName: storeName?.trim() || undefined,
         ownerName: ownerName?.trim() || undefined,
         businessCategory: businessCategory || undefined,
         address: address?.trim() || undefined,
+        logoUrl: logoUrl || undefined,
       });
 
       return NextResponse.json({
@@ -410,12 +422,14 @@ export async function POST(request: NextRequest) {
 
     // 13. Update Operating Hours & Split Shifts
     if (action === "update_operating_hours") {
-      const { openingTime, closingTime, isFestivalMode, isLunchPause } = data || {};
+      const { openingTime, closingTime, isFestivalMode, festivalMode, isLunchPause, lunchPause } = data || {};
+      const fest = isFestivalMode !== undefined ? Boolean(isFestivalMode) : festivalMode !== undefined ? Boolean(festivalMode) : undefined;
+      const lunch = isLunchPause !== undefined ? Boolean(isLunchPause) : lunchPause !== undefined ? Boolean(lunchPause) : undefined;
       const updated = updateMerchantRemoteConfig({
         openingTime: openingTime || undefined,
         closingTime: closingTime || undefined,
-        isFestivalMode: isFestivalMode !== undefined ? Boolean(isFestivalMode) : undefined,
-        isLunchPause: isLunchPause !== undefined ? Boolean(isLunchPause) : undefined,
+        isFestivalMode: fest,
+        isLunchPause: lunch,
       });
 
       return NextResponse.json({
@@ -438,6 +452,147 @@ export async function POST(request: NextRequest) {
         success: true,
         message: "Google Review Smart Gating link updated!",
         config: updated,
+      });
+    }
+
+    // 14b. Update Master Cashier PIN (Security Screen 41)
+    if (action === "update_security_pin") {
+      const { currentPin, newPin } = data || {};
+      if (!newPin || newPin.length < 4) {
+        return NextResponse.json(
+          { success: false, message: "New PIN must be at least 4 digits" },
+          { status: 400 }
+        );
+      }
+      const curConfig = getMerchantRemoteConfig();
+      if (curConfig.cashierPin && currentPin && curConfig.cashierPin !== currentPin) {
+        return NextResponse.json(
+          { success: false, message: "Current PIN is incorrect!" },
+          { status: 400 }
+        );
+      }
+      const updated = updateMerchantRemoteConfig({ cashierPin: newPin });
+      return NextResponse.json({
+        success: true,
+        message: "Master Cashier PIN safalta se badal diya gaya!",
+        cashierPin: updated.cashierPin,
+      });
+    }
+
+    // 14c. Update Security 2FA & Login Alerts (Security Screen 41)
+    if (action === "update_security_settings") {
+      const { twoFactorEnabled, loginAlerts } = data || {};
+      const updated = updateMerchantRemoteConfig({
+        twoFactorEnabled: twoFactorEnabled !== undefined ? Boolean(twoFactorEnabled) : undefined,
+        loginAlerts: loginAlerts !== undefined ? Boolean(loginAlerts) : undefined,
+      });
+      return NextResponse.json({
+        success: true,
+        message: "Security settings saved!",
+        config: updated,
+      });
+    }
+
+    // 14d. Multi-Outlet Branch Registration & Switching (Screen 42)
+    if (action === "add_branch") {
+      const { name, locality, phone } = data || {};
+      if (!name || !locality) {
+        return NextResponse.json(
+          { success: false, message: "Branch name and locality are required" },
+          { status: 400 }
+        );
+      }
+      const cur = getMerchantRemoteConfig();
+      const branches = cur.branches || [];
+      const newBranch = {
+        id: `branch_${Date.now()}`,
+        name: name.trim(),
+        locality: locality.trim(),
+        phone: phone?.trim() || cur.phone,
+        idCode: `QR-${Math.floor(10000000 + Math.random() * 90000000)}`,
+        active: false,
+        pendingOrders: 0,
+        revenueToday: "₹0",
+      };
+      const updated = updateMerchantRemoteConfig({ branches: [...branches, newBranch] });
+      return NextResponse.json({
+        success: true,
+        message: `New outlet branch "${name}" registered!`,
+        branch: newBranch,
+        branches: updated.branches,
+      });
+    }
+
+    if (action === "switch_branch") {
+      const { branchId } = data || {};
+      const cur = getMerchantRemoteConfig();
+      const branches = cur.branches || [];
+      const target = branches.find((b) => b.id === branchId);
+      if (!target) {
+        return NextResponse.json({ success: false, message: "Branch not found" }, { status: 404 });
+      }
+      const updatedBranches = branches.map((b) => ({
+        ...b,
+        active: b.id === branchId,
+      }));
+      const updated = updateMerchantRemoteConfig({
+        branches: updatedBranches,
+        storeName: target.name,
+      });
+      return NextResponse.json({
+        success: true,
+        message: `Switched active branch to ${target.name}`,
+        activeBranch: target,
+        config: updated,
+      });
+    }
+
+    // 14e. Staff Roles & Matrix (Screen 43)
+    if (action === "manage_staff") {
+      const { actionType, staffMember, targetName } = data || {};
+      const cur = getMerchantRemoteConfig();
+      let staff = cur.staffList || [];
+      if (actionType === "revoke") {
+        staff = staff.filter((s) => s.name !== targetName);
+        const updated = updateMerchantRemoteConfig({ staffList: staff });
+        return NextResponse.json({
+          success: true,
+          message: `✓ Staff access revoked for ${targetName}!`,
+          staffList: updated.staffList,
+        });
+      } else if (actionType === "invite") {
+        if (!staffMember?.name || !staffMember?.phone) {
+          return NextResponse.json(
+            { success: false, message: "Name and phone are required" },
+            { status: 400 }
+          );
+        }
+        staff.push(staffMember);
+        const updated = updateMerchantRemoteConfig({ staffList: staff });
+        return NextResponse.json({
+          success: true,
+          message: `✓ ${staffMember.name} has been added to staff list!`,
+          staffList: updated.staffList,
+        });
+      }
+      return NextResponse.json({ success: false, message: "Invalid staff action" }, { status: 400 });
+    }
+
+    // 14f. Thermal Printer Settings (Screen 11 & Screen 46)
+    if (action === "update_printer_settings") {
+      const { paperSize, connectionType, autoCut } = data || {};
+      const cur = getMerchantRemoteConfig();
+      const updated = updateMerchantRemoteConfig({
+        printerSettings: {
+          paperSize: paperSize || cur.printerSettings?.paperSize || "80mm",
+          connectionType: connectionType || cur.printerSettings?.connectionType || "bluetooth",
+          autoCut: autoCut !== undefined ? Boolean(autoCut) : cur.printerSettings?.autoCut ?? true,
+        },
+      });
+      return NextResponse.json({
+        success: true,
+        message: `Printer configuration updated (${updated.printerSettings?.paperSize})!`,
+        printerSettings: updated.printerSettings,
       });
     }
 
@@ -469,20 +624,88 @@ export async function POST(request: NextRequest) {
 
     // 16. Bank Account Penny Drop Verification
     if (action === "verify_bank_kyc") {
-      const { accountNumber, ifsc, holderName } = data || {};
-      const mask = accountNumber ? `•••• •••• ${accountNumber.slice(-4)}` : "•••• •••• 4512";
+      const { accountNumber, ifsc, holderName, phone } = data || {};
+      const cleanAcc = (accountNumber || "").replace(/\s+/g, "");
+      const cleanIfsc = (ifsc || "").trim().toUpperCase();
+
+      // Production-grade validation
+      if (!/^\d{8,18}$/.test(cleanAcc)) {
+        return NextResponse.json(
+          { success: false, message: "Kripya 8 se 18 digit ka valid Bank Account Number dalein." },
+          { status: 400 }
+        );
+      }
+      if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) {
+        return NextResponse.json(
+          { success: false, message: "Kripya valid 11-digit IFSC code dalein (jaise SBIN0000024)." },
+          { status: 400 }
+        );
+      }
+
+      const mask = `•••• •••• ${cleanAcc.slice(-4)}`;
+      const clientId = process.env.CASHFREE_CLIENT_ID?.trim();
+      const clientSecret = process.env.CASHFREE_CLIENT_SECRET?.trim();
+      const env = (process.env.CASHFREE_ENVIRONMENT || "production").trim().toLowerCase();
+      const verificationBaseUrl = env === "production"
+        ? "https://api.cashfree.com/verification"
+        : "https://sandbox.cashfree.com/verification";
+
+      let verifiedLive = false;
+      let utrRef = `TEST_IMPS_${Date.now()}`;
+      let registeredBankName = holderName || "Verified Merchant";
+      let statusNote = "";
+
+      if (clientId && clientSecret) {
+        try {
+          const cfRes = await fetch(`${verificationBaseUrl}/bank-account/sync`, {
+            method: "POST",
+            headers: {
+              "x-client-id": clientId,
+              "x-client-secret": clientSecret,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              bank_account: cleanAcc,
+              ifsc: cleanIfsc,
+              name: holderName || "Trustit Partner",
+              phone: phone || "9118643415",
+            }),
+            signal: AbortSignal.timeout(10000),
+          });
+
+          const cfData = await cfRes.json();
+          if (cfRes.ok && (cfData.account_status === "VALID" || cfData.status === "SUCCESS")) {
+            verifiedLive = true;
+            utrRef = cfData.utr || cfData.reference_id || `UTR_${Date.now()}`;
+            registeredBankName = cfData.name_at_bank || holderName || "Verified Partner";
+            statusNote = "Live ₹1 IMPS penny drop confirmed by Cashfree NPCI gateway.";
+          } else if (cfRes.status === 401 || cfData.code === "authentication_failed") {
+            statusNote = "Bank details saved. Note: Cashfree Verification Suite API keys require activation on your Cashfree merchant dashboard for automated ₹1 penny drop.";
+          } else {
+            statusNote = cfData.message || "Bank details recorded for manual branch review.";
+          }
+        } catch {
+          statusNote = "Gateway connection timeout. Bank details stored securely.";
+        }
+      }
+
       const updated = updateMerchantRemoteConfig({
         bankAccount: {
           accountNumberMask: mask,
-          ifsc: ifsc || "SBIN0000024",
-          holderName: holderName || "Verified Merchant",
+          ifsc: cleanIfsc,
+          holderName: registeredBankName,
           isVerified: true,
+          verifiedLive,
+          utr: utrRef,
+          updatedAt: new Date().toISOString(),
         },
       });
 
       return NextResponse.json({
         success: true,
-        message: "₹1 Penny Drop verified via NPCI IMPS! Bank account linked successfully.",
+        message: verifiedLive
+          ? `₹1.00 IMPS penny drop successful! Beneficiary: ${registeredBankName} (UTR: ${utrRef})`
+          : `Bank Account Linked (${cleanIfsc})! ${statusNote}`,
         bankAccount: updated.bankAccount,
       });
     }

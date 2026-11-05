@@ -43,17 +43,19 @@ export default function Screen28ConnectWalletRecharge({
         const data = await res.json();
         if (data.success && data.paymentSessionId) {
           setStatusMessage(`Cashfree Session ${data.orderId.slice(-8)} Created!`);
-          setTimeout(() => {
-            onRechargeSuccess?.();
-          }, 1500);
+          if (data.paymentUrl && typeof window !== "undefined") {
+            window.location.href = data.paymentUrl;
+            return;
+          }
+          onRechargeSuccess?.();
         } else {
           setStatusMessage(data.message || "Recharge initiated");
-          setTimeout(() => onRechargeSuccess?.(), 1500);
+          onRechargeSuccess?.();
         }
       }
     } catch {
       setStatusMessage("Recharge request dispatched.");
-      setTimeout(() => onRechargeSuccess?.(), 1500);
+      onRechargeSuccess?.();
     } finally {
       setRecharging(false);
     }

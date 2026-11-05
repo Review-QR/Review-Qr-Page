@@ -8,8 +8,11 @@ interface Screen08Props {
   onSaveOperatingHours?: (hours: {
     openingTime: string;
     closingTime: string;
-    festivalMode: boolean;
-    lunchPause: boolean;
+    festivalMode?: boolean;
+    lunchPause?: boolean;
+    isFestivalMode?: boolean;
+    isLunchPause?: boolean;
+    autoSave?: boolean;
   }) => void;
   initialOpening?: string;
   initialClosing?: string;
@@ -32,6 +35,30 @@ export default function Screen08OperatingHours({
   const [closingTime] = useState<string>(initialClosing);
   const [saved, setSaved] = useState(false);
 
+  const toggleFestivalMode = () => {
+    const next = !festivalMode;
+    setFestivalMode(next);
+    onSaveOperatingHours?.({
+      openingTime,
+      closingTime,
+      isFestivalMode: next,
+      isLunchPause: lunchPause,
+      autoSave: true,
+    });
+  };
+
+  const toggleLunchPause = () => {
+    const next = !lunchPause;
+    setLunchPause(next);
+    onSaveOperatingHours?.({
+      openingTime,
+      closingTime,
+      isFestivalMode: festivalMode,
+      isLunchPause: next,
+      autoSave: true,
+    });
+  };
+
   const days = [
     { name: "Monday", open: "08:00 AM", close: "10:30 PM", active: true },
     { name: "Tuesday", open: "08:00 AM", close: "10:30 PM", active: true },
@@ -45,7 +72,13 @@ export default function Screen08OperatingHours({
   const handleSave = () => {
     setSaved(true);
     if (onSaveOperatingHours) {
-      onSaveOperatingHours({ openingTime, closingTime, festivalMode, lunchPause });
+      onSaveOperatingHours({
+        openingTime,
+        closingTime,
+        isFestivalMode: festivalMode,
+        isLunchPause: lunchPause,
+        autoSave: false,
+      });
     }
     setTimeout(() => {
       setSaved(false);
@@ -109,7 +142,7 @@ export default function Screen08OperatingHours({
           </div>
           <button
             type="button"
-            onClick={() => setLunchPause(!lunchPause)}
+            onClick={toggleLunchPause}
             className={`w-9 h-5 rounded-full transition relative p-0.5 cursor-pointer ${
               lunchPause ? "bg-blue-600" : "bg-slate-300"
             }`}

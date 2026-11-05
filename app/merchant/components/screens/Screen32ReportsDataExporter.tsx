@@ -9,9 +9,35 @@ interface Screen32Props {
 export default function Screen32ReportsDataExporter({ onBack }: Screen32Props) {
   const [downloading, setDownloading] = useState<string | null>(null);
 
-  const handleDownload = (format: string) => {
-    setDownloading(format);
-    setTimeout(() => setDownloading(null), 1800);
+  const handleDownload = (filename: string) => {
+    setDownloading(filename);
+    try {
+      let csvContent = "";
+      if (filename.includes("Sales")) {
+        csvContent = "Date,Order ID,Customer,Items,Gross Bill (INR),Tax GST (INR),Gateway Fee (INR),Net Settled (INR),Status\n" +
+          "2026-10-31,TRU-8921,Aman Verma,2x Shahi Paneer 4x Naan,570.00,28.50,11.40,530.10,SETTLED\n" +
+          "2026-10-31,TRU-8920,Rohit Gupta,1x Dal Makhani 2x Roti,290.00,14.50,5.80,269.70,SETTLED\n" +
+          "2026-10-30,TRU-8919,Pooja Singh,3x Paneer Tikka,450.00,22.50,9.00,418.50,SETTLED\n" +
+          "2026-10-30,TRU-8918,Kunal Mishra,1x Veg Thali,180.00,9.00,3.60,167.40,SETTLED\n";
+      } else {
+        csvContent = "Timestamp,Customer ID,QR Device,Visit Count,Source,Google Review Directed\n" +
+          "2026-10-31 20:14:11,CUST-9118,Standee Counter A,4,Bahraich Local,YES (5 Star)\n" +
+          "2026-10-31 19:42:05,CUST-9832,Standee Counter B,1,New Footfall,NO (Direct Khata)\n" +
+          "2026-10-30 21:05:40,CUST-7741,Standee Counter A,2,Repeat Dine-in,YES (5 Star)\n";
+      }
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename.endsWith(".xlsx") ? filename.replace(".xlsx", ".csv") : filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      // ignore
+    }
+    setTimeout(() => setDownloading(null), 1500);
   };
 
   return (

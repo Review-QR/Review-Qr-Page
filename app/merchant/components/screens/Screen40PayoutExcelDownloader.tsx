@@ -8,9 +8,29 @@ interface Screen40Props {
 
 export default function Screen40PayoutExcelDownloader({ onBack }: Screen40Props) {
   const [downloading, setDownloading] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState("oct_2026");
 
   const handleDownload = () => {
     setDownloading(true);
+    try {
+      const csvContent =
+        "Settlement Date,Cycle UTR,Orders Count,Gross Customer Billing (INR),Payment Gateway MDR (INR),Platform Fee (INR),TDS 194-O (INR),Net Amount Deposited (INR),Bank Account Mask,Bank Name,NPCI Status\n" +
+        "2026-10-31,CMS992144820,18,5840.00,102.20,0.00,5.84,5731.96,•••• •••• 4512,State Bank of India,CREDITED_SUCCESS\n" +
+        "2026-10-30,CMS991823194,22,7410.00,129.68,0.00,7.41,7272.91,•••• •••• 4512,State Bank of India,CREDITED_SUCCESS\n" +
+        "2026-10-29,CMS990714210,14,4620.00,80.85,0.00,4.62,4534.53,•••• •••• 4512,State Bank of India,CREDITED_SUCCESS\n" +
+        "2026-10-28,CMS989412039,19,6120.00,107.10,0.00,6.12,6006.78,•••• •••• 4512,State Bank of India,CREDITED_SUCCESS\n";
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `Trustit_Payout_Ledger_${selectedMonth}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch {
+      // ignore
+    }
     setTimeout(() => setDownloading(false), 1500);
   };
 
@@ -50,7 +70,11 @@ export default function Screen40PayoutExcelDownloader({ onBack }: Screen40Props)
             <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
               Select Financial Month
             </label>
-            <select className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-slate-50">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-slate-50"
+            >
               <option value="oct_2026">October 2026 (₹48,920.00 Total Payouts)</option>
               <option value="sep_2026">September 2026 (₹42,150.00 Total Payouts)</option>
               <option value="aug_2026">August 2026 (₹38,900.00 Total Payouts)</option>

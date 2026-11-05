@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 interface Screen02Props {
   onAccept?: (prepMins: number) => void;
@@ -15,6 +16,17 @@ export default function Screen02IncomingOrderSiren({
 }: Screen02Props) {
   const [selectedPrep, setSelectedPrep] = useState<number>(20);
   const [isMuted, setIsMuted] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isMuted) {
+      TrustitNative.playOrderSiren();
+    } else {
+      TrustitNative.stopOrderSiren();
+    }
+    return () => {
+      TrustitNative.stopOrderSiren();
+    };
+  }, [isMuted]);
 
   return (
     <div className="w-full h-full bg-gradient-to-b from-rose-50 via-red-50/60 to-amber-50/40 text-slate-900 flex flex-col justify-between p-3.5 sm:p-4 font-sans overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden relative">
@@ -114,7 +126,10 @@ export default function Screen02IncomingOrderSiren({
       <div className="pt-2 space-y-1.5">
         <button
           type="button"
-          onClick={() => onAccept?.(selectedPrep)}
+          onClick={() => {
+            TrustitNative.stopOrderSiren();
+            onAccept?.(selectedPrep);
+          }}
           className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm tracking-wide shadow-md flex items-center justify-center gap-2 transition"
         >
           <span>✓ ACCEPT ORDER (+{selectedPrep} MINS)</span>
@@ -123,14 +138,20 @@ export default function Screen02IncomingOrderSiren({
         <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
-            onClick={onDecline}
+            onClick={() => {
+              TrustitNative.stopOrderSiren();
+              onDecline?.();
+            }}
             className="py-2 rounded-xl bg-white hover:bg-rose-50 text-rose-700 border border-rose-300 text-xs font-bold transition"
           >
             Decline Order ✕
           </button>
           <button
             type="button"
-            onClick={onBack}
+            onClick={() => {
+              TrustitNative.stopOrderSiren();
+              onBack?.();
+            }}
             className="py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-bold transition"
           >
             Close Siren

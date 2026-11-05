@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 
 interface Screen14Props {
   onBack?: () => void;
   onSave?: () => void;
-  onSaveProduct?: (product: { name: string; price: number; category: string; itemType: string; prepTime: string }) => void;
+  onSaveProduct?: (product: { name: string; price: number; category: string; itemType: string; prepTime: string; imageUrl?: string; mrp?: string }) => void;
 }
 
 export default function Screen14AddProductModal({ onBack, onSave, onSaveProduct }: Screen14Props) {
@@ -15,7 +15,20 @@ export default function Screen14AddProductModal({ onBack, onSave, onSaveProduct 
   const [category, setCategory] = useState("Grocery");
   const [prepTime, setPrepTime] = useState("10");
   const [itemType, setItemType] = useState<"veg" | "non_veg" | "egg">("veg");
+  const [productImage, setProductImage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setProductImage(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!title.trim() || !price) return;
@@ -23,9 +36,11 @@ export default function Screen14AddProductModal({ onBack, onSave, onSaveProduct 
     const itemData = {
       name: title.trim(),
       price: Number(price),
+      mrp: mrp ? mrp.trim() : undefined,
       category: category.trim(),
       itemType,
       prepTime,
+      imageUrl: productImage || undefined,
     };
     if (onSaveProduct) {
       onSaveProduct(itemData);
@@ -51,25 +66,72 @@ export default function Screen14AddProductModal({ onBack, onSave, onSaveProduct 
           <button
             type="button"
             onClick={onBack}
-            className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200"
+            className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200 cursor-pointer"
           >
             ✕ Close
           </button>
         </div>
 
+        {/* Hidden File Picker Input */}
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept="image/*"
+          className="hidden"
+          onChange={handleImageChange}
+        />
+
         {/* Photo Uploader Box */}
         <div className="mt-2.5 bg-white border border-dashed border-slate-300 rounded-2xl p-3 text-center space-y-1">
-          <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 mx-auto flex items-center justify-center text-xl shadow-2xs">
-            📸
-          </div>
-          <p className="text-xs font-bold text-slate-800">Upload Food Photograph</p>
+          {productImage ? (
+            <div className="relative inline-block mx-auto">
+              <img
+                src={productImage}
+                alt="Product preview"
+                className="w-16 h-16 rounded-xl object-cover border border-slate-200 shadow-sm mx-auto"
+              />
+              <button
+                type="button"
+                onClick={() => setProductImage(null)}
+                className="absolute -top-1 -right-1 bg-rose-600 text-white rounded-full w-4 h-4 text-[9px] flex items-center justify-center cursor-pointer shadow"
+                title="Remove photo"
+              >
+                ✕
+              </button>
+            </div>
+          ) : (
+            <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 mx-auto flex items-center justify-center text-xl shadow-2xs">
+              📸
+            </div>
+          )}
+          <p className="text-xs font-bold text-slate-800">
+            {productImage ? "Photo Attached" : "Upload Product Photograph"}
+          </p>
           <span className="text-[10px] text-slate-500 block">PNG, JPG up to 5MB (Square 1:1 recommended)</span>
-          <button
-            type="button"
-            className="mt-1 px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold border border-slate-200"
-          >
-            Choose Image File
-          </button>
+          <div className="mt-1 flex flex-wrap justify-center items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="px-3 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-[10px] font-bold border border-blue-200 cursor-pointer active:scale-95 transition flex items-center gap-1"
+            >
+              <span>📷</span>
+              <span>{productImage ? "Change Image File" : "Choose Image File"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setProductImage("https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&auto=format&fit=crop&q=80")}
+              className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-[9px] font-medium border border-slate-200 cursor-pointer"
+            >
+              🥛 Dairy
+            </button>
+            <button
+              type="button"
+              onClick={() => setProductImage("https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200&auto=format&fit=crop&q=80")}
+              className="px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-[9px] font-medium border border-slate-200 cursor-pointer"
+            >
+              🌾 Grains
+            </button>
+          </div>
         </div>
 
         {/* Form Inputs */}

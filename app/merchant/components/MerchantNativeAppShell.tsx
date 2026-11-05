@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { merchantAudio } from "@/lib/audio/merchant-siren";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 import DongleSliderSwitch from "./DongleSliderSwitch";
 
 // ============================================================
@@ -99,6 +100,9 @@ interface MerchantNativeAppShellProps {
   initialStoreName?: string;
   initialOwnerName?: string;
   initialSubScreen?: string | null;
+  initialTab?: PrimaryTab;
+  initialLandingVariant?: "A" | "B" | "C" | string;
+  activeVariant?: string;
   forceStandalone?: boolean; // When true, forces full viewport (for APK)
 }
 
@@ -109,6 +113,9 @@ export default function MerchantNativeAppShell({
   initialStoreName = "Gupta Kirana & General Store",
   initialOwnerName = "Merchant Partner",
   initialSubScreen = null,
+  initialTab = "cockpit",
+  initialLandingVariant = "opt1_bharatpe",
+  activeVariant,
   forceStandalone = false,
 }: MerchantNativeAppShellProps) {
   // Authentication & Profile State
@@ -130,7 +137,7 @@ export default function MerchantNativeAppShell({
   const [merchantConfig, setMerchantConfig] = useState<any>(null);
 
   // Navigation State
-  const [activeTab, setActiveTab] = useState<PrimaryTab>("cockpit");
+  const [activeTab, setActiveTab] = useState<PrimaryTab>(initialTab);
   const [activeSubScreen, setActiveSubScreen] = useState<string | null>(initialSubScreen);
 
   // Laptop Simulator View State
@@ -185,6 +192,17 @@ export default function MerchantNativeAppShell({
   useEffect(() => {
     fetchDashboard();
     const timer = setInterval(fetchDashboard, 10000);
+
+    // Silent Background OTA Live Update Check (Swiggy/Zomato pattern)
+    TrustitNative.checkAndApplyOta({
+      app: "partner",
+      currentVersion: "2.2.0",
+    }).then((res) => {
+      if (res?.hasUpdate) {
+        showToast("⚡ Naya OTA update safalta se apply ho gaya!");
+      }
+    }).catch(() => {});
+
     return () => clearInterval(timer);
   }, []);
 
@@ -357,17 +375,25 @@ export default function MerchantNativeAppShell({
 
   // 9. Save Operating Hours
   const handleSaveOperatingHours = async (hoursData: any) => {
-    showToast("Saving operating hours...");
+    if (hoursData?.autoSave) {
+      showToast("✓ Shift updated in real-time!");
+    } else {
+      showToast("Saving operating hours...");
+    }
     try {
       await fetch("/api/merchant/app-operations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "update_operating_hours", data: hoursData }),
       });
-      showToast("✓ Operating Hours Saved!");
+      if (!hoursData?.autoSave) {
+        showToast("✓ Operating Hours Saved!");
+      }
       fetchDashboard();
     } catch {}
-    setActiveSubScreen(null);
+    if (!hoursData?.autoSave) {
+      setActiveSubScreen(null);
+    }
   };
 
   // 10. Save Google Review Gating
@@ -647,6 +673,7 @@ export default function MerchantNativeAppShell({
             <Screen11KotThermalReceipt
               order={selectedOrder || liveOrders[0]}
               storeName={storeName}
+              initialPaperSize={merchantConfig?.printerSettings?.paperSize || "80mm"}
               onBack={() => setActiveSubScreen(null)}
               onPrintDone={() => {
                 showToast("Thermal KOT Print command dispatched!");
@@ -714,7 +741,10 @@ export default function MerchantNativeAppShell({
             />
           )}
           {activeSubScreen === "s24" && (
-            <Screen24OrderTrackingWaybill onBack={() => setActiveSubScreen(null)} />
+            <Screen24OrderTrackingWaybill
+              storeName={storeName}
+              onBack={() => setActiveSubScreen(null)}
+            />
           )}
           {activeSubScreen === "s25" && (
             <Screen25OccasionsCrmBoard onBack={() => setActiveSubScreen(null)} />
@@ -786,16 +816,35 @@ export default function MerchantNativeAppShell({
             <Screen40PayoutExcelDownloader onBack={() => setActiveSubScreen(null)} />
           )}
           {activeSubScreen === "s41" && (
-            <Screen41SecurityTwoFactor onBack={() => setActiveSubScreen(null)} />
+            <Screen41SecurityTwoFactor
+              initialTwoFactor={merchantConfig?.twoFactorEnabled !== false}
+              initialLoginAlerts={merchantConfig?.loginAlerts !== false}
+              onBack={() => setActiveSubScreen(null)}
+              onSave={() => {
+                showToast("✓ Security Settings Saved!");
+                fetchDashboard();
+                setActiveSubScreen(null);
+              }}
+            />
           )}
           {activeSubScreen === "s42" && (
-            <Screen42MultiOutletSwitcher onBack={() => setActiveSubScreen(null)} />
+            <Screen42MultiOutletSwitcher
+              initialBranches={merchantConfig?.branches}
+              onSelectOutlet={(name) => {
+                setStoreName(name);
+                showToast(`✓ Switched outlet to ${name}!`);
+                fetchDashboard();
+              }}
+              onBack={() => setActiveSubScreen(null)}
+            />
           )}
           {activeSubScreen === "s43" && (
             <Screen43StaffRolesMatrix
               ownerName={ownerName}
               phone={merchantPhone}
+              initialStaffList={merchantConfig?.staffList}
               onBack={() => setActiveSubScreen(null)}
+              onInviteStaff={() => fetchDashboard()}
             />
           )}
           {activeSubScreen === "s44" && (
@@ -826,6 +875,7 @@ export default function MerchantNativeAppShell({
               initialOwnerName={merchantConfig?.ownerName || "Aman Sharma"}
               initialBusinessType={storeCategory}
               initialPhone={merchantConfig?.phone || "+919118643415"}
+              initialLogoUrl={merchantConfig?.logoUrl}
               onSaveProfile={handleSaveProfile}
               onBack={() => setActiveSubScreen(null)}
             />
@@ -1326,7 +1376,7 @@ export default function MerchantNativeAppShell({
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div>
                 <span className="text-[10px] font-black uppercase text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                  0% Commission Payouts
+                  Direct Bank Payouts
                 </span>
                 <h3 className="text-sm font-black text-slate-900 mt-1">Aaj Ki Kul Bikri (Net Payout)</h3>
               </div>
@@ -1344,7 +1394,7 @@ export default function MerchantNativeAppShell({
                   ₹{todayGrossEarnings.toLocaleString("en-IN")}.00
                 </span>
                 <span className="text-[11px] font-bold text-slate-500 block">
-                  {liveOrders.length || 34} Orders · 0% Fee Auto-Settled via NEFT / UPI
+                  {liveOrders.length || 34} Orders · Direct Auto-Settlement via IMPS / UPI
                 </span>
               </div>
               <button
@@ -1549,6 +1599,7 @@ export default function MerchantNativeAppShell({
       <div className="h-full flex flex-col justify-between bg-white overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {authStep === "pitch" && (
           <ScreenAuth01LandingBecomePartner
+            initialVariant={activeVariant || initialLandingVariant}
             onStartRegistration={() => setAuthStep("category")}
             onGoToLogin={() => setAuthStep("login")}
           />
@@ -1672,9 +1723,10 @@ export default function MerchantNativeAppShell({
         ) : (
           <>
             {/* Top Merchant App Bar */}
-            <header className="bg-white border-b border-slate-200 px-3.5 py-2 flex items-center justify-between shrink-0 shadow-xs z-10">
+            {/* Persistent Slim Native Header */}
+            <header className="bg-white border-b border-slate-200 px-3 py-1.5 flex items-center justify-between shrink-0 shadow-2xs z-10">
               <div className="flex items-center gap-2 min-w-0">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white font-black text-sm flex items-center justify-center shadow-xs shrink-0">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-700 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0">
                   {storeCategory === "kirana"
                     ? "🛒"
                     : storeCategory === "chemist"
@@ -1685,30 +1737,36 @@ export default function MerchantNativeAppShell({
                     ? "🚗"
                     : "🍔"}
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-black text-slate-900 truncate block">
-                      {storeName}
-                    </span>
-                  </div>
-                  <span className="text-[9px] font-black uppercase text-blue-700 tracking-wider block">
-                    {storeCategory.toUpperCase()} CONSOLE
+                <div className="min-w-0 flex items-center gap-1.5">
+                  <span className="text-[11px] font-black text-slate-900 truncate">
+                    {storeName}
+                  </span>
+                  <span className="text-[8px] font-black uppercase text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.2 rounded shrink-0">
+                    {storeCategory}
                   </span>
                 </div>
               </div>
 
               {/* Online / Offline Status Hardware Dongle Slider Switch */}
-              <div className="flex items-center gap-1.5 shrink-0">
+              <div className="flex items-center gap-1 shrink-0">
                 <DongleSliderSwitch
                   isOn={isStoreOnline}
                   onToggle={toggleStoreStatus}
                 />
 
+                <Link
+                  href="/merchant/studio"
+                  title="Open Live Visual Studio"
+                  className="w-6 h-6 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 flex items-center justify-center text-[11px] border border-blue-200 transition active:scale-95"
+                >
+                  🎨
+                </Link>
+
                 <button
                   type="button"
                   onClick={triggerTestSiren}
                   title="Test Siren Audio"
-                  className="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs border border-slate-200 transition active:scale-95"
+                  className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-[11px] border border-slate-200 transition active:scale-95"
                 >
                   🔔
                 </button>
@@ -1730,8 +1788,8 @@ export default function MerchantNativeAppShell({
               )}
             </main>
 
-            {/* Bottom 5-Tab Native Navigation Bar */}
-            <nav className="bg-white border-t border-slate-200/90 px-2 py-1.5 flex items-center justify-around shrink-0 z-20 shadow-md">
+            {/* Bottom 5-Tab Native Navigation Bar (Elevated Orders Center Button) */}
+            <nav className="bg-white border-t border-slate-200/90 px-2 py-1 flex items-center justify-around shrink-0 z-20 shadow-md">
               {/* Tab 1: Cockpit */}
               <button
                 type="button"
@@ -1739,7 +1797,7 @@ export default function MerchantNativeAppShell({
                   setActiveSubScreen(null);
                   setActiveTab("cockpit");
                 }}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition cursor-pointer ${
                   activeTab === "cockpit" && !activeSubScreen
                     ? "text-blue-700 font-black bg-blue-50/80"
                     : "text-slate-500 hover:text-slate-900 font-bold"
@@ -1749,44 +1807,55 @@ export default function MerchantNativeAppShell({
                 <span className="text-[10px] mt-0.5">Cockpit</span>
               </button>
 
-              {/* Tab 2: Orders */}
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveSubScreen(null);
-                  setActiveTab("orders");
-                }}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition relative ${
-                  activeTab === "orders" && !activeSubScreen
-                    ? "text-blue-700 font-black bg-blue-50/80"
-                    : "text-slate-500 hover:text-slate-900 font-bold"
-                }`}
-              >
-                <span className="text-base leading-none">📦</span>
-                <span className="text-[10px] mt-0.5">Orders</span>
-                {unreadOrders > 0 && (
-                  <span className="absolute top-0.5 right-1 w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center animate-pulse shadow-2xs">
-                    {unreadOrders}
-                  </span>
-                )}
-              </button>
-
-              {/* Tab 3: Menu / Rates */}
+              {/* Tab 2: Menu / Items Catalog */}
               <button
                 type="button"
                 onClick={() => {
                   setActiveSubScreen(null);
                   setActiveTab("menu");
                 }}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition cursor-pointer ${
                   activeTab === "menu" && !activeSubScreen
                     ? "text-blue-700 font-black bg-blue-50/80"
                     : "text-slate-500 hover:text-slate-900 font-bold"
                 }`}
               >
                 <span className="text-base leading-none">📋</span>
-                <span className="text-[10px] mt-0.5">Menu</span>
+                <span className="text-[10px] mt-0.5">
+                  {storeCategory === "kirana" || storeCategory === "chemist" ? "Items" : "Menu"}
+                </span>
               </button>
+
+              {/* Tab 3: ELEVATED CENTER ORDERS BUTTON (Raised / Floated) */}
+              <div className="relative -top-3.5 flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveSubScreen(null);
+                    setActiveTab("orders");
+                  }}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition active:scale-95 cursor-pointer relative ${
+                    activeTab === "orders" && !activeSubScreen
+                      ? "bg-gradient-to-tr from-blue-700 to-indigo-600 text-white ring-4 ring-blue-100"
+                      : "bg-slate-900 text-white hover:bg-slate-800"
+                  }`}
+                  title="Live Incoming Orders"
+                >
+                  <span className="text-xl leading-none">📦</span>
+                  {unreadOrders > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center animate-pulse border-2 border-white shadow-xs">
+                      {unreadOrders}
+                    </span>
+                  )}
+                </button>
+                <span
+                  className={`text-[10px] mt-0.5 font-black ${
+                    activeTab === "orders" && !activeSubScreen ? "text-blue-700" : "text-slate-600"
+                  }`}
+                >
+                  Orders
+                </span>
+              </div>
 
               {/* Tab 4: QR Standee */}
               <button
@@ -1795,7 +1864,7 @@ export default function MerchantNativeAppShell({
                   setActiveSubScreen(null);
                   setActiveTab("standee");
                 }}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition cursor-pointer ${
                   activeTab === "standee" && !activeSubScreen
                     ? "text-blue-700 font-black bg-blue-50/80"
                     : "text-slate-500 hover:text-slate-900 font-bold"
@@ -1812,7 +1881,7 @@ export default function MerchantNativeAppShell({
                   setActiveSubScreen(null);
                   setActiveTab("more");
                 }}
-                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition ${
+                className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition cursor-pointer ${
                   activeTab === "more" && !activeSubScreen
                     ? "text-blue-700 font-black bg-blue-50/80"
                     : "text-slate-500 hover:text-slate-900 font-bold"

@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 interface ScreenAuth03Props {
   category?: string;
@@ -39,7 +40,7 @@ export default function ScreenAuth03MobileKycRegistration({
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/merchant/auth", {
+      const res = await TrustitNative.nativeFetch("/api/merchant/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "send_otp", phone, channel: "whatsapp" }),
@@ -68,7 +69,7 @@ export default function ScreenAuth03MobileKycRegistration({
 
     try {
       // Step A: Verify OTP
-      const verifyRes = await fetch("/api/merchant/auth", {
+      const verifyRes = await TrustitNative.nativeFetch("/api/merchant/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "verify_otp", phone, otp: fullCode }),
@@ -81,7 +82,7 @@ export default function ScreenAuth03MobileKycRegistration({
       // Step B: Register profile in database
       const finalStore = storeName.trim() || `${ownerName || "Merchant"}'s Store`;
       const finalOwner = ownerName.trim() || "Merchant Partner";
-      const regRes = await fetch("/api/merchant/auth", {
+      const regRes = await TrustitNative.nativeFetch("/api/merchant/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -123,7 +124,7 @@ export default function ScreenAuth03MobileKycRegistration({
     setErrorMsg(null);
 
     try {
-      const res = await fetch("/api/merchant/auth", {
+      const res = await TrustitNative.nativeFetch("/api/merchant/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -99,7 +99,7 @@ export default function Screen13MenuExplorer({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search dishes or items..."
+              placeholder="Search items or grocery products..."
               className="w-full pl-7 pr-3 py-1.5 rounded-xl border border-slate-300 text-xs text-slate-800 bg-white placeholder-slate-400 focus:outline-hidden focus:border-blue-600"
             />
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">

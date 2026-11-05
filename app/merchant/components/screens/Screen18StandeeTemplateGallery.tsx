@@ -81,19 +81,10 @@ export default function Screen18StandeeTemplateGallery({
           </div>
 
           <div className="flex items-center gap-1.5">
-            {/* Quick Demo Mode Toggle */}
-            <button
-              type="button"
-              onClick={() => setIsSubscribed(!isSubscribed)}
-              className="text-[9px] font-bold px-2 py-1 rounded bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-2xs"
-            >
-              {isSubscribed ? "Test Free" : "Test VIP"}
-            </button>
-
             <button
               type="button"
               onClick={onBack}
-              className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200"
+              className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200 cursor-pointer"
             >
               ← Back
             </button>

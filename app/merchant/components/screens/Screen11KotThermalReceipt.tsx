@@ -5,6 +5,7 @@ import React, { useState } from "react";
 interface Screen11Props {
   order?: any;
   storeName?: string;
+  initialPaperSize?: "80mm" | "58mm";
   onBack?: () => void;
   onPrintDone?: () => void;
 }
@@ -12,11 +13,29 @@ interface Screen11Props {
 export default function Screen11KotThermalReceipt({
   order,
   storeName = "Shri Balaji Daily Needs & General Store",
+  initialPaperSize = "80mm",
   onBack,
   onPrintDone,
 }: Screen11Props) {
-  const [printPaper, setPrintPaper] = useState<"80mm" | "58mm">("80mm");
+  const [printPaper, setPrintPaper] = useState<"80mm" | "58mm">(initialPaperSize);
   const [printed, setPrinted] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+
+  const handleSelectPaper = async (size: "80mm" | "58mm") => {
+    setPrintPaper(size);
+    setSaveStatus(`Saved ${size}`);
+    try {
+      await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update_printer_settings",
+          data: { paperSize: size },
+        }),
+      });
+    } catch {}
+    setTimeout(() => setSaveStatus(null), 2000);
+  };
 
   const orderId = order?.id || "ORD-7783-09";
   const customerName = order?.customer_name || "Aman Sharma";
@@ -64,11 +83,18 @@ export default function Screen11KotThermalReceipt({
 
         {/* Paper Width Selector */}
         <div className="mt-3 flex items-center justify-between bg-slate-800/80 p-2 rounded-xl border border-slate-700 text-xs">
-          <span className="font-bold text-slate-300">Roll Format:</span>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-slate-300">Roll Format:</span>
+            {saveStatus && (
+              <span className="text-[10px] text-emerald-400 font-mono animate-pulse">
+                ✓ {saveStatus}
+              </span>
+            )}
+          </div>
           <div className="flex gap-1.5">
             <button
               type="button"
-              onClick={() => setPrintPaper("80mm")}
+              onClick={() => handleSelectPaper("80mm")}
               className={`px-3 py-1 rounded-lg font-mono font-bold text-xs transition cursor-pointer ${
                 printPaper === "80mm"
                   ? "bg-amber-400 text-slate-950 shadow-xs"
@@ -79,7 +105,7 @@ export default function Screen11KotThermalReceipt({
             </button>
             <button
               type="button"
-              onClick={() => setPrintPaper("58mm")}
+              onClick={() => handleSelectPaper("58mm")}
               className={`px-3 py-1 rounded-lg font-mono font-bold text-xs transition cursor-pointer ${
                 printPaper === "58mm"
                   ? "bg-amber-400 text-slate-950 shadow-xs"

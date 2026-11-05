@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 interface ScreenAuth04Props {
   onLoginSuccess?: (details?: { storeName?: string; phone?: string; ownerName?: string }) => void;
@@ -29,6 +30,10 @@ export default function ScreenAuth04PartnerLogin({
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
+  useEffect(() => {
+    TrustitNative.checkAndApplyOta({ app: "partner" }).catch(() => {});
+  }, []);
+
   // 1. Send WhatsApp OTP
   const handleSendWhatsAppOtp = async () => {
     if (mobile.length !== 10) {
@@ -39,7 +44,7 @@ export default function ScreenAuth04PartnerLogin({
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/merchant/auth", {
+      const res = await TrustitNative.nativeFetch("/api/merchant/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "send_otp", phone: mobile, channel: "whatsapp" }),
@@ -50,7 +55,8 @@ export default function ScreenAuth04PartnerLogin({
       }
 
       setOtpSent(true);
-      setSuccessMsg(`Verification code sent to WhatsApp (+91 ${mobile})`);
+      const otpNote = data.previewOtp ? ` [Code: ${data.previewOtp}]` : "";
+      setSuccessMsg(`Verification code sent to WhatsApp (+91 ${mobile})${otpNote}`);
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : "Failed to dispatch WhatsApp OTP.");
     } finally {
@@ -69,7 +75,7 @@ export default function ScreenAuth04PartnerLogin({
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/merchant/auth", {
+      const res = await TrustitNative.nativeFetch("/api/merchant/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "verify_otp", phone: mobile, otp: fullCode }),
@@ -106,7 +112,7 @@ export default function ScreenAuth04PartnerLogin({
     setErrorMsg(null);
 
     try {
-      const res = await fetch("/api/merchant/auth", {
+      const res = await TrustitNative.nativeFetch("/api/merchant/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -166,9 +172,9 @@ export default function ScreenAuth04PartnerLogin({
           <button
             type="button"
             onClick={onGoToRegister}
-            className="text-[11px] font-bold text-blue-700 hover:text-blue-800 px-2 py-1 rounded-lg bg-blue-50 border border-blue-200 active:scale-95 transition"
+            className="text-[11px] font-black text-white px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 border border-emerald-500 shadow-sm active:scale-95 transition flex items-center gap-1"
           >
-            + New Partner
+            <span>रजिस्टर करें · Register Business</span>
           </button>
         </div>
 

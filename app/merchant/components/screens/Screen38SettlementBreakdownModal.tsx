@@ -42,7 +42,7 @@ export default function Screen38SettlementBreakdownModal({ onBack }: Screen38Pro
             </div>
 
             <div className="flex justify-between items-center text-slate-600">
-              <span>Trustit Hyperlocal Platform Fee (0% Promo)</span>
+              <span>Trustit Hyperlocal Platform Fee (Standard Plan)</span>
               <span className="font-mono text-emerald-700">₹0.00</span>
             </div>
 

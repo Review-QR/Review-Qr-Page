@@ -37,9 +37,19 @@ const nextConfig: NextConfig = {
       });
     }
 
+    const corsHeaders = [
+      { key: "Access-Control-Allow-Origin", value: "*" },
+      { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, DELETE, OPTIONS, PATCH" },
+      { key: "Access-Control-Allow-Headers", value: "X-Requested-With, Content-Type, Authorization, Accept, Origin" },
+      { key: "Access-Control-Max-Age", value: "86400" },
+    ];
+
     // CSP is intentionally omitted: Next.js runtime scripts and the dynamically
     // loaded Cashfree Web Checkout SDK need a nonce-aware policy to avoid breakage.
-    return [{ source: "/:path*", headers }];
+    return [
+      { source: "/api/:path*", headers: [...headers, ...corsHeaders] },
+      { source: "/:path*", headers }
+    ];
   },
 };
 

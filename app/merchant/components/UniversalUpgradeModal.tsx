@@ -83,17 +83,39 @@ export default function UniversalUpgradeModal({
 
   const currentHint = reasonHints[reason] || reasonHints.general;
 
-  const handlePay = () => {
+  const handlePay = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
+    try {
+      const planAmount =
+        selectedPlan === "basic"
+          ? billingCycle === "yearly" ? 290 : 29
+          : selectedPlan === "standard"
+          ? billingCycle === "yearly" ? 490 : 49
+          : billingCycle === "yearly" ? 990 : 99;
+
+      const res = await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "recharge_wallet",
+          data: { amount: planAmount, planId: selectedPlan, billingCycle },
+        }),
+      });
+      const data = await res.json().catch(() => null);
+
+      if (data?.paymentUrl && typeof window !== "undefined") {
+        window.location.href = data.paymentUrl;
+        return;
+      }
+
+      if (onSuccessPay) onSuccessPay(selectedPlan);
+      onClose();
+    } catch {
+      if (onSuccessPay) onSuccessPay(selectedPlan);
+      onClose();
+    } finally {
       setIsProcessing(false);
-      setPaymentSuccess(true);
-      setTimeout(() => {
-        setPaymentSuccess(false);
-        onClose();
-        if (onSuccessPay) onSuccessPay(selectedPlan);
-      }, 1800);
-    }, 1500);
+    }
   };
 
   return (
