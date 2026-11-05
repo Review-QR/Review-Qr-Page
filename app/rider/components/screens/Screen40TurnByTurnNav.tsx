@@ -50,7 +50,7 @@ export default function Screen40TurnByTurnNav({
   };
 
   return (
-    <div className="w-full h-full max-h-[600px] bg-[#0A0F1D] text-white flex flex-col justify-between p-3 select-none font-sans">
+    <div className="w-full flex-1 bg-[#0A0F1D] text-white flex flex-col justify-between p-3 select-none font-sans min-h-[520px]">
       {/* 1. Header Bar: LIVE GPS TRACKING & Telemetry Strip */}
       <div>
         <div className="flex items-center justify-between pb-2 border-b border-slate-800">

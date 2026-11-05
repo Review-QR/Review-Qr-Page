@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { DeliveryRider } from "@/lib/hyperlocal/types";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 export interface RiderAuthState {
   rider: DeliveryRider | null;
@@ -62,7 +63,7 @@ export function useRiderAuth() {
     setPreviewOtp(null);
 
     try {
-      const res = await fetch("/api/hyperlocal/rider", {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "send_otp", phone, channel }),
@@ -94,7 +95,7 @@ export function useRiderAuth() {
     setError(null);
 
     try {
-      const res = await fetch("/api/hyperlocal/rider", {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "verify_otp", phone, otp }),
@@ -139,7 +140,7 @@ export function useRiderAuth() {
     setError(null);
 
     try {
-      const res = await fetch("/api/hyperlocal/rider", {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -170,7 +171,7 @@ export function useRiderAuth() {
   const completeAcademy = async (riderId: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/hyperlocal/rider", {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "complete_academy", riderId }),
@@ -193,7 +194,7 @@ export function useRiderAuth() {
   const verifyHelmetSelfie = async (riderId: string) => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/hyperlocal/rider", {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "verify_helmet_selfie", riderId }),

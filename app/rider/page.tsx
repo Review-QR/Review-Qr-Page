@@ -6,6 +6,7 @@ import { useRiderWorkflow } from "@/app/rider/hooks/useRiderWorkflow";
 import { riderAudio } from "@/lib/audio/rider-siren";
 import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
 import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotificationBanner";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 // 18 Core Screens
 import Screen01AuthStart from "@/app/rider/components/screens/Screen01AuthStart";
@@ -108,7 +109,7 @@ export default function StandaloneRiderProductionApp() {
 
   const handleRiderGoogleLogin = async (googleUser: { email: string; fullName: string }) => {
     try {
-      const res = await fetch("/api/hyperlocal/rider", {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -162,6 +163,7 @@ export default function StandaloneRiderProductionApp() {
   const [lastSyncTime, setLastSyncTime] = useState<string>("Active");
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
   const [showQuickHub, setShowQuickHub] = useState<boolean>(false);
+  const [showTestStrip, setShowTestStrip] = useState<boolean>(false);
 
   // Background Telemetry Throttling Refs (Guarantees zero re-renders of the watcher)
   const lastHeartbeatTimeRef = useRef<number>(0);
@@ -300,10 +302,9 @@ export default function StandaloneRiderProductionApp() {
           lastHeartbeatTimeRef.current = now;
           setTelemetrySyncState("syncing");
 
-          fetch("/api/hyperlocal/rider", {
+          TrustitNative.nativeFetch("/api/hyperlocal/rider", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            keepalive: true,
             body: JSON.stringify({
               action: "heartbeat_telemetry",
               riderId: rider.id,
@@ -365,12 +366,12 @@ export default function StandaloneRiderProductionApp() {
     }
   }, [activeOrder]);
 
-  // 5 Permanent Navigation Tabs Mapping
+  // 5 Permanent Navigation Tabs Mapping (Cockpit in Center as Hero button)
   const tabConfigs = [
-    { key: "cockpit" as TabKey, label: "Cockpit", icon: "🛵", screens: [7, 8, 9, 25, 33, 39] },
     { key: "orders" as TabKey, label: "Live Orders", icon: "⚡", screens: [10, 21, 22, 11, 12, 23, 35, 36, 37, 38, 13, 14, 24, 28, 29, 30, 45, 46] },
-    { key: "earnings" as TabKey, label: "Passbook", icon: "💰", screens: [15, 16, 26, 6, 31, 34, 47] },
     { key: "navigation" as TabKey, label: "Navigation", icon: "🗺️", screens: [40, 41, 42, 44, 48] },
+    { key: "cockpit" as TabKey, label: "Cockpit", icon: "🛵", screens: [7, 8, 9, 25, 33, 39] },
+    { key: "earnings" as TabKey, label: "Passbook", icon: "💰", screens: [15, 16, 26, 6, 31, 34, 47] },
     { key: "profile" as TabKey, label: "Fleet ID", icon: "👤", screens: [18, 43, 32, 17, 1, 2, 3, 4, 5, 19, 20, 27] },
   ];
 
@@ -431,8 +432,20 @@ export default function StandaloneRiderProductionApp() {
           channel={authChannel}
           previewOtp={previewOtp}
           onVerified={(otp, riderObj) => {
-            // As a new partner, proceed into full onboarding flow: Terms -> Selfie KYC -> Vehicle RC -> Payout!
-            setCurrentScreenId(3);
+            const hasCompletedKyc =
+              typeof window !== "undefined" &&
+              (localStorage.getItem("trustit_rider_onboarded") === "true" ||
+                Boolean(riderObj?.is_verified));
+            if (hasCompletedKyc) {
+              // Registered partner goes directly into Live Duty Cockpit!
+              setCurrentScreenId(7);
+            } else {
+              // First time registration goes through onboarding flow
+              setCurrentScreenId(3);
+            }
+          }}
+          onResend={() => {
+            console.log("OTP Resent for rider:", authPhone);
           }}
           onBack={() => setCurrentScreenId(1)}
         />
@@ -472,7 +485,22 @@ export default function StandaloneRiderProductionApp() {
         />
       ),
     },
-    { id: 19, title: "19. Verification In-Progress Room", component: <Screen19VerificationPending onBack={() => setCurrentScreenId(6)} onProceedToAcademy={() => setCurrentScreenId(20)} /> },
+    {
+      id: 19,
+      title: "19. Verification In-Progress Room",
+      component: (
+        <Screen19VerificationPending
+          onBack={() => setCurrentScreenId(6)}
+          onProceedToAcademy={() => setCurrentScreenId(20)}
+          onRefresh={() => {
+            if (typeof window !== "undefined") window.location.reload();
+          }}
+          onChatFleet={() => {
+            if (typeof window !== "undefined") window.location.href = "tel:+919415099999";
+          }}
+        />
+      ),
+    },
 
     // Stage 2: Training & Daily Gate
     { id: 20, title: "20. Rider Training Academy & Quiz", component: <Screen20TrainingAcademy onBack={() => setCurrentScreenId(19)} onCompleteAcademy={() => setCurrentScreenId(27)} /> },
@@ -483,6 +511,9 @@ export default function StandaloneRiderProductionApp() {
         <Screen27MorningHelmetSelfie
           onBack={() => setCurrentScreenId(20)}
           onSelfieApproved={() => {
+            if (typeof window !== "undefined") {
+              localStorage.setItem("trustit_rider_onboarded", "true");
+            }
             workflow.setRider((prev) => ({ ...prev, is_verified: true, kyc_status: "approved" }));
             setCurrentScreenId(7);
           }}
@@ -535,13 +566,47 @@ export default function StandaloneRiderProductionApp() {
     // Stage 4: Radar, Siren & Batching
     { id: 10, title: "10. 30s Proximity Siren Radar", component: <Screen10Radar onAccept={() => { acceptOrder(); setCurrentScreenId(12); }} onDecline={() => { declineOrder(); setCurrentScreenId(7); }} /> },
     { id: 21, title: "21. Lockscreen High-Siren Order Pop", component: <Screen21LockscreenOrderPop onAccept={() => { acceptOrder(); setCurrentScreenId(12); }} onDecline={() => { declineOrder(); setCurrentScreenId(7); }} /> },
-    { id: 22, title: "22. 2-Order Same-Route Batch Radar", component: <Screen22MultiOrderBatch onAcceptBatch={() => { acceptOrder(); setCurrentScreenId(12); }} onDecline={() => { declineOrder(); setCurrentScreenId(7); }} /> },
+    {
+      id: 22,
+      title: "22. 2-Order Same-Route Batch Radar",
+      component: (
+        <Screen22MultiOrderBatch
+          onAcceptBatch={() => {
+            acceptOrder();
+            setCurrentScreenId(12);
+          }}
+          onAcceptSingle={() => {
+            acceptOrder();
+            setCurrentScreenId(12);
+          }}
+          onDecline={() => {
+            declineOrder();
+            setCurrentScreenId(7);
+          }}
+        />
+      ),
+    },
     { id: 11, title: "11. Slide to Accept Order", component: <Screen11SlideAccept onAccepted={() => { acceptOrder(); setCurrentScreenId(12); }} onBack={() => setCurrentScreenId(10)} /> },
 
     // Stage 5: Multi-Category Specialist Runs
     { id: 35, title: "35. Pharmacy Rx & Medical Verification", component: <Screen35PharmacyRxPickup onBack={() => setCurrentScreenId(12)} onConfirmPickup={() => { confirmPickup(); setCurrentScreenId(40); }} /> },
     { id: 36, title: "36. Heavy Grocery Crate & Weight Bonus", component: <Screen36HeavyGroceryCrate onBack={() => setCurrentScreenId(12)} onConfirmCratePickup={() => { confirmPickup(); setCurrentScreenId(40); }} /> },
-    { id: 37, title: "37. P2P Genie Courier (Dual-OTP)", component: <Screen37P2pGenieCourier onBack={() => setCurrentScreenId(12)} onProceedToDrop={() => { confirmPickup(); setCurrentScreenId(40); }} /> },
+    {
+      id: 37,
+      title: "37. P2P Genie Courier (Dual-OTP)",
+      component: (
+        <Screen37P2pGenieCourier
+          onBack={() => setCurrentScreenId(12)}
+          onVerifySenderOtp={(otp) => {
+            console.log("Sender OTP verified:", otp);
+          }}
+          onProceedToDrop={() => {
+            confirmPickup();
+            setCurrentScreenId(40);
+          }}
+        />
+      ),
+    },
     { id: 38, title: "38. Fragile Cake & Bakery Guard", component: <Screen38FragileCakeGuard onBack={() => setCurrentScreenId(12)} onConfirmCakePickup={() => { confirmPickup(); setCurrentScreenId(40); }} /> },
 
     // Stage 6: Store Pickup & Delays
@@ -553,6 +618,9 @@ export default function StandaloneRiderProductionApp() {
           onPickupConfirmed={() => { confirmPickup(); setCurrentScreenId(40); }}
           onBack={() => setCurrentScreenId(11)}
           onMerchantDelay={() => setCurrentScreenId(23)}
+          onCallShop={() => {
+            if (typeof window !== "undefined") window.location.href = "tel:+919415011111";
+          }}
         />
       ),
     },
@@ -577,7 +645,18 @@ export default function StandaloneRiderProductionApp() {
     { id: 41, title: "41. Last 100m Alleyway & Gate Rescue", component: <Screen41Last100mLandmark onBack={() => setCurrentScreenId(40)} onContinueNavigation={() => setCurrentScreenId(13)} /> },
     { id: 42, title: "42. Railway Halt & Dynamic Reroute", component: <Screen42TrafficReroute onBack={() => setCurrentScreenId(40)} onAcceptReroute={() => setCurrentScreenId(40)} onStayOnCurrentRoute={() => setCurrentScreenId(40)} /> },
     { id: 43, title: "43. Digital Fleet ID & Police Pass", component: <Screen43DigitalFleetIdPass riderProp={rider} onBack={() => setCurrentScreenId(18)} /> },
-    { id: 44, title: "44. In-App Masked Customer Chat", component: <Screen44InAppMaskedChat onBack={() => setCurrentScreenId(40)} /> },
+    {
+      id: 44,
+      title: "44. In-App Masked Customer Chat",
+      component: (
+        <Screen44InAppMaskedChat
+          onBack={() => setCurrentScreenId(40)}
+          onCallMasked={() => {
+            if (typeof window !== "undefined") window.location.href = "tel:+919876543210";
+          }}
+        />
+      ),
+    },
 
     // Stage 8: Doorstep Delivery & Rescues
     {
@@ -591,13 +670,58 @@ export default function StandaloneRiderProductionApp() {
           onDoorstepChangeRefund={() => setCurrentScreenId(45)}
           onCustomerUnreachable={() => setCurrentScreenId(24)}
           onContactlessPhotoPod={() => setCurrentScreenId(30)}
+          onCallMasked={() => {
+            if (typeof window !== "undefined") window.location.href = "tel:+919876543210";
+          }}
         />
       ),
     },
     { id: 14, title: "14. Dynamic Cashfree UPI QR (COD)", component: <Screen14DynamicQr onPaymentReceived={() => { completeDeliveryWithOtp("4492"); setCurrentScreenId(15); }} onBack={() => setCurrentScreenId(13)} /> },
-    { id: 24, title: "24. Customer Unreachable 5-Min Rescue", component: <Screen24CustomerUnreachable onBack={() => setCurrentScreenId(13)} onCompleteCancellation={() => setCurrentScreenId(15)} /> },
-    { id: 28, title: "28. Breakdown & Buddy Handover Desk", component: <Screen28BreakdownRescue onBack={() => setCurrentScreenId(13)} onHandoverComplete={() => setCurrentScreenId(15)} /> },
-    { id: 29, title: "29. Customer Refused (RTO Return Flow)", component: <Screen29CustomerRefusalRto onBack={() => setCurrentScreenId(13)} onConfirmMerchantReturn={() => setCurrentScreenId(15)} /> },
+    {
+      id: 24,
+      title: "24. Customer Unreachable 5-Min Rescue",
+      component: (
+        <Screen24CustomerUnreachable
+          onBack={() => setCurrentScreenId(13)}
+          onCallIvr={() => {
+            if (typeof window !== "undefined") window.location.href = "tel:+919876543210";
+          }}
+          onUploadGatePhoto={() => {
+            console.log("Customer gate photo recorded");
+          }}
+          onCompleteCancellation={() => setCurrentScreenId(15)}
+        />
+      ),
+    },
+    {
+      id: 28,
+      title: "28. Breakdown & Buddy Handover Desk",
+      component: (
+        <Screen28BreakdownRescue
+          onBack={() => setCurrentScreenId(13)}
+          onRequestBuddy={() => {
+            console.log("Nearest buddy rider pinged: Vikas Mishra");
+          }}
+          onCallBuddy={() => {
+            if (typeof window !== "undefined") window.location.href = "tel:+919450881200";
+          }}
+          onHandoverComplete={() => setCurrentScreenId(15)}
+        />
+      ),
+    },
+    {
+      id: 29,
+      title: "29. Customer Refused (RTO Return Flow)",
+      component: (
+        <Screen29CustomerRefusalRto
+          onBack={() => setCurrentScreenId(13)}
+          onInitiateReturn={() => {
+            console.log("RTO return initiated back to merchant");
+          }}
+          onConfirmMerchantReturn={() => setCurrentScreenId(15)}
+        />
+      ),
+    },
     { id: 30, title: "30. Contactless Photo POD Watermark", component: <Screen30ContactlessPhotoPod onBack={() => setCurrentScreenId(13)} onConfirmPod={() => { completeDeliveryWithOtp("4492"); setCurrentScreenId(15); }} /> },
 
     // Stage 9: Ground-Zero Dilemmas & Rescues
@@ -629,7 +753,7 @@ export default function StandaloneRiderProductionApp() {
         />
       ),
     },
-    { id: 48, title: "48. Critical Battery (<15%) Safe Mode", component: <Screen48LowBatterySafeMode onBack={() => setCurrentScreenId(40)} /> },
+    { id: 48, title: "48. Critical Battery (<15%) Safe Mode", component: <Screen48LowBatterySafeMode onBack={() => setCurrentScreenId(7)} batteryLevelProp={batteryLevel} /> },
 
     // Stage 10: Earnings, Remittance & Claims
     {
@@ -659,6 +783,11 @@ export default function StandaloneRiderProductionApp() {
           onPayViaUpi={() => remitCash()}
           cashDueProp={cashInHand}
           cashCeilingProp={cashCeiling}
+          onNavigateHub={(hubName) => {
+            if (typeof window !== "undefined") {
+              window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hubName + " Bahraich")}`, "_blank");
+            }
+          }}
         />
       ),
     },
@@ -674,10 +803,40 @@ export default function StandaloneRiderProductionApp() {
         />
       ),
     },
-    { id: 34, title: "34. Tier Badges & Refer ₹500", component: <Screen34ReferAndBadges onBack={() => setCurrentScreenId(18)} /> },
+    {
+      id: 34,
+      title: "34. Tier Badges & Refer ₹500",
+      component: (
+        <Screen34ReferAndBadges
+          onBack={() => setCurrentScreenId(18)}
+          onShareWhatsapp={() => {
+            if (typeof window !== "undefined") {
+              const text = encodeURIComponent(
+                "🛵 *Trustit Delivery Partner बनें — बहराइच (UP 40)*\n" +
+                "रोज़ाना ₹600-₹1,100 कमाएं। सीधे बैंक UPI में डेली पेआउट!\n" +
+                "रेफरल कोड: UP40RIDER\n" +
+                "रजिस्टर करें: " + window.location.origin + "/rider"
+              );
+              window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
+            }
+          }}
+        />
+      ),
+    },
 
     // Stage 11: Safety, Insurance & Profile
-    { id: 17, title: "17. Red 24x7 Safety SOS Shield", component: <Screen17SafetySos onBack={() => setCurrentScreenId(7)} /> },
+    {
+      id: 17,
+      title: "17. Red 24x7 Safety SOS Shield",
+      component: (
+        <Screen17SafetySos
+          onBack={() => setCurrentScreenId(7)}
+          onCallOps={() => {
+            if (typeof window !== "undefined") window.location.href = "tel:+919415099999";
+          }}
+        />
+      ),
+    },
     { id: 32, title: "32. Safe Driving Rules & Road Code", component: <Screen32AccidentInsurance onBack={() => setCurrentScreenId(18)} onConsentAccepted={() => setCurrentScreenId(7)} /> },
     {
       id: 18,
@@ -702,34 +861,47 @@ export default function StandaloneRiderProductionApp() {
   return (
     <div className="min-h-screen w-full bg-[#FAF8FF] text-[#0F172A] font-sans flex flex-col justify-between selection:bg-[#0D47A1] selection:text-white relative">
       
-      {/* ── Native Sticky Header & Hardware Telemetry Notch ── */}
-      <header className="sticky top-0 z-40 bg-slate-950 text-white px-3.5 py-2 flex items-center justify-between text-xs select-none shadow-md">
-        
-        {/* Left: Online Status & WakeLock Beacon */}
-        <div className="flex items-center gap-2">
-          <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? "bg-emerald-400 animate-ping" : "bg-slate-500"}`}></span>
-          <span className="font-black tracking-wide uppercase text-[11px]">
-            {isOnline ? "ONLINE DUTY" : "OFFLINE"}
+      {/* ── Minimalist Clean Header: ONLY Online/Offline Duty Dongle ── */}
+      <header className="sticky top-0 z-40 bg-slate-950 text-white px-3 py-1.5 flex items-center justify-between text-xs select-none shadow-md">
+        {/* Left: 1-Tap Duty Toggle Button (NO SLIDER) */}
+        <button
+          type="button"
+          onClick={() => {
+            // Check if rider is signed in
+            const isSignedIn =
+              Boolean(rider?.phone && rider.phone.replace(/\D/g, "").length >= 10) ||
+              (typeof window !== "undefined" &&
+                Boolean(localStorage.getItem("trustit_rider_session_token")));
+
+            if (!isSignedIn) {
+              setCurrentScreenId(1);
+              return;
+            }
+
+            const next = !isOnline;
+            if (next) {
+              riderAudio.playCashChime();
+            }
+            toggleDuty(next);
+          }}
+          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all active:scale-95 border shadow-sm ${
+            isOnline
+              ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400"
+              : "bg-slate-900 hover:bg-slate-800 text-rose-300 border-rose-500/50"
+          }`}
+          title="Tap to Toggle Duty"
+        >
+          <span
+            className={`w-2.5 h-2.5 rounded-full ${
+              isOnline ? "bg-white animate-ping" : "bg-rose-500"
+            }`}
+          ></span>
+          <span className="font-black text-xs tracking-wider uppercase">
+            {isOnline ? "DUTY ON" : "DUTY OFF"}
           </span>
-          {isWakeLockActive && (
-            <span className="hidden sm:inline-block text-[9px] px-1.5 py-0.2 rounded bg-blue-900/80 text-blue-300 font-mono" title="Screen WakeLock Active">
-              ☀️ Screen Awake
-            </span>
-          )}
-        </div>
+        </button>
 
-        {/* Center: Live GPS & Zone */}
-        <div className="text-center font-mono text-[10px]">
-          {gpsAccuracy ? (
-            <span className="text-emerald-400 font-bold">
-              GPS ±{gpsAccuracy}m · UP 40
-            </span>
-          ) : (
-            <span className="text-amber-400">GPS Syncing...</span>
-          )}
-        </div>
-
-        {/* Right: Sound, Cash Ceiling & Real Battery */}
+        {/* Right: Audio Siren */}
         <div className="flex items-center gap-2 font-mono text-[11px]">
           <button
             type="button"
@@ -739,190 +911,13 @@ export default function StandaloneRiderProductionApp() {
               if (next) riderAudio.playCashChime();
               else riderAudio.stopSiren();
             }}
-            className="text-xs hover:scale-110 transition"
+            className="p-1 px-1.5 rounded bg-white/10 hover:bg-white/20 text-xs transition"
             title="Toggle Loud Siren"
           >
             {soundEnabled ? "🔊" : "🔇"}
           </button>
-
-          {/* Real Device Battery Level */}
-          <span className={`flex items-center gap-0.5 ${batteryLevel <= 20 ? "text-red-400 font-bold animate-pulse" : "text-slate-300"}`}>
-            {isBatteryCharging ? "⚡" : "🔋"} {batteryLevel}%
-          </span>
-
-          {/* Quick Hub Drawer Toggle */}
-          <button
-            type="button"
-            onClick={() => setShowQuickHub(!showQuickHub)}
-            className="w-6 h-6 rounded-md bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs font-bold"
-            title="Fleet Stage Navigator"
-          >
-            ☰
-          </button>
         </div>
       </header>
-
-      {/* ── Live Silent Telemetry HUD Banner (No Full Page Reloads) ── */}
-      <div className="bg-[#040814] border-b border-emerald-950/60 px-3 py-1 flex items-center justify-between text-[11px] font-mono select-none">
-        <div className="flex items-center gap-2">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span className="text-emerald-400 font-bold text-[10px] tracking-tight">
-            📍 {gpsCoords.lat.toFixed(4)}° N, {gpsCoords.lng.toFixed(4)}° E
-          </span>
-          <span className="text-slate-400 text-[9px]">
-            (±{gpsAccuracy || 4.2}m)
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5 text-[10px]">
-          {telemetrySyncState === "syncing" ? (
-            <span className="text-amber-400 font-bold animate-pulse text-[9px]">📡 Syncing...</span>
-          ) : (
-            <span className="text-emerald-400 font-semibold text-[9px]">🟢 Synced ({lastSyncTime})</span>
-          )}
-        </div>
-      </div>
-
-      {/* ── Mobile 1-Tap Hardware Quick-Test Strip ── */}
-      <div className="bg-[#0B132B] border-b border-blue-900/60 px-3 py-1.5 flex items-center gap-1.5 overflow-x-auto no-scrollbar scrollbar-none [&::-webkit-scrollbar]:hidden text-[11px] font-bold z-30 shrink-0 select-none">
-        <span className="text-slate-400 text-[9px] uppercase tracking-wider shrink-0 mr-1">
-          1-Tap Test:
-        </span>
-        
-        {/* Reset as Brand New Rider Button */}
-        <button
-          type="button"
-          onClick={resetToNewRider}
-          className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-black shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
-          title="Reset completely to Screen 01 as a brand new rider"
-        >
-          <span>🆕 New Rider (S01)</span>
-        </button>
-
-        {/* 1-Tap Copy Link Button */}
-        <button
-          type="button"
-          onClick={() => {
-            const url = typeof window !== "undefined" ? window.location.href : "https://choices-crm-appropriations-reserve.trycloudflare.com/rider?v=3";
-            navigator.clipboard.writeText(url);
-            setCopiedLink(true);
-            setTimeout(() => setCopiedLink(false), 2500);
-          }}
-          className={`px-2.5 py-1 rounded-lg text-white font-black shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1 ${
-            copiedLink ? "bg-emerald-500 text-slate-950" : "bg-blue-600 hover:bg-blue-500"
-          }`}
-          title="1-Tap Copy Link to Clipboard"
-        >
-          <span>{copiedLink ? "✓ Copied!" : "📋 Copy Link"}</span>
-        </button>
-
-        {/* 1-Tap WhatsApp Share */}
-        <a
-          href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-            "Trustit Rider Partner App Live Link: " + (typeof window !== "undefined" ? window.location.href : "https://choices-crm-appropriations-reserve.trycloudflare.com/rider")
-          )}`}
-          target="_blank"
-          rel="noreferrer"
-          className="px-2.5 py-1 rounded-lg bg-[#25D366] hover:bg-[#20ba59] text-slate-950 font-black shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
-          title="Share via WhatsApp"
-        >
-          <span>💬 WhatsApp</span>
-        </a>
-
-        <button
-          type="button"
-          onClick={() => setCurrentScreenId(4)}
-          className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
-        >
-          <span>🤳 Selfie Cam (S04)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setCurrentScreenId(27)}
-          className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
-        >
-          <span>🪖 Helmet Check (S27)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            triggerIncomingOrderRadar(false);
-            setCurrentScreenId(10);
-          }}
-          className="px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
-        >
-          <span>🚨 Loud Siren (S10)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setCurrentScreenId(40)}
-          className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
-        >
-          <span>🗺️ GPS HUD (S40)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setCurrentScreenId(13)}
-          className="px-2.5 py-1 rounded-lg bg-teal-600 hover:bg-teal-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
-        >
-          <span>🚪 Doorstep OTP (S13)</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setCurrentScreenId(15)}
-          className="px-2.5 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white shrink-0 active:scale-95 transition shadow-xs flex items-center gap-1"
-        >
-          <span>💰 Passbook (S15)</span>
-        </button>
-      </div>
-
-      {/* ── Native PWA Install Banner ── */}
-      {showInstallBanner && (
-        <div className="bg-gradient-to-r from-blue-900 to-indigo-950 text-white px-4 py-2 flex items-center justify-between text-xs shadow-md z-30">
-          <div className="flex items-center gap-2">
-            <span className="text-base">📲</span>
-            <div>
-              <strong className="block text-[11px] leading-tight">Install Trustit Rider Partner App</strong>
-              <span className="text-[9px] text-blue-300">Fast 1-tap launch from your Android home screen</span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleInstallPwa}
-              className="py-1 px-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[10px] shadow"
-            >
-              Install App
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowInstallBanner(false)}
-              className="text-slate-400 hover:text-white text-xs"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Notification & Siren Permission Banner ── */}
-      {notificationPermission !== "granted" && (
-        <div className="bg-slate-900 text-slate-200 border-b border-slate-800 px-4 py-1.5 flex items-center justify-between text-[11px] z-30">
-          <span className="flex items-center gap-1.5 text-[10px]">
-            <span>🔔</span>
-            <span>Enable background sirens when phone is locked?</span>
-          </span>
-          <button
-            type="button"
-            onClick={handleRequestNotification}
-            className="py-0.5 px-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded"
-          >
-            Enable Siren ➔
-          </button>
-        </div>
-      )}
 
       {/* ── Offline Dead-Zone Warning Banner ── */}
       {isOffline && (
@@ -932,36 +927,48 @@ export default function StandaloneRiderProductionApp() {
         </div>
       )}
 
-      {/* ── Collapsible Fleet Hub Drawer (Quick Access on Mobile) ── */}
-      {showQuickHub && (
-        <div className="bg-slate-900/95 backdrop-blur-md text-white border-b border-slate-800 p-3 z-30 space-y-2 animate-in slide-in-from-top duration-200">
-          <div className="flex items-center justify-between text-xs pb-1 border-b border-slate-800">
-            <span className="font-bold text-slate-400 uppercase text-[10px]">Quick Stage Navigator:</span>
-            <button type="button" onClick={() => setShowQuickHub(false)} className="text-slate-400 hover:text-white font-bold">✕ Close</button>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 text-[10px] font-bold">
-            <button onClick={() => { setCurrentScreenId(7); setShowQuickHub(false); }} className="p-2 rounded-lg bg-blue-900/60 text-blue-200 border border-blue-700/50 text-center">🛵 Cockpit</button>
-            <button onClick={() => { triggerIncomingOrderRadar(false); setShowQuickHub(false); }} className="p-2 rounded-lg bg-amber-900/60 text-amber-200 border border-amber-700/50 text-center">🚨 Siren Radar</button>
-            <button onClick={() => { setCurrentScreenId(12); setShowQuickHub(false); }} className="p-2 rounded-lg bg-cyan-900/60 text-cyan-200 border border-cyan-700/50 text-center">🏪 Store</button>
-            <button onClick={() => { setCurrentScreenId(40); setShowQuickHub(false); }} className="p-2 rounded-lg bg-emerald-900/60 text-emerald-200 border border-emerald-700/50 text-center">🗺️ Live GPS</button>
-            <button onClick={() => { setCurrentScreenId(13); setShowQuickHub(false); }} className="p-2 rounded-lg bg-teal-900/60 text-teal-200 border border-teal-700/50 text-center">🚪 Doorstep</button>
-            <button onClick={() => { setCurrentScreenId(15); setShowQuickHub(false); }} className="p-2 rounded-lg bg-emerald-900/60 text-emerald-300 border border-emerald-700/50 text-center">💰 Passbook</button>
-          </div>
-        </div>
-      )}
-
       {/* ── Active Production Screen Viewport (Full Bleed Mobile) ── */}
       <main
-        className="flex-1 w-full max-w-md mx-auto overflow-y-auto no-scrollbar scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col justify-between"
+        className="flex-1 w-full max-w-md mx-auto overflow-y-auto no-scrollbar scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col justify-between pb-16"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {activeScreenObj.component}
       </main>
 
-      {/* ── 5 Permanent Mobile Bottom Navigation Tabs ── */}
+      {/* ── 5 Permanent Mobile Bottom Navigation Tabs (Center Elevated Cockpit Hero) ── */}
       <nav className="sticky bottom-0 bg-white border-t border-slate-200 px-1 py-1 grid grid-cols-5 text-center shadow-lg z-30">
         {tabConfigs.map((tab) => {
           const isTabActive = activeTab === tab.key;
+          const isCockpit = tab.key === "cockpit";
+
+          if (isCockpit) {
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => handleTabClick(tab.key)}
+                className="relative -mt-4 flex flex-col items-center justify-center group focus:outline-none"
+              >
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 border-2 ${
+                    isTabActive
+                      ? "bg-[#0D47A1] text-white border-white ring-2 ring-[#0D47A1]/30"
+                      : "bg-[#0D47A1] text-white border-white"
+                  }`}
+                >
+                  <span className="text-xl leading-none">🛵</span>
+                </div>
+                <span
+                  className={`text-[9px] mt-0.5 block truncate max-w-full ${
+                    isTabActive ? "font-black text-[#0D47A1]" : "font-semibold text-slate-600"
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </button>
+            );
+          }
+
           return (
             <button
               key={tab.key}

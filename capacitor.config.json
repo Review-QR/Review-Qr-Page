@@ -1,19 +1,18 @@
 {
   "appId": "com.trustit.partner",
   "appName": "Trustit Partner",
-  "webDir": "public",
-  "server": {
-    "url": "https://trustitreview.com/partner",
-    "cleartext": true
-  },
+  "webDir": "android-embedded-bundle",
   "android": {
     "allowMixedContent": true,
     "captureInput": true,
     "backgroundColor": "#7C2D12"
   },
   "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    },
     "SplashScreen": {
-      "launchShowDuration": 2200,
+      "launchShowDuration": 1200,
       "launchAutoHide": true,
       "backgroundColor": "#7C2D12",
       "androidSplashResourceName": "splash",

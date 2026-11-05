@@ -6,12 +6,16 @@ interface Screen28Props {
   onBack?: () => void;
   onRequestBuddy?: () => void;
   onHandoverComplete?: () => void;
+  onCallBuddy?: () => void;
+  buddyPhone?: string;
 }
 
 export default function Screen28BreakdownRescue({
   onBack,
   onRequestBuddy,
   onHandoverComplete,
+  onCallBuddy,
+  buddyPhone = "+919450881200",
 }: Screen28Props) {
   const [breakdownType, setBreakdownType] = useState<"puncture" | "chain_engine" | "accident">("puncture");
   const [buddyAssigned, setBuddyAssigned] = useState<boolean>(true);
@@ -121,7 +125,11 @@ export default function Screen28BreakdownRescue({
               </div>
               <button
                 type="button"
-                className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold"
+                onClick={() => {
+                  if (onCallBuddy) onCallBuddy();
+                  else if (typeof window !== "undefined") window.location.href = `tel:${buddyPhone}`;
+                }}
+                className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 text-xs font-bold hover:bg-slate-200 active:scale-95 transition-all"
               >
                 📞 Call
               </button>

@@ -1,10 +1,10 @@
 {
   "businessId": "m_9118643415_6364",
-  "storeName": "Asirwad genral",
-  "ownerName": "deepakm",
+  "storeName": "Balaji Express Branch (5270)",
+  "ownerName": "Aman Sharma",
   "businessCategory": "kirana",
   "phone": "+919118643415",
-  "address": "Asirwad genral, Bahraich",
+  "address": "Civil Lines, Near Indira Gandhi Stadium, Bahraich",
   "city": "Bahraich",
   "isStoreOnline": true,
   "latitude": 27.5744,
@@ -13,15 +13,77 @@
   "openingTime": "08:00 AM",
   "closingTime": "10:30 PM",
   "isFestivalMode": false,
-  "isLunchPause": false,
+  "isLunchPause": true,
   "googlePlaceId": "ChIJ_TrustitShriBalajiBahraich",
   "reviewShortLink": "https://trustitreview.com/r/m_9118643415_0601",
   "smartGatingMinStars": 4,
+  "logoUrl": "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=200",
+  "cashierPin": "1234",
+  "twoFactorEnabled": true,
+  "loginAlerts": true,
+  "printerSettings": {
+    "paperSize": "58mm",
+    "connectionType": "bluetooth",
+    "autoCut": true
+  },
+  "branches": [
+    {
+      "id": "branch_1",
+      "name": "Asirwad genral (Main Hub)",
+      "locality": "Civil Lines, Bahraich",
+      "idCode": "QR-77837892",
+      "active": false,
+      "pendingOrders": 3,
+      "revenueToday": "₹2,840"
+    },
+    {
+      "id": "branch_2",
+      "name": "Asirwad genral (Station Road Branch)",
+      "locality": "Railway Station Road, Bahraich",
+      "idCode": "QR-90412850",
+      "active": false,
+      "pendingOrders": 0,
+      "revenueToday": "₹1,420"
+    },
+    {
+      "id": "branch_1793824445288",
+      "name": "Balaji Express Branch (5270)",
+      "locality": "Nanpara Bypass, Bahraich",
+      "phone": "9118643415",
+      "idCode": "QR-13282381",
+      "active": true,
+      "pendingOrders": 0,
+      "revenueToday": "₹0"
+    }
+  ],
+  "staffList": [
+    {
+      "name": "deepakm",
+      "role": "Owner (Admin)",
+      "phone": "+91 91186 43415",
+      "access": "Full Master Access",
+      "badge": "bg-purple-100 text-purple-900"
+    },
+    {
+      "name": "Ramesh Kumar",
+      "role": "Counter Cashier",
+      "phone": "+91 94501 23456",
+      "access": "Live Orders & Menu Only",
+      "badge": "bg-blue-100 text-blue-900"
+    },
+    {
+      "name": "Chef Dinesh",
+      "role": "Kitchen Master",
+      "phone": "+91 87654 32109",
+      "access": "KOT Screen Only",
+      "badge": "bg-amber-100 text-amber-900"
+    }
+  ],
   "bankAccount": {
     "accountNumberMask": "•••• •••• 4091",
     "ifsc": "SBIN0000024",
     "holderName": "Shri Balaji Daily Needs",
     "isVerified": true
   },
-  "lastUpdatedAt": "2026-11-04T11:49:51.530Z"
+  "lastUpdatedAt": "2026-11-04T20:34:05.427Z"
 }

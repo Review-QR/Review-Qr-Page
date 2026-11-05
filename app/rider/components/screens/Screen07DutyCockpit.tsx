@@ -47,60 +47,15 @@ export default function Screen07DutyCockpit({
   remoteConfig,
 }: Screen07Props) {
   const [isOnline, setIsOnline] = useState(isOnlineProp);
-  const [dragProgress, setDragProgress] = useState(isOnlineProp ? 1 : 0);
-  const [isDragging, setIsDragging] = useState(false);
-  const sliderTrackRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setIsOnline(isOnlineProp);
-    setDragProgress(isOnlineProp ? 1 : 0);
   }, [isOnlineProp]);
 
-  // Handle Touch/Pointer Dragging for Zomato & Blinkit Slide Gesture
-  const handlePointerDown = (e: React.PointerEvent) => {
-    setIsDragging(true);
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging || !sliderTrackRef.current) return;
-    const rect = sliderTrackRef.current.getBoundingClientRect();
-    const trackWidth = rect.width - 44; // minus thumb width
-    const currentX = e.clientX - rect.left - 22;
-    const progress = Math.max(0, Math.min(1, currentX / trackWidth));
-    setDragProgress(progress);
-  };
-
-  const handlePointerUp = (e: React.PointerEvent) => {
-    if (!isDragging) return;
-    setIsDragging(false);
-    try {
-      (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-    } catch {
-      // ignore
-    }
-
-    // If dragged more than 50% to the right -> Go Online!
-    if (!isOnline && dragProgress > 0.5) {
-      setIsOnline(true);
-      setDragProgress(1);
-      riderAudio.playCashChime();
-      onGoOnline?.(true);
-    } else if (isOnline && dragProgress < 0.5) {
-      setIsOnline(false);
-      setDragProgress(0);
-      onGoOnline?.(false);
-    } else {
-      // Snap back to current state
-      setDragProgress(isOnline ? 1 : 0);
-    }
-  };
-
-  // Quick 1-tap fallback toggle
+  // Direct 1-tap Duty Toggle
   const toggleDutyTap = () => {
     const next = !isOnline;
     setIsOnline(next);
-    setDragProgress(next ? 1 : 0);
     if (next) riderAudio.playCashChime();
     onGoOnline?.(next);
   };
@@ -118,9 +73,9 @@ export default function Screen07DutyCockpit({
     .toUpperCase() || "TP";
 
   return (
-    <div className="w-full h-full max-h-[600px] bg-[#FAF8FF] flex flex-col justify-between p-3.5 text-[#0F172A] font-sans select-none overflow-hidden">
-      <div className="space-y-2">
-        {/* Top Rider Cockpit Header (Blinkit & Zomato Dark Store Style) */}
+    <div className="w-full flex-1 bg-[#FAF8FF] flex flex-col justify-between p-3.5 text-[#0F172A] font-sans select-none pb-4">
+      <div className="space-y-2.5">
+        {/* Top Rider Cockpit Header */}
         <div className="flex items-center justify-between pb-2 border-b border-slate-200">
           <div className="flex items-center gap-2">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#0D47A1] to-[#1565C0] text-white flex items-center justify-center font-black text-xs shadow-2xs overflow-hidden shrink-0">
@@ -145,76 +100,43 @@ export default function Screen07DutyCockpit({
             className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider transition ${
               isOnline
                 ? "bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-2xs"
-                : "bg-slate-200 text-slate-600"
+                : "bg-rose-100 text-rose-800 border border-rose-200"
             }`}
           >
-            {isOnline ? "🟢 ONLINE DUTY" : "OFF DUTY"}
+            {isOnline ? "🟢 ON DUTY" : "🔴 OFF DUTY"}
           </span>
         </div>
 
-        {/* 1. ZOMATO & BLINKIT SIGNATURE SWIPE-TO-GO-ONLINE SLIDER */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-1.5 shadow-2xs">
-          <div
-            ref={sliderTrackRef}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            className={`relative w-full h-11 rounded-xl overflow-hidden flex items-center px-1 select-none cursor-pointer transition-colors duration-300 ${
-              isOnline
-                ? "bg-emerald-50 border border-emerald-300 shadow-inner"
-                : "bg-slate-100 border border-slate-200"
-            }`}
-          >
-            {/* Fluid Active Track Background */}
-            <div
-              className={`absolute left-0 top-0 bottom-0 transition-all ${
-                isDragging ? "duration-75" : "duration-300"
-              } ${isOnline ? "bg-emerald-500 opacity-20" : "bg-blue-600 opacity-15"}`}
-              style={{ width: `${Math.max(12, dragProgress * 100)}%` }}
-            ></div>
-
-            {/* Centered Instructional Typography */}
-            <div className="w-full text-center pointer-events-none z-10">
+        {/* 1. COMPACT SLEEK 1-TAP DUTY DONGLE */}
+        <div
+          className={`border rounded-xl p-2.5 shadow-2xs transition-all ${
+            isOnline
+              ? "bg-emerald-950/20 border-emerald-500/40"
+              : "bg-white border-slate-200"
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <span
-                className={`text-[10px] font-black tracking-wider uppercase flex items-center justify-center gap-1 ${
-                  isOnline ? "text-emerald-800" : "text-slate-500"
+                className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                  isOnline ? "bg-emerald-500 animate-ping" : "bg-rose-500"
                 }`}
-              >
-                {isOnline ? (
-                  <>
-                    <span>🟢 ON DUTY</span>
-                    <span className="text-[9px] font-medium text-emerald-600">(Slide left to go offline)</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="animate-pulse">👉</span>
-                    <span>Slide to Go Online (ड्यूटी ऑन करें)</span>
-                    <span className="animate-pulse">➔➔</span>
-                  </>
-                )}
-              </span>
+              ></span>
+              <strong className="text-xs font-black text-slate-900 leading-tight">
+                {isOnline ? "DUTY ON · Active for Orders" : "DUTY OFF · Offline"}
+              </strong>
             </div>
 
-            {/* Draggable Haptic Thumb Handle */}
             <button
               type="button"
               onClick={toggleDutyTap}
-              className={`absolute z-20 w-9 h-9 rounded-lg flex items-center justify-center font-black text-xs shadow-md transition-all ${
-                isDragging ? "duration-75" : "duration-300"
-              } ${
+              className={`px-3 py-1 rounded-full font-black text-[11px] transition-all active:scale-95 shadow-2xs flex items-center gap-1.5 ${
                 isOnline
-                  ? "bg-emerald-600 text-white shadow-emerald-600/30 active:scale-95"
-                  : "bg-[#0D47A1] text-white shadow-blue-900/30 active:scale-95"
+                  ? "bg-rose-600 hover:bg-rose-700 text-white"
+                  : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/30"
               }`}
-              style={{
-                left: sliderTrackRef.current
-                  ? `${dragProgress * (sliderTrackRef.current.clientWidth - 44) + 4}px`
-                  : isOnline
-                  ? "calc(100% - 40px)"
-                  : "4px",
-              }}
             >
-              {isOnline ? "✓" : "➔"}
+              <span>{isOnline ? "🛑 Go Offline" : "⚡ Go Online"}</span>
             </button>
           </div>
         </div>
@@ -328,35 +250,7 @@ export default function Screen07DutyCockpit({
               Listening for incoming dispatches across Bahraich food &amp; grocery hubs.
             </p>
           </div>
-
-          <button
-            type="button"
-            onClick={onOpenRadar}
-            className="w-full py-2 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black text-xs flex items-center justify-center gap-1.5 shadow-2xs transition active:scale-[0.99]"
-          >
-            <span>⚡ Test 30s Incoming Order Radar (🚨 Siren)</span>
-          </button>
         </div>
-      </div>
-
-      {/* Docked 4-Tab Bottom Bar (Blinkit Micro-Tab Bar) */}
-      <div className="pt-2 border-t border-slate-200 flex items-center justify-around text-[10px] font-bold text-slate-500 bg-[#FAF8FF]">
-        <span className="text-[#0D47A1] font-black flex items-center gap-1">
-          <span>🛵</span>
-          <span>Cockpit</span>
-        </span>
-        <button type="button" onClick={onOpenPassbook} className="hover:text-slate-900 flex items-center gap-1">
-          <span>💰</span>
-          <span>Passbook</span>
-        </button>
-        <button type="button" onClick={onOpenScorecard} className="hover:text-slate-900 flex items-center gap-1">
-          <span>📊</span>
-          <span>Scorecard</span>
-        </button>
-        <button type="button" onClick={onOpenProfile} className="hover:text-slate-900 flex items-center gap-1">
-          <span>👤</span>
-          <span>Profile</span>
-        </button>
       </div>
     </div>
   );

@@ -30,11 +30,40 @@ export interface MerchantRemoteConfig {
   googlePlaceId: string;
   reviewShortLink: string;
   smartGatingMinStars: number;
+  logoUrl?: string;
+  cashierPin?: string;
+  twoFactorEnabled?: boolean;
+  loginAlerts?: boolean;
+  printerSettings?: {
+    connectionType: "bluetooth" | "usb";
+    paperSize: "58mm" | "80mm";
+    autoCut: boolean;
+  };
+  branches?: Array<{
+    id: string;
+    name: string;
+    locality: string;
+    phone?: string;
+    idCode: string;
+    active: boolean;
+    pendingOrders: number;
+    revenueToday: string;
+  }>;
+  staffList?: Array<{
+    name: string;
+    role: string;
+    phone: string;
+    access: string;
+    badge: string;
+  }>;
   bankAccount: {
     accountNumberMask: string;
     ifsc: string;
     holderName: string;
     isVerified: boolean;
+    verifiedLive?: boolean;
+    utr?: string;
+    updatedAt?: string;
   };
   lastUpdatedAt: string;
 }
@@ -58,6 +87,40 @@ const DEFAULT_CONFIG: MerchantRemoteConfig = {
   googlePlaceId: "ChIJ_TrustitShriBalajiBahraich",
   reviewShortLink: "https://trustitreview.com/r/m_9118643415_0601",
   smartGatingMinStars: 4,
+  logoUrl: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=200&auto=format&fit=crop&q=80",
+  cashierPin: "1234",
+  twoFactorEnabled: true,
+  loginAlerts: true,
+  printerSettings: {
+    connectionType: "bluetooth",
+    paperSize: "80mm",
+    autoCut: true,
+  },
+  branches: [
+    {
+      id: "branch_1",
+      name: "Shri Balaji Daily Needs (Main Hub)",
+      locality: "Civil Lines / KDC Road, Bahraich",
+      idCode: "QR-77837892",
+      active: true,
+      pendingOrders: 3,
+      revenueToday: "₹2,840",
+    },
+    {
+      id: "branch_2",
+      name: "Shri Balaji Express (Branch 2)",
+      locality: "Medical College Road, Bahraich",
+      idCode: "QR-90412850",
+      active: false,
+      pendingOrders: 0,
+      revenueToday: "₹1,420",
+    },
+  ],
+  staffList: [
+    { name: "Aman Sharma", role: "Owner (Admin)", phone: "+91 91186 43415", access: "Full Master Access", badge: "bg-purple-100 text-purple-900" },
+    { name: "Ramesh Kumar", role: "Counter Cashier", phone: "+91 94501 23456", access: "Live Orders & Menu Only", badge: "bg-blue-100 text-blue-900" },
+    { name: "Chef Dinesh", role: "Kitchen Master", phone: "+91 87654 32109", access: "KOT Screen Only", badge: "bg-amber-100 text-amber-900" },
+  ],
   bankAccount: {
     accountNumberMask: "•••• •••• 4512",
     ifsc: "SBIN0000024",

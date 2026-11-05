@@ -61,7 +61,7 @@ export default function Screen01AuthStart({ onContinue, onGoogleLogin }: Screen0
   };
 
   return (
-    <div className="w-full h-full max-h-[600px] bg-[#FAF8FF] flex flex-col justify-between p-3.5 text-[#0F172A] font-sans select-none overflow-hidden relative">
+    <div className="w-full flex-1 bg-[#FAF8FF] flex flex-col justify-between p-3.5 text-[#0F172A] font-sans select-none relative min-h-[520px]">
       <div>
         {/* Top Brand Header */}
         <div className="flex items-center justify-between pb-2 border-b border-slate-200">

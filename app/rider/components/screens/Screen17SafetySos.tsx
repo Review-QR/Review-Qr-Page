@@ -4,9 +4,10 @@ import React, { useState, useRef } from "react";
 
 interface Screen17Props {
   onBack?: () => void;
+  onCallOps?: () => void;
 }
 
-export default function Screen17SafetySos({ onBack }: Screen17Props) {
+export default function Screen17SafetySos({ onBack, onCallOps }: Screen17Props) {
   const [holding, setHolding] = useState(false);
   const [triggered, setTriggered] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -107,7 +108,14 @@ export default function Screen17SafetySos({ onBack }: Screen17Props) {
                 <span className="text-[10px] text-slate-500">Bahraich Ops Desk · Real-time monitoring</span>
               </div>
             </div>
-            <button className="text-xs font-bold text-[#0D47A1] bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+            <button
+              type="button"
+              onClick={() => {
+                if (onCallOps) onCallOps();
+                else if (typeof window !== "undefined") window.location.href = "tel:+919415099999";
+              }}
+              className="text-xs font-bold text-[#0D47A1] bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200 hover:bg-blue-100 active:scale-95 transition-all"
+            >
               Call Ops
             </button>
           </div>

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { formatDisplayOrderNumber, formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
 import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
 import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotificationBanner";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 type CashfreeCheckoutSdk = (options: { mode: "sandbox" | "production" }) => {
   checkout: (options: {
@@ -199,17 +200,241 @@ type ActiveParchaOrder = {
   };
 };
 
+export const DEFAULT_BAHRAICH_BUSINESSES: SuperAppBusiness[] = [
+  {
+    id: "biz-awadh-biryani",
+    name: "Awadh Biryani & Family Restaurant",
+    city: "Bahraich",
+    type: "Restaurant",
+    address: "Civil Lines, Near Dist Hospital, Bahraich",
+    phone: "9415091234",
+    location_latitude: 27.5744,
+    location_longitude: 81.5977,
+  },
+  {
+    id: "biz-brijwasi-sweets",
+    name: "Brijwasi Sweets & Bakers",
+    city: "Bahraich",
+    type: "Bakery",
+    address: "Chowk Bazar, Bahraich",
+    phone: "9415091235",
+    location_latitude: 27.5765,
+    location_longitude: 81.6012,
+  },
+  {
+    id: "biz-gupta-kirana",
+    name: "Gupta Kirana & Supermart",
+    city: "Bahraich",
+    type: "Retail",
+    address: "Ghanta Ghar, Main Market, Bahraich",
+    phone: "9415091236",
+    location_latitude: 27.5732,
+    location_longitude: 81.5955,
+  },
+  {
+    id: "biz-star-chemist",
+    name: "Star Chemist & Healthcare",
+    city: "Bahraich",
+    type: "Chemist",
+    address: "Medical College Road, Bahraich",
+    phone: "9415091237",
+    location_latitude: 27.5755,
+    location_longitude: 81.5988,
+  },
+  {
+    id: "biz-classic-salon",
+    name: "Classic Men's & Women's Salon",
+    city: "Bahraich",
+    type: "Salon",
+    address: "Station Road, Bahraich",
+    phone: "9415091238",
+    location_latitude: 27.5718,
+    location_longitude: 81.6033,
+  },
+  {
+    id: "biz-express-carwash",
+    name: "Express Car Wash & Detailing Spa",
+    city: "Bahraich",
+    type: "Car Wash",
+    address: "Lucknow Road Bypass, Bahraich",
+    phone: "9415091239",
+    location_latitude: 27.5689,
+    location_longitude: 81.6055,
+  },
+];
+
+export const DEFAULT_BAHRAICH_ITEMS: SuperAppCatalogItem[] = [
+  {
+    id: "item-awadh-1",
+    business_id: "biz-awadh-biryani",
+    name: "Special Dum Handi Veg Biryani",
+    category: "Biryani & Rice",
+    price: 140,
+    item_type: "veg",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop&q=80",
+    description: "Fragrant basmati rice cooked with fresh farm vegetables and Awadhi aromatic spices.",
+  },
+  {
+    id: "item-awadh-2",
+    business_id: "biz-awadh-biryani",
+    name: "Hyderabadi Chicken Dum Biryani",
+    category: "Biryani & Rice",
+    price: 220,
+    item_type: "non_veg",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&auto=format&fit=crop&q=80",
+    description: "Tender chicken marinated overnight in rich spices and steamed with long grain basmati rice.",
+  },
+  {
+    id: "item-awadh-3",
+    business_id: "biz-awadh-biryani",
+    name: "Paneer Butter Masala (Desi Ghee)",
+    category: "Main Course",
+    price: 180,
+    item_type: "veg",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=300&auto=format&fit=crop&q=80",
+    description: "Cottage cheese cubes tossed in rich velvety tomato makhani gravy.",
+  },
+  {
+    id: "item-brij-1",
+    business_id: "biz-brijwasi-sweets",
+    name: "Hot Gulab Jamun (Desi Ghee, 2 Pcs)",
+    category: "Sweets & Mithai",
+    price: 60,
+    item_type: "veg",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=300&auto=format&fit=crop&q=80",
+    description: "Melt-in-mouth hot gulab jamun soaked in saffron sugar syrup.",
+  },
+  {
+    id: "item-brij-2",
+    business_id: "biz-brijwasi-sweets",
+    name: "Kaju Katli Special (250g Box)",
+    category: "Sweets & Mithai",
+    price: 260,
+    item_type: "veg",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=300&auto=format&fit=crop&q=80",
+    description: "Premium diamond-cut cashew fudge made with real silver vark.",
+  },
+  {
+    id: "item-brij-3",
+    business_id: "biz-brijwasi-sweets",
+    name: "Special Malai Lassi Kulhad (300ml)",
+    category: "Dairy & Beverages",
+    price: 50,
+    item_type: "veg",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&auto=format&fit=crop&q=80",
+    description: "Chilled creamy curd lassi topped with thick rabdi and dry fruits in earthen kulhad.",
+  },
+  {
+    id: "item-gupta-1",
+    business_id: "biz-gupta-kirana",
+    name: "Fortune Chakki Fresh Atta (5 kg)",
+    category: "Flours & Grains",
+    price: 215,
+    item_type: "product",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&auto=format&fit=crop&q=80",
+    description: "100% whole wheat chakki fresh flour for soft rotis.",
+  },
+  {
+    id: "item-gupta-2",
+    business_id: "biz-gupta-kirana",
+    name: "Mustard Oil Pouch (1 Litre)",
+    category: "Cooking Oils",
+    price: 165,
+    item_type: "product",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&auto=format&fit=crop&q=80",
+    description: "Cold pressed kachhi ghani mustard oil for authentic Indian cooking.",
+  },
+  {
+    id: "item-chemist-1",
+    business_id: "biz-star-chemist",
+    name: "Dolo 650mg Paracetamol Strip (15 Tabs)",
+    category: "Medicines & Relief",
+    price: 32,
+    item_type: "product",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=80",
+    description: "Fever and mild to moderate pain relief tablets.",
+  },
+  {
+    id: "item-salon-1",
+    business_id: "biz-classic-salon",
+    name: "Haircut, Styling & Beard Grooming",
+    category: "Grooming & Styling",
+    price: 150,
+    item_type: "service",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&auto=format&fit=crop&q=80",
+    description: "Executive hair trim, hot towel head wash, beard contouring & splash cologne.",
+  },
+  {
+    id: "item-wash-1",
+    business_id: "biz-express-carwash",
+    name: "Snow Foam Pressure Car Wash",
+    category: "Auto Wash Packages",
+    price: 350,
+    item_type: "service",
+    is_available: true,
+    image_url: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=300&auto=format&fit=crop&q=80",
+    description: "Exterior high-pressure underbody rinse, active pH snow foam wash, tyre polish and interior vacuuming.",
+  },
+];
+
 export default function CustomerSuperAppClient({
-  businesses,
-  catalogItems,
+  businesses: propBusinesses,
+  catalogItems: propCatalogItems,
   initialSearchQuery = "",
   initialStoreName = "",
 }: {
-  businesses: SuperAppBusiness[];
-  catalogItems: SuperAppCatalogItem[];
+  businesses?: SuperAppBusiness[];
+  catalogItems?: SuperAppCatalogItem[];
   initialSearchQuery?: string;
   initialStoreName?: string;
 }) {
+  const [businesses, setBusinesses] = useState<SuperAppBusiness[]>(
+    propBusinesses && propBusinesses.length > 0 ? propBusinesses : DEFAULT_BAHRAICH_BUSINESSES
+  );
+  const [catalogItems, setCatalogItems] = useState<SuperAppCatalogItem[]>(
+    propCatalogItems && propCatalogItems.length > 0 ? propCatalogItems : DEFAULT_BAHRAICH_ITEMS
+  );
+
+  // Sync state if props change
+  useEffect(() => {
+    if (propBusinesses && propBusinesses.length > 0) {
+      setBusinesses(propBusinesses);
+    }
+  }, [propBusinesses]);
+
+  useEffect(() => {
+    if (propCatalogItems && propCatalogItems.length > 0) {
+      setCatalogItems(propCatalogItems);
+    }
+  }, [propCatalogItems]);
+
+  // Background Cloud Sync (Silent live update via native socket engine)
+  useEffect(() => {
+    fetch("/api/hyperlocal/businesses")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success) {
+          if (Array.isArray(data.businesses) && data.businesses.length > 0) {
+            setBusinesses(data.businesses);
+          }
+          if (Array.isArray(data.catalogItems) && data.catalogItems.length > 0) {
+            setCatalogItems(data.catalogItems);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Navigation & Category Tab
   const [activeTab, setActiveTab] = useState<"food" | "dairy" | "kirana" | "medical" | "car_wash" | "salon">("food");
   const [selectedCity, setSelectedCity] = useState<string>("Bahraich");
@@ -960,29 +1185,23 @@ export default function CustomerSuperAppClient({
     }
   }, [customerPhone]);
 
-  // GPS auto-detect for delivery address
-  const handleDetectGps = () => {
-    if (!navigator.geolocation) {
-      alert("GPS not supported on this device.");
-      return;
-    }
+  // GPS auto-detect for delivery address (Native Android Fused GPS + Geocoder with fallback)
+  const handleDetectGps = async () => {
     setIsDetectingGps(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setIsDetectingGps(false);
-        setAddrDistrict("Bahraich");
-        if (!addrPincode) setAddrPincode("271801");
-        const detectedMohalla = addrMohalla || "Civil Lines / Chowk Area";
-        setAddrMohalla(detectedMohalla);
-        const auto = buildAddressString(addrHouseNo, detectedMohalla, addrRoad, addrPincode || "271801", "Bahraich");
-        setCustomerAddress(auto);
-      },
-      () => {
-        setIsDetectingGps(false);
-        alert("GPS location permission denied or timed out.");
-      },
-      { timeout: 8000 },
-    );
+    try {
+      const loc = await TrustitNative.getPreciseLocation();
+      setIsDetectingGps(false);
+      setAddrDistrict(loc.city || "Bahraich");
+      if (!addrPincode || addrPincode === "271801") setAddrPincode(loc.pincode || "271801");
+      const detectedMohalla = loc.mohalla || addrMohalla || "Civil Lines";
+      setAddrMohalla(detectedMohalla);
+      const auto = loc.address || buildAddressString(addrHouseNo, detectedMohalla, addrRoad, loc.pincode || "271801", loc.city || "Bahraich");
+      setCustomerAddress(auto);
+      TrustitNative.playHapticFeedback("click");
+    } catch {
+      setIsDetectingGps(false);
+      alert("GPS location permission denied or timed out.");
+    }
   };
 
   // Real-time Auto-Suggest matching dishes & stores (Image 1 Benchmark)
@@ -1153,10 +1372,12 @@ export default function CustomerSuperAppClient({
       };
     });
 
+    TrustitNative.playHapticFeedback("click");
     setCustomizingItem(null);
   };
 
   const updateCartLineQty = (cartKey: string, delta: number) => {
+    TrustitNative.playHapticFeedback("click");
     setCart((prev) => {
       const existing = prev[cartKey];
       if (!existing) return prev;
@@ -1223,6 +1444,7 @@ export default function CustomerSuperAppClient({
 
         const data = await res.json();
         if (data.success) {
+          TrustitNative.playHapticFeedback("success");
           if (data.order) {
             setActiveOrders((prev) => [data.order, ...prev.filter((o) => o.id !== data.order.id)]);
           }
@@ -1353,6 +1575,7 @@ export default function CustomerSuperAppClient({
         const verifyData = await resVerify.json();
 
         if (verifyData.status === "VERIFIED_SUCCESS") {
+          TrustitNative.playHapticFeedback("success");
           setCart({});
           setRiderTip(0);
           setIsCheckoutOpen(false);

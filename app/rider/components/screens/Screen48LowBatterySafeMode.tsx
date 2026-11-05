@@ -5,17 +5,19 @@ import React, { useState } from "react";
 interface Screen48Props {
   onBack?: () => void;
   onSendSmsBackup?: () => void;
+  batteryLevelProp?: number;
 }
 
 export default function Screen48LowBatterySafeMode({
   onBack,
   onSendSmsBackup,
+  batteryLevelProp = 13,
 }: Screen48Props) {
-  const [batteryLevel] = useState<number>(8);
+  const [batteryLevel] = useState<number>(batteryLevelProp);
   const [isSmsSent, setIsSmsSent] = useState<boolean>(true);
 
   return (
-    <div className="w-full h-full bg-[#000000] text-white flex flex-col justify-between p-4 sm:p-5 font-mono select-none">
+    <div className="w-full min-h-full bg-[#000000] text-white flex flex-col justify-between p-4 sm:p-5 font-mono select-none overflow-y-auto pb-28">
       {/* High-Contrast Top Bar */}
       <div>
         <div className="flex items-center justify-between pb-3 border-b border-white/20">
@@ -30,7 +32,7 @@ export default function Screen48LowBatterySafeMode({
             <span className="text-[10px] font-black uppercase tracking-widest text-red-400 bg-red-950 px-2 py-0.5 rounded border border-red-800">
               CRITICAL BATTERY SAFE MODE
             </span>
-            <h2 className="text-xs font-bold text-white mt-0.5">Ultra Power Saving (8% Left)</h2>
+            <h2 className="text-xs font-bold text-white mt-0.5">Ultra Power Saving ({batteryLevel}% Left)</h2>
           </div>
           <span className="text-xs font-bold text-red-400 font-mono">
             🪫 {batteryLevel}%

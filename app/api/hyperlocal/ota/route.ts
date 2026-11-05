@@ -50,7 +50,7 @@ export async function GET(request: Request) {
   let finalBundleUrl = manifest.bundleUrl;
   const host = request.headers.get("host") || "";
   if (host.includes("192.168.") || host.includes("localhost")) {
-    finalBundleUrl = `http://${host}/bundles/${manifestFileName.replace('-manifest.json', '-latest.zip')}?v=${Date.now()}`;
+    finalBundleUrl = `http://${host}/bundles/${app}-bundle-latest.zip?v=${Date.now()}`;
   }
 
   return NextResponse.json(

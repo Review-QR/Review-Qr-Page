@@ -9,6 +9,8 @@ interface Screen13Props {
   onDoorstepChangeRefund?: () => void;
   onCustomerUnreachable?: () => void;
   onContactlessPhotoPod?: () => void;
+  onCallMasked?: () => void;
+  customerPhone?: string;
 }
 
 export default function Screen13Doorstep({
@@ -18,6 +20,8 @@ export default function Screen13Doorstep({
   onDoorstepChangeRefund,
   onCustomerUnreachable,
   onContactlessPhotoPod,
+  onCallMasked,
+  customerPhone = "+919876543210",
 }: Screen13Props) {
   const [digits, setDigits] = useState(["4", "4", "9", "2"]);
   const fullOtp = digits.join("");
@@ -54,7 +58,14 @@ export default function Screen13Doorstep({
               <h3 className="text-sm font-black text-slate-900 mt-0.5">Riya Sharma</h3>
               <p className="text-[11px] text-slate-500">Flat 204, Gayatri Complex, Civil Lines, Bahraich</p>
             </div>
-            <button className="p-2 rounded-xl bg-blue-50 text-[#0D47A1] border border-blue-200 text-xs font-bold hover:bg-blue-100 flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => {
+                if (onCallMasked) onCallMasked();
+                else if (typeof window !== "undefined") window.location.href = `tel:${customerPhone}`;
+              }}
+              className="p-2 rounded-xl bg-blue-50 text-[#0D47A1] border border-blue-200 text-xs font-bold hover:bg-blue-100 active:scale-95 transition-all flex items-center gap-1"
+            >
               <span>📞</span>
               <span>Masked Call</span>
             </button>
