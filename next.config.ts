@@ -28,6 +28,40 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "10mb",
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/downloads/Trustit-Merchant-Partner.apk",
+        destination: "https://raw.githubusercontent.com/Review-QR/Review-Qr-Page/main/public/downloads/Trustit-Merchant-Partner.apk",
+        permanent: false,
+      },
+      {
+        source: "/downloads/Trustit-Customer.apk",
+        destination: "https://raw.githubusercontent.com/Review-QR/Review-Qr-Page/main/public/downloads/Trustit-Customer.apk",
+        permanent: false,
+      },
+      {
+        source: "/downloads/Trustit-Rider-Partner.apk",
+        destination: "https://raw.githubusercontent.com/Review-QR/Review-Qr-Page/main/public/downloads/Trustit-Rider-Partner.apk",
+        permanent: false,
+      },
+      {
+        source: "/trustit-partner.apk",
+        destination: "https://raw.githubusercontent.com/Review-QR/Review-Qr-Page/main/public/downloads/Trustit-Merchant-Partner.apk",
+        permanent: false,
+      },
+      {
+        source: "/trustit-customer.apk",
+        destination: "https://raw.githubusercontent.com/Review-QR/Review-Qr-Page/main/public/downloads/Trustit-Customer.apk",
+        permanent: false,
+      },
+      {
+        source: "/trustit-rider.apk",
+        destination: "https://raw.githubusercontent.com/Review-QR/Review-Qr-Page/main/public/downloads/Trustit-Rider-Partner.apk",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     const headers = [...securityHeaders];
     if (process.env.NODE_ENV === "production") {
