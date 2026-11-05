@@ -28,7 +28,7 @@ export async function GET(
     } catch {}
   }
 
-  // 2. Fallback to GitHub raw CDN direct download
-  const githubUrl = `https://raw.githubusercontent.com/Review-QR/Review-Qr-Page/main/public/downloads/${filename}`;
+  // 2. Fallback to GitHub raw CDN direct download (bypassing GitHub CDN cache)
+  const githubUrl = `https://raw.githubusercontent.com/Review-QR/Review-Qr-Page/main/public/downloads/${filename}?v=${Date.now()}`;
   return NextResponse.redirect(githubUrl, 307);
 }
