@@ -1,8 +1,8 @@
 {
-  "version": "3.1.0",
+  "version": "3.1.0330",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793850224630",
-  "updatedAt": "2026-11-05T03:43:44.630Z",
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793855763734",
+  "updatedAt": "2026-11-05T05:16:03.734Z",
   "notes": "Loom 3 UI Refinements (Center Cockpit, Mini Dongle, Clean Radar)",
-  "sizeBytes": 3532741
+  "sizeBytes": 3540140
 }

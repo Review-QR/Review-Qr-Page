@@ -1,0 +1,11 @@
+android/
+android-customer-bundle/
+android-embedded-bundle/
+android-rider-bundle/
+android-web-shell/
+.gradle/
+!public/trustit-rider.apk
+!public/downloads/*.apk
+!public/bundles/*.zip
+scripts/*.json
+read_step.js
