@@ -1,8 +1,8 @@
 {
-  "version": "3.1.0330",
+  "version": "3.3.0",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793855763734",
-  "updatedAt": "2026-11-05T05:16:03.734Z",
-  "notes": "Loom 3 UI Refinements (Center Cockpit, Mini Dongle, Clean Radar)",
-  "sizeBytes": 3540140
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793861234891",
+  "updatedAt": "2026-11-05T06:47:14.891Z",
+  "notes": "Emerald Single-Line Google Maps Button + Manual WhatsApp OTP Input",
+  "sizeBytes": 3539900
 }

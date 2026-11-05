@@ -28,12 +28,11 @@ export default function Screen02OtpVerify({
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-  // Auto-fill preview OTP if provided from server/test
+  // Auto-fill disabled per user request: customer/rider will check WhatsApp and manually type OTP
+  // No automatic filling of OTP digits
   useEffect(() => {
-    if (previewOtp && previewOtp.length === 6) {
-      setDigits(previewOtp.split(""));
-    }
-  }, [previewOtp]);
+    // Keep digits empty for manual input
+  }, []);
 
   // Focus first empty box on mount
   useEffect(() => {

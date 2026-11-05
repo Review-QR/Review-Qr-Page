@@ -201,15 +201,17 @@ export default function Screen40TurnByTurnNav({
 
       {/* 3. Action Deck: Google Maps Launcher & Road Assist Pills */}
       <div className="space-y-2">
-        {/* Prominent Google Maps 1-Tap Launcher Button (Requested by User) */}
+        {/* Prominent Google Maps 1-Tap Launcher Button (Sleek 1-Line Compact Emerald Design - OTA Update) */}
         <button
           type="button"
           onClick={handleLaunchGoogleMaps}
-          className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 active:scale-[0.99] transition border border-blue-400/30"
+          className="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 text-white font-extrabold text-[10.5px] shadow-md flex items-center justify-between whitespace-nowrap active:scale-[0.99] transition border border-emerald-400/40"
         >
-          <span className="text-base leading-none">🗺️</span>
-          <span>Open in Google Maps (गूगल मैप्स में खोलें)</span>
-          <span className="text-[10px] bg-white/20 px-1.5 py-0.2 rounded font-mono">2W Navigation ➔</span>
+          <div className="flex items-center gap-1.5 truncate">
+            <span className="text-sm leading-none shrink-0">🗺️</span>
+            <span className="truncate">Open in Google Maps (गूगल मैप्स में खोलें)</span>
+          </div>
+          <span className="text-[9.5px] bg-white/20 px-2 py-0.5 rounded font-mono shrink-0 ml-2 tracking-wide uppercase">2W Navigation ➔</span>
         </button>
 
         {/* 4 Road Assist Pills */}

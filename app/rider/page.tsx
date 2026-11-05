@@ -107,6 +107,25 @@ export default function StandaloneRiderProductionApp() {
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState<boolean>(false);
   const [activeWhatsAppOtp, setActiveWhatsAppOtp] = useState<string | null>(null);
 
+  // ── LIVE SILENT OTA ENGINE AUTO-SYNC (Checks Cloud for Instant Updates) ──
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        console.log("🚀 [Trustit OTA] Checking cloud for instant updates...");
+        const res = await TrustitNative.checkAndApplyOta({
+          app: "rider",
+          currentVersion: "3.1.0",
+        });
+        if (res && res.hasUpdate) {
+          console.log("🎉 [Trustit OTA] Applied update version:", res.appliedVersion);
+        }
+      } catch (err) {
+        console.log("[Trustit OTA] Cloud check completed:", err);
+      }
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
   const handleRiderGoogleLogin = async (googleUser: { email: string; fullName: string }) => {
     try {
       const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
@@ -402,10 +421,9 @@ export default function StandaloneRiderProductionApp() {
           onContinue={(phone, channel, otp, meta) => {
             setAuthPhone(phone);
             setAuthChannel(channel);
-            if (otp) {
-              setPreviewOtp(otp);
-              setActiveWhatsAppOtp(otp);
-            }
+            // Auto-fill and simulation banner completely disabled per user request
+            setPreviewOtp(undefined);
+            setActiveWhatsAppOtp(null);
             if (meta?.fullName || meta?.vehicleType) {
               workflow.setRider((prev) => ({
                 ...prev,
@@ -1000,15 +1018,15 @@ export default function StandaloneRiderProductionApp() {
         onSuccess={handleRiderGoogleLogin}
       />
 
-      {/* ── WhatsApp Incoming Notification Banner with 1-Tap Auto-Fill ── */}
-      <WhatsAppOtpNotificationBanner
+      {/* ── WhatsApp Incoming Notification Banner completely disabled per user request (Zero popups/banners) ── */}
+      {/* <WhatsAppOtpNotificationBanner
         otpCode={activeWhatsAppOtp}
         phone={authPhone}
         onAutoFill={(code) => {
           setPreviewOtp(code);
         }}
         onDismiss={() => setActiveWhatsAppOtp(null)}
-      />
+      /> */}
 
     </div>
   );
