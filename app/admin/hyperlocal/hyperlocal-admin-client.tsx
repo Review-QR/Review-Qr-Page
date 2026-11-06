@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import type { HyperlocalOrder } from "@/lib/hyperlocal/types";
 import { formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
+import RiderApprovalsPanel from "./rider-approvals-panel";
 
 interface OrderStats {
   active: number;
@@ -55,7 +56,18 @@ interface SettlementKPIs {
 }
 
 export default function HyperlocalLiveAdminClient() {
-  const [viewMode, setViewMode] = useState<"orders" | "settlements">("orders");
+  const [viewMode, setViewMode] = useState<"orders" | "settlements" | "riders">("orders");
+  const [pendingRidersCount, setPendingRidersCount] = useState<number>(0);
+
+  // Check URL tab param on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("tab") === "riders") {
+        setViewMode("riders");
+      }
+    }
+  }, []);
 
   // Orders State
   const [orders, setOrders] = useState<HyperlocalOrder[]>([]);
@@ -386,6 +398,23 @@ export default function HyperlocalLiveAdminClient() {
             {pendingMerchants.length + pendingRiders.length > 0 && (
               <span className="bg-emerald-500 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[10px]">
                 {pendingMerchants.length + pendingRiders.length} Pending
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setViewMode("riders")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+              viewMode === "riders"
+                ? "bg-amber-400 text-slate-950 shadow-md font-black"
+                : "text-slate-400 hover:text-white hover:bg-slate-800"
+            }`}
+          >
+            <span>🛵 Rider Approvals</span>
+            {pendingRidersCount > 0 && (
+              <span className="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[10px] animate-pulse">
+                {pendingRidersCount} Pending
               </span>
             )}
           </button>
@@ -1021,6 +1050,16 @@ export default function HyperlocalLiveAdminClient() {
             )}
           </div>
         </div>
+      )}
+
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {/* ── VIEW 3: RIDER ONBOARDING & APPROVALS ── */}
+      {/* ═════════════════════════════════════════════════════════════════ */}
+      {viewMode === "riders" && (
+        <RiderApprovalsPanel
+          onToast={(msg) => setToastMessage(msg)}
+          onPendingCountChange={(c) => setPendingRidersCount(c)}
+        />
       )}
 
       {/* ═════════════════════════════════════════════════════════════════ */}

@@ -584,11 +584,16 @@ export default function StandaloneRiderProductionApp() {
       component: (
         <Screen02BasicProfile
           verifiedPhone={authPhone}
+          initialData={{
+            fullName: workflow.rider?.full_name || undefined,
+            residentialAddress: workflow.rider?.residential_address || undefined,
+          }}
           onSaveProfile={(data) => {
             workflow.setRider((prev) => ({
               ...prev,
               full_name: data.fullName,
               phone: authPhone,
+              residential_address: data.address,
             }));
             if (typeof window !== "undefined") {
               localStorage.setItem("trustit_rider_address", data.address);
@@ -609,7 +614,11 @@ export default function StandaloneRiderProductionApp() {
       title: "05. Vehicle RC & DL (UP 40)",
       component: (
         <Screen05VehicleDl
-          initialVehicleType={(rider?.vehicle_type as any) || "bike"}
+          initialData={{
+            vehicleType: (rider?.vehicle_type as any) || "bike",
+            vehicleNumber: rider?.vehicle_number || "",
+            dlNumber: rider?.driving_license_number || "",
+          }}
           onVehicleSubmit={(vehData) => {
             workflow.setRider((prev) => ({
               ...prev,
@@ -644,14 +653,13 @@ export default function StandaloneRiderProductionApp() {
       title: "19. Verification In-Progress Room",
       component: (
         <Screen19VerificationPending
-          riderName={workflow.rider?.full_name}
-          vehicleNumber={workflow.rider?.vehicle_number}
+          riderId={workflow.rider?.id}
           onBack={() => setCurrentScreenId(6)}
           onProceedToAcademy={() => setCurrentScreenId(20)}
-          onRefresh={() => {
-            if (typeof window !== "undefined") window.location.reload();
-          }}
-          onChatFleet={() => {
+          onEditProfile={() => setCurrentScreenId(48)}
+          onEditVehicle={() => setCurrentScreenId(5)}
+          onEditSelfie={() => setCurrentScreenId(4)}
+          onCallFleetOps={() => {
             if (typeof window !== "undefined") window.location.href = "tel:+919415099999";
           }}
         />
@@ -930,7 +938,8 @@ export default function StandaloneRiderProductionApp() {
           walletBalanceProp={walletBalance}
           todayEarningsProp={todayEarnings}
           todayTripsCountProp={todayTripsCount}
-          riderUpiProp={rider?.upi_id || (typeof window !== "undefined" ? localStorage.getItem("trustit_rider_upi") || "luckyshukla@hdfcbank" : "luckyshukla@hdfcbank")}
+          riderUpiProp={rider?.upi_id || (typeof window !== "undefined" ? localStorage.getItem("trustit_rider_upi") || "" : "")}
+          riderId={rider?.id}
         />
       ),
     },
@@ -1019,66 +1028,72 @@ export default function StandaloneRiderProductionApp() {
 
   const activeScreenObj = screens.find((s) => s.id === currentScreenId) || screens[6];
 
+  const ONBOARDING_SCREEN_IDS = new Set([1, 2, 48, 3, 4, 5, 6, 19, 20, 27]);
+  const isOnboarding = ONBOARDING_SCREEN_IDS.has(currentScreenId);
+  const shouldShowNavAndHeader = !isOnboarding && Boolean(rider?.id && rider.id !== "rider_new_partner");
+
   return (
     <div className="min-h-screen w-full bg-[#FAF8FF] text-[#0F172A] font-sans flex flex-col justify-between selection:bg-[#0D47A1] selection:text-white relative">
       
-      {/* ── Minimalist Clean Header: ONLY Online/Offline Duty Dongle ── */}
-      <header className="sticky top-0 z-40 bg-slate-950 text-white px-3 py-1.5 flex items-center justify-between text-xs select-none shadow-md">
-        {/* Left: 1-Tap Duty Toggle Button (NO SLIDER) */}
-        <button
-          type="button"
-          onClick={() => {
-            // Check if rider is signed in
-            const isSignedIn =
-              Boolean(rider?.phone && rider.phone.replace(/\D/g, "").length >= 10) ||
-              (typeof window !== "undefined" &&
-                Boolean(localStorage.getItem("trustit_rider_session_token")));
-
-            if (!isSignedIn) {
-              setCurrentScreenId(1);
-              return;
-            }
-
-            const next = !isOnline;
-            if (next) {
-              riderAudio.playCashChime();
-            }
-            toggleDuty(next);
-          }}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 border shadow-sm ${
-            isOnline
-              ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400"
-              : "bg-rose-700 hover:bg-rose-600 text-white border-rose-500"
-          }`}
-          title="Tap to Toggle Duty"
-        >
-          <span
-            className={`w-2 h-2 rounded-full ${
-              isOnline ? "bg-white animate-ping" : "bg-white"
-            }`}
-          ></span>
-          <span className="font-black text-[11px] tracking-wider uppercase">
-            {isOnline ? "DUTY ON" : "DUTY OFF"}
-          </span>
-        </button>
-
-        {/* Right: Audio Siren */}
-        <div className="flex items-center gap-2 font-mono text-[11px]">
+      {/* ── Minimalist Clean Header: ONLY Online/Offline Duty Dongle (Visible ONLY after login & onboarding) ── */}
+      {shouldShowNavAndHeader && (
+        <header className="sticky top-0 z-40 bg-slate-950 text-white px-3 py-1.5 flex items-center justify-between text-xs select-none shadow-md">
+          {/* Left: 1-Tap Duty Toggle Button (NO SLIDER) */}
           <button
             type="button"
             onClick={() => {
-              const next = !soundEnabled;
-              setSoundEnabled(next);
-              if (next) riderAudio.playCashChime();
-              else riderAudio.stopSiren();
+              // Check if rider is signed in
+              const isSignedIn =
+                Boolean(rider?.phone && rider.phone.replace(/\D/g, "").length >= 10) ||
+                (typeof window !== "undefined" &&
+                  Boolean(localStorage.getItem("trustit_rider_session_token")));
+
+              if (!isSignedIn) {
+                setCurrentScreenId(1);
+                return;
+              }
+
+              const next = !isOnline;
+              if (next) {
+                riderAudio.playCashChime();
+              }
+              toggleDuty(next);
             }}
-            className="p-1 px-1.5 rounded bg-white/10 hover:bg-white/20 text-xs transition"
-            title="Toggle Loud Siren"
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 border shadow-sm ${
+              isOnline
+                ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400"
+                : "bg-rose-700 hover:bg-rose-600 text-white border-rose-500"
+            }`}
+            title="Tap to Toggle Duty"
           >
-            {soundEnabled ? "🔊" : "🔇"}
+            <span
+              className={`w-2 h-2 rounded-full ${
+                isOnline ? "bg-white animate-ping" : "bg-white"
+              }`}
+            ></span>
+            <span className="font-black text-[11px] tracking-wider uppercase">
+              {isOnline ? "DUTY ON" : "DUTY OFF"}
+            </span>
           </button>
-        </div>
-      </header>
+
+          {/* Right: Audio Siren */}
+          <div className="flex items-center gap-2 font-mono text-[11px]">
+            <button
+              type="button"
+              onClick={() => {
+                const next = !soundEnabled;
+                setSoundEnabled(next);
+                if (next) riderAudio.playCashChime();
+                else riderAudio.stopSiren();
+              }}
+              className="p-1 px-1.5 rounded bg-white/10 hover:bg-white/20 text-xs transition"
+              title="Toggle Loud Siren"
+            >
+              {soundEnabled ? "🔊" : "🔇"}
+            </button>
+          </div>
+        </header>
+      )}
 
       {/* ── Offline Dead-Zone Warning Banner ── */}
       {isOffline && (
@@ -1090,66 +1105,70 @@ export default function StandaloneRiderProductionApp() {
 
       {/* ── Active Production Screen Viewport (Full Bleed Mobile) ── */}
       <main
-        className="flex-1 w-full max-w-md mx-auto overflow-y-auto no-scrollbar scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col justify-between pb-16"
+        className={`flex-1 w-full max-w-md mx-auto overflow-y-auto no-scrollbar scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col justify-between ${
+          shouldShowNavAndHeader ? "pb-16" : "pb-2"
+        }`}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {activeScreenObj.component}
       </main>
 
-      {/* ── 5 Permanent Mobile Bottom Navigation Tabs (Center Elevated Cockpit Hero) ── */}
-      <nav className="sticky bottom-0 bg-white border-t border-slate-200 px-1 py-1 grid grid-cols-5 text-center shadow-lg z-30">
-        {tabConfigs.map((tab) => {
-          const isTabActive = activeTab === tab.key;
-          const isCockpit = tab.key === "cockpit";
+      {/* ── 5 Mobile Bottom Navigation Tabs (VISIBLE ONLY AFTER VERIFIED LOGIN & ONBOARDING) ── */}
+      {shouldShowNavAndHeader && (
+        <nav className="sticky bottom-0 bg-white border-t border-slate-200 px-1 py-1 grid grid-cols-5 text-center shadow-lg z-30">
+          {tabConfigs.map((tab) => {
+            const isTabActive = activeTab === tab.key;
+            const isCockpit = tab.key === "cockpit";
 
-          if (isCockpit) {
+            if (isCockpit) {
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  onClick={() => handleTabClick(tab.key)}
+                  className="relative -mt-4 flex flex-col items-center justify-center group focus:outline-none"
+                >
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 border-2 ${
+                      isTabActive
+                        ? "bg-[#0D47A1] text-white border-white ring-2 ring-[#0D47A1]/30"
+                        : "bg-[#0D47A1] text-white border-white"
+                    }`}
+                  >
+                    <span className="text-xl leading-none">🛵</span>
+                  </div>
+                  <span
+                    className={`text-[9px] mt-0.5 block truncate max-w-full ${
+                      isTabActive ? "font-black text-[#0D47A1]" : "font-semibold text-slate-600"
+                    }`}
+                  >
+                    {tab.label}
+                  </span>
+                </button>
+              );
+            }
+
             return (
               <button
                 key={tab.key}
                 type="button"
                 onClick={() => handleTabClick(tab.key)}
-                className="relative -mt-4 flex flex-col items-center justify-center group focus:outline-none"
+                className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition ${
+                  isTabActive ? "text-[#0D47A1]" : "text-slate-500 hover:text-slate-800"
+                }`}
               >
-                <div
-                  className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition-transform active:scale-95 border-2 ${
-                    isTabActive
-                      ? "bg-[#0D47A1] text-white border-white ring-2 ring-[#0D47A1]/30"
-                      : "bg-[#0D47A1] text-white border-white"
-                  }`}
-                >
-                  <span className="text-xl leading-none">🛵</span>
-                </div>
-                <span
-                  className={`text-[9px] mt-0.5 block truncate max-w-full ${
-                    isTabActive ? "font-black text-[#0D47A1]" : "font-semibold text-slate-600"
-                  }`}
-                >
+                <span className="text-base leading-none block">{tab.icon}</span>
+                <span className={`text-[9px] mt-0.5 block truncate max-w-full ${isTabActive ? "font-black" : "font-semibold"}`}>
                   {tab.label}
                 </span>
+                {isTabActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0D47A1] mt-0.5 block"></span>
+                )}
               </button>
             );
-          }
-
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => handleTabClick(tab.key)}
-              className={`flex flex-col items-center justify-center py-1 px-0.5 rounded-xl transition ${
-                isTabActive ? "text-[#0D47A1]" : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              <span className="text-base leading-none block">{tab.icon}</span>
-              <span className={`text-[9px] mt-0.5 block truncate max-w-full ${isTabActive ? "font-black" : "font-semibold"}`}>
-                {tab.label}
-              </span>
-              {isTabActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-[#0D47A1] mt-0.5 block"></span>
-              )}
-            </button>
-          );
-        })}
-      </nav>
+          })}
+        </nav>
+      )}
 
       {/* ── Android Native Hardware Back Button Toast ── */}
       {backToast && (

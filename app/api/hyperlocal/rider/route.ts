@@ -236,8 +236,17 @@ export async function GET(request: Request) {
     }),
   };
 
+  const isActionRequired =
+    rider.kyc_status === "pending" &&
+    Boolean(rider.rejection_reason || (rider.admin_notes && rider.admin_notes.includes("CORRECTION_REQUESTED")));
+
+  const enrichedRider = {
+    ...rider,
+    display_status: isActionRequired ? "action_required" : rider.kyc_status || "pending",
+  };
+
   return Response.json({
-    rider,
+    rider: enrichedRider,
     scorecard,
     activeOrder: activeOrder || null,
     incomingOrder: incomingDispatchOrder || null,
@@ -426,7 +435,7 @@ export async function POST(request: Request) {
       }
 
       // Check if rider already exists
-      let existingQuery = admin.from("delivery_riders").select("id");
+      let existingQuery = admin.from("delivery_riders").select("id, is_verified, kyc_status");
       if (cleanEmail && cleanEmail.includes("@")) {
         existingQuery = existingQuery.or(`email.eq.${cleanEmail},phone.eq.+91${cleanPhone}`);
       } else {
@@ -450,10 +459,10 @@ export async function POST(request: Request) {
           bank_name: bankName || null,
           upi_id: upiId || null,
           pan_number: (panNumber || "").toUpperCase().trim() || null,
-          kyc_status: "approved",
-          is_verified: true,
-          is_online: true,
-          is_available: true,
+          kyc_status: existing.is_verified ? "approved" : "pending",
+          is_verified: Boolean(existing.is_verified),
+          rejection_reason: null, // clear previous correction reason on re-submit
+          admin_notes: "Re-submitted by rider after correction",
           updated_at: new Date().toISOString(),
         };
 
@@ -496,10 +505,10 @@ export async function POST(request: Request) {
           bank_name: bankName || null,
           upi_id: upiId || null,
           pan_number: (panNumber || "").toUpperCase().trim() || null,
-          kyc_status: "approved",
-          is_verified: true,
-          is_online: true,
-          is_available: true,
+          kyc_status: "pending",
+          is_verified: false,
+          is_online: false,
+          is_available: false,
           wallet_balance: 0,
           cash_in_hand: 0,
           rating: 5.0,

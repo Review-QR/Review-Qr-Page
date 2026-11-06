@@ -1,8 +1,8 @@
 {
-  "version": "3.9.0",
+  "version": "4.0.0",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793948899261",
-  "updatedAt": "2026-11-06T07:08:19.261Z",
-  "notes": "Production Clean Registration: Removed Google Sign-in, Added Screen 2.5 Basic Profile, Blank Vehicle/DL, Blank UPI, Eliminated Telemetry Jitter, Hardware Back Stack",
-  "sizeBytes": 3571312
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793954094202",
+  "updatedAt": "2026-11-06T08:34:54.202Z",
+  "notes": "Production Fleet Onboarding, Zero Mock Purge & Admin Approval Command Center",
+  "sizeBytes": 3571702
 }

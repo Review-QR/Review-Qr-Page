@@ -62,6 +62,7 @@ export default async function HomePage() {
 
   let activeHyperlocalCount = 0;
   let disputedHyperlocalCount = 0;
+  let pendingRiderCount = 0;
 
   try {
     const supabase = await createSupabaseServerClient();
@@ -85,6 +86,12 @@ export default async function HomePage() {
       .select("*", { count: "exact", head: true })
       .not("dispute_status", "in", '("none","resolved")');
     disputedHyperlocalCount = dispCount || 0;
+
+    const { count: riderCount } = await supabase
+      .from("delivery_riders")
+      .select("*", { count: "exact", head: true })
+      .eq("kyc_status", "pending");
+    pendingRiderCount = riderCount || 0;
   } catch {
     // Graceful fallback
   }
@@ -439,17 +446,26 @@ export default async function HomePage() {
               Food delivery, kirana parcha orders, doorstep refusal disputes, 4-digit OTP audit &amp; rider instant payouts in Bahraich.
             </p>
 
-            <div className="grid grid-cols-2 gap-2 text-center">
+            <div className="grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-2.5">
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Running Orders</span>
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">Running</span>
                 <span className="text-xl font-black text-emerald-400">{activeHyperlocalCount}</span>
               </div>
               <div className="rounded-xl border border-slate-800 bg-slate-950/80 p-2.5">
-                <span className="text-[10px] font-bold uppercase text-slate-400 block">Disputes / Refusals</span>
+                <span className="text-[10px] font-bold uppercase text-slate-400 block">Disputes</span>
                 <span className={`text-xl font-black ${disputedHyperlocalCount > 0 ? "text-rose-400 animate-pulse" : "text-slate-300"}`}>
                   {disputedHyperlocalCount}
                 </span>
               </div>
+              <Link
+                href="/admin/hyperlocal?tab=riders"
+                className="rounded-xl border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 p-2.5 transition block"
+              >
+                <span className="text-[10px] font-bold uppercase text-amber-300 block">Riders</span>
+                <span className={`text-xl font-black ${pendingRiderCount > 0 ? "text-amber-400 animate-pulse" : "text-slate-300"}`}>
+                  {pendingRiderCount}
+                </span>
+              </Link>
             </div>
 
             <Link

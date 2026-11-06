@@ -48,42 +48,6 @@ const BLANK_NEW_RIDER: DeliveryRider = {
   upi_id: "",
 };
 
-const SAMPLE_ACTIVE_ORDER: HyperlocalOrder = {
-  id: "TR-4492",
-  business_id: "biz_golden_blossom_01",
-  customer_name: "Riya Sharma",
-  customer_phone: "+919876543210",
-  customer_address: {
-    street: "House 42/B, Behind Peepal Tree",
-    landmark: "Opposite Primary School",
-    city: "Civil Lines, Bahraich",
-    pinCode: "271801",
-    latitude: 27.5760,
-    longitude: 81.5980,
-  },
-  order_type: "food_delivery",
-  status: "rider_assigned",
-  payment_mode: "cod",
-  payment_status: "pending",
-  subtotal_amount: 310,
-  delivery_fee: 30,
-  platform_fee: 0,
-  tax_amount: 0,
-  total_amount: 340,
-  delivery_otp: "4492",
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  business: {
-    name: "Golden Blossom Café",
-    city: "Civil Lines, Bahraich",
-    category: "Cafe & Burger",
-    address: "Civil Lines Main Road",
-    phone: "+919415011111",
-    latitude: 27.5745,
-    longitude: 81.5965,
-  },
-};
-
 export function useRiderWorkflow() {
   const [currentScreenId, setCurrentScreenId] = useState<number>(1); // Start at Screen 01 (Auth Entry for New Rider)
   const [rider, setRider] = useState<DeliveryRider>(BLANK_NEW_RIDER);
@@ -185,19 +149,31 @@ export function useRiderWorkflow() {
         const data = await res.json();
         if (!isSubscribed) return;
 
-        if (data.incomingDispatchOrder && (!incomingOrder || incomingOrder.id !== data.incomingDispatchOrder.id)) {
+        const incoming = data.incomingOrder || data.incomingDispatchOrder;
+        if (incoming && (!incomingOrder || incomingOrder.id !== incoming.id)) {
           setIncomingOrder({
-            ...data.incomingDispatchOrder,
-            secondsRemaining: data.incomingDispatchOrder.secondsRemaining || 29,
+            ...incoming,
+            secondsRemaining: incoming.secondsRemaining || 29,
           });
           if (soundEnabled) {
             riderAudio.playProximitySiren();
-            const shopName = data.incomingDispatchOrder.businesses?.name || "मर्चेंट";
-            const earn = data.incomingDispatchOrder.delivery_fee || 40;
+            const shopName = incoming.businesses?.name || incoming.business?.name || "मर्चेंट";
+            const earn = incoming.delivery_fee || 35;
             riderAudio.speakHindiAlert(`नया लाइव ऑर्डर! ${shopName} — कमाई ₹${earn}`);
             setIsSirenPlaying(true);
           }
           setCurrentScreenId(10);
+        }
+
+        if (data.activeOrder && !activeOrder) {
+          setActiveOrder(data.activeOrder);
+        }
+
+        if (data.scorecard) {
+          setTodayEarnings(data.scorecard.todayEarnings || 0);
+          setTodayTripsCount(data.scorecard.todayTripsCount || 0);
+          setWalletBalance(data.scorecard.walletBalance || 0);
+          setCashInHand(data.scorecard.cashInHand || 0);
         }
       } catch {}
     }, 4500);
@@ -212,24 +188,22 @@ export function useRiderWorkflow() {
    * 2. Trigger Proximity Siren Radar (Simulated Incoming Order)
    */
   const triggerIncomingOrderRadar = useCallback((isLockscreen = false) => {
-    setIncomingOrder({
-      ...SAMPLE_ACTIVE_ORDER,
-      secondsRemaining: 29,
-    });
-    if (soundEnabled) {
-      riderAudio.playProximitySiren();
-      const surgeExtra = remoteConfig.isSurgeActive ? ` + ₹${remoteConfig.surgeBonusAmount} surge` : "";
-      riderAudio.speakHindiAlert(`नया ऑर्डर! गोल्डन ब्लॉसम कैफ़े, सिविल लाइन्स — कमाई ₹45${surgeExtra}`);
-      setIsSirenPlaying(true);
+    // Only scans if real incoming order is present; zero mock order synthesis
+    if (incomingOrder) {
+      if (soundEnabled) {
+        riderAudio.playProximitySiren();
+        setIsSirenPlaying(true);
+      }
+      setCurrentScreenId(isLockscreen ? 21 : 10);
     }
-    setCurrentScreenId(isLockscreen ? 21 : 10);
-  }, [soundEnabled, remoteConfig]);
+  }, [soundEnabled, incomingOrder]);
 
   /**
    * 3. Stop Siren & Accept Order
    */
   const acceptOrder = useCallback(async () => {
-    const orderToAccept = incomingOrder || SAMPLE_ACTIVE_ORDER;
+    if (!incomingOrder) return;
+    const orderToAccept = incomingOrder;
     riderAudio.stopSiren();
     setIsSirenPlaying(false);
     setIncomingOrder(null);
@@ -250,10 +224,12 @@ export function useRiderWorkflow() {
    * 4. Decline Order
    */
   const declineOrder = useCallback(async () => {
-    const orderToDeclineId = incomingOrder?.id || "TR-4492";
+    const orderToDeclineId = incomingOrder?.id;
     riderAudio.stopSiren();
     setIsSirenPlaying(false);
     setIncomingOrder(null);
+    if (!orderToDeclineId) return;
+
     try {
       await fetch("/api/hyperlocal/rider", {
         method: "POST",
@@ -268,7 +244,9 @@ export function useRiderWorkflow() {
    * 5. Confirm Store Pickup & Launch GPS Navigation
    */
   const confirmPickup = useCallback(async () => {
-    const currentOrderId = activeOrder?.id || "TR-4492";
+    const currentOrderId = activeOrder?.id;
+    if (!currentOrderId) return;
+
     try {
       await fetch("/api/hyperlocal/rider", {
         method: "POST",
@@ -280,12 +258,12 @@ export function useRiderWorkflow() {
   }, [rider.id, activeOrder]);
 
   /**
-   * 6. Complete Delivery with 4-Digit Secret OTP (#4492)
+   * 6. Complete Delivery with 4-Digit Secret OTP
    */
   const completeDeliveryWithOtp = useCallback(async (otp: string) => {
-    const expectedOtp = activeOrder?.delivery_otp || "4492";
-    if (otp !== expectedOtp && otp !== "4492") {
-      alert("❌ Invalid Delivery OTP. Ask customer for 4-digit code from their Trustit App.");
+    const expectedOtp = activeOrder?.delivery_otp;
+    if (expectedOtp && otp !== expectedOtp) {
+      alert("❌ अमान्य डिलीवरी OTP (Invalid Delivery OTP)। कृपया ग्राहक से उनके Trustit App पर दिख रहा 4-अंकीय कोड पूछें।");
       return false;
     }
 
@@ -295,7 +273,7 @@ export function useRiderWorkflow() {
 
     // Dynamic pay including surge from Remote Config
     const tripPay = (activeOrder?.delivery_fee ?? remoteConfig.baseDeliveryPay) + (remoteConfig.isSurgeActive ? remoteConfig.surgeBonusAmount : 0);
-    const codAmount = activeOrder?.payment_mode === "cod" ? (activeOrder?.total_amount ?? 340) : 0;
+    const codAmount = activeOrder?.payment_mode === "cod" ? (activeOrder?.total_amount ?? 0) : 0;
 
     // Update balances
     setWalletBalance((w) => w + tripPay);
@@ -306,11 +284,13 @@ export function useRiderWorkflow() {
     }
 
     try {
-      await fetch("/api/hyperlocal/rider", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "deliver_with_otp", riderId: rider.id, orderId: activeOrder?.id || "TR-4492", otp }),
-      });
+      if (activeOrder?.id) {
+        await fetch("/api/hyperlocal/rider", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "deliver_with_otp", riderId: rider.id, orderId: activeOrder.id, otp }),
+        });
+      }
     } catch {}
 
     setActiveOrder(null);
@@ -328,32 +308,36 @@ export function useRiderWorkflow() {
     setTodayEarnings((e) => e + amount);
 
     try {
-      await fetch("/api/hyperlocal/rider", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "wait_compensation", riderId: rider.id, orderId: "TR-4492", waitMinutes }),
-      });
+      if (activeOrder?.id) {
+        await fetch("/api/hyperlocal/rider", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "wait_compensation", riderId: rider.id, orderId: activeOrder.id, waitMinutes }),
+        });
+      }
     } catch {}
-  }, [rider.id]);
+  }, [rider.id, activeOrder]);
 
   /**
    * 8. Refund Change Deficit to Customer Wallet
    */
   const refundDoorstepChange = useCallback(async (changeAmount: number, method: "wallet" | "upi") => {
     try {
-      await fetch("/api/hyperlocal/rider", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "doorstep_change_wallet",
-          orderId: "TR-4492",
-          customerPhone: "9876543210",
-          changeAmount,
-          method,
-        }),
-      });
+      if (activeOrder?.id) {
+        await fetch("/api/hyperlocal/rider", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "doorstep_change_wallet",
+            orderId: activeOrder.id,
+            customerPhone: activeOrder.customer_phone || "",
+            changeAmount,
+            method,
+          }),
+        });
+      }
     } catch {}
-  }, []);
+  }, [activeOrder]);
 
   /**
    * 9. Claim Parking / Toll Reimbursement
@@ -361,13 +345,15 @@ export function useRiderWorkflow() {
   const claimParkingReimbursement = useCallback(async (amount: number) => {
     setWalletBalance((w) => w + amount);
     try {
-      await fetch("/api/hyperlocal/rider", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "claim_parking", riderId: rider.id, orderId: "TR-4492", amount }),
-      });
+      if (activeOrder?.id) {
+        await fetch("/api/hyperlocal/rider", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "claim_parking", riderId: rider.id, orderId: activeOrder.id, amount }),
+        });
+      }
     } catch {}
-  }, [rider.id]);
+  }, [rider.id, activeOrder]);
 
   /**
    * 10. Cash Remittance (Reset Cash in Hand back to ₹0)
