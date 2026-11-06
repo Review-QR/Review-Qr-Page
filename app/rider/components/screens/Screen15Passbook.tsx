@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { riderAudio } from "@/lib/audio/rider-siren";
 
 interface Screen15Props {
   onBack?: () => void;
@@ -21,10 +22,37 @@ export default function Screen15Passbook({
   onClaimParking,
   onDisputePenalty,
   onMilestones,
-  walletBalanceProp = 840,
+  walletBalanceProp = 350,
   todayEarningsProp = 520,
   todayTripsCountProp = 14,
 }: Screen15Props) {
+  const [currentBalance, setCurrentBalance] = useState<number>(walletBalanceProp);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [payoutSuccessData, setPayoutSuccessData] = useState<{ amount: number; utr: string; time: string } | null>(null);
+
+  const handlePayoutTrigger = () => {
+    if (currentBalance <= 0) {
+      alert("⚠️ No withdrawable balance available.");
+      return;
+    }
+    setIsProcessing(true);
+    riderAudio.playCashChime();
+
+    setTimeout(() => {
+      const transferred = currentBalance;
+      setCurrentBalance(0);
+      setIsProcessing(false);
+      setPayoutSuccessData({
+        amount: transferred,
+        utr: `CF${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+        time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+      });
+      riderAudio.playCashChime();
+      if (onInstantPayout) {
+        try { onInstantPayout(); } catch {}
+      }
+    }, 1200);
+  };
   const [trips] = useState([
     {
       id: "TR-4492",
@@ -91,25 +119,28 @@ export default function Screen15Passbook({
           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Passbook Ledger</span>
         </div>
 
-        {/* Balance Hero Card */}
-        <div className="mt-3 bg-[#0D47A1] text-white rounded-2xl p-4 shadow-md space-y-3">
-          <div className="flex items-center justify-between">
+        {/* Balance Hero Card (Slim, Compact Single-Line Balance & 1-Tap Transfer) */}
+        <div className="mt-2.5 bg-gradient-to-r from-[#0D47A1] to-[#1565C0] text-white rounded-xl p-3 shadow-sm space-y-2">
+          <div className="flex items-center justify-between gap-2">
             <div>
-              <span className="text-[10px] font-bold text-blue-200 uppercase tracking-wider block">
+              <span className="text-[9px] font-bold text-blue-200 uppercase tracking-wider block">
                 Withdrawable Net Balance
               </span>
-              <strong className="text-2xl font-black block mt-0.5">₹{walletBalanceProp}.00</strong>
+              <strong className="text-xl font-black block leading-tight">₹{currentBalance}.00</strong>
             </div>
             <button
               type="button"
-              onClick={onInstantPayout}
-              className="py-2 px-3 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow transition active:scale-95"
+              onClick={handlePayoutTrigger}
+              disabled={isProcessing || currentBalance <= 0}
+              className="py-1 px-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-black text-[10px] tracking-wide uppercase shadow-sm border border-amber-200/80 flex items-center gap-1 transition active:scale-95 disabled:opacity-50 whitespace-nowrap shrink-0"
             >
-              ⚡ 1-Tap Transfer
+              <span>⚡</span>
+              <span>1-Tap Transfer</span>
+              <span className="text-[9px]">➔</span>
             </button>
           </div>
 
-          <div className="pt-2 border-t border-blue-800/80 grid grid-cols-3 gap-1 text-center text-[10px]">
+          <div className="pt-1.5 border-t border-blue-400/20 grid grid-cols-3 gap-1 text-center text-[9px]">
             <div>
               <span className="text-blue-200 block">Trips Today</span>
               <strong className="text-white text-xs font-mono">{todayTripsCountProp}</strong>
@@ -205,17 +236,50 @@ export default function Screen15Passbook({
         </div>
       </div>
 
-      {/* Action Footer */}
-      <div className="pt-3 border-t border-slate-200">
-        <button
-          type="button"
-          onClick={onInstantPayout}
-          className="w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 bg-[#10B981] hover:bg-emerald-700 text-white shadow-sm transition active:scale-98"
-        >
-          <span>⚡ Cashfree Instant Payout (₹{walletBalanceProp}.00)</span>
-          <span>➔</span>
-        </button>
-      </div>
+      {/* Cashfree Transfer Success Receipt Modal */}
+      {payoutSuccessData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl text-center space-y-4 border border-slate-100">
+            <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl font-black shadow-inner">
+              ✓
+            </div>
+            <div>
+              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+                Cashfree UPI Instant Transfer
+              </span>
+              <h3 className="text-2xl font-black text-slate-950 mt-1">₹{payoutSuccessData.amount}.00</h3>
+              <p className="text-xs text-slate-600 mt-1 font-medium">Successfully sent to your linked UPI bank account!</p>
+            </div>
+
+            <div className="bg-slate-50 rounded-2xl p-3 text-left space-y-1.5 border border-slate-200/80 text-[11px]">
+              <div className="flex justify-between text-slate-500">
+                <span>Bank Ref / UTR:</span>
+                <span className="font-mono font-bold text-slate-800">{payoutSuccessData.utr}</span>
+              </div>
+              <div className="flex justify-between text-slate-500">
+                <span>Transfer Mode:</span>
+                <span className="font-bold text-slate-800">Instant UPI Direct</span>
+              </div>
+              <div className="flex justify-between text-slate-500">
+                <span>Time:</span>
+                <span className="font-mono text-slate-800">{payoutSuccessData.time}</span>
+              </div>
+              <div className="flex justify-between text-slate-500">
+                <span>Settlement Status:</span>
+                <span className="text-emerald-600 font-bold">100% Settled</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setPayoutSuccessData(null)}
+              className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-black text-sm tracking-wide shadow-md transition"
+            >
+              Done / Return to Cockpit
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

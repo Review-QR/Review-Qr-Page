@@ -1,8 +1,8 @@
 {
-  "version": "3.4.0",
+  "version": "3.5.0",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793931443217",
-  "updatedAt": "2026-11-06T02:17:23.217Z",
-  "notes": "New Trustit Rider branded icon - delivery rider logo",
-  "sizeBytes": 3563484
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793933043118",
+  "updatedAt": "2026-11-06T02:44:03.118Z",
+  "notes": "Option A Light Navigation Map + Slim Passbook 1-Tap Transfer",
+  "sizeBytes": 3563363
 }

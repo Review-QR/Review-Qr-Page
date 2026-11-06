@@ -371,9 +371,8 @@ public class TrustitNativeBridge extends Plugin {
                             }
                         } catch (Exception ignored) {}
                         bridge.setServerBasePath(targetDir.getAbsolutePath());
-                        try {
-                            android.widget.Toast.makeText(ctx, "⚡ Trustit OTA: Updated to v" + latestVersion, android.widget.Toast.LENGTH_LONG).show();
-                        } catch (Exception ignored) {}
+                        // Silent OTA update without intrusive UI Toast
+                        // android.widget.Toast.makeText(ctx, "⚡ Trustit OTA: Updated to v" + latestVersion, android.widget.Toast.LENGTH_LONG).show();
                     });
                 }
             } catch (Exception ignored) {}
