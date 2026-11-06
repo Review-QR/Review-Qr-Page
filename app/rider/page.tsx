@@ -4,13 +4,13 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRiderWorkflow } from "@/app/rider/hooks/useRiderWorkflow";
 import { riderAudio } from "@/lib/audio/rider-siren";
-import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
 import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotificationBanner";
 import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 // 18 Core Screens
 import Screen01AuthStart from "@/app/rider/components/screens/Screen01AuthStart";
 import Screen02OtpVerify from "@/app/rider/components/screens/Screen02OtpVerify";
+import Screen02BasicProfile from "@/app/rider/components/screens/Screen02BasicProfile";
 import Screen03Consent from "@/app/rider/components/screens/Screen03Consent";
 import Screen04SelfieKyc from "@/app/rider/components/screens/Screen04SelfieKyc";
 import Screen05VehicleDl from "@/app/rider/components/screens/Screen05VehicleDl";
@@ -104,37 +104,7 @@ export default function StandaloneRiderProductionApp() {
   const [authPhone, setAuthPhone] = useState<string>("");
   const [authChannel, setAuthChannel] = useState<"sms" | "whatsapp">("whatsapp");
   const [previewOtp, setPreviewOtp] = useState<string>("547291");
-  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState<boolean>(false);
   const [activeWhatsAppOtp, setActiveWhatsAppOtp] = useState<string | null>(null);
-  const [googleName, setGoogleName] = useState<string>("");
-  const [googleEmail, setGoogleEmail] = useState<string>("");
-
-  // ── LIVE SILENT OTA ENGINE AUTO-SYNC (Checks Cloud for Instant Updates) ──
-  useEffect(() => {
-    const timer = setTimeout(async () => {
-      try {
-        console.log("🚀 [Trustit OTA] Checking cloud for instant updates...");
-        const res = await TrustitNative.checkAndApplyOta({
-          app: "rider",
-          currentVersion: "3.1.0",
-        });
-        if (res && res.hasUpdate) {
-          console.log("🎉 [Trustit OTA] Applied update version:", res.appliedVersion);
-        }
-      } catch (err) {
-        console.log("[Trustit OTA] Cloud check completed:", err);
-      }
-    }, 2500);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const handleRiderGoogleLogin = (googleUser: { email: string; fullName: string }) => {
-    setGoogleName(googleUser.fullName);
-    setGoogleEmail(googleUser.email);
-    setIsGoogleModalOpen(false);
-    // Populate Google Name and leave phone blank on Screen 01 for mobile number entry
-    setCurrentScreenId(1);
-  };
 
   // Auto-reset when testing as fresh new rider (?v=2 or ?fresh=1 or if legacy Arjun was cached)
   useEffect(() => {
@@ -365,8 +335,16 @@ export default function StandaloneRiderProductionApp() {
         const { latitude, longitude, accuracy, speed } = pos.coords;
         const now = Date.now();
 
-        // Update local HUD state silently
-        setGpsAccuracy(accuracy ? Number(accuracy.toFixed(1)) : 4.2);
+        // Throttle accuracy state updates to prevent re-render jitter
+        if (accuracy) {
+          const roundedAcc = Number(accuracy.toFixed(1));
+          setGpsAccuracy((prev) => {
+            if (prev === null || Math.abs(prev - roundedAcc) >= 1.5) {
+              return roundedAcc;
+            }
+            return prev;
+          });
+        }
         setGpsCoords({ lat: latitude, lng: longitude });
 
         // Periodically resolve human-readable locality
@@ -542,26 +520,12 @@ export default function StandaloneRiderProductionApp() {
       title: "01. Auth & Mobile Entry",
       component: (
         <Screen01AuthStart
-          prefilledName={googleName}
-          prefilledEmail={googleEmail}
           onContinue={(phone, channel, otp, meta) => {
             setAuthPhone(phone);
             setAuthChannel(channel);
             setPreviewOtp("");
             setActiveWhatsAppOtp(null);
-            if (meta?.fullName || meta?.vehicleType || meta?.email) {
-              workflow.setRider((prev) => ({
-                ...prev,
-                full_name: meta.fullName || prev?.full_name,
-                vehicle_type: (meta.vehicleType as any) || prev?.vehicle_type,
-                phone: phone || prev?.phone,
-                email: meta.email || prev?.email,
-              }));
-            }
             setCurrentScreenId(2);
-          }}
-          onGoogleLogin={() => {
-            setIsGoogleModalOpen(true);
           }}
         />
       ),
@@ -575,31 +539,36 @@ export default function StandaloneRiderProductionApp() {
           channel={authChannel}
           previewOtp={previewOtp}
           onVerified={async (otp, riderObj) => {
-            if (googleEmail || googleName) {
-              try {
-                await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    action: "google_login",
-                    email: googleEmail || undefined,
-                    fullName: googleName || workflow.rider?.full_name,
-                    phone: authPhone,
-                  }),
-                });
-              } catch {}
-            }
+            // Check if rider already exists and is fully verified in Supabase
+            const isFullyVerifiedInDb = Boolean(
+              riderObj?.is_verified &&
+              riderObj?.vehicle_number &&
+              riderObj?.vehicle_number !== "UP-40-TEMP" &&
+              riderObj?.kyc_status === "approved"
+            );
 
-            const hasCompletedKyc =
-              typeof window !== "undefined" &&
-              (localStorage.getItem("trustit_rider_onboarded") === "true" ||
-                Boolean(riderObj?.is_verified));
-            if (hasCompletedKyc) {
-              // Registered partner goes directly into Live Duty Cockpit!
+            if (isFullyVerifiedInDb) {
+              // Existing registered partner -> Cockpit
               setCurrentScreenId(7);
             } else {
-              // First time registration goes through onboarding flow
-              setCurrentScreenId(3);
+              // NEW RIDER REGISTRATION JOURNEY!
+              // Wipe any stale test data from device storage
+              if (typeof window !== "undefined") {
+                localStorage.removeItem("trustit_rider_onboarded");
+                localStorage.removeItem("trustit_rider_profile");
+                localStorage.removeItem("trustit_rider_upi");
+              }
+              workflow.resetToNewRider();
+              workflow.setRider((prev) => ({
+                ...prev,
+                phone: authPhone,
+                full_name: "",
+                vehicle_number: "",
+                is_verified: false,
+                kyc_status: "pending",
+              }));
+              // Advance to Step 2.5: Basic Profile (Name & Address)
+              setCurrentScreenId(48);
             }
           }}
           onResend={() => {
@@ -609,7 +578,31 @@ export default function StandaloneRiderProductionApp() {
         />
       ),
     },
-    { id: 3, title: "03. Terms & Road Safety", component: <Screen03Consent onAgree={() => setCurrentScreenId(4)} onBack={() => setCurrentScreenId(2)} /> },
+    {
+      id: 48,
+      title: "02.5. Basic Profile (Name & Address)",
+      component: (
+        <Screen02BasicProfile
+          verifiedPhone={authPhone}
+          onSaveProfile={(data) => {
+            workflow.setRider((prev) => ({
+              ...prev,
+              full_name: data.fullName,
+              phone: authPhone,
+            }));
+            if (typeof window !== "undefined") {
+              localStorage.setItem("trustit_rider_address", data.address);
+              if (data.emergencyPhone) {
+                localStorage.setItem("trustit_rider_emergency", data.emergencyPhone);
+              }
+            }
+            setCurrentScreenId(3); // Advance to Terms & Road Safety!
+          }}
+          onBack={() => setCurrentScreenId(2)}
+        />
+      ),
+    },
+    { id: 3, title: "03. Terms & Road Safety", component: <Screen03Consent onAgree={() => setCurrentScreenId(4)} onBack={() => setCurrentScreenId(48)} /> },
     { id: 4, title: "04. Real Selfie KYC (Live Camera)", component: <Screen04SelfieKyc onSelfieCaptured={(img) => { workflow.setRider((prev) => ({ ...prev, profile_image_url: img })); setCurrentScreenId(5); }} onBack={() => setCurrentScreenId(3)} /> },
     {
       id: 5,
@@ -651,6 +644,8 @@ export default function StandaloneRiderProductionApp() {
       title: "19. Verification In-Progress Room",
       component: (
         <Screen19VerificationPending
+          riderName={workflow.rider?.full_name}
+          vehicleNumber={workflow.rider?.vehicle_number}
           onBack={() => setCurrentScreenId(6)}
           onProceedToAcademy={() => setCurrentScreenId(20)}
           onRefresh={() => {
@@ -1162,27 +1157,6 @@ export default function StandaloneRiderProductionApp() {
           {backToast}
         </div>
       )}
-
-      {/* ── Google 1-Tap Auto-Login Consent Modal ── */}
-      <GoogleConsentModal
-        isOpen={isGoogleModalOpen}
-        onClose={() => setIsGoogleModalOpen(false)}
-        role="rider"
-        defaultName="Lucky Shukla (Rider)"
-        defaultEmail="lucky.rider@gmail.com"
-        onSuccess={handleRiderGoogleLogin}
-      />
-
-      {/* ── WhatsApp Incoming Notification Banner completely disabled per user request (Zero popups/banners) ── */}
-      {/* <WhatsAppOtpNotificationBanner
-        otpCode={activeWhatsAppOtp}
-        phone={authPhone}
-        onAutoFill={(code) => {
-          setPreviewOtp(code);
-        }}
-        onDismiss={() => setActiveWhatsAppOtp(null)}
-      /> */}
-
     </div>
   );
 }

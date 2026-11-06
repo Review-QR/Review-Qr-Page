@@ -99,8 +99,10 @@ export function useRiderCamera(initialFacingMode: "user" | "environment" = "user
     try {
       const video = videoRef.current;
       const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth || 640;
-      canvas.height = video.videoHeight || 480;
+      const width = video.videoWidth > 0 ? video.videoWidth : (video.clientWidth || 640);
+      const height = video.videoHeight > 0 ? video.videoHeight : (video.clientHeight || 480);
+      canvas.width = width;
+      canvas.height = height;
 
       const ctx = canvas.getContext("2d");
       if (!ctx) return null;

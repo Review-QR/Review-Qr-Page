@@ -17,31 +17,18 @@ interface Screen01Props {
     phone: string,
     channel: "sms" | "whatsapp",
     previewOtp?: string,
-    meta?: { fullName?: string; vehicleType?: "scooter"; isNewRegistration?: boolean; email?: string }
+    meta?: { isNewRegistration?: boolean; fullName?: string; vehicleType?: string }
   ) => void;
-  onGoogleLogin?: () => void;
-  prefilledName?: string;
-  prefilledEmail?: string;
+  onGoogleLogin?: () => Promise<void> | void;
 }
 
 export default function Screen01AuthStart({
   onContinue,
-  onGoogleLogin,
-  prefilledName = "",
-  prefilledEmail = "",
 }: Screen01Props) {
   const [phone, setPhone] = useState("");
-  const [fullName, setFullName] = useState(prefilledName);
   const [selectedChannel, setSelectedChannel] = useState<"whatsapp" | "sms">("whatsapp");
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
   const [localError, setLocalError] = useState<string | null>(null);
-
-  // Update fullName if prefilledName changes from Google Sign-In
-  React.useEffect(() => {
-    if (prefilledName) {
-      setFullName(prefilledName);
-    }
-  }, [prefilledName]);
 
   const { sendPhoneOtp, isLoading, error } = useRiderAuth();
 
@@ -66,10 +53,7 @@ export default function Screen01AuthStart({
     const res = await sendPhoneOtp(cleanPhone, "whatsapp");
     if (res.success) {
       onContinue?.(cleanPhone, "whatsapp", res.previewOtp, {
-        fullName: fullName.trim() || "Delivery Partner",
-        vehicleType: "scooter",
         isNewRegistration: true,
-        email: prefilledEmail,
       });
     } else {
       setLocalError(res.error || "WhatsApp OTP भेजने में विफल। कृपया पुनः प्रयास करें।");
@@ -101,30 +85,12 @@ export default function Screen01AuthStart({
         <div className="mt-3 space-y-0.5">
           <h1 className="text-sm font-black text-slate-900 leading-tight">Enter Your Mobile Number</h1>
           <p className="text-[11px] text-slate-500 leading-tight">
-            We will send an instant 6-digit verification code.
+            We will send an instant 6-digit verification code on WhatsApp.
           </p>
         </div>
 
         {/* Phone Entry Card */}
         <div className="mt-3 bg-white border border-slate-200 rounded-xl p-3 shadow-2xs space-y-3">
-          {/* If Signed In with Google, Show Verified Name */}
-          {fullName ? (
-            <div className="p-2 rounded-lg bg-blue-50/80 border border-blue-200 flex items-center justify-between">
-              <div>
-                <span className="text-[9px] font-bold text-blue-700 uppercase tracking-wider block">
-                  Google Account Name
-                </span>
-                <span className="text-xs font-black text-slate-900">{fullName}</span>
-                {prefilledEmail && (
-                  <span className="text-[10px] text-slate-500 block">{prefilledEmail}</span>
-                )}
-              </div>
-              <span className="text-[10px] bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full">
-                ✓ Google
-              </span>
-            </div>
-          ) : null}
-
           {/* Mobile Input */}
           <div>
             <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
@@ -142,7 +108,7 @@ export default function Screen01AuthStart({
                 }}
                 placeholder="Enter 10-digit number"
                 className="w-full pl-2 text-xs font-mono font-bold text-slate-900 bg-transparent focus:outline-none tracking-wider"
-                autoFocus={Boolean(fullName)}
+                autoFocus
               />
             </div>
           </div>
@@ -190,7 +156,7 @@ export default function Screen01AuthStart({
           )}
 
           {/* Exact Undertaking Sentence with PDF Link as Requested:
-              "By tapping Continue, you agree to our (Terms & Road Safety Policy)" */}
+              "By tapping Continue, you agree to our (Terms & Road Safety Policy)." */}
           <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-[10px] text-slate-600 leading-snug">
             <span>By tapping Continue, you agree to our </span>
             <button
@@ -200,7 +166,7 @@ export default function Screen01AuthStart({
             >
               (Terms &amp; Road Safety Policy)
             </button>
-            <span> and ₹1,500 cash ceiling undertaking.</span>
+            <span>.</span>
           </div>
 
           {/* Slim 40px Primary Action Button */}
@@ -222,18 +188,6 @@ export default function Screen01AuthStart({
                 <span>➔</span>
               </>
             )}
-          </button>
-        </div>
-
-        {/* Secondary Google Sign-In */}
-        <div className="mt-2.5 text-center">
-          <button
-            type="button"
-            onClick={onGoogleLogin}
-            className="w-full py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-bold flex items-center justify-center gap-2 hover:bg-slate-50 shadow-2xs active:scale-[0.99] transition"
-          >
-            <span>🌐</span>
-            <span>Continue with Google Account</span>
           </button>
         </div>
       </div>

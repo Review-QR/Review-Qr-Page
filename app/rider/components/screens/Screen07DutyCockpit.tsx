@@ -71,8 +71,8 @@ export default function Screen07DutyCockpit({
   const isCeilingBreached = cashInHandProp >= cashCeilingProp;
   const riderName = riderProp?.full_name?.trim() || "Delivery Partner";
   const vehicleText = riderProp?.vehicle_number?.trim()
-    ? `${riderProp.vehicle_number} · SCOOTER`
-    : "UP 40 BV 1001 · SCOOTER";
+    ? `${riderProp.vehicle_number} · ${(riderProp?.vehicle_type || "bike").toUpperCase()}`
+    : `${(riderProp?.vehicle_type || "bike").toUpperCase()} · UP 40 FLEET`;
   const initials = riderName
     .split(" ")
     .map((w) => w[0])

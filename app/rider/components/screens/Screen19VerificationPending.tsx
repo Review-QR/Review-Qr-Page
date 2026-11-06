@@ -7,6 +7,8 @@ interface Screen19Props {
   onRefresh?: () => void;
   onChatFleet?: () => void;
   onProceedToAcademy?: () => void;
+  riderName?: string;
+  vehicleNumber?: string;
 }
 
 export default function Screen19VerificationPending({
@@ -14,13 +16,15 @@ export default function Screen19VerificationPending({
   onRefresh,
   onChatFleet,
   onProceedToAcademy,
+  riderName,
+  vehicleNumber,
 }: Screen19Props) {
   const [activeTab, setActiveTab] = useState<"docs" | "timeline">("docs");
 
   const steps = [
-    { title: "Mobile & Basic Profile", status: "completed", detail: "Verified Partner · UP 40 Fleet Zone" },
-    { title: "Aadhaar & DL Verification", status: "completed", detail: "Verified via UIDAI / Parivahan API" },
-    { title: "Penny-Drop Bank Settlement", status: "completed", detail: "Cashfree ₹1.00 deposit verified" },
+    { title: "Mobile & Basic Profile", status: "completed", detail: `${riderName || "Verified Partner"} · UP 40 Fleet Zone` },
+    { title: "Vehicle RC & DL Details", status: "completed", detail: `${vehicleNumber || "Vehicle RC"} · Verification in Progress` },
+    { title: "Penny-Drop Bank Settlement", status: "completed", detail: "Cashfree UPI Payout handle linked" },
     { title: "Background Verification & Admin Approval", status: "in_progress", detail: "Admin Ops Review (ETA: 1-2 hours)" },
     { title: "Delivery Kit & Final Activation", status: "locked", detail: "Thermal bag & T-shirt allocation" },
   ];

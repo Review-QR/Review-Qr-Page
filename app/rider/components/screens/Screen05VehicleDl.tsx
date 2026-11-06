@@ -9,12 +9,13 @@ interface Screen05Props {
 }
 
 export default function Screen05VehicleDl({
+  initialVehicleType,
   onVehicleSubmit,
   onBack,
 }: Screen05Props) {
-  const [vehicleType, setVehicleType] = useState<string>("bike");
-  const [vehicleNumber, setVehicleNumber] = useState("UP 40 BV 1001");
-  const [dlNumber, setDlNumber] = useState("UP40 2024009182");
+  const [vehicleType, setVehicleType] = useState<string>(initialVehicleType || "bike");
+  const [vehicleNumber, setVehicleNumber] = useState("");
+  const [dlNumber, setDlNumber] = useState("");
 
   const vehicleOptions = [
     { id: "bike", name: "Motorcycle / Bike (बाइक)", icon: "🏍️", badge: "Petrol" },
@@ -25,8 +26,9 @@ export default function Screen05VehicleDl({
   ];
 
   const handleSubmit = () => {
-    const vNum = vehicleNumber.trim() || "UP 40 BV 1001";
-    const dl = dlNumber.trim() || "UP40 2024009182";
+    const vNum = vehicleNumber.trim();
+    if (!vNum) return;
+    const dl = dlNumber.trim();
     onVehicleSubmit?.({ vehicleType, vehicleNumber: vNum, dlNumber: dl });
   };
 
@@ -96,8 +98,9 @@ export default function Screen05VehicleDl({
               type="text"
               value={vehicleNumber}
               onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
-              placeholder="UP 40 BV 1001"
+              placeholder="e.g. UP 40 AB 1234"
               className="w-full rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-mono font-black text-slate-900 focus:border-[#0D47A1] focus:bg-white focus:outline-none uppercase tracking-wider"
+              autoFocus
             />
           </div>
 
@@ -110,7 +113,7 @@ export default function Screen05VehicleDl({
               type="text"
               value={dlNumber}
               onChange={(e) => setDlNumber(e.target.value.toUpperCase())}
-              placeholder="UP40 2024009182"
+              placeholder="e.g. UP40 2024000123"
               className="w-full rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-mono font-black text-slate-900 focus:border-[#0D47A1] focus:bg-white focus:outline-none uppercase tracking-wider"
             />
           </div>
@@ -119,11 +122,15 @@ export default function Screen05VehicleDl({
           <div className="grid grid-cols-2 gap-2 text-[10px]">
             <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
               <span className="text-slate-600">Vehicle RC</span>
-              <span className="text-emerald-700 font-bold">✓ Validated</span>
+              <span className={`font-bold ${vehicleNumber.trim() ? "text-emerald-700" : "text-slate-400"}`}>
+                {vehicleNumber.trim() ? "✓ Entered" : "Pending"}
+              </span>
             </div>
             <div className="p-1.5 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
               <span className="text-slate-600">DL Card</span>
-              <span className="text-emerald-700 font-bold">✓ Validated</span>
+              <span className={`font-bold ${dlNumber.trim() ? "text-emerald-700" : "text-slate-400"}`}>
+                {dlNumber.trim() ? "✓ Entered" : "Optional"}
+              </span>
             </div>
           </div>
         </div>
@@ -134,7 +141,12 @@ export default function Screen05VehicleDl({
         <button
           type="button"
           onClick={handleSubmit}
-          className="w-full py-2.5 rounded-lg font-black text-xs flex items-center justify-center gap-2 bg-[#0D47A1] hover:bg-[#082b66] text-white shadow-xs active:scale-[0.99] transition"
+          disabled={!vehicleNumber.trim()}
+          className={`w-full py-2.5 rounded-lg font-black text-xs flex items-center justify-center gap-2 shadow-xs active:scale-[0.99] transition ${
+            vehicleNumber.trim().length >= 4
+              ? "bg-[#0D47A1] hover:bg-[#082b66] text-white"
+              : "bg-slate-200 text-slate-400 cursor-not-allowed"
+          }`}
         >
           <span>Continue ➔ Setup Instant UPI Payout</span>
           <span>➔</span>

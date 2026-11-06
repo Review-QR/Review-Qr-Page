@@ -9,7 +9,9 @@ interface Screen06Props {
 
 export default function Screen06PayoutSetup({ onPayoutConfigured, onBack }: Screen06Props) {
   // Single standardized payout method as instructed by user: UPI only
-  const [upiId, setUpiId] = useState("trustit.rider@oksbi");
+  const [upiId, setUpiId] = useState("");
+
+  const isValidUpi = upiId.includes("@") && upiId.trim().length >= 6;
 
   return (
     <div className="w-full h-full max-h-[580px] bg-[#FAF8FF] flex flex-col justify-between p-4 text-[#0F172A] font-sans select-none">
@@ -51,7 +53,7 @@ export default function Screen06PayoutSetup({ onPayoutConfigured, onBack }: Scre
           <div>
             <div className="flex items-center justify-between mb-1">
               <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
-                UPI ID / Virtual Payment Address (VPA)
+                UPI ID / Virtual Payment Address (VPA) *
               </label>
               <span className="text-[9px] text-slate-400">@okhdfcbank, @paytm, @oksbi</span>
             </div>
@@ -59,18 +61,10 @@ export default function Screen06PayoutSetup({ onPayoutConfigured, onBack }: Scre
               type="text"
               value={upiId}
               onChange={(e) => setUpiId(e.target.value.toLowerCase().trim())}
-              placeholder="yourname@oksbi"
+              placeholder="e.g. yourname@okhdfcbank"
               className="w-full rounded-lg border border-slate-300 bg-slate-50 px-2.5 py-1.5 text-xs font-mono font-bold text-slate-900 focus:border-[#0D47A1] focus:bg-white focus:outline-none"
+              autoFocus
             />
-          </div>
-
-          {/* Cashfree Penny-Drop Badge (Single Line) */}
-          <div className="p-2 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-between text-[11px]">
-            <div className="flex items-center gap-1 text-emerald-900 font-bold">
-              <span>✓</span>
-              <span>Cashfree ₹1 Penny-Drop Active</span>
-            </div>
-            <span className="text-[9px] font-mono text-emerald-700 font-bold">UTR: CF94821049</span>
           </div>
 
           <div className="p-2 rounded-lg bg-slate-50 border border-slate-200 text-[10px] text-slate-600 leading-tight">
@@ -83,10 +77,17 @@ export default function Screen06PayoutSetup({ onPayoutConfigured, onBack }: Scre
       <div className="pt-2 border-t border-slate-200">
         <button
           type="button"
-          onClick={() => onPayoutConfigured?.(upiId || "trustit.rider@oksbi")}
-          className="w-full py-2.5 rounded-lg font-black text-xs flex items-center justify-center gap-2 bg-[#10B981] hover:bg-emerald-700 text-white shadow-xs active:scale-[0.99] transition"
+          onClick={() => {
+            if (isValidUpi) onPayoutConfigured?.(upiId.trim());
+          }}
+          disabled={!isValidUpi}
+          className={`w-full py-2.5 rounded-lg font-black text-xs flex items-center justify-center gap-2 shadow-xs active:scale-[0.99] transition ${
+            isValidUpi
+              ? "bg-[#10B981] hover:bg-emerald-700 text-white cursor-pointer"
+              : "bg-slate-200 text-slate-400 cursor-not-allowed"
+          }`}
         >
-          <span>Complete KYC ➔ Launch Duty Cockpit</span>
+          <span>Submit UPI ➔ Review &amp; Activation</span>
           <span>➔</span>
         </button>
       </div>

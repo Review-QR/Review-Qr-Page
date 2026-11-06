@@ -26,7 +26,7 @@ export interface RiderWorkflowState {
 
 const BLANK_NEW_RIDER: DeliveryRider = {
   id: "rider_new_partner",
-  full_name: "New Partner",
+  full_name: "",
   phone: "",
   email: "",
   vehicle_type: "bike",
