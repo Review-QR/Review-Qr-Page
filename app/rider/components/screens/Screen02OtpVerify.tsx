@@ -28,12 +28,6 @@ export default function Screen02OtpVerify({
 
   const inputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-  // Auto-fill disabled per user request: customer/rider will check WhatsApp and manually type OTP
-  // No automatic filling of OTP digits
-  useEffect(() => {
-    // Keep digits empty for manual input
-  }, []);
-
   // Focus first empty box on mount
   useEffect(() => {
     const firstEmptyIndex = digits.findIndex((d) => !d);
@@ -44,7 +38,7 @@ export default function Screen02OtpVerify({
   // 30s Countdown timer
   useEffect(() => {
     if (countdown <= 0) return;
-    const timer = setInterval(() => setCountdown((c) => c - 1), 1000);
+    const timer = setInterval(() => setCountdown((c) => Math.max(0, c - 1)), 1000);
     return () => clearInterval(timer);
   }, [countdown]);
 
@@ -113,7 +107,7 @@ export default function Screen02OtpVerify({
   };
 
   return (
-    <div className="w-full h-full max-h-[580px] bg-[#FAF8FF] flex flex-col justify-between p-4 text-[#0F172A] font-sans select-none">
+    <div className="w-full h-full min-h-[560px] bg-[#FAF8FF] flex flex-col justify-between p-4 text-[#0F172A] font-sans select-none overflow-y-auto">
       {/* Top Header */}
       <div>
         <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
@@ -139,75 +133,78 @@ export default function Screen02OtpVerify({
           </p>
         </div>
 
-        {/* 6 Auto-Next Digit Boxes (38px x 44px) */}
-        <div className="mt-4 bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs space-y-3">
-          <div className="flex justify-between gap-1.5">
+        {/* 6 Auto-Next Digit Boxes with Forced Numeric Keyboard */}
+        <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-4">
+          <div className="flex justify-between gap-1.5 sm:gap-2">
             {digits.map((digit, i) => (
               <input
                 key={i}
                 ref={(el) => {
                   inputRefs.current[i] = el;
                 }}
-                type="text"
+                type="tel"
                 inputMode="numeric"
                 pattern="[0-9]*"
+                autoComplete="one-time-code"
                 maxLength={6}
                 value={digit}
                 onChange={(e) => handleDigitChange(i, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(i, e)}
                 onFocus={(e) => e.target.select()}
-                className={`w-9 h-11 sm:w-10 sm:h-11 text-center text-base font-black font-mono rounded-lg border transition ${
+                className={`w-10 h-12 sm:w-11 sm:h-12 text-center text-lg font-black font-mono rounded-xl border transition ${
                   digit
                     ? "border-[#0D47A1] bg-blue-50/40 text-slate-950 font-black"
                     : "border-slate-300 bg-slate-50 text-slate-800"
-                } focus:border-[#0D47A1] focus:bg-blue-50/50 focus:outline-none focus:ring-1 focus:ring-[#0D47A1]`}
+                } focus:border-[#0D47A1] focus:bg-blue-50/50 focus:outline-none focus:ring-2 focus:ring-[#0D47A1]/20`}
               />
             ))}
           </div>
 
           {/* Error Banner */}
           {(localError || error) && (
-            <div className="p-2 rounded-lg bg-red-50 border border-red-200 text-[11px] text-red-700 font-medium text-center">
+            <div className="p-2.5 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 font-bold text-center">
               ⚠️ {localError || error}
             </div>
           )}
 
-          {/* Resend & Channel Switch */}
-          <div className="flex items-center justify-between text-xs pt-1">
+          {/* Resend Countdown Bar */}
+          <div className="flex items-center justify-between text-xs pt-1 px-1">
             {countdown > 0 ? (
-              <span className="text-[11px] text-slate-500 font-semibold">
-                Resend OTP in <strong className="font-mono text-slate-700">{countdown}s</strong>
+              <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1.5">
+                <span>⏳ पुनः OTP भेजें (Resend):</span>
+                <strong className="font-mono text-[#0D47A1] font-black">{countdown}s</strong>
               </span>
             ) : (
               <button
                 type="button"
                 onClick={handleResendOtp}
-                className="text-[11px] font-bold text-[#0D47A1] hover:underline"
+                className="text-xs font-black text-[#0D47A1] hover:underline flex items-center gap-1"
               >
-                🔄 Resend OTP Now
+                <span>🔄</span>
+                <span>पुनः OTP भेजें (Resend OTP Now)</span>
               </button>
             )}
-            <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
               WhatsApp Active
             </span>
           </div>
 
-          {/* Slim 40px Primary Verify CTA */}
+          {/* Primary Verify CTA */}
           <button
             type="button"
             onClick={handleVerify}
             disabled={fullOtp.length < 6 || isLoading}
-            className={`w-full py-2.5 rounded-lg font-black text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-[0.99] ${
+            className={`w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-[0.99] ${
               fullOtp.length === 6 && !isLoading
                 ? "bg-[#0D47A1] hover:bg-[#082b66] text-white"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
             }`}
           >
             {isLoading ? (
-              <span>Verifying OTP Code...</span>
+              <span>सत्यापन हो रहा है (Verifying)...</span>
             ) : (
               <>
-                <span>Verify OTP &amp; Proceed</span>
+                <span>OTP सत्यापित करें (Verify &amp; Proceed)</span>
                 <span>➔</span>
               </>
             )}
@@ -215,7 +212,7 @@ export default function Screen02OtpVerify({
         </div>
       </div>
 
-      {/* Footer Info (Zero-Scroll Fit) */}
+      {/* Footer Info */}
       <div className="pt-2 border-t border-slate-200 text-center">
         <p className="text-[10px] text-slate-400 font-mono">
           Fast2SMS Direct WhatsApp Gateway · 256-Bit SSL Encrypted

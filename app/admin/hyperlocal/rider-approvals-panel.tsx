@@ -11,6 +11,8 @@ export interface RiderAdminItem {
   residential_address?: string | null;
   city?: string | null;
   pincode?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
   vehicle_type?: string | null;
   vehicle_number?: string | null;
   driving_license_number?: string | null;
@@ -67,7 +69,10 @@ export default function RiderApprovalsPanel({ onToast, onPendingCountChange }: R
     fullName: "",
     phone: "",
     residentialAddress: "",
+    city: "बहराइच",
     pincode: "271801",
+    emergencyContactName: "",
+    emergencyContactPhone: "",
     vehicleType: "bike",
     vehicleNumber: "",
     drivingLicenseNumber: "",
@@ -113,7 +118,10 @@ export default function RiderApprovalsPanel({ onToast, onPendingCountChange }: R
       fullName: r.full_name || "",
       phone: (r.phone || "").replace(/^\+91/, ""),
       residentialAddress: r.residential_address || "",
+      city: r.city || "बहराइच",
       pincode: r.pincode || "271801",
+      emergencyContactName: r.emergency_contact_name || "",
+      emergencyContactPhone: (r.emergency_contact_phone || "").replace(/^\+91/, ""),
       vehicleType: r.vehicle_type || "bike",
       vehicleNumber: r.vehicle_number || "",
       drivingLicenseNumber: r.driving_license_number || "",
@@ -726,6 +734,16 @@ export default function RiderApprovalsPanel({ onToast, onPendingCountChange }: R
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">ज़िला / शहर (District/City)</label>
+                  <input
+                    type="text"
+                    value={editForm.city}
+                    onChange={(e) => setEditForm({ ...editForm, city: e.target.value })}
+                    placeholder="उदा. बहराइच / श्रावस्ती"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">पिन कोड</label>
                   <input
                     type="text"
@@ -735,22 +753,46 @@ export default function RiderApprovalsPanel({ onToast, onPendingCountChange }: R
                     className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white font-mono"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">आपातकालीन संपर्क नाम</label>
+                  <input
+                    type="text"
+                    value={editForm.emergencyContactName}
+                    onChange={(e) => setEditForm({ ...editForm, emergencyContactName: e.target.value })}
+                    placeholder="पिता / भाई का नाम"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">आपातकालीन फ़ोन नं.</label>
+                  <input
+                    type="tel"
+                    maxLength={10}
+                    value={editForm.emergencyContactPhone}
+                    onChange={(e) => setEditForm({ ...editForm, emergencyContactPhone: e.target.value })}
+                    placeholder="10 अंकों का मोबाइल"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">वाहन प्रकार</label>
                   <select
                     value={editForm.vehicleType}
                     onChange={(e) => setEditForm({ ...editForm, vehicleType: e.target.value })}
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-2 py-2 text-xs text-white"
                   >
-                    <option value="bike">मोटरसाइकिल (Bike)</option>
+                    <option value="bike">बाइक (Bike)</option>
                     <option value="scooter">स्कूटर (Scooter)</option>
-                    <option value="ev">इलेक्ट्रिक व्हीकल (EV)</option>
-                    <option value="cycle">साइकिल (Bicycle)</option>
+                    <option value="ev">इलेक्ट्रिक (EV)</option>
+                    <option value="cycle">साइकिल (Cycle)</option>
                   </select>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">वाहन संख्या</label>
                   <input
@@ -758,7 +800,7 @@ export default function RiderApprovalsPanel({ onToast, onPendingCountChange }: R
                     value={editForm.vehicleNumber}
                     onChange={(e) => setEditForm({ ...editForm, vehicleNumber: e.target.value.toUpperCase() })}
                     placeholder="UP 40 AB 1234"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white font-mono uppercase"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white font-mono uppercase text-xs"
                   />
                 </div>
                 <div>
@@ -768,7 +810,7 @@ export default function RiderApprovalsPanel({ onToast, onPendingCountChange }: R
                     value={editForm.drivingLicenseNumber}
                     onChange={(e) => setEditForm({ ...editForm, drivingLicenseNumber: e.target.value.toUpperCase() })}
                     placeholder="UP40 20230001234"
-                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white font-mono uppercase"
+                    className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-white font-mono uppercase text-xs"
                   />
                 </div>
               </div>

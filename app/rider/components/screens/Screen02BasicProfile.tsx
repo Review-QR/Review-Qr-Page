@@ -7,12 +7,14 @@ interface Screen02BasicProfileProps {
   initialData?: {
     fullName?: string;
     residentialAddress?: string;
+    emergencyContactName?: string;
     emergencyPhone?: string;
   };
   onSaveProfile: (data: {
     fullName: string;
     address: string;
-    emergencyPhone?: string;
+    emergencyContactName: string;
+    emergencyPhone: string;
   }) => void;
   onBack?: () => void;
 }
@@ -23,25 +25,30 @@ export default function Screen02BasicProfile({
   onSaveProfile,
   onBack,
 }: Screen02BasicProfileProps) {
-  // Completely blank inputs by default (no fake prefilled names like Lucky Shukla)
+  // Completely blank inputs - NO prefilled text, NO confusing "उदा." in values
   const [fullName, setFullName] = useState(initialData?.fullName || "");
   const [houseAndStreet, setHouseAndStreet] = useState("");
   const [villageAndPost, setVillageAndPost] = useState("");
-  const [district, setDistrict] = useState("बहराइच, उत्तर प्रदेश - 271801");
+  const [districtAndCity, setDistrictAndCity] = useState("बहराइच");
+  const [pincode, setPincode] = useState("271801");
+  const [emergencyContactName, setEmergencyContactName] = useState(initialData?.emergencyContactName || "");
   const [emergencyPhone, setEmergencyPhone] = useState(initialData?.emergencyPhone || "");
   const [error, setError] = useState<string | null>(null);
 
-  // Restore draft from localStorage if present
+  // Restore draft from localStorage if available
   useEffect(() => {
     if (typeof window !== "undefined" && !initialData?.fullName) {
       try {
         const draft = localStorage.getItem("trustit_rider_profile_draft");
         if (draft) {
-          const parsed = JSON.parse(draft);
-          if (parsed.fullName) setFullName(parsed.fullName);
-          if (parsed.houseAndStreet) setHouseAndStreet(parsed.houseAndStreet);
-          if (parsed.villageAndPost) setVillageAndPost(parsed.villageAndPost);
-          if (parsed.emergencyPhone) setEmergencyPhone(parsed.emergencyPhone);
+          const p = JSON.parse(draft);
+          if (p.fullName) setFullName(p.fullName);
+          if (p.houseAndStreet) setHouseAndStreet(p.houseAndStreet);
+          if (p.villageAndPost) setVillageAndPost(p.villageAndPost);
+          if (p.districtAndCity) setDistrictAndCity(p.districtAndCity);
+          if (p.pincode) setPincode(p.pincode);
+          if (p.emergencyContactName) setEmergencyContactName(p.emergencyContactName);
+          if (p.emergencyPhone) setEmergencyPhone(p.emergencyPhone);
         }
       } catch {}
     }
@@ -53,41 +60,66 @@ export default function Screen02BasicProfile({
       try {
         localStorage.setItem(
           "trustit_rider_profile_draft",
-          JSON.stringify({ fullName, houseAndStreet, villageAndPost, emergencyPhone })
+          JSON.stringify({
+            fullName,
+            houseAndStreet,
+            villageAndPost,
+            districtAndCity,
+            pincode,
+            emergencyContactName,
+            emergencyPhone,
+          })
         );
       } catch {}
     }
-  }, [fullName, houseAndStreet, villageAndPost, emergencyPhone]);
+  }, [fullName, houseAndStreet, villageAndPost, districtAndCity, pincode, emergencyContactName, emergencyPhone]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!fullName.trim() || fullName.trim().length < 3) {
-      setError("कृपया अपना वास्तविक पूरा नाम दर्ज करें (Enter your full name)");
+      setError("कृपया अपना पूरा नाम दर्ज करें (Enter Full Name)");
       return;
     }
     if (!houseAndStreet.trim()) {
-      setError("कृपया मकान नंबर और गली / मोहल्ला दर्ज करें (Enter House No. & Street/Mohalla)");
+      setError("कृपया मकान नंबर और गली / मोहल्ला दर्ज करें");
       return;
     }
     if (!villageAndPost.trim()) {
-      setError("कृपया गाँव / कस्बा और पोस्ट ऑफिस दर्ज करें (Enter Village & Post Office)");
+      setError("कृपया गाँव / कस्बा और पोस्ट ऑफिस दर्ज करें");
+      return;
+    }
+    if (!districtAndCity.trim()) {
+      setError("कृपया अपना जिला / शहर दर्ज करें (उदा. बहराइच / श्रावस्ती)");
+      return;
+    }
+    if (!emergencyContactName.trim()) {
+      setError("आपातकालीन संपर्क व्यक्ति का नाम अनिवार्य है (पिता / भाई / मित्र का नाम)");
+      return;
+    }
+    const cleanEmergencyPhone = emergencyPhone.replace(/\D/g, "");
+    if (!cleanEmergencyPhone || cleanEmergencyPhone.length < 10) {
+      setError("आपातकालीन 10-अंकीय मोबाइल नंबर दर्ज करना अनिवार्य है");
       return;
     }
 
-    const fullAddress = `${houseAndStreet.trim()}, ${villageAndPost.trim()}, ${district.trim()}`;
+    const fullAddress = `${houseAndStreet.trim()}, ${villageAndPost.trim()}, ${districtAndCity.trim()} - ${pincode.trim()}`;
     setError(null);
 
     onSaveProfile({
       fullName: fullName.trim(),
       address: fullAddress,
-      emergencyPhone: emergencyPhone.trim() || undefined,
+      emergencyContactName: emergencyContactName.trim(),
+      emergencyPhone: cleanEmergencyPhone,
     });
   };
 
   const isFormValid =
     fullName.trim().length >= 3 &&
     houseAndStreet.trim().length >= 2 &&
-    villageAndPost.trim().length >= 2;
+    villageAndPost.trim().length >= 2 &&
+    districtAndCity.trim().length >= 2 &&
+    emergencyContactName.trim().length >= 2 &&
+    emergencyPhone.replace(/\D/g, "").length === 10;
 
   return (
     <div className="w-full h-full min-h-[560px] bg-[#FAF8FF] flex flex-col justify-between p-4 text-[#0F172A] font-sans select-none overflow-y-auto">
@@ -115,7 +147,7 @@ export default function Screen02BasicProfile({
             मूल विवरण (Basic Profile)
           </h2>
           <p className="text-[11px] text-slate-500 leading-tight">
-            ऑर्डर डिलीवरी और फ्लीट रिकॉर्ड के लिए अपना वास्तविक नाम व बहराइच का पता दर्ज करें।
+            सत्यापन और फ्लीट रिकॉर्ड के लिए अपना नाम, निवास स्थान व आपातकालीन संपर्क दर्ज करें।
           </p>
         </div>
 
@@ -125,7 +157,7 @@ export default function Screen02BasicProfile({
             <span className="text-base">📱</span>
             <div>
               <span className="text-[9px] font-bold text-emerald-800 uppercase tracking-wider block">
-                सत्यापित मोबाइल नंबर (Verified Number)
+                सत्यापित मोबाइल नंबर
               </span>
               <span className="text-xs font-mono font-bold text-slate-900">
                 +91 {verifiedPhone || "Registered Mobile"}
@@ -138,11 +170,11 @@ export default function Screen02BasicProfile({
         </div>
 
         {/* Input Form Card */}
-        <form onSubmit={handleSubmit} className="mt-3 bg-white border border-slate-200 rounded-xl p-3.5 shadow-xs space-y-3">
+        <form onSubmit={handleSubmit} className="mt-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3.5">
           {/* Full Name */}
           <div>
-            <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
-              पूरा नाम (Full Name) *
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+              पूरा नाम (Full Name) <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -151,7 +183,7 @@ export default function Screen02BasicProfile({
                 setFullName(e.target.value);
                 setError(null);
               }}
-              placeholder="उदा. राहुल वर्मा (अपना नाम लिखें)"
+              placeholder="पूरा नाम दर्ज करें"
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
               autoFocus
             />
@@ -159,8 +191,8 @@ export default function Screen02BasicProfile({
 
           {/* House No & Street */}
           <div>
-            <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
-              मकान संख्या एवं गली / मोहल्ला (House No., Street/Gali) *
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+              मकान संख्या एवं गली / मोहल्ला <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -169,15 +201,15 @@ export default function Screen02BasicProfile({
                 setHouseAndStreet(e.target.value);
                 setError(null);
               }}
-              placeholder="उदा. मकान नं. 15, नाज़िरपुरा / मोहल्ला छावनी"
+              placeholder="मकान नंबर व गली / मोहल्ला"
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
             />
           </div>
 
           {/* Village & Post Office */}
           <div>
-            <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
-              गाँव / कस्बा एवं पोस्ट ऑफिस (Village &amp; Post Office) *
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+              गाँव / कस्बा एवं पोस्ट ऑफिस <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -186,37 +218,80 @@ export default function Screen02BasicProfile({
                 setVillageAndPost(e.target.value);
                 setError(null);
               }}
-              placeholder="उदा. बहराइच हेड पोस्ट ऑफिस"
+              placeholder="गाँव या कस्बा और पोस्ट ऑफिस"
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
             />
           </div>
 
-          {/* District & Pincode (Read-only / Pre-set for Bahraich Fleet) */}
-          <div>
-            <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
-              जिला एवं पिन कोड (District &amp; Pin Code)
+          {/* District & Pincode (Editable, not hardcoded to only Bahraich) */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+                जिला / शहर (District) <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={districtAndCity}
+                onChange={(e) => {
+                  setDistrictAndCity(e.target.value);
+                  setError(null);
+                }}
+                placeholder="बहराइच / श्रावस्ती"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+                पिन कोड (Pincode) <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="tel"
+                maxLength={6}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={pincode}
+                onChange={(e) => setPincode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="271801"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold font-mono text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Emergency Contact Name (Mandatory) */}
+          <div className="pt-2 border-t border-slate-100">
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+              आपातकालीन संपर्क व्यक्ति का नाम (Emergency Contact Person) <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
-              value={district}
-              onChange={(e) => setDistrict(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-slate-700 focus:outline-none"
+              value={emergencyContactName}
+              onChange={(e) => {
+                setEmergencyContactName(e.target.value);
+                setError(null);
+              }}
+              placeholder="पिता, भाई या मित्र का नाम"
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
             />
           </div>
 
-          {/* Emergency / Alternate Phone */}
+          {/* Emergency Contact Number (Mandatory) */}
           <div>
-            <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
-              आपातकालीन संपर्क नंबर (Emergency Contact - Optional)
+            <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
+              आपातकालीन मोबाइल नंबर (Emergency Mobile No.) <span className="text-rose-500">*</span>
             </label>
             <div className="flex items-center rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-1.5 focus-within:border-[#0D47A1] focus-within:bg-white">
               <span className="text-xs font-bold text-slate-500 font-mono pr-2 border-r border-slate-300">+91</span>
               <input
                 type="tel"
                 maxLength={10}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={emergencyPhone}
-                onChange={(e) => setEmergencyPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                placeholder="10 अंकों का नंबर"
+                onChange={(e) => {
+                  setEmergencyPhone(e.target.value.replace(/\D/g, "").slice(0, 10));
+                  setError(null);
+                }}
+                placeholder="10 अंकों का मोबाइल नंबर"
                 className="w-full pl-2 text-xs font-mono font-bold text-slate-900 bg-transparent focus:outline-none"
               />
             </div>

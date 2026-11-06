@@ -89,23 +89,23 @@ export default function Screen19VerificationPending({
           </button>
           <div className="text-center">
             <span className="text-[9px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-              सत्यापन गेटवे (Verification Gate)
+              Verification Gateway
             </span>
             <h2 className="text-sm font-black text-slate-900 leading-tight">
               {kycStatus === "approved"
-                ? "आवेदन स्वीकृत ✅"
+                ? "Application Approved ✅"
                 : kycStatus === "action_required"
-                ? "सुधार आवश्यक ⚠️"
+                ? "Correction Required ⚠️"
                 : kycStatus === "rejected"
-                ? "आवेदन अस्वीकृत 🚫"
-                : "दस्तावेज़ समीक्षा जारी ⏳"}
+                ? "Application Rejected 🚫"
+                : "Verification In-Progress ⏳"}
             </h2>
           </div>
           <button
             type="button"
             onClick={checkStatus}
             className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs hover:bg-slate-50 text-xs"
-            title="स्थिति रीफ्रेश करें"
+            title="Refresh Status"
           >
             🔄
           </button>
@@ -120,35 +120,37 @@ export default function Screen19VerificationPending({
               <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-100 border-2 border-amber-300 flex items-center justify-center text-3xl shadow-inner mb-3 animate-pulse">
                 ⏳
               </div>
-              <h3 className="text-base font-black text-amber-950">एडमिन समीक्षा प्रगति पर है</h3>
+              <h3 className="text-base font-black text-amber-950">Admin Review In-Progress</h3>
               <p className="text-xs text-amber-800 mt-1 max-w-xs mx-auto leading-relaxed">
-                बहराइच फ्लीट ऑपरेशन्स टीम आपके वाहन, ड्राइविंग लाइसेंस और प्रोफाइल की समीक्षा कर रही है।
+                The Fleet Operations team is reviewing your profile, vehicle, and driving license details.
               </p>
               <div className="mt-3.5 inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white text-[11px] font-bold text-slate-800 border border-amber-200 shadow-xs">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                <span>समीक्षा समय: <strong>15 से 30 मिनट</strong></span>
+                <span>Expected Review Time: <strong>15 - 30 minutes</strong></span>
               </div>
             </div>
 
             {/* Application Summary Card */}
             <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-2.5 text-xs">
               <h4 className="text-[11px] font-black uppercase tracking-wider text-slate-500">
-                आपके द्वारा सबमिट किया गया विवरण
+                Submitted Application Details
               </h4>
               <div className="space-y-1.5 pt-1">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">राइडर का नाम:</span>
-                  <span className="font-bold text-slate-900">{riderData?.full_name || "समीक्षाधीन"}</span>
+                  <span className="text-slate-500">Rider Name:</span>
+                  <span className="font-bold text-slate-900">{riderData?.full_name || "Under Review"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">वाहन एवं DL:</span>
+                  <span className="text-slate-500">Vehicle &amp; DL:</span>
                   <span className="font-mono font-bold text-slate-900">
                     {(riderData?.vehicle_type || "BIKE").toUpperCase()} · {riderData?.vehicle_number || "UP 40"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-500">स्थान / ज़ोन:</span>
-                  <span className="font-semibold text-slate-800">बहराइच, उत्तर प्रदेश - 271801</span>
+                  <span className="text-slate-500">City / Zone:</span>
+                  <span className="font-semibold text-slate-800">
+                    {riderData?.city || riderData?.district || "Bahraich, Uttar Pradesh"}
+                  </span>
                 </div>
               </div>
             </div>
@@ -164,35 +166,37 @@ export default function Screen19VerificationPending({
               <div className="w-14 h-14 mx-auto rounded-2xl bg-orange-100 border-2 border-orange-300 flex items-center justify-center text-3xl shadow-inner mb-3">
                 ⚠️
               </div>
-              <h3 className="text-base font-black text-orange-950">आवेदन में सुधार आवश्यक है</h3>
+              <h3 className="text-base font-black text-orange-950">Correction Required</h3>
               <p className="text-xs text-orange-800 mt-1 max-w-xs mx-auto leading-relaxed">
-                एडमिन सत्यापन टीम ने आपके आवेदन में निम्नलिखित विवरण सुधारने का निर्देश दिया है:
+                The verification team has requested updates to your submitted details:
               </p>
 
               {/* Admin Note Highlight Box */}
               <div className="mt-3 bg-white/90 border border-orange-300 rounded-2xl p-3.5 text-left shadow-xs">
                 <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 block mb-1">
-                  💬 एडमिन का संदेश / निर्देश:
+                  💬 Admin Instructions:
                 </span>
                 <p className="text-xs font-bold text-slate-900 leading-snug">
-                  &quot;{rejectionReason || adminNotes || "कृपया अपना विवरण सुधारें"}&quot;
+                  &quot;{rejectionReason || adminNotes || "Please update your submitted details as requested."}&quot;
                 </p>
               </div>
             </div>
 
-            {/* Action Button: Edit & Resubmit */}
+            {/* Action Card: Edit & Resubmit */}
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-2 text-center">
               <p className="text-xs font-semibold text-slate-600">
-                आपका पूर्व विवरण सुरक्षित है। केवल आवश्यक सुधार करके तुरंत दोबारा सबमिट करें।
+                Your previously entered details are saved. Update the necessary fields and resubmit.
               </p>
-              <button
-                type="button"
-                onClick={handleStartCorrection}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 active:scale-95"
-              >
-                <span>✏️</span>
-                <span>विवरण सुधारें और पुनः सबमिट करें (Edit &amp; Resubmit)</span>
-              </button>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleStartCorrection}
+                  className="py-2.5 px-6 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 active:scale-95"
+                >
+                  <span>✏️</span>
+                  <span>Edit &amp; Resubmit Application</span>
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -206,19 +210,19 @@ export default function Screen19VerificationPending({
               <div className="w-14 h-14 mx-auto rounded-2xl bg-emerald-100 border-2 border-emerald-300 flex items-center justify-center text-3xl shadow-inner mb-3">
                 🎉
               </div>
-              <h3 className="text-base font-black text-emerald-950">बधाई हो! आपका आवेदन स्वीकृत हो गया!</h3>
+              <h3 className="text-base font-black text-emerald-950">Congratulations! Application Approved!</h3>
               <p className="text-xs text-emerald-800 mt-1 max-w-xs mx-auto leading-relaxed">
-                एडमिन टीम द्वारा आपका प्रोफाइल, वाहन और ड्राइविंग लाइसेंस सत्यापित कर दिया गया है।
+                Your profile, vehicle, and driving license have been verified by the fleet operations team.
               </p>
               <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-600 text-white text-[11px] font-black shadow-xs">
                 <span>✓</span>
-                <span>वेरिफाइड ट्रस्टिट फ्लीट पार्टनर</span>
+                <span>Verified Trustit Fleet Partner</span>
               </div>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs text-xs text-slate-600 space-y-1 text-center">
-              <p className="font-bold text-slate-900">अगला चरण: 2 मिनट की सुरक्षा ट्रेनिंग अकादमी</p>
-              <p className="text-[11px]">ट्रेनिंग क्विज़ पास करते ही आपकी दैनिक डिलीवरी शिफ्ट शुरू हो जाएगी।</p>
+              <p className="font-bold text-slate-900">Next Step: 2-Minute Safety Academy Quiz</p>
+              <p className="text-[11px]">Pass the brief training quiz to start accepting live delivery shifts.</p>
             </div>
           </div>
         )}
@@ -232,55 +236,57 @@ export default function Screen19VerificationPending({
               <div className="w-14 h-14 mx-auto rounded-2xl bg-rose-100 border-2 border-rose-300 flex items-center justify-center text-3xl shadow-inner mb-3">
                 🚫
               </div>
-              <h3 className="text-base font-black text-rose-950">आवेदन अस्वीकृत हुआ</h3>
+              <h3 className="text-base font-black text-rose-950">Application Rejected</h3>
               <p className="text-xs text-rose-800 mt-1 leading-relaxed">
-                कारण: {rejectionReason || "दस्तावेज़ सत्यापन विफल रहा"}
+                Reason: {rejectionReason || "Document verification was not approved"}
               </p>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs text-center space-y-2">
               <p className="text-xs text-slate-600">
-                यदि आपको लगता है कि यह कोई त्रुटि है, तो Trustit फ्लीट सपोर्ट टीम से संपर्क करें।
+                If you believe this is an error, please reach out to the Trustit fleet support team.
               </p>
-              <a
-                href="tel:+919415099999"
-                className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow flex items-center justify-center gap-2"
-              >
-                <span>📞</span>
-                <span>Trustit फ्लीट सपोर्ट: +91 94150 99999</span>
-              </a>
+              <div className="flex justify-center">
+                <a
+                  href="tel:+919415099999"
+                  className="py-2.5 px-6 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs shadow flex items-center justify-center gap-2"
+                >
+                  <span>📞</span>
+                  <span>Trustit Fleet Support: +91 94150 99999</span>
+                </a>
+              </div>
             </div>
           </div>
         )}
       </div>
 
-      {/* ── FOOTER CTA: STRICT ADMIN APPROVAL GATE ── */}
-      <div className="pt-4 border-t border-slate-200 mt-4 space-y-2">
+      {/* ── FOOTER CTA: COMPACT ADMIN APPROVAL GATE BUTTON ── */}
+      <div className="pt-3 border-t border-slate-200 mt-4 flex justify-center">
         {kycStatus === "approved" ? (
           <button
             type="button"
             onClick={onProceedToAcademy}
-            className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-sm shadow-lg transition flex items-center justify-center gap-2 active:scale-95"
+            className="py-2.5 px-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 active:scale-95"
           >
-            <span>ट्रेनिंग अकादमी शुरू करें (Start Training Academy)</span>
+            <span>Start Training Academy</span>
             <span>➔</span>
           </button>
         ) : kycStatus === "action_required" ? (
           <button
             type="button"
             onClick={handleStartCorrection}
-            className="w-full py-3.5 rounded-2xl bg-orange-500 hover:bg-orange-600 text-white font-black text-sm shadow-md transition flex items-center justify-center gap-2 active:scale-95"
+            className="py-2.5 px-6 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 active:scale-95"
           >
-            <span>विवरण सुधारें (Edit Details)</span>
+            <span>Edit Details</span>
             <span>➔</span>
           </button>
         ) : (
           <button
             type="button"
             disabled
-            className="w-full py-3.5 rounded-2xl bg-slate-200 text-slate-400 font-black text-xs flex items-center justify-center gap-2 cursor-not-allowed shadow-none"
+            className="py-2.5 px-5 rounded-xl bg-slate-200 text-slate-500 font-bold text-xs flex items-center justify-center gap-2 cursor-not-allowed shadow-none"
           >
-            <span>⏳ एडमिन अप्रूवल पेंडिंग (सत्यापन के बाद बटन सक्रिय होगा)</span>
+            <span>⏳ Approval Pending (Review in progress)</span>
           </button>
         )}
       </div>

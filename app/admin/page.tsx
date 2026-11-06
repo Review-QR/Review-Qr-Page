@@ -234,6 +234,12 @@ export default async function HomePage() {
       tone: "orange",
       icon: "🛵",
     },
+    {
+      label: "Pending Rider KYC",
+      value: pendingRiderCount,
+      tone: pendingRiderCount > 0 ? "orange" : "green",
+      icon: "🪪",
+    },
   ];
 
   const plans = [
@@ -249,6 +255,13 @@ export default async function HomePage() {
       description: "Running orders, OTP audit, disputes & doorstep refusal cancellation",
       tone: "orange",
       icon: "🛵",
+    },
+    {
+      href: "/admin/hyperlocal?tab=riders",
+      title: `🛵 Rider Fleet & Onboarding (${pendingRiderCount} Pending)`,
+      description: "Approve rider KYC, selfies, driving licenses, edit profiles & rejection notes",
+      tone: "blue",
+      icon: "🪪",
     },
     {
       href: "/businesses",

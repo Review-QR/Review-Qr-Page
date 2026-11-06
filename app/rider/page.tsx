@@ -594,12 +594,13 @@ export default function StandaloneRiderProductionApp() {
               full_name: data.fullName,
               phone: authPhone,
               residential_address: data.address,
+              emergency_contact_name: data.emergencyContactName,
+              emergency_contact_phone: data.emergencyPhone,
             }));
             if (typeof window !== "undefined") {
               localStorage.setItem("trustit_rider_address", data.address);
-              if (data.emergencyPhone) {
-                localStorage.setItem("trustit_rider_emergency", data.emergencyPhone);
-              }
+              localStorage.setItem("trustit_rider_emergency_name", data.emergencyContactName);
+              localStorage.setItem("trustit_rider_emergency", data.emergencyPhone);
             }
             setCurrentScreenId(3); // Advance to Terms & Road Safety!
           }}

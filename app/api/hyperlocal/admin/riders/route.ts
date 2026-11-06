@@ -128,11 +128,15 @@ export async function POST(request: Request) {
         fullName,
         phone,
         residentialAddress,
+        city,
+        district,
         pincode,
         vehicleType,
         vehicleNumber,
         drivingLicenseNumber,
         upiId,
+        emergencyContactName,
+        emergencyContactPhone,
         autoApprove,
       } = body;
 
@@ -143,11 +147,16 @@ export async function POST(request: Request) {
       if (fullName) updateData.full_name = String(fullName).trim();
       if (phone) updateData.phone = String(phone).trim();
       if (residentialAddress) updateData.residential_address = String(residentialAddress).trim();
+      if (city || district) {
+        updateData.city = String(city || district).trim();
+      }
       if (pincode) updateData.pincode = String(pincode).trim();
       if (vehicleType) updateData.vehicle_type = String(vehicleType).trim();
       if (vehicleNumber) updateData.vehicle_number = String(vehicleNumber).toUpperCase().trim();
       if (drivingLicenseNumber) updateData.driving_license_number = String(drivingLicenseNumber).toUpperCase().trim();
       if (upiId) updateData.upi_id = String(upiId).trim();
+      if (emergencyContactName) updateData.emergency_contact_name = String(emergencyContactName).trim();
+      if (emergencyContactPhone) updateData.emergency_contact_phone = String(emergencyContactPhone).trim();
 
       if (autoApprove) {
         updateData.kyc_status = "approved";
