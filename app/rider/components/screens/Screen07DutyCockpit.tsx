@@ -26,6 +26,10 @@ interface Screen07Props {
   cashInHandProp?: number;
   cashCeilingProp?: number;
   remoteConfig?: RiderRemoteConfig;
+  liveZoneNameProp?: string;
+  onRefreshLocation?: () => void;
+  isLocatingProp?: boolean;
+  gpsAccuracyProp?: number;
 }
 
 export default function Screen07DutyCockpit({
@@ -45,6 +49,10 @@ export default function Screen07DutyCockpit({
   cashInHandProp = 0,
   cashCeilingProp = 1500,
   remoteConfig,
+  liveZoneNameProp = "Nazipurwa (Near Anupam Sweets), Bahraich",
+  onRefreshLocation,
+  isLocatingProp = false,
+  gpsAccuracyProp = 4.2,
 }: Screen07Props) {
   const [isOnline, setIsOnline] = useState(isOnlineProp);
 
@@ -160,20 +168,33 @@ export default function Screen07DutyCockpit({
           </div>
         )}
 
-        {/* Active Hub Zone & Telemetry Strip */}
-        <div className="p-2 rounded-xl bg-white border border-slate-200 flex items-center justify-between text-xs shadow-2xs">
-          <div className="flex items-center gap-1.5">
-            <span className="text-[#0D47A1] text-sm">📍</span>
+        {/* Active Hub Zone & Telemetry Strip (Live Dynamic GPS Locality) */}
+        <div className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-center justify-between text-xs shadow-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-7 h-7 rounded-lg bg-blue-50 text-[#0D47A1] border border-blue-200 flex items-center justify-center text-sm shrink-0">
+              📍
+            </span>
             <div>
-              <span className="text-[9px] text-slate-400 font-bold uppercase block leading-none">Active Zone</span>
-              <strong className="text-slate-900 text-[11px] block leading-tight">Civil Lines, Bahraich (UP 40)</strong>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[9px] text-slate-400 font-bold uppercase leading-none">Live Active Zone</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+              </div>
+              <strong className="text-slate-900 text-[11px] sm:text-xs block leading-tight font-black mt-0.5">
+                {liveZoneNameProp}
+              </strong>
             </div>
           </div>
-          <div className="text-right">
-            <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
-              GPS ±4.2m
-            </span>
-            <span className="text-[9px] text-slate-400 block mt-0.5">Live Telemetry</span>
+          <div className="text-right shrink-0">
+            <button
+              type="button"
+              onClick={onRefreshLocation}
+              className="text-[9px] font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300 flex items-center gap-1 transition active:scale-95"
+              title="Tap to refresh live GPS location"
+            >
+              <span className={isLocatingProp ? "animate-spin inline-block" : ""}>🔄</span>
+              <span>GPS ±{gpsAccuracyProp}m</span>
+            </button>
+            <span className="text-[8px] text-slate-400 block mt-0.5 font-mono">Live Telemetry</span>
           </div>
         </div>
 

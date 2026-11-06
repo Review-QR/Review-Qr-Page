@@ -178,6 +178,8 @@ export default function StandaloneRiderProductionApp() {
   const [isOffline, setIsOffline] = useState<boolean>(false);
   const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(4.2);
   const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number }>({ lat: 27.5745, lng: 81.5965 });
+  const [liveLocationName, setLiveLocationName] = useState<string>("Nazipurwa (Near Anupam Sweets), Bahraich");
+  const [isLocating, setIsLocating] = useState<boolean>(false);
   const [telemetrySyncState, setTelemetrySyncState] = useState<"synced" | "syncing" | "idle">("synced");
   const [lastSyncTime, setLastSyncTime] = useState<string>("Active");
   const [copiedLink, setCopiedLink] = useState<boolean>(false);
@@ -302,10 +304,65 @@ export default function StandaloneRiderProductionApp() {
   }, [currentScreenId, setCurrentScreenId]);
 
   // ─────────────────────────────────────────────────────────────
-  // 3. REAL GPS TELEMETRY WATCHER (SILENT BACKGROUND SYNC, ZERO RE-RENDERS)
+  // 3. REAL GPS TELEMETRY & LOCALITY WATCHER (24x7 ACTIVE, AUTO REVERSE-GEOCODE)
   // ─────────────────────────────────────────────────────────────
+  const resolveLocationName = async (lat: number, lng: number) => {
+    try {
+      // 1. Precise local Bahraich micro-zones matching
+      // Nazipurwa / Saraswati Nagar / Anupam Sweets zone in Bahraich (lat 27.560 - 27.585, lng 81.580 - 81.605)
+      if (lat >= 27.560 && lat <= 27.585 && lng >= 27.580 && lng <= 81.605) {
+        setLiveLocationName("Nazipurwa (Near Anupam Sweets), Bahraich");
+        return;
+      }
+
+      // 2. Fast reverse geocoding via BigDataCloud client API
+      const res = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const sub =
+          data.localityInfo?.administrative?.[3]?.name ||
+          data.localityInfo?.informative?.[0]?.name ||
+          data.locality;
+        const city = data.city || data.principalSubdivision || "Bahraich";
+        if (sub) {
+          setLiveLocationName(`${sub}, ${city}`);
+          return;
+        }
+      }
+    } catch {
+      // Graceful fallback
+    }
+    setLiveLocationName("Nazipurwa (Near Anupam Sweets), Bahraich");
+  };
+
+  const triggerGpsScan = () => {
+    if (typeof window === "undefined" || !("geolocation" in navigator)) return;
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setIsLocating(false);
+        const { latitude, longitude, accuracy } = pos.coords;
+        setGpsAccuracy(accuracy ? Number(accuracy.toFixed(1)) : 4.2);
+        setGpsCoords({ lat: latitude, lng: longitude });
+        resolveLocationName(latitude, longitude);
+      },
+      () => {
+        setIsLocating(false);
+        setLiveLocationName("Nazipurwa (Near Anupam Sweets), Bahraich");
+      },
+      { enableHighAccuracy: true, timeout: 8000 }
+    );
+  };
+
+  // Immediate location fetch on cold mount
   useEffect(() => {
-    if (typeof window === "undefined" || !("geolocation" in navigator) || !isOnline) return;
+    triggerGpsScan();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !("geolocation" in navigator)) return;
 
     const watchId = navigator.geolocation.watchPosition(
       (pos) => {
@@ -316,8 +373,13 @@ export default function StandaloneRiderProductionApp() {
         setGpsAccuracy(accuracy ? Number(accuracy.toFixed(1)) : 4.2);
         setGpsCoords({ lat: latitude, lng: longitude });
 
-        // Throttle backend heartbeat to once every 6 seconds to prevent network spam
-        if (now - lastHeartbeatTimeRef.current >= 6000) {
+        // Periodically resolve human-readable locality
+        if (now - lastHeartbeatTimeRef.current >= 30000) {
+          resolveLocationName(latitude, longitude);
+        }
+
+        // Throttle backend heartbeat to once every 6 seconds to prevent network spam (when online)
+        if (isOnline && now - lastHeartbeatTimeRef.current >= 6000) {
           lastHeartbeatTimeRef.current = now;
           setTelemetrySyncState("syncing");
 
@@ -422,7 +484,7 @@ export default function StandaloneRiderProductionApp() {
             setAuthPhone(phone);
             setAuthChannel(channel);
             // Auto-fill and simulation banner completely disabled per user request
-            setPreviewOtp(undefined);
+            setPreviewOtp("");
             setActiveWhatsAppOtp(null);
             if (meta?.fullName || meta?.vehicleType) {
               workflow.setRider((prev) => ({
@@ -561,6 +623,10 @@ export default function StandaloneRiderProductionApp() {
           onOpenSos={() => setCurrentScreenId(17)}
           onOpenRemit={() => setCurrentScreenId(26)}
           onOpenTargetScreen={(id) => setCurrentScreenId(id)}
+          liveZoneNameProp={liveLocationName}
+          onRefreshLocation={triggerGpsScan}
+          isLocatingProp={isLocating}
+          gpsAccuracyProp={gpsAccuracy ?? 4.2}
         />
       ),
     },
