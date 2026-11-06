@@ -128,6 +128,11 @@ export function useRiderCamera(initialFacingMode: "user" | "environment" = "user
     startCamera(facingModeRef.current);
   }, [startCamera]);
 
+  const toggleCameraFacing = useCallback(async () => {
+    const nextMode = facingModeRef.current === "user" ? "environment" : "user";
+    return await startCamera(nextMode);
+  }, [startCamera]);
+
   return {
     isStreaming,
     capturedImage,
@@ -137,6 +142,7 @@ export function useRiderCamera(initialFacingMode: "user" | "environment" = "user
     stopCamera,
     capturePhoto,
     resetPhoto,
+    toggleCameraFacing,
     videoRef,
     setCapturedImage,
   };

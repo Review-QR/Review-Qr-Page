@@ -308,14 +308,37 @@ export default function StandaloneRiderProductionApp() {
   // ─────────────────────────────────────────────────────────────
   const resolveLocationName = async (lat: number, lng: number) => {
     try {
-      // 1. Precise local Bahraich micro-zones matching
-      // Nazipurwa / Saraswati Nagar / Anupam Sweets zone in Bahraich (lat 27.560 - 27.585, lng 81.580 - 81.605)
-      if (lat >= 27.560 && lat <= 27.585 && lng >= 27.580 && lng <= 81.605) {
-        setLiveLocationName("Nazipurwa (Near Anupam Sweets), Bahraich");
+      // 1. Precise local Bahraich landmark zones (Euclidean closest point algorithm)
+      const bahraichZones = [
+        { name: "Nazipurwa (Near Anupam Sweets), Bahraich", lat: 27.5715, lng: 81.5910 },
+        { name: "Police Line, Bahraich", lat: 27.5870, lng: 81.5970 },
+        { name: "Kachehri / DM Residence (DC), Bahraich", lat: 27.5780, lng: 81.6050 },
+        { name: "Civil Lines Main Road, Bahraich", lat: 27.5760, lng: 81.5990 },
+        { name: "Pani Tanki (Hospital Road), Bahraich", lat: 27.5740, lng: 81.6180 },
+        { name: "Peepal Chauraha / Digiha, Bahraich", lat: 27.5640, lng: 81.6040 },
+        { name: "Dargah Sharif Road, Bahraich", lat: 27.5890, lng: 81.6120 },
+      ];
+
+      let closestZone = bahraichZones[0];
+      let minDistance = Number.MAX_VALUE;
+
+      for (const zone of bahraichZones) {
+        const dLat = lat - zone.lat;
+        const dLng = lng - zone.lng;
+        const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestZone = zone;
+        }
+      }
+
+      // If within Bahraich region (approx 4km radius)
+      if (minDistance < 0.040) {
+        setLiveLocationName(closestZone.name);
         return;
       }
 
-      // 2. Fast reverse geocoding via BigDataCloud client API
+      // 2. Fallback to reverse-geocoding API for locations outside Bahraich center
       const res = await fetch(
         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
       );
@@ -420,6 +443,44 @@ export default function StandaloneRiderProductionApp() {
   }, [isOnline, rider.id]);
 
   // ─────────────────────────────────────────────────────────────
+  // 3.5. HARDWARE / ANDROID NATIVE BACK BUTTON LISTENER (Zero Crash)
+  // ─────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // 1. Capacitor Native Plugin (if available globally on window)
+    try {
+      const capApp = (window as any).Capacitor?.Plugins?.App;
+      if (capApp?.addListener) {
+        capApp.addListener("backButton", () => {
+          if (currentScreenId !== 7) {
+            setCurrentScreenId(7);
+          } else {
+            capApp.exitApp?.();
+          }
+        });
+      }
+    } catch {}
+
+    // 2. Android WebView History Popstate Navigation
+    if (currentScreenId !== 7) {
+      window.history.pushState({ screen: currentScreenId }, "");
+    }
+
+    const handlePopState = (e: PopStateEvent) => {
+      if (currentScreenId !== 7) {
+        e.preventDefault();
+        setCurrentScreenId(7);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [currentScreenId, setCurrentScreenId]);
+
+  // ─────────────────────────────────────────────────────────────
   // 4. OFFLINE DEAD-ZONE CACHING (BAHRAICH 2G RESILIENCE)
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -496,9 +557,8 @@ export default function StandaloneRiderProductionApp() {
             }
             setCurrentScreenId(2);
           }}
-          onGoogleLogin={async () => {
-            const ok = await handleGoogleLogin();
-            if (ok) setCurrentScreenId(3); // Direct new rider into Consent & KYC!
+          onGoogleLogin={() => {
+            setIsGoogleModalOpen(true);
           }}
         />
       ),
@@ -559,6 +619,9 @@ export default function StandaloneRiderProductionApp() {
         <Screen06PayoutSetup
           onPayoutConfigured={(upi) => {
             workflow.setRider((prev) => ({ ...prev, upi_id: upi }));
+            if (typeof window !== "undefined") {
+              localStorage.setItem("trustit_rider_upi", upi);
+            }
             setCurrentScreenId(19);
           }}
           onBack={() => setCurrentScreenId(5)}
@@ -854,6 +917,7 @@ export default function StandaloneRiderProductionApp() {
           walletBalanceProp={walletBalance}
           todayEarningsProp={todayEarnings}
           todayTripsCountProp={todayTripsCount}
+          riderUpiProp={rider?.upi_id || (typeof window !== "undefined" ? localStorage.getItem("trustit_rider_upi") || "luckyshukla@hdfcbank" : "luckyshukla@hdfcbank")}
         />
       ),
     },
@@ -968,19 +1032,19 @@ export default function StandaloneRiderProductionApp() {
             }
             toggleDuty(next);
           }}
-          className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all active:scale-95 border shadow-sm ${
+          className={`flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 border shadow-sm ${
             isOnline
               ? "bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400"
-              : "bg-slate-900 hover:bg-slate-800 text-rose-300 border-rose-500/50"
+              : "bg-rose-700 hover:bg-rose-600 text-white border-rose-500"
           }`}
           title="Tap to Toggle Duty"
         >
           <span
-            className={`w-2.5 h-2.5 rounded-full ${
-              isOnline ? "bg-white animate-ping" : "bg-rose-500"
+            className={`w-2 h-2 rounded-full ${
+              isOnline ? "bg-white animate-ping" : "bg-white"
             }`}
           ></span>
-          <span className="font-black text-xs tracking-wider uppercase">
+          <span className="font-black text-[11px] tracking-wider uppercase">
             {isOnline ? "DUTY ON" : "DUTY OFF"}
           </span>
         </button>

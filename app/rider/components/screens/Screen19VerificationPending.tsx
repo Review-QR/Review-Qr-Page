@@ -21,7 +21,7 @@ export default function Screen19VerificationPending({
     { title: "Mobile & Basic Profile", status: "completed", detail: "Arjun Singh · UP 40 Fleet Zone" },
     { title: "Aadhaar & DL Verification", status: "completed", detail: "Verified via UIDAI / Parivahan API" },
     { title: "Penny-Drop Bank Settlement", status: "completed", detail: "Cashfree ₹1.00 deposit verified" },
-    { title: "Background & Police Undertaking", status: "in_progress", detail: "Manual Ops Review (ETA: 1-2 hours)" },
+    { title: "Background Verification & Admin Approval", status: "in_progress", detail: "Admin Ops Review (ETA: 1-2 hours)" },
     { title: "Delivery Kit & Final Activation", status: "locked", detail: "Thermal bag & T-shirt allocation" },
   ];
 

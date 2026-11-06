@@ -1,8 +1,8 @@
 {
-  "version": "3.6.0",
+  "version": "3.7.0",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793934227685",
-  "updatedAt": "2026-11-06T03:03:47.685Z",
-  "notes": "Galli-wise Turn Navigation Grid + Trustit Rider on Bike + Dynamic Live GPS Nazipurwa",
-  "sizeBytes": 3565102
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793942834007",
+  "updatedAt": "2026-11-06T05:27:14.007Z",
+  "notes": "11 Improvements: Moving GPS, Flip Camera, Android Back Button, Quiz fix, Fleet inline, Solid Duty Status",
+  "sizeBytes": 3566126
 }

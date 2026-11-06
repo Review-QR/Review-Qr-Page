@@ -27,6 +27,7 @@ export default function Screen27MorningHelmetSelfie({
     stopCamera,
     capturePhoto,
     resetPhoto,
+    toggleCameraFacing,
     videoRef,
     setCapturedImage,
   } = useRiderCamera("user");
@@ -166,9 +167,28 @@ export default function Screen27MorningHelmetSelfie({
           )}
         </div>
 
-        {/* Retake & Native Fallback Controls */}
-        <div className="mt-2 flex items-center justify-center gap-2">
-          {capturedImage && (
+        {/* Retake, Switch & Native Fallback Controls */}
+        <div className="mt-2.5 flex items-center justify-center gap-1.5 flex-wrap">
+          {!capturedImage ? (
+            <>
+              <button
+                type="button"
+                onClick={handleCapture}
+                disabled={!isStreaming}
+                className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition disabled:opacity-40 flex items-center gap-1 active:scale-95"
+              >
+                <span>📸 Capture Helmet Photo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => toggleCameraFacing()}
+                className="py-1.5 px-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-700 active:scale-95"
+                title="Switch Front/Back Camera"
+              >
+                <span>🔄 Flip Cam</span>
+              </button>
+            </>
+          ) : (
             <button
               type="button"
               onClick={() => {
@@ -192,9 +212,9 @@ export default function Screen27MorningHelmetSelfie({
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="text-[10px] text-blue-700 hover:underline font-bold"
+            className="py-1.5 px-2 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[10px] text-blue-700 font-bold active:scale-95"
           >
-            Use Native Phone Camera 📱
+            📱 Phone Camera
           </button>
         </div>
 

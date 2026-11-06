@@ -196,28 +196,46 @@ export default function Screen20TrainingAcademy({
                   ? "प्रश्न 1: ग्राहक को खाने का पैकेट कब हैंडओवर करना चाहिए?"
                   : "Q1: When do you hand over the food packet to customer?"}
               </p>
-              <div className="space-y-1 text-[11px]">
+              <div className="space-y-1.5 text-[11px]">
                 <button
                   type="button"
                   onClick={() => setQuizAnswer1(1)}
-                  className={`w-full text-left p-1.5 rounded-lg border font-bold transition ${
-                    quizAnswer1 === 1 ? "bg-emerald-50 border-emerald-500 text-emerald-950" : "bg-slate-50 border-slate-200 text-slate-700"
+                  className={`w-full text-left p-2 rounded-lg border font-bold flex items-center justify-between transition ${
+                    quizAnswer1 === 1
+                      ? "bg-emerald-50 border-emerald-500 text-emerald-950 shadow-xs"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {lang === "hi"
-                    ? "✓ केवल 4-अंकीय सीक्रेट डिलीवरी OTP सत्यापित करने के बाद"
-                    : "✓ Only after verifying the 4-digit secret delivery OTP"}
+                  <span>
+                    {lang === "hi"
+                      ? "केवल 4-अंकीय सीक्रेट डिलीवरी OTP सत्यापित करने के बाद"
+                      : "Only after verifying the 4-digit secret delivery OTP"}
+                  </span>
+                  <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ml-2 ${
+                    quizAnswer1 === 1 ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-300"
+                  }`}>
+                    {quizAnswer1 === 1 ? "✓" : ""}
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setQuizAnswer1(2)}
-                  className={`w-full text-left p-1.5 rounded-lg border font-medium transition ${
-                    quizAnswer1 === 2 ? "bg-red-50 border-red-400 text-red-950" : "bg-slate-50 border-slate-200 text-slate-600"
+                  className={`w-full text-left p-2 rounded-lg border font-medium flex items-center justify-between transition ${
+                    quizAnswer1 === 2
+                      ? "bg-rose-50 border-rose-400 text-rose-950 shadow-xs"
+                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
-                  {lang === "hi"
-                    ? "✗ बिना OTP पूछे पैकेट तुरंत पकड़ा देना"
-                    : "✗ Hand over packet immediately without asking OTP"}
+                  <span>
+                    {lang === "hi"
+                      ? "बिना OTP पूछे पैकेट तुरंत पकड़ा देना"
+                      : "Hand over packet immediately without asking OTP"}
+                  </span>
+                  <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ml-2 ${
+                    quizAnswer1 === 2 ? "border-rose-500 bg-rose-500 text-white" : "border-slate-300"
+                  }`}>
+                    {quizAnswer1 === 2 ? "✗" : ""}
+                  </span>
                 </button>
               </div>
             </div>
@@ -229,28 +247,46 @@ export default function Screen20TrainingAcademy({
                   ? "प्रश्न 2: ग्राहक से COD कैश कैसे कलेक्ट करना चाहिए?"
                   : "Q2: How should COD cash be collected from customer?"}
               </p>
-              <div className="space-y-1 text-[11px]">
+              <div className="space-y-1.5 text-[11px]">
                 <button
                   type="button"
                   onClick={() => setQuizAnswer2(1)}
-                  className={`w-full text-left p-1.5 rounded-lg border font-medium transition ${
-                    quizAnswer2 === 1 ? "bg-red-50 border-red-400 text-red-950" : "bg-slate-50 border-slate-200 text-slate-600"
+                  className={`w-full text-left p-2 rounded-lg border font-medium flex items-center justify-between transition ${
+                    quizAnswer2 === 1
+                      ? "bg-rose-50 border-rose-400 text-rose-950 shadow-xs"
+                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
                   }`}
                 >
-                  {lang === "hi"
-                    ? "✗ ग्राहक को अपना व्यक्तिगत PhonePe/Paytm QR दिखाना"
-                    : "✗ Ask customer to scan personal PhonePe/Paytm QR"}
+                  <span>
+                    {lang === "hi"
+                      ? "ग्राहक को अपना व्यक्तिगत PhonePe/Paytm QR दिखाना"
+                      : "Ask customer to scan personal PhonePe/Paytm QR"}
+                  </span>
+                  <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ml-2 ${
+                    quizAnswer2 === 1 ? "border-rose-500 bg-rose-500 text-white" : "border-slate-300"
+                  }`}>
+                    {quizAnswer2 === 1 ? "✗" : ""}
+                  </span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setQuizAnswer2(2)}
-                  className={`w-full text-left p-1.5 rounded-lg border font-bold transition ${
-                    quizAnswer2 === 2 ? "bg-emerald-50 border-emerald-500 text-emerald-950" : "bg-slate-50 border-slate-200 text-slate-700"
+                  className={`w-full text-left p-2 rounded-lg border font-bold flex items-center justify-between transition ${
+                    quizAnswer2 === 2
+                      ? "bg-emerald-50 border-emerald-500 text-emerald-950 shadow-xs"
+                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                   }`}
                 >
-                  {lang === "hi"
-                    ? "✓ सटीक कैश लेना या आधिकारिक Trustit डायनामिक QR दिखाना"
-                    : "✓ Collect exact cash or show Trustit In-App Dynamic QR"}
+                  <span>
+                    {lang === "hi"
+                      ? "सटीक कैश लेना या आधिकारिक Trustit डायनामिक QR दिखाना"
+                      : "Collect exact cash or show Trustit In-App Dynamic QR"}
+                  </span>
+                  <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] shrink-0 ml-2 ${
+                    quizAnswer2 === 2 ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-300"
+                  }`}>
+                    {quizAnswer2 === 2 ? "✓" : ""}
+                  </span>
                 </button>
               </div>
             </div>

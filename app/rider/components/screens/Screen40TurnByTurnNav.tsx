@@ -125,31 +125,31 @@ export default function Screen40TurnByTurnNav({
           </div>
         </div>
 
-        {/* Vehicle Switcher: Bike vs Cab */}
-        <div className="flex items-center justify-between mt-2 px-1">
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Fleet Mode</span>
-          <div className="flex items-center gap-1 bg-slate-200/70 border border-slate-300/60 rounded-lg p-0.5">
+        {/* Fleet Mode: Ultra-Compact Inline Pill (Bike & Electric Bike only) */}
+        <div className="flex items-center justify-between mt-1.5 px-1 text-[10px]">
+          <span className="font-bold text-slate-500 uppercase tracking-wider text-[9px]">Fleet Mode:</span>
+          <div className="flex items-center gap-1 bg-slate-200/80 rounded-lg p-0.5 text-[9.5px]">
             <button
               type="button"
               onClick={() => setVehicleMode("bike")}
-              className={`px-2.5 py-0.5 rounded text-[10px] font-bold transition ${
+              className={`px-2 py-0.5 rounded font-black transition ${
                 vehicleMode === "bike"
-                  ? "bg-white text-emerald-800 font-black shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-white text-slate-900 shadow-2xs"
+                  : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              🏍️ Bike (2W)
+              🏍️ Bike
             </button>
             <button
               type="button"
               onClick={() => setVehicleMode("cab")}
-              className={`px-2.5 py-0.5 rounded text-[10px] font-bold transition ${
+              className={`px-2 py-0.5 rounded font-black transition ${
                 vehicleMode === "cab"
-                  ? "bg-white text-amber-700 font-black shadow-xs"
-                  : "text-slate-600 hover:text-slate-900"
+                  ? "bg-white text-emerald-800 shadow-2xs"
+                  : "text-slate-500 hover:text-slate-800"
               }`}
             >
-              🚖 Cab (4W)
+              ⚡ EV Bike
             </button>
           </div>
         </div>

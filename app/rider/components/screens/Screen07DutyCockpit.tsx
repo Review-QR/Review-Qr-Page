@@ -126,8 +126,8 @@ export default function Screen07DutyCockpit({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
-                className={`w-2.5 h-2.5 rounded-full shrink-0 ${
-                  isOnline ? "bg-emerald-500 animate-ping" : "bg-rose-500"
+                className={`w-2 h-2 rounded-full shrink-0 ${
+                  isOnline ? "bg-emerald-500" : "bg-rose-500"
                 }`}
               ></span>
               <strong className="text-xs font-black text-slate-900 leading-tight">
@@ -177,7 +177,7 @@ export default function Screen07DutyCockpit({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[9px] text-slate-400 font-bold uppercase leading-none">Live Active Zone</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               </div>
               <strong className="text-slate-900 text-[11px] sm:text-xs block leading-tight font-black mt-0.5">
                 {liveZoneNameProp}

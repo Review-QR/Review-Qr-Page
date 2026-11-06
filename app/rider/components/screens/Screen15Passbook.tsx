@@ -13,6 +13,7 @@ interface Screen15Props {
   walletBalanceProp?: number;
   todayEarningsProp?: number;
   todayTripsCountProp?: number;
+  riderUpiProp?: string;
 }
 
 export default function Screen15Passbook({
@@ -25,10 +26,13 @@ export default function Screen15Passbook({
   walletBalanceProp = 350,
   todayEarningsProp = 520,
   todayTripsCountProp = 14,
+  riderUpiProp,
 }: Screen15Props) {
   const [currentBalance, setCurrentBalance] = useState<number>(walletBalanceProp);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [payoutSuccessData, setPayoutSuccessData] = useState<{ amount: number; utr: string; time: string } | null>(null);
+
+  const activeUpi = riderUpiProp || (typeof window !== "undefined" ? localStorage.getItem("trustit_rider_upi") || "luckyshukla@hdfcbank" : "luckyshukla@hdfcbank");
 
   const handlePayoutTrigger = () => {
     if (currentBalance <= 0) {
@@ -128,16 +132,21 @@ export default function Screen15Passbook({
               </span>
               <strong className="text-xl font-black block leading-tight">₹{currentBalance}.00</strong>
             </div>
-            <button
-              type="button"
-              onClick={handlePayoutTrigger}
-              disabled={isProcessing || currentBalance <= 0}
-              className="py-1 px-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-black text-[10px] tracking-wide uppercase shadow-sm border border-amber-200/80 flex items-center gap-1 transition active:scale-95 disabled:opacity-50 whitespace-nowrap shrink-0"
-            >
-              <span>⚡</span>
-              <span>1-Tap Transfer</span>
-              <span className="text-[9px]">➔</span>
-            </button>
+            <div className="text-right">
+              <button
+                type="button"
+                onClick={handlePayoutTrigger}
+                disabled={isProcessing || currentBalance <= 0}
+                className="py-1 px-3 rounded-full bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-black text-[10px] tracking-wide uppercase shadow-sm border border-amber-200/80 flex items-center gap-1 transition active:scale-95 disabled:opacity-50 whitespace-nowrap ml-auto"
+              >
+                <span>⚡</span>
+                <span>1-Tap Transfer</span>
+                <span className="text-[9px]">➔</span>
+              </button>
+              <span className="text-[8px] font-mono text-blue-200 block mt-0.5">
+                to: {activeUpi}
+              </span>
+            </div>
           </div>
 
           <div className="pt-1.5 border-t border-blue-400/20 grid grid-cols-3 gap-1 text-center text-[9px]">

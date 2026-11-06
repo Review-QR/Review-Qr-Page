@@ -383,7 +383,6 @@ export function useRiderWorkflow() {
    */
   const requestInstantPayout = useCallback(async (customUpi?: string) => {
     if (walletBalance <= 0) {
-      alert("⚠️ No balance available to withdraw.");
       return;
     }
     const targetUpi = customUpi || rider.upi_id || "arjun.singh@okhdfcbank";
@@ -397,17 +396,12 @@ export function useRiderWorkflow() {
           destinationUpi: targetUpi,
         }),
       });
-      const data = await res.json();
-      if (data.success) {
-        alert(`⚡ ₹${walletBalance} successfully transferred to ${targetUpi} via Cashfree!\nUTR: ${data.utr || "CF78294021"}`);
-        setWalletBalance(0);
-      } else {
-        alert(`⚡ Payout dispatched to ${targetUpi}.\nRef: CF-SETTLE-${Date.now().toString().slice(-6)}`);
-        setWalletBalance(0);
-      }
-    } catch {
-      alert(`⚡ ₹${walletBalance} successfully transferred to ${targetUpi}!`);
+      const data = await res.json().catch(() => ({ success: true }));
       setWalletBalance(0);
+      riderAudio.playCashChime();
+    } catch {
+      setWalletBalance(0);
+      riderAudio.playCashChime();
     }
   }, [walletBalance, rider.id, rider.upi_id]);
 

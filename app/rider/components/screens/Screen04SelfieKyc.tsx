@@ -17,6 +17,7 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
     stopCamera,
     capturePhoto,
     resetPhoto,
+    toggleCameraFacing,
     videoRef,
     setCapturedImage,
   } = useRiderCamera("user");
@@ -145,16 +146,26 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
           </div>
 
           {/* Action Row: Snap vs Retake & Fallback */}
-          <div className="flex items-center justify-center gap-2">
+          <div className="flex items-center justify-center gap-1.5 flex-wrap">
             {!capturedImage ? (
-              <button
-                type="button"
-                onClick={handleCapture}
-                disabled={!isStreaming}
-                className="py-1.5 px-4 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition disabled:opacity-40 flex items-center gap-1 active:scale-95"
-              >
-                <span>📸 Snap Live Selfie</span>
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={handleCapture}
+                  disabled={!isStreaming}
+                  className="py-1.5 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition disabled:opacity-40 flex items-center gap-1 active:scale-95"
+                >
+                  <span>📸 Take Live Photo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => toggleCameraFacing()}
+                  className="py-1.5 px-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-700 active:scale-95 flex items-center gap-1"
+                  title="Switch Front/Back Camera"
+                >
+                  <span>🔄 Flip Cam</span>
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -177,10 +188,10 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              className="py-1.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-600 active:scale-95"
-              title="Use Device Native Camera"
+              className="py-1.5 px-2 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[10px] font-bold text-blue-700 active:scale-95"
+              title="Use Phone Native Camera App"
             >
-              📱 Phone Cam
+              📱 Phone Camera
             </button>
           </div>
         </div>

@@ -12,15 +12,22 @@ export default function Screen05VehicleDl({
   onVehicleSubmit,
   onBack,
 }: Screen05Props) {
-  // Single standardized fleet vehicle option as instructed by user: Scooter only
-  const vehicleType = "scooter";
+  const [vehicleType, setVehicleType] = useState<string>("bike");
   const [vehicleNumber, setVehicleNumber] = useState("UP 40 BV 1001");
   const [dlNumber, setDlNumber] = useState("UP40 2024009182");
+
+  const vehicleOptions = [
+    { id: "bike", name: "Motorcycle / Bike (बाइक)", icon: "🏍️", badge: "Petrol" },
+    { id: "activa", name: "Scooter / Activa (एक्टिवा/स्कूटर)", icon: "🛵", badge: "Scooter" },
+    { id: "ev_bike", name: "Electric Bike (इलेक्ट्रिक बाइक)", icon: "⚡", badge: "EV 0% Emission" },
+    { id: "ev_scooter", name: "Electric Scooter (ई-स्कूटर)", icon: "🔋", badge: "EV Green" },
+    { id: "electric_car", name: "Electric Car / Eco-Cab", icon: "🚗", badge: "4W Eco" },
+  ];
 
   const handleSubmit = () => {
     const vNum = vehicleNumber.trim() || "UP 40 BV 1001";
     const dl = dlNumber.trim() || "UP40 2024009182";
-    onVehicleSubmit?.({ vehicleType: "scooter", vehicleNumber: vNum, dlNumber: dl });
+    onVehicleSubmit?.({ vehicleType, vehicleNumber: vNum, dlNumber: dl });
   };
 
   return (
@@ -48,22 +55,30 @@ export default function Screen05VehicleDl({
 
         {/* Form Card (Single Clean Vehicle Option: Scooter Only) */}
         <div className="mt-3 bg-white border border-slate-200 rounded-xl p-3 shadow-xs space-y-3">
-          {/* Single Fleet Vehicle Option (Scooter - Zero Multi-Chips) */}
+          {/* Fleet Vehicle Options (Bike, Activa, EV Bike, EV Scooter, Electric Car) */}
           <div>
             <label className="text-[10px] font-bold text-slate-700 block mb-1 uppercase tracking-wider">
-              Fleet Vehicle (वाहन प्रकार)
+              Fleet Vehicle (वाहन प्रकार चुनें)
             </label>
-            <div className="p-2 rounded-xl bg-blue-50/80 border border-blue-200 flex items-center justify-between text-xs font-bold text-[#0D47A1]">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🛵</span>
-                <div>
-                  <span className="block leading-none text-slate-900 font-black">Scooter (स्कूटर)</span>
-                  <span className="text-[10px] text-blue-700 font-mono mt-0.5 block">Bahraich Local Fleet</span>
-                </div>
-              </div>
-              <span className="px-2 py-0.5 rounded text-[10px] font-black bg-blue-600 text-white shadow-2xs">
-                ✓ Default Active
-              </span>
+            <div className="grid grid-cols-2 gap-1.5">
+              {vehicleOptions.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setVehicleType(opt.id)}
+                  className={`p-2 rounded-xl border text-left flex items-center gap-1.5 transition ${
+                    vehicleType === opt.id
+                      ? "bg-blue-50 border-[#0D47A1] text-[#0D47A1] shadow-2xs"
+                      : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <span className="text-lg">{opt.icon}</span>
+                  <div className="overflow-hidden">
+                    <span className="block text-[10px] font-black truncate">{opt.name}</span>
+                    <span className="text-[8px] font-bold text-slate-400 block">{opt.badge}</span>
+                  </div>
+                </button>
+              ))}
             </div>
           </div>
 
