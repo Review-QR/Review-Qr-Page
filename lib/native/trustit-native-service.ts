@@ -55,6 +55,7 @@ export const TrustitNative = {
    * Stop order siren & vibration.
    */
   async stopOrderSiren(): Promise<void> {
+    merchantAudio.stopIncomingOrderSiren();
     const plugin = getNativePlugin();
     if (plugin) {
       try {

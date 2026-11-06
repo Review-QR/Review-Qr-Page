@@ -1758,21 +1758,42 @@ export default function MerchantStudioPage() {
       {/* Top Header */}
       <header className="h-14 bg-slate-900 border-b border-slate-800 px-3 flex items-center justify-between shrink-0 shadow-lg z-20 gap-2">
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-rose-600 text-white flex items-center justify-center font-black text-base shadow-md shrink-0">
+          <a
+            href="/"
+            className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-600 to-rose-600 text-white flex items-center justify-center font-black text-base shadow-md shrink-0 hover:opacity-90 transition cursor-pointer"
+            title="Go to Home"
+          >
             🎨
-          </div>
+          </a>
           <div>
             <div className="flex items-center gap-1.5">
               <h1 className="text-xs font-black text-white tracking-wider uppercase">
                 Trustit Studio v4.0
               </h1>
               <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                SLIDE-UP REELS
+                SCREEN DESIGNER &amp; PLANNER
               </span>
             </div>
-            <p className="text-[10px] text-slate-400 hidden xl:block">
-              Slide Up for Next Screen • Mouse Wheel / Swipe • Pro Inspector
-            </p>
+            {/* Quick App Switcher Pills */}
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="text-[10px] font-bold text-amber-400 bg-amber-400/10 px-1.5 py-0.2 rounded border border-amber-400/30">
+                🏪 Merchant (56)
+              </span>
+              <a
+                href="/customer-preview"
+                className="text-[10px] font-bold text-slate-400 hover:text-blue-300 hover:bg-blue-900/30 px-1.5 py-0.2 rounded transition"
+                title="Open Customer 48-Screen Showroom"
+              >
+                🛍️ Customer (48) ↗
+              </a>
+              <a
+                href="/rider-preview"
+                className="text-[10px] font-bold text-slate-400 hover:text-emerald-300 hover:bg-emerald-900/30 px-1.5 py-0.2 rounded transition"
+                title="Open Rider 48-Screen Cockpit"
+              >
+                🛵 Rider (48) ↗
+              </a>
+            </div>
           </div>
         </div>
 

@@ -206,6 +206,54 @@ export default function MerchantNativeAppShell({
     return () => clearInterval(timer);
   }, []);
 
+  // Android Hardware Back Button Navigator (Prevents abrupt app exit)
+  useEffect(() => {
+    let lastBackPress = 0;
+    const handleRootBack = () => {
+      // 1. If incoming order modal or selected order drawer is open
+      if (selectedOrder) {
+        setSelectedOrder(null);
+        return true;
+      }
+      if (activeIncomingOrder) {
+        setActiveIncomingOrder(null);
+        return true;
+      }
+      // 2. If inside a sub-screen
+      if (activeSubScreen) {
+        setActiveSubScreen(null);
+        return true;
+      }
+      // 3. If in unauthenticated flow
+      if (!isAuthenticated) {
+        if (authStep === "kyc" || authStep === "login" || authStep === "category") {
+          setAuthStep("pitch");
+          return true;
+        }
+      } else {
+        // 4. If on another tab besides cockpit
+        if (activeTab !== "cockpit") {
+          setActiveTab("cockpit");
+          return true;
+        }
+        // 5. If on cockpit root, double press back to exit
+        const now = Date.now();
+        if (now - lastBackPress < 2500) {
+          return false; // Let Android exit cleanly
+        }
+        lastBackPress = now;
+        showToast("Press back again to exit");
+        return true;
+      }
+      return false;
+    };
+
+    (window as any).__handleTrustitBack = handleRootBack;
+    return () => {
+      delete (window as any).__handleTrustitBack;
+    };
+  }, [selectedOrder, activeIncomingOrder, activeSubScreen, isAuthenticated, authStep, activeTab]);
+
   // 1. Toggle Store Online / Offline Status
   const toggleStoreStatus = async () => {
     const next = !isStoreOnline;
@@ -1600,8 +1648,8 @@ export default function MerchantNativeAppShell({
         {authStep === "pitch" && (
           <ScreenAuth01LandingBecomePartner
             initialVariant={activeVariant || initialLandingVariant}
-            onStartRegistration={() => setAuthStep("category")}
-            onGoToLogin={() => setAuthStep("login")}
+            onStartRegistration={() => setAuthStep("kyc")}
+            onGoToLogin={() => setAuthStep("kyc")}
           />
         )}
 
@@ -1621,9 +1669,41 @@ export default function MerchantNativeAppShell({
 
         {authStep === "kyc" && (
           <ScreenAuth03MobileKycRegistration
-            category={storeCategory}
             disableRedirect={true}
-            onBack={() => setAuthStep("category")}
+            onBack={() => setAuthStep("pitch")}
+            onLoginSuccess={(details) => {
+              const finalStore = details?.storeName || storeName;
+              const finalOwner = details?.ownerName || ownerName;
+              const finalPhone = details?.phone || merchantPhone;
+              let cat: MerchantCategory = "kirana";
+              if (details?.category) {
+                const rawCat = (details.category || "").toLowerCase();
+                if (rawCat.includes("kirana") || rawCat.includes("groc")) cat = "kirana";
+                else if (rawCat.includes("chem") || rawCat.includes("pharm") || rawCat.includes("med")) cat = "chemist";
+                else if (rawCat.includes("salon") || rawCat.includes("spa") || rawCat.includes("beauty")) cat = "salon";
+                else if (rawCat.includes("car") || rawCat.includes("auto") || rawCat.includes("wash")) cat = "carwash";
+                else cat = "restaurant";
+                setStoreCategory(cat);
+              }
+              setStoreName(finalStore);
+              setOwnerName(finalOwner);
+              if (details?.phone) setMerchantPhone(finalPhone);
+              setIsAuthenticated(true);
+              setActiveTab("cockpit");
+              if (typeof window !== "undefined") {
+                localStorage.setItem(
+                  "trustit_merchant_session",
+                  JSON.stringify({
+                    isAuthenticated: true,
+                    storeName: finalStore,
+                    ownerName: finalOwner,
+                    phone: finalPhone,
+                    category: details?.category ? cat : storeCategory,
+                  })
+                );
+              }
+              showToast(`वापसी पर स्वागत है, ${finalStore}!`);
+            }}
             onRegisterComplete={(details) => {
               if (details?.storeName) setStoreName(details.storeName);
               if (details?.ownerName) setOwnerName(details.ownerName);
@@ -1652,7 +1732,7 @@ export default function MerchantNativeAppShell({
                   })
                 );
               }
-              showToast(`Dukaan "${details?.storeName || storeName}" safalta se register ho gayi!`);
+              showToast(`दुकान "${details?.storeName || storeName}" सफलतापूर्वक रजिस्टर हो गई!`);
             }}
           />
         )}
@@ -1660,7 +1740,7 @@ export default function MerchantNativeAppShell({
         {authStep === "login" && (
           <ScreenAuth04PartnerLogin
             disableRedirect={true}
-            onGoToRegister={() => setAuthStep("pitch")}
+            onGoToRegister={() => setAuthStep("kyc")}
             onLoginSuccess={(details) => {
               if (details?.storeName) setStoreName(details.storeName);
               if (details?.ownerName) setOwnerName(details.ownerName);
@@ -1679,7 +1759,7 @@ export default function MerchantNativeAppShell({
                   })
                 );
               }
-              showToast("Swagatam! Merchant Console me aapka swagat hai.");
+              showToast(`Login successful: ${details?.storeName || storeName}`);
             }}
           />
         )}

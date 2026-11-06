@@ -41,4 +41,20 @@ public class MainActivity extends BridgeActivity {
             );
         }
     }
+
+    @Override
+    public void onBackPressed() {
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().evaluateJavascript(
+                "if (typeof window.__handleTrustitBack === 'function') { if (window.__handleTrustitBack()) { true; } else { false; } } else if (window.history.length > 1) { window.history.back(); true; } else { false; }",
+                value -> {
+                    if ("false".equals(value) || value == null) {
+                        runOnUiThread(MainActivity.super::onBackPressed);
+                    }
+                }
+            );
+            return;
+        }
+        super.onBackPressed();
+    }
 }

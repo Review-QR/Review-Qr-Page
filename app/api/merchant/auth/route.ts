@@ -21,7 +21,7 @@ export async function OPTIONS() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { action, phone, otp, storeName, ownerName, category, city, email, fullName, channel } = body;
+    const { action, phone, otp, storeName, ownerName, category, city, address, latitude, longitude, email, fullName, channel } = body;
 
     // 1. Send OTP (SMS disabled by DLT, WhatsApp active)
     if (action === "send_otp") {
@@ -53,6 +53,9 @@ export async function POST(request: NextRequest) {
         ownerName,
         category,
         city,
+        address,
+        latitude,
+        longitude,
       });
       return NextResponse.json(res, { status: res.success ? 200 : 400, headers: corsHeaders });
     }

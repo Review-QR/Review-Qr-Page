@@ -103,6 +103,13 @@ export async function verifyMerchantWhatsAppOtp(
   isNewMerchant?: boolean;
   businessId?: string;
   businessName?: string;
+  storeName?: string;
+  ownerName?: string;
+  category?: string;
+  address?: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
   redirectUrl?: string;
 }> {
   const phone10 = cleanPhone(rawPhone);
@@ -164,7 +171,7 @@ export async function verifyMerchantWhatsAppOtp(
   const phoneVariants = [`+91${phone10}`, phone10, `91${phone10}`];
   const { data: businesses } = await admin
     .from("businesses")
-    .select("id, name, owner, phone")
+    .select("id, name, owner, phone, type, address, city, location_latitude, location_longitude")
     .in("phone", phoneVariants)
     .eq("merchant_status", "active")
     .is("deleted_at", null)
@@ -186,6 +193,13 @@ export async function verifyMerchantWhatsAppOtp(
     isNewMerchant: false,
     businessId: business.id,
     businessName: business.name,
+    storeName: business.name,
+    ownerName: business.owner || "Merchant Partner",
+    category: business.type || "kirana",
+    address: business.address || "",
+    city: business.city || "Bahraich",
+    latitude: business.location_latitude || 27.5744,
+    longitude: business.location_longitude || 81.5977,
     redirectUrl: "/merchant/app",
     message: `Welcome back to ${business.name}!`,
   };
@@ -201,10 +215,15 @@ export async function registerMerchantProfile(params: {
   category: string;
   city?: string;
   address?: string;
+  latitude?: number;
+  longitude?: number;
 }): Promise<{
   success: boolean;
   message: string;
   businessId?: string;
+  storeName?: string;
+  ownerName?: string;
+  category?: string;
   redirectUrl?: string;
 }> {
   const phone10 = cleanPhone(params.phone);
@@ -212,6 +231,8 @@ export async function registerMerchantProfile(params: {
   const ownerName = params.ownerName?.trim() || "Shop Owner";
   const category = params.category?.toLowerCase() || "kirana";
   const city = params.city?.trim() || "Bahraich";
+  const latitude = Number(params.latitude) || 27.5744;
+  const longitude = Number(params.longitude) || 81.5977;
 
   const admin = createSupabaseAdminClient();
 
@@ -227,6 +248,8 @@ export async function registerMerchantProfile(params: {
       type: category,
       city: city,
       address: params.address || `${storeName}, ${city}`,
+      location_latitude: latitude,
+      location_longitude: longitude,
       status: "active",
       merchant_status: "active",
       plan: "growth",
@@ -235,7 +258,7 @@ export async function registerMerchantProfile(params: {
       is_taking_orders: true,
       registration_date: new Date().toISOString(),
     })
-    .select("id, name")
+    .select("id, name, owner, type")
     .single();
 
   const finalBizId = createdBiz?.id || businessId;
@@ -248,18 +271,16 @@ export async function registerMerchantProfile(params: {
       storeName,
       ownerName,
       phone: `+91${phone10}`,
-      businessCategory: (category as "kirana" | "restaurant" | "chemist" | "salon" | "carwash") || "kirana",
-      city,
-      address: params.address || `${storeName}, ${city}`,
-      isStoreOnline: true,
-      lastUpdatedAt: new Date().toISOString(),
     });
   } catch {}
 
   return {
     success: true,
-    message: `Store "${storeName}" registered successfully!`,
+    message: `Business profile registered for ${storeName}!`,
     businessId: finalBizId,
+    storeName,
+    ownerName,
+    category,
     redirectUrl: "/merchant/app",
   };
 }
