@@ -17,12 +17,10 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
     stopCamera,
     capturePhoto,
     resetPhoto,
-    toggleCameraFacing,
     videoRef,
     setCapturedImage,
   } = useRiderCamera("user");
 
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [cameraPermissionGranted, setCameraPermissionGranted] = useState<boolean>(false);
   const [isVerifyingSelfie, setIsVerifyingSelfie] = useState<boolean>(false);
 
@@ -41,27 +39,17 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
   const handleCapture = () => {
     const photo = capturePhoto();
     if (photo) {
+      stopCamera(); // Shut down live camera stream immediately upon capture
       setIsVerifyingSelfie(true);
       setTimeout(() => {
         setIsVerifyingSelfie(false);
-      }, 700);
+      }, 600);
     }
   };
 
-  const handleFileFallback = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setCapturedImage(reader.result as string);
-        stopCamera();
-        setIsVerifyingSelfie(true);
-        setTimeout(() => {
-          setIsVerifyingSelfie(false);
-        }, 700);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleRetake = () => {
+    resetPhoto();
+    startCamera("user");
   };
 
   return (
@@ -145,54 +133,26 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
             )}
           </div>
 
-          {/* Action Row: Snap vs Retake & Fallback */}
-          <div className="flex items-center justify-center gap-1.5 flex-wrap">
+          {/* Action Row: Single Clean In-App Button Only */}
+          <div className="flex items-center justify-center gap-2">
             {!capturedImage ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleCapture}
-                  disabled={!isStreaming}
-                  className="py-1.5 px-3.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition disabled:opacity-40 flex items-center gap-1 active:scale-95"
-                >
-                  <span>📸 Take Live Photo</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => toggleCameraFacing()}
-                  className="py-1.5 px-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-700 active:scale-95 flex items-center gap-1"
-                  title="Switch Front/Back Camera"
-                >
-                  <span>🔄 Flip Cam</span>
-                </button>
-              </>
+              <button
+                type="button"
+                onClick={handleCapture}
+                disabled={!isStreaming}
+                className="w-full py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition disabled:opacity-40 flex items-center justify-center gap-1.5 active:scale-95"
+              >
+                <span>📸 Take Live Selfie</span>
+              </button>
             ) : (
               <button
                 type="button"
-                onClick={() => resetPhoto()}
-                className="py-1.5 px-3 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition"
+                onClick={handleRetake}
+                className="py-1.5 px-4 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition active:scale-95 flex items-center gap-1"
               >
-                🔄 Retake Photo
+                <span>🔄 Retake Photo</span>
               </button>
             )}
-
-            {/* Hardware Fallback Input for mobile browsers */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              capture="user"
-              onChange={handleFileFallback}
-              className="hidden"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="py-1.5 px-2 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[10px] font-bold text-blue-700 active:scale-95"
-              title="Use Phone Native Camera App"
-            >
-              📱 Phone Camera
-            </button>
           </div>
         </div>
       </div>

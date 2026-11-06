@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useRiderWorkflow } from "@/app/rider/hooks/useRiderWorkflow";
 import { riderAudio } from "@/lib/audio/rider-siren";
@@ -106,6 +106,8 @@ export default function StandaloneRiderProductionApp() {
   const [previewOtp, setPreviewOtp] = useState<string>("547291");
   const [isGoogleModalOpen, setIsGoogleModalOpen] = useState<boolean>(false);
   const [activeWhatsAppOtp, setActiveWhatsAppOtp] = useState<string | null>(null);
+  const [googleName, setGoogleName] = useState<string>("");
+  const [googleEmail, setGoogleEmail] = useState<string>("");
 
   // ── LIVE SILENT OTA ENGINE AUTO-SYNC (Checks Cloud for Instant Updates) ──
   useEffect(() => {
@@ -126,34 +128,12 @@ export default function StandaloneRiderProductionApp() {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleRiderGoogleLogin = async (googleUser: { email: string; fullName: string }) => {
-    try {
-      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "google_login",
-          email: googleUser.email,
-          fullName: googleUser.fullName,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok && data.success && data.rider) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem("trustit_rider_profile", JSON.stringify(data.rider));
-          if (data.riderToken) {
-            localStorage.setItem("trustit_rider_session_token", data.riderToken);
-          }
-        }
-        if (data.rider?.is_verified && data.rider?.vehicle_number && data.rider.vehicle_number !== "UP-40-TEMP") {
-          setCurrentScreenId(7); // Already verified partner -> Cockpit
-        } else {
-          setCurrentScreenId(3); // New partner -> Terms, Road Safety & KYC!
-        }
-      }
-    } catch (err) {
-      console.error("Google rider login error", err);
-    }
+  const handleRiderGoogleLogin = (googleUser: { email: string; fullName: string }) => {
+    setGoogleName(googleUser.fullName);
+    setGoogleEmail(googleUser.email);
+    setIsGoogleModalOpen(false);
+    // Populate Google Name and leave phone blank on Screen 01 for mobile number entry
+    setCurrentScreenId(1);
   };
 
   // Auto-reset when testing as fresh new rider (?v=2 or ?fresh=1 or if legacy Arjun was cached)
@@ -308,37 +288,7 @@ export default function StandaloneRiderProductionApp() {
   // ─────────────────────────────────────────────────────────────
   const resolveLocationName = async (lat: number, lng: number) => {
     try {
-      // 1. Precise local Bahraich landmark zones (Euclidean closest point algorithm)
-      const bahraichZones = [
-        { name: "Nazipurwa (Near Anupam Sweets), Bahraich", lat: 27.5715, lng: 81.5910 },
-        { name: "Police Line, Bahraich", lat: 27.5870, lng: 81.5970 },
-        { name: "Kachehri / DM Residence (DC), Bahraich", lat: 27.5780, lng: 81.6050 },
-        { name: "Civil Lines Main Road, Bahraich", lat: 27.5760, lng: 81.5990 },
-        { name: "Pani Tanki (Hospital Road), Bahraich", lat: 27.5740, lng: 81.6180 },
-        { name: "Peepal Chauraha / Digiha, Bahraich", lat: 27.5640, lng: 81.6040 },
-        { name: "Dargah Sharif Road, Bahraich", lat: 27.5890, lng: 81.6120 },
-      ];
-
-      let closestZone = bahraichZones[0];
-      let minDistance = Number.MAX_VALUE;
-
-      for (const zone of bahraichZones) {
-        const dLat = lat - zone.lat;
-        const dLng = lng - zone.lng;
-        const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-        if (dist < minDistance) {
-          minDistance = dist;
-          closestZone = zone;
-        }
-      }
-
-      // If within Bahraich region (approx 4km radius)
-      if (minDistance < 0.040) {
-        setLiveLocationName(closestZone.name);
-        return;
-      }
-
-      // 2. Fallback to reverse-geocoding API for locations outside Bahraich center
+      // 1. High-precision Reverse-Geocoding for real street, neighbourhood & locality
       const res = await fetch(
         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
       );
@@ -349,14 +299,37 @@ export default function StandaloneRiderProductionApp() {
           data.localityInfo?.informative?.[0]?.name ||
           data.locality;
         const city = data.city || data.principalSubdivision || "Bahraich";
-        if (sub) {
-          setLiveLocationName(`${sub}, ${city}`);
+        if (sub && !sub.toLowerCase().includes("bahraich")) {
+          setLiveLocationName(`${sub}, ${city} (UP 40)`);
+          return;
+        } else if (sub) {
+          setLiveLocationName(`${sub} (UP 40)`);
           return;
         }
       }
-    } catch {
-      // Graceful fallback
+    } catch {}
+
+    // 2. High-precision Bahraich micro-zones (if within 600m of landmark)
+    const bahraichZones = [
+      { name: "Nazipurwa (Near Anupam Sweets), Bahraich", lat: 27.5715, lng: 81.5910 },
+      { name: "Police Line, Bahraich", lat: 27.5870, lng: 81.5970 },
+      { name: "Kachehri / DM Residence, Bahraich", lat: 27.5780, lng: 81.6050 },
+      { name: "Civil Lines Main Road, Bahraich", lat: 27.5760, lng: 81.5990 },
+      { name: "Pani Tanki (Hospital Road), Bahraich", lat: 27.5740, lng: 81.6180 },
+      { name: "Peepal Chauraha / Digiha, Bahraich", lat: 27.5640, lng: 81.6040 },
+      { name: "Dargah Sharif Road, Bahraich", lat: 27.5890, lng: 81.6120 },
+    ];
+
+    for (const zone of bahraichZones) {
+      const dLat = lat - zone.lat;
+      const dLng = lng - zone.lng;
+      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+      if (dist < 0.006) {
+        setLiveLocationName(zone.name);
+        return;
+      }
     }
+
     setLiveLocationName("Nazipurwa (Near Anupam Sweets), Bahraich");
   };
 
@@ -443,42 +416,70 @@ export default function StandaloneRiderProductionApp() {
   }, [isOnline, rider.id]);
 
   // ─────────────────────────────────────────────────────────────
-  // 3.5. HARDWARE / ANDROID NATIVE BACK BUTTON LISTENER (Zero Crash)
+  // 3.5. HARDWARE / ANDROID NATIVE BACK BUTTON (SCREEN HISTORY STACK)
   // ─────────────────────────────────────────────────────────────
+  const screenHistoryRef = useRef<number[]>([currentScreenId]);
+  const lastBackPressTimeRef = useRef<number>(0);
+  const [backToast, setBackToast] = useState<string | null>(null);
+
+  // Synchronize internal history stack whenever currentScreenId advances
+  useEffect(() => {
+    const stack = screenHistoryRef.current;
+    if (stack[stack.length - 1] !== currentScreenId) {
+      stack.push(currentScreenId);
+    }
+  }, [currentScreenId]);
+
+  // Navigate to previous (last) screen, prevent unintentional exit
+  const handleHardwareBack = useCallback(() => {
+    const stack = screenHistoryRef.current;
+    if (stack.length > 1) {
+      // Pop the active screen
+      stack.pop();
+      // Navigate to the immediate previous screen
+      const previousScreen = stack[stack.length - 1];
+      setCurrentScreenId(previousScreen);
+      return;
+    }
+
+    // At root screen (Screen 01 or Screen 07 Cockpit)
+    const now = Date.now();
+    if (now - lastBackPressTimeRef.current < 2000) {
+      const capApp = (window as any).Capacitor?.Plugins?.App;
+      capApp?.exitApp?.();
+    } else {
+      lastBackPressTimeRef.current = now;
+      setBackToast("Press back again to exit");
+      setTimeout(() => setBackToast(null), 2000);
+    }
+  }, [setCurrentScreenId]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 1. Capacitor Native Plugin (if available globally on window)
+    let listenerHandle: any = null;
     try {
       const capApp = (window as any).Capacitor?.Plugins?.App;
       if (capApp?.addListener) {
-        capApp.addListener("backButton", () => {
-          if (currentScreenId !== 7) {
-            setCurrentScreenId(7);
-          } else {
-            capApp.exitApp?.();
-          }
+        capApp.addListener("backButton", handleHardwareBack).then((h: any) => {
+          listenerHandle = h;
         });
       }
     } catch {}
 
-    // 2. Android WebView History Popstate Navigation
-    if (currentScreenId !== 7) {
-      window.history.pushState({ screen: currentScreenId }, "");
-    }
+    window.history.pushState({ screen: currentScreenId }, "");
 
-    const handlePopState = (e: PopStateEvent) => {
-      if (currentScreenId !== 7) {
-        e.preventDefault();
-        setCurrentScreenId(7);
-      }
+    const onPop = (e: PopStateEvent) => {
+      e.preventDefault();
+      handleHardwareBack();
     };
-    window.addEventListener("popstate", handlePopState);
+    window.addEventListener("popstate", onPop);
 
     return () => {
-      window.removeEventListener("popstate", handlePopState);
+      window.removeEventListener("popstate", onPop);
+      listenerHandle?.remove?.();
     };
-  }, [currentScreenId, setCurrentScreenId]);
+  }, [handleHardwareBack, currentScreenId]);
 
   // ─────────────────────────────────────────────────────────────
   // 4. OFFLINE DEAD-ZONE CACHING (BAHRAICH 2G RESILIENCE)
@@ -541,18 +542,20 @@ export default function StandaloneRiderProductionApp() {
       title: "01. Auth & Mobile Entry",
       component: (
         <Screen01AuthStart
+          prefilledName={googleName}
+          prefilledEmail={googleEmail}
           onContinue={(phone, channel, otp, meta) => {
             setAuthPhone(phone);
             setAuthChannel(channel);
-            // Auto-fill and simulation banner completely disabled per user request
             setPreviewOtp("");
             setActiveWhatsAppOtp(null);
-            if (meta?.fullName || meta?.vehicleType) {
+            if (meta?.fullName || meta?.vehicleType || meta?.email) {
               workflow.setRider((prev) => ({
                 ...prev,
                 full_name: meta.fullName || prev?.full_name,
                 vehicle_type: (meta.vehicleType as any) || prev?.vehicle_type,
                 phone: phone || prev?.phone,
+                email: meta.email || prev?.email,
               }));
             }
             setCurrentScreenId(2);
@@ -571,7 +574,22 @@ export default function StandaloneRiderProductionApp() {
           phone={authPhone}
           channel={authChannel}
           previewOtp={previewOtp}
-          onVerified={(otp, riderObj) => {
+          onVerified={async (otp, riderObj) => {
+            if (googleEmail || googleName) {
+              try {
+                await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    action: "google_login",
+                    email: googleEmail || undefined,
+                    fullName: googleName || workflow.rider?.full_name,
+                    phone: authPhone,
+                  }),
+                });
+              } catch {}
+            }
+
             const hasCompletedKyc =
               typeof window !== "undefined" &&
               (localStorage.getItem("trustit_rider_onboarded") === "true" ||
@@ -1137,6 +1155,13 @@ export default function StandaloneRiderProductionApp() {
           );
         })}
       </nav>
+
+      {/* ── Android Native Hardware Back Button Toast ── */}
+      {backToast && (
+        <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-slate-900/95 text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-150 border border-slate-700">
+          {backToast}
+        </div>
+      )}
 
       {/* ── Google 1-Tap Auto-Login Consent Modal ── */}
       <GoogleConsentModal

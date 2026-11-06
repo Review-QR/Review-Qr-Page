@@ -24,6 +24,7 @@ export default function Screen40TurnByTurnNav({
   onLowBattery,
 }: Screen40Props) {
   const [vehicleMode, setVehicleMode] = useState<"bike" | "cab">("bike");
+  const [isFleetDropdownOpen, setIsFleetDropdownOpen] = useState<boolean>(false);
   const [progress, setProgress] = useState<number>(38); // 0 to 100 percentage
   const [speed, setSpeed] = useState<number>(28);
 
@@ -125,32 +126,55 @@ export default function Screen40TurnByTurnNav({
           </div>
         </div>
 
-        {/* Fleet Mode: Ultra-Compact Inline Pill (Bike & Electric Bike only) */}
-        <div className="flex items-center justify-between mt-1.5 px-1 text-[10px]">
+        {/* Fleet Mode: Clean Single Dropdown (Active Vehicle Only) */}
+        <div className="relative flex items-center justify-between mt-1.5 px-1 text-[10px]">
           <span className="font-bold text-slate-500 uppercase tracking-wider text-[9px]">Fleet Mode:</span>
-          <div className="flex items-center gap-1 bg-slate-200/80 rounded-lg p-0.5 text-[9.5px]">
+          
+          <div className="relative">
             <button
               type="button"
-              onClick={() => setVehicleMode("bike")}
-              className={`px-2 py-0.5 rounded font-black transition ${
-                vehicleMode === "bike"
-                  ? "bg-white text-slate-900 shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
+              onClick={() => setIsFleetDropdownOpen(!isFleetDropdownOpen)}
+              className="px-2.5 py-1 rounded-lg bg-white border border-slate-300 shadow-2xs font-bold text-[10px] text-slate-800 flex items-center gap-1.5 hover:bg-slate-50 active:scale-95 transition"
             >
-              🏍️ Bike
+              <span>{vehicleMode === "bike" ? "🏍️ Petrol Bike" : "⚡ EV Bike"}</span>
+              <span className="text-[8px] text-slate-500 font-mono">▼</span>
             </button>
-            <button
-              type="button"
-              onClick={() => setVehicleMode("cab")}
-              className={`px-2 py-0.5 rounded font-black transition ${
-                vehicleMode === "cab"
-                  ? "bg-white text-emerald-800 shadow-2xs"
-                  : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              ⚡ EV Bike
-            </button>
+
+            {/* Dropdown Menu (Hides other option until clicked) */}
+            {isFleetDropdownOpen && (
+              <div className="absolute right-0 top-full mt-1 w-32 bg-white border border-slate-200 rounded-xl shadow-lg p-1 z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVehicleMode("bike");
+                    setIsFleetDropdownOpen(false);
+                  }}
+                  className={`w-full px-2 py-1.5 text-left rounded-lg text-[10px] font-bold flex items-center justify-between ${
+                    vehicleMode === "bike"
+                      ? "bg-blue-50 text-[#0D47A1] font-black"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <span>🏍️ Petrol Bike</span>
+                  {vehicleMode === "bike" && <span className="text-blue-600">✓</span>}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVehicleMode("cab");
+                    setIsFleetDropdownOpen(false);
+                  }}
+                  className={`w-full px-2 py-1.5 text-left rounded-lg text-[10px] font-bold flex items-center justify-between ${
+                    vehicleMode === "cab"
+                      ? "bg-emerald-50 text-emerald-800 font-black"
+                      : "text-slate-700 hover:bg-slate-100"
+                  }`}
+                >
+                  <span>⚡ EV Bike</span>
+                  {vehicleMode === "cab" && <span className="text-emerald-600">✓</span>}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>

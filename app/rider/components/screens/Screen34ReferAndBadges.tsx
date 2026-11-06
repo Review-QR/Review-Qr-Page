@@ -117,7 +117,7 @@ export default function Screen34ReferAndBadges({
                 Invite friends in Bahraich to join the Trustit Fleet. Earn ₹500 cash when they complete their first 25 trips!
               </p>
               <div className="mt-3 inline-block bg-white/20 px-3 py-1 rounded-xl text-xs font-mono font-bold">
-                Your Referral Code: <span className="text-amber-300 font-black">ARJUN40</span>
+                Your Referral Code: <span className="text-amber-300 font-black">TRUSTIT40</span>
               </div>
             </div>
 

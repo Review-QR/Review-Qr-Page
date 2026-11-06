@@ -14,7 +14,7 @@ interface Screen02Props {
 }
 
 export default function Screen02OtpVerify({
-  phone = "9415011111",
+  phone = "",
   channel = "whatsapp",
   previewOtp,
   onVerified,
@@ -135,7 +135,7 @@ export default function Screen02OtpVerify({
           <h2 className="text-base font-black text-slate-900 leading-tight">Verify WhatsApp Mobile OTP</h2>
           <p className="text-xs text-slate-500 leading-snug">
             Sent via <strong className="text-emerald-700">WhatsApp</strong> to{" "}
-            <strong className="text-slate-900 font-mono">+91 {phone || "9415011111"}</strong>
+            <strong className="text-slate-900 font-mono">{phone ? `+91 ${phone}` : "your mobile number"}</strong>
           </p>
         </div>
 

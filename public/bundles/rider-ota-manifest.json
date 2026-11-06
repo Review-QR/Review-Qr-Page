@@ -1,8 +1,8 @@
 {
-  "version": "3.7.0",
+  "version": "3.8.0",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793942834007",
-  "updatedAt": "2026-11-06T05:27:14.007Z",
-  "notes": "11 Improvements: Moving GPS, Flip Camera, Android Back Button, Quiz fix, Fleet inline, Solid Duty Status",
-  "sizeBytes": 3566126
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793945967575",
+  "updatedAt": "2026-11-06T06:19:27.575Z",
+  "notes": "Production Transition: Real GPS Geocoding, Fleet Dropdown, Clean In-App Camera, Google Name Auto-fill, Back Button Screen History Stack, Live Order Polling",
+  "sizeBytes": 3583960
 }

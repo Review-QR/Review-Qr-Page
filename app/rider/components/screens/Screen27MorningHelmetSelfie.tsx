@@ -27,12 +27,9 @@ export default function Screen27MorningHelmetSelfie({
     stopCamera,
     capturePhoto,
     resetPhoto,
-    toggleCameraFacing,
     videoRef,
     setCapturedImage,
   } = useRiderCamera("user");
-
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     startCamera("user");
@@ -43,28 +40,18 @@ export default function Screen27MorningHelmetSelfie({
     const snap = capturePhoto();
     if (!snap) return;
 
+    stopCamera(); // Shut down live stream immediately upon capture
     setIsAiVerifying(true);
     setTimeout(() => {
       setIsAiVerifying(false);
       setIsPhotoCaptured(true);
-    }, 1200);
+    }, 800);
   };
 
-  const handleFileFallback = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setCapturedImage(reader.result as string);
-        stopCamera();
-        setIsAiVerifying(true);
-        setTimeout(() => {
-          setIsAiVerifying(false);
-          setIsPhotoCaptured(true);
-        }, 1000);
-      };
-      reader.readAsDataURL(file);
-    }
+  const handleRetake = () => {
+    setIsPhotoCaptured(false);
+    resetPhoto();
+    startCamera("user");
   };
 
   const handlePassGate = async () => {
@@ -138,7 +125,7 @@ export default function Screen27MorningHelmetSelfie({
               <img src={capturedImage} alt="Helmet Selfie" className="w-full h-full object-cover" />
               <div className="absolute bottom-2 inset-x-2 bg-black/70 backdrop-blur-xs text-white p-1 rounded-lg text-center">
                 <span className="text-[10px] font-bold text-emerald-400 block">✓ Helmet Verified (99.4%)</span>
-                <span className="text-[9px] text-slate-300">Arjun Singh · Shift Ready</span>
+                <span className="text-[9px] text-slate-300">{rider?.full_name || "Delivery Partner"} · Shift Ready</span>
               </div>
             </div>
           )}
@@ -167,55 +154,26 @@ export default function Screen27MorningHelmetSelfie({
           )}
         </div>
 
-        {/* Retake, Switch & Native Fallback Controls */}
-        <div className="mt-2.5 flex items-center justify-center gap-1.5 flex-wrap">
+        {/* Action Row: Single Clean In-App Button Only */}
+        <div className="mt-2.5 flex items-center justify-center gap-2">
           {!capturedImage ? (
-            <>
-              <button
-                type="button"
-                onClick={handleCapture}
-                disabled={!isStreaming}
-                className="py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-xs transition disabled:opacity-40 flex items-center gap-1 active:scale-95"
-              >
-                <span>📸 Capture Helmet Photo</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => toggleCameraFacing()}
-                className="py-1.5 px-2 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-700 active:scale-95"
-                title="Switch Front/Back Camera"
-              >
-                <span>🔄 Flip Cam</span>
-              </button>
-            </>
+            <button
+              type="button"
+              onClick={handleCapture}
+              disabled={!isStreaming}
+              className="w-full py-2 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition disabled:opacity-40 flex items-center justify-center gap-1.5 active:scale-95"
+            >
+              <span>📸 Capture Helmet Photo</span>
+            </button>
           ) : (
             <button
               type="button"
-              onClick={() => {
-                setIsPhotoCaptured(false);
-                resetPhoto();
-              }}
-              className="py-1 px-3 rounded-lg border border-slate-300 bg-white text-[11px] font-bold text-slate-700"
+              onClick={handleRetake}
+              className="py-1.5 px-4 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 transition active:scale-95 flex items-center gap-1"
             >
-              🔄 Retake Selfie
+              <span>🔄 Retake Selfie</span>
             </button>
           )}
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            capture="user"
-            onChange={handleFileFallback}
-            className="hidden"
-          />
-          <button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            className="py-1.5 px-2 rounded-lg border border-blue-200 bg-blue-50 hover:bg-blue-100 text-[10px] text-blue-700 font-bold active:scale-95"
-          >
-            📱 Phone Camera
-          </button>
         </div>
 
         {/* Checklist Checkboxes */}

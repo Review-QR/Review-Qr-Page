@@ -17,16 +17,31 @@ interface Screen01Props {
     phone: string,
     channel: "sms" | "whatsapp",
     previewOtp?: string,
-    meta?: { fullName?: string; vehicleType?: "scooter"; isNewRegistration?: boolean }
+    meta?: { fullName?: string; vehicleType?: "scooter"; isNewRegistration?: boolean; email?: string }
   ) => void;
   onGoogleLogin?: () => void;
+  prefilledName?: string;
+  prefilledEmail?: string;
 }
 
-export default function Screen01AuthStart({ onContinue, onGoogleLogin }: Screen01Props) {
-  const [phone, setPhone] = useState("9415011111");
+export default function Screen01AuthStart({
+  onContinue,
+  onGoogleLogin,
+  prefilledName = "",
+  prefilledEmail = "",
+}: Screen01Props) {
+  const [phone, setPhone] = useState("");
+  const [fullName, setFullName] = useState(prefilledName);
   const [selectedChannel, setSelectedChannel] = useState<"whatsapp" | "sms">("whatsapp");
   const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
   const [localError, setLocalError] = useState<string | null>(null);
+
+  // Update fullName if prefilledName changes from Google Sign-In
+  React.useEffect(() => {
+    if (prefilledName) {
+      setFullName(prefilledName);
+    }
+  }, [prefilledName]);
 
   const { sendPhoneOtp, isLoading, error } = useRiderAuth();
 
@@ -51,9 +66,10 @@ export default function Screen01AuthStart({ onContinue, onGoogleLogin }: Screen0
     const res = await sendPhoneOtp(cleanPhone, "whatsapp");
     if (res.success) {
       onContinue?.(cleanPhone, "whatsapp", res.previewOtp, {
-        fullName: "Delivery Partner",
+        fullName: fullName.trim() || "Delivery Partner",
         vehicleType: "scooter",
         isNewRegistration: true,
+        email: prefilledEmail,
       });
     } else {
       setLocalError(res.error || "WhatsApp OTP भेजने में विफल। कृपया पुनः प्रयास करें।");
@@ -91,6 +107,24 @@ export default function Screen01AuthStart({ onContinue, onGoogleLogin }: Screen0
 
         {/* Phone Entry Card */}
         <div className="mt-3 bg-white border border-slate-200 rounded-xl p-3 shadow-2xs space-y-3">
+          {/* If Signed In with Google, Show Verified Name */}
+          {fullName ? (
+            <div className="p-2 rounded-lg bg-blue-50/80 border border-blue-200 flex items-center justify-between">
+              <div>
+                <span className="text-[9px] font-bold text-blue-700 uppercase tracking-wider block">
+                  Google Account Name
+                </span>
+                <span className="text-xs font-black text-slate-900">{fullName}</span>
+                {prefilledEmail && (
+                  <span className="text-[10px] text-slate-500 block">{prefilledEmail}</span>
+                )}
+              </div>
+              <span className="text-[10px] bg-blue-600 text-white font-bold px-2 py-0.5 rounded-full">
+                ✓ Google
+              </span>
+            </div>
+          ) : null}
+
           {/* Mobile Input */}
           <div>
             <label className="text-[10px] font-bold text-slate-700 uppercase tracking-wider block mb-1">
@@ -108,6 +142,7 @@ export default function Screen01AuthStart({ onContinue, onGoogleLogin }: Screen0
                 }}
                 placeholder="Enter 10-digit number"
                 className="w-full pl-2 text-xs font-mono font-bold text-slate-900 bg-transparent focus:outline-none tracking-wider"
+                autoFocus={Boolean(fullName)}
               />
             </div>
           </div>

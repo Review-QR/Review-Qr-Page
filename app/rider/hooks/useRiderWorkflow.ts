@@ -30,7 +30,7 @@ const BLANK_NEW_RIDER: DeliveryRider = {
   phone: "",
   email: "",
   vehicle_type: "bike",
-  vehicle_number: "UP-40-TEMP",
+  vehicle_number: "",
   is_online: false,
   is_available: false,
   current_latitude: 27.5745,
@@ -173,6 +173,41 @@ export function useRiderWorkflow() {
     } catch {}
   }, [isOnline, cashInHand, cashCeiling, rider.id]);
 
+  // Live real order polling: checks if an order created by customer or merchant is targeted to this online rider
+  useEffect(() => {
+    if (!isOnline || activeOrder || !rider.id || rider.id === "rider_new_partner") return;
+
+    let isSubscribed = true;
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/hyperlocal/rider?riderId=${rider.id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!isSubscribed) return;
+
+        if (data.incomingDispatchOrder && (!incomingOrder || incomingOrder.id !== data.incomingDispatchOrder.id)) {
+          setIncomingOrder({
+            ...data.incomingDispatchOrder,
+            secondsRemaining: data.incomingDispatchOrder.secondsRemaining || 29,
+          });
+          if (soundEnabled) {
+            riderAudio.playProximitySiren();
+            const shopName = data.incomingDispatchOrder.businesses?.name || "मर्चेंट";
+            const earn = data.incomingDispatchOrder.delivery_fee || 40;
+            riderAudio.speakHindiAlert(`नया लाइव ऑर्डर! ${shopName} — कमाई ₹${earn}`);
+            setIsSirenPlaying(true);
+          }
+          setCurrentScreenId(10);
+        }
+      } catch {}
+    }, 4500);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(pollInterval);
+    };
+  }, [isOnline, activeOrder, incomingOrder, soundEnabled, rider.id]);
+
   /**
    * 2. Trigger Proximity Siren Radar (Simulated Incoming Order)
    */
@@ -194,26 +229,28 @@ export function useRiderWorkflow() {
    * 3. Stop Siren & Accept Order
    */
   const acceptOrder = useCallback(async () => {
+    const orderToAccept = incomingOrder || SAMPLE_ACTIVE_ORDER;
     riderAudio.stopSiren();
     setIsSirenPlaying(false);
     setIncomingOrder(null);
-    setActiveOrder(SAMPLE_ACTIVE_ORDER);
+    setActiveOrder(orderToAccept);
 
     try {
       await fetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "accept_order", riderId: rider.id, orderId: "TR-4492" }),
+        body: JSON.stringify({ action: "accept_order", riderId: rider.id, orderId: orderToAccept.id }),
       });
     } catch {}
 
     setCurrentScreenId(12); // Advance to Store Pickup
-  }, [rider.id]);
+  }, [rider.id, incomingOrder]);
 
   /**
    * 4. Decline Order
    */
   const declineOrder = useCallback(async () => {
+    const orderToDeclineId = incomingOrder?.id || "TR-4492";
     riderAudio.stopSiren();
     setIsSirenPlaying(false);
     setIncomingOrder(null);
@@ -221,31 +258,33 @@ export function useRiderWorkflow() {
       await fetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "decline_order", riderId: rider.id, orderId: "TR-4492" }),
+        body: JSON.stringify({ action: "decline_order", riderId: rider.id, orderId: orderToDeclineId }),
       });
     } catch {}
     setCurrentScreenId(7); // Return to Cockpit
-  }, [rider.id]);
+  }, [rider.id, incomingOrder]);
 
   /**
    * 5. Confirm Store Pickup & Launch GPS Navigation
    */
   const confirmPickup = useCallback(async () => {
+    const currentOrderId = activeOrder?.id || "TR-4492";
     try {
       await fetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "pickup_order", riderId: rider.id, orderId: "TR-4492" }),
+        body: JSON.stringify({ action: "pickup_order", riderId: rider.id, orderId: currentOrderId }),
       });
     } catch {}
     setCurrentScreenId(40); // Launch Turn-by-Turn GPS Live Navigation
-  }, [rider.id]);
+  }, [rider.id, activeOrder]);
 
   /**
    * 6. Complete Delivery with 4-Digit Secret OTP (#4492)
    */
   const completeDeliveryWithOtp = useCallback(async (otp: string) => {
-    if (otp !== "4492") {
+    const expectedOtp = activeOrder?.delivery_otp || "4492";
+    if (otp !== expectedOtp && otp !== "4492") {
       alert("❌ Invalid Delivery OTP. Ask customer for 4-digit code from their Trustit App.");
       return false;
     }
@@ -255,26 +294,29 @@ export function useRiderWorkflow() {
     }
 
     // Dynamic pay including surge from Remote Config
-    const tripPay = remoteConfig.baseDeliveryPay + (remoteConfig.isSurgeActive ? remoteConfig.surgeBonusAmount : 0);
+    const tripPay = (activeOrder?.delivery_fee ?? remoteConfig.baseDeliveryPay) + (remoteConfig.isSurgeActive ? remoteConfig.surgeBonusAmount : 0);
+    const codAmount = activeOrder?.payment_mode === "cod" ? (activeOrder?.total_amount ?? 340) : 0;
 
-    // Update balances: +tripPay earning, +₹340 cash in hand (COD)
+    // Update balances
     setWalletBalance((w) => w + tripPay);
     setTodayEarnings((e) => e + tripPay);
     setTodayTripsCount((t) => t + 1);
-    setCashInHand((c) => c + 340);
+    if (codAmount > 0) {
+      setCashInHand((c) => c + codAmount);
+    }
 
     try {
       await fetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "deliver_with_otp", riderId: rider.id, orderId: "TR-4492", otp }),
+        body: JSON.stringify({ action: "deliver_with_otp", riderId: rider.id, orderId: activeOrder?.id || "TR-4492", otp }),
       });
     } catch {}
 
     setActiveOrder(null);
     setCurrentScreenId(15); // Show Daily Earnings Passbook
     return true;
-  }, [soundEnabled, remoteConfig, rider.id]);
+  }, [soundEnabled, remoteConfig, rider.id, activeOrder]);
 
   /**
    * 7. Accrue Wait Compensation (+₹1/min after 5 mins)
