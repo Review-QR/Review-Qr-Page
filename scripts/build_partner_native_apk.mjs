@@ -359,12 +359,12 @@ if (!fs.existsSync(publicBundlesDir)) fs.mkdirSync(publicBundlesDir, { recursive
 const zipPath = path.join(publicBundlesDir, 'partner-bundle-latest.zip');
 if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
 
-execSync(`tar -a -c -f "${zipPath}" -C "${bundleDir}" .`, { stdio: 'inherit' });
+execSync(`tar -a -c -f "${zipPath}" *`, { cwd: bundleDir, stdio: 'inherit' });
 
 const otaStats = fs.statSync(zipPath);
 const otaSizeMb = (otaStats.size / (1024 * 1024)).toFixed(2);
 
-const otaVersion = '3.2.1';
+const otaVersion = '3.3.0';
 const manifest = {
   version: otaVersion,
   minAppVersion: '2.2.0',

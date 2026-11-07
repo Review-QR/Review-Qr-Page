@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 interface ScreenAuth03Props {
+  category?: string;
   onBack?: () => void;
   onLoginSuccess?: (details?: { storeName?: string; ownerName?: string; phone?: string; category?: string }) => void;
   onRegisterComplete?: (details?: { storeName: string; ownerName: string; phone: string; category: string }) => void;

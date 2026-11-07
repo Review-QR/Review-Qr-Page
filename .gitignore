@@ -30,6 +30,8 @@ android/*.iml
 android/app/*.iml
 
 # Temporary files
+android-embedded-bundle/
+android-rider-bundle/
 loom*
 apollo*
 scratch/

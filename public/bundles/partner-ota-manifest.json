@@ -1,8 +1,8 @@
 {
-  "version": "3.2.1",
+  "version": "3.3.0",
   "minAppVersion": "2.2.0",
-  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1793949210444",
-  "updatedAt": "2026-11-06T07:13:30.444Z",
+  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1794039923057",
+  "updatedAt": "2026-11-07T08:25:23.057Z",
   "notes": "Official Trustit Merchant Partner true native release with emerald green register button and WhatsApp OTP socket bridge",
-  "sizeBytes": 3568523
+  "sizeBytes": 3477348
 }

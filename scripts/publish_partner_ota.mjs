@@ -28,7 +28,7 @@ if (fs.existsSync(zipPath)) {
 }
 
 console.log('📦 Compressing android-embedded-bundle into partner-bundle-latest.zip...');
-execSync(`tar -a -c -f "${zipPath}" -C "${bundleDir}" .`, { stdio: 'inherit' });
+execSync(`tar -a -c -f "${zipPath}" *`, { cwd: bundleDir, stdio: 'inherit' });
 
 const stats = fs.statSync(zipPath);
 const sizeMb = (stats.size / (1024 * 1024)).toFixed(2);

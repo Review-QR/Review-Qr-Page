@@ -93,6 +93,16 @@ class MerchantAudioSynthesizer {
   /**
    * Pleasant Ding-Dong Bell Chime (587Hz -> 880Hz)
    */
+  public stopIncomingOrderSiren() {
+    if (this.ctx && this.isPlaying) {
+      try {
+        this.ctx.close();
+        this.ctx = null;
+      } catch {}
+      this.isPlaying = false;
+    }
+  }
+
   public playDingDong() {
     this.initContext();
     if (!this.ctx) return;
