@@ -1,8 +1,8 @@
 {
-  "version": "5.1.0",
+  "version": "5.2.0",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1794153263338",
-  "updatedAt": "2026-11-08T15:54:23.338Z",
-  "notes": "Rider Enterprise v5.1.0: Pure English UI, sleek button ergonomics, live selfie camera stream fix, Android hardware back navigation stack, and pending approval lifecycle router",
-  "sizeBytes": 3485400
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1794155285045",
+  "updatedAt": "2026-11-08T16:28:05.045Z",
+  "notes": "Rider Enterprise v5.2.0: High-accuracy live GPS telemetry watcher (every 3-5s), intelligent Mapbox & Google Maps reverse geocoding via server proxy, zero hardcoded fake fallbacks, real GPS coordinates support, and real-time satellite accuracy indicator",
+  "sizeBytes": 3485385
 }

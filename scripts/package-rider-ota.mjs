@@ -7,7 +7,7 @@ const bundleDir = path.join(rootDir, 'android-rider-bundle');
 const publicBundlesDir = path.join(rootDir, 'public', 'bundles');
 
 console.log('========================================================');
-console.log('🚀 TRUSTIT RIDER — ENTERPRISE PRODUCTION OTA v5.1.0 PACKAGER');
+console.log('🚀 TRUSTIT RIDER — ENTERPRISE PRODUCTION OTA v5.2.0 PACKAGER');
 console.log('========================================================');
 
 // 1. Clean & create bundle directory
@@ -183,20 +183,20 @@ const timestamp = Date.now();
 // 6. Update rider-ota-manifest.json
 const manifestPath = path.join(publicBundlesDir, 'rider-ota-manifest.json');
 const manifestData = {
-  version: "5.1.0",
+  version: "5.2.0",
   minAppVersion: "2.5.0",
   bundleUrl: `https://trustitreview.com/bundles/rider-bundle-latest.zip?v=${timestamp}`,
   updatedAt: new Date().toISOString(),
-  notes: "Rider Enterprise v5.1.0: Pure English UI, sleek button ergonomics, live selfie camera stream fix, Android hardware back navigation stack, and pending approval lifecycle router",
+  notes: "Rider Enterprise v5.2.0: High-accuracy live GPS telemetry watcher (every 3-5s), intelligent Mapbox & Google Maps reverse geocoding via server proxy, zero hardcoded fake fallbacks, real GPS coordinates support, and real-time satellite accuracy indicator",
   sizeBytes: zipStats.size
 };
 
 fs.writeFileSync(manifestPath, JSON.stringify(manifestData, null, 2), 'utf8');
-console.log('✔ Updated public/bundles/rider-ota-manifest.json with version 5.1.0');
+console.log('✔ Updated public/bundles/rider-ota-manifest.json with version 5.2.0');
 console.log(`   Size: ${(zipStats.size / (1024 * 1024)).toFixed(2)} MB (${zipStats.size} bytes)`);
 
 // 7. Clean up temp bundle dir
 fs.rmSync(bundleDir, { recursive: true, force: true });
 console.log('✔ Cleaned up temporary android-rider-bundle directory');
 
-console.log('\n🎉 Production OTA v5.1.0 successfully packaged and ready for deployment!');
+console.log('\n🎉 Production OTA v5.2.0 successfully packaged and ready for deployment!');

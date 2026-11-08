@@ -137,32 +137,33 @@ export const TrustitNative = {
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
             accuracy: pos.coords.accuracy,
-            address: "Civil Lines, Bahraich",
-            mohalla: "Civil Lines",
-            city: "Bahraich",
-            pincode: "271801",
+            address: `GPS (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`,
+            mohalla: "Live Telemetry",
+            city: "UP",
+            pincode: "",
           }),
           () => resolve({
-            latitude: 27.5744,
-            longitude: 81.5977,
-            accuracy: 50,
-            address: "Civil Lines, Bahraich",
-            mohalla: "Civil Lines",
-            city: "Bahraich",
-            pincode: "271801",
+            latitude: 0,
+            longitude: 0,
+            accuracy: 999,
+            address: "Location Permission Required",
+            mohalla: "",
+            city: "",
+            pincode: "",
           }),
-          { enableHighAccuracy: true, timeout: 8000 }
+          { enableHighAccuracy: true, timeout: 12000 }
         );
       });
     }
 
     return {
-      latitude: 27.5744,
-      longitude: 81.5977,
-      address: "Civil Lines, Bahraich",
-      mohalla: "Civil Lines",
-      city: "Bahraich",
-      pincode: "271801",
+      latitude: 0,
+      longitude: 0,
+      accuracy: 999,
+      address: "GPS Unavailable",
+      mohalla: "",
+      city: "",
+      pincode: "",
     };
   },
 

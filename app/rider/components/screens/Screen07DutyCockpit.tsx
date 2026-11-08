@@ -29,7 +29,7 @@ interface Screen07Props {
   liveZoneNameProp?: string;
   onRefreshLocation?: () => void;
   isLocatingProp?: boolean;
-  gpsAccuracyProp?: number;
+  gpsAccuracyProp?: number | null;
 }
 
 export default function Screen07DutyCockpit({
@@ -49,10 +49,10 @@ export default function Screen07DutyCockpit({
   cashInHandProp = 0,
   cashCeilingProp = 1500,
   remoteConfig,
-  liveZoneNameProp = "Nazipurwa (Near Anupam Sweets), Bahraich",
+  liveZoneNameProp = "Locating GPS...",
   onRefreshLocation,
   isLocatingProp = false,
-  gpsAccuracyProp = 4.2,
+  gpsAccuracyProp = null,
 }: Screen07Props) {
   const [isOnline, setIsOnline] = useState(isOnlineProp);
 
@@ -177,7 +177,7 @@ export default function Screen07DutyCockpit({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="text-[9px] text-slate-400 font-bold uppercase leading-none">Live Active Zone</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span className={`w-1.5 h-1.5 rounded-full ${gpsAccuracyProp !== null ? "bg-emerald-500 animate-pulse" : "bg-amber-400"}`}></span>
               </div>
               <strong className="text-slate-900 text-[11px] sm:text-xs block leading-tight font-black mt-0.5">
                 {liveZoneNameProp}
@@ -192,7 +192,7 @@ export default function Screen07DutyCockpit({
               title="Tap to refresh live GPS location"
             >
               <span className={isLocatingProp ? "animate-spin inline-block" : ""}>🔄</span>
-              <span>GPS ±{gpsAccuracyProp}m</span>
+              <span>{gpsAccuracyProp !== null && gpsAccuracyProp !== undefined ? `GPS ±${gpsAccuracyProp}m` : (isLocatingProp ? "Locating..." : "GPS Sync")}</span>
             </button>
             <span className="text-[8px] text-slate-400 block mt-0.5 font-mono">Live Telemetry</span>
           </div>

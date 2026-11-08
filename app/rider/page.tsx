@@ -126,9 +126,9 @@ export default function StandaloneRiderProductionApp() {
   const [batteryLevel, setBatteryLevel] = useState<number>(94);
   const [isBatteryCharging, setIsBatteryCharging] = useState<boolean>(false);
   const [isOffline, setIsOffline] = useState<boolean>(false);
-  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(4.2);
-  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number }>({ lat: 27.5745, lng: 81.5965 });
-  const [liveLocationName, setLiveLocationName] = useState<string>("Nazipurwa (Near Anupam Sweets), Bahraich");
+  const [gpsAccuracy, setGpsAccuracy] = useState<number | null>(null);
+  const [gpsCoords, setGpsCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [liveLocationName, setLiveLocationName] = useState<string>("Locating GPS...");
   const [isLocating, setIsLocating] = useState<boolean>(false);
   const [telemetrySyncState, setTelemetrySyncState] = useState<"synced" | "syncing" | "idle">("synced");
   const [lastSyncTime, setLastSyncTime] = useState<string>("Active");
@@ -138,6 +138,8 @@ export default function StandaloneRiderProductionApp() {
 
   // Background Telemetry Throttling Refs (Guarantees zero re-renders of the watcher)
   const lastHeartbeatTimeRef = useRef<number>(0);
+  const lastGeocodeTimeRef = useRef<number>(0);
+  const lastGeocodedCoordsRef = useRef<{ lat: number; lng: number } | null>(null);
   const batteryLevelRef = useRef<number>(batteryLevel);
   useEffect(() => {
     batteryLevelRef.current = batteryLevel;
@@ -258,67 +260,66 @@ export default function StandaloneRiderProductionApp() {
   // ─────────────────────────────────────────────────────────────
   const resolveLocationName = async (lat: number, lng: number) => {
     try {
-      // 1. High-precision Reverse-Geocoding for real street, neighbourhood & locality
-      const res = await fetch(
-        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`
+      // 1. High-precision Reverse-Geocoding via server proxy (Mapbox / Google Maps / Nominatim)
+      const res = await TrustitNative.nativeFetch(
+        `/api/hyperlocal/reverse-geocode?lat=${lat}&lng=${lng}`,
+        { method: "GET" }
       );
-      if (res.ok) {
+      if (res && res.status === 200) {
         const data = await res.json();
-        const sub =
-          data.localityInfo?.administrative?.[3]?.name ||
-          data.localityInfo?.informative?.[0]?.name ||
-          data.locality;
-        const city = data.city || data.principalSubdivision || "Bahraich";
-        if (sub && !sub.toLowerCase().includes("bahraich")) {
-          setLiveLocationName(`${sub}, ${city} (UP 40)`);
-          return;
-        } else if (sub) {
-          setLiveLocationName(`${sub} (UP 40)`);
+        if (data && data.locationName) {
+          setLiveLocationName(data.locationName);
+          lastGeocodedCoordsRef.current = { lat, lng };
+          lastGeocodeTimeRef.current = Date.now();
           return;
         }
       }
-    } catch {}
-
-    // 2. High-precision Bahraich micro-zones (if within 600m of landmark)
-    const bahraichZones = [
-      { name: "Nazipurwa (Near Anupam Sweets), Bahraich", lat: 27.5715, lng: 81.5910 },
-      { name: "Police Line, Bahraich", lat: 27.5870, lng: 81.5970 },
-      { name: "Kachehri / DM Residence, Bahraich", lat: 27.5780, lng: 81.6050 },
-      { name: "Civil Lines Main Road, Bahraich", lat: 27.5760, lng: 81.5990 },
-      { name: "Pani Tanki (Hospital Road), Bahraich", lat: 27.5740, lng: 81.6180 },
-      { name: "Peepal Chauraha / Digiha, Bahraich", lat: 27.5640, lng: 81.6040 },
-      { name: "Dargah Sharif Road, Bahraich", lat: 27.5890, lng: 81.6120 },
-    ];
-
-    for (const zone of bahraichZones) {
-      const dLat = lat - zone.lat;
-      const dLng = lng - zone.lng;
-      const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-      if (dist < 0.006) {
-        setLiveLocationName(zone.name);
-        return;
-      }
+    } catch {
+      // Direct fetch fallback if nativeFetch is unavailable
+      try {
+        const res = await fetch(`/api/hyperlocal/reverse-geocode?lat=${lat}&lng=${lng}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.locationName) {
+            setLiveLocationName(data.locationName);
+            lastGeocodedCoordsRef.current = { lat, lng };
+            lastGeocodeTimeRef.current = Date.now();
+            return;
+          }
+        }
+      } catch {}
     }
 
-    setLiveLocationName("Nazipurwa (Near Anupam Sweets), Bahraich");
+    // Honest live coordinate fallback when offline or resolving fails (Zero fake landmarks)
+    setLiveLocationName(`GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
   };
 
   const triggerGpsScan = () => {
-    if (typeof window === "undefined" || !("geolocation" in navigator)) return;
+    if (typeof window === "undefined" || !("geolocation" in navigator)) {
+      setLiveLocationName("GPS Unavailable");
+      return;
+    }
     setIsLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setIsLocating(false);
         const { latitude, longitude, accuracy } = pos.coords;
-        setGpsAccuracy(accuracy ? Number(accuracy.toFixed(1)) : 4.2);
+        const acc = accuracy ? Number(accuracy.toFixed(1)) : 5.0;
+        setGpsAccuracy(acc);
         setGpsCoords({ lat: latitude, lng: longitude });
         resolveLocationName(latitude, longitude);
       },
-      () => {
+      (err) => {
         setIsLocating(false);
-        setLiveLocationName("Nazipurwa (Near Anupam Sweets), Bahraich");
+        console.warn("[GPS] Current position error:", err);
+        setLiveLocationName((prev) => {
+          if (!prev || prev === "Locating GPS...") {
+            return "GPS Signal Waiting (Enable Location)";
+          }
+          return prev;
+        });
       },
-      { enableHighAccuracy: true, timeout: 8000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
   };
 
@@ -335,11 +336,11 @@ export default function StandaloneRiderProductionApp() {
         const { latitude, longitude, accuracy, speed } = pos.coords;
         const now = Date.now();
 
-        // Throttle accuracy state updates to prevent re-render jitter
+        // 1. Live accuracy and coordinate telemetry (Updates continuously every 3-5s)
         if (accuracy) {
           const roundedAcc = Number(accuracy.toFixed(1));
           setGpsAccuracy((prev) => {
-            if (prev === null || Math.abs(prev - roundedAcc) >= 1.5) {
+            if (prev === null || Math.abs(prev - roundedAcc) >= 1.0) {
               return roundedAcc;
             }
             return prev;
@@ -347,13 +348,28 @@ export default function StandaloneRiderProductionApp() {
         }
         setGpsCoords({ lat: latitude, lng: longitude });
 
-        // Periodically resolve human-readable locality
-        if (now - lastHeartbeatTimeRef.current >= 30000) {
+        // 2. Intelligent Address Resolution (Updates when moved > 100m or after 2 minutes)
+        const lastCoords = lastGeocodedCoordsRef.current;
+        let shouldGeocode = false;
+        if (!lastCoords) {
+          shouldGeocode = true;
+        } else {
+          const dLat = latitude - lastCoords.lat;
+          const dLng = longitude - lastCoords.lng;
+          const distDegrees = Math.sqrt(dLat * dLat + dLng * dLng);
+          // ~0.001 degrees = ~110m
+          if (distDegrees >= 0.001 || now - lastGeocodeTimeRef.current >= 120000) {
+            shouldGeocode = true;
+          }
+        }
+
+        if (shouldGeocode) {
+          lastGeocodeTimeRef.current = now;
           resolveLocationName(latitude, longitude);
         }
 
-        // Throttle backend heartbeat to once every 6 seconds to prevent network spam (when online)
-        if (isOnline && now - lastHeartbeatTimeRef.current >= 6000) {
+        // 3. Telemetry Heartbeat to Backend Dispatch Engine (Every 5s when online)
+        if (isOnline && rider?.id && now - lastHeartbeatTimeRef.current >= 5000) {
           lastHeartbeatTimeRef.current = now;
           setTelemetrySyncState("syncing");
 
@@ -380,18 +396,18 @@ export default function StandaloneRiderProductionApp() {
             });
         }
       },
-      () => {
-        // Fallback gracefully without throwing
+      (err) => {
+        console.warn("[GPS] Watch position warning:", err);
       },
       {
         enableHighAccuracy: true,
-        maximumAge: 5000,
-        timeout: 12000,
+        maximumAge: 2000,
+        timeout: 10000,
       }
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [isOnline, rider.id]);
+  }, [isOnline, rider?.id]);
 
   // ─────────────────────────────────────────────────────────────
   // 3.5. HARDWARE / ANDROID NATIVE BACK BUTTON (SCREEN HISTORY STACK)
@@ -736,7 +752,7 @@ export default function StandaloneRiderProductionApp() {
           liveZoneNameProp={liveLocationName}
           onRefreshLocation={triggerGpsScan}
           isLocatingProp={isLocating}
-          gpsAccuracyProp={gpsAccuracy ?? 4.2}
+          gpsAccuracyProp={gpsAccuracy}
         />
       ),
     },
