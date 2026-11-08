@@ -173,7 +173,7 @@ export default function ScreenAuth04PartnerLogin({
             onClick={onGoToRegister}
             className="text-[11px] font-black text-white px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 border border-emerald-500 shadow-sm active:scale-95 transition flex items-center gap-1"
           >
-            <span>रजिस्टर करें · Register Business</span>
+            <span>Register Your Business</span>
           </button>
         </div>
 

@@ -69,17 +69,6 @@ export default function PartnerPage() {
 
   return (
     <div className="relative w-full h-full">
-      {/* Floating Shortcut to Studio & Screen Designer */}
-      <div className="fixed top-2.5 right-2.5 z-50">
-        <a
-          href="/merchant/studio"
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-900/95 text-white border border-amber-400 text-[11px] font-black shadow-xl backdrop-blur-md hover:bg-slate-800 transition active:scale-95"
-        >
-          <span>🎨</span>
-          <span>Screen Designer &amp; Planner →</span>
-        </a>
-      </div>
-
       <MerchantNativeAppShell
         initialAuth={session.isAuthenticated}
         initialAuthStep="pitch"

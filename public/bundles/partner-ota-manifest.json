@@ -1,8 +1,8 @@
 {
-  "version": "3.4.0",
+  "version": "3.3.1",
   "minAppVersion": "2.2.0",
-  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1794152440277",
-  "updatedAt": "2026-11-08T15:40:40.277Z",
-  "notes": "Register Your Business English button, prominent Log In Here link, eliminated black header bars",
-  "sizeBytes": 3561958
+  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1794154349331",
+  "updatedAt": "2026-11-08T16:12:29.332Z",
+  "notes": "Official Trustit Merchant Partner true native release with emerald green register button and WhatsApp OTP socket bridge",
+  "sizeBytes": 3475269
 }

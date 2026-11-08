@@ -364,7 +364,7 @@ execSync(`tar -a -c -f "${zipPath}" *`, { cwd: bundleDir, stdio: 'inherit' });
 const otaStats = fs.statSync(zipPath);
 const otaSizeMb = (otaStats.size / (1024 * 1024)).toFixed(2);
 
-const otaVersion = '3.3.0';
+const otaVersion = '3.3.1';
 const manifest = {
   version: otaVersion,
   minAppVersion: '2.2.0',

@@ -176,16 +176,14 @@ export default function ScreenAuth01LandingBecomePartner({
               <span>→</span>
             </button>
 
-            {/* Direct prominent Log In Here option as requested in Loom */}
-            <div className="text-center pt-0.5">
-              <button
-                type="button"
-                onClick={onGoToLogin}
-                className="text-xs font-bold text-slate-700 hover:text-emerald-700 transition"
-              >
-                Already registered? <span className="font-black text-emerald-800 underline">Log In Here →</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={onGoToLogin}
+              className="w-full py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-300 shadow-2xs flex items-center justify-center gap-1.5 transition active:scale-98"
+            >
+              <span>Already registered?</span>
+              <span className="font-black text-emerald-800 underline">Log In Here →</span>
+            </button>
 
             <p className="text-[9px] text-center text-slate-500 leading-none">
               Trusted by 500+ local verified merchants across UP
@@ -306,15 +304,25 @@ export default function ScreenAuth01LandingBecomePartner({
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-800 space-y-1.5">
+          <div className="pt-3 border-t border-slate-800 space-y-2">
             <button
               type="button"
               onClick={onStartRegistration}
-              className="w-full py-3 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-blue-900/40 flex items-center justify-center gap-2 transition active:scale-98"
+              className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-500 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg shadow-blue-900/40 flex items-center justify-center gap-2 transition active:scale-98"
             >
-              <span>🚀 Start Free Merchant Registration</span>
+              <span>Register Your Business</span>
               <span>→</span>
             </button>
+
+            <button
+              type="button"
+              onClick={onGoToLogin}
+              className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-200 text-xs font-bold border border-slate-700 shadow-2xs flex items-center justify-center gap-1.5 transition active:scale-98"
+            >
+              <span>Already registered?</span>
+              <span className="font-black text-blue-400 underline">Log In Here →</span>
+            </button>
+
             <p className="text-[9px] text-center text-slate-400">
               ⚡ Instant Approval in 5 Minutes • Free QR Standee
             </p>
@@ -395,10 +403,21 @@ export default function ScreenAuth01LandingBecomePartner({
             <button
               type="button"
               onClick={onStartRegistration}
-              className="w-full py-3.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm"
+              className="w-full py-3.5 rounded-xl bg-black hover:bg-slate-800 text-white text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5"
             >
-              Become a Partner Today →
+              <span>Register Your Business</span>
+              <span>→</span>
             </button>
+
+            <button
+              type="button"
+              onClick={onGoToLogin}
+              className="w-full py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-200 shadow-2xs flex items-center justify-center gap-1.5 transition active:scale-98"
+            >
+              <span>Already registered?</span>
+              <span className="font-black text-black underline">Log In Here →</span>
+            </button>
+
             <p className="text-[10px] text-center text-slate-400">
               No subscription fee • Cancel anytime
             </p>
