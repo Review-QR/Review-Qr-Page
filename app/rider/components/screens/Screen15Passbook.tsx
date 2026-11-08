@@ -4,49 +4,55 @@ import React, { useState, useEffect } from "react";
 import { riderAudio } from "@/lib/audio/rider-siren";
 
 interface Screen15Props {
-  onBack?: () => void;
-  onInstantPayout?: () => void;
+  riderId?: string;
+  walletBalanceProp?: number;
+  todayEarningsProp?: number;
+  todayTripsCountProp?: number;
+  upiIdProp?: string;
+  riderUpiProp?: string;
+  tripsProp?: Array<{
+    id: string;
+    orderId: string;
+    shopName: string;
+    amount: number;
+    deliveredAt: string;
+    paymentMode: string;
+  }>;
+  onInstantPayout?: () => Promise<{ success: boolean; utr?: string; error?: string } | void> | void;
   onRemitCash?: () => void;
   onClaimParking?: () => void;
   onDisputePenalty?: () => void;
   onMilestones?: () => void;
-  walletBalanceProp?: number;
-  todayEarningsProp?: number;
-  todayTripsCountProp?: number;
-  riderUpiProp?: string;
-  tripsProp?: any[];
-  riderId?: string;
+  onBack?: () => void;
 }
 
 export default function Screen15Passbook({
-  onBack,
+  riderId,
+  walletBalanceProp = 0,
+  todayEarningsProp = 0,
+  todayTripsCountProp = 0,
+  upiIdProp,
+  riderUpiProp,
+  tripsProp,
   onInstantPayout,
   onRemitCash,
   onClaimParking,
   onDisputePenalty,
   onMilestones,
-  walletBalanceProp = 0,
-  todayEarningsProp = 0,
-  todayTripsCountProp = 0,
-  riderUpiProp,
-  tripsProp,
-  riderId,
+  onBack,
 }: Screen15Props) {
   const [currentBalance, setCurrentBalance] = useState<number>(walletBalanceProp);
+  const [trips, setTrips] = useState<any[]>(tripsProp || []);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [payoutSuccessData, setPayoutSuccessData] = useState<{ amount: number; utr: string; time: string } | null>(null);
-  const [trips, setTrips] = useState<any[]>(tripsProp || []);
 
-  const activeUpi =
-    riderUpiProp ||
-    (typeof window !== "undefined" ? localStorage.getItem("trustit_rider_upi") || "" : "");
+  const activeUpi = upiIdProp || riderUpiProp || (typeof window !== "undefined" ? localStorage.getItem("trustit_rider_upi") || "" : "");
 
-  // Sync props to state
   useEffect(() => {
     setCurrentBalance(walletBalanceProp);
   }, [walletBalanceProp]);
 
-  // Fetch real trips from API if not provided in props
+  // Load genuine trips from scorecard API if not passed via props
   useEffect(() => {
     if (tripsProp && tripsProp.length > 0) {
       setTrips(tripsProp);
@@ -71,11 +77,11 @@ export default function Screen15Passbook({
 
   const handlePayoutTrigger = async () => {
     if (currentBalance <= 0) {
-      alert("⚠️ कोई विथड्रॉ करने योग्य बैलेंस उपलब्ध नहीं है।");
+      alert("⚠️ No withdrawable balance available.");
       return;
     }
     if (!activeUpi) {
-      alert("⚠️ कृपया पहले अपनी प्रोफाइल में UPI आईडी दर्ज करें।");
+      alert("⚠️ Please configure your UPI ID in Profile first.");
       return;
     }
 
@@ -84,7 +90,7 @@ export default function Screen15Passbook({
       if (onInstantPayout) {
         const result: any = await onInstantPayout();
         if (result && result.success === false) {
-          alert(`⚠️ ${result.error || "विथड्रॉल विफल रहा।"}`);
+          alert(`⚠️ ${result.error || "Withdrawal failed."}`);
           setIsProcessing(false);
           return;
         }
@@ -112,7 +118,7 @@ export default function Screen15Passbook({
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        alert(`⚠️ ${data.error || "विथड्रॉल प्रोसेस नहीं हो सका।"}`);
+        alert(`⚠️ ${data.error || "Withdrawal request could not be processed."}`);
         setIsProcessing(false);
         return;
       }
@@ -126,7 +132,7 @@ export default function Screen15Passbook({
       });
       riderAudio.playCashChime();
     } catch (e: any) {
-      alert(`⚠️ ${e?.message || "नेटवर्क त्रुटि。"}`);
+      alert(`⚠️ ${e?.message || "Network error. Please try again."}`);
       setIsProcessing(false);
     }
   };
@@ -139,11 +145,11 @@ export default function Screen15Passbook({
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 text-xs font-bold text-[#0D47A1] hover:underline"
+            className="flex items-center gap-1 text-xs font-bold text-[#0D47A1] hover:underline cursor-pointer"
           >
-            <span>← कॉकपिट (Cockpit)</span>
+            <span>← Cockpit</span>
           </button>
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">पासबुक व अर्निंग्स लेजर</span>
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Passbook &amp; Earnings Ledger</span>
         </div>
 
         {/* Balance Hero Card */}
@@ -151,7 +157,7 @@ export default function Screen15Passbook({
           <div className="flex items-center justify-between gap-2">
             <div>
               <span className="text-[9px] font-bold text-blue-200 uppercase tracking-wider block">
-                विथड्रॉ करने योग्य शुद्ध बैलेंस
+                Net Withdrawable Balance
               </span>
               <strong className="text-2xl font-black block leading-tight">₹{currentBalance}.00</strong>
             </div>
@@ -160,25 +166,25 @@ export default function Screen15Passbook({
                 type="button"
                 onClick={handlePayoutTrigger}
                 disabled={isProcessing || currentBalance <= 0}
-                className="py-1.5 px-3.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-black text-[10px] tracking-wide uppercase shadow-sm border border-amber-200/80 flex items-center gap-1 transition active:scale-95 disabled:opacity-50 whitespace-nowrap ml-auto"
+                className="py-1.5 px-3.5 rounded-full bg-gradient-to-r from-amber-400 to-amber-300 hover:from-amber-300 hover:to-amber-200 text-slate-950 font-black text-[10px] tracking-wide uppercase shadow-sm border border-amber-200/80 flex items-center gap-1 transition active:scale-95 disabled:opacity-50 whitespace-nowrap ml-auto cursor-pointer"
               >
                 <span>⚡</span>
-                <span>{isProcessing ? "ट्रांसफर..." : "1-टैप ट्रांसफर"}</span>
+                <span>{isProcessing ? "Transferring..." : "1-Tap Transfer"}</span>
                 <span className="text-[9px]">➔</span>
               </button>
               <span className="text-[9px] font-mono text-blue-200 block mt-1">
-                UPI: {activeUpi || "सेट नहीं है"}
+                UPI: {activeUpi || "Not Configured"}
               </span>
             </div>
           </div>
 
           <div className="pt-2 border-t border-blue-400/20 grid grid-cols-2 gap-2 text-center text-[10px]">
             <div>
-              <span className="text-blue-200 block font-semibold">आज पूरी की गई ट्रिप्स</span>
+              <span className="text-blue-200 block font-semibold">Today&apos;s Completed Trips</span>
               <strong className="text-white text-sm font-mono">{todayTripsCountProp}</strong>
             </div>
             <div>
-              <span className="text-blue-200 block font-semibold">आज की वास्तविक कमाई</span>
+              <span className="text-blue-200 block font-semibold">Today&apos;s Real Earnings</span>
               <strong className="text-emerald-300 text-sm font-mono">₹{todayEarningsProp}.00</strong>
             </div>
           </div>
@@ -189,12 +195,12 @@ export default function Screen15Passbook({
           <div className="mt-3 p-3 rounded-2xl bg-emerald-50 border border-emerald-300 text-emerald-950 space-y-1 text-xs shadow-xs">
             <div className="flex items-center justify-between">
               <span className="font-black text-emerald-800 flex items-center gap-1">
-                <span>✅</span> तत्काल UPI ट्रांसफर सफल!
+                <span>✅</span> Instant UPI Transfer Successful!
               </span>
               <span className="text-[10px] text-slate-500 font-mono">{payoutSuccessData.time}</span>
             </div>
             <p className="text-[11px] text-emerald-800">
-              ₹{payoutSuccessData.amount}.00 सीधे आपके बैंक खाते में भेज दिया गया है। UTR: <strong className="font-mono">{payoutSuccessData.utr}</strong>
+              ₹{payoutSuccessData.amount}.00 transferred directly to your bank account. UTR: <strong className="font-mono">{payoutSuccessData.utr}</strong>
             </p>
           </div>
         )}
@@ -203,17 +209,17 @@ export default function Screen15Passbook({
         <div className="mt-4 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-[11px] font-black text-slate-900 uppercase tracking-wider">
-              आज का ट्रिप ब्रेकडाउन (Today&apos;s Run)
+              Today&apos;s Trip Breakdown
             </span>
-            <span className="text-[10px] font-bold text-blue-700">लाइव लेजर</span>
+            <span className="text-[10px] font-bold text-blue-700">Live Ledger</span>
           </div>
 
           {trips.length === 0 ? (
             <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-200 space-y-1.5 shadow-2xs">
               <span className="text-3xl block">📦</span>
-              <h4 className="text-xs font-black text-slate-800">आज की कोई डिलीवरी हिस्ट्री नहीं है</h4>
+              <h4 className="text-xs font-black text-slate-800">No Delivery Trips Recorded Today</h4>
               <p className="text-[11px] text-slate-500 max-w-xs mx-auto leading-relaxed">
-                जब आप पहला लाइव ऑर्डर स्वीकार कर डिलीवर करेंगे, तो उसकी वास्तविक कमाई और विवरण यहाँ प्रदर्शित होगा।
+                When you accept and deliver orders, itemized trip payouts and customer payment modes will appear here in real time.
               </p>
             </div>
           ) : (
@@ -244,9 +250,9 @@ export default function Screen15Passbook({
         <button
           type="button"
           onClick={onBack}
-          className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition text-center"
+          className="w-full py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold transition text-center cursor-pointer"
         >
-          कॉकपिट पर वापस जाएं
+          Back to Cockpit
         </button>
       </div>
     </div>

@@ -102,7 +102,7 @@ export default function Screen03Consent({ onAgree, onBack }: Screen03Props) {
           type="button"
           onClick={onAgree}
           disabled={!agreed}
-          className={`w-full py-2.5 rounded-lg font-black text-xs flex items-center justify-center gap-2 shadow-xs transition active:scale-[0.99] ${
+          className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] cursor-pointer ${
             agreed
               ? "bg-[#0D47A1] hover:bg-[#082b66] text-white"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"

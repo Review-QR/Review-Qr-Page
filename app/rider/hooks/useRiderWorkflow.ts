@@ -157,9 +157,9 @@ export function useRiderWorkflow() {
           });
           if (soundEnabled) {
             riderAudio.playProximitySiren();
-            const shopName = incoming.businesses?.name || incoming.business?.name || "मर्चेंट";
+            const shopName = incoming.businesses?.name || incoming.business?.name || "Merchant Store";
             const earn = incoming.delivery_fee || 35;
-            riderAudio.speakHindiAlert(`नया लाइव ऑर्डर! ${shopName} — कमाई ₹${earn}`);
+            riderAudio.speakOrderAlert(`New Order Alert! Pickup from ${shopName}. Earnings ₹${earn}`);
             setIsSirenPlaying(true);
           }
           setCurrentScreenId(10);
@@ -263,7 +263,7 @@ export function useRiderWorkflow() {
   const completeDeliveryWithOtp = useCallback(async (otp: string) => {
     const expectedOtp = activeOrder?.delivery_otp;
     if (expectedOtp && otp !== expectedOtp) {
-      alert("❌ अमान्य डिलीवरी OTP (Invalid Delivery OTP)। कृपया ग्राहक से उनके Trustit App पर दिख रहा 4-अंकीय कोड पूछें।");
+      alert("❌ Invalid Delivery OTP. Please verify the 4-digit OTP shown on customer's Trustit app.");
       return false;
     }
 

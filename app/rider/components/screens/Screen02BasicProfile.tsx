@@ -25,11 +25,10 @@ export default function Screen02BasicProfile({
   onSaveProfile,
   onBack,
 }: Screen02BasicProfileProps) {
-  // Completely blank inputs - NO prefilled text, NO confusing "उदा." in values
   const [fullName, setFullName] = useState(initialData?.fullName || "");
   const [houseAndStreet, setHouseAndStreet] = useState("");
   const [villageAndPost, setVillageAndPost] = useState("");
-  const [districtAndCity, setDistrictAndCity] = useState("बहराइच");
+  const [districtAndCity, setDistrictAndCity] = useState("Bahraich");
   const [pincode, setPincode] = useState("271801");
   const [emergencyContactName, setEmergencyContactName] = useState(initialData?.emergencyContactName || "");
   const [emergencyPhone, setEmergencyPhone] = useState(initialData?.emergencyPhone || "");
@@ -77,28 +76,33 @@ export default function Screen02BasicProfile({
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!fullName.trim() || fullName.trim().length < 3) {
-      setError("कृपया अपना पूरा नाम दर्ज करें (Enter Full Name)");
+      setError("Please enter your legal full name (at least 3 characters).");
       return;
     }
     if (!houseAndStreet.trim()) {
-      setError("कृपया मकान नंबर और गली / मोहल्ला दर्ज करें");
+      setError("Please enter house/flat number and street name.");
       return;
     }
     if (!villageAndPost.trim()) {
-      setError("कृपया गाँव / कस्बा और पोस्ट ऑफिस दर्ज करें");
+      setError("Please enter area, locality or village and post office.");
       return;
     }
     if (!districtAndCity.trim()) {
-      setError("कृपया अपना जिला / शहर दर्ज करें (उदा. बहराइच / श्रावस्ती)");
+      setError("Please enter city or district (e.g. Bahraich, Shravasti).");
       return;
     }
     if (!emergencyContactName.trim()) {
-      setError("आपातकालीन संपर्क व्यक्ति का नाम अनिवार्य है (पिता / भाई / मित्र का नाम)");
+      setError("Emergency contact person name is mandatory (Father, Brother, or Relative).");
       return;
     }
     const cleanEmergencyPhone = emergencyPhone.replace(/\D/g, "");
     if (!cleanEmergencyPhone || cleanEmergencyPhone.length < 10) {
-      setError("आपातकालीन 10-अंकीय मोबाइल नंबर दर्ज करना अनिवार्य है");
+      setError("Please enter a valid 10-digit emergency contact number.");
+      return;
+    }
+    const cleanRiderPhone = verifiedPhone.replace(/\D/g, "").slice(-10);
+    if (cleanEmergencyPhone.slice(-10) === cleanRiderPhone) {
+      setError("Emergency contact number cannot be the same as your own registered phone number.");
       return;
     }
 
@@ -129,25 +133,25 @@ export default function Screen02BasicProfile({
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 text-xs font-bold text-[#0D47A1] hover:underline"
+            className="flex items-center gap-1 text-xs font-bold text-[#0D47A1] hover:underline cursor-pointer"
           >
-            <span>← वापस (Back)</span>
+            <span>← Back</span>
           </button>
           <div className="flex items-center gap-1.5">
             <span className="px-2 py-0.5 rounded text-[9px] font-black bg-blue-100 text-[#0D47A1] border border-blue-200 uppercase tracking-wider">
-              राइडर पंजीकरण
+              Rider Registration
             </span>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">चरण 2 / 6</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Step 1 of 6</span>
           </div>
         </div>
 
         {/* Title */}
         <div className="mt-3 space-y-0.5">
           <h2 className="text-base font-black text-slate-900 leading-tight">
-            मूल विवरण (Basic Profile)
+            Basic Profile
           </h2>
           <p className="text-[11px] text-slate-500 leading-tight">
-            सत्यापन और फ्लीट रिकॉर्ड के लिए अपना नाम, निवास स्थान व आपातकालीन संपर्क दर्ज करें।
+            Enter your legal name, residential address, and emergency contact for fleet verification.
           </p>
         </div>
 
@@ -157,7 +161,7 @@ export default function Screen02BasicProfile({
             <span className="text-base">📱</span>
             <div>
               <span className="text-[9px] font-bold text-emerald-800 uppercase tracking-wider block">
-                सत्यापित मोबाइल नंबर
+                Registered Mobile Number
               </span>
               <span className="text-xs font-mono font-bold text-slate-900">
                 +91 {verifiedPhone || "Registered Mobile"}
@@ -165,7 +169,7 @@ export default function Screen02BasicProfile({
             </div>
           </div>
           <span className="text-[9px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
-            ✓ सत्यापित
+            Verified ✓
           </span>
         </div>
 
@@ -174,7 +178,7 @@ export default function Screen02BasicProfile({
           {/* Full Name */}
           <div>
             <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
-              पूरा नाम (Full Name) <span className="text-rose-500">*</span>
+              Full Name <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -183,7 +187,7 @@ export default function Screen02BasicProfile({
                 setFullName(e.target.value);
                 setError(null);
               }}
-              placeholder="पूरा नाम दर्ज करें"
+              placeholder="Enter legal full name as per Aadhaar/PAN"
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
               autoFocus
             />
@@ -192,7 +196,7 @@ export default function Screen02BasicProfile({
           {/* House No & Street */}
           <div>
             <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
-              मकान संख्या एवं गली / मोहल्ला <span className="text-rose-500">*</span>
+              House No. / Flat &amp; Street Name <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -201,7 +205,7 @@ export default function Screen02BasicProfile({
                 setHouseAndStreet(e.target.value);
                 setError(null);
               }}
-              placeholder="मकान नंबर व गली / मोहल्ला"
+              placeholder="House/Flat number, street, or building name"
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
             />
           </div>
@@ -209,7 +213,7 @@ export default function Screen02BasicProfile({
           {/* Village & Post Office */}
           <div>
             <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
-              गाँव / कस्बा एवं पोस्ट ऑफिस <span className="text-rose-500">*</span>
+              Area / Landmark / Village &amp; Post <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -218,16 +222,16 @@ export default function Screen02BasicProfile({
                 setVillageAndPost(e.target.value);
                 setError(null);
               }}
-              placeholder="गाँव या कस्बा और पोस्ट ऑफिस"
+              placeholder="Area, locality, landmark or post office"
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
             />
           </div>
 
-          {/* District & Pincode (Editable, not hardcoded to only Bahraich) */}
+          {/* District & Pincode */}
           <div className="grid grid-cols-2 gap-2">
             <div>
               <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
-                जिला / शहर (District) <span className="text-rose-500">*</span>
+                City / District <span className="text-rose-500">*</span>
               </label>
               <input
                 type="text"
@@ -236,13 +240,13 @@ export default function Screen02BasicProfile({
                   setDistrictAndCity(e.target.value);
                   setError(null);
                 }}
-                placeholder="बहराइच / श्रावस्ती"
+                placeholder="Bahraich / Shravasti / Gonda"
                 className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
               />
             </div>
             <div>
               <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
-                पिन कोड (Pincode) <span className="text-rose-500">*</span>
+                Pincode <span className="text-rose-500">*</span>
               </label>
               <input
                 type="tel"
@@ -260,7 +264,7 @@ export default function Screen02BasicProfile({
           {/* Emergency Contact Name (Mandatory) */}
           <div className="pt-2 border-t border-slate-100">
             <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
-              आपातकालीन संपर्क व्यक्ति का नाम (Emergency Contact Person) <span className="text-rose-500">*</span>
+              Emergency Contact Person Name <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -269,7 +273,7 @@ export default function Screen02BasicProfile({
                 setEmergencyContactName(e.target.value);
                 setError(null);
               }}
-              placeholder="पिता, भाई या मित्र का नाम"
+              placeholder="Father, Brother, or Relative Name"
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-900 placeholder:text-slate-400 focus:border-[#0D47A1] focus:outline-none"
             />
           </div>
@@ -277,7 +281,7 @@ export default function Screen02BasicProfile({
           {/* Emergency Contact Number (Mandatory) */}
           <div>
             <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider block mb-1">
-              आपातकालीन मोबाइल नंबर (Emergency Mobile No.) <span className="text-rose-500">*</span>
+              Emergency Contact Number <span className="text-rose-500">*</span>
             </label>
             <div className="flex items-center rounded-xl border border-slate-300 bg-slate-50 px-2.5 py-1.5 focus-within:border-[#0D47A1] focus-within:bg-white">
               <span className="text-xs font-bold text-slate-500 font-mono pr-2 border-r border-slate-300">+91</span>
@@ -291,7 +295,7 @@ export default function Screen02BasicProfile({
                   setEmergencyPhone(e.target.value.replace(/\D/g, "").slice(0, 10));
                   setError(null);
                 }}
-                placeholder="10 अंकों का मोबाइल नंबर"
+                placeholder="10-digit mobile number"
                 className="w-full pl-2 text-xs font-mono font-bold text-slate-900 bg-transparent focus:outline-none"
               />
             </div>
@@ -307,19 +311,19 @@ export default function Screen02BasicProfile({
         </form>
       </div>
 
-      {/* Footer Submit Button */}
+      {/* Footer Submit Button - Sleek enterprise height */}
       <div className="pt-3 border-t border-slate-200 mt-3">
         <button
           type="button"
           onClick={() => handleSubmit()}
           disabled={!isFormValid}
-          className={`w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-[0.99] ${
+          className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] ${
             isFormValid
-              ? "bg-[#0D47A1] hover:bg-[#082b66] text-white"
+              ? "bg-[#0D47A1] hover:bg-[#082b66] text-white cursor-pointer"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           }`}
         >
-          <span>विवरण सहेजें और आगे बढ़ें (Save &amp; Continue)</span>
+          <span>Save &amp; Continue</span>
           <span>➔</span>
         </button>
       </div>

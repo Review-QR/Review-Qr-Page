@@ -1773,21 +1773,6 @@ export default function MerchantNativeAppShell({
   const renderPhoneApp = () => {
     return (
       <div className="flex flex-col h-full bg-[#F8FAFC] text-slate-900 font-sans select-none overflow-hidden relative">
-        {/* Realistic Mobile Status Bar (9:41, 5G, Battery) - only shown when simulating in browser */}
-        {!forceStandalone && (
-          <div className="bg-slate-950 text-white px-5 pt-2 pb-1.5 flex items-center justify-between text-[11px] font-black tracking-tight shrink-0">
-            <span>9:41 AM</span>
-            <div className="w-24 h-4 bg-black rounded-full mx-auto flex items-center justify-center gap-1.5 px-2">
-              <span className="w-2 h-2 rounded-full bg-slate-800"></span>
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="text-[10px]">5G</span>
-              <span className="w-2.5 h-2 bg-white rounded-xs"></span>
-              <span className="text-emerald-400 font-bold">100%</span>
-            </div>
-          </div>
-        )}
 
         {/* Global Floating Toast Alert */}
         {statusNotification && (
@@ -1983,22 +1968,7 @@ export default function MerchantNativeAppShell({
   if (forceStandalone || !isSimulatorFrame) {
     return (
       <div className="w-full h-screen bg-[#F8FAFC]">
-        {!forceStandalone && (
-          <div className="bg-slate-900 text-white px-4 py-2 flex items-center justify-between text-xs font-bold">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Trustit Merchant Mobile App</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsSimulatorFrame(true)}
-              className="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black transition"
-            >
-              📱 Switch to Laptop Phone Simulator
-            </button>
-          </div>
-        )}
-        <div className={`w-full ${!forceStandalone ? "h-[calc(100vh-36px)] max-w-md mx-auto shadow-2xl border-x border-slate-200" : "h-full"}`}>
+        <div className="w-full h-full max-w-md mx-auto shadow-2xl border-x border-slate-200">
           {renderPhoneApp()}
         </div>
       </div>

@@ -61,7 +61,7 @@ export default function ScreenAuth01LandingBecomePartner({
                 onClick={onGoToLogin}
                 className="px-3 py-1.5 rounded-lg text-[11px] font-black bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs transition flex items-center gap-1 active:scale-95"
               >
-                <span>लॉगिन · Login</span>
+                <span>Log In</span>
                 <span className="text-emerald-700 font-black">→</span>
               </button>
             </div>
@@ -166,15 +166,27 @@ export default function ScreenAuth01LandingBecomePartner({
             </div>
           </div>
 
-          <div className="pt-3 border-t border-amber-200/50 space-y-1.5">
+          <div className="pt-3 border-t border-amber-200/50 space-y-2">
             <button
               type="button"
               onClick={onStartRegistration}
               className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-lg shadow-emerald-600/30 border border-emerald-500 flex items-center justify-center gap-2 transition active:scale-98"
             >
-              <span>🟢 रजिस्टर करें · Register Your Business</span>
+              <span>Register Your Business</span>
               <span>→</span>
             </button>
+
+            {/* Direct prominent Log In Here option as requested in Loom */}
+            <div className="text-center pt-0.5">
+              <button
+                type="button"
+                onClick={onGoToLogin}
+                className="text-xs font-bold text-slate-700 hover:text-emerald-700 transition"
+              >
+                Already registered? <span className="font-black text-emerald-800 underline">Log In Here →</span>
+              </button>
+            </div>
+
             <p className="text-[9px] text-center text-slate-500 leading-none">
               Trusted by 500+ local verified merchants across UP
             </p>

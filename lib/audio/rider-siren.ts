@@ -182,6 +182,21 @@ class RiderAudioSynthesizer {
   }
 
   /**
+   * English Voice Alert Announcement for Incoming Orders
+   */
+  public speakOrderAlert(text: string) {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-IN";
+      utterance.rate = 1.05;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch {}
+  }
+
+  /**
    * Hindi Text-to-Speech Voice Alert Announcement
    */
   public speakHindiAlert(text: string) {

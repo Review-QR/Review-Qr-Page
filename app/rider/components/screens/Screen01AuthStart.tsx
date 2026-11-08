@@ -33,8 +33,8 @@ export default function Screen01AuthStart({
   const { sendPhoneOtp, isLoading, error } = useRiderAuth();
 
   const handleSmsClick = () => {
-    // SMS button is disabled as instructed: "SMS पे टिक करने पे tick na हो"
-    setLocalError("SMS OTP सेवा अस्थायी रूप से अक्षम है। कृपया WhatsApp OTP का उपयोग करें।");
+    // SMS button is disabled as instructed
+    setLocalError("SMS OTP is temporarily disabled. Please select WhatsApp OTP.");
   };
 
   const handleWhatsAppClick = () => {
@@ -45,7 +45,7 @@ export default function Screen01AuthStart({
   const handleSubmit = async () => {
     const cleanPhone = phone.trim().replace(/\D/g, "");
     if (cleanPhone.length < 10) {
-      setLocalError("कृपया 10 अंकों का वैध मोबाइल नंबर दर्ज करें (Enter valid 10-digit mobile number).");
+      setLocalError("Please enter a valid 10-digit mobile number.");
       return;
     }
     setLocalError(null);
@@ -56,7 +56,7 @@ export default function Screen01AuthStart({
         isNewRegistration: true,
       });
     } else {
-      setLocalError(res.error || "WhatsApp OTP भेजने में विफल। कृपया पुनः प्रयास करें।");
+      setLocalError(res.error || "Failed to send WhatsApp OTP. Please try again.");
     }
   };
 
@@ -76,9 +76,6 @@ export default function Screen01AuthStart({
               <h2 className="text-xs font-black text-slate-900 leading-tight">Delivery Partner App</h2>
             </div>
           </div>
-          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-[#0D47A1] border border-blue-200">
-            Bahraich UP 40
-          </span>
         </div>
 
         {/* Title */}
@@ -169,22 +166,22 @@ export default function Screen01AuthStart({
             <span>.</span>
           </div>
 
-          {/* Slim 40px Primary Action Button */}
+          {/* Slim Sleek Primary Action Button */}
           <button
             type="button"
             onClick={handleSubmit}
             disabled={phone.length < 10 || isLoading}
-            className={`w-full py-2.5 rounded-lg font-black text-xs flex items-center justify-center gap-2 shadow-2xs transition active:scale-[0.99] ${
+            className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-2xs transition active:scale-[0.99] ${
               phone.length === 10 && !isLoading
                 ? "bg-[#0D47A1] hover:bg-[#082b66] text-white"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
             }`}
           >
             {isLoading ? (
-              <span>Sending WhatsApp OTP...</span>
+              <span>Sending OTP...</span>
             ) : (
               <>
-                <span>Continue with WhatsApp OTP</span>
+                <span>Send OTP</span>
                 <span>➔</span>
               </>
             )}
@@ -209,7 +206,7 @@ export default function Screen01AuthStart({
                 <span className="text-base">📄</span>
                 <div>
                   <strong className="text-xs font-black block leading-none">Terms &amp; Road Safety Policy</strong>
-                  <span className="text-[9px] text-slate-400 font-mono">Trustit Bahraich Partner Code (PDF Document)</span>
+                  <span className="text-[9px] text-slate-400 font-mono">Trustit Delivery Partner Code of Conduct</span>
                 </div>
               </div>
               <button
@@ -228,16 +225,16 @@ export default function Screen01AuthStart({
                   1. ₹1,500 Cash-in-Hand Safety Ceiling:
                 </strong>
                 <p className="text-amber-900 leading-tight">
-                  जब भी राइडर का COD कैश संग्रह ₹1,500 तक पहुंचेगा, वह Trustit UPI रीमिटेंस के जरिए कैश जमा करेगा। इसके बाद ही अगले ऑर्डर उपलब्ध होंगे।
+                  Whenever COD collections reach ₹1,500, deposit via official Trustit UPI remittance to unlock new incoming delivery orders.
                 </p>
               </div>
 
               <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 space-y-0.5">
                 <strong className="text-blue-950 font-bold block text-[11px]">
-                  2. Mandatory Helmet &amp; UP 40 Traffic Safety:
+                  2. Mandatory Helmet &amp; Traffic Safety:
                 </strong>
                 <p className="text-blue-900 leading-tight">
-                  राइडर हमेशा हेलमेट पहनेगा तथा वैध UP 40 RC व ड्राइविंग लाइसेंस साथ रखेगा। बहराइच ट्रैफिक नियमों का कड़ाई से पालन अनिवार्य है।
+                  Rider must wear a certified helmet at all times and carry a valid vehicle registration certificate (RC) and Driving License.
                 </p>
               </div>
 
@@ -246,16 +243,16 @@ export default function Screen01AuthStart({
                   3. Trustit Dynamic QR Code Only:
                 </strong>
                 <p className="text-purple-900 leading-tight">
-                  ग्राहक से भुगतान के लिए केवल आधिकारिक Trustit Cashfree QR कोड ही दिखाएं। अपना व्यक्तिगत QR कोड दिखाना सख्त प्रतिबंधित है।
+                  Always present official Trustit Cashfree dynamic QR codes to customers for doorstep payments. Using personal QR codes is strictly prohibited.
                 </p>
               </div>
 
               <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-0.5">
                 <strong className="text-emerald-950 font-bold block text-[11px]">
-                  4. Honest GPS Telemetry:
+                  4. Live GPS Telemetry:
                 </strong>
                 <p className="text-emerald-900 leading-tight">
-                  सटीक लाइव जीपीएस लोकेशन शेयर करना आवश्यक है। किसी भी मॉक या फेक जीपीएस टूल के प्रयोग पर आईडी तुरंत ब्लॉक की जाएगी।
+                  Accurate live GPS location is mandatory while on active shift. Using mock or simulated GPS tools will lead to instant account suspension.
                 </p>
               </div>
             </div>
@@ -266,7 +263,7 @@ export default function Screen01AuthStart({
               onClick={() => setShowPdfModal(false)}
               className="w-full py-2 bg-[#0D47A1] hover:bg-[#082b66] text-white rounded-lg text-xs font-black shadow-xs transition"
             >
-              ✓ I Agree to Terms &amp; Conditions (स्वीकार है)
+              ✓ I Understand &amp; Agree
             </button>
           </div>
         </div>

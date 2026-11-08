@@ -86,7 +86,7 @@ export default function Screen02OtpVerify({
 
   const handleVerify = async () => {
     if (fullOtp.length < 6) {
-      setLocalError("कृपया 6 अंकों का OTP दर्ज करें (Enter 6-digit OTP).");
+      setLocalError("Please enter 6-digit OTP.");
       return;
     }
     setLocalError(null);
@@ -95,7 +95,7 @@ export default function Screen02OtpVerify({
     if (res.success) {
       onVerified?.(fullOtp, res.rider);
     } else {
-      setLocalError(res.error || "अमान्य OTP कोड. कृपया पुनः जांचें (Invalid OTP code).");
+      setLocalError(res.error || "Invalid OTP code. Please check and try again.");
     }
   };
 
@@ -171,7 +171,7 @@ export default function Screen02OtpVerify({
           <div className="flex items-center justify-between text-xs pt-1 px-1">
             {countdown > 0 ? (
               <span className="text-[11px] text-slate-500 font-semibold flex items-center gap-1.5">
-                <span>⏳ पुनः OTP भेजें (Resend):</span>
+                <span>⏳ Resend OTP in:</span>
                 <strong className="font-mono text-[#0D47A1] font-black">{countdown}s</strong>
               </span>
             ) : (
@@ -181,7 +181,7 @@ export default function Screen02OtpVerify({
                 className="text-xs font-black text-[#0D47A1] hover:underline flex items-center gap-1"
               >
                 <span>🔄</span>
-                <span>पुनः OTP भेजें (Resend OTP Now)</span>
+                <span>Resend OTP Now</span>
               </button>
             )}
             <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
@@ -189,22 +189,22 @@ export default function Screen02OtpVerify({
             </span>
           </div>
 
-          {/* Primary Verify CTA */}
+          {/* Primary Verify CTA - Sleek enterprise height */}
           <button
             type="button"
             onClick={handleVerify}
             disabled={fullOtp.length < 6 || isLoading}
-            className={`w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-[0.99] ${
+            className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] ${
               fullOtp.length === 6 && !isLoading
                 ? "bg-[#0D47A1] hover:bg-[#082b66] text-white"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
             }`}
           >
             {isLoading ? (
-              <span>सत्यापन हो रहा है (Verifying)...</span>
+              <span>Verifying...</span>
             ) : (
               <>
-                <span>OTP सत्यापित करें (Verify &amp; Proceed)</span>
+                <span>Verify &amp; Proceed</span>
                 <span>➔</span>
               </>
             )}

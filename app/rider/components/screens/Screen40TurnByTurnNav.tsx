@@ -51,8 +51,8 @@ export default function Screen40TurnByTurnNav({
   let riderX = 45;
   let riderY = 30;
   let riderRotation = 90; // degrees
-  let currentStreet = "Kachehri Marg (कचहरी मार्ग)";
-  let turnInstruction = "सीधे जाएं, आगे 50m बाद दाहिने मोड़ें ➡️";
+  let currentStreet = "Kachehri Marg";
+  let turnInstruction = "Head straight, then turn right in 50m ➡️";
   let etaMins = 6;
 
   if (progress < 22) {
@@ -61,8 +61,8 @@ export default function Screen40TurnByTurnNav({
     riderX = 45;
     riderY = 30 + t * 55;
     riderRotation = 90;
-    currentStreet = "Kachehri Marg (कचहरी मार्ग)";
-    turnInstruction = "कचहरी मार्ग पर सीधे चलें, आगे मोड़ है ➡️";
+    currentStreet = "Kachehri Marg";
+    turnInstruction = "Continue straight on Kachehri Marg ➡️";
     etaMins = 7;
   } else if (progress < 55) {
     // Segment 2: Turn 1 -> Turn 2 (rightwards along Main Road)
@@ -70,8 +70,8 @@ export default function Screen40TurnByTurnNav({
     riderX = 45 + t * 120;
     riderY = 85;
     riderRotation = 0;
-    currentStreet = "Civil Lines Main Road (सिविल लाइंस)";
-    turnInstruction = "मेन रोड पर 300m सीधा चलें, फिर पीपल चौराहा गली ↩️";
+    currentStreet = "Civil Lines Main Road";
+    turnInstruction = "Continue 300m on Main Road, then enter Peepal Chauraha Lane ↩️";
     etaMins = 5;
   } else if (progress < 80) {
     // Segment 3: Turn 2 -> Turn 3 (downwards into Galli)
@@ -79,8 +79,8 @@ export default function Screen40TurnByTurnNav({
     riderX = 165;
     riderY = 85 + t * 70;
     riderRotation = 90;
-    currentStreet = "Peepal Chauraha Galli (पीपल चौराहा गली)";
-    turnInstruction = "गली में अंदर जाएं, कस्टमर का घर 100m दूर है 🏠";
+    currentStreet = "Peepal Chauraha Lane";
+    turnInstruction = "Proceed down the lane, customer home is 100m ahead 🏠";
     etaMins = 2;
   } else {
     // Segment 4: Turn 3 -> Home (rightwards to Customer Home)
@@ -88,8 +88,8 @@ export default function Screen40TurnByTurnNav({
     riderX = 165 + t * 90;
     riderY = 155;
     riderRotation = 0;
-    currentStreet = "Customer Gate · Amit Home (दरवाजा)";
-    turnInstruction = "गेट नंबर 4 पर पहुंचे, OTP हैंडओवर तैयार करें 🏁";
+    currentStreet = "Customer Gate · Destination";
+    turnInstruction = "Arrived at Gate No. 4, prepare 4-digit OTP handover 🏁";
     etaMins = 1;
   }
 
@@ -123,7 +123,7 @@ export default function Screen40TurnByTurnNav({
                 <span className="text-xs font-black text-slate-900 uppercase tracking-wider">
                   LIVE GPS TRACKING
                 </span>
-                <span className="text-[10px] text-slate-500 font-hindi">(बहराइच)</span>
+                <span className="text-[10px] text-slate-500 font-mono">(Bahraich)</span>
               </div>
             </div>
           </div>
@@ -383,7 +383,7 @@ export default function Screen40TurnByTurnNav({
         >
           <div className="flex items-center gap-1.5 truncate">
             <span className="text-sm leading-none shrink-0">🗺️</span>
-            <span className="truncate">Open in Google Maps (गूगल मैप्स में खोलें)</span>
+            <span className="truncate">Open in Google Maps</span>
           </div>
           <span className="text-[9.5px] bg-white/20 text-white px-2 py-0.5 rounded font-mono shrink-0 ml-2 tracking-wide uppercase">
             Live 2W Navigation ➔

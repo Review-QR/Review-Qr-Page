@@ -411,16 +411,22 @@ export default function StandaloneRiderProductionApp() {
   // Navigate to previous (last) screen, prevent unintentional exit
   const handleHardwareBack = useCallback(() => {
     const stack = screenHistoryRef.current;
-    if (stack.length > 1) {
+    const isRootScreen = currentScreenId === 1 || currentScreenId === 7 || currentScreenId === 19;
+
+    if (!isRootScreen && stack.length > 1) {
       // Pop the active screen
       stack.pop();
       // Navigate to the immediate previous screen
-      const previousScreen = stack[stack.length - 1];
+      let previousScreen = stack[stack.length - 1] || 1;
+      // Never pop back to OTP verification (Screen 2) if OTP was already verified
+      if (previousScreen === 2 && currentScreenId !== 2) {
+        previousScreen = 1;
+      }
       setCurrentScreenId(previousScreen);
       return;
     }
 
-    // At root screen (Screen 01 or Screen 07 Cockpit)
+    // At root screen (Screen 01, Screen 07 Cockpit, or Screen 19 Pending)
     const now = Date.now();
     if (now - lastBackPressTimeRef.current < 2000) {
       const capApp = (window as any).Capacitor?.Plugins?.App;
@@ -430,7 +436,7 @@ export default function StandaloneRiderProductionApp() {
       setBackToast("Press back again to exit");
       setTimeout(() => setBackToast(null), 2000);
     }
-  }, [setCurrentScreenId]);
+  }, [currentScreenId, setCurrentScreenId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -445,10 +451,12 @@ export default function StandaloneRiderProductionApp() {
       }
     } catch {}
 
-    window.history.pushState({ screen: currentScreenId }, "");
+    // Maintain WebView history buffer so native Android back never kills the WebView
+    window.history.pushState({ screen: currentScreenId }, "", window.location.pathname);
 
     const onPop = (e: PopStateEvent) => {
-      e.preventDefault();
+      // Re-push state so WebView history stack never collapses to 0
+      window.history.pushState({ screen: currentScreenId }, "", window.location.pathname);
       handleHardwareBack();
     };
     window.addEventListener("popstate", onPop);
@@ -539,37 +547,54 @@ export default function StandaloneRiderProductionApp() {
           channel={authChannel}
           previewOtp={previewOtp}
           onVerified={async (otp, riderObj) => {
-            // Check if rider already exists and is fully verified in Supabase
-            const isFullyVerifiedInDb = Boolean(
-              riderObj?.is_verified &&
-              riderObj?.vehicle_number &&
-              riderObj?.vehicle_number !== "UP-40-TEMP" &&
-              riderObj?.kyc_status === "approved"
+            // 1. Check if rider is fully approved in Supabase
+            const isApprovedInDb = Boolean(
+              riderObj?.id &&
+              riderObj?.kyc_status === "approved" &&
+              riderObj?.is_verified
             );
 
-            if (isFullyVerifiedInDb) {
-              // Existing registered partner -> Cockpit
+            if (isApprovedInDb) {
+              // Existing approved partner -> Direct to Cockpit
+              if (riderObj) workflow.setRider(riderObj);
               setCurrentScreenId(7);
-            } else {
-              // NEW RIDER REGISTRATION JOURNEY!
-              // Wipe any stale test data from device storage
-              if (typeof window !== "undefined") {
-                localStorage.removeItem("trustit_rider_onboarded");
-                localStorage.removeItem("trustit_rider_profile");
-                localStorage.removeItem("trustit_rider_upi");
-              }
-              workflow.resetToNewRider();
-              workflow.setRider((prev) => ({
-                ...prev,
-                phone: authPhone,
-                full_name: "",
-                vehicle_number: "",
-                is_verified: false,
-                kyc_status: "pending",
-              }));
-              // Advance to Step 2.5: Basic Profile (Name & Address)
-              setCurrentScreenId(48);
+              return;
             }
+
+            // 2. Check if rider has already registered / submitted details and is pending admin review
+            const kycStatusStr = String(riderObj?.kyc_status || "");
+            const isPendingOrSubmittedInDb = Boolean(
+              riderObj?.id &&
+              (kycStatusStr === "pending" ||
+               kycStatusStr === "submitted" ||
+               kycStatusStr === "under_review" ||
+               Boolean(riderObj?.full_name?.trim()))
+            );
+
+            if (isPendingOrSubmittedInDb) {
+              // Existing applicant awaiting admin approval -> Direct to Verification Pending Room!
+              if (riderObj) workflow.setRider(riderObj);
+              setCurrentScreenId(19);
+              return;
+            }
+
+            // 3. Brand New Rider Registration Journey
+            if (typeof window !== "undefined") {
+              localStorage.removeItem("trustit_rider_onboarded");
+              localStorage.removeItem("trustit_rider_profile");
+              localStorage.removeItem("trustit_rider_upi");
+            }
+            workflow.resetToNewRider();
+            workflow.setRider((prev) => ({
+              ...prev,
+              phone: authPhone,
+              full_name: "",
+              vehicle_number: "",
+              is_verified: false,
+              kyc_status: "pending",
+            }));
+            // Advance to Step 1 of 6: Basic Profile
+            setCurrentScreenId(48);
           }}
           onResend={() => {
             console.log("OTP Resent for rider:", authPhone);
@@ -604,7 +629,7 @@ export default function StandaloneRiderProductionApp() {
             }
             setCurrentScreenId(3); // Advance to Terms & Road Safety!
           }}
-          onBack={() => setCurrentScreenId(2)}
+          onBack={() => setCurrentScreenId(1)}
         />
       ),
     },
@@ -655,7 +680,7 @@ export default function StandaloneRiderProductionApp() {
       component: (
         <Screen19VerificationPending
           riderId={workflow.rider?.id}
-          onBack={() => setCurrentScreenId(6)}
+          onBack={() => setCurrentScreenId(1)}
           onProceedToAcademy={() => setCurrentScreenId(20)}
           onEditProfile={() => setCurrentScreenId(48)}
           onEditVehicle={() => setCurrentScreenId(5)}
@@ -1057,10 +1082,10 @@ export default function StandaloneRiderProductionApp() {
             if (typeof window !== "undefined") {
               const refCode = rider?.referral_code || "TRFLEET";
               const text = encodeURIComponent(
-                "🛵 *Trustit Delivery Partner बनें — बहराइच (UP 40)*\n" +
-                "रोज़ाना ₹600-₹1,100 कमाएं। सीधे बैंक UPI में डेली पेआउट!\n" +
-                `रेफरल कोड: ${refCode}\n` +
-                "रजिस्टर करें: " + window.location.origin + "/rider"
+                "🛵 *Become a Trustit Delivery Partner — Bahraich (UP 40)*\n" +
+                "Earn ₹600 - ₹1,100 daily. Direct daily bank UPI payouts!\n" +
+                `Referral Code: ${refCode}\n` +
+                "Register now: " + window.location.origin + "/rider"
               );
               window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
             }

@@ -48,12 +48,12 @@ export default function Screen21LockscreenOrderPop({
         </div>
       </div>
 
-      {/* Voice Alert Hindi Banner */}
+      {/* Voice Alert Banner */}
       <div className="relative z-10 mt-3 bg-red-500/20 border border-red-500/40 rounded-xl p-2.5 flex items-center gap-2.5">
         <span className="text-xl animate-bounce">📢</span>
         <div>
           <p className="text-[11px] font-extrabold text-red-300">
-            आवाज़ अलर्ट: &quot;नया ऑर्डर! नज़दीकी स्टोर — गारण्टीड कमाई&quot;
+            Audio Alert: &quot;New Order! Nearby Store — Guaranteed Earnings&quot;
           </p>
           <p className="text-[9px] text-slate-400">
             Screen Wakeup &amp; Media Volume Overridden (Dual-Tone 880Hz Siren)

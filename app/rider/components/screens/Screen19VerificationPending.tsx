@@ -66,9 +66,9 @@ export default function Screen19VerificationPending({
   // Determine which edit screen to route to based on correction notes
   const handleStartCorrection = () => {
     const text = `${rejectionReason || ""} ${adminNotes || ""}`.toLowerCase();
-    if (text.includes("selfie") || text.includes("फोटो") || text.includes("चेहरा") || text.includes("चश्मा")) {
+    if (text.includes("selfie") || text.includes("photo") || text.includes("face") || text.includes("glasses")) {
       onEditSelfie?.();
-    } else if (text.includes("गाड़ी") || text.includes("वाहन") || text.includes("vehicle") || text.includes("dl") || text.includes("लाइसेंस")) {
+    } else if (text.includes("vehicle") || text.includes("dl") || text.includes("license") || text.includes("rc")) {
       onEditVehicle?.();
     } else {
       onEditProfile?.();

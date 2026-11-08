@@ -17,38 +17,38 @@ export default function Screen32AccidentInsurance({
   const rules = [
     {
       icon: "🪖",
-      title: "ISI-Mark Helmet Mandatory (हेलमेट अनिवार्य)",
-      desc: "हर राइड पर हेलमेट पहनना अनिवार्य है। कोई भी डिलीवरी बिना हेलमेट नहीं की जाएगी।",
+      title: "ISI-Mark Helmet Mandatory",
+      desc: "Wearing a certified helmet is mandatory on every trip. No delivery may be conducted without a helmet.",
       badge: "Must Follow",
     },
     {
       icon: "⚡",
-      title: "Speed Limit: Max 35 km/h (गति सीमा)",
-      desc: "चौक बाजार, कचहरी रोड, दरगाह शरीफ और तंग गलियों में गति सीमा 35 किमी/घंटा है।",
+      title: "Speed Limit: Max 35 km/h",
+      desc: "Adhere to a maximum of 35 km/h in Chowk Bazar, Kachehri Road, Dargah Sharif, and busy alleys.",
       badge: "City Speed",
     },
     {
       icon: "📵",
-      title: "No Phone While Driving (राइडिंग में फोन मना)",
-      desc: "गाड़ी चलाते समय हाथ में फोन न लें। केवल वॉयस नेविगेशन सुनें या गाड़ी रोक कर देखें।",
+      title: "Zero Phone Distraction",
+      desc: "Do not hold your phone while riding. Use audio prompts or pull over safely to inspect routes.",
       badge: "Zero Distraction",
     },
     {
       icon: "🚦",
-      title: "Traffic Signals & One-Way (ट्रैफिक नियम)",
-      desc: "रेड लाइट, वन-वे और जेब्रा क्रॉसिंग का आदर करें। पैदल यात्रियों को प्राथमिकता दें।",
+      title: "Traffic Signals & Pedestrians",
+      desc: "Respect red lights, one-way zones, and zebra crossings. Pedestrians always have the right of way.",
       badge: "Law Compliant",
     },
     {
       icon: "🚂",
-      title: "Railway Crossing Caution (रेलवे फाटक सुरक्षा)",
-      desc: "बहराइच रेलवे क्रॉसिंग बंद होने पर जल्दबाजी न करें। कभी भी बंद बैरियर के नीचे से न निकलें।",
+      title: "Railway Crossing Caution",
+      desc: "Never rush or cross under closed railway barriers. Always wait until barriers lift fully.",
       badge: "Critical Alert",
     },
     {
       icon: "🎒",
-      title: "Clean Bag & Reflective Night Vest (बैग व नाइट स्ट्रिप)",
-      desc: "डिलीवरी बैग हमेशा साफ रखें। रात 8 बजे के बाद रिफ्लेक्टिव स्ट्रिप वाली जैकेट पहनें।",
+      title: "Reflective Vest & Clean Bag",
+      desc: "Keep delivery bag sanitized. Wear high-visibility reflective clothing for night deliveries after 8 PM.",
       badge: "Night Safety",
     },
   ];
@@ -69,7 +69,7 @@ export default function Screen32AccidentInsurance({
           <button
             type="button"
             onClick={onBack}
-            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-xs hover:bg-slate-50 transition"
+            className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-xs hover:bg-slate-50 transition cursor-pointer"
           >
             ←
           </button>
@@ -78,7 +78,7 @@ export default function Screen32AccidentInsurance({
               Bahraich Rider Safety Code
             </span>
             <h2 className="text-sm font-extrabold text-slate-900 leading-tight mt-0.5">
-              Safe Driving Rules (सड़क सुरक्षा नियम)
+              Safe Driving Rules &amp; Road Code
             </h2>
           </div>
           <span className="w-8 text-center text-sm">
@@ -97,7 +97,7 @@ export default function Screen32AccidentInsurance({
             </span>
           </div>
           <p className="text-xs text-slate-200 leading-relaxed">
-            आपकी जान आपके परिवार और ट्रस्टिट दोनों के लिए सबसे कीमती है। डिलीवरी में 2 मिनट लेट होना सुरक्षित पहुंचने से ज्यादा जरूरी कभी नहीं हो सकता।
+            Your safety is the highest priority for both your family and Trustit. Arriving safely is always more important than speeding to save two minutes.
           </p>
         </div>
 
@@ -139,7 +139,7 @@ export default function Screen32AccidentInsurance({
             className="w-4 h-4 rounded text-blue-600 accent-[#0D47A1] mt-0.5 shrink-0"
           />
           <span className="text-[11px] text-slate-700 leading-tight">
-            <strong>I Give My Consent (सहमति):</strong> मैंने ट्रस्टिट के सभी सुरक्षित ड्राइविंग नियम पढ़ लिए हैं। मैं बहराइच की सड़कों पर सुरक्षित गति और ट्रैफिक नियमों का पूरी तरह पालन करूंगा।
+            <strong>I Give My Safety Consent:</strong> I have read and agree to follow all Trustit safe driving guidelines and local UP 40 road safety rules.
           </span>
         </label>
 
@@ -147,7 +147,7 @@ export default function Screen32AccidentInsurance({
           type="button"
           onClick={handleSaveConsent}
           disabled={!hasAgreed || isSaved}
-          className={`w-full py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition ${
+          className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition cursor-pointer ${
             isSaved
               ? "bg-emerald-600 text-white"
               : hasAgreed
@@ -155,7 +155,7 @@ export default function Screen32AccidentInsurance({
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           }`}
         >
-          <span>{isSaved ? "✓ Safety Consent Recorded" : "I Give My Consent & Accept Safety Code"}</span>
+          <span>{isSaved ? "✓ Safety Consent Recorded" : "I Accept Safety Code"}</span>
           <span>➔</span>
         </button>
       </div>

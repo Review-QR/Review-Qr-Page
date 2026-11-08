@@ -12,6 +12,7 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
   const streamRef = useRef<MediaStream | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
@@ -35,12 +36,7 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
       });
 
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.setAttribute("playsinline", "true");
-        videoRef.current.setAttribute("webkit-playsinline", "true");
-        await videoRef.current.play().catch(() => {});
-      }
+      setMediaStream(stream);
       setIsStreaming(true);
     } catch {
       try {
@@ -49,17 +45,10 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
           audio: false,
         });
         streamRef.current = fallbackStream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = fallbackStream;
-          videoRef.current.setAttribute("playsinline", "true");
-          videoRef.current.setAttribute("webkit-playsinline", "true");
-          await videoRef.current.play().catch(() => {});
-        }
+        setMediaStream(fallbackStream);
         setIsStreaming(true);
-      } catch (err2: unknown) {
-        setCameraError(
-          "लाइव कैमरा शुरू नहीं हो सका। नीचे दिए गए 'फ़ोन कैमरा' बटन से सीधी सेल्फी लें।"
-        );
+      } catch {
+        setCameraError("Live camera access unavailable. Tap below to take selfie with phone camera.");
         setIsStreaming(false);
       }
     }
@@ -70,15 +59,26 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    setMediaStream(null);
     setIsStreaming(false);
   }, []);
+
+  // Guarantee stream attachment to video element whenever stream changes or video element mounts
+  useEffect(() => {
+    if (videoRef.current && mediaStream) {
+      videoRef.current.srcObject = mediaStream;
+      videoRef.current.setAttribute("playsinline", "true");
+      videoRef.current.setAttribute("webkit-playsinline", "true");
+      videoRef.current.play().catch(() => {});
+    }
+  }, [mediaStream]);
 
   useEffect(() => {
     startCamera();
     return () => stopCamera();
   }, [startCamera, stopCamera]);
 
-  // Robust Live Video Snapshot (Guarantees no black screen)
+  // Robust Live Video Snapshot (Guarantees crisp square selfie)
   const handleCapture = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -86,13 +86,12 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
     try {
       setIsProcessing(true);
 
-      // Determine actual video dimensions safely
       const vw = video.videoWidth > 0 ? video.videoWidth : video.clientWidth || 640;
       const vh = video.videoHeight > 0 ? video.videoHeight : video.clientHeight || 480;
       const size = Math.min(vw, vh);
 
       if (size <= 0) {
-        // Fallback to native phone camera if video dimensions are 0
+        // Fallback to native phone camera if video dimensions are not ready
         fileInputRef.current?.click();
         return;
       }
@@ -112,13 +111,10 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
 
         const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.85);
 
-        // Verification check: ensure data URL is valid and not empty
         if (compressedDataUrl && compressedDataUrl.length > 2000) {
           setCapturedImage(compressedDataUrl);
-          // Stop stream gracefully after state update
           setTimeout(stopCamera, 200);
         } else {
-          // If canvas generated black frame, trigger phone camera
           fileInputRef.current?.click();
         }
       }
@@ -188,48 +184,49 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 text-xs font-bold text-[#0D47A1] hover:underline"
+            className="flex items-center gap-1 text-xs font-bold text-[#0D47A1] hover:underline cursor-pointer"
           >
-            <span>← वापस (Back)</span>
+            <span>← Back</span>
           </button>
           <div className="flex items-center gap-1.5">
             <span className="px-2 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200 uppercase tracking-wider">
-              लाइव सेल्फी KYC
+              Live Selfie KYC
             </span>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">चरण 4 / 6</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Step 2 of 6</span>
           </div>
         </div>
 
         {/* Title */}
         <div className="mt-2.5 space-y-0.5 text-center">
           <h2 className="text-base font-black text-slate-900 leading-tight">
-            लाइव फ्रंट कैमरा सेल्फी
+            Live Front Camera Selfie
           </h2>
           <p className="text-[11px] text-slate-500 leading-tight">
-            यह फोटो आपके डिजिटल फ्लीट आईडी कार्ड और ग्राहकों को दिखाई जाएगी।
+            This photo will appear on your Digital Fleet ID Card and be shown to customers.
           </p>
         </div>
 
         {/* Viewfinder Box */}
         <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3 shadow-xs text-center space-y-3">
-          <div className="relative w-44 h-48 mx-auto rounded-3xl border-2 border-dashed border-[#0D47A1] bg-slate-950 overflow-hidden flex flex-col items-center justify-center text-white shadow-inner">
-            {/* Live Video Element */}
-            {isStreaming && !capturedImage && (
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover transform -scale-x-100"
-              />
-            )}
+          <div className="relative w-48 h-52 mx-auto rounded-3xl border-2 border-dashed border-[#0D47A1] bg-slate-950 overflow-hidden flex flex-col items-center justify-center text-white shadow-inner">
+            {/* Live Video Element - Always Mounted to Guarantee Stream Binding */}
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              onLoadedMetadata={() => videoRef.current?.play().catch(() => {})}
+              className={`w-full h-full object-cover transform -scale-x-100 ${
+                capturedImage ? "hidden" : "block"
+              }`}
+            />
 
             {/* Oval Face Guide Overlay */}
             {isStreaming && !capturedImage && (
               <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-                <div className="w-32 h-36 rounded-[50%] border-2 border-dashed border-emerald-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
+                <div className="w-36 h-40 rounded-[50%] border-2 border-dashed border-emerald-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
                 <span className="absolute bottom-1.5 text-[9px] font-bold text-emerald-300 bg-black/70 px-2 py-0.5 rounded-full">
-                  चेहरा अंदर रखें
+                  Keep face inside oval
                 </span>
               </div>
             )}
@@ -240,7 +237,7 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={capturedImage} alt="Captured Selfie" className="w-full h-full object-cover" />
                 <div className="absolute top-2 right-2 bg-emerald-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full shadow">
-                  ✓ फोटो कैप्चर हुई
+                  ✓ Photo Captured
                 </div>
               </div>
             )}
@@ -250,50 +247,48 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
               <div className="space-y-2 p-3 text-center z-10">
                 <span className="text-3xl block">📷</span>
                 <span className="text-[10px] text-slate-300 block font-semibold leading-tight">
-                  {cameraError || "कैमरा लोड हो रहा है..."}
+                  {cameraError || "Initializing camera..."}
                 </span>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow hover:bg-emerald-500 active:scale-95 flex items-center justify-center gap-1 mx-auto"
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold shadow hover:bg-emerald-500 active:scale-95 flex items-center justify-center gap-1 mx-auto cursor-pointer"
                 >
                   <span>📱</span>
-                  <span>फ़ोन कैमरा खोलें</span>
+                  <span>Open Phone Camera</span>
                 </button>
               </div>
             )}
           </div>
 
-          {/* Action Row: Take Live Selfie + 1-Tap Native Camera Fallback */}
+          {/* Unified Action Controls */}
           <div className="space-y-2">
             {!capturedImage ? (
-              <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1.5">
                 <button
                   type="button"
                   onClick={handleCapture}
-                  disabled={!isStreaming || isProcessing}
-                  className="py-2.5 px-2 rounded-xl bg-[#0D47A1] hover:bg-[#082b66] text-white font-black text-xs shadow-md transition disabled:opacity-40 flex items-center justify-center gap-1 active:scale-95"
+                  disabled={isProcessing}
+                  className="w-full py-2.5 px-4 rounded-xl bg-[#0D47A1] hover:bg-[#082b66] text-white font-black text-xs shadow-sm transition disabled:opacity-40 flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
                 >
                   <span>📸</span>
-                  <span>लाइव सेल्फी लें</span>
+                  <span>Capture Selfie</span>
                 </button>
-
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="py-2.5 px-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-1 active:scale-95"
+                  className="text-[10px] text-slate-500 hover:text-[#0D47A1] font-semibold underline block mx-auto cursor-pointer"
                 >
-                  <span>📱</span>
-                  <span>फ़ोन कैमरा</span>
+                  Or switch to phone camera app 📱
                 </button>
               </div>
             ) : (
               <button
                 type="button"
                 onClick={handleRetake}
-                className="w-full py-2 px-4 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition active:scale-95 flex items-center justify-center gap-1.5"
+                className="w-full py-2 px-4 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>🔄 दोबारा फोटो लें (Retake)</span>
+                <span>🔄 Retake Photo</span>
               </button>
             )}
           </div>
@@ -302,50 +297,50 @@ export default function Screen04SelfieKyc({ onSelfieCaptured, onBack }: Screen04
         {/* ── 6 PHOTO AUDIT GUIDANCE CARDS (3 GOOD, 3 BAD) ── */}
         <div className="mt-3.5 space-y-2">
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-600 text-center">
-            फोटो सत्यापन नियम (Photo Guidelines)
+            Photo Verification Rules
           </p>
 
           <div className="grid grid-cols-2 gap-2 text-[10px]">
             {/* 3 Good Examples */}
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 space-y-1.5">
               <span className="font-black text-emerald-900 block flex items-center gap-1 text-[11px]">
-                <span>✅</span> सही तरीका (Good)
+                <span>✅</span> Correct Photo
               </span>
               <ul className="space-y-1 text-emerald-800 font-semibold leading-tight">
-                <li>• पूरा चेहरा और दोनों कान स्पष्ट दिखें</li>
-                <li>• कंधे के ऊपर का हिस्सा विजिबल हो</li>
-                <li>• अच्छी रोशनी और साफ पृष्ठभूमि</li>
+                <li>• Clear face and both ears visible</li>
+                <li>• Shoulders centered in frame</li>
+                <li>• Good lighting, neutral background</li>
               </ul>
             </div>
 
             {/* 3 Bad Examples */}
             <div className="bg-rose-50 border border-rose-200 rounded-xl p-2.5 space-y-1.5">
               <span className="font-black text-rose-900 block flex items-center gap-1 text-[11px]">
-                <span>❌</span> गलत तरीका (Bad)
+                <span>❌</span> Rejected Photo
               </span>
               <ul className="space-y-1 text-rose-800 font-semibold leading-tight">
-                <li>• धूप का चश्मा या टोपी न पहनें</li>
-                <li>• मास्क या रूमाल से चेहरा न ढकें</li>
-                <li>• धुंधली या अंधेरे में फोटो न लें</li>
+                <li>• No sunglasses, spectacles or caps</li>
+                <li>• Face must not be covered with mask</li>
+                <li>• No blurry, dark, or low-light photos</li>
               </ul>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Footer Confirm Button */}
+      {/* Footer Confirm Button - Sleek enterprise height */}
       <div className="pt-3 border-t border-slate-200 mt-3">
         <button
           type="button"
           onClick={handleConfirm}
           disabled={!capturedImage}
-          className={`w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-[0.99] ${
+          className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] ${
             capturedImage
-              ? "bg-[#0D47A1] hover:bg-[#082b66] text-white"
+              ? "bg-[#0D47A1] hover:bg-[#082b66] text-white cursor-pointer"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           }`}
         >
-          <span>सेल्फी कन्फर्म करें और आगे बढ़ें (Confirm &amp; Next)</span>
+          <span>Confirm &amp; Proceed</span>
           <span>➔</span>
         </button>
       </div>

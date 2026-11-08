@@ -27,10 +27,10 @@ export default function Screen44InAppMaskedChat({
   const [inputVal, setInputVal] = useState("");
 
   const quickChips = [
-    "🚪 मैं आपके दरवाज़े पर पहुंच गया हूं",
-    "📍 कृपया कोई नज़दीकी लैंडमार्क बताएं",
-    "🛍️ ऑर्डर पिकअप हो गया है, रास्ते में हूं",
-    "📞 फोन उठा लीजिए कृपया, घंटी बज रही है",
+    "🚪 I have arrived at your doorstep",
+    "📍 Please share a nearby landmark",
+    "🛍️ Order picked up, on my way to you",
+    "📞 Please pick up the call, at your location",
   ];
 
   const handleSendChip = (chipText: string) => {

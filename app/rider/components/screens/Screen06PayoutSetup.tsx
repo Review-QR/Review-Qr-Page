@@ -42,7 +42,7 @@ export default function Screen06PayoutSetup({ onPayoutConfigured, onBack }: Scre
           <div className="p-2 rounded-xl bg-blue-50/80 border border-blue-200 flex items-center justify-between text-xs font-bold text-[#0D47A1]">
             <div className="flex items-center gap-1.5">
               <span>⚡</span>
-              <span className="font-black">Instant UPI Payout (तत्काल यूपीआई)</span>
+              <span className="font-black">Instant UPI Direct Transfer</span>
             </div>
             <span className="px-2 py-0.5 rounded text-[10px] font-black bg-blue-600 text-white shadow-2xs">
               ✓ Active

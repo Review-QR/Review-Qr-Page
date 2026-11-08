@@ -12,7 +12,6 @@ export default function Screen20TrainingAcademy({
   onBack,
   onCompleteAcademy,
 }: Screen20Props) {
-  const [lang, setLang] = useState<"hi" | "en">("hi");
   const [currentRuleIndex, setCurrentRuleIndex] = useState<number>(0);
   const [isQuizMode, setIsQuizMode] = useState<boolean>(false);
 
@@ -24,30 +23,30 @@ export default function Screen20TrainingAcademy({
 
   const { rider, completeAcademy, isLoading } = useRiderAuth();
 
-  const rulesHi = [
+  const rules = [
     {
       num: 1,
       icon: "🎒",
-      title: "नियम 1: इंसुलेटेड थर्मल डिलीवरी बैग का उपयोग",
-      desc: "गर्म खाना मुख्य इंसुलेटेड चेंबर में रखें और ठंडे पेय पदार्थ बाहरी पॉकेट में। खाना ठंडा न हो, इसके लिए बैग की चेन हमेशा पूरी तरह बंद रखें।",
+      title: "Rule 1: Insulated Thermal Delivery Bag",
+      desc: "Place hot items inside the insulated thermal chamber and cold drinks in designated exterior pouches. Always keep the zip securely closed.",
     },
     {
       num: 2,
       icon: "🔒",
-      title: "नियम 2: रेस्टोरेंट सुरक्षा टेप व नो-टैम्पर पॉलिसी",
-      desc: "रेस्टोरेंट की सुरक्षा सील या Trustit टेप को कभी न खोलें। यदि दुकान से लेते समय पैकेट लीक या फटा हो, तो वहीं दुकानदार को सूचित करें।",
+      title: "Rule 2: Tamper-Evident Restaurant Seal Policy",
+      desc: "Never break or open merchant safety tape or Trustit packaging. If a package is leaking or damaged at pickup, report it immediately before leaving store.",
     },
     {
       num: 3,
       icon: "🤝",
-      title: "नियम 3: 4-अंकीय डिलीवरी OTP का अनिवार्य सत्यापन",
-      desc: "ग्राहक के घर पहुँचने पर पहले 4-अंकीय OTP पूछकर ऐप में दर्ज करें। बिना OTP दर्ज किए ग्राहक को कभी भी सामान न सौंपें।",
+      title: "Rule 3: Mandatory 4-Digit Delivery OTP",
+      desc: "Upon reaching customer doorstep, ask for and verify the 4-digit secret OTP shown on their Trustit app. Never release parcels without OTP verification.",
     },
     {
       num: 4,
       icon: "💳",
-      title: "नियम 4: केवल ऐप का आधिकारिक Cashfree QR ही दिखाएं",
-      desc: "कैश ऑन डिलीवरी (COD) ऑर्डर में बिल से ₹1 भी अधिक न मांगें। भुगतान के लिए केवल ऐप का आधिकारिक Cashfree QR दिखाएं; निजी QR दिखाना सख्त मना है।",
+      title: "Rule 4: Official In-App Cashfree QR Only",
+      desc: "Never demand even ₹1 extra cash tip from customer. For Cash on Delivery, always present the official Trustit Cashfree dynamic QR code. Personal QR codes are strictly prohibited.",
     },
   ];
 
@@ -77,7 +76,7 @@ export default function Screen20TrainingAcademy({
       onCompleteAcademy?.();
     } else {
       setFailedMessage(
-        "आप परीक्षा में अनुत्तीर्ण (Failed) हो गए हैं। सुरक्षा नियमों को पुनः ध्यान से पढ़ें और फिर से टेस्ट दें।"
+        "You did not pass the safety quiz. Please review the safety guidelines and retake the test."
       );
     }
   };
@@ -100,16 +99,16 @@ export default function Screen20TrainingAcademy({
           <button
             type="button"
             onClick={onBack}
-            className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xs text-slate-700 shadow-2xs hover:bg-slate-50 font-bold"
+            className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xs text-slate-700 shadow-2xs hover:bg-slate-50 font-bold cursor-pointer"
           >
             ←
           </button>
           <div className="text-center">
             <span className="text-[9px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
-              ट्रेनिंग अकादमी (Training Academy)
+              Training Academy
             </span>
             <h2 className="text-sm font-black text-slate-900 leading-tight">
-              {isQuizMode ? "सुरक्षा एवं सेवा क्विज़" : "सुरक्षा नियमावली"}
+              {isQuizMode ? "Safety & Service Quiz" : "Safety Code & Guidelines"}
             </h2>
           </div>
           <span className="w-8 text-center text-xs">🎓</span>
@@ -123,10 +122,10 @@ export default function Screen20TrainingAcademy({
             {/* Rule Progress Indicator */}
             <div className="flex items-center justify-between text-xs px-1">
               <span className="font-bold text-slate-500">
-                नियम {currentRuleIndex + 1} / 4
+                Rule {currentRuleIndex + 1} of 4
               </span>
               <span className="font-black text-[#0D47A1]">
-                {Math.round(((currentRuleIndex + 1) / 4) * 100)}% पूर्ण
+                {Math.round(((currentRuleIndex + 1) / 4) * 100)}% Complete
               </span>
             </div>
             <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
@@ -139,13 +138,13 @@ export default function Screen20TrainingAcademy({
             {/* Rule Card */}
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs text-center space-y-3">
               <div className="w-16 h-16 mx-auto rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-3xl shadow-inner">
-                {rulesHi[currentRuleIndex].icon}
+                {rules[currentRuleIndex].icon}
               </div>
               <h3 className="text-sm font-black text-slate-900 leading-snug">
-                {rulesHi[currentRuleIndex].title}
+                {rules[currentRuleIndex].title}
               </h3>
               <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
-                {rulesHi[currentRuleIndex].desc}
+                {rules[currentRuleIndex].desc}
               </p>
             </div>
 
@@ -155,26 +154,26 @@ export default function Screen20TrainingAcademy({
                 type="button"
                 disabled={currentRuleIndex === 0}
                 onClick={() => setCurrentRuleIndex((c) => Math.max(0, c - 1))}
-                className="px-4 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 disabled:opacity-30 bg-white"
+                className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 disabled:opacity-30 bg-white cursor-pointer"
               >
-                ← पिछला नियम
+                ← Previous
               </button>
 
               {currentRuleIndex < 3 ? (
                 <button
                   type="button"
                   onClick={() => setCurrentRuleIndex((c) => Math.min(3, c + 1))}
-                  className="px-5 py-2.5 rounded-xl bg-[#0D47A1] hover:bg-blue-800 text-white text-xs font-black shadow transition"
+                  className="px-5 py-2 rounded-xl bg-[#0D47A1] hover:bg-blue-800 text-white text-xs font-black shadow transition cursor-pointer"
                 >
-                  अगला नियम ➔
+                  Next Rule ➔
                 </button>
               ) : (
                 <button
                   type="button"
                   onClick={() => setIsQuizMode(true)}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md transition"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black shadow-md transition cursor-pointer"
                 >
-                  क्विज़ शुरू करें (Start Quiz) 📝
+                  Start Quiz 📝
                 </button>
               )}
             </div>
@@ -190,14 +189,14 @@ export default function Screen20TrainingAcademy({
             {failedMessage && (
               <div className="bg-rose-50 border-2 border-rose-400 rounded-2xl p-4 text-center space-y-2 shadow-md">
                 <span className="text-2xl block">❌</span>
-                <h4 className="text-sm font-black text-rose-950">अनुत्तीर्ण (Failed)</h4>
+                <h4 className="text-sm font-black text-rose-950">Test Incomplete</h4>
                 <p className="text-xs text-rose-800 leading-snug">{failedMessage}</p>
                 <button
                   type="button"
                   onClick={handleResetToRules}
-                  className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow mt-1 transition"
+                  className="w-full py-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-black text-xs shadow mt-1 transition cursor-pointer"
                 >
-                  📖 नियमावली के मुख्य पेज पर वापस जाएं (Re-read Rules)
+                  📖 Re-read Safety Rules &amp; Retake
                 </button>
               </div>
             )}
@@ -205,13 +204,13 @@ export default function Screen20TrainingAcademy({
             {!failedMessage && (
               <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-4">
                 <p className="text-xs font-bold text-slate-500 text-center">
-                  नोट: विकल्प चुनते ही वह लॉक हो जाएगा (Once selected, choice locks).
+                  Note: Choices lock immediately upon selection.
                 </p>
 
                 {/* ── QUESTION 1 ── */}
                 <div className="space-y-2 pb-3 border-b border-slate-100">
                   <h4 className="text-xs font-black text-slate-900 leading-tight">
-                    प्रश्न 1: ग्राहक को डिलीवरी पैकेट कब हैंडओवर करना चाहिए?
+                    Question 1: When must the rider hand over the delivery package to the customer?
                   </h4>
 
                   <div className="space-y-2 text-xs">
@@ -227,7 +226,7 @@ export default function Screen20TrainingAcademy({
                       } ${answer1 !== null ? "cursor-not-allowed" : "cursor-pointer"}`}
                     >
                       <span>
-                        <strong>विकल्प A:</strong> ग्राहक के फ़ोन पर आया 4-अंकीय OTP सत्यापित करने के बाद
+                        <strong>Option A:</strong> After verifying the 4-digit secret OTP shown on customer&apos;s phone
                       </span>
                       <span className="text-sm font-mono shrink-0 ml-2">
                         {answer1 === 1 ? "🔒 [A]" : "(A)"}
@@ -246,7 +245,7 @@ export default function Screen20TrainingAcademy({
                       } ${answer1 !== null ? "cursor-not-allowed" : "cursor-pointer"}`}
                     >
                       <span>
-                        <strong>विकल्प B:</strong> घर के बाहर पहुँचते ही बिना OTP पैकेट ग्राहक को दे दें
+                        <strong>Option B:</strong> Hand it over immediately outside door without asking for OTP
                       </span>
                       <span className="text-sm font-mono shrink-0 ml-2">
                         {answer1 === 2 ? "🔒 [B]" : "(B)"}
@@ -258,7 +257,7 @@ export default function Screen20TrainingAcademy({
                 {/* ── QUESTION 2 ── */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-black text-slate-900 leading-tight">
-                    प्रश्न 2: कैश ऑन डिलीवरी (COD) के समय राइडर को क्या करना चाहिए?
+                    Question 2: How must the rider collect Cash on Delivery (COD) payment?
                   </h4>
 
                   <div className="space-y-2 text-xs">
@@ -274,7 +273,7 @@ export default function Screen20TrainingAcademy({
                       } ${answer2 !== null ? "cursor-not-allowed" : "cursor-pointer"}`}
                     >
                       <span>
-                        <strong>विकल्प A:</strong> ग्राहक से ₹20 अतिरिक्त डिलीवरी टिप नकद मांगें
+                        <strong>Option A:</strong> Ask customer for extra cash tip over the order bill
                       </span>
                       <span className="text-sm font-mono shrink-0 ml-2">
                         {answer2 === 1 ? "🔒 [A]" : "(A)"}
@@ -293,7 +292,7 @@ export default function Screen20TrainingAcademy({
                       } ${answer2 !== null ? "cursor-not-allowed" : "cursor-pointer"}`}
                     >
                       <span>
-                        <strong>विकल्प B:</strong> केवल Trustit ऐप का आधिकारिक Cashfree QR ही दिखाएं
+                        <strong>Option B:</strong> Present only the official Trustit Cashfree dynamic QR code
                       </span>
                       <span className="text-sm font-mono shrink-0 ml-2">
                         {answer2 === 2 ? "🔒 [B]" : "(B)"}
@@ -314,13 +313,13 @@ export default function Screen20TrainingAcademy({
             type="button"
             disabled={!isBothAnswered || isLoading}
             onClick={handleSubmitQuiz}
-            className={`w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-[0.99] ${
+            className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] ${
               isBothAnswered
-                ? "bg-[#0D47A1] hover:bg-[#082b66] text-white"
+                ? "bg-[#0D47A1] hover:bg-[#082b66] text-white cursor-pointer"
                 : "bg-slate-200 text-slate-400 cursor-not-allowed"
             }`}
           >
-            <span>क्विज़ सबमिट करें (Submit Answers)</span>
+            <span>Submit Quiz Answers</span>
             <span>➔</span>
           </button>
         </div>

@@ -12,11 +12,11 @@ export default function RiderJoinOnboardingPage() {
   const estimatedMonthlyEarning = estimatedDailyEarning * 26;
 
   const shareText = encodeURIComponent(
-    `🛵 *Trustit Delivery Partner बनें — बहराइच (UP 40)*\n` +
-    `रोज़ाना ₹600 से ₹1,100 तक कमाएं। सीधे बैंक UPI में डेली पेआउट!\n` +
-    `✅ कोई बॉस नहीं · अपनी मर्जी का टाइम\n` +
-    `✅ बारिश व शाम को +₹20 एक्स्ट्रा सर्ज\n` +
-    `अभी जॉइन करने के लिए यहाँ टैप करें: ${typeof window !== "undefined" ? window.location.origin : "https://trustit.in"}/rider`
+    `🛵 *Become a Trustit Delivery Partner — Bahraich (UP 40)*\n` +
+    `Earn ₹600 to ₹1,100 daily. Direct daily bank UPI payouts!\n` +
+    `✅ Flexible hours · No boss\n` +
+    `✅ Extra surge bonuses on evening rush & rain\n` +
+    `Tap here to register: ${typeof window !== "undefined" ? window.location.origin : "https://trustitreview.com"}/rider`
   );
 
   return (
@@ -45,7 +45,6 @@ export default function RiderJoinOnboardingPage() {
 
       {/* ── Main Container (Mobile First) ── */}
       <main className="max-w-md mx-auto p-4 sm:p-5 space-y-5 pb-24">
-        
         {/* Hero Section */}
         <div className="bg-gradient-to-br from-[#0D47A1] via-blue-900 to-indigo-950 text-white rounded-3xl p-5 shadow-xl space-y-3 relative overflow-hidden">
           <div className="absolute top-0 right-0 transform translate-x-4 -translate-y-4 opacity-10 text-9xl font-black select-none pointer-events-none">
@@ -58,12 +57,12 @@ export default function RiderJoinOnboardingPage() {
           </div>
 
           <h1 className="text-2xl font-black tracking-tight leading-tight">
-            अपनी बाइक चलाएं, <br />
-            <span className="text-amber-300">रोज़ाना ₹600–₹1,100 कमाएं</span>
+            Ride Your Two-Wheeler, <br />
+            <span className="text-amber-300">Earn ₹600–₹1,100 Daily</span>
           </h1>
 
           <p className="text-xs text-blue-100 leading-relaxed">
-            दीपक स्वीट्स, अल-बाइके, अपोलो फार्मेसी और सिविल लाइन्स के स्टोर्स से 2-3 किमी के अंदर डिलीवरी करें। 1-टैप डेली UPI पेआउट!
+            Deliver local orders from top stores across Bahraich within 2-3 km radiuses. Enjoy 1-tap instant daily bank UPI payouts!
           </p>
 
           <div className="pt-2 flex items-center gap-2">
@@ -71,7 +70,7 @@ export default function RiderJoinOnboardingPage() {
               href="/rider"
               className="flex-1 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs text-center shadow-lg transition active:scale-98"
             >
-              🚀 अभी ऑनलाइन जॉइन करें
+              🚀 Register Online Now
             </Link>
             <a
               href={`https://wa.me/?text=${shareText}`}
@@ -81,7 +80,7 @@ export default function RiderJoinOnboardingPage() {
               title="Share on WhatsApp"
             >
               <span>💬</span>
-              <span>शेयर</span>
+              <span>Share</span>
             </a>
           </div>
         </div>
@@ -91,17 +90,17 @@ export default function RiderJoinOnboardingPage() {
           <div className="flex items-center justify-between pb-2 border-b border-slate-100">
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Daily Income Calculator</span>
-              <h3 className="text-sm font-black text-slate-900">आप कितना कमा सकते हैं?</h3>
+              <h3 className="text-sm font-black text-slate-900">How much can you earn?</h3>
             </div>
             <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              ₹45 / डिलीवरी औसतन
+              ₹45 / trip average
             </span>
           </div>
 
           {/* Slider */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs font-bold">
-              <span className="text-slate-600">दिन में ट्रिप्स:</span>
+              <span className="text-slate-600">Daily Trips:</span>
               <span className="text-base font-black text-[#0D47A1] font-mono">{dailyTrips} Orders / Day</span>
             </div>
             <input
@@ -114,27 +113,27 @@ export default function RiderJoinOnboardingPage() {
               className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#0D47A1]"
             />
             <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-              <span>5 ट्रिप्स (Part-time)</span>
-              <span>15 ट्रिप्स (Regular)</span>
-              <span>25 ट्रिप्स (Pro Rush)</span>
+              <span>5 Trips (Part-time)</span>
+              <span>15 Trips (Regular)</span>
+              <span>25 Trips (Pro Rush)</span>
             </div>
           </div>
 
           {/* Result Card */}
           <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 grid grid-cols-2 gap-3 text-center">
             <div className="border-r border-emerald-200/80 pr-2">
-              <span className="text-[10px] font-bold text-emerald-800 uppercase block">प्रतिदिन कमाई</span>
+              <span className="text-[10px] font-bold text-emerald-800 uppercase block">Daily Estimated</span>
               <span className="text-2xl font-black text-emerald-700 font-mono block mt-0.5">
                 ₹{estimatedDailyEarning}
               </span>
-              <span className="text-[9px] text-emerald-600">बोनस शामिल</span>
+              <span className="text-[9px] text-emerald-600">Includes Bonuses</span>
             </div>
             <div className="pl-2">
-              <span className="text-[10px] font-bold text-emerald-800 uppercase block">मासिक कमाई (26 दिन)</span>
+              <span className="text-[10px] font-bold text-emerald-800 uppercase block">Monthly (26 Days)</span>
               <span className="text-2xl font-black text-emerald-950 font-mono block mt-0.5">
                 ₹{estimatedMonthlyEarning.toLocaleString("en-IN")}
               </span>
-              <span className="text-[9px] text-emerald-700">सीधे बैंक UPI में</span>
+              <span className="text-[9px] text-emerald-700">Direct Bank UPI</span>
             </div>
           </div>
         </div>
@@ -142,44 +141,44 @@ export default function RiderJoinOnboardingPage() {
         {/* 6 Core Perks */}
         <div className="space-y-2.5">
           <h3 className="text-xs font-black uppercase text-slate-400 tracking-wider">
-            ट्रस्टिट राइडर पार्टनर बनने के 6 बड़े फायदे:
+            6 Key Benefits for Trustit Delivery Partners:
           </h3>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
             <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-1">
               <span className="text-xl">⚡</span>
               <strong className="text-slate-900 block font-bold text-[11px]">Daily Instant Payout</strong>
-              <p className="text-[10px] text-slate-500 leading-tight">रात 10 बजे का इंतज़ार नहीं, काम खत्म होते ही 1-क्लिक बैंक ट्रांसफर।</p>
+              <p className="text-[10px] text-slate-500 leading-tight">No waiting for weekly settlement; 1-click transfer to your bank UPI.</p>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-1">
               <span className="text-xl">🪙</span>
               <strong className="text-slate-900 block font-bold text-[11px]">Zero Chutta Friction</strong>
-              <p className="text-[10px] text-slate-500 leading-tight">₹500 के नोट पर छुट्टे न होने पर कस्टमर वॉलेट में डायरेक्ट रिफंड।</p>
+              <p className="text-[10px] text-slate-500 leading-tight">No change for ₹500 notes? Direct balance refund to customer wallet in 1 tap.</p>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-1">
               <span className="text-xl">⏱️</span>
               <strong className="text-slate-900 block font-bold text-[11px]">Store Wait Pay</strong>
-              <p className="text-[10px] text-slate-500 leading-tight">दुकानदार 5 मिनट से ज्यादा लेट करे तो +₹1/मिनट का मुआवजा।</p>
+              <p className="text-[10px] text-slate-500 leading-tight">If merchant takes more than 5 mins, receive wait compensation.</p>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-1">
               <span className="text-xl">🌧️</span>
               <strong className="text-slate-900 block font-bold text-[11px]">Monsoon Rush Surge</strong>
-              <p className="text-[10px] text-slate-500 leading-tight">शाम के पीक आवर्स व बारिश में हर ऑर्डर पर +₹15 से ₹20 एक्स्ट्रा।</p>
+              <p className="text-[10px] text-slate-500 leading-tight">+₹15 to +₹20 extra surge pay per order during rain and evening peaks.</p>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-1">
               <span className="text-xl">🦺</span>
               <strong className="text-slate-900 block font-bold text-[11px]">Rider-First Safety</strong>
-              <p className="text-[10px] text-slate-500 leading-tight">सुरक्षित स्पीड 35 km/h, कोई स्पीडिंग पेनल्टी नहीं। जान पहले!</p>
+              <p className="text-[10px] text-slate-500 leading-tight">Safe 35 km/h city speed limit with zero speeding penalties. Safety first!</p>
             </div>
 
             <div className="bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-1">
               <span className="text-xl">🤝</span>
               <strong className="text-slate-900 block font-bold text-[11px]">Refer &amp; Earn ₹500</strong>
-              <p className="text-[10px] text-slate-500 leading-tight">अपने दोस्त को जोड़ें और उसकी पहली 20 ट्रिप्स पर ₹500 पाएं।</p>
+              <p className="text-[10px] text-slate-500 leading-tight">Invite fellow riders and receive ₹500 bonus after their first 20 completed trips.</p>
             </div>
           </div>
         </div>
@@ -187,38 +186,38 @@ export default function RiderJoinOnboardingPage() {
         {/* Documents Required */}
         <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm space-y-3">
           <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-            📋 क्या-क्या डॉक्यूमेंट चाहिए? (Only 4 Things)
+            📋 What Documents Are Needed? (Only 4 Items)
           </h3>
           <div className="space-y-2 text-xs">
             <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200">
               <span className="text-base">🪪</span>
               <div>
-                <strong className="text-slate-900 block text-[11px]">1. आधार कार्ड (Aadhaar Card)</strong>
-                <span className="text-[10px] text-slate-500">उम्र 18 वर्ष या उससे अधिक होनी चाहिए</span>
+                <strong className="text-slate-900 block text-[11px]">1. Aadhaar Card</strong>
+                <span className="text-[10px] text-slate-500">Age must be 18 years or older</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200">
               <span className="text-base">📜</span>
               <div>
-                <strong className="text-slate-900 block text-[11px]">2. ड्राइविंग लाइसेंस (DL / Learning)</strong>
-                <span className="text-[10px] text-slate-500">टू-व्हीलर (MCWG) वैध लाइसेंस</span>
+                <strong className="text-slate-900 block text-[11px]">2. Driving License (DL)</strong>
+                <span className="text-[10px] text-slate-500">Valid Two-Wheeler (MCWG) license</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200">
               <span className="text-base">🛵</span>
               <div>
-                <strong className="text-slate-900 block text-[11px]">3. गाड़ी की RC (Bike / Scooter)</strong>
-                <span className="text-[10px] text-slate-500">UP 40 या उत्तर प्रदेश का वाहन रजिस्ट्रेशन</span>
+                <strong className="text-slate-900 block text-[11px]">3. Vehicle Registration (RC)</strong>
+                <span className="text-[10px] text-slate-500">UP 40 or Uttar Pradesh bike/scooter registration</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5 p-2 rounded-xl bg-slate-50 border border-slate-200">
               <span className="text-base">🏦</span>
               <div>
-                <strong className="text-slate-900 block text-[11px]">4. बैंक खाता या PhonePe / GPay UPI</strong>
-                <span className="text-[10px] text-slate-500">जिसमें रोज़ाना आपकी कमाई ट्रांसफर होगी</span>
+                <strong className="text-slate-900 block text-[11px]">4. Bank Account or UPI (PhonePe / GPay)</strong>
+                <span className="text-[10px] text-slate-500">For daily instant automated earnings transfer</span>
               </div>
             </div>
           </div>
@@ -228,9 +227,9 @@ export default function RiderJoinOnboardingPage() {
         <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-5 text-center space-y-3">
           <span className="text-3xl block">💬</span>
           <div>
-            <h4 className="text-sm font-black text-emerald-950">अपने दोस्तों के साथ शेयर करें</h4>
+            <h4 className="text-sm font-black text-emerald-950">Share with Friends &amp; Fleet Mates</h4>
             <p className="text-xs text-emerald-800 mt-0.5">
-              बहराइच के अपने दोस्तों को वॉट्सऐप पर इनवाइट करें और पाएं ₹500 रेफरल बोनस।
+              Invite friends in Bahraich via WhatsApp and receive a ₹500 referral bonus.
             </p>
           </div>
           <a
@@ -243,7 +242,6 @@ export default function RiderJoinOnboardingPage() {
             <span>➔</span>
           </a>
         </div>
-
       </main>
 
       {/* ── Fixed Bottom Sticky Bar ── */}

@@ -1,8 +1,8 @@
 {
-  "version": "5.0.0",
+  "version": "5.1.0",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1794122958631",
-  "updatedAt": "2026-11-08T07:29:18.631Z",
-  "notes": "Enterprise Production Release v5.0.0: Test data sanitization complete, real Supabase fleet schema engine, genuine empty states, production-grade security",
-  "sizeBytes": 3489461
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1794153263338",
+  "updatedAt": "2026-11-08T15:54:23.338Z",
+  "notes": "Rider Enterprise v5.1.0: Pure English UI, sleek button ergonomics, live selfie camera stream fix, Android hardware back navigation stack, and pending approval lifecycle router",
+  "sizeBytes": 3485400
 }

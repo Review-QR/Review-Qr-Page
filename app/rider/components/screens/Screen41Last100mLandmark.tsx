@@ -99,7 +99,7 @@ export default function Screen41Last100mLandmark({
             </button>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-slate-900 truncate">
-                &quot;भैया, मेडिकल स्टोर के बगल वाली संकरी गली में तीसरा मकान...&quot;
+                &quot;Near City Medical Store, 3rd house in the lane, blue gate...&quot;
               </p>
               <div className="flex items-center gap-1 mt-1">
                 <span className="w-1 h-3 bg-blue-600 rounded-full animate-pulse"></span>

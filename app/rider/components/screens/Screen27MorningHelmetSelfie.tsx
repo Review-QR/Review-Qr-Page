@@ -12,19 +12,19 @@ export default function Screen27MorningHelmetSelfie({
   onBack,
   onSelfieApproved,
 }: Screen27Props) {
-  // Checkboxes must start unchecked so rider manually verifies
   const [hasHelmet, setHasHelmet] = useState<boolean>(false);
   const [hasThermalBag, setHasThermalBag] = useState<boolean>(false);
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const [mediaStream, setMediaStream] = useState<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState<boolean>(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [isAiVerifying, setIsAiVerifying] = useState<boolean>(false);
 
-  const { rider, verifyHelmetSelfie, isLoading } = useRiderAuth();
+  const { rider, verifyHelmetSelfie } = useRiderAuth();
 
   // Start front camera
   const startCamera = useCallback(async () => {
@@ -38,24 +38,16 @@ export default function Screen27MorningHelmetSelfie({
         audio: false,
       });
       streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play().catch(() => {});
-      }
+      setMediaStream(stream);
       setIsStreaming(true);
     } catch {
       try {
         const fallbackStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
         streamRef.current = fallbackStream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = fallbackStream;
-          videoRef.current.play().catch(() => {});
-        }
+        setMediaStream(fallbackStream);
         setIsStreaming(true);
-      } catch (err2: unknown) {
-        setCameraError(
-          err2 instanceof Error ? err2.message : "कैमरा खोलने की अनुमति आवश्यक है।"
-        );
+      } catch {
+        setCameraError("Camera permission required for shift safety audit.");
         setIsStreaming(false);
       }
     }
@@ -66,8 +58,18 @@ export default function Screen27MorningHelmetSelfie({
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    setMediaStream(null);
     setIsStreaming(false);
   }, []);
+
+  useEffect(() => {
+    if (videoRef.current && mediaStream) {
+      videoRef.current.srcObject = mediaStream;
+      videoRef.current.setAttribute("playsinline", "true");
+      videoRef.current.setAttribute("webkit-playsinline", "true");
+      videoRef.current.play().catch(() => {});
+    }
+  }, [mediaStream]);
 
   useEffect(() => {
     startCamera();
@@ -123,16 +125,16 @@ export default function Screen27MorningHelmetSelfie({
           <button
             type="button"
             onClick={onBack}
-            className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xs text-slate-700 shadow-2xs hover:bg-slate-50 font-bold"
+            className="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-xs text-slate-700 shadow-2xs hover:bg-slate-50 font-bold cursor-pointer"
           >
             ←
           </button>
           <div className="text-center">
             <span className="text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              दैनिक शिफ्ट गेट (Daily Shift Gate)
+              Daily Shift Gate
             </span>
             <h2 className="text-sm font-black text-slate-900 leading-tight">
-              मॉर्निंग हेलमेट व बैग ऑडिट
+              Morning Helmet &amp; Bag Audit
             </h2>
           </div>
           <span className="w-8 text-center text-xs">☀️</span>
@@ -141,21 +143,21 @@ export default function Screen27MorningHelmetSelfie({
         {/* Viewfinder Card */}
         <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3 shadow-xs text-center space-y-3">
           <div className="relative w-44 h-48 mx-auto rounded-3xl border-2 border-dashed border-[#0D47A1] bg-slate-950 overflow-hidden flex flex-col items-center justify-center text-white shadow-inner">
-            {isStreaming && !capturedImage && (
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                className="w-full h-full object-cover transform -scale-x-100"
-              />
-            )}
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className={`w-full h-full object-cover transform -scale-x-100 ${
+                capturedImage ? "hidden" : "block"
+              }`}
+            />
 
             {isStreaming && !capturedImage && (
               <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
                 <div className="w-32 h-36 rounded-[50%] border-2 border-dashed border-emerald-400 shadow-[0_0_0_9999px_rgba(0,0,0,0.4)]"></div>
                 <span className="absolute bottom-1 text-[9px] font-bold text-emerald-300 bg-black/70 px-2 py-0.5 rounded-full">
-                  हेलमेट पहनकर चेहरा रखें
+                  Wear helmet &amp; center face
                 </span>
               </div>
             )}
@@ -165,7 +167,7 @@ export default function Screen27MorningHelmetSelfie({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={capturedImage} alt="Helmet Selfie" className="w-full h-full object-cover" />
                 <div className="absolute top-2 right-2 bg-emerald-500 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-full shadow">
-                  ✓ फोटो कैप्चर हुई
+                  ✓ Photo Captured
                 </div>
               </div>
             )}
@@ -174,14 +176,14 @@ export default function Screen27MorningHelmetSelfie({
               <div className="space-y-2 p-3 text-center z-10">
                 <span className="text-3xl block">🪖</span>
                 <span className="text-[10px] text-slate-300 block font-semibold">
-                  {cameraError || "कैमरा लोड हो रहा है..."}
+                  {cameraError || "Initializing camera..."}
                 </span>
                 <button
                   type="button"
                   onClick={startCamera}
-                  className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow hover:bg-blue-500 active:scale-95"
+                  className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-bold shadow hover:bg-blue-500 active:scale-95 cursor-pointer"
                 >
-                  कैमरा खोलें 🤳
+                  Start Camera 🤳
                 </button>
               </div>
             )}
@@ -193,17 +195,17 @@ export default function Screen27MorningHelmetSelfie({
                 type="button"
                 onClick={handleCapture}
                 disabled={!isStreaming}
-                className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition disabled:opacity-40 flex items-center justify-center gap-1.5 active:scale-95"
+                className="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-sm transition disabled:opacity-40 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
               >
-                <span>📸 हेलमेट फोटो खींचें (Capture Helmet Photo)</span>
+                <span>📸 Capture Helmet Photo</span>
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleRetake}
-                className="w-full py-2 px-4 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition active:scale-95 flex items-center justify-center gap-1.5"
+                className="w-full py-2 px-4 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
               >
-                <span>🔄 दोबारा फोटो लें (Retake)</span>
+                <span>🔄 Retake Photo</span>
               </button>
             )}
           </div>
@@ -219,7 +221,7 @@ export default function Screen27MorningHelmetSelfie({
               className="w-4 h-4 accent-[#0D47A1] rounded cursor-pointer"
             />
             <span className="text-xs font-bold text-slate-800 leading-snug">
-              मेरे पास ISI प्रमाणित सेफ्टी हेलमेट है (ISI Safety Helmet) *
+              I am wearing an ISI-certified safety helmet *
             </span>
           </label>
 
@@ -231,7 +233,7 @@ export default function Screen27MorningHelmetSelfie({
               className="w-4 h-4 accent-[#0D47A1] rounded cursor-pointer"
             />
             <span className="text-xs font-bold text-slate-800 leading-snug">
-              मेरे पास साफ़ Trustit थर्मल डिलीवरी बैग है (Clean Delivery Bag) *
+              I have a clean Trustit insulated delivery bag *
             </span>
           </label>
         </div>
@@ -239,29 +241,29 @@ export default function Screen27MorningHelmetSelfie({
         {/* ── 6 PHOTO AUDIT GUIDES (3 GOOD, 3 BAD) ── */}
         <div className="mt-3 space-y-2">
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-600 text-center">
-            हेलमेट फोटो ऑडिट नियम
+            Helmet Photo Audit Rules
           </p>
 
           <div className="grid grid-cols-2 gap-2 text-[10px]">
             <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 space-y-1">
               <span className="font-black text-emerald-900 block flex items-center gap-1 text-[11px]">
-                <span>✅</span> सही (Good)
+                <span>✅</span> Correct Photo
               </span>
               <ul className="space-y-1 text-emerald-800 font-semibold leading-tight">
-                <li>• हेलमेट सिर पर ठीक से लॉक हो</li>
-                <li>• चेहरा और आँखें स्पष्ट दिखें</li>
-                <li>• Trustit बैग साथ में विजिबल हो</li>
+                <li>• Helmet locked securely on head</li>
+                <li>• Face and eyes clearly visible</li>
+                <li>• Trustit thermal bag visible</li>
               </ul>
             </div>
 
             <div className="bg-rose-50 border border-rose-200 rounded-xl p-2.5 space-y-1">
               <span className="font-black text-rose-900 block flex items-center gap-1 text-[11px]">
-                <span>❌</span> गलत (Bad)
+                <span>❌</span> Rejected Photo
               </span>
               <ul className="space-y-1 text-rose-800 font-semibold leading-tight">
-                <li>• बिना हेलमेट या हाथ में पकड़ा हुआ</li>
-                <li>• धूप का चश्मा या रुमाल से ढका चेहरा</li>
-                <li>• बिना डिलीवरी बैग के फोटो</li>
+                <li>• No helmet or holding in hand</li>
+                <li>• Sunglasses or face covered</li>
+                <li>• Missing delivery bag in frame</li>
               </ul>
             </div>
           </div>
@@ -274,18 +276,18 @@ export default function Screen27MorningHelmetSelfie({
           type="button"
           onClick={handlePassGate}
           disabled={!isEligibleToPass || isAiVerifying}
-          className={`w-full py-3.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-[0.99] ${
+          className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] ${
             isEligibleToPass
-              ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg"
+              ? "bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           }`}
         >
           <span>
             {isAiVerifying
-              ? "सत्यापन हो रहा है..."
+              ? "Verifying Safety Audit..."
               : isEligibleToPass
-              ? "दैनिक शिफ्ट अनलॉक करें (Unlock Duty Shift) ➔"
-              : "हेलमेट फोटो व दोनों बॉक्स टिक करें"}
+              ? "Unlock Duty Shift ➔"
+              : "Complete Helmet Photo & Checklist"}
           </span>
         </button>
       </div>

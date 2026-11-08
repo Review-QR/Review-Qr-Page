@@ -59,11 +59,11 @@ export default function Screen05VehicleDl({
     const dl = dlNumber.trim().toUpperCase();
 
     if (!vNum || vNum.length < 4) {
-      setError("कृपया अपनी सही वाहन संख्या दर्ज करें (उदा. UP 40 AB 1234)");
+      setError("Please enter a valid vehicle registration number (e.g. UP 40 AB 1234)");
       return;
     }
     if (!dl || dl.length < 5) {
-      setError("कृपया अपना वैध ड्राइविंग लाइसेंस नंबर दर्ज करें");
+      setError("Please enter a valid Driving License number (e.g. UP40 20230001234)");
       return;
     }
 
@@ -81,34 +81,34 @@ export default function Screen05VehicleDl({
           <button
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1 text-xs font-bold text-[#0D47A1] hover:underline"
+            className="flex items-center gap-1 text-xs font-bold text-[#0D47A1] hover:underline cursor-pointer"
           >
-            <span>← वापस (Back)</span>
+            <span>← Back</span>
           </button>
           <div className="flex items-center gap-1.5">
             <span className="px-2 py-0.5 rounded text-[9px] font-black bg-blue-100 text-[#0D47A1] border border-blue-200 uppercase tracking-wider">
-              वाहन विवरण
+              Vehicle Details
             </span>
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">चरण 5 / 6</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Step 3 of 6</span>
           </div>
         </div>
 
         {/* Title */}
         <div className="mt-3 space-y-0.5">
           <h2 className="text-base font-black text-slate-900 leading-tight">
-            वाहन एवं ड्राइविंग लाइसेंस विवरण
+            Vehicle &amp; Driving License Details
           </h2>
           <p className="text-[11px] text-slate-500 leading-tight">
-            बहराइच फ्लीट डिलीवरी के लिए अपने वाहन और ड्राइविंग लाइसेंस की जानकारी भरें।
+            Enter your vehicle registration and driving license information for fleet compliance.
           </p>
         </div>
 
         {/* Form Card */}
         <div className="mt-3.5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-4">
-          {/* 1. Dropdown: वाहन प्रकार चुनें */}
+          {/* 1. Dropdown: Choose Vehicle Type */}
           <div>
             <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">
-              वाहन प्रकार चुनें (Choose Vehicle Type) *
+              Choose Vehicle Type <span className="text-rose-500">*</span>
             </label>
             <div className="relative">
               <select
@@ -116,10 +116,10 @@ export default function Screen05VehicleDl({
                 onChange={(e) => setVehicleType(e.target.value)}
                 className="w-full appearance-none px-3.5 py-2.5 rounded-xl border border-slate-300 bg-white text-xs font-bold text-slate-900 focus:border-[#0D47A1] focus:ring-2 focus:ring-[#0D47A1]/20 focus:outline-none pr-10 shadow-xs cursor-pointer"
               >
-                <option value="bike">🏍️ मोटरसाइकिल / बाइक (Motorcycle / Bike)</option>
-                <option value="scooter">🛵 स्कूटर / एक्टिवा (Scooter / Activa)</option>
-                <option value="ev">⚡ इलेक्ट्रिक बाइक / ई-स्कूटर (Electric EV)</option>
-                <option value="cycle">🚲 साइकिल (Bicycle - Local Courier)</option>
+                <option value="bike">🏍️ Motorcycle / Bike</option>
+                <option value="scooter">🛵 Scooter / Activa</option>
+                <option value="ev">⚡ Electric EV / E-Scooter</option>
+                <option value="cycle">🚲 Bicycle (Local Courier)</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-500">
                 <span className="text-xs">▼</span>
@@ -127,14 +127,14 @@ export default function Screen05VehicleDl({
             </div>
           </div>
 
-          {/* 2. Blank Input: वाहन संख्या (Vehicle Number) */}
+          {/* 2. Blank Input: Vehicle Number */}
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-[10px] font-black text-slate-700 uppercase tracking-wider">
-                वाहन संख्या (Vehicle Number) *
+                Vehicle Registration Number <span className="text-rose-500">*</span>
               </label>
               <span className="text-[9px] font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-mono">
-                UP 40
+                RC Number
               </span>
             </div>
             <input
@@ -144,15 +144,15 @@ export default function Screen05VehicleDl({
                 setVehicleNumber(e.target.value.toUpperCase());
                 setError(null);
               }}
-              placeholder="UP 40 AB 1234"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold font-mono text-slate-900 placeholder:text-slate-400 placeholder:font-sans focus:border-[#0D47A1] focus:outline-none uppercase"
+              placeholder="e.g. UP 40 AB 1234"
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold font-mono text-slate-900 placeholder:text-slate-400 placeholder:font-sans focus:border-[#0D47A1] focus:outline-none uppercase"
             />
           </div>
 
-          {/* 3. Blank Input: ड्राइविंग लाइसेंस नंबर (Driving License Number) */}
+          {/* 3. Blank Input: Driving License Number */}
           <div>
             <label className="text-[10px] font-black text-slate-700 block mb-1.5 uppercase tracking-wider">
-              ड्राइविंग लाइसेंस नंबर (Driving License Number) *
+              Driving License Number (DL) <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -161,8 +161,8 @@ export default function Screen05VehicleDl({
                 setDlNumber(e.target.value.toUpperCase());
                 setError(null);
               }}
-              placeholder="UP40 20230001234"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-bold font-mono text-slate-900 placeholder:text-slate-400 placeholder:font-sans focus:border-[#0D47A1] focus:outline-none uppercase"
+              placeholder="e.g. UP40 20230001234"
+              className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-bold font-mono text-slate-900 placeholder:text-slate-400 placeholder:font-sans focus:border-[#0D47A1] focus:outline-none uppercase"
             />
           </div>
 
@@ -176,19 +176,19 @@ export default function Screen05VehicleDl({
         </div>
       </div>
 
-      {/* Footer Submit Button */}
+      {/* Footer Submit Button - Sleek enterprise height */}
       <div className="pt-3 border-t border-slate-200 mt-3">
         <button
           type="button"
           onClick={() => handleSubmit()}
           disabled={!isFormValid}
-          className={`w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-md transition active:scale-[0.99] ${
+          className={`w-full py-2.5 rounded-xl font-black text-xs flex items-center justify-center gap-2 shadow-sm transition active:scale-[0.99] ${
             isFormValid
-              ? "bg-[#0D47A1] hover:bg-[#082b66] text-white"
+              ? "bg-[#0D47A1] hover:bg-[#082b66] text-white cursor-pointer"
               : "bg-slate-200 text-slate-400 cursor-not-allowed"
           }`}
         >
-          <span>वाहन विवरण सहेजें और आगे बढ़ें (Save &amp; Next)</span>
+          <span>Save &amp; Continue</span>
           <span>➔</span>
         </button>
       </div>
