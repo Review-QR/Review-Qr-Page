@@ -21,8 +21,8 @@ export default function Screen43DigitalFleetIdPass({
   onCallFleetLead,
 }: Screen43Props) {
   const riderName = riderProp?.full_name?.trim() || "Verified Partner";
-  const vehicleText = riderProp?.vehicle_number?.trim() || "UP 40 BV 1001";
-  const dlText = riderProp?.driving_license_number?.trim() || "UP40 2024009182";
+  const vehicleText = riderProp?.vehicle_number?.trim() || "Pending Registration";
+  const dlText = riderProp?.driving_license_number?.trim() || "Pending Verification";
   return (
     <div className="w-full h-full bg-[#FAF8FF] flex flex-col justify-between p-4 sm:p-5 text-[#0F172A] font-sans">
       {/* Header */}
@@ -96,8 +96,8 @@ export default function Screen43DigitalFleetIdPass({
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 block">
                 Police / Checkpoint QR
               </span>
-              <p className="text-xs font-bold text-slate-900">Active Order: #TR-4492</p>
-              <p className="text-[10px] text-slate-500">Golden Blossom ➔ Civil Lines</p>
+              <p className="text-xs font-bold text-slate-900">Active Duty Partner Pass</p>
+              <p className="text-[10px] text-slate-500">Bahraich Hyperlocal Delivery Network</p>
               <span className="inline-block mt-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
                 Essential Goods Courier
               </span>

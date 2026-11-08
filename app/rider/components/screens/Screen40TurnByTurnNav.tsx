@@ -11,6 +11,8 @@ interface Screen40Props {
   onInAppChat?: () => void;
   onPolicePass?: () => void;
   onLowBattery?: () => void;
+  destinationCoords?: { lat: number; lng: number };
+  destinationAddress?: string;
 }
 
 export default function Screen40TurnByTurnNav({
@@ -22,6 +24,8 @@ export default function Screen40TurnByTurnNav({
   onInAppChat,
   onPolicePass,
   onLowBattery,
+  destinationCoords,
+  destinationAddress,
 }: Screen40Props) {
   const [vehicleMode, setVehicleMode] = useState<"bike" | "cab">("bike");
   const [isFleetDropdownOpen, setIsFleetDropdownOpen] = useState<boolean>(false);
@@ -94,11 +98,17 @@ export default function Screen40TurnByTurnNav({
       onOpenGoogleMaps();
       return;
     }
-    // Launch Google Maps navigation directly from rider's live GPS location (origin omitted)
-    const destination = "27.5760,81.5980"; // Customer Home, Peepal Chauraha
+    // Launch Google Maps navigation directly to destination
+    const destination = destinationCoords
+      ? `${destinationCoords.lat},${destinationCoords.lng}`
+      : destinationAddress
+      ? encodeURIComponent(destinationAddress)
+      : "27.5745,81.5965";
     const travelmode = vehicleMode === "bike" ? "two_wheeler" : "driving";
     const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${destination}&travelmode=${travelmode}`;
-    window.open(mapsUrl, "_blank");
+    if (typeof window !== "undefined") {
+      window.open(mapsUrl, "_blank");
+    }
   };
 
   return (

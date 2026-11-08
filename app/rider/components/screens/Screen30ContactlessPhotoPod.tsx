@@ -137,7 +137,7 @@ export default function Screen30ContactlessPhotoPod({
 
           {/* Bottom Tamper-Proof Watermark */}
           <div className="relative z-10 flex items-center justify-between text-[10px] font-mono text-white/95 bg-black/60 px-2.5 py-1 rounded-lg backdrop-blur-xs border border-white/10">
-            <span>Order #TR-4492</span>
+            <span>Verified Delivery</span>
             <span>Rider: Verified Partner · UP 40</span>
           </div>
         </div>

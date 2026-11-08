@@ -137,7 +137,7 @@ export async function getPendingRiderPayouts(): Promise<PendingRiderPayoutItem[]
         phone: r.delivery_riders?.phone || "N/A",
         walletBalance: Number(r.delivery_riders?.wallet_balance || 0),
         cashInHand: Number(r.delivery_riders?.cash_in_hand || 0),
-        upiId: r.destination_upi || "luckyshukla@oksbi",
+        upiId: r.destination_upi || r.delivery_riders?.upi_id || "",
         bankAccountNumber: r.destination_bank_account,
         ifscCode: r.destination_ifsc,
         amountRequested: Number(r.amount),

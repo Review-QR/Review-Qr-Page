@@ -14,7 +14,7 @@ export default function Screen26CashRemittanceHubs({
   onBack,
   onPayViaUpi,
   onNavigateHub,
-  cashDueProp = 680,
+  cashDueProp = 0,
   cashCeilingProp = 1500,
 }: Screen26Props) {
   const [method, setMethod] = useState<"upi" | "cash_hub">("upi");

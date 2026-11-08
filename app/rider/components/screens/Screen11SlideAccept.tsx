@@ -11,9 +11,9 @@ interface Screen11Props {
 }
 
 export default function Screen11SlideAccept({
-  orderCode = "TR-4492",
-  merchantName = "Golden Blossom Café",
-  payoutAmount = 45,
+  orderCode = "TR-LIVE",
+  merchantName = "Verified Merchant Partner",
+  payoutAmount = 40,
   onAccepted,
   onBack,
 }: Screen11Props) {

@@ -51,7 +51,7 @@ export default function Screen45DoorstepChangeWallet({
         <div className="mt-4 bg-gradient-to-r from-emerald-800 to-teal-900 text-white rounded-2xl p-4 shadow-md">
           <div className="flex items-center justify-between pb-2 border-b border-white/20">
             <div>
-              <span className="text-[10px] text-emerald-200 uppercase font-bold">Order #TR-4492 (COD)</span>
+              <span className="text-[10px] text-emerald-200 uppercase font-bold">Active COD Delivery</span>
               <p className="text-xs text-white">Bill: ₹{billAmount} · Customer Paid: ₹{cashGiven}</p>
             </div>
             <div className="text-right">
@@ -132,7 +132,7 @@ export default function Screen45DoorstepChangeWallet({
           <div className="mt-3 bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-center space-y-1">
             <span className="text-lg">🎉</span>
             <p className="text-xs font-black text-emerald-900">₹{changeDue}.00 Refunded Successfully!</p>
-            <p className="text-[10px] text-emerald-700">SMS confirmation sent to customer Riya Sharma (+91 9876543210).</p>
+            <p className="text-[10px] text-emerald-700">SMS confirmation and wallet balance update sent to customer mobile.</p>
           </div>
         )}
       </div>

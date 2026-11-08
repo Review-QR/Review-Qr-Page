@@ -1,8 +1,8 @@
 {
-  "version": "4.1.0",
+  "version": "5.0.0",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1793957970426",
-  "updatedAt": "2026-11-06T09:39:30.426Z",
-  "notes": "Loom 12 fixes: numeric keyboard, emergency contact name, camera fix, English Screen 19 & admin card",
-  "sizeBytes": 3571577
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1794122958631",
+  "updatedAt": "2026-11-08T07:29:18.631Z",
+  "notes": "Enterprise Production Release v5.0.0: Test data sanitization complete, real Supabase fleet schema engine, genuine empty states, production-grade security",
+  "sizeBytes": 3489461
 }

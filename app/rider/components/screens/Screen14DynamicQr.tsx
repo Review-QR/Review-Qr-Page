@@ -6,13 +6,15 @@ import QRCode from "qrcode";
 interface Screen14Props {
   amount?: number;
   orderCode?: string;
+  upiVpa?: string;
   onPaymentReceived?: () => void;
   onBack?: () => void;
 }
 
 export default function Screen14DynamicQr({
-  amount = 340,
-  orderCode = "TR-4492",
+  amount = 0,
+  orderCode = "TR-LIVE",
+  upiVpa = "trustit@icici",
   onPaymentReceived,
   onBack,
 }: Screen14Props) {
@@ -20,15 +22,15 @@ export default function Screen14DynamicQr({
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  // Dynamic UPI Intent String for Trustit Fleet
-  const upiVpa = "luckyshukla@oksbi";
-  const payeeName = "Trustit Fleet";
+  const payeeName = "Trustit Technologies";
+  const validAmount = Number(amount || 0);
   const upiIntentString = `upi://pay?pa=${encodeURIComponent(upiVpa)}&pn=${encodeURIComponent(
     payeeName
-  )}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order ${orderCode}`)}`;
+  )}&am=${validAmount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Order ${orderCode}`)}`;
 
-  // Generate real high-res scannable QR Code instantly
+  // Generate high-res scannable QR Code
   useEffect(() => {
+    if (validAmount <= 0) return;
     QRCode.toDataURL(upiIntentString, {
       width: 320,
       margin: 1,
@@ -39,7 +41,7 @@ export default function Screen14DynamicQr({
     })
       .then((url) => setQrDataUrl(url))
       .catch((err) => console.error("Error generating UPI QR Code:", err));
-  }, [upiIntentString]);
+  }, [upiIntentString, validAmount]);
 
   const handleConfirmPayment = () => {
     setIsVerifying(true);
@@ -48,12 +50,12 @@ export default function Screen14DynamicQr({
       setPaymentSuccess(true);
       setTimeout(() => {
         onPaymentReceived?.();
-      }, 1000);
-    }, 1200);
+      }, 800);
+    }, 1000);
   };
 
   return (
-    <div className="w-full h-full bg-[#FAF8FF] flex flex-col justify-between p-3.5 text-[#0F172A] font-sans select-none">
+    <div className="w-full h-full bg-[#FAF8FF] flex flex-col justify-between p-3.5 text-[#0F172A] font-sans select-none overflow-y-auto">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between pb-2 border-b border-slate-200">
@@ -66,7 +68,7 @@ export default function Screen14DynamicQr({
           </button>
           <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Cashfree Live UPI Gateway
+            Dynamic UPI POS
           </span>
         </div>
 
@@ -76,7 +78,7 @@ export default function Screen14DynamicQr({
             OFFICIAL PLATFORM POS TERMINAL
           </span>
           <h2 className="text-sm font-black text-slate-900 leading-tight">
-            Scan to Pay Exact Amount (₹{amount}.00)
+            Scan to Pay Exact Amount (₹{validAmount.toFixed(2)})
           </h2>
           <p className="text-[11px] text-slate-500">
             Customer scans with PhonePe, Google Pay, Paytm, or BHIM.
@@ -86,7 +88,7 @@ export default function Screen14DynamicQr({
         {/* Dynamic Scannable QR Terminal Card */}
         <div className="mt-2.5 bg-white border border-slate-200 rounded-2xl p-3 shadow-xs text-center space-y-2">
           {/* QR Graphic Container */}
-          <div className="relative w-40 h-40 mx-auto bg-slate-950 rounded-xl p-2 shadow-sm flex flex-col items-center justify-center">
+          <div className="relative w-40 h-40 mx-auto bg-slate-950 rounded-xl p-2 shadow-xs flex flex-col items-center justify-center">
             {qrDataUrl ? (
               <img
                 src={qrDataUrl}
@@ -100,55 +102,35 @@ export default function Screen14DynamicQr({
             )}
           </div>
 
-          <div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-              Payable COD Amount
-            </span>
-            <strong className="text-xl font-black text-slate-900 block leading-tight">
-              ₹{amount}.00
-            </strong>
-            <span className="text-[10px] font-bold text-emerald-600 block mt-0.5">
-              ✓ Direct settlement to Trustit bank account
-            </span>
-          </div>
-
-          {/* Supported UPI Apps Strip */}
-          <div className="pt-1.5 border-t border-slate-100 flex items-center justify-center gap-2 text-[10px] font-bold text-slate-600">
-            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800">PhonePe</span>
-            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800">GPay</span>
-            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800">Paytm</span>
-            <span className="px-1.5 py-0.5 rounded bg-slate-100 text-slate-800">BHIM UPI</span>
+          {/* VPA Details */}
+          <div className="text-center">
+            <p className="text-xs font-mono font-bold text-slate-800">{upiVpa}</p>
+            <p className="text-[10px] text-slate-400">Order Ref: {orderCode}</p>
           </div>
         </div>
       </div>
 
-      {/* Action Footer: Live Confirmation */}
-      <div className="pt-2 border-t border-slate-200 space-y-1.5">
+      {/* Confirmation Button */}
+      <div className="pt-2 border-t border-slate-200">
         <button
           type="button"
           onClick={handleConfirmPayment}
           disabled={isVerifying || paymentSuccess}
-          className={`w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 text-white shadow-sm transition active:scale-[0.98] ${
+          className={`w-full py-3 rounded-xl font-black text-xs flex items-center justify-center gap-1.5 shadow-xs transition ${
             paymentSuccess
-              ? "bg-emerald-600"
-              : "bg-[#10B981] hover:bg-emerald-700"
+              ? "bg-emerald-600 text-white"
+              : isVerifying
+              ? "bg-blue-300 text-white cursor-wait"
+              : "bg-[#0D47A1] hover:bg-[#082b66] text-white active:scale-[0.98]"
           }`}
         >
           {paymentSuccess ? (
-            <span>✓ ₹{amount} Received & Reconciled!</span>
+            <span>Payment Verified ✓</span>
           ) : isVerifying ? (
-            <span>Verifying Cashfree UPI Webhook...</span>
+            <span>Verifying UPI Receipt...</span>
           ) : (
-            <span>✓ Confirm Payment Received (₹{amount}) ➔</span>
+            <span>Confirm UPI Payment Received</span>
           )}
-        </button>
-
-        <button
-          type="button"
-          onClick={onBack}
-          className="w-full py-1.5 text-center text-[10px] font-bold text-slate-500 hover:text-slate-800"
-        >
-          Customer Paid Cash Instead? Switch to Cash COD
         </button>
       </div>
     </div>

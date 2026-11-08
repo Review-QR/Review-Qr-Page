@@ -42,13 +42,13 @@ export default function Screen29CustomerRefusalRto({
         {/* Refusal Hero Banner */}
         <div className="mt-4 bg-gradient-to-r from-slate-900 to-slate-800 text-white rounded-2xl p-4 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-300">Order #TR-4492 (₹340 COD)</span>
+            <span className="text-xs font-bold text-slate-300">Active COD Order</span>
             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/30 text-rose-300 border border-rose-500/40">
               Customer Refused
             </span>
           </div>
           <p className="text-xs text-slate-200 mt-2 leading-relaxed">
-            Do not leave the parcel. Return package intact to <strong>Golden Blossom Café</strong> or nearest Trustit Hub.
+            Do not leave the parcel. Return package intact to <strong>Original Merchant Store</strong> or nearest Trustit Hub.
           </p>
           <div className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-300">
             <span>💰 Extra Return Allowance:</span>
@@ -96,7 +96,7 @@ export default function Screen29CustomerRefusalRto({
                 🏪
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-900">Return to: Golden Blossom Café</p>
+                <p className="text-xs font-bold text-slate-900">Return to: Merchant Store Partner</p>
                 <p className="text-[10px] text-slate-500">Civil Lines, Bahraich · Counter Staff Contact: 9876543211</p>
               </div>
             </div>

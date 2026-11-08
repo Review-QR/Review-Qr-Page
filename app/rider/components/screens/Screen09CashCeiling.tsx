@@ -12,7 +12,7 @@ interface Screen09Props {
 export default function Screen09CashCeiling({
   onBack,
   onRemit,
-  cashInHandProp = 680,
+  cashInHandProp = 0,
   cashCeilingProp = 1500,
 }: Screen09Props) {
   const cashAmount = cashInHandProp;

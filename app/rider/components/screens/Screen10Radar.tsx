@@ -2,13 +2,30 @@
 
 import React, { useState, useEffect } from "react";
 
+export interface HyperlocalRadarOrder {
+  id: string;
+  businesses?: {
+    name?: string;
+    address?: string;
+    city?: string;
+    phone?: string;
+  } | null;
+  customer_name?: string;
+  customer_address?: any;
+  total_amount?: number;
+  delivery_fee?: number;
+  payment_mode?: string;
+  hyperlocal_order_items?: any[];
+}
+
 interface Screen10Props {
   onAccept?: () => void;
   onDecline?: () => void;
+  order?: HyperlocalRadarOrder | null;
 }
 
-export default function Screen10Radar({ onAccept, onDecline }: Screen10Props) {
-  const [secondsRemaining, setSecondsRemaining] = useState(28);
+export default function Screen10Radar({ onAccept, onDecline, order }: Screen10Props) {
+  const [secondsRemaining, setSecondsRemaining] = useState(30);
 
   useEffect(() => {
     if (secondsRemaining <= 0) {
@@ -19,11 +36,33 @@ export default function Screen10Radar({ onAccept, onDecline }: Screen10Props) {
     return () => clearInterval(timer);
   }, [secondsRemaining, onDecline]);
 
+  const merchantName = order?.businesses?.name || "Verified Merchant Partner";
+  const merchantAddress = order?.businesses?.address || "Bahraich Commercial Center";
+  const orderTag = order?.id ? `#${order.id.slice(-6).toUpperCase()}` : "#TR-LIVE";
+
+  let dropAddress = "Customer Destination, Bahraich";
+  if (order?.customer_address) {
+    if (typeof order.customer_address === "string") {
+      dropAddress = order.customer_address;
+    } else if (typeof order.customer_address === "object") {
+      dropAddress =
+        order.customer_address.address_line ||
+        order.customer_address.formatted_address ||
+        order.customer_address.area ||
+        "Bahraich City Delivery Address";
+    }
+  }
+
+  const payout = Number(order?.delivery_fee || 40);
+  const totalAmount = Number(order?.total_amount || 0);
+  const isCod = order?.payment_mode?.toLowerCase() === "cod";
+  const itemsCount = order?.hyperlocal_order_items?.length || 1;
+
   return (
-    <div className="w-full h-full bg-[#FAF8FF] flex flex-col justify-between p-4 sm:p-5 text-[#0F172A] font-sans">
+    <div className="w-full h-full bg-[#FAF8FF] flex flex-col justify-between p-4 sm:p-5 text-[#0F172A] font-sans overflow-y-auto">
       <div>
         {/* Top Siren Warning Header */}
-        <div className="bg-amber-500 text-slate-950 px-3.5 py-2.5 rounded-2xl flex items-center justify-between shadow-sm">
+        <div className="bg-amber-500 text-slate-950 px-3.5 py-2.5 rounded-2xl flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-2">
             <span className="text-xl animate-bounce">🚨</span>
             <div>
@@ -37,16 +76,16 @@ export default function Screen10Radar({ onAccept, onDecline }: Screen10Props) {
         </div>
 
         {/* Order Card Container */}
-        <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm space-y-3.5">
+        <div className="mt-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3.5">
           {/* Merchant Info */}
           <div className="flex items-start justify-between pb-3 border-b border-slate-100">
             <div>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pickup Restaurant</span>
-              <h3 className="text-sm font-black text-slate-900 mt-0.5">Golden Blossom Café</h3>
-              <p className="text-[11px] text-slate-500">Civil Lines, Near DM Residence, Bahraich</p>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pickup Store / Restaurant</span>
+              <h3 className="text-sm font-black text-slate-900 mt-0.5">{merchantName}</h3>
+              <p className="text-[11px] text-slate-500">{merchantAddress}</p>
             </div>
             <span className="px-2 py-1 rounded-lg bg-blue-50 text-[#0D47A1] font-mono font-bold text-xs">
-              #TR-4492
+              {orderTag}
             </span>
           </div>
 
@@ -55,8 +94,8 @@ export default function Screen10Radar({ onAccept, onDecline }: Screen10Props) {
             <span className="text-blue-700 text-sm mt-0.5">📍</span>
             <div>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Drop Location</span>
-              <strong className="text-xs font-bold text-slate-900 block">Flat 204, Kachehri Road, Civil Lines</strong>
-              <span className="text-[10px] text-slate-500">Distance: 2.4 km (Est. 12 mins bike run)</span>
+              <strong className="text-xs font-bold text-slate-900 block">{dropAddress}</strong>
+              <span className="text-[10px] text-slate-500">Fast Hyperlocal Dispatch corridor</span>
             </div>
           </div>
 
@@ -65,24 +104,30 @@ export default function Screen10Radar({ onAccept, onDecline }: Screen10Props) {
             <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
               <span className="text-[10px] font-bold text-emerald-800 uppercase block">Trip Payout</span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-lg font-black text-emerald-700">₹45.00</span>
-                <span className="text-[9px] font-bold text-emerald-600 font-mono">+₹15 surge</span>
+                <span className="text-lg font-black text-emerald-700">₹{payout.toFixed(2)}</span>
+                <span className="text-[9px] font-bold text-emerald-600 font-mono">Guaranteed</span>
               </div>
             </div>
 
             <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
-              <span className="text-[10px] font-bold text-amber-800 uppercase block">Collect Cash (COD)</span>
+              <span className="text-[10px] font-bold text-amber-800 uppercase block">
+                {isCod ? "Collect Cash (COD)" : "Payment Mode"}
+              </span>
               <div className="flex items-baseline gap-1 mt-0.5">
-                <span className="text-lg font-black text-amber-900">₹340.00</span>
-                <span className="text-[9px] text-slate-500 font-mono">3 items</span>
+                <span className="text-lg font-black text-amber-900">
+                  {isCod ? `₹${totalAmount.toFixed(2)}` : "Prepaid Online"}
+                </span>
+                <span className="text-[9px] text-slate-500 font-mono">
+                  {isCod ? `${itemsCount} item(s)` : "Paid"}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Audio Alert Status */}
+          {/* Dispatch Audio Alert Status */}
           <div className="p-2 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between text-[11px] text-slate-600">
             <span className="flex items-center gap-1.5 font-medium">
-              <span>🔊</span> Loud Siren Active (880Hz/1760Hz)
+              <span>🔊</span> Loud Dispatch Alert Active
             </span>
             <span className="text-[10px] font-bold text-slate-400">Vibrating</span>
           </div>
@@ -101,9 +146,9 @@ export default function Screen10Radar({ onAccept, onDecline }: Screen10Props) {
         <button
           type="button"
           onClick={onAccept}
-          className="col-span-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition"
+          className="col-span-2 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-1.5"
         >
-          <span>✓ ACCEPT ORDER (₹45)</span>
+          <span>Accept Order Now</span>
           <span>➔</span>
         </button>
       </div>

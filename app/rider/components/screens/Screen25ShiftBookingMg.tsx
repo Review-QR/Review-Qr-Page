@@ -12,7 +12,7 @@ export default function Screen25ShiftBookingMg({
   onBookSlot,
 }: Screen25Props) {
   const [selectedDay, setSelectedDay] = useState<"today" | "tomorrow">("today");
-  const [bookedSlots, setBookedSlots] = useState<string[]>(["lunch"]);
+  const [bookedSlots, setBookedSlots] = useState<string[]>([]);
 
   const toggleSlot = (id: string) => {
     if (bookedSlots.includes(id)) {

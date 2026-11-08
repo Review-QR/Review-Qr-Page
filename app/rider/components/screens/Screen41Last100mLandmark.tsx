@@ -5,11 +5,15 @@ import React, { useState } from "react";
 interface Screen41Props {
   onBack?: () => void;
   onContinueNavigation?: () => void;
+  customerPhone?: string;
+  onCall?: () => void;
 }
 
 export default function Screen41Last100mLandmark({
   onBack,
   onContinueNavigation,
+  customerPhone,
+  onCall,
 }: Screen41Props) {
   const [isPlayingAudio, setIsPlayingAudio] = useState<boolean>(false);
 
@@ -125,12 +129,16 @@ export default function Screen41Last100mLandmark({
       {/* Footer Actions */}
       <div className="pt-3 border-t border-slate-200 space-y-2">
         <div className="flex items-center gap-2">
-          <a
-            href="tel:+919876543210"
+          <button
+            type="button"
+            onClick={() => {
+              if (onCall) onCall();
+              else if (customerPhone && typeof window !== "undefined") window.location.href = `tel:${customerPhone}`;
+            }}
             className="flex-1 py-3 rounded-xl bg-white border border-slate-300 text-slate-800 font-bold text-xs hover:bg-slate-50 text-center flex items-center justify-center gap-1.5"
           >
             <span>📞 Call for Directions</span>
-          </a>
+          </button>
           <button
             type="button"
             onClick={onContinueNavigation}

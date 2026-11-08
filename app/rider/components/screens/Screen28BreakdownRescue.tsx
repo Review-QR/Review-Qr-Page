@@ -47,7 +47,7 @@ export default function Screen28BreakdownRescue({
         {/* Emergency Alert Banner */}
         <div className="mt-4 bg-gradient-to-r from-rose-600 to-red-700 text-white rounded-2xl p-4 shadow-md">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-rose-100">Stranded with Order #TR-4492</span>
+            <span className="text-xs font-bold text-rose-100">Stranded with Active Order</span>
             <span className="text-xs font-black uppercase px-2 py-0.5 rounded bg-black/20 text-white">
               Food in Bag
             </span>

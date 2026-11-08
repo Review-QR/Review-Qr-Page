@@ -21,7 +21,7 @@ alter table public.delivery_riders
 
 -- Auto-generate referral codes for existing riders if null
 update public.delivery_riders
-set referral_code = 'ARJUN' || substr(replace(id::text, '-', ''), 1, 4)
+set referral_code = 'TR' || right(replace(id::text, '-', ''), 6)
 where referral_code is null;
 
 -- 2. Rider High-Frequency GPS Heartbeats & Telemetry

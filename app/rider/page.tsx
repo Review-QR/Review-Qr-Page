@@ -103,7 +103,7 @@ export default function StandaloneRiderProductionApp() {
   // Dynamic Auth State
   const [authPhone, setAuthPhone] = useState<string>("");
   const [authChannel, setAuthChannel] = useState<"sms" | "whatsapp">("whatsapp");
-  const [previewOtp, setPreviewOtp] = useState<string>("547291");
+  const [previewOtp, setPreviewOtp] = useState<string>("");
   const [activeWhatsAppOtp, setActiveWhatsAppOtp] = useState<string | null>(null);
 
   // Auto-reset when testing as fresh new rider (?v=2 or ?fresh=1 or if legacy Arjun was cached)
@@ -715,7 +715,26 @@ export default function StandaloneRiderProductionApp() {
         />
       ),
     },
-    { id: 8, title: "08. Shift Scorecard & Telemetry", component: <Screen08ShiftScorecard onBack={() => setCurrentScreenId(7)} onOpenCeiling={() => setCurrentScreenId(9)} /> },
+    {
+      id: 8,
+      title: "08. Shift Scorecard & Telemetry",
+      component: (
+        <Screen08ShiftScorecard
+          onBack={() => setCurrentScreenId(7)}
+          onOpenCeiling={() => setCurrentScreenId(9)}
+          data={{
+            todayEarnings,
+            todayTrips: todayTripsCount,
+            monthEarnings: Number(rider?.total_earnings || 0),
+            monthTrips: Number(rider?.total_deliveries_count || 0),
+            cashInHand,
+            cashCap: cashCeiling,
+            rating: Number(rider?.rating || 5.0),
+            tier: rider?.tier_status ? `${rider.tier_status.toUpperCase()} PARTNER` : "GOLD PARTNER",
+          }}
+        />
+      ),
+    },
     {
       id: 9,
       title: "09. ₹1,500 Cash Ceiling Guard",
@@ -733,7 +752,7 @@ export default function StandaloneRiderProductionApp() {
     { id: 39, title: "39. Delivery Category Opt-In Toggles", component: <Screen39CategoryToggles onBack={() => setCurrentScreenId(18)} onSavePreferences={() => setCurrentScreenId(7)} /> },
 
     // Stage 4: Radar, Siren & Batching
-    { id: 10, title: "10. 30s Proximity Siren Radar", component: <Screen10Radar onAccept={() => { acceptOrder(); setCurrentScreenId(12); }} onDecline={() => { declineOrder(); setCurrentScreenId(7); }} /> },
+    { id: 10, title: "10. 30s Proximity Siren Radar", component: <Screen10Radar order={activeOrder} onAccept={() => { acceptOrder(); setCurrentScreenId(12); }} onDecline={() => { declineOrder(); setCurrentScreenId(7); }} /> },
     { id: 21, title: "21. Lockscreen High-Siren Order Pop", component: <Screen21LockscreenOrderPop onAccept={() => { acceptOrder(); setCurrentScreenId(12); }} onDecline={() => { declineOrder(); setCurrentScreenId(7); }} /> },
     {
       id: 22,
@@ -784,11 +803,13 @@ export default function StandaloneRiderProductionApp() {
       title: "12. Store Pickup & Verification Checklist",
       component: (
         <Screen12StorePickup
+          activeOrder={activeOrder as any}
           onPickupConfirmed={() => { confirmPickup(); setCurrentScreenId(40); }}
           onBack={() => setCurrentScreenId(11)}
           onMerchantDelay={() => setCurrentScreenId(23)}
           onCallShop={() => {
-            if (typeof window !== "undefined") window.location.href = "tel:+919415011111";
+            const phone = activeOrder?.business?.phone || (activeOrder as any)?.businesses?.phone;
+            if (typeof window !== "undefined" && phone) window.location.href = `tel:${phone}`;
           }}
         />
       ),
@@ -808,6 +829,11 @@ export default function StandaloneRiderProductionApp() {
           onInAppChat={() => setCurrentScreenId(44)}
           onPolicePass={() => setCurrentScreenId(43)}
           onLowBattery={() => setCurrentScreenId(48)}
+          destinationAddress={
+            typeof activeOrder?.customer_address === "string"
+              ? activeOrder.customer_address
+              : (activeOrder?.customer_address as any)?.address_line || activeOrder?.customer_address?.street || "Bahraich City"
+          }
         />
       ),
     },
@@ -819,9 +845,12 @@ export default function StandaloneRiderProductionApp() {
       title: "44. In-App Masked Customer Chat",
       component: (
         <Screen44InAppMaskedChat
+          customerName={activeOrder?.customer_name || "Customer"}
+          orderCode={activeOrder?.id ? activeOrder.id.slice(-6).toUpperCase() : "LIVE"}
           onBack={() => setCurrentScreenId(40)}
           onCallMasked={() => {
-            if (typeof window !== "undefined") window.location.href = "tel:+919876543210";
+            const phone = activeOrder?.customer_phone;
+            if (typeof window !== "undefined" && phone) window.location.href = `tel:${phone}`;
           }}
         />
       ),
@@ -833,6 +862,7 @@ export default function StandaloneRiderProductionApp() {
       title: "13. Customer Doorstep & 4-Digit OTP",
       component: (
         <Screen13Doorstep
+          activeOrder={activeOrder}
           onShowDynamicQr={() => setCurrentScreenId(14)}
           onDelivered={(otp) => { completeDeliveryWithOtp(otp); setCurrentScreenId(15); }}
           onBack={() => setCurrentScreenId(40)}
@@ -840,12 +870,29 @@ export default function StandaloneRiderProductionApp() {
           onCustomerUnreachable={() => setCurrentScreenId(24)}
           onContactlessPhotoPod={() => setCurrentScreenId(30)}
           onCallMasked={() => {
-            if (typeof window !== "undefined") window.location.href = "tel:+919876543210";
+            const phone = activeOrder?.customer_phone;
+            if (typeof window !== "undefined" && phone) window.location.href = `tel:${phone}`;
           }}
         />
       ),
     },
-    { id: 14, title: "14. Dynamic Cashfree UPI QR (COD)", component: <Screen14DynamicQr onPaymentReceived={() => { completeDeliveryWithOtp("4492"); setCurrentScreenId(15); }} onBack={() => setCurrentScreenId(13)} /> },
+    {
+      id: 14,
+      title: "14. Dynamic Cashfree UPI QR (COD)",
+      component: (
+        <Screen14DynamicQr
+          amount={Number(activeOrder?.total_amount || 0)}
+          orderCode={activeOrder?.id ? activeOrder.id.slice(-6).toUpperCase() : "TR-LIVE"}
+          onPaymentReceived={() => {
+            if (activeOrder?.delivery_otp) {
+              completeDeliveryWithOtp(activeOrder.delivery_otp);
+            }
+            setCurrentScreenId(15);
+          }}
+          onBack={() => setCurrentScreenId(13)}
+        />
+      ),
+    },
     {
       id: 24,
       title: "24. Customer Unreachable 5-Min Rescue",
@@ -853,7 +900,8 @@ export default function StandaloneRiderProductionApp() {
         <Screen24CustomerUnreachable
           onBack={() => setCurrentScreenId(13)}
           onCallIvr={() => {
-            if (typeof window !== "undefined") window.location.href = "tel:+919876543210";
+            const phone = activeOrder?.customer_phone;
+            if (typeof window !== "undefined" && phone) window.location.href = `tel:${phone}`;
           }}
           onUploadGatePhoto={() => {
             console.log("Customer gate photo recorded");
@@ -908,7 +956,18 @@ export default function StandaloneRiderProductionApp() {
         />
       ),
     },
-    { id: 46, title: "46. Mid-Trip Cancel & Distance Pay", component: <Screen46MidTripCancellation onBack={() => setCurrentScreenId(10)} onReturnToRadar={() => triggerIncomingOrderRadar(false)} /> },
+    {
+      id: 46,
+      title: "46. Mid-Trip Cancel & Distance Pay",
+      component: (
+        <Screen46MidTripCancellation
+          orderCode={activeOrder?.id ? activeOrder.id.slice(-6).toUpperCase() : "TR-LIVE"}
+          reason={activeOrder?.cancellation_reason || "Order cancelled by customer"}
+          onBack={() => setCurrentScreenId(10)}
+          onReturnToRadar={() => triggerIncomingOrderRadar(false)}
+        />
+      ),
+    },
     {
       id: 47,
       title: "47. Parking & Municipal Toll Claim",
@@ -922,7 +981,17 @@ export default function StandaloneRiderProductionApp() {
         />
       ),
     },
-    { id: 48, title: "48. Critical Battery (<15%) Safe Mode", component: <Screen48LowBatterySafeMode onBack={() => setCurrentScreenId(7)} batteryLevelProp={batteryLevel} /> },
+    {
+      id: 48,
+      title: "48. Critical Battery (<15%) Safe Mode",
+      component: (
+        <Screen48LowBatterySafeMode
+          activeOrder={activeOrder}
+          onBack={() => setCurrentScreenId(7)}
+          batteryLevelProp={batteryLevel}
+        />
+      ),
+    },
 
     // Stage 10: Earnings, Remittance & Claims
     {
@@ -979,13 +1048,18 @@ export default function StandaloneRiderProductionApp() {
       title: "34. Tier Badges & Refer ₹500",
       component: (
         <Screen34ReferAndBadges
+          referralCode={rider?.referral_code}
+          tier={rider?.tier_status ? `${rider.tier_status.toUpperCase()} PARTNER` : "GOLD PARTNER"}
+          acceptanceRate={Number(rider?.acceptance_rate || 100)}
+          rating={Number(rider?.rating || 5.0)}
           onBack={() => setCurrentScreenId(18)}
           onShareWhatsapp={() => {
             if (typeof window !== "undefined") {
+              const refCode = rider?.referral_code || "TRFLEET";
               const text = encodeURIComponent(
                 "🛵 *Trustit Delivery Partner बनें — बहराइच (UP 40)*\n" +
                 "रोज़ाना ₹600-₹1,100 कमाएं। सीधे बैंक UPI में डेली पेआउट!\n" +
-                "रेफरल कोड: UP40RIDER\n" +
+                `रेफरल कोड: ${refCode}\n` +
                 "रजिस्टर करें: " + window.location.origin + "/rider"
               );
               window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");

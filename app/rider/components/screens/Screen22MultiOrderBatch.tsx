@@ -80,7 +80,7 @@ export default function Screen22MultiOrderBatch({
                 1
               </span>
               <div>
-                <p className="font-bold text-slate-900">📍 Pickup Order A: Golden Blossom Café</p>
+                <p className="font-bold text-slate-900">📍 Pickup Order A: Store Partner 1</p>
                 <p className="text-[10px] text-slate-500">Civil Lines (0.8 km) · 2 Items (Burger &amp; Fries)</p>
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function Screen22MultiOrderBatch({
       <div className="pt-3 border-t border-slate-200 space-y-2">
         <button
           type="button"
-          onClick={() => (selectedMode === "batch" ? onAcceptBatch?.() : onAcceptSingle?.("TR-4492"))}
+          onClick={() => (selectedMode === "batch" ? onAcceptBatch?.() : onAcceptSingle?.("ORD_A"))}
           className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-800 text-white font-black text-sm shadow-md hover:brightness-110 transition flex items-center justify-center gap-2"
         >
           <span>{selectedMode === "batch" ? "Accept Full Batch (Earn ₹92.00)" : "Accept Order A Only (₹35.00)"}</span>

@@ -50,11 +50,23 @@ async function dispatchCustomerOtp(
         });
         const data = await resp.json().catch(() => null);
         if (data?.return === true || data?.status === true) {
-          return { success: true, provider: "fast2sms-whatsapp-live", previewOtp: otp };
+          return {
+            success: true,
+            provider: "fast2sms-whatsapp-live",
+            ...(process.env.NODE_ENV !== "production" ? { previewOtp: otp } : {}),
+          };
         }
       } catch (e) {
         console.error("[Customer WhatsApp OTP Error]:", e);
       }
+    }
+
+    if (process.env.NODE_ENV === "production") {
+      return {
+        success: false,
+        provider: "whatsapp-failed",
+        error: "WhatsApp OTP delivery unavailable. Please try SMS verification.",
+      };
     }
 
     return {
@@ -106,11 +118,19 @@ async function dispatchCustomerOtp(
         return { success: true, provider: "fast2sms-quick" };
       }
     } catch {
-      // Network or API failure, gracefully fallback to preview
+      // Network or API failure
     }
   }
 
-  // Graceful fallback preview
+  if (process.env.NODE_ENV === "production") {
+    return {
+      success: false,
+      provider: "sms-failed",
+      error: "Unable to send SMS OTP at this moment. Please try again shortly.",
+    };
+  }
+
+  // Development-only fallback preview
   return {
     success: true,
     provider: "dev-preview",

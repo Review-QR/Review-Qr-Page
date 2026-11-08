@@ -6,15 +6,43 @@ interface Screen48Props {
   onBack?: () => void;
   onSendSmsBackup?: () => void;
   batteryLevelProp?: number;
+  activeOrder?: {
+    id: string;
+    customer_name?: string;
+    customer_phone?: string;
+    customer_address?: any;
+    total_amount?: number;
+    payment_mode?: string;
+  } | null;
 }
 
 export default function Screen48LowBatterySafeMode({
   onBack,
   onSendSmsBackup,
-  batteryLevelProp = 13,
+  batteryLevelProp = 15,
+  activeOrder,
 }: Screen48Props) {
   const [batteryLevel] = useState<number>(batteryLevelProp);
   const [isSmsSent, setIsSmsSent] = useState<boolean>(true);
+
+  const orderCode = activeOrder?.id ? `#${activeOrder.id.slice(-6).toUpperCase()}` : "#TR-LIVE";
+  const isCod = activeOrder?.payment_mode?.toLowerCase() === "cod";
+  const amountStr = isCod ? `Collect ₹${Number(activeOrder?.total_amount || 0).toFixed(2)} COD` : "Prepaid Online";
+  const customerName = activeOrder?.customer_name || "Customer";
+  const customerPhone = activeOrder?.customer_phone || "";
+
+  let addressStr = "Customer Delivery Destination, Bahraich";
+  if (activeOrder?.customer_address) {
+    if (typeof activeOrder.customer_address === "string") {
+      addressStr = activeOrder.customer_address;
+    } else if (typeof activeOrder.customer_address === "object") {
+      addressStr =
+        activeOrder.customer_address.address_line ||
+        activeOrder.customer_address.formatted_address ||
+        activeOrder.customer_address.area ||
+        "Bahraich Delivery Address";
+    }
+  }
 
   return (
     <div className="w-full min-h-full bg-[#000000] text-white flex flex-col justify-between p-4 sm:p-5 font-mono select-none overflow-y-auto pb-28">
@@ -46,7 +74,7 @@ export default function Screen48LowBatterySafeMode({
             <strong className="text-white">Central Dispatch Hub Notified</strong>
           </div>
           <p className="text-[11px] text-red-300">
-            Ops team knows your phone is at {batteryLevel}%. GPS throttle active to extend battery life by +35 mins.
+            Ops team knows your phone is at {batteryLevel}%. GPS throttle active to extend battery life.
           </p>
         </div>
 
@@ -60,48 +88,46 @@ export default function Screen48LowBatterySafeMode({
           <div className="space-y-2 text-xs">
             <div>
               <span className="text-[10px] text-slate-400 block uppercase">Order ID:</span>
-              <p className="text-sm font-black text-amber-300">#TR-4492 (Collect ₹340 COD)</p>
+              <p className="text-sm font-black text-amber-300">{orderCode} ({amountStr})</p>
             </div>
 
             <div>
               <span className="text-[10px] text-slate-400 block uppercase">Customer Address:</span>
               <p className="font-bold text-white leading-snug">
-                Riya Sharma · House 42/B, Civil Lines, Behind Peepal Tree (Opposite Primary School)
+                {customerName} · {addressStr}
               </p>
             </div>
 
-            <div>
-              <span className="text-[10px] text-slate-400 block uppercase">Customer Phone (Backup):</span>
-              <p className="text-sm font-bold text-emerald-300">9876543210</p>
-            </div>
-
-            <div>
-              <span className="text-[10px] text-slate-400 block uppercase">Handover Secret OTP:</span>
-              <p className="text-base font-black text-white tracking-widest bg-white/10 p-1.5 rounded text-center">
-                4492
-              </p>
-            </div>
+            {customerPhone && (
+              <div>
+                <span className="text-[10px] text-slate-400 block uppercase">Customer Phone:</span>
+                <a
+                  href={`tel:${customerPhone}`}
+                  className="font-bold text-blue-400 underline block"
+                >
+                  Call Customer: {customerPhone}
+                </a>
+              </div>
+            )}
           </div>
-        </div>
-
-        {/* SMS Backup Status */}
-        <div className="mt-3 p-2.5 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between text-xs">
-          <span>📲 SMS Copy Sent to Your Phone</span>
-          <span className="text-emerald-400 font-bold">{isSmsSent ? "✓ Received" : "Sending..."}</span>
         </div>
       </div>
 
       {/* Footer */}
       <div className="pt-3 border-t border-white/20 space-y-2">
-        <a
-          href="tel:+919876543210"
-          className="w-full py-3 rounded-xl bg-white text-black font-black text-xs hover:bg-slate-200 text-center flex items-center justify-center gap-1.5"
+        <button
+          type="button"
+          onClick={() => {
+            setIsSmsSent(true);
+            onSendSmsBackup?.();
+          }}
+          className={`w-full py-3 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition ${
+            isSmsSent ? "bg-white/10 text-white/60" : "bg-white text-black"
+          }`}
         >
-          <span>📞 Direct Call Customer Before Phone Shuts Down</span>
-        </a>
-        <p className="text-center text-[10px] text-slate-500">
-          Zero Failure Guarantee · Handover verified even with zero phone battery.
-        </p>
+          <span>{isSmsSent ? "Emergency SMS Sent to Customer" : "Send Emergency SMS Backup"}</span>
+          <span>✉️</span>
+        </button>
       </div>
     </div>
   );

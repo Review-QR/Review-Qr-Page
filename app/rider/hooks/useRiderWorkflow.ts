@@ -411,9 +411,12 @@ export function useRiderWorkflow() {
    */
   const requestInstantPayout = useCallback(async (customUpi?: string) => {
     if (walletBalance <= 0) {
-      return;
+      return { success: false, error: "No wallet balance available to withdraw" };
     }
-    const targetUpi = customUpi || rider.upi_id || "arjun.singh@okhdfcbank";
+    const targetUpi = customUpi || rider.upi_id;
+    if (!targetUpi || !targetUpi.includes("@")) {
+      return { success: false, error: "Please configure a valid UPI ID (e.g. name@oksbi) in your profile." };
+    }
     try {
       const res = await fetch("/api/hyperlocal/rider", {
         method: "POST",
@@ -424,12 +427,20 @@ export function useRiderWorkflow() {
           destinationUpi: targetUpi,
         }),
       });
-      const data = await res.json().catch(() => ({ success: true }));
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        return { success: false, error: data?.error || "Payout processing failed. Please try again." };
+      }
       setWalletBalance(0);
       riderAudio.playCashChime();
-    } catch {
-      setWalletBalance(0);
-      riderAudio.playCashChime();
+      return {
+        success: true,
+        utr: data.utr || data.referenceId,
+        withdrawnAmount: data.withdrawnAmount || walletBalance,
+        destination: data.destination,
+      };
+    } catch (err: any) {
+      return { success: false, error: err?.message || "Network error while requesting payout." };
     }
   }, [walletBalance, rider.id, rider.upi_id]);
 

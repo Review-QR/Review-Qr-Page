@@ -57,7 +57,18 @@ export async function GET(request: Request) {
     const clean = phone.replace(/\D/g, "").slice(-10);
     query = query.or(`phone.eq.${clean},phone.eq.+91${clean}`);
   } else {
-    query = query.eq("id", "33333333-3333-4333-a333-333333333301");
+    // Check Authorization header for rider session token
+    const authHeader = request.headers.get("Authorization");
+    const token = authHeader?.replace(/^Bearer\s+/i, "");
+    const sessionRiderId = verifyRiderSessionToken(token);
+    if (sessionRiderId) {
+      query = query.eq("id", sessionRiderId);
+    } else {
+      return Response.json(
+        { error: "Unauthorized: Active rider session or identifier required" },
+        { status: 401 }
+      );
+    }
   }
 
   const { data: rider, error: riderErr } = await query.maybeSingle();
@@ -325,29 +336,31 @@ export async function POST(request: Request) {
         });
       }
 
-      // Auto-register rider profile
+      // Register new rider profile with pending KYC (genuine production flow)
       const riderId = crypto.randomUUID();
-      const fallbackPhone = phone && phone.length === 10 ? `+91${phone}` : `+9198765${Math.floor(10000 + Math.random() * 90000)}`;
+      const sanitizedPhone = phone && phone.length === 10 ? `+91${phone}` : null;
+      const refCode = `TR${riderId.replace(/-/g, "").slice(-6)}`;
       const newRiderPayload = {
         id: riderId,
         full_name: fullName,
         email: email,
-        phone: fallbackPhone,
+        phone: sanitizedPhone,
         vehicle_type: "bike",
-        vehicle_number: "UP-40-TEMP",
-        driving_license_number: "DL-UP40-TEMP",
-        is_verified: true,
-        kyc_status: "approved",
+        vehicle_number: null,
+        driving_license_number: null,
+        is_verified: false,
+        kyc_status: "pending",
         is_online: false,
-        is_available: true,
+        is_available: false,
         rating: 5.0,
         wallet_balance: 0,
         cash_in_hand: 0,
         city: "Bahraich",
+        referral_code: refCode,
         created_at: new Date().toISOString(),
       };
 
-      const { data: createdRider, error: insertErr } = await admin
+      const { data: createdRider } = await admin
         .from("delivery_riders")
         .insert(newRiderPayload)
         .select("*")
@@ -356,8 +369,8 @@ export async function POST(request: Request) {
       const finalRider = createdRider || newRiderPayload;
       return Response.json({
         success: true,
-        message: `Welcome to Trustit Fleet, ${fullName}!`,
-        isNewRider: false,
+        message: `Welcome to Trustit Fleet, ${fullName}! Please complete document verification to start deliveries.`,
+        isNewRider: true,
         rider: finalRider,
         riderToken: signRiderSessionToken(finalRider.id),
       });
@@ -650,7 +663,13 @@ export async function POST(request: Request) {
         );
       }
 
-      const upiToUse = destinationUpi?.trim() || currentRider?.upi_id?.trim() || "luckyshukla@oksbi";
+      const upiToUse = destinationUpi?.trim() || currentRider?.upi_id?.trim();
+      if (!upiToUse || !upiToUse.includes("@")) {
+        return Response.json(
+          { success: false, error: "Please configure a valid UPI ID (e.g. yourname@oksbi) in your profile before requesting a payout." },
+          { status: 400 },
+        );
+      }
 
       const payoutResult = await executeRiderPayout({
         riderId,
@@ -833,13 +852,14 @@ export async function POST(request: Request) {
         .from("delivery_riders")
         .update({
           training_completed_at: new Date().toISOString(),
-          kyc_status: "approved",
-          is_verified: true,
           updated_at: new Date().toISOString(),
         })
         .eq("id", riderId);
 
-      return Response.json({ success: true, message: "Academy completed. Account approved!" });
+      return Response.json({
+        success: true,
+        message: "Trustit Fleet Academy completed! Your certificates have been recorded for fleet compliance.",
+      });
     }
 
     // ── 20. BUDDY BREAKDOWN HANDOVER ──

@@ -69,7 +69,7 @@ export default function Screen15Passbook({
     loadTrips();
   }, [riderId, tripsProp]);
 
-  const handlePayoutTrigger = () => {
+  const handlePayoutTrigger = async () => {
     if (currentBalance <= 0) {
       alert("⚠️ कोई विथड्रॉ करने योग्य बैलेंस उपलब्ध नहीं है।");
       return;
@@ -80,22 +80,55 @@ export default function Screen15Passbook({
     }
 
     setIsProcessing(true);
-    riderAudio.playCashChime();
+    try {
+      if (onInstantPayout) {
+        const result: any = await onInstantPayout();
+        if (result && result.success === false) {
+          alert(`⚠️ ${result.error || "विथड्रॉल विफल रहा।"}`);
+          setIsProcessing(false);
+          return;
+        }
+        const transferred = currentBalance;
+        setCurrentBalance(0);
+        setIsProcessing(false);
+        setPayoutSuccessData({
+          amount: transferred,
+          utr: result?.utr || `TR-UPI-${Date.now().toString().slice(-6)}`,
+          time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
+        });
+        riderAudio.playCashChime();
+        return;
+      }
 
-    setTimeout(() => {
+      // Direct fallback to API
+      const res = await fetch("/api/hyperlocal/rider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "request_payout",
+          riderId,
+          destinationUpi: activeUpi,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alert(`⚠️ ${data.error || "विथड्रॉल प्रोसेस नहीं हो सका।"}`);
+        setIsProcessing(false);
+        return;
+      }
       const transferred = currentBalance;
       setCurrentBalance(0);
       setIsProcessing(false);
       setPayoutSuccessData({
         amount: transferred,
-        utr: `CF${Math.floor(1000000000 + Math.random() * 9000000000)}`,
+        utr: data.utr || data.referenceId || "Pending Verification",
         time: new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
       });
       riderAudio.playCashChime();
-      if (onInstantPayout) {
-        try { onInstantPayout(); } catch {}
-      }
-    }, 1200);
+    } catch (e: any) {
+      alert(`⚠️ ${e?.message || "नेटवर्क त्रुटि。"}`);
+      setIsProcessing(false);
+    }
   };
 
   return (

@@ -79,8 +79,8 @@ export default function Screen23MerchantDelay({
               🏪
             </div>
             <div>
-              <h4 className="text-xs font-black text-slate-900">Golden Blossom Café</h4>
-              <p className="text-[11px] text-slate-500">Order #TR-4492 · Chef is preparing: Peri Peri Fries</p>
+              <h4 className="text-xs font-black text-slate-900">Merchant Store</h4>
+              <p className="text-[11px] text-slate-500">Active Order · Store is preparing fresh package</p>
             </div>
           </div>
 

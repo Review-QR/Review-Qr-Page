@@ -53,7 +53,7 @@ export default function Screen21LockscreenOrderPop({
         <span className="text-xl animate-bounce">📢</span>
         <div>
           <p className="text-[11px] font-extrabold text-red-300">
-            आवाज़ अलर्ट: &quot;नया ऑर्डर! गोल्डन ब्लॉसम कैफ़े — कमाई ₹45&quot;
+            आवाज़ अलर्ट: &quot;नया ऑर्डर! नज़दीकी स्टोर — गारण्टीड कमाई&quot;
           </p>
           <p className="text-[9px] text-slate-400">
             Screen Wakeup &amp; Media Volume Overridden (Dual-Tone 880Hz Siren)
@@ -111,10 +111,10 @@ export default function Screen21LockscreenOrderPop({
               🍔
             </div>
             <div>
-              <h3 className="text-sm font-black text-white">Golden Blossom Café</h3>
-              <p className="text-xs text-slate-300">Civil Lines, Bahraich · 1.2 km away</p>
+              <h3 className="text-sm font-black text-white">Verified Merchant Partner</h3>
+              <p className="text-xs text-slate-300">Bahraich Commercial Center · Nearby</p>
               <p className="text-[11px] text-amber-300 font-medium mt-0.5">
-                Drop: Riya Sharma (Kachehri Road · 2.4 km)
+                Drop: Customer Doorstep Destination
               </p>
             </div>
           </div>
