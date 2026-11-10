@@ -1,5 +1,6 @@
 package com.trustit.customer;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -7,9 +8,13 @@ import android.content.pm.ResolveInfo;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
@@ -18,17 +23,31 @@ import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
+import com.getcapacitor.PermissionState;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 
-@CapacitorPlugin(name = "TrustitNativeBridge")
+@CapacitorPlugin(
+    name = "TrustitNativeBridge",
+    permissions = {
+        @Permission(
+            alias = "location",
+            strings = {
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            }
+        )
+    }
+)
 public class TrustitNativeBridge extends Plugin {
 
     /**
@@ -111,78 +130,148 @@ public class TrustitNativeBridge extends Plugin {
     }
 
     /**
-     * 2. getPreciseLocation: High-accuracy hardware GPS coordinates & reverse geocoded street/mohalla.
+     * 2. getPreciseLocation: High-accuracy hardware GPS coordinates & real-time telemetry fix.
      */
     @PluginMethod
     public void getPreciseLocation(PluginCall call) {
         Context context = getContext();
-        if (ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            call.reject("Location permission not granted. Please allow location access.");
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionForAlias("location", call, "locationPermsCallback");
             return;
         }
 
-        try {
-            LocationManager locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-            if (locationManager == null) {
-                call.reject("LocationManager service unavailable");
-                return;
-            }
-
-            Location bestLocation = null;
-            if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                bestLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            }
-            if (bestLocation == null && locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-                bestLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            }
-
-            double lat = bestLocation != null ? bestLocation.getLatitude() : 27.5744; // Default to Bahraich
-            double lng = bestLocation != null ? bestLocation.getLongitude() : 81.5977;
-            float accuracy = bestLocation != null ? bestLocation.getAccuracy() : 15.0f;
-
-            final double finalLat = lat;
-            final double finalLng = lng;
-            final float finalAcc = accuracy;
-            final boolean finalIsSimulated = (bestLocation == null);
-
-            new Thread(() -> {
-                String streetAddress = "Civil Lines, Bahraich";
-                String mohalla = "Civil Lines";
-                String city = "Bahraich";
-                String pincode = "271801";
-
-                try {
-                    Geocoder geocoder = new Geocoder(context, Locale.getDefault());
-                    List<Address> addresses = geocoder.getFromLocation(finalLat, finalLng, 1);
-                    if (addresses != null && !addresses.isEmpty()) {
-                        Address addr = addresses.get(0);
-                        if (addr.getSubLocality() != null) mohalla = addr.getSubLocality();
-                        else if (addr.getThoroughfare() != null) mohalla = addr.getThoroughfare();
-
-                        if (addr.getLocality() != null) city = addr.getLocality();
-                        if (addr.getPostalCode() != null) pincode = addr.getPostalCode();
-                        if (addr.getAddressLine(0) != null) streetAddress = addr.getAddressLine(0);
-                    }
-                } catch (Exception ignored) {}
-
-                JSObject res = new JSObject();
-                res.put("latitude", finalLat);
-                res.put("longitude", finalLng);
-                res.put("accuracy", finalAcc);
-                res.put("address", streetAddress);
-                res.put("mohalla", mohalla);
-                res.put("city", city);
-                res.put("pincode", pincode);
-                res.put("isSimulated", finalIsSimulated);
-                call.resolve(res);
-            }).start();
-
-        } catch (SecurityException se) {
-            call.reject("Security exception accessing GPS location: " + se.getMessage());
-        } catch (Exception e) {
-            call.reject("Error obtaining precise location: " + e.getMessage());
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (lm == null) {
+            call.reject("LocationManager service is unavailable on device");
+            return;
         }
+
+        boolean gpsEnabled = false;
+        boolean networkEnabled = false;
+        try {
+            gpsEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch (Exception ignored) {}
+        try {
+            networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch (Exception ignored) {}
+
+        if (!gpsEnabled && !networkEnabled) {
+            JSObject err = new JSObject();
+            err.put("gpsDisabled", true);
+            call.reject("GPS and Location Services are disabled. Please turn on Location in device settings.", err);
+            return;
+        }
+
+        // 1. Check for immediate cached / last known location
+        Location bestLoc = null;
+        try {
+            Location gpsLoc = gpsEnabled ? lm.getLastKnownLocation(LocationManager.GPS_PROVIDER) : null;
+            Location netLoc = networkEnabled ? lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) : null;
+            if (gpsLoc != null && netLoc != null) {
+                long gpsAge = System.currentTimeMillis() - gpsLoc.getTime();
+                if (gpsAge < 30000 && gpsLoc.getAccuracy() <= netLoc.getAccuracy() + 10) {
+                    bestLoc = gpsLoc;
+                } else if (gpsLoc.getTime() >= netLoc.getTime()) {
+                    bestLoc = gpsLoc;
+                } else {
+                    bestLoc = netLoc;
+                }
+            } else if (gpsLoc != null) {
+                bestLoc = gpsLoc;
+            } else {
+                bestLoc = netLoc;
+            }
+        } catch (SecurityException ignored) {}
+
+        // If last known location is fresh (< 8 seconds old), return immediately
+        if (bestLoc != null && (System.currentTimeMillis() - bestLoc.getTime() < 8000)) {
+            resolveLocationResult(call, bestLoc);
+            return;
+        }
+
+        // 2. Request fresh real-time satellite / cell-tower fix
+        final Location fallbackLoc = bestLoc;
+        final boolean[] responded = new boolean[]{false};
+        final Handler handler = new Handler(Looper.getMainLooper());
+
+        final LocationListener listener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                if (!responded[0]) {
+                    responded[0] = true;
+                    try {
+                        lm.removeUpdates(this);
+                    } catch (Exception ignored) {}
+                    resolveLocationResult(call, location);
+                }
+            }
+
+            @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
+            @Override public void onProviderEnabled(String provider) {}
+            @Override public void onProviderDisabled(String provider) {}
+        };
+
+        final Runnable timeoutRunnable = () -> {
+            if (!responded[0]) {
+                responded[0] = true;
+                try {
+                    lm.removeUpdates(listener);
+                } catch (Exception ignored) {}
+                if (fallbackLoc != null) {
+                    resolveLocationResult(call, fallbackLoc);
+                } else {
+                    call.reject("GPS satellite timeout: No satellite fix acquired within 4.5s.");
+                }
+            }
+        };
+
+        handler.postDelayed(timeoutRunnable, 4500);
+
+        try {
+            if (gpsEnabled) {
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, listener, Looper.getMainLooper());
+            }
+            if (networkEnabled) {
+                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, listener, Looper.getMainLooper());
+            }
+        } catch (SecurityException se) {
+            handler.removeCallbacks(timeoutRunnable);
+            if (fallbackLoc != null) {
+                resolveLocationResult(call, fallbackLoc);
+            } else {
+                call.reject("Security exception requesting location updates: " + se.getMessage());
+            }
+        } catch (Exception e) {
+            handler.removeCallbacks(timeoutRunnable);
+            if (fallbackLoc != null) {
+                resolveLocationResult(call, fallbackLoc);
+            } else {
+                call.reject("Failed to request location updates: " + e.getMessage());
+            }
+        }
+    }
+
+    @PermissionCallback
+    private void locationPermsCallback(PluginCall call) {
+        if (getPermissionState("location") == PermissionState.GRANTED) {
+            getPreciseLocation(call);
+        } else {
+            call.reject("Location permission is required for live GPS tracking.");
+        }
+    }
+
+    private void resolveLocationResult(PluginCall call, Location loc) {
+        JSObject res = new JSObject();
+        res.put("latitude", loc.getLatitude());
+        res.put("longitude", loc.getLongitude());
+        res.put("accuracy", Math.round(loc.getAccuracy() * 10.0) / 10.0);
+        res.put("speed", loc.getSpeed());
+        res.put("bearing", loc.getBearing());
+        res.put("altitude", loc.getAltitude());
+        res.put("provider", loc.getProvider());
+        res.put("timestamp", loc.getTime());
+        call.resolve(res);
     }
 
     /**

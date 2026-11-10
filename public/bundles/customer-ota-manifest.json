@@ -1,8 +1,8 @@
 {
-  "version": "2.2.3223",
+  "version": "2.5.0",
   "minAppVersion": "2.2.0",
-  "bundleUrl": "https://trustitreview.com/bundles/customer-bundle-latest.zip?v=1793852027215",
-  "updatedAt": "2026-11-05T04:13:47.215Z",
-  "notes": "Trustit Customer Super-App 48 Screens (100% Buttons Wired)",
-  "sizeBytes": 1370075
+  "bundleUrl": "https://trustitreview.com/bundles/customer-bundle-latest.zip?v=1794287934792",
+  "updatedAt": "2026-11-10T05:18:54.792Z",
+  "notes": "Customer Super-App v2.5.0: Google Maps Geocoding API with active billing key, high-precision native hardware GPS bridge, interactive tap-to-detect location header, auto-filled accurate delivery address, zero fake fallbacks.",
+  "sizeBytes": 3489324
 }

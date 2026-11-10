@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 
 interface Screen06Props {
   onBack?: () => void;
@@ -23,32 +24,58 @@ export default function Screen06GpsGeofence({
   const [detecting, setDetecting] = useState<boolean>(false);
   const [lat, setLat] = useState(initialLat);
   const [lng, setLng] = useState(initialLng);
+  const [locationName, setLocationName] = useState<string>("Bahraich Center");
   const [saved, setSaved] = useState(false);
 
-  const handleDetect = () => {
+  const handleDetect = async () => {
     setDetecting(true);
-    if (typeof navigator !== "undefined" && navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setLat(pos.coords.latitude.toFixed(4));
-          setLng(pos.coords.longitude.toFixed(4));
-          setDetecting(false);
-        },
-        () => {
-          // Fallback to Bahraich town coordinates
-          setLat("27.5751");
-          setLng("81.5982");
-          setDetecting(false);
-        },
-        { timeout: 5000 }
-      );
-    } else {
-      setTimeout(() => {
-        setLat("27.5751");
-        setLng("81.5982");
-        setDetecting(false);
-      }, 800);
+    let resolvedLat: number | null = null;
+    let resolvedLng: number | null = null;
+
+    // 1. Hardware GPS Bridge
+    try {
+      const nativeLoc = await TrustitNative.getPreciseLocation();
+      if (nativeLoc && nativeLoc.latitude && nativeLoc.longitude) {
+        resolvedLat = nativeLoc.latitude;
+        resolvedLng = nativeLoc.longitude;
+      }
+    } catch {}
+
+    // 2. Geolocation API Fallback
+    if (!resolvedLat && typeof navigator !== "undefined" && navigator.geolocation) {
+      try {
+        await new Promise<void>((resolve) => {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              resolvedLat = pos.coords.latitude;
+              resolvedLng = pos.coords.longitude;
+              resolve();
+            },
+            () => resolve(),
+            { timeout: 8000, enableHighAccuracy: true }
+          );
+        });
+      } catch {}
     }
+
+    if (resolvedLat && resolvedLng) {
+      const formattedLat = resolvedLat.toFixed(4);
+      const formattedLng = resolvedLng.toFixed(4);
+      setLat(formattedLat);
+      setLng(formattedLng);
+
+      // Reverse geocode
+      try {
+        const res = await fetch(`/api/hyperlocal/reverse-geocode?lat=${resolvedLat}&lng=${resolvedLng}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.locationName) {
+            setLocationName(data.locationName);
+          }
+        }
+      } catch {}
+    }
+    setDetecting(false);
   };
 
   const handleSave = () => {
@@ -115,7 +142,7 @@ export default function Screen06GpsGeofence({
               Store Address &amp; Locality
             </label>
             <p className="font-bold text-slate-900">
-              Civil Lines, Near Indira Gandhi Stadium, Bahraich
+              {locationName || "Civil Lines, Bahraich"}
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">

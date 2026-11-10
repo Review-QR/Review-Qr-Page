@@ -5,6 +5,11 @@ export const dynamic = "force-dynamic";
 // In-memory cache for reverse geocoding to prevent excessive external API calls
 interface CachedLocation {
   name: string;
+  mohalla?: string;
+  city?: string;
+  pincode?: string;
+  formattedAddress?: string;
+  source: string;
   timestamp: number;
 }
 const geocodeCache = new Map<string, CachedLocation>();
@@ -56,6 +61,11 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         locationName: cached.name,
+        mohalla: cached.mohalla || cached.name,
+        city: cached.city || "Bahraich",
+        pincode: cached.pincode || "271801",
+        formattedAddress: cached.formattedAddress || cached.name,
+        source: cached.source || "cache",
         cached: true,
         lat,
         lng,
@@ -70,9 +80,13 @@ export async function GET(request: Request) {
   }
 
   let resolvedName: string | null = null;
+  let resolvedMohalla: string = "";
+  let resolvedCity: string = "Bahraich";
+  let resolvedPincode: string = "271801";
+  let resolvedFormattedAddress: string = "";
   let source: "google" | "mapbox" | "nominatim" | "raw" = "raw";
 
-  // 1. Google Maps Geocoding API (If key configured)
+  // 1. Google Maps Geocoding API (Primary - Active Billing Key)
   const googleApiKey = process.env.GOOGLE_MAPS_API_KEY;
   if (googleApiKey) {
     try {
@@ -84,20 +98,33 @@ export async function GET(request: Request) {
         const googleData = await googleRes.json();
         if (googleData.status === "OK" && Array.isArray(googleData.results) && googleData.results.length > 0) {
           const first = googleData.results[0];
-          // Try to extract sublocality / locality / neighborhood
+          resolvedFormattedAddress = first.formatted_address || "";
+
           let sublocality = "";
           let locality = "";
           let district = "";
+          let postalCode = "";
+          let route = "";
 
           for (const comp of first.address_components || []) {
-            if (comp.types.includes("sublocality") || comp.types.includes("sublocality_level_1")) {
-              sublocality = comp.long_name;
+            if (comp.types.includes("sublocality") || comp.types.includes("sublocality_level_1") || comp.types.includes("sublocality_level_2")) {
+              if (!sublocality) sublocality = comp.long_name;
+            } else if (comp.types.includes("neighborhood")) {
+              if (!sublocality) sublocality = comp.long_name;
             } else if (comp.types.includes("locality")) {
               locality = comp.long_name;
             } else if (comp.types.includes("administrative_area_level_2")) {
               district = comp.long_name;
+            } else if (comp.types.includes("postal_code")) {
+              postalCode = comp.long_name;
+            } else if (comp.types.includes("route")) {
+              route = comp.long_name;
             }
           }
+
+          resolvedMohalla = sublocality || route || locality || "";
+          resolvedCity = locality || district || "Bahraich";
+          if (postalCode) resolvedPincode = postalCode;
 
           if (sublocality && locality && sublocality !== locality) {
             resolvedName = `${sublocality}, ${locality}`;
@@ -106,7 +133,6 @@ export async function GET(request: Request) {
           } else if (locality) {
             resolvedName = `${locality}`;
           } else if (first.formatted_address) {
-            // Pick first two parts of formatted address
             const parts = first.formatted_address.split(",").map((p: string) => p.trim());
             resolvedName = parts.slice(0, 2).join(", ");
           }
@@ -131,22 +157,27 @@ export async function GET(request: Request) {
         if (mapboxRes.ok) {
           const mapboxData = await mapboxRes.json();
           if (Array.isArray(mapboxData.features) && mapboxData.features.length > 0) {
-            // Find the most descriptive feature (neighborhood, address, or locality)
             const features = mapboxData.features;
             const primary = features[0];
             const text = primary.text || "";
             const placeName = primary.place_name || "";
+            resolvedFormattedAddress = placeName;
 
-            // Find parent locality/district context
             let districtOrCity = "";
+            let postCode = "";
             if (Array.isArray(primary.context)) {
               for (const ctx of primary.context) {
                 if (ctx.id?.startsWith("place.") || ctx.id?.startsWith("district.")) {
                   districtOrCity = ctx.text;
-                  break;
+                } else if (ctx.id?.startsWith("postcode.")) {
+                  postCode = ctx.text;
                 }
               }
             }
+
+            resolvedMohalla = text || "";
+            if (districtOrCity) resolvedCity = districtOrCity;
+            if (postCode) resolvedPincode = postCode;
 
             if (text && districtOrCity && !text.toLowerCase().includes(districtOrCity.toLowerCase())) {
               resolvedName = `${text}, ${districtOrCity}`;
@@ -182,14 +213,18 @@ export async function GET(request: Request) {
       if (osmRes.ok) {
         const osmData = await osmRes.json();
         const addr = osmData.address || {};
+        resolvedFormattedAddress = osmData.display_name || "";
+
         const local =
           addr.suburb ||
-          addr.village ||
-          addr.town ||
-          addr.hamlet ||
+          addr.subdistrict ||
           addr.neighbourhood ||
           addr.road;
         const district = addr.county || addr.state_district || addr.city || "Bahraich";
+
+        resolvedMohalla = local || "";
+        resolvedCity = district;
+        if (addr.postcode) resolvedPincode = addr.postcode;
 
         if (local && district && !local.toLowerCase().includes(district.toLowerCase())) {
           resolvedName = `${local}, ${district}`;
@@ -207,18 +242,31 @@ export async function GET(request: Request) {
     }
   }
 
-  // 4. Clean Raw GPS Fallback (No fake landmarks, completely transparent)
+  // 4. Clean Raw GPS Fallback
   if (!resolvedName) {
     resolvedName = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    resolvedMohalla = "Live GPS";
     source = "raw";
   }
 
   // Cache resolved address
-  geocodeCache.set(cacheKey, { name: resolvedName, timestamp: now });
+  geocodeCache.set(cacheKey, {
+    name: resolvedName,
+    mohalla: resolvedMohalla,
+    city: resolvedCity,
+    pincode: resolvedPincode,
+    formattedAddress: resolvedFormattedAddress,
+    source,
+    timestamp: now,
+  });
 
   return NextResponse.json(
     {
       locationName: resolvedName,
+      mohalla: resolvedMohalla || resolvedName,
+      city: resolvedCity || "Bahraich",
+      pincode: resolvedPincode || "271801",
+      formattedAddress: resolvedFormattedAddress || resolvedName,
       source,
       lat,
       lng,

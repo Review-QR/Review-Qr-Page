@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useTransition } from "react";
+import { useState, useEffect, useMemo, useCallback, useTransition } from "react";
 import Link from "next/link";
 import { formatDisplayOrderNumber, formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
 import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
@@ -460,6 +460,11 @@ export default function CustomerSuperAppClient({
   const [addrRoad, setAddrRoad] = useState<string>("");
   const [addrPincode, setAddrPincode] = useState<string>("271801");
   const [addrDistrict, setAddrDistrict] = useState<string>("Bahraich");
+
+  // High-Precision GPS & Google Maps Location State
+  const [userLiveLocation, setUserLiveLocation] = useState<string>("Civil Lines, Bahraich");
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [isResolvingLocation, setIsResolvingLocation] = useState<boolean>(false);
 
   const buildAddressString = (h: string, m: string, r: string, p: string, d: string) => {
     return [h.trim(), m.trim(), r.trim(), p.trim() ? `Pin: ${p.trim()}` : "", d.trim() || "Bahraich"].filter(Boolean).join(", ");
@@ -1185,24 +1190,107 @@ export default function CustomerSuperAppClient({
     }
   }, [customerPhone]);
 
-  // GPS auto-detect for delivery address (Native Android Fused GPS + Geocoder with fallback)
-  const handleDetectGps = async () => {
-    setIsDetectingGps(true);
+  // ── High-Precision Google Maps GPS & Address Resolver (Rider & Customer Standard) ──
+  const detectLiveLocation = useCallback(async (silent = false) => {
+    setIsResolvingLocation(true);
+    if (!silent) setIsDetectingGps(true);
+
     try {
+      // 1. Acquire native hardware GPS coordinates (or browser geolocation fallback)
       const loc = await TrustitNative.getPreciseLocation();
-      setIsDetectingGps(false);
-      setAddrDistrict(loc.city || "Bahraich");
-      if (!addrPincode || addrPincode === "271801") setAddrPincode(loc.pincode || "271801");
-      const detectedMohalla = loc.mohalla || addrMohalla || "Civil Lines";
-      setAddrMohalla(detectedMohalla);
-      const auto = loc.address || buildAddressString(addrHouseNo, detectedMohalla, addrRoad, loc.pincode || "271801", loc.city || "Bahraich");
-      setCustomerAddress(auto);
-      TrustitNative.playHapticFeedback("click");
-    } catch {
-      setIsDetectingGps(false);
-      alert("GPS location permission denied or timed out.");
+      const lat = loc.latitude;
+      const lng = loc.longitude;
+      setUserCoords({ lat, lng });
+
+      // 2. High-precision Reverse-Geocode via Google Maps API server proxy
+      let geocodeData: {
+        locationName?: string;
+        mohalla?: string;
+        city?: string;
+        pincode?: string;
+        formattedAddress?: string;
+        source?: string;
+      } | null = null;
+
+      try {
+        const res = await TrustitNative.nativeFetch(
+          `/api/hyperlocal/reverse-geocode?lat=${lat}&lng=${lng}`,
+          { method: "GET" }
+        );
+        if (res && res.status === 200) {
+          geocodeData = typeof res.json === "function" ? await res.json() : null;
+        }
+      } catch {
+        try {
+          const res = await fetch(`/api/hyperlocal/reverse-geocode?lat=${lat}&lng=${lng}`);
+          if (res.ok) {
+            geocodeData = await res.json();
+          }
+        } catch {}
+      }
+
+      const locationName = geocodeData?.locationName || loc.address || `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      const mohalla = geocodeData?.mohalla || loc.mohalla || "";
+      const city = geocodeData?.city || loc.city || "Bahraich";
+      const pincode = geocodeData?.pincode || loc.pincode || "271801";
+      const formatted = geocodeData?.formattedAddress || locationName;
+
+      setUserLiveLocation(locationName);
+      setSelectedCity(city);
+      setAddrDistrict(city);
+      if (mohalla) setAddrMohalla(mohalla);
+      if (pincode) setAddrPincode(pincode);
+      if (formatted) setCustomerAddress(formatted);
+
+      try {
+        localStorage.setItem(
+          "trustit_customer_location",
+          JSON.stringify({ locationName, mohalla, city, pincode, formatted, lat, lng, time: Date.now() })
+        );
+      } catch {}
+
+      if (!silent) {
+        TrustitNative.playHapticFeedback("click");
+      }
+    } catch (err: any) {
+      console.warn("Location detection error:", err);
+      if (!silent) {
+        alert("GPS location permission denied or timed out. Please ensure location is enabled.");
+      }
+    } finally {
+      setIsResolvingLocation(false);
+      if (!silent) setIsDetectingGps(false);
     }
+  }, []);
+
+  const handleDetectGps = async () => {
+    await detectLiveLocation(false);
   };
+
+  // Restore cached location on mount & silently fetch fresh Google GPS fix
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("trustit_customer_location");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.locationName) setUserLiveLocation(parsed.locationName);
+        if (parsed.city) {
+          setSelectedCity(parsed.city);
+          setAddrDistrict(parsed.city);
+        }
+        if (parsed.mohalla) setAddrMohalla(parsed.mohalla);
+        if (parsed.pincode) setAddrPincode(parsed.pincode);
+        if (parsed.formatted) setCustomerAddress(parsed.formatted);
+        if (parsed.lat && parsed.lng) setUserCoords({ lat: parsed.lat, lng: parsed.lng });
+      }
+    } catch {}
+
+    // Silent background high-accuracy satellite fix via Google Maps API
+    const timer = setTimeout(() => {
+      detectLiveLocation(true);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [detectLiveLocation]);
 
   // Real-time Auto-Suggest matching dishes & stores (Image 1 Benchmark)
   const searchSuggestions = useMemo(() => {
@@ -1765,30 +1853,38 @@ export default function CustomerSuperAppClient({
       {/* ── Top Super-App Header (Compact Swiggy/Zomato Micro-Bar) ── */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-2xs">
         <div className="max-w-5xl mx-auto px-2.5 sm:px-4 py-1.5 flex items-center justify-between gap-2">
-          {/* Location Picker (Micro-Typography) */}
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-blue-600 text-[11px] font-black text-white shadow-2xs">
-              ⚡
+          {/* Location Picker (Live Google Maps GPS Reverse-Geocode) */}
+          <button
+            type="button"
+            onClick={() => detectLiveLocation(false)}
+            className="flex items-center gap-1.5 min-w-0 text-left hover:opacity-85 transition group focus:outline-hidden"
+            title="Click to detect exact GPS location via Google Maps"
+          >
+            <span
+              className={`grid h-6 w-6 shrink-0 place-items-center rounded-md bg-blue-600 text-[11px] font-black text-white shadow-2xs ${
+                isResolvingLocation ? "animate-pulse" : ""
+              }`}
+            >
+              📍
             </span>
             <div className="min-w-0 leading-none">
               <div className="flex items-center gap-1">
-                <span className="text-[11px] font-black text-slate-900 truncate">Bahraich</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const next = selectedCity === "Bahraich" ? "Lucknow" : "Bahraich";
-                    setSelectedCity(next);
-                  }}
-                  className="text-[9px] text-blue-600 font-bold"
-                >
+                <span className="text-[11px] font-black text-slate-900 truncate max-w-[130px] sm:max-w-[200px]">
+                  {isResolvingLocation
+                    ? "Locating..."
+                    : (userLiveLocation ? userLiveLocation.split(",")[0] : (selectedCity || "Bahraich"))}
+                </span>
+                <span className="text-[8.5px] text-blue-600 font-extrabold group-hover:translate-y-0.5 transition-transform">
                   ▼
-                </button>
+                </span>
               </div>
-              <span className="block text-[8.5px] text-slate-500 font-medium truncate mt-0.5">
-                Uttar Pradesh · Verified Local
+              <span className="block text-[8.5px] text-slate-500 font-medium truncate mt-0.5 max-w-[140px] sm:max-w-[220px]">
+                {userLiveLocation
+                  ? (userLiveLocation.includes(",") ? userLiveLocation.split(",").slice(1).join(",").trim() : "Verified GPS Locality")
+                  : "Tap to detect location"}
               </span>
             </div>
-          </div>
+          </button>
 
           {/* Right Action Icons (Swiggy Style ☰ Account Menu & Active Orders) */}
           <div className="flex items-center gap-2 shrink-0">

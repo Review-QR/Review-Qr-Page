@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace "com.trustit.partner"
+    namespace "com.trustit.customer"
     compileSdk rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.trustit.rider"
+        applicationId "com.trustit.customer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 26
-        versionName "5.3.0"
+        versionCode 15
+        versionName "2.5.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~:downloads:*.apk'
