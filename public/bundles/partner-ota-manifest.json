@@ -1,8 +1,8 @@
 {
-  "version": "3.4.0",
+  "version": "3.5.0",
   "minAppVersion": "2.2.0",
-  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1794156112203",
-  "updatedAt": "2026-11-08T16:41:52.203Z",
-  "notes": "Official Trustit Merchant Partner release v3.4.0: Pure English auth UI, smooth 6-digit OTP input, 30s resend timer, solid Verify button, and strict new merchant registration",
-  "sizeBytes": 3474739
+  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1794288490450",
+  "updatedAt": "2026-11-10T05:28:10.450Z",
+  "notes": "Official Trustit Merchant Partner release v3.5.0: Native Android hardware GPS bridge and Google Maps reverse-geocoding for instant store address auto-fetch",
+  "sizeBytes": 3475992
 }

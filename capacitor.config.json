@@ -1,11 +1,11 @@
 {
-  "appId": "com.trustit.customer",
-  "appName": "Trustit Customer",
-  "webDir": "android-customer-bundle",
+  "appId": "com.trustit.partner",
+  "appName": "Trustit Partner",
+  "webDir": "android-embedded-bundle",
   "android": {
     "allowMixedContent": true,
     "captureInput": true,
-    "backgroundColor": "#1E3A8A"
+    "backgroundColor": "#7C2D12"
   },
   "plugins": {
     "CapacitorHttp": {
@@ -14,7 +14,7 @@
     "SplashScreen": {
       "launchShowDuration": 1200,
       "launchAutoHide": true,
-      "backgroundColor": "#1E3A8A",
+      "backgroundColor": "#7C2D12",
       "androidSplashResourceName": "splash",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": true,
