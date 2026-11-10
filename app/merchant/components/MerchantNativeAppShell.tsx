@@ -1702,7 +1702,7 @@ export default function MerchantNativeAppShell({
                   })
                 );
               }
-              showToast(`वापसी पर स्वागत है, ${finalStore}!`);
+              showToast(`Welcome back, ${finalStore}!`);
             }}
             onRegisterComplete={(details) => {
               if (details?.storeName) setStoreName(details.storeName);
@@ -1732,7 +1732,7 @@ export default function MerchantNativeAppShell({
                   })
                 );
               }
-              showToast(`दुकान "${details?.storeName || storeName}" सफलतापूर्वक रजिस्टर हो गई!`);
+              showToast(`Store "${details?.storeName || storeName}" registered successfully!`);
             }}
           />
         )}

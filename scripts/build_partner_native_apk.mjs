@@ -153,7 +153,7 @@ const apiInterceptor = `
           var bridge = window.Capacitor;
           var payload = {
             manifestUrl: API_HOST + '/api/hyperlocal/ota?app=partner',
-            currentVersion: '3.2.1'
+            currentVersion: '3.4.0'
           };
           if (bridge && typeof bridge.nativePromise === 'function') {
             bridge.nativePromise('TrustitNativeBridge', 'checkAndApplyOta', payload);
@@ -215,8 +215,8 @@ const gradlePath = path.join(androidAppDir, 'build.gradle');
 let gradle = fs.readFileSync(gradlePath, 'utf8');
 gradle = gradle.replace(/namespace\s+"[^"]+"/, 'namespace "com.trustit.partner"');
 gradle = gradle.replace(/applicationId\s+"[^"]+"/, 'applicationId "com.trustit.partner"');
-gradle = gradle.replace(/versionCode\s+\d+/, 'versionCode 21');
-gradle = gradle.replace(/versionName\s+"[^"]+"/, 'versionName "3.2.1"');
+gradle = gradle.replace(/versionCode\s+\d+/, 'versionCode 22');
+gradle = gradle.replace(/versionName\s+"[^"]+"/, 'versionName "3.4.0"');
 fs.writeFileSync(gradlePath, gradle);
 
 const stringsXml = `<?xml version='1.0' encoding='utf-8'?>
@@ -364,13 +364,13 @@ execSync(`tar -a -c -f "${zipPath}" *`, { cwd: bundleDir, stdio: 'inherit' });
 const otaStats = fs.statSync(zipPath);
 const otaSizeMb = (otaStats.size / (1024 * 1024)).toFixed(2);
 
-const otaVersion = '3.3.1';
+const otaVersion = '3.4.0';
 const manifest = {
   version: otaVersion,
   minAppVersion: '2.2.0',
   bundleUrl: `https://trustitreview.com/bundles/partner-bundle-latest.zip?v=${Date.now()}`,
   updatedAt: new Date().toISOString(),
-  notes: 'Official Trustit Merchant Partner true native release with emerald green register button and WhatsApp OTP socket bridge',
+  notes: 'Official Trustit Merchant Partner release v3.4.0: Pure English auth UI, smooth 6-digit OTP input, 30s resend timer, solid Verify button, and strict new merchant registration',
   sizeBytes: otaStats.size
 };
 

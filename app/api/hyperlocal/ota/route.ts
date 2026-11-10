@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import riderManifest from "@/public/bundles/rider-ota-manifest.json";
 import partnerManifest from "@/public/bundles/partner-ota-manifest.json";
+import customerManifest from "@/public/bundles/customer-ota-manifest.json";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,12 @@ export async function GET(request: Request) {
   const app = (searchParams.get("app") || "partner").toLowerCase();
   const currentClientVersion = searchParams.get("current") || "";
 
-  let manifest = app === "rider" ? riderManifest : partnerManifest;
+  let manifest = partnerManifest;
+  if (app === "rider") {
+    manifest = riderManifest;
+  } else if (app === "customer") {
+    manifest = customerManifest;
+  }
 
   // Always force hasUpdate = true if client is on an older version or no version passed
   const hasUpdate = !currentClientVersion || manifest.version !== currentClientVersion;
