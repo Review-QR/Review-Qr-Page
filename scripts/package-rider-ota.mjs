@@ -7,7 +7,7 @@ const bundleDir = path.join(rootDir, 'android-rider-bundle');
 const publicBundlesDir = path.join(rootDir, 'public', 'bundles');
 
 console.log('========================================================');
-console.log('🚀 TRUSTIT RIDER — ENTERPRISE PRODUCTION OTA v5.2.0 PACKAGER');
+console.log('🚀 TRUSTIT RIDER — ENTERPRISE PRODUCTION OTA v5.3.0 PACKAGER');
 console.log('========================================================');
 
 // 1. Clean & create bundle directory
@@ -183,20 +183,20 @@ const timestamp = Date.now();
 // 6. Update rider-ota-manifest.json
 const manifestPath = path.join(publicBundlesDir, 'rider-ota-manifest.json');
 const manifestData = {
-  version: "5.2.0",
+  version: "5.3.0",
   minAppVersion: "2.5.0",
   bundleUrl: `https://trustitreview.com/bundles/rider-bundle-latest.zip?v=${timestamp}`,
   updatedAt: new Date().toISOString(),
-  notes: "Rider Enterprise v5.2.0: High-accuracy live GPS telemetry watcher (every 3-5s), intelligent Mapbox & Google Maps reverse geocoding via server proxy, zero hardcoded fake fallbacks, real GPS coordinates support, and real-time satellite accuracy indicator",
+  notes: "Rider Enterprise v5.3.0: Native Android hardware GPS bridge integration (direct satellite & cell tower telemetry), continuous 3.5s real-time hardware location loop, verified Google Maps reverse-geocoding engine with billing active, auto-refresh WebView on OTA update, zero hardcoded fallbacks.",
   sizeBytes: zipStats.size
 };
 
 fs.writeFileSync(manifestPath, JSON.stringify(manifestData, null, 2), 'utf8');
-console.log('✔ Updated public/bundles/rider-ota-manifest.json with version 5.2.0');
+console.log('✔ Updated public/bundles/rider-ota-manifest.json with version 5.3.0');
 console.log(`   Size: ${(zipStats.size / (1024 * 1024)).toFixed(2)} MB (${zipStats.size} bytes)`);
 
 // 7. Clean up temp bundle dir
 fs.rmSync(bundleDir, { recursive: true, force: true });
 console.log('✔ Cleaned up temporary android-rider-bundle directory');
 
-console.log('\n🎉 Production OTA v5.2.0 successfully packaged and ready for deployment!');
+console.log('\n🎉 Production OTA v5.3.0 successfully packaged and ready for deployment!');

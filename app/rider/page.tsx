@@ -294,33 +294,106 @@ export default function StandaloneRiderProductionApp() {
     setLiveLocationName(`GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`);
   };
 
-  const triggerGpsScan = () => {
-    if (typeof window === "undefined" || !("geolocation" in navigator)) {
-      setLiveLocationName("GPS Unavailable");
-      return;
+  const processLocationUpdate = (latitude: number, longitude: number, accuracy?: number, speed?: number) => {
+    const now = Date.now();
+    if (accuracy) {
+      const roundedAcc = Number(accuracy.toFixed(1));
+      setGpsAccuracy((prev) => {
+        if (prev === null || Math.abs(prev - roundedAcc) >= 0.5) {
+          return roundedAcc;
+        }
+        return prev;
+      });
     }
-    setIsLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setIsLocating(false);
-        const { latitude, longitude, accuracy } = pos.coords;
-        const acc = accuracy ? Number(accuracy.toFixed(1)) : 5.0;
-        setGpsAccuracy(acc);
-        setGpsCoords({ lat: latitude, lng: longitude });
-        resolveLocationName(latitude, longitude);
-      },
-      (err) => {
-        setIsLocating(false);
-        console.warn("[GPS] Current position error:", err);
-        setLiveLocationName((prev) => {
-          if (!prev || prev === "Locating GPS...") {
-            return "GPS Signal Waiting (Enable Location)";
-          }
-          return prev;
+    setGpsCoords({ lat: latitude, lng: longitude });
+
+    // Intelligent Address Resolution (Updates when moved > 100m or after 2 minutes)
+    const lastCoords = lastGeocodedCoordsRef.current;
+    let shouldGeocode = false;
+    if (!lastCoords) {
+      shouldGeocode = true;
+    } else {
+      const dLat = latitude - lastCoords.lat;
+      const dLng = longitude - lastCoords.lng;
+      const distDegrees = Math.sqrt(dLat * dLat + dLng * dLng);
+      // ~0.001 degrees = ~110m
+      if (distDegrees >= 0.001 || now - lastGeocodeTimeRef.current >= 120000) {
+        shouldGeocode = true;
+      }
+    }
+
+    if (shouldGeocode) {
+      lastGeocodeTimeRef.current = now;
+      resolveLocationName(latitude, longitude);
+    }
+
+    // Telemetry Heartbeat to Backend Dispatch Engine (Every 5s when online)
+    if (isOnline && rider?.id && now - lastHeartbeatTimeRef.current >= 5000) {
+      lastHeartbeatTimeRef.current = now;
+      setTelemetrySyncState("syncing");
+
+      TrustitNative.nativeFetch("/api/hyperlocal/rider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "heartbeat_telemetry",
+          riderId: rider.id,
+          latitude,
+          longitude,
+          accuracyMeters: accuracy || 4.2,
+          speedKmh: speed ? Math.round(speed * 3.6) : 0,
+          batteryPercentage: batteryLevelRef.current,
+          isMoving: Boolean(speed && speed > 0.5),
+        }),
+      })
+        .then(() => {
+          setTelemetrySyncState("synced");
+          setLastSyncTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+        })
+        .catch(() => {
+          setTelemetrySyncState("idle");
         });
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+    }
+  };
+
+  const triggerGpsScan = async () => {
+    setIsLocating(true);
+    // 1. Direct Native Android Hardware GPS Bridge (Instant Satellites / Cell Towers)
+    try {
+      const nativeLoc = await TrustitNative.getPreciseLocation();
+      if (nativeLoc && nativeLoc.latitude && nativeLoc.longitude) {
+        setIsLocating(false);
+        processLocationUpdate(nativeLoc.latitude, nativeLoc.longitude, nativeLoc.accuracy, nativeLoc.speed);
+        return;
+      }
+    } catch (e) {
+      console.warn("[GPS] Native scan fallback:", e);
+    }
+
+    // 2. Browser navigator.geolocation Fallback
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setIsLocating(false);
+          const { latitude, longitude, accuracy, speed } = pos.coords;
+          processLocationUpdate(latitude, longitude, accuracy, speed || 0);
+        },
+        (err) => {
+          setIsLocating(false);
+          console.warn("[GPS] Current position error:", err);
+          setLiveLocationName((prev) => {
+            if (!prev || prev === "Locating GPS...") {
+              return "GPS Signal Waiting (Enable Location)";
+            }
+            return prev;
+          });
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
+    } else {
+      setIsLocating(false);
+      setLiveLocationName("GPS Unavailable");
+    }
   };
 
   // Immediate location fetch on cold mount
@@ -328,85 +401,42 @@ export default function StandaloneRiderProductionApp() {
     triggerGpsScan();
   }, []);
 
+  // 4. CONTINUOUS LIVE TELEMETRY LOOP (Every 3.5s hardware poll + webview watcher)
   useEffect(() => {
-    if (typeof window === "undefined" || !("geolocation" in navigator)) return;
-
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const { latitude, longitude, accuracy, speed } = pos.coords;
-        const now = Date.now();
-
-        // 1. Live accuracy and coordinate telemetry (Updates continuously every 3-5s)
-        if (accuracy) {
-          const roundedAcc = Number(accuracy.toFixed(1));
-          setGpsAccuracy((prev) => {
-            if (prev === null || Math.abs(prev - roundedAcc) >= 1.0) {
-              return roundedAcc;
-            }
-            return prev;
-          });
+    let watchId: number | null = null;
+    if (typeof window !== "undefined" && "geolocation" in navigator) {
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const { latitude, longitude, accuracy, speed } = pos.coords;
+          processLocationUpdate(latitude, longitude, accuracy, speed || 0);
+        },
+        (err) => {
+          console.warn("[GPS] Watch position warning:", err);
+        },
+        {
+          enableHighAccuracy: true,
+          maximumAge: 2000,
+          timeout: 10000,
         }
-        setGpsCoords({ lat: latitude, lng: longitude });
+      );
+    }
 
-        // 2. Intelligent Address Resolution (Updates when moved > 100m or after 2 minutes)
-        const lastCoords = lastGeocodedCoordsRef.current;
-        let shouldGeocode = false;
-        if (!lastCoords) {
-          shouldGeocode = true;
-        } else {
-          const dLat = latitude - lastCoords.lat;
-          const dLng = longitude - lastCoords.lng;
-          const distDegrees = Math.sqrt(dLat * dLat + dLng * dLng);
-          // ~0.001 degrees = ~110m
-          if (distDegrees >= 0.001 || now - lastGeocodeTimeRef.current >= 120000) {
-            shouldGeocode = true;
-          }
+    // Continuous 3.5s hardware polling loop ensures updates even if WebView throttles
+    const pollInterval = setInterval(async () => {
+      try {
+        const nativeLoc = await TrustitNative.getPreciseLocation();
+        if (nativeLoc && nativeLoc.latitude && nativeLoc.longitude) {
+          processLocationUpdate(nativeLoc.latitude, nativeLoc.longitude, nativeLoc.accuracy, nativeLoc.speed);
         }
+      } catch {}
+    }, 3500);
 
-        if (shouldGeocode) {
-          lastGeocodeTimeRef.current = now;
-          resolveLocationName(latitude, longitude);
-        }
-
-        // 3. Telemetry Heartbeat to Backend Dispatch Engine (Every 5s when online)
-        if (isOnline && rider?.id && now - lastHeartbeatTimeRef.current >= 5000) {
-          lastHeartbeatTimeRef.current = now;
-          setTelemetrySyncState("syncing");
-
-          TrustitNative.nativeFetch("/api/hyperlocal/rider", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "heartbeat_telemetry",
-              riderId: rider.id,
-              latitude,
-              longitude,
-              accuracyMeters: accuracy || 4.2,
-              speedKmh: speed ? Math.round(speed * 3.6) : 0,
-              batteryPercentage: batteryLevelRef.current,
-              isMoving: Boolean(speed && speed > 0.5),
-            }),
-          })
-            .then(() => {
-              setTelemetrySyncState("synced");
-              setLastSyncTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-            })
-            .catch(() => {
-              setTelemetrySyncState("idle");
-            });
-        }
-      },
-      (err) => {
-        console.warn("[GPS] Watch position warning:", err);
-      },
-      {
-        enableHighAccuracy: true,
-        maximumAge: 2000,
-        timeout: 10000,
+    return () => {
+      if (watchId !== null && typeof window !== "undefined" && "geolocation" in navigator) {
+        navigator.geolocation.clearWatch(watchId);
       }
-    );
-
-    return () => navigator.geolocation.clearWatch(watchId);
+      clearInterval(pollInterval);
+    };
   }, [isOnline, rider?.id]);
 
   // ─────────────────────────────────────────────────────────────

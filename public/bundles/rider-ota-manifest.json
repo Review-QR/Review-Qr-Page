@@ -1,8 +1,8 @@
 {
-  "version": "5.2.0",
+  "version": "5.3.0",
   "minAppVersion": "2.5.0",
-  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1794155285045",
-  "updatedAt": "2026-11-08T16:28:05.045Z",
-  "notes": "Rider Enterprise v5.2.0: High-accuracy live GPS telemetry watcher (every 3-5s), intelligent Mapbox & Google Maps reverse geocoding via server proxy, zero hardcoded fake fallbacks, real GPS coordinates support, and real-time satellite accuracy indicator",
-  "sizeBytes": 3485385
+  "bundleUrl": "https://trustitreview.com/bundles/rider-bundle-latest.zip?v=1794285607301",
+  "updatedAt": "2026-11-10T04:40:07.301Z",
+  "notes": "Rider Enterprise v5.3.0: Native Android hardware GPS bridge integration (direct satellite & cell tower telemetry), continuous 3.5s real-time hardware location loop, verified Google Maps reverse-geocoding engine with billing active, auto-refresh WebView on OTA update, zero hardcoded fallbacks.",
+  "sizeBytes": 3485481
 }

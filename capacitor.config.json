@@ -1,11 +1,11 @@
 {
-  "appId": "com.trustit.partner",
-  "appName": "Trustit Partner",
-  "webDir": "android-embedded-bundle",
+  "appId": "com.trustit.rider",
+  "appName": "Trustit Rider",
+  "webDir": "android-rider-bundle",
   "android": {
     "allowMixedContent": true,
     "captureInput": true,
-    "backgroundColor": "#7C2D12"
+    "backgroundColor": "#064E3B"
   },
   "plugins": {
     "CapacitorHttp": {
@@ -14,7 +14,7 @@
     "SplashScreen": {
       "launchShowDuration": 1200,
       "launchAutoHide": true,
-      "backgroundColor": "#7C2D12",
+      "backgroundColor": "#064E3B",
       "androidSplashResourceName": "splash",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": true,

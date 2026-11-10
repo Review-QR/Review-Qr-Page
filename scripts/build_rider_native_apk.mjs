@@ -157,7 +157,7 @@ const apiInterceptor = `
           var bridge = window.Capacitor;
           var payload = {
             manifestUrl: API_HOST + '/api/hyperlocal/ota?app=rider',
-            currentVersion: '3.2.0'
+            currentVersion: '5.3.0'
           };
           if (bridge && typeof bridge.nativePromise === 'function') {
             bridge.nativePromise('TrustitNativeBridge', 'checkAndApplyOta', payload);
@@ -250,10 +250,10 @@ console.log('   ✔ strings.xml configured for "Trustit Rider" (com.trustit.ride
 const gradlePath = path.join(androidAppDir, 'build.gradle');
 let gradleContent = fs.readFileSync(gradlePath, 'utf8');
 gradleContent = gradleContent.replace(/applicationId\s+"[^"]+"/, `applicationId "com.trustit.rider"`);
-gradleContent = gradleContent.replace(/versionCode\s+\d+/, `versionCode 25`);
-gradleContent = gradleContent.replace(/versionName\s+"[^"]+"/, `versionName "3.4.0"`);
+gradleContent = gradleContent.replace(/versionCode\s+\d+/, `versionCode 26`);
+gradleContent = gradleContent.replace(/versionName\s+"[^"]+"/, `versionName "5.3.0"`);
 fs.writeFileSync(gradlePath, gradleContent);
-console.log('   ✔ build.gradle updated (applicationId: com.trustit.rider, v3.4.0 New Icon Build)');
+console.log('   ✔ build.gradle updated (applicationId: com.trustit.rider, v5.3.0 New Hardware GPS Build)');
 
 // 5. Install PNG Icons (Trustit Rider branding - delivery rider logo)
 // PNG icons were pre-generated in mipmap-* folders; update colors.xml for adaptive icon background

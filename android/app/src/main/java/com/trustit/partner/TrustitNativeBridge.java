@@ -1,19 +1,28 @@
 package com.trustit.partner;
 
+import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.media.AudioAttributes;
 import android.media.AudioManager;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.WindowManager;
+import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
@@ -21,13 +30,27 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
+import com.getcapacitor.PermissionState;
 
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.UUID;
 
-@CapacitorPlugin(name = "TrustitNativeBridge")
+@CapacitorPlugin(
+    name = "TrustitNativeBridge",
+    permissions = {
+        @Permission(
+            alias = "location",
+            strings = {
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            }
+        )
+    }
+)
 public class TrustitNativeBridge extends Plugin {
 
     private static final UUID SPP_UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
@@ -316,9 +339,10 @@ public class TrustitNativeBridge extends Plugin {
     public static void performBackgroundOtaSync(Context ctx, com.getcapacitor.Bridge bridge) {
         new Thread(() -> {
             try {
-                final String appName = ctx.getPackageName().contains("rider") ? "rider" : "partner";
-                final String manifestUrl = "https://trustitreview.com/api/hyperlocal/ota?app=" + appName;
                 android.content.SharedPreferences otaPrefs = ctx.getSharedPreferences("TrustitOtaSettings", Context.MODE_PRIVATE);
+                final String defaultApp = ctx.getPackageName().contains("rider") ? "rider" : "partner";
+                final String appName = otaPrefs.getString("appMode", defaultApp);
+                final String manifestUrl = "https://trustitreview.com/api/hyperlocal/ota?app=" + appName;
                 String activeOtaVersion = otaPrefs.getString("activeVersion", "2.2.0");
 
                 java.net.URL url = new java.net.URL(manifestUrl + "&current=" + activeOtaVersion);
@@ -395,8 +419,11 @@ public class TrustitNativeBridge extends Plugin {
                             }
                         } catch (Exception ignored) {}
                         bridge.setServerBasePath(targetDir.getAbsolutePath());
-                        // Silent OTA update without intrusive UI Toast
-                        // android.widget.Toast.makeText(ctx, "⚡ Trustit OTA: Updated to v" + latestVersion, android.widget.Toast.LENGTH_LONG).show();
+                        try {
+                            if (bridge.getWebView() != null) {
+                                bridge.getWebView().post(() -> bridge.getWebView().reload());
+                            }
+                        } catch (Exception ignored) {}
                     });
                 }
             } catch (Exception ignored) {}
@@ -405,15 +432,22 @@ public class TrustitNativeBridge extends Plugin {
 
     @PluginMethod
     public void checkAndApplyOta(PluginCall call) {
-        final String appName = getContext().getPackageName().contains("rider") ? "rider" : "partner";
-        final String manifestUrl = call.getString("manifestUrl", "https://trustitreview.com/api/hyperlocal/ota?app=" + appName);
+        final Context ctx = getContext();
+        final android.content.SharedPreferences otaPrefs = ctx.getSharedPreferences("TrustitOtaSettings", Context.MODE_PRIVATE);
+        final String defaultApp = ctx.getPackageName().contains("rider") ? "rider" : "partner";
+        final String savedApp = otaPrefs.getString("appMode", defaultApp);
+        final String manifestUrl = call.getString("manifestUrl", "https://trustitreview.com/api/hyperlocal/ota?app=" + savedApp);
         final String currentVersion = call.getString("currentVersion", "2.2.0");
+
+        if (manifestUrl.contains("app=rider")) {
+            otaPrefs.edit().putString("appMode", "rider").apply();
+        } else if (manifestUrl.contains("app=partner")) {
+            otaPrefs.edit().putString("appMode", "partner").apply();
+        }
 
         new Thread(() -> {
             java.net.HttpURLConnection conn = null;
             try {
-                Context ctx = getContext();
-                android.content.SharedPreferences otaPrefs = ctx.getSharedPreferences("TrustitOtaSettings", Context.MODE_PRIVATE);
                 String activeOtaVersion = otaPrefs.getString("activeVersion", currentVersion);
 
                 String sep = manifestUrl.contains("?") ? "&" : "?";
@@ -526,5 +560,148 @@ public class TrustitNativeBridge extends Plugin {
                 if (conn != null) conn.disconnect();
             }
         }).start();
+    }
+
+    // ── HIGH-PRECISION NATIVE HARDWARE GPS ENGINE (SWIGGY/ZOMATO STANDARD) ──
+    @PluginMethod
+    public void getPreciseLocation(PluginCall call) {
+        Context context = getContext();
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionForAlias("location", call, "locationPermsCallback");
+            return;
+        }
+
+        LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+        if (lm == null) {
+            call.reject("LocationManager service is unavailable on device");
+            return;
+        }
+
+        boolean gpsEnabled = false;
+        boolean networkEnabled = false;
+        try {
+            gpsEnabled = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        } catch (Exception ignored) {}
+        try {
+            networkEnabled = lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        } catch (Exception ignored) {}
+
+        if (!gpsEnabled && !networkEnabled) {
+            JSObject err = new JSObject();
+            err.put("gpsDisabled", true);
+            call.reject("GPS and Location Services are disabled. Please turn on Location in device settings.", err);
+            return;
+        }
+
+        // 1. Check for immediate cached / last known location
+        Location bestLoc = null;
+        try {
+            Location gpsLoc = gpsEnabled ? lm.getLastKnownLocation(LocationManager.GPS_PROVIDER) : null;
+            Location netLoc = networkEnabled ? lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) : null;
+            if (gpsLoc != null && netLoc != null) {
+                long gpsAge = System.currentTimeMillis() - gpsLoc.getTime();
+                if (gpsAge < 30000 && gpsLoc.getAccuracy() <= netLoc.getAccuracy() + 10) {
+                    bestLoc = gpsLoc;
+                } else if (gpsLoc.getTime() >= netLoc.getTime()) {
+                    bestLoc = gpsLoc;
+                } else {
+                    bestLoc = netLoc;
+                }
+            } else if (gpsLoc != null) {
+                bestLoc = gpsLoc;
+            } else {
+                bestLoc = netLoc;
+            }
+        } catch (SecurityException ignored) {}
+
+        // If last known location is fresh (< 8 seconds old), return immediately
+        if (bestLoc != null && (System.currentTimeMillis() - bestLoc.getTime() < 8000)) {
+            resolveLocationResult(call, bestLoc);
+            return;
+        }
+
+        // 2. Request fresh real-time satellite / cell-tower fix
+        final Location fallbackLoc = bestLoc;
+        final boolean[] responded = new boolean[]{false};
+        final Handler handler = new Handler(Looper.getMainLooper());
+
+        final LocationListener listener = new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                if (!responded[0]) {
+                    responded[0] = true;
+                    try {
+                        lm.removeUpdates(this);
+                    } catch (Exception ignored) {}
+                    resolveLocationResult(call, location);
+                }
+            }
+
+            @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
+            @Override public void onProviderEnabled(String provider) {}
+            @Override public void onProviderDisabled(String provider) {}
+        };
+
+        final Runnable timeoutRunnable = () -> {
+            if (!responded[0]) {
+                responded[0] = true;
+                try {
+                    lm.removeUpdates(listener);
+                } catch (Exception ignored) {}
+                if (fallbackLoc != null) {
+                    resolveLocationResult(call, fallbackLoc);
+                } else {
+                    call.reject("GPS satellite timeout: No satellite fix acquired within 4.5s.");
+                }
+            }
+        };
+
+        handler.postDelayed(timeoutRunnable, 4500);
+
+        try {
+            if (gpsEnabled) {
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, listener, Looper.getMainLooper());
+            }
+            if (networkEnabled) {
+                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, listener, Looper.getMainLooper());
+            }
+        } catch (SecurityException se) {
+            handler.removeCallbacks(timeoutRunnable);
+            if (fallbackLoc != null) {
+                resolveLocationResult(call, fallbackLoc);
+            } else {
+                call.reject("Security exception requesting location updates: " + se.getMessage());
+            }
+        } catch (Exception e) {
+            handler.removeCallbacks(timeoutRunnable);
+            if (fallbackLoc != null) {
+                resolveLocationResult(call, fallbackLoc);
+            } else {
+                call.reject("Failed to request location updates: " + e.getMessage());
+            }
+        }
+    }
+
+    @PermissionCallback
+    private void locationPermsCallback(PluginCall call) {
+        if (getPermissionState("location") == PermissionState.GRANTED) {
+            getPreciseLocation(call);
+        } else {
+            call.reject("Location permission is required for live GPS tracking.");
+        }
+    }
+
+    private void resolveLocationResult(PluginCall call, Location loc) {
+        JSObject res = new JSObject();
+        res.put("latitude", loc.getLatitude());
+        res.put("longitude", loc.getLongitude());
+        res.put("accuracy", Math.round(loc.getAccuracy() * 10.0) / 10.0);
+        res.put("speed", loc.getSpeed());
+        res.put("bearing", loc.getBearing());
+        res.put("altitude", loc.getAltitude());
+        res.put("provider", loc.getProvider());
+        res.put("timestamp", loc.getTime());
+        call.resolve(res);
     }
 }

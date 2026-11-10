@@ -10,7 +10,20 @@ interface TrustitNativeBridgePlugin {
   getPairedPrinters(): Promise<{ success: boolean; printers: Array<{ name: string; address: string }> }>;
   printThermalReceipt(options: { address?: string; text: string }): Promise<{ success: boolean; printerName?: string; message?: string }>;
   nativeFetch(options: { url: string; method?: string; body?: string }): Promise<{ status: number; data: string }>;
-  getPreciseLocation(): Promise<{ latitude: number; longitude: number; accuracy: number; address: string; mohalla: string; city: string; pincode: string }>;
+  getPreciseLocation(): Promise<{
+    latitude: number;
+    longitude: number;
+    accuracy?: number;
+    speed?: number;
+    bearing?: number;
+    altitude?: number;
+    provider?: string;
+    timestamp?: number;
+    address?: string;
+    mohalla?: string;
+    city?: string;
+    pincode?: string;
+  }>;
   playHapticFeedback(options?: { type?: string }): Promise<{ success: boolean; type?: string }>;
   nativeCheckoutHandoff(options?: { upiUri?: string }): Promise<{ success: boolean; dispatched?: boolean; installedCount?: number }>;
   checkAndApplyOta(options?: { manifestUrl?: string; currentVersion?: string }): Promise<{ hasUpdate: boolean; appliedVersion?: string; message?: string }>;
@@ -115,6 +128,11 @@ export const TrustitNative = {
     latitude: number;
     longitude: number;
     accuracy?: number;
+    speed?: number;
+    bearing?: number;
+    altitude?: number;
+    provider?: string;
+    timestamp?: number;
     address?: string;
     mohalla?: string;
     city?: string;
@@ -124,7 +142,9 @@ export const TrustitNative = {
     if (plugin && typeof plugin.getPreciseLocation === "function") {
       try {
         const res = await plugin.getPreciseLocation();
-        return res;
+        if (res && res.latitude && res.longitude) {
+          return res;
+        }
       } catch (err) {
         console.warn("Native location fallback to web navigator:", err);
       }
@@ -137,6 +157,11 @@ export const TrustitNative = {
             latitude: pos.coords.latitude,
             longitude: pos.coords.longitude,
             accuracy: pos.coords.accuracy,
+            speed: pos.coords.speed || 0,
+            bearing: pos.coords.heading || 0,
+            altitude: pos.coords.altitude || 0,
+            provider: "browser",
+            timestamp: pos.timestamp,
             address: `GPS (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`,
             mohalla: "Live Telemetry",
             city: "UP",
