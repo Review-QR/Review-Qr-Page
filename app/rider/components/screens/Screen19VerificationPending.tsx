@@ -29,9 +29,26 @@ export default function Screen19VerificationPending({
 
   // Poll status from /api/hyperlocal/rider every 3 seconds
   const checkStatus = useCallback(async () => {
-    if (!riderId || riderId === "rider_new_partner") return;
+    let effectiveRiderId = riderId;
+    if (!effectiveRiderId || effectiveRiderId === "rider_new_partner") {
+      if (typeof window !== "undefined") {
+        const stored = localStorage.getItem("trustit_rider_profile");
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed?.id && parsed.id !== "rider_new_partner") {
+              effectiveRiderId = parsed.id;
+            }
+          } catch {
+            // ignore
+          }
+        }
+      }
+    }
+
+    if (!effectiveRiderId || effectiveRiderId === "rider_new_partner") return;
     try {
-      const res = await fetch(`/api/hyperlocal/rider?riderId=${riderId}`);
+      const res = await fetch(`/api/hyperlocal/rider?riderId=${effectiveRiderId}`);
       if (res.ok) {
         const data = await res.json();
         if (data.rider) {
@@ -138,7 +155,9 @@ export default function Screen19VerificationPending({
               <div className="space-y-1.5 pt-1">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Rider Name:</span>
-                  <span className="font-bold text-slate-900">{riderData?.full_name || "Under Review"}</span>
+                  <span className="font-bold text-slate-900">
+                    {riderData?.full_name || (typeof window !== "undefined" ? localStorage.getItem("trustit_rider_name") : null) || "Delivery Partner"}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Vehicle &amp; DL:</span>

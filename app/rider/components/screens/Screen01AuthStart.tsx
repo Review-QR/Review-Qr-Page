@@ -20,10 +20,12 @@ interface Screen01Props {
     meta?: { isNewRegistration?: boolean; fullName?: string; vehicleType?: string }
   ) => void;
   onGoogleLogin?: () => Promise<void> | void;
+  noticeMessage?: string | null;
 }
 
 export default function Screen01AuthStart({
   onContinue,
+  noticeMessage,
 }: Screen01Props) {
   const [phone, setPhone] = useState("");
   const [selectedChannel, setSelectedChannel] = useState<"whatsapp" | "sms">("whatsapp");
@@ -85,6 +87,12 @@ export default function Screen01AuthStart({
             We will send an instant 6-digit verification code on WhatsApp.
           </p>
         </div>
+
+        {noticeMessage && (
+          <div className="mt-2.5 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-[11px] font-bold text-amber-900 leading-snug">
+            ⚠️ {noticeMessage}
+          </div>
+        )}
 
         {/* Phone Entry Card */}
         <div className="mt-3 bg-white border border-slate-200 rounded-xl p-3 shadow-2xs space-y-3">

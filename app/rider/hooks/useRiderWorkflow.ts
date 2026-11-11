@@ -48,6 +48,35 @@ const BLANK_NEW_RIDER: DeliveryRider = {
   upi_id: "",
 };
 
+const RIDER_STORAGE_KEYS = [
+  "trustit_rider_profile",
+  "trustit_rider_session_token",
+  "trustit_cached_trip",
+  "trustit_rider_onboarded",
+  "trustit_rider_name",
+  "trustit_rider_address",
+  "trustit_rider_emergency_name",
+  "trustit_rider_emergency",
+  "trustit_rider_vehicle_type",
+  "trustit_rider_vehicle_number",
+  "trustit_rider_dl_number",
+  "trustit_rider_upi",
+  "trustit_rider_profile_draft",
+  "trustit_rider_vehicle_draft",
+];
+
+/** Clears every cached rider session and registration draft key from browser storage. */
+export function clearAllRiderStorage() {
+  if (typeof window === "undefined") return;
+  for (const key of RIDER_STORAGE_KEYS) {
+    try {
+      localStorage.removeItem(key);
+    } catch {
+      // Ignore storage access errors
+    }
+  }
+}
+
 export function useRiderWorkflow() {
   const [currentScreenId, setCurrentScreenId] = useState<number>(1); // Start at Screen 01 (Auth Entry for New Rider)
   const [rider, setRider] = useState<DeliveryRider>(BLANK_NEW_RIDER);
@@ -61,6 +90,7 @@ export function useRiderWorkflow() {
   const [isSirenPlaying, setIsSirenPlaying] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [remoteConfig, setRemoteConfig] = useState<RiderRemoteConfig>(DEFAULT_RIDER_REMOTE_CONFIG);
+  const [sessionNotice, setSessionNotice] = useState<string | null>(null);
 
   // 1. Fetch Remote Config on Mount
   useEffect(() => {
@@ -80,33 +110,80 @@ export function useRiderWorkflow() {
     loadRemoteConfig();
   }, []);
 
-  // 2. Only restore saved session if explicitly saved in localStorage by the rider
+  // 2. Restore saved session and verify live existence against Supabase
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("trustit_rider_profile");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          // Purge any legacy dummy Arjun Singh session completely
-          if (
-            parsed?.full_name?.toLowerCase().includes("arjun") ||
-            parsed?.vehicle_number?.includes("2345") ||
-            parsed?.phone === "9876543210"
-          ) {
-            localStorage.removeItem("trustit_rider_profile");
-            localStorage.removeItem("trustit_rider_session_token");
-            return;
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("trustit_rider_profile");
+    if (!saved) return;
+
+    let cancelled = false;
+    async function restoreAndVerify() {
+      try {
+        const parsed = JSON.parse(saved as string);
+        if (
+          parsed?.full_name?.toLowerCase().includes("arjun") ||
+          parsed?.vehicle_number?.includes("2345") ||
+          parsed?.phone === "9876543210"
+        ) {
+          clearAllRiderStorage();
+          return;
+        }
+        if (parsed && parsed.id && parsed.id !== "rider_new_partner") {
+          // Verify with live DB that this rider has NOT been deleted by Admin
+          try {
+            const res = await fetch(`/api/hyperlocal/rider?riderId=${encodeURIComponent(parsed.id)}`);
+            if (cancelled) return;
+
+            if (res.status === 404) {
+              clearAllRiderStorage();
+              setRider(BLANK_NEW_RIDER);
+              setIsOnline(false);
+              setCurrentScreenId(1);
+              setSessionNotice(
+                "Your partner profile was deleted or reset. Please verify your mobile number and complete your full profile setup again."
+              );
+              return;
+            }
+
+            if (res.ok) {
+              const data = await res.json();
+              if (cancelled) return;
+              if (data?.rider) {
+                const liveRider = data.rider;
+                localStorage.setItem("trustit_rider_profile", JSON.stringify(liveRider));
+                setRider(liveRider);
+                if (typeof liveRider.cash_in_hand === "number") setCashInHand(liveRider.cash_in_hand);
+                if (typeof liveRider.wallet_balance === "number") setWalletBalance(liveRider.wallet_balance);
+
+                if (liveRider.is_verified && liveRider.kyc_status === "approved") {
+                  setIsOnline(Boolean(liveRider.is_online));
+                  setCurrentScreenId(7);
+                } else {
+                  setIsOnline(false);
+                  setCurrentScreenId(liveRider.full_name?.trim() ? 19 : 48);
+                }
+                return;
+              }
+            }
+          } catch {
+            // Network offline fallback to local verification state
           }
-          if (parsed && parsed.id && parsed.full_name && parsed.id !== "rider_new_partner" && parsed.is_verified) {
+
+          if (!cancelled && parsed.full_name && parsed.is_verified) {
             setRider(parsed);
-            setCurrentScreenId(7); // Jump to Cockpit if already onboarded
+            setCurrentScreenId(7);
             setIsOnline(Boolean(parsed.is_online));
             if (typeof parsed.cash_in_hand === "number") setCashInHand(parsed.cash_in_hand);
             if (typeof parsed.wallet_balance === "number") setWalletBalance(parsed.wallet_balance);
           }
-        } catch {}
-      }
+        }
+      } catch {}
     }
+
+    restoreAndVerify();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   /**
@@ -137,6 +214,43 @@ export function useRiderWorkflow() {
     } catch {}
   }, [isOnline, cashInHand, cashCeiling, rider.id]);
 
+  // Periodic session guard when active on Cockpit or Dashboard (detects Admin deletion immediately)
+  useEffect(() => {
+    if (!rider.id || rider.id === "rider_new_partner" || currentScreenId < 7 || currentScreenId === 19 || currentScreenId === 48) {
+      return;
+    }
+
+    let cancelled = false;
+    const guardInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/hyperlocal/rider?riderId=${encodeURIComponent(rider.id)}`);
+        if (cancelled) return;
+        if (res.status === 404) {
+          clearAllRiderStorage();
+          setRider(BLANK_NEW_RIDER);
+          setIsOnline(false);
+          setCashInHand(0);
+          setWalletBalance(0);
+          setTodayEarnings(0);
+          setTodayTripsCount(0);
+          setActiveOrder(null);
+          setIncomingOrder(null);
+          setCurrentScreenId(1);
+          setSessionNotice(
+            "Your partner profile was deleted or reset by Admin. Please log in and complete your full profile setup again."
+          );
+        }
+      } catch {
+        // Ignore transient network errors
+      }
+    }, 10000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(guardInterval);
+    };
+  }, [rider.id, currentScreenId]);
+
   // Live real order polling: checks if an order created by customer or merchant is targeted to this online rider
   useEffect(() => {
     if (!isOnline || activeOrder || !rider.id || rider.id === "rider_new_partner") return;
@@ -145,6 +259,17 @@ export function useRiderWorkflow() {
     const pollInterval = setInterval(async () => {
       try {
         const res = await fetch(`/api/hyperlocal/rider?riderId=${rider.id}`);
+        if (res.status === 404) {
+          if (!isSubscribed) return;
+          clearAllRiderStorage();
+          setRider(BLANK_NEW_RIDER);
+          setIsOnline(false);
+          setCurrentScreenId(1);
+          setSessionNotice(
+            "Your partner profile was deleted or reset by Admin. Please log in and complete your full profile setup again."
+          );
+          return;
+        }
         if (!res.ok) return;
         const data = await res.json();
         if (!isSubscribed) return;
@@ -463,11 +588,7 @@ export function useRiderWorkflow() {
    * 14. Reset to Brand New Unregistered Rider Session
    */
   const resetToNewRider = useCallback(() => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("trustit_rider_profile");
-      localStorage.removeItem("trustit_rider_session_token");
-      localStorage.removeItem("trustit_cached_trip");
-    }
+    clearAllRiderStorage();
     setRider(BLANK_NEW_RIDER);
     setIsOnline(false);
     setCashInHand(0);
@@ -499,6 +620,8 @@ export function useRiderWorkflow() {
     setSoundEnabled,
     remoteConfig,
     updateRemoteConfigLive,
+    sessionNotice,
+    setSessionNotice,
     toggleDuty,
     triggerIncomingOrderRadar,
     acceptOrder,

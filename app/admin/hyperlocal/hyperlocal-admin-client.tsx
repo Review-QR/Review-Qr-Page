@@ -344,10 +344,10 @@ export default function HyperlocalLiveAdminClient() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3.5">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-3.5 text-xs font-bold text-emerald-300 flex items-center justify-between shadow-lg animate-in fade-in">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-[11px] font-bold text-emerald-800 flex items-center justify-between shadow-xs animate-in fade-in">
           <div className="flex items-center gap-2">
             <span>⚡</span>
             <span>{toastMessage}</span>
@@ -355,7 +355,7 @@ export default function HyperlocalLiveAdminClient() {
           <button
             type="button"
             onClick={() => setToastMessage(null)}
-            className="text-xs text-slate-400 hover:text-white"
+            className="text-xs text-slate-500 hover:text-slate-900"
           >
             ✕
           </button>
@@ -363,20 +363,20 @@ export default function HyperlocalLiveAdminClient() {
       )}
 
       {/* ── TOP PRIMARY VIEW TOGGLE ── */}
-      <div className="flex items-center justify-between bg-slate-900/90 border border-slate-800 p-2 rounded-2xl">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-white border border-slate-200 p-1.5 rounded-xl shadow-2xs">
+        <div className="flex flex-wrap items-center gap-1.5">
           <button
             type="button"
             onClick={() => setViewMode("orders")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 ${
               viewMode === "orders"
-                ? "bg-amber-400 text-slate-950 shadow-md font-black"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                ? "bg-slate-900 text-white shadow-2xs font-black"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             }`}
           >
             <span>⚡ Live Orders &amp; Doorstep Audit</span>
             {counts.disputed > 0 && (
-              <span className="bg-rose-500 text-white px-1.5 py-0.2 rounded-full text-[10px] animate-pulse">
+              <span className="bg-rose-500 text-white px-1.5 py-0.2 rounded-full text-[9px] animate-pulse">
                 {counts.disputed}
               </span>
             )}
@@ -388,15 +388,15 @@ export default function HyperlocalLiveAdminClient() {
               setViewMode("settlements");
               fetchSettlements();
             }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 ${
               viewMode === "settlements"
-                ? "bg-amber-400 text-slate-950 shadow-md font-black"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                ? "bg-slate-900 text-white shadow-2xs font-black"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             }`}
           >
             <span>💰 Settlements &amp; Cashfree Payouts</span>
             {pendingMerchants.length + pendingRiders.length > 0 && (
-              <span className="bg-emerald-500 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[10px]">
+              <span className="bg-emerald-600 text-white font-black px-1.5 py-0.2 rounded-full text-[9px]">
                 {pendingMerchants.length + pendingRiders.length} Pending
               </span>
             )}
@@ -405,15 +405,15 @@ export default function HyperlocalLiveAdminClient() {
           <button
             type="button"
             onClick={() => setViewMode("riders")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 ${
               viewMode === "riders"
-                ? "bg-amber-400 text-slate-950 shadow-md font-black"
-                : "text-slate-400 hover:text-white hover:bg-slate-800"
+                ? "bg-amber-500 text-slate-950 shadow-2xs font-black"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
             }`}
           >
             <span>🛵 Rider Approvals</span>
             {pendingRidersCount > 0 && (
-              <span className="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[10px] animate-pulse">
+              <span className="bg-amber-400 text-slate-950 font-black px-1.5 py-0.2 rounded-full text-[9px] animate-pulse">
                 {pendingRidersCount} Pending
               </span>
             )}
@@ -421,15 +421,15 @@ export default function HyperlocalLiveAdminClient() {
         </div>
 
         {/* Status indicator */}
-        <div className="hidden sm:flex items-center gap-2 pr-2 text-[11px] font-mono">
-          <span className="text-slate-400">Gateway Rails:</span>
+        <div className="hidden sm:flex items-center gap-1.5 pr-2 text-[10px] font-mono">
+          <span className="text-slate-500">Gateway Rails:</span>
           {isCashfreeConfigured ? (
-            <span className="text-emerald-400 font-bold flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-emerald-400"></span> Cashfree Payouts Live
+            <span className="text-emerald-700 font-bold flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Cashfree Payouts Live
             </span>
           ) : (
-            <span className="text-amber-400 font-bold flex items-center gap-1">
-              <span className="h-2 w-2 rounded-full bg-amber-400"></span> 1-Click Bank Netbanking CSV Mode
+            <span className="text-amber-700 font-bold flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span> 1-Click Bank Netbanking CSV Mode
             </span>
           )}
         </div>
@@ -439,50 +439,50 @@ export default function HyperlocalLiveAdminClient() {
       {/* ── VIEW 1: LIVE ORDERS & DOORSTEP AUDIT ── */}
       {/* ═════════════════════════════════════════════════════════════════ */}
       {viewMode === "orders" && (
-        <div className="space-y-6">
-          {/* ── 4-CARD LIVE KPI DASHBOARD ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="space-y-3.5">
+          {/* ── 4-CARD COMPACT LIVE KPI DASHBOARD ── */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
             {/* Card 1: Active Running Orders */}
             <div
               onClick={() => setActiveTab("active")}
-              className={`cursor-pointer rounded-2xl border p-4 transition ${
+              className={`cursor-pointer rounded-xl border px-3 py-2 transition shadow-2xs ${
                 activeTab === "active"
-                  ? "border-emerald-500 bg-emerald-500/15 ring-2 ring-emerald-500/30"
-                  : "border-slate-800 bg-slate-900/80 hover:bg-slate-900"
+                  ? "border-emerald-400 bg-emerald-50 ring-1 ring-emerald-400"
+                  : "border-slate-200 bg-white hover:border-slate-300"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Running Orders</span>
-                <span className="relative flex h-2.5 w-2.5">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Running Orders</span>
+                <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                 </span>
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-black text-white">{counts.active}</span>
-                <span className="text-[11px] text-emerald-400 font-semibold">Live on Road / Kitchen</span>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-lg sm:text-xl font-black text-slate-900">{counts.active}</span>
+                <span className="text-[10px] text-emerald-700 font-semibold">Live on Road / Kitchen</span>
               </div>
             </div>
 
             {/* Card 2: Disputed / Refusals */}
             <div
               onClick={() => setActiveTab("disputed")}
-              className={`cursor-pointer rounded-2xl border p-4 transition ${
+              className={`cursor-pointer rounded-xl border px-3 py-2 transition shadow-2xs ${
                 counts.disputed > 0
-                  ? "border-rose-500 bg-rose-500/20 ring-2 ring-rose-500/40 animate-pulse"
+                  ? "border-rose-400 bg-rose-50 ring-1 ring-rose-400 animate-pulse"
                   : activeTab === "disputed"
-                  ? "border-rose-500 bg-rose-500/10 ring-2 ring-rose-500/20"
-                  : "border-slate-800 bg-slate-900/80 hover:bg-slate-900"
+                  ? "border-rose-300 bg-rose-50/50 ring-1 ring-rose-400"
+                  : "border-slate-200 bg-white hover:border-slate-300"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-rose-300 uppercase tracking-wider">Disputes / Refusals</span>
-                <span className="text-sm">🚨</span>
+                <span className="text-[10px] font-bold text-rose-800 uppercase tracking-wider">Disputes / Refusals</span>
+                <span className="text-xs">🚨</span>
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-black text-rose-400">{counts.disputed}</span>
-                <span className="text-[11px] text-rose-300 font-semibold">
-                  {counts.disputed > 0 ? "Requires Immediate Action!" : "All Clean"}
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-lg sm:text-xl font-black text-rose-600">{counts.disputed}</span>
+                <span className="text-[10px] text-rose-700 font-semibold">
+                  {counts.disputed > 0 ? "Action Needed!" : "All Clean"}
                 </span>
               </div>
             </div>
@@ -490,44 +490,44 @@ export default function HyperlocalLiveAdminClient() {
             {/* Card 3: Delivered Today */}
             <div
               onClick={() => setActiveTab("delivered")}
-              className={`cursor-pointer rounded-2xl border p-4 transition ${
+              className={`cursor-pointer rounded-xl border px-3 py-2 transition shadow-2xs ${
                 activeTab === "delivered"
-                  ? "border-blue-500 bg-blue-500/15 ring-2 ring-blue-500/30"
-                  : "border-slate-800 bg-slate-900/80 hover:bg-slate-900"
+                  ? "border-blue-400 bg-blue-50 ring-1 ring-blue-400"
+                  : "border-slate-200 bg-white hover:border-slate-300"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Delivered Today</span>
-                <span className="text-sm">✅</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Delivered Today</span>
+                <span className="text-xs">✅</span>
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-black text-white">{counts.deliveredToday}</span>
-                <span className="text-[11px] text-blue-400 font-semibold">OTP Verified</span>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-lg sm:text-xl font-black text-slate-900">{counts.deliveredToday}</span>
+                <span className="text-[10px] text-blue-700 font-semibold">OTP Verified</span>
               </div>
             </div>
 
             {/* Card 4: Cancelled Today */}
             <div
               onClick={() => setActiveTab("cancelled")}
-              className={`cursor-pointer rounded-2xl border p-4 transition ${
+              className={`cursor-pointer rounded-xl border px-3 py-2 transition shadow-2xs ${
                 activeTab === "cancelled"
-                  ? "border-rose-500 bg-rose-500/15 ring-2 ring-rose-500/30"
-                  : "border-slate-800 bg-slate-900/80 hover:bg-slate-900"
+                  ? "border-rose-400 bg-rose-50 ring-1 ring-rose-400"
+                  : "border-slate-200 bg-white hover:border-slate-300"
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cancelled Today</span>
-                <span className="text-sm">🔴</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Cancelled Today</span>
+                <span className="text-xs">🔴</span>
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-black text-slate-300">{counts.cancelledToday}</span>
-                <span className="text-[11px] text-rose-400 font-semibold">Doorstep / Reject</span>
+              <div className="mt-1 flex items-baseline gap-2">
+                <span className="text-lg sm:text-xl font-black text-slate-700">{counts.cancelledToday}</span>
+                <span className="text-[10px] text-rose-600 font-semibold">Doorstep / Reject</span>
               </div>
             </div>
           </div>
 
           {/* ── FILTER TABS & SEARCH BAR ── */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-white p-2 rounded-xl border border-slate-200 shadow-2xs">
             <div className="flex flex-wrap gap-1.5">
               {[
                 { id: "all", label: "All Orders", count: counts.total },
@@ -540,14 +540,16 @@ export default function HyperlocalLiveAdminClient() {
                   key={tab.id}
                   type="button"
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 ${
                     activeTab === tab.id
-                      ? "bg-amber-400 text-slate-950 shadow-sm"
-                      : "bg-slate-800/80 text-slate-300 hover:bg-slate-800"
+                      ? "bg-slate-900 text-white shadow-2xs"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                   }`}
                 >
                   <span>{tab.label}</span>
-                  <span className="rounded-md bg-black/20 px-1.5 py-0.2 text-[10px]">
+                  <span className={`rounded-full px-1.5 py-0.2 text-[9px] ${
+                    activeTab === tab.id ? "bg-white/20 text-white" : "bg-white text-slate-700 border border-slate-200"
+                  }`}>
                     {tab.count}
                   </span>
                 </button>
@@ -560,21 +562,20 @@ export default function HyperlocalLiveAdminClient() {
                 placeholder="Search code (#TR-DEL-3210), phone, rider..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 rounded-xl border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-amber-400"
+                className="w-full sm:w-60 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-amber-500 focus:bg-white"
               />
             </div>
           </div>
-
           {/* ── ORDERS LIST ── */}
           {isLoading ? (
-            <div className="p-12 text-center text-xs text-slate-400">
+            <div className="p-12 text-center text-xs text-slate-500">
               <span className="animate-spin inline-block text-lg mb-2">⚡</span>
               <p>Syncing live orders and OTPs from Supabase...</p>
             </div>
           ) : filteredOrders.length === 0 ? (
-            <div className="p-12 text-center rounded-2xl border border-slate-800 bg-slate-900/40 text-slate-400 space-y-1">
+            <div className="p-12 text-center rounded-2xl border border-slate-200 bg-white text-slate-500 space-y-1 shadow-2xs">
               <span className="text-3xl block">📋</span>
-              <p className="text-sm font-bold text-slate-300">No Orders in this View</p>
+              <p className="text-sm font-bold text-slate-800">No Orders in this View</p>
               <p className="text-xs">There are no orders matching the &quot;{activeTab}&quot; filter right now.</p>
             </div>
           ) : (
@@ -589,23 +590,23 @@ export default function HyperlocalLiveAdminClient() {
                 return (
                   <div
                     key={ord.id}
-                    className={`rounded-2xl border p-4 sm:p-5 transition shadow-sm space-y-3 ${
+                    className={`rounded-2xl border p-4 sm:p-5 transition shadow-2xs space-y-3 ${
                       isDisputed
-                        ? "border-rose-500/80 bg-rose-950/20 ring-1 ring-rose-500/40"
+                        ? "border-rose-300 bg-rose-50/60 ring-1 ring-rose-200"
                         : isCancelled
-                        ? "border-slate-800 bg-slate-900/40 opacity-75"
+                        ? "border-slate-200 bg-slate-50/70 opacity-75"
                         : isDelivered
-                        ? "border-slate-800/80 bg-slate-900/50"
-                        : "border-slate-700/80 bg-slate-900"
+                        ? "border-slate-200 bg-white"
+                        : "border-slate-200 bg-white"
                     }`}
                   >
                     {/* Header: Order Code, Type, Timestamps & Status */}
-                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-800">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
                       <div className="flex items-center gap-2">
-                        <span className="rounded-lg bg-indigo-600/30 border border-indigo-500/40 px-2 py-0.5 text-xs font-mono font-black text-indigo-300">
+                        <span className="rounded-lg bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-xs font-mono font-black text-indigo-700">
                           {formatUnifiedOrderCode(ord.id, biz?.name)}
                         </span>
-                        <span className="text-xs font-bold text-slate-300">
+                        <span className="text-xs font-bold text-slate-800">
                           {biz?.name || "Merchant Outlet"}
                         </span>
                         <span className="text-[10px] text-slate-500 font-mono">
@@ -615,17 +616,17 @@ export default function HyperlocalLiveAdminClient() {
 
                       <div className="flex items-center gap-2">
                         {isDisputed && (
-                          <span className="rounded-md bg-rose-500 px-2 py-0.5 text-[10px] font-black uppercase text-white animate-pulse">
+                          <span className="rounded-md bg-rose-600 px-2 py-0.5 text-[10px] font-black uppercase text-white animate-pulse">
                             🚨 CUSTOMER REFUSED AT DOORSTEP
                           </span>
                         )}
                         <span
                           className={`rounded-md px-2 py-0.5 text-[10px] font-black uppercase tracking-wider ${
                             isCancelled
-                              ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                              ? "bg-rose-50 text-rose-700 border border-rose-200"
                               : isDelivered
-                              ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
-                              : "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200"
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-200"
                           }`}
                         >
                           {ord.status.replace(/_/g, " ")}
@@ -635,18 +636,18 @@ export default function HyperlocalLiveAdminClient() {
 
                     {/* Dispute Banner if customer refused */}
                     {isDisputed && (
-                      <div className="rounded-xl border border-rose-500/50 bg-rose-950/40 p-3 text-xs space-y-1">
-                        <div className="flex items-center justify-between font-bold text-rose-300">
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs space-y-1">
+                        <div className="flex items-center justify-between font-bold text-rose-800">
                           <span className="flex items-center gap-1.5">
                             <span>⚠️ Dispute Alert:</span>
                             <span>Rider reported customer refusal at doorstep</span>
                           </span>
-                          <span className="text-[10px] text-rose-400">
+                          <span className="text-[10px] text-rose-600">
                             {ord.dispute_reported_at ? new Date(ord.dispute_reported_at).toLocaleTimeString() : ""}
                           </span>
                         </div>
                         {ord.dispute_notes && (
-                          <p className="text-[11px] text-slate-300 italic bg-black/30 p-2 rounded-lg">
+                          <p className="text-[11px] text-slate-800 italic bg-white/80 border border-rose-100 p-2 rounded-lg">
                             &ldquo;{ord.dispute_notes}&rdquo;
                           </p>
                         )}
@@ -655,66 +656,66 @@ export default function HyperlocalLiveAdminClient() {
 
                     {/* Cancellation details banner */}
                     {isCancelled && ord.cancellation_reason && (
-                      <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 p-2.5 text-xs text-rose-300 flex items-center justify-between">
+                      <div className="rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700 flex items-center justify-between">
                         <span>🔴 Cancelled: {ord.cancellation_reason.replace(/_/g, " ")}</span>
-                        {ord.admin_notes && <span className="text-[11px] text-slate-400">Audit: {ord.admin_notes}</span>}
+                        {ord.admin_notes && <span className="text-[11px] text-slate-600">Audit: {ord.admin_notes}</span>}
                       </div>
                     )}
 
                     {/* 3-Column Grid: Customer Info, Rider Info & OTP Card */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                       {/* Col 1: Customer Details */}
-                      <div className="rounded-xl bg-slate-950/60 p-3 border border-slate-800/80 space-y-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Customer Details</span>
-                        <div className="font-semibold text-white flex items-center justify-between">
+                      <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Customer Details</span>
+                        <div className="font-semibold text-slate-900 flex items-center justify-between">
                           <span>{ord.customer_name || "Customer"}</span>
-                          <span className="text-slate-400 font-mono text-[11px]">{ord.customer_phone}</span>
+                          <span className="text-slate-500 font-mono text-[11px]">{ord.customer_phone}</span>
                         </div>
-                        <p className="text-[11px] text-slate-400 line-clamp-2">
+                        <p className="text-[11px] text-slate-600 line-clamp-2">
                           📍 {ord.customer_address?.street || ord.customer_address?.city || "Bahraich, UP"}
                         </p>
                         <div className="pt-1 flex items-center justify-between text-[11px]">
-                          <span className="text-slate-400">Total Bill:</span>
-                          <span className="font-bold text-emerald-400">₹{Number(ord.total_amount).toFixed(2)}</span>
+                          <span className="text-slate-500">Total Bill:</span>
+                          <span className="font-bold text-emerald-700">₹{Number(ord.total_amount).toFixed(2)}</span>
                         </div>
                       </div>
 
                       {/* Col 2: Assigned Rider Details */}
-                      <div className="rounded-xl bg-slate-950/60 p-3 border border-slate-800/80 space-y-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delivery Rider</span>
+                      <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Delivery Rider</span>
                         {rider ? (
                           <>
-                            <div className="font-semibold text-white flex items-center justify-between">
+                            <div className="font-semibold text-slate-900 flex items-center justify-between">
                               <span>🛵 {rider.full_name}</span>
-                              <span className="text-amber-400 text-[11px]">★ {rider.rating || 5.0}</span>
+                              <span className="text-amber-600 text-[11px]">★ {rider.rating || 5.0}</span>
                             </div>
-                            <p className="text-[11px] text-slate-400 font-mono">
+                            <p className="text-[11px] text-slate-600 font-mono">
                               📞 {rider.phone} • {rider.vehicle_number}
                             </p>
                             <div className="pt-1 flex items-center justify-between text-[11px]">
-                              <span className="text-slate-400">Trip Fare:</span>
-                              <span className="font-bold text-white">₹{ord.delivery_fee || 35}</span>
+                              <span className="text-slate-500">Trip Fare:</span>
+                              <span className="font-bold text-slate-900">₹{ord.delivery_fee || 35}</span>
                             </div>
                           </>
                         ) : (
-                          <div className="py-2 text-center text-slate-500 italic text-[11px]">
+                          <div className="py-2 text-center text-slate-400 italic text-[11px]">
                             Assigning Rider Soon (Radar scanning)...
                           </div>
                         )}
                       </div>
 
                       {/* Col 3: Live OTP & Admin Action */}
-                      <div className="rounded-xl bg-slate-950/60 p-3 border border-slate-800/80 flex flex-col justify-between space-y-2">
+                      <div className="rounded-xl bg-slate-50 p-3 border border-slate-200 flex flex-col justify-between space-y-2">
                         <div>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delivery OTP &amp; Security</span>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Delivery OTP &amp; Security</span>
                           <div className="mt-1 flex items-center justify-between">
-                            <span className="text-slate-400 text-[11px]">4-Digit OTP:</span>
+                            <span className="text-slate-500 text-[11px]">4-Digit OTP:</span>
                             {ord.delivery_otp ? (
-                              <span className="font-mono text-base font-black tracking-widest text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/30">
+                              <span className="font-mono text-base font-black tracking-widest text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                                 {ord.delivery_otp}
                               </span>
                             ) : (
-                              <span className="text-[11px] text-slate-500 font-mono">N/A</span>
+                              <span className="text-[11px] text-slate-400 font-mono">N/A</span>
                             )}
                           </div>
                         </div>
@@ -729,7 +730,7 @@ export default function HyperlocalLiveAdminClient() {
                                 setAdminNote("");
                                 setActionError(null);
                               }}
-                              className="w-full rounded-xl bg-rose-600/90 hover:bg-rose-600 py-1.5 text-[11px] font-bold text-white transition shadow"
+                              className="w-full rounded-xl bg-rose-600 hover:bg-rose-700 py-1.5 text-[11px] font-bold text-white transition shadow-xs"
                             >
                               🛑 Cancel Order (Doorstep Refusal)
                             </button>
@@ -738,7 +739,7 @@ export default function HyperlocalLiveAdminClient() {
                             <button
                               type="button"
                               onClick={() => handleResolveDispute(ord.id)}
-                              className="rounded-xl bg-slate-800 hover:bg-slate-700 px-3 py-1.5 text-[11px] font-bold text-slate-300"
+                              className="rounded-xl bg-slate-200 hover:bg-slate-300 px-3 py-1.5 text-[11px] font-bold text-slate-700"
                             >
                               Mark Resolved
                             </button>
@@ -762,55 +763,55 @@ export default function HyperlocalLiveAdminClient() {
           {/* ── 4 FINANCIAL KPI CARDS ── */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Card 1: Total Gross Sales */}
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Gross Food Volume</span>
+            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs">
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider block">Gross Food Volume</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-black text-white">
+                <span className="text-2xl sm:text-3xl font-black text-slate-900">
                   ₹{settlementKpis?.totalGrossDelivered?.toFixed(2) || "0.00"}
                 </span>
-                <span className="text-[11px] text-blue-400 font-semibold">Total Pool</span>
+                <span className="text-[11px] text-blue-600 font-semibold">Total Pool</span>
               </div>
             </div>
 
             {/* Card 2: Platform Revenue Retained */}
-            <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4">
-              <span className="text-xs font-bold text-amber-300 uppercase tracking-wider block">Trustit Net Cut (Commission)</span>
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/60 p-4 shadow-2xs">
+              <span className="text-xs font-bold text-amber-800 uppercase tracking-wider block">Trustit Net Cut (Commission)</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-black text-amber-400">
+                <span className="text-2xl sm:text-3xl font-black text-amber-700">
                   ₹{settlementKpis?.totalPlatformCommissionRetained?.toFixed(2) || "0.00"}
                 </span>
-                <span className="text-[11px] text-amber-300 font-semibold">10% - 15% Net</span>
+                <span className="text-[11px] text-amber-800 font-semibold">10% - 15% Net</span>
               </div>
             </div>
 
             {/* Card 3: Restaurant Pending Payouts */}
-            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4">
-              <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider block">Restaurant Pending Payouts</span>
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 shadow-2xs">
+              <span className="text-xs font-bold text-emerald-800 uppercase tracking-wider block">Restaurant Pending Payouts</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-black text-emerald-400">
+                <span className="text-2xl sm:text-3xl font-black text-emerald-700">
                   ₹{settlementKpis?.totalMerchantPendingPayout?.toFixed(2) || "0.00"}
                 </span>
-                <span className="text-[11px] text-emerald-300 font-semibold">{pendingMerchants.length} Outlets</span>
+                <span className="text-[11px] text-emerald-800 font-semibold">{pendingMerchants.length} Outlets</span>
               </div>
             </div>
 
             {/* Card 4: Rider Pending Balances */}
-            <div className="rounded-2xl border border-indigo-500/40 bg-indigo-500/10 p-4">
-              <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider block">Rider Wallet Balance</span>
+            <div className="rounded-2xl border border-indigo-200 bg-indigo-50/60 p-4 shadow-2xs">
+              <span className="text-xs font-bold text-indigo-800 uppercase tracking-wider block">Rider Wallet Balance</span>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-2xl sm:text-3xl font-black text-indigo-300">
+                <span className="text-2xl sm:text-3xl font-black text-indigo-700">
                   ₹{settlementKpis?.totalRiderPendingPayout?.toFixed(2) || "0.00"}
                 </span>
-                <span className="text-[11px] text-indigo-400 font-semibold">Direct UPI</span>
+                <span className="text-[11px] text-indigo-600 font-semibold">Direct UPI</span>
               </div>
             </div>
           </div>
 
           {/* ── EXPORT ACTION STRIP ── */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-2xs">
             <div>
-              <span className="text-xs font-black text-white block">Corporate Netbanking Bulk Settlement Rails</span>
-              <p className="text-[11px] text-slate-400">
+              <span className="text-xs font-black text-slate-900 block">Corporate Netbanking Bulk Settlement Rails</span>
+              <p className="text-[11px] text-slate-500">
                 Generate 1-Click CSV for SBI CMP, HDFC E-Net, or disburse directly via Cashfree Payouts API.
               </p>
             </div>
@@ -820,7 +821,7 @@ export default function HyperlocalLiveAdminClient() {
                 type="button"
                 onClick={() => handleDownloadBankCsv("all")}
                 disabled={isActionPending}
-                className="rounded-xl bg-emerald-500 hover:bg-emerald-400 px-3.5 py-2 text-xs font-black text-slate-950 transition shadow flex items-center gap-1.5"
+                className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 text-xs font-black text-white transition shadow-xs flex items-center gap-1.5"
               >
                 <span>📥</span>
                 <span>Download Bank Bulk CSV (All)</span>
@@ -830,7 +831,7 @@ export default function HyperlocalLiveAdminClient() {
                 type="button"
                 onClick={() => handleDownloadBankCsv("merchants")}
                 disabled={isActionPending}
-                className="rounded-xl bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition"
+                className="rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-2 text-xs font-bold text-slate-700 border border-slate-200 transition"
               >
                 Restaurant IMPS CSV
               </button>
@@ -839,7 +840,7 @@ export default function HyperlocalLiveAdminClient() {
                 type="button"
                 onClick={() => handleDownloadBankCsv("riders")}
                 disabled={isActionPending}
-                className="rounded-xl bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition"
+                className="rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-2 text-xs font-bold text-slate-700 border border-slate-200 transition"
               >
                 Rider UPI CSV
               </button>
@@ -847,7 +848,7 @@ export default function HyperlocalLiveAdminClient() {
               <button
                 type="button"
                 onClick={fetchSettlements}
-                className="rounded-xl bg-slate-850 hover:bg-slate-800 px-3 py-2 text-xs font-semibold text-slate-400"
+                className="rounded-xl bg-slate-100 hover:bg-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 border border-slate-200"
               >
                 🔄 Refresh
               </button>
@@ -858,18 +859,18 @@ export default function HyperlocalLiveAdminClient() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-black text-white">🍽️ Restaurant Settlement Queue</span>
-                <span className="rounded-md bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300">
+                <span className="text-sm font-black text-slate-900">🍽️ Restaurant Settlement Queue</span>
+                <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
                   {pendingMerchants.length} Pending
                 </span>
               </div>
-              <span className="text-xs text-slate-400">Disbursed via IMPS / NEFT</span>
+              <span className="text-xs text-slate-500">Disbursed via IMPS / NEFT</span>
             </div>
 
             {pendingMerchants.length === 0 ? (
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400 space-y-1">
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 space-y-1 shadow-2xs">
                 <span className="text-2xl block">🍱</span>
-                <p className="text-xs font-bold text-slate-300">All Restaurant Settlements are Up to Date!</p>
+                <p className="text-xs font-bold text-slate-800">All Restaurant Settlements are Up to Date!</p>
                 <p className="text-[11px]">No pending unbatched restaurant payouts at this moment.</p>
               </div>
             ) : (
@@ -877,22 +878,22 @@ export default function HyperlocalLiveAdminClient() {
                 {pendingMerchants.map((m) => (
                   <div
                     key={m.businessId}
-                    className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 space-y-3 hover:border-slate-700 transition"
+                    className="rounded-2xl border border-slate-200 bg-white p-4 space-y-3 hover:border-slate-300 shadow-2xs transition"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold text-white">{m.businessName}</span>
-                          <span className="text-[10px] text-slate-400 font-mono">({m.city || "Bahraich"})</span>
+                          <span className="text-sm font-bold text-slate-900">{m.businessName}</span>
+                          <span className="text-[10px] text-slate-500 font-mono">({m.city || "Bahraich"})</span>
                         </div>
-                        <p className="text-[11px] text-slate-400">
+                        <p className="text-[11px] text-slate-500">
                           Owner: {m.ownerName || "Partner"} • 📞 {m.ownerPhone || "N/A"}
                         </p>
                       </div>
 
                       <div className="text-right">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 block">Net Payable to Restaurant</span>
-                        <span className="text-lg font-black text-emerald-400">
+                        <span className="text-[10px] uppercase font-bold text-slate-500 block">Net Payable to Restaurant</span>
+                        <span className="text-lg font-black text-emerald-600">
                           ₹{m.netPayable.toFixed(2)}
                         </span>
                       </div>
@@ -900,53 +901,53 @@ export default function HyperlocalLiveAdminClient() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
                       {/* Financial breakdown */}
-                      <div className="rounded-xl bg-slate-950/60 p-2.5 space-y-1 border border-slate-850">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Orders &amp; Cuts</span>
+                      <div className="rounded-xl bg-slate-50 p-2.5 space-y-1 border border-slate-200">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold block">Orders &amp; Cuts</span>
                         <div className="flex justify-between text-[11px]">
-                          <span className="text-slate-400">Orders Count:</span>
-                          <span className="font-bold text-white">{m.ordersCount}</span>
+                          <span className="text-slate-500">Orders Count:</span>
+                          <span className="font-bold text-slate-900">{m.ordersCount}</span>
                         </div>
                         <div className="flex justify-between text-[11px]">
-                          <span className="text-slate-400">Gross Sales:</span>
-                          <span className="text-slate-200">₹{m.grossSales.toFixed(2)}</span>
+                          <span className="text-slate-500">Gross Sales:</span>
+                          <span className="text-slate-700">₹{m.grossSales.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between text-[11px]">
-                          <span className="text-amber-400">Trustit Commission:</span>
-                          <span className="text-amber-300 font-bold">-₹{m.platformCommission.toFixed(2)}</span>
+                          <span className="text-amber-700">Trustit Commission:</span>
+                          <span className="text-amber-800 font-bold">-₹{m.platformCommission.toFixed(2)}</span>
                         </div>
                       </div>
 
                       {/* Bank Details */}
-                      <div className="rounded-xl bg-slate-950/60 p-2.5 space-y-1 border border-slate-850">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Linked Bank Account</span>
+                      <div className="rounded-xl bg-slate-50 p-2.5 space-y-1 border border-slate-200">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold block">Linked Bank Account</span>
                         {m.bankDetails?.bank_account_number ? (
                           <>
-                            <p className="text-[11px] font-mono font-semibold text-white">
+                            <p className="text-[11px] font-mono font-semibold text-slate-900">
                               {m.bankDetails.bank_name || "Bank"}: {m.bankDetails.bank_account_number}
                             </p>
-                            <p className="text-[10px] text-slate-400 font-mono">
+                            <p className="text-[10px] text-slate-500 font-mono">
                               IFSC: {m.bankDetails.ifsc_code}
                             </p>
-                            <span className="inline-block text-[9px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded">
+                            <span className="inline-block text-[9px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
                               ✓ Penny-Drop Verified
                             </span>
                           </>
                         ) : (
-                          <div className="text-[10px] text-amber-400 italic pt-1">
+                          <div className="text-[10px] text-amber-700 italic pt-1">
                             ⚠️ Awaiting bank account submission by merchant
                           </div>
                         )}
                       </div>
 
                       {/* Actions */}
-                      <div className="rounded-xl bg-slate-950/60 p-2.5 flex flex-col justify-between space-y-2 border border-slate-850">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Disbursement Action</span>
+                      <div className="rounded-xl bg-slate-50 p-2.5 flex flex-col justify-between space-y-2 border border-slate-200">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold block">Disbursement Action</span>
                         <div className="flex gap-2">
                           <button
                             type="button"
                             disabled={isActionPending || m.netPayable <= 0}
                             onClick={() => handleCashfreeMerchantPayout(m)}
-                            className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-500 py-1.5 text-[11px] font-bold text-white transition disabled:opacity-50"
+                            className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 py-1.5 text-[11px] font-bold text-white transition disabled:opacity-50"
                           >
                             ⚡ Cashfree IMPS
                           </button>
@@ -956,7 +957,7 @@ export default function HyperlocalLiveAdminClient() {
                               setSettleModalData({ type: "merchant", item: m });
                               setSettleUtrInput(`CMS${Date.now().toString().slice(-8)}`);
                             }}
-                            className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-white transition"
+                            className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-[11px] font-bold text-white transition"
                           >
                             ✅ Mark Settled
                           </button>
@@ -973,18 +974,18 @@ export default function HyperlocalLiveAdminClient() {
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-black text-white">🛵 Delivery Partner UPI Withdrawals Queue</span>
-                <span className="rounded-md bg-indigo-500/20 px-2 py-0.5 text-[10px] font-bold text-indigo-300">
+                <span className="text-sm font-black text-slate-900">🛵 Delivery Partner UPI Withdrawals Queue</span>
+                <span className="rounded-md bg-indigo-50 border border-indigo-200 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
                   {pendingRiders.length} Pending
                 </span>
               </div>
-              <span className="text-xs text-slate-400">Disbursed via Direct UPI</span>
+              <span className="text-xs text-slate-500">Disbursed via Direct UPI</span>
             </div>
 
             {pendingRiders.length === 0 ? (
-              <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400 space-y-1">
+              <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-slate-500 space-y-1 shadow-2xs">
                 <span className="text-2xl block">🛵</span>
-                <p className="text-xs font-bold text-slate-300">All Rider Wallets are Cleared!</p>
+                <p className="text-xs font-bold text-slate-800">All Rider Wallets are Cleared!</p>
                 <p className="text-[11px]">No active rider withdrawal balances pending.</p>
               </div>
             ) : (
@@ -992,25 +993,25 @@ export default function HyperlocalLiveAdminClient() {
                 {pendingRiders.map((r) => (
                   <div
                     key={r.id}
-                    className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 space-y-2.5 hover:border-slate-700 transition"
+                    className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2.5 hover:border-slate-300 shadow-2xs transition"
                   >
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                    <div className="flex items-center justify-between pb-2 border-b border-slate-100">
                       <div>
-                        <span className="text-xs font-bold text-white block">🛵 {r.riderName}</span>
-                        <span className="text-[10px] text-slate-400 font-mono">📞 {r.phone}</span>
+                        <span className="text-xs font-bold text-slate-900 block">🛵 {r.riderName}</span>
+                        <span className="text-[10px] text-slate-500 font-mono">📞 {r.phone}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[10px] text-slate-400 uppercase font-bold block">Available Balance</span>
-                        <span className="text-base font-black text-emerald-400">
+                        <span className="text-[10px] text-slate-500 uppercase font-bold block">Available Balance</span>
+                        <span className="text-base font-black text-emerald-600">
                           ₹{(r.amountRequested || r.walletBalance).toFixed(2)}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs bg-slate-950 p-2.5 rounded-xl border border-slate-850">
+                    <div className="flex items-center justify-between text-xs bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                       <div>
-                        <span className="text-[10px] text-slate-400 block">Registered UPI ID:</span>
-                        <span className="font-mono font-bold text-amber-400 text-[11px]">{r.upiId}</span>
+                        <span className="text-[10px] text-slate-500 block">Registered UPI ID:</span>
+                        <span className="font-mono font-bold text-amber-700 text-[11px]">{r.upiId}</span>
                       </div>
                       <button
                         type="button"
@@ -1018,7 +1019,7 @@ export default function HyperlocalLiveAdminClient() {
                           navigator.clipboard?.writeText(r.upiId);
                           setToastMessage(`Copied UPI ID: ${r.upiId}`);
                         }}
-                        className="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-slate-300"
+                        className="text-[10px] bg-slate-200 hover:bg-slate-300 px-2 py-1 rounded text-slate-700 font-medium"
                       >
                         📋 Copy
                       </button>
@@ -1029,7 +1030,7 @@ export default function HyperlocalLiveAdminClient() {
                         type="button"
                         disabled={isActionPending}
                         onClick={() => handleCashfreeRiderPayout(r)}
-                        className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-500 py-1.5 text-[11px] font-bold text-white transition"
+                        className="flex-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 py-1.5 text-[11px] font-bold text-white transition"
                       >
                         ⚡ Cashfree UPI
                       </button>
@@ -1039,7 +1040,7 @@ export default function HyperlocalLiveAdminClient() {
                           setSettleModalData({ type: "rider", item: r });
                           setSettleUtrInput(`UPI${Date.now().toString().slice(-8)}`);
                         }}
-                        className="rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-1.5 text-[11px] font-bold text-white transition"
+                        className="rounded-xl bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 text-[11px] font-bold text-white transition"
                       >
                         ✅ Settle with UTR
                       </button>
@@ -1066,10 +1067,10 @@ export default function HyperlocalLiveAdminClient() {
       {/* ── SETTLEMENT UTR CONFIRMATION MODAL ── */}
       {/* ═════════════════════════════════════════════════════════════════ */}
       {settleModalData && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3">
-          <div className="w-full max-w-sm rounded-2xl border border-emerald-500/40 bg-slate-900 p-4 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <span className="text-xs font-black text-white">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3">
+          <div className="w-full max-w-sm rounded-2xl border border-emerald-200 bg-white p-4 shadow-xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span className="text-xs font-black text-slate-900">
                 {settleModalData.type === "merchant"
                   ? `Settle Restaurant Batch: ${settleModalData.item.businessName}`
                   : `Settle Rider UPI: ${settleModalData.item.riderName}`}
@@ -1077,22 +1078,22 @@ export default function HyperlocalLiveAdminClient() {
               <button
                 type="button"
                 onClick={() => setSettleModalData(null)}
-                className="text-xs text-slate-400 hover:text-white"
+                className="text-xs text-slate-400 hover:text-slate-700"
               >
                 ✕
               </button>
             </div>
 
-            <div className="rounded-xl bg-slate-950 p-3 text-xs space-y-1.5 border border-slate-800">
+            <div className="rounded-xl bg-slate-50 p-3 text-xs space-y-1.5 border border-slate-200">
               <div className="flex justify-between">
-                <span className="text-slate-400">Payable Amount:</span>
-                <span className="font-bold text-emerald-400 text-sm">
+                <span className="text-slate-500">Payable Amount:</span>
+                <span className="font-bold text-emerald-600 text-sm">
                   ₹{Number(settleModalData.type === "merchant" ? settleModalData.item.netPayable : (settleModalData.item.amountRequested || settleModalData.item.walletBalance)).toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between text-[11px]">
-                <span className="text-slate-400">Destination:</span>
-                <span className="font-mono text-slate-200">
+                <span className="text-slate-500">Destination:</span>
+                <span className="font-mono text-slate-800">
                   {settleModalData.type === "merchant"
                     ? `${settleModalData.item.bankDetails?.bank_name || "Bank"} (${settleModalData.item.bankDetails?.bank_account_number || "A/C"})`
                     : settleModalData.item.upiId}
@@ -1102,13 +1103,13 @@ export default function HyperlocalLiveAdminClient() {
 
             <div className="space-y-1">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   Bank UTR / Transaction Reference
                 </label>
                 <button
                   type="button"
                   onClick={() => setSettleUtrInput(`CMS${Date.now().toString().slice(-8)}`)}
-                  className="text-[10px] text-amber-400 hover:underline"
+                  className="text-[10px] text-amber-600 font-semibold hover:underline"
                 >
                   Auto CMS UTR
                 </button>
@@ -1118,7 +1119,7 @@ export default function HyperlocalLiveAdminClient() {
                 value={settleUtrInput}
                 onChange={(e) => setSettleUtrInput(e.target.value)}
                 placeholder="e.g. CMS928310948192 or UPI781923"
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-slate-200 font-mono placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 font-mono placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white"
               />
             </div>
 
@@ -1127,14 +1128,14 @@ export default function HyperlocalLiveAdminClient() {
                 type="button"
                 disabled={settleActionPending}
                 onClick={handleConfirmManualSettle}
-                className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2.5 text-xs font-black text-white transition disabled:opacity-50 shadow"
+                className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2.5 text-xs font-black text-white transition disabled:opacity-50 shadow-xs"
               >
                 {settleActionPending ? "Marking Settled..." : "Confirm & Update Passbook ✅"}
               </button>
               <button
                 type="button"
                 onClick={() => setSettleModalData(null)}
-                className="rounded-xl bg-slate-800 px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700"
+                className="rounded-xl bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
               >
                 Cancel
               </button>
@@ -1147,49 +1148,49 @@ export default function HyperlocalLiveAdminClient() {
       {/* ── DOORSTEP REFUSAL CANCEL CONFIRMATION MODAL ── */}
       {/* ═════════════════════════════════════════════════════════════════ */}
       {cancelModalOrder && (
-        <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-3">
-          <div className="w-full max-w-sm rounded-2xl border border-rose-500/50 bg-slate-900 p-4 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-800">
-              <span className="text-xs font-black text-white flex items-center gap-1.5">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3">
+          <div className="w-full max-w-sm rounded-2xl border border-rose-200 bg-white p-4 shadow-xl space-y-3">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+              <span className="text-xs font-black text-slate-900 flex items-center gap-1.5">
                 <span>🚨</span>
                 <span>Cancel Order: {formatUnifiedOrderCode(cancelModalOrder.id, (cancelModalOrder as any).businesses?.name)}</span>
               </span>
               <button
                 type="button"
                 onClick={() => setCancelModalOrder(null)}
-                className="text-xs text-slate-400 hover:text-white"
+                className="text-xs text-slate-400 hover:text-slate-700"
               >
                 ✕
               </button>
             </div>
 
-            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-slate-200 space-y-2">
-              <p className="font-bold text-rose-300">
-                क्या आपने कस्टमर से बात करके कन्फर्म कर लिया है कि वे ऑर्डर नहीं ले रहे हैं?
+            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-slate-800 space-y-2">
+              <p className="font-bold text-rose-800">
+                Have you confirmed with the customer that they are refusing the order at their doorstep?
               </p>
-              <div className="space-y-1 text-[11px] text-slate-300">
-                <p>• <strong>राइडर को नुकसान नहीं होगा:</strong> राइडर को ₹35 ट्रिप चार्ज वॉलेट में मिलेगा।</p>
-                <p>• <strong>राइडर अनलॉक हो जाएगा:</strong> राइडर तुरंत नए ऑर्डर लेने के लिए फ़्री हो जाएगा।</p>
-                <p>• <strong>रेस्टोरेंट को भुगतान होगा:</strong> पके हुए खाने का पैसा रेस्टोरेंट को मिलेगा।</p>
-                <p>• <strong>कस्टमर को रिफ़ंड नहीं मिलेगा:</strong> दरवाजे पर मना करने पर कोई रिफंड नहीं।</p>
+              <div className="space-y-1 text-[11px] text-slate-700">
+                <p>• <strong>Rider Protected:</strong> Rider receives ₹35 trip fare credit in their wallet.</p>
+                <p>• <strong>Fleet Unlocked:</strong> Rider becomes immediately available for new orders.</p>
+                <p>• <strong>Restaurant Paid:</strong> Food preparation amount is fully credited to the restaurant.</p>
+                <p>• <strong>Customer Policy:</strong> No refund applicable for doorstep refusal upon arrival.</p>
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-                Admin Audit Note (कैंसिलेशन कारण)
+              <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
+                Admin Audit Note (Cancellation Reason)
               </label>
               <textarea
                 value={adminNote}
                 onChange={(e) => setAdminNote(e.target.value)}
-                placeholder="जैसे: कस्टमर ने कहा खाना नहीं चाहिए, लेट हो गया।"
+                placeholder="e.g. Customer refused delivery at doorstep due to delay or changed mind."
                 rows={2}
-                className="w-full rounded-xl border border-slate-700 bg-slate-950 p-2.5 text-xs text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-rose-500"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-rose-500 focus:bg-white"
               />
             </div>
 
             {actionError && (
-              <div className="rounded-xl border border-rose-500 bg-rose-500/20 p-2.5 text-xs text-rose-300 font-bold">
+              <div className="rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-700 font-bold">
                 ⚠️ {actionError}
               </div>
             )}
@@ -1199,14 +1200,14 @@ export default function HyperlocalLiveAdminClient() {
                 type="button"
                 disabled={isActionPending}
                 onClick={handleConfirmDoorstepCancel}
-                className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-500 py-2.5 text-xs font-black text-white transition disabled:opacity-50 shadow-md"
+                className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-500 py-2.5 text-xs font-black text-white transition disabled:opacity-50 shadow-xs"
               >
                 {isActionPending ? "Cancelling & Settling..." : "Confirm Cancel & Settle Payouts"}
               </button>
               <button
                 type="button"
                 onClick={() => setCancelModalOrder(null)}
-                className="rounded-xl bg-slate-800 px-4 py-2.5 text-xs font-bold text-slate-300 hover:bg-slate-700"
+                className="rounded-xl bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
               >
                 Back
               </button>

@@ -28,20 +28,13 @@ export async function GET(request: Request) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    // Process riders to normalize virtual status (action_required if pending with correction note)
-    const enrichedRiders = (riders || []).map((r) => {
-      const isActionRequired =
-        r.kyc_status === "pending" &&
-        Boolean(r.rejection_reason || (r.admin_notes && r.admin_notes.includes("CORRECTION_REQUESTED")));
-
-      return {
-        ...r,
-        display_status: isActionRequired ? "action_required" : r.kyc_status || "pending",
-      };
-    });
+    // Normalize status consistently for the 3 core workflow states: pending, approved, rejected
+    const enrichedRiders = (riders || []).map((r) => ({
+      ...r,
+      display_status: r.kyc_status || "pending",
+    }));
 
     const pendingCount = enrichedRiders.filter((r) => r.display_status === "pending").length;
-    const actionRequiredCount = enrichedRiders.filter((r) => r.display_status === "action_required").length;
     const approvedCount = enrichedRiders.filter((r) => r.kyc_status === "approved").length;
     const rejectedCount = enrichedRiders.filter((r) => r.kyc_status === "rejected").length;
 
@@ -50,7 +43,7 @@ export async function GET(request: Request) {
       stats: {
         total: enrichedRiders.length,
         pending: pendingCount,
-        actionRequired: actionRequiredCount,
+        actionRequired: 0,
         approved: approvedCount,
         rejected: rejectedCount,
       },
@@ -99,7 +92,7 @@ export async function POST(request: Request) {
     // ── 2. REQUEST CORRECTION (Send back to rider) ──
     if (action === "request_correction") {
       const { reason, note, fields } = body;
-      const cleanReason = String(reason || "विवरण में सुधार आवश्यक").trim();
+      const cleanReason = String(reason || "Correction required in submitted details").trim();
       const cleanNote = String(note || cleanReason).trim();
 
       const { error } = await admin
@@ -207,6 +200,35 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         message: "Rider application rejected.",
+      });
+    }
+
+    // ── 5. DELETE RIDER (Complete database deletion) ──
+    if (action === "delete_rider") {
+      // Unassign active order & dispatch slot references cleanly
+      await admin
+        .from("hyperlocal_orders")
+        .update({ rider_id: null })
+        .eq("rider_id", riderId);
+
+      await admin
+        .from("hyperlocal_orders")
+        .update({ dispatch_target_rider_id: null })
+        .eq("dispatch_target_rider_id", riderId);
+
+      // Delete the rider record (child tables cascade cleanly)
+      const { error } = await admin
+        .from("delivery_riders")
+        .delete()
+        .eq("id", riderId);
+
+      if (error) {
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Rider permanently deleted from database.",
       });
     }
 

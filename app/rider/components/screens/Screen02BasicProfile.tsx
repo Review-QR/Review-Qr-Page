@@ -17,6 +17,7 @@ interface Screen02BasicProfileProps {
     emergencyPhone: string;
   }) => void;
   onBack?: () => void;
+  noticeMessage?: string | null;
 }
 
 export default function Screen02BasicProfile({
@@ -24,6 +25,7 @@ export default function Screen02BasicProfile({
   initialData,
   onSaveProfile,
   onBack,
+  noticeMessage,
 }: Screen02BasicProfileProps) {
   const [fullName, setFullName] = useState(initialData?.fullName || "");
   const [houseAndStreet, setHouseAndStreet] = useState("");
@@ -154,6 +156,12 @@ export default function Screen02BasicProfile({
             Enter your legal name, residential address, and emergency contact for fleet verification.
           </p>
         </div>
+
+        {noticeMessage && (
+          <div className="mt-2.5 rounded-xl border border-amber-300 bg-amber-50 p-2.5 text-[11px] font-bold text-amber-900 leading-snug">
+            ℹ️ {noticeMessage}
+          </div>
+        )}
 
         {/* Verified Phone Badge */}
         <div className="mt-3 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">

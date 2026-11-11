@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
-import { useRiderWorkflow } from "@/app/rider/hooks/useRiderWorkflow";
+import { useRiderWorkflow, clearAllRiderStorage } from "@/app/rider/hooks/useRiderWorkflow";
 import { riderAudio } from "@/lib/audio/rider-siren";
 import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotificationBanner";
 import { TrustitNative } from "@/lib/native/trustit-native-service";
@@ -95,6 +95,8 @@ export default function StandaloneRiderProductionApp() {
     handleGoogleLogin,
     requestInstantPayout,
     resetToNewRider,
+    sessionNotice,
+    setSessionNotice,
   } = workflow;
 
   // Active Bottom Tab
@@ -113,9 +115,7 @@ export default function StandaloneRiderProductionApp() {
       const saved = localStorage.getItem("trustit_rider_profile");
       const isLegacy = saved && (saved.includes("Arjun") || saved.includes("2345") || saved.includes("9876543210"));
       if (params.get("fresh") === "1" || params.get("v") === "3" || params.get("v") === "2" || params.get("new") === "1" || isLegacy) {
-        localStorage.removeItem("trustit_rider_profile");
-        localStorage.removeItem("trustit_rider_session_token");
-        localStorage.removeItem("trustit_cached_trip");
+        clearAllRiderStorage();
         resetToNewRider();
       }
     }
@@ -574,11 +574,13 @@ export default function StandaloneRiderProductionApp() {
       title: "01. Auth & Mobile Entry",
       component: (
         <Screen01AuthStart
+          noticeMessage={sessionNotice}
           onContinue={(phone, channel, otp, meta) => {
             setAuthPhone(phone);
             setAuthChannel(channel);
             setPreviewOtp("");
             setActiveWhatsAppOtp(null);
+            setSessionNotice(null);
             setCurrentScreenId(2);
           }}
         />
@@ -602,6 +604,7 @@ export default function StandaloneRiderProductionApp() {
 
             if (isApprovedInDb) {
               // Existing approved partner -> Direct to Cockpit
+              setSessionNotice(null);
               if (riderObj) workflow.setRider(riderObj);
               setCurrentScreenId(7);
               return;
@@ -619,17 +622,14 @@ export default function StandaloneRiderProductionApp() {
 
             if (isPendingOrSubmittedInDb) {
               // Existing applicant awaiting admin approval -> Direct to Verification Pending Room!
+              setSessionNotice(null);
               if (riderObj) workflow.setRider(riderObj);
               setCurrentScreenId(19);
               return;
             }
 
-            // 3. Brand New Rider Registration Journey
-            if (typeof window !== "undefined") {
-              localStorage.removeItem("trustit_rider_onboarded");
-              localStorage.removeItem("trustit_rider_profile");
-              localStorage.removeItem("trustit_rider_upi");
-            }
+            // 3. Brand New Rider Registration Journey (or previously deleted rider starting fresh)
+            clearAllRiderStorage();
             workflow.resetToNewRider();
             workflow.setRider((prev) => ({
               ...prev,
@@ -639,6 +639,7 @@ export default function StandaloneRiderProductionApp() {
               is_verified: false,
               kyc_status: "pending",
             }));
+            setSessionNotice("Please complete your full profile setup to log in as a delivery partner.");
             // Advance to Step 1 of 6: Basic Profile
             setCurrentScreenId(48);
           }}
@@ -655,11 +656,13 @@ export default function StandaloneRiderProductionApp() {
       component: (
         <Screen02BasicProfile
           verifiedPhone={authPhone}
+          noticeMessage={sessionNotice}
           initialData={{
             fullName: workflow.rider?.full_name || undefined,
             residentialAddress: workflow.rider?.residential_address || undefined,
           }}
           onSaveProfile={(data) => {
+            setSessionNotice(null);
             workflow.setRider((prev) => ({
               ...prev,
               full_name: data.fullName,
@@ -669,6 +672,7 @@ export default function StandaloneRiderProductionApp() {
               emergency_contact_phone: data.emergencyPhone,
             }));
             if (typeof window !== "undefined") {
+              localStorage.setItem("trustit_rider_name", data.fullName);
               localStorage.setItem("trustit_rider_address", data.address);
               localStorage.setItem("trustit_rider_emergency_name", data.emergencyContactName);
               localStorage.setItem("trustit_rider_emergency", data.emergencyPhone);
@@ -698,6 +702,11 @@ export default function StandaloneRiderProductionApp() {
               vehicle_number: vehData.vehicleNumber,
               driving_license_number: vehData.dlNumber,
             }));
+            if (typeof window !== "undefined") {
+              localStorage.setItem("trustit_rider_vehicle_type", vehData.vehicleType);
+              localStorage.setItem("trustit_rider_vehicle_number", vehData.vehicleNumber);
+              localStorage.setItem("trustit_rider_dl_number", vehData.dlNumber);
+            }
             setCurrentScreenId(6);
           }}
           onBack={() => setCurrentScreenId(4)}
@@ -709,11 +718,55 @@ export default function StandaloneRiderProductionApp() {
       title: "06. Cashfree UPI Payout Setup",
       component: (
         <Screen06PayoutSetup
-          onPayoutConfigured={(upi) => {
+          onPayoutConfigured={async (upi) => {
+            const currentRider = workflow.rider;
+            const savedName = typeof window !== "undefined" ? localStorage.getItem("trustit_rider_name") : null;
+            const savedAddress = typeof window !== "undefined" ? localStorage.getItem("trustit_rider_address") : null;
+            const savedEmergencyName = typeof window !== "undefined" ? localStorage.getItem("trustit_rider_emergency_name") : null;
+            const savedEmergencyPhone = typeof window !== "undefined" ? localStorage.getItem("trustit_rider_emergency") : null;
+            const savedVehicleType = typeof window !== "undefined" ? localStorage.getItem("trustit_rider_vehicle_type") : null;
+            const savedVehicleNumber = typeof window !== "undefined" ? localStorage.getItem("trustit_rider_vehicle_number") : null;
+            const savedDl = typeof window !== "undefined" ? localStorage.getItem("trustit_rider_dl_number") : null;
+
             workflow.setRider((prev) => ({ ...prev, upi_id: upi }));
             if (typeof window !== "undefined") {
               localStorage.setItem("trustit_rider_upi", upi);
             }
+
+            // Real-time API Submission to Supabase delivery_riders
+            try {
+              const res = await fetch("/api/hyperlocal/rider", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  action: "register_kyc",
+                  phone: authPhone || currentRider?.phone,
+                  fullName: currentRider?.full_name || savedName || "New Delivery Partner",
+                  residentialAddress: currentRider?.residential_address || savedAddress || "",
+                  emergencyContactName: currentRider?.emergency_contact_name || savedEmergencyName || "",
+                  emergencyContactPhone: currentRider?.emergency_contact_phone || savedEmergencyPhone || "",
+                  profileImageUrl: currentRider?.profile_image_url || null,
+                  vehicleType: currentRider?.vehicle_type || savedVehicleType || "bike",
+                  vehicleNumber: currentRider?.vehicle_number || savedVehicleNumber || "UP-40-TEMP",
+                  drivingLicenseNumber: currentRider?.driving_license_number || savedDl || null,
+                  upiId: upi,
+                  city: "Bahraich",
+                  pincode: "271801",
+                }),
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (data.rider) {
+                  workflow.setRider(data.rider);
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem("trustit_rider_profile", JSON.stringify(data.rider));
+                  }
+                }
+              }
+            } catch (err) {
+              console.error("KYC registration submission error:", err);
+            }
+
             setCurrentScreenId(19);
           }}
           onBack={() => setCurrentScreenId(5)}

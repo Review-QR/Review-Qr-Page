@@ -472,8 +472,8 @@ export async function POST(request: Request) {
           bank_name: bankName || null,
           upi_id: upiId || null,
           pan_number: (panNumber || "").toUpperCase().trim() || null,
-          kyc_status: existing.is_verified ? "approved" : "pending",
-          is_verified: Boolean(existing.is_verified),
+          kyc_status: "pending",
+          is_verified: false,
           rejection_reason: null, // clear previous correction reason on re-submit
           admin_notes: "Re-submitted by rider after correction",
           updated_at: new Date().toISOString(),
