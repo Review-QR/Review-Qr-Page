@@ -6,8 +6,8 @@ import { TrustitNative } from "@/lib/native/trustit-native-service";
 interface ScreenAuth03Props {
   category?: string;
   onBack?: () => void;
-  onLoginSuccess?: (details?: { storeName?: string; ownerName?: string; phone?: string; category?: string }) => void;
-  onRegisterComplete?: (details?: { storeName: string; ownerName: string; phone: string; category: string }) => void;
+  onLoginSuccess?: (details?: { businessId?: string; storeName?: string; ownerName?: string; phone?: string; category?: string }) => void;
+  onRegisterComplete?: (details?: { businessId?: string; storeName: string; ownerName: string; phone: string; category: string }) => void;
   disableRedirect?: boolean;
 }
 
@@ -214,6 +214,7 @@ export default function ScreenAuth03MobileKycRegistration({
 
         if (onLoginSuccess) {
           onLoginSuccess({
+            businessId: data.businessId,
             storeName: activeStoreName,
             ownerName: activeOwnerName,
             phone: cleanNumber,
@@ -413,6 +414,7 @@ export default function ScreenAuth03MobileKycRegistration({
 
       if (onRegisterComplete) {
         onRegisterComplete({
+          businessId: regData.businessId,
           storeName: storeName.trim(),
           ownerName: ownerName.trim(),
           phone: cleanNumber,
@@ -420,6 +422,7 @@ export default function ScreenAuth03MobileKycRegistration({
         });
       } else if (onLoginSuccess) {
         onLoginSuccess({
+          businessId: regData.businessId,
           storeName: storeName.trim(),
           ownerName: ownerName.trim(),
           phone: cleanNumber,
@@ -487,7 +490,7 @@ export default function ScreenAuth03MobileKycRegistration({
           </div>
 
           {/* Form Card */}
-          <div className="mt-3.5 bg-white border border-amber-200/80 rounded-2xl p-4 shadow-sm space-y-3.5">
+          <div className="mt-3 bg-white border border-amber-200/80 rounded-2xl p-3.5 shadow-sm space-y-3">
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[10px] font-black uppercase text-slate-600 block">
@@ -497,17 +500,17 @@ export default function ScreenAuth03MobileKycRegistration({
                   <button
                     type="button"
                     onClick={handleEditNumber}
-                    className="text-[10px] font-black text-amber-700 hover:text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-300 transition active:scale-95 flex items-center gap-1"
+                    className="text-[9px] font-black text-amber-700 hover:text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-300 transition active:scale-95 flex items-center gap-1"
                   >
                     <span>✏️ Edit Number</span>
                   </button>
                 )}
               </div>
 
-              {/* Single-Pill Phone Input */}
-              <div className="flex items-center rounded-xl border-2 border-amber-300 bg-amber-50/30 px-3 py-2.5 focus-within:bg-white focus-within:border-emerald-600 transition shadow-inner">
-                <span className="text-xs font-black text-slate-700 mr-2.5 border-r border-amber-300 pr-2.5 select-none flex items-center gap-1.5">
-                  <span className="text-sm">🇮🇳</span>
+              {/* Slim Single-Pill Phone Input */}
+              <div className="flex items-center rounded-lg border border-amber-300 bg-amber-50/30 px-2.5 py-1.5 focus-within:bg-white focus-within:border-emerald-600 transition shadow-2xs">
+                <span className="text-[11px] font-black text-slate-700 mr-2 border-r border-amber-300 pr-2 select-none flex items-center gap-1">
+                  <span className="text-xs">🇮🇳</span>
                   <span>+91</span>
                 </span>
                 <input
@@ -519,9 +522,9 @@ export default function ScreenAuth03MobileKycRegistration({
                   autoComplete="tel"
                   placeholder="10-digit mobile number"
                   onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
-                  className="w-full text-sm font-mono font-black text-slate-900 bg-transparent focus:outline-none tracking-wider placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal placeholder:text-xs disabled:text-slate-600"
+                  className="w-full text-xs font-mono font-black text-slate-900 bg-transparent focus:outline-none tracking-wider placeholder:text-slate-400 placeholder:font-sans placeholder:font-normal placeholder:text-[11px] disabled:text-slate-600"
                 />
-                {otpSent && <span className="text-emerald-600 font-black text-xs">✓ Sent</span>}
+                {otpSent && <span className="text-emerald-600 font-black text-[10px] shrink-0">✓ Sent</span>}
               </div>
               <span className="text-[9px] text-slate-500 font-medium block mt-1">
                 Enter your 10-digit mobile number to receive a 6-digit WhatsApp verification code.
@@ -530,16 +533,16 @@ export default function ScreenAuth03MobileKycRegistration({
 
             {/* OTP Section (Reveals after code dispatched) */}
             {otpSent && (
-              <div className="pt-3 border-t border-amber-100 space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="pt-2.5 border-t border-amber-100 space-y-2 animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] font-black uppercase text-slate-700 block">
                     6-Digit WhatsApp OTP
                   </label>
                 </div>
 
-                {/* Single Overlay Input + 6 High-Contrast Visual Boxes */}
+                {/* Single Overlay Input + 6 Compact Slim Visual Boxes */}
                 <div
-                  className="relative flex justify-between gap-1.5 sm:gap-2 cursor-pointer"
+                  className="relative flex justify-between gap-1.5 max-w-[260px] mx-auto cursor-pointer"
                   onClick={() => otpInputRef.current?.focus()}
                 >
                   <input
@@ -566,15 +569,15 @@ export default function ScreenAuth03MobileKycRegistration({
                     return (
                       <div
                         key={i}
-                        className={`w-11 h-12 flex items-center justify-center text-center text-lg font-mono font-black border-2 rounded-xl transition shadow-2xs ${
+                        className={`w-9 h-10 flex items-center justify-center text-center text-base font-mono font-black border rounded-lg transition shadow-2xs ${
                           char
                             ? "border-emerald-600 bg-emerald-50/20 text-slate-900"
                             : isCurrent
-                            ? "border-amber-500 bg-amber-50/40 text-slate-900 ring-2 ring-amber-400/30"
+                            ? "border-amber-500 bg-amber-50/40 text-slate-900 ring-1 ring-amber-400/40"
                             : "border-amber-300 bg-amber-50/20 text-slate-400"
                         }`}
                       >
-                        {char || (isCurrent ? <span className="w-0.5 h-5 bg-amber-600 animate-pulse" /> : "")}
+                        {char || (isCurrent ? <span className="w-0.5 h-4 bg-amber-600 animate-pulse" /> : "")}
                       </div>
                     );
                   })}

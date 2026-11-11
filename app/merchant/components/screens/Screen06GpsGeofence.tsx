@@ -6,10 +6,11 @@ import { TrustitNative } from "@/lib/native/trustit-native-service";
 interface Screen06Props {
   onBack?: () => void;
   onSave?: () => void;
-  onSaveLocation?: (loc: { radius: number; lat: string; lng: string }) => void;
+  onSaveLocation?: (loc: { radius: number; lat: string; lng: string; address?: string }) => void;
   initialRadius?: number;
   initialLat?: string;
   initialLng?: string;
+  initialAddress?: string;
 }
 
 export default function Screen06GpsGeofence({
@@ -19,12 +20,13 @@ export default function Screen06GpsGeofence({
   initialRadius = 5.0,
   initialLat = "27.5744",
   initialLng = "81.5977",
+  initialAddress = "",
 }: Screen06Props) {
   const [radius, setRadius] = useState<number>(initialRadius);
   const [detecting, setDetecting] = useState<boolean>(false);
   const [lat, setLat] = useState(initialLat);
   const [lng, setLng] = useState(initialLng);
-  const [locationName, setLocationName] = useState<string>("Bahraich Center");
+  const [locationName, setLocationName] = useState<string>(initialAddress || "Tap 'Re-Detect GPS' to sync");
   const [saved, setSaved] = useState(false);
 
   const handleDetect = async () => {
@@ -64,14 +66,18 @@ export default function Screen06GpsGeofence({
       setLat(formattedLat);
       setLng(formattedLng);
 
-      // Reverse geocode
+      // Reverse geocode via native bridge first, fallback to browser fetch
       try {
-        const res = await fetch(`/api/hyperlocal/reverse-geocode?lat=${resolvedLat}&lng=${resolvedLng}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.locationName) {
-            setLocationName(data.locationName);
-          }
+        let data: any = null;
+        try {
+          const res = await TrustitNative.nativeFetch(`/api/hyperlocal/reverse-geocode?lat=${resolvedLat}&lng=${resolvedLng}`, { method: "GET" });
+          if (res && res.ok) data = await res.json();
+        } catch {
+          const res = await fetch(`/api/hyperlocal/reverse-geocode?lat=${resolvedLat}&lng=${resolvedLng}`);
+          if (res.ok) data = await res.json();
+        }
+        if (data) {
+          setLocationName(data.formattedAddress || data.locationName || `GPS: ${formattedLat}, ${formattedLng}`);
         }
       } catch {}
     }
@@ -81,7 +87,7 @@ export default function Screen06GpsGeofence({
   const handleSave = () => {
     setSaved(true);
     if (onSaveLocation) {
-      onSaveLocation({ radius, lat, lng });
+      onSaveLocation({ radius, lat, lng, address: locationName });
     }
     setTimeout(() => {
       setSaved(false);

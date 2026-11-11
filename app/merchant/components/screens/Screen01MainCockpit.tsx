@@ -10,8 +10,16 @@ export interface Screen01Props {
   isStoreOnline?: boolean;
   onToggleStoreOnline?: () => void;
   liveOrdersCount?: number;
+  preparingCount?: number;
+  outCount?: number;
   catalogCount?: number;
   todayEarnings?: number;
+  reviewStats?: {
+    totalReviews?: number;
+    averageRating?: number | null;
+    totalScans?: number;
+    positivePct?: number | null;
+  };
   onOpenOrders?: () => void;
   onOpenMenu?: () => void;
   onOpenSiren?: () => void;
@@ -20,29 +28,25 @@ export interface Screen01Props {
 
 /**
  * Screen01: Pure Multi-Tenant Restaurant / General Retail Cockpit.
- * Zero hardcoded personas (No Supriya ji) - 100% dynamic multi-tenant business center.
- * Features hardware DongleSliderSwitch.
+ * Zero hardcoded personas - 100% dynamic multi-tenant business center.
  */
 export default function Screen01MainCockpit({
-  storeName = "Golden Blossom Cafe",
   ownerName = "Business Partner",
-  phone = "",
   isStoreOnline = true,
-  onToggleStoreOnline,
-  liveOrdersCount = 3,
-  catalogCount = 24,
-  todayEarnings = 2840,
-  onOpenOrders,
-  onOpenMenu,
+  liveOrdersCount = 0,
+  preparingCount = 0,
+  outCount = 0,
+  todayEarnings = 0,
+  reviewStats,
   onOpenSiren,
   onOpenOccasion,
 }: Screen01Props) {
   const [ordersPaused, setOrdersPaused] = useState(false);
 
-  const displayPhone = phone.replace(/\D/g, "");
-  const formattedPhone = displayPhone.length === 10
-    ? `+91 ${displayPhone.slice(0, 5)} ${displayPhone.slice(5)}`
-    : phone || "+91 Merchant Partner";
+  const reviewsCount = reviewStats?.totalReviews ?? 0;
+  const ratingLabel = reviewStats?.averageRating != null ? `⭐ ${reviewStats.averageRating}` : "—";
+  const viewsCount = reviewStats?.totalScans ?? 0;
+  const trustLabel = reviewStats?.positivePct != null ? `${reviewStats.positivePct}%` : "—";
 
   return (
     <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3 text-[#0F172A] font-sans select-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -108,13 +112,13 @@ export default function Screen01MainCockpit({
 
             <div className="bg-blue-50/60 border border-blue-200 rounded-lg p-2">
               <span className="text-[9px] font-bold text-blue-900 block">🍳 In Kitchen Prep</span>
-              <p className="text-sm font-black text-blue-950 mt-0.5">2 Orders</p>
-              <span className="text-[8px] font-medium text-blue-700">Timer active</span>
+              <p className="text-sm font-black text-blue-950 mt-0.5">{preparingCount} Orders</p>
+              <span className="text-[8px] font-medium text-blue-700">Live status</span>
             </div>
 
             <div className="bg-cyan-50/60 border border-cyan-200 rounded-lg p-2">
               <span className="text-[9px] font-bold text-cyan-900 block">🛵 Out for Delivery</span>
-              <p className="text-sm font-black text-cyan-950 mt-0.5">1 Order</p>
+              <p className="text-sm font-black text-cyan-950 mt-0.5">{outCount} Orders</p>
               <span className="text-[8px] font-medium text-cyan-700">Rider on route</span>
             </div>
 
@@ -126,7 +130,7 @@ export default function Screen01MainCockpit({
           </div>
         </div>
 
-        {/* 4 Slim Review & Analytics Metric Boxes (Requested in Loom) */}
+        {/* 4 Slim Review & Analytics Metric Boxes */}
         <div className="mt-2.5 bg-white border border-slate-200 rounded-xl p-2.5 shadow-2xs">
           <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100">
             <div className="flex items-center gap-1.5">
@@ -134,36 +138,32 @@ export default function Screen01MainCockpit({
               <span className="text-[11px] font-black text-slate-900">Review &amp; Customer Analytics</span>
             </div>
             <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.2 rounded-full border border-emerald-200">
-              Live Google Sync
+              Live Sync
             </span>
           </div>
 
           <div className="grid grid-cols-4 gap-1.5 text-center">
-            {/* Box 1: Total Reviews */}
             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-1.5">
               <span className="text-[8px] font-bold text-slate-500 uppercase block truncate">Reviews</span>
-              <p className="text-xs font-black text-slate-900 mt-0.5">428</p>
-              <span className="text-[7px] font-bold text-emerald-600 block">+18 this wk</span>
+              <p className="text-xs font-black text-slate-900 mt-0.5">{reviewsCount}</p>
+              <span className="text-[7px] font-bold text-slate-500 block">verified</span>
             </div>
 
-            {/* Box 2: Google Rating */}
             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-1.5">
               <span className="text-[8px] font-bold text-slate-500 uppercase block truncate">Rating</span>
-              <p className="text-xs font-black text-amber-600 mt-0.5">⭐ 4.8</p>
+              <p className="text-xs font-black text-amber-600 mt-0.5">{ratingLabel}</p>
               <span className="text-[7px] font-bold text-slate-500 block">5.0 scale</span>
             </div>
 
-            {/* Box 3: Total Profile Views */}
             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-1.5">
               <span className="text-[8px] font-bold text-slate-500 uppercase block truncate">Views</span>
-              <p className="text-xs font-black text-blue-700 mt-0.5">1,240</p>
-              <span className="text-[7px] font-bold text-blue-600 block">Direct hits</span>
+              <p className="text-xs font-black text-blue-700 mt-0.5">{viewsCount}</p>
+              <span className="text-[7px] font-bold text-blue-600 block">QR scans</span>
             </div>
 
-            {/* Box 4: Positive Trust % */}
             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-1.5">
               <span className="text-[8px] font-bold text-slate-500 uppercase block truncate">Trust</span>
-              <p className="text-xs font-black text-emerald-700 mt-0.5">96%</p>
+              <p className="text-xs font-black text-emerald-700 mt-0.5">{trustLabel}</p>
               <span className="text-[7px] font-bold text-emerald-600 block">Positive</span>
             </div>
           </div>

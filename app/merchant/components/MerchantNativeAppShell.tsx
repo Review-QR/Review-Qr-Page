@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import React, { useState, useEffect, useRef } from "react";
 import { merchantAudio } from "@/lib/audio/merchant-siren";
 import { TrustitNative } from "@/lib/native/trustit-native-service";
 import DongleSliderSwitch from "./DongleSliderSwitch";
@@ -19,7 +18,6 @@ import ScreenAuth04PartnerLogin from "./screens/ScreenAuth04PartnerLogin";
 // Kirana Mart (4 screens)
 import ScreenK01KiranaCockpit from "./screens/ScreenK01KiranaCockpit";
 import ScreenK02ParchaOrderViewer from "./screens/ScreenK02ParchaOrderViewer";
-import ScreenK03KiranaMasterRates from "./screens/ScreenK03KiranaMasterRates";
 import ScreenK04KiranaReviewStandee from "./screens/ScreenK04KiranaReviewStandee";
 
 // Chemist & Medical (4 screens)
@@ -99,6 +97,8 @@ interface MerchantNativeAppShellProps {
   initialCategory?: MerchantCategory;
   initialStoreName?: string;
   initialOwnerName?: string;
+  initialPhone?: string;
+  initialBusinessId?: string;
   initialSubScreen?: string | null;
   initialTab?: PrimaryTab;
   initialLandingVariant?: "A" | "B" | "C" | string;
@@ -110,8 +110,10 @@ export default function MerchantNativeAppShell({
   initialAuth = true,
   initialAuthStep = "pitch",
   initialCategory = "kirana",
-  initialStoreName = "Gupta Kirana & General Store",
+  initialStoreName = "My Store",
   initialOwnerName = "Merchant Partner",
+  initialPhone = "",
+  initialBusinessId = "",
   initialSubScreen = null,
   initialTab = "cockpit",
   initialLandingVariant = "opt1_bharatpe",
@@ -121,24 +123,39 @@ export default function MerchantNativeAppShell({
   // Authentication & Profile State
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(initialAuth);
   const [authStep, setAuthStep] = useState<"pitch" | "category" | "kyc" | "login">(initialAuthStep);
+  const [businessId, setBusinessId] = useState<string>(initialBusinessId);
   const [storeCategory, setStoreCategory] = useState<MerchantCategory>(initialCategory);
   const [storeName, setStoreName] = useState<string>(initialStoreName);
   const [ownerName, setOwnerName] = useState<string>(initialOwnerName);
-  const [merchantPhone, setMerchantPhone] = useState<string>("");
+  const [merchantPhone, setMerchantPhone] = useState<string>(initialPhone);
   const [isStoreOnline, setIsStoreOnline] = useState<boolean>(true);
-  const [unreadOrders, setUnreadOrders] = useState<number>(2);
+  const [unreadOrders, setUnreadOrders] = useState<number>(0);
 
-  // Live Data State
+  // Live Data State (Strictly isolated per merchant businessId)
   const [liveOrders, setLiveOrders] = useState<any[]>([]);
   const [liveCatalog, setLiveCatalog] = useState<any[]>([]);
-  const [todayGrossEarnings, setTodayGrossEarnings] = useState<number>(8450);
+  const [liveReviews, setLiveReviews] = useState<any[]>([]);
+  const [reviewStats, setReviewStats] = useState<{
+    totalReviews?: number;
+    averageRating?: number | null;
+    totalScans?: number;
+    positivePct?: number | null;
+  }>({});
+  const [todayGrossEarnings, setTodayGrossEarnings] = useState<number>(0);
   const [activeIncomingOrder, setActiveIncomingOrder] = useState<any>(null);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [merchantConfig, setMerchantConfig] = useState<any>(null);
 
-  // Navigation State
+  // Navigation State with Back Stack History
   const [activeTab, setActiveTab] = useState<PrimaryTab>(initialTab);
+  const [tabHistory, setTabHistory] = useState<PrimaryTab[]>([initialTab]);
   const [activeSubScreen, setActiveSubScreen] = useState<string | null>(initialSubScreen);
+
+  // Ref for fresh identity inside polling intervals & native back listeners
+  const identityRef = useRef({ businessId: initialBusinessId, phone: initialPhone });
+  useEffect(() => {
+    identityRef.current = { businessId, phone: merchantPhone };
+  }, [businessId, merchantPhone]);
 
   // Laptop Simulator View State
   const [isSimulatorFrame, setIsSimulatorFrame] = useState<boolean>(!forceStandalone);
@@ -151,16 +168,84 @@ export default function MerchantNativeAppShell({
     setTimeout(() => setStatusNotification(null), 3500);
   };
 
-  // Fetch Dashboard & Live Orders from Supabase
-  const fetchDashboard = async () => {
+  // Tab navigation helpers with real back history stack (e.g. Items -> Standee -> Back returns to Items)
+  const navigateToTab = (nextTab: PrimaryTab) => {
+    setActiveSubScreen(null);
+    if (nextTab === activeTab) return;
+    setActiveTab(nextTab);
+    setTabHistory((prev) => {
+      const next = [...prev, nextTab];
+      return next.length > 20 ? next.slice(-20) : next;
+    });
+  };
+
+  const navigateTabBack = (): boolean => {
+    if (tabHistory.length > 1) {
+      const nextHistory = tabHistory.slice(0, -1);
+      const prevTab = nextHistory[nextHistory.length - 1];
+      setTabHistory(nextHistory);
+      setActiveTab(prevTab);
+      return true;
+    }
+    if (activeTab !== "cockpit") {
+      setTabHistory(["cockpit"]);
+      setActiveTab("cockpit");
+      return true;
+    }
+    return false;
+  };
+
+  // Shared helper for authenticated multi-tenant POST operations
+  const postMerchantOp = async (action: string, payload: Record<string, any> = {}) => {
+    const activeBiz = identityRef.current.businessId || businessId;
+    return TrustitNative.nativeFetch("/api/merchant/app-operations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action,
+        businessId: activeBiz,
+        ...payload,
+      }),
+    });
+  };
+
+  // Fetch Dashboard & Live Orders strictly for the active merchant from Supabase
+  const fetchDashboard = async (overrideBizId?: string, overridePhone?: string) => {
+    const activeBiz = overrideBizId ?? identityRef.current.businessId;
+    const activePhone = overridePhone ?? identityRef.current.phone;
+
+    // Fallback: inspect localStorage if React state hasn't received ID yet
+    let resolvedBiz = activeBiz;
+    let resolvedPhone = activePhone;
+    if ((!resolvedBiz || !resolvedPhone) && typeof window !== "undefined") {
+      try {
+        const stored = JSON.parse(localStorage.getItem("trustit_merchant_session") || "null");
+        if (stored) {
+          if (!resolvedBiz && stored.businessId) resolvedBiz = stored.businessId;
+          if (!resolvedPhone && stored.phone) resolvedPhone = stored.phone;
+        }
+      } catch {}
+    }
+
+    if (!resolvedBiz && !resolvedPhone) return;
+
     try {
-      const res = await fetch("/api/merchant/app-operations");
+      const qs = new URLSearchParams();
+      if (resolvedBiz) qs.set("businessId", resolvedBiz);
+      if (resolvedPhone) qs.set("phone", resolvedPhone);
+
+      const res = await TrustitNative.nativeFetch(`/api/merchant/app-operations?${qs.toString()}`, {
+        method: "GET",
+      });
       const data = await res.json();
       if (data.success) {
+        if (data.business?.id && !resolvedBiz) {
+          setBusinessId(data.business.id);
+        }
         if (data.config) {
           setMerchantConfig(data.config);
-          if (data.config.ownerName && initialOwnerName === "Merchant Partner") setOwnerName(data.config.ownerName);
-          if (data.config.phone) setMerchantPhone(data.config.phone);
+          if (data.config.ownerName && ownerName === "Merchant Partner") setOwnerName(data.config.ownerName);
+          if (data.config.phone && !merchantPhone) setMerchantPhone(data.config.phone);
           if (data.config.businessCategory) {
             const rawCat = (data.config.businessCategory || "").toLowerCase();
             if (rawCat.includes("kirana") || rawCat.includes("groc")) setStoreCategory("kirana");
@@ -170,9 +255,9 @@ export default function MerchantNativeAppShell({
             else setStoreCategory("restaurant");
           }
         }
-        if (data.business?.name && initialStoreName === "Gupta Kirana & General Store") setStoreName(data.business.name);
-        if (data.business?.owner && initialOwnerName === "Merchant Partner") setOwnerName(data.business.owner);
-        if (data.business?.phone) setMerchantPhone(data.business.phone);
+        if (data.business?.name && (storeName === "My Store" || initialStoreName === "My Store")) setStoreName(data.business.name);
+        if (data.business?.owner && ownerName === "Merchant Partner") setOwnerName(data.business.owner);
+        if (data.business?.phone && !merchantPhone) setMerchantPhone(data.business.phone);
         if (data.business?.type) {
           const rawType = (data.business.type || "").toLowerCase();
           if (rawType.includes("kirana") || rawType.includes("groc")) setStoreCategory("kirana");
@@ -181,32 +266,41 @@ export default function MerchantNativeAppShell({
           else if (rawType.includes("car") || rawType.includes("auto") || rawType.includes("wash")) setStoreCategory("carwash");
         }
         if (data.business?.is_outlet_open !== undefined) setIsStoreOnline(data.business.is_outlet_open);
-        if (data.orders) setLiveOrders(data.orders);
-        if (data.catalog) setLiveCatalog(data.catalog);
-        if (data.stats?.todayEarnings) setTodayGrossEarnings(data.stats.todayEarnings);
-        if (data.stats?.pendingCount !== undefined) setUnreadOrders(data.stats.pendingCount);
+        setLiveOrders(data.orders || []);
+        setLiveCatalog(data.catalog || []);
+        setLiveReviews(data.reviews || []);
+        if (data.stats) {
+          setTodayGrossEarnings(Number(data.stats.todayEarnings || 0));
+          setUnreadOrders(Number(data.stats.pendingCount || 0));
+          setReviewStats({
+            totalReviews: Number(data.stats.totalReviews || 0),
+            averageRating: data.stats.averageRating ?? null,
+            totalScans: Number(data.stats.totalScans || 0),
+            positivePct: data.stats.positivePct ?? null,
+          });
+        }
       }
     } catch {}
   };
 
   useEffect(() => {
-    fetchDashboard();
-    const timer = setInterval(fetchDashboard, 10000);
+    if (isAuthenticated) {
+      fetchDashboard();
+    }
+    const timer = setInterval(() => {
+      if (isAuthenticated) fetchDashboard();
+    }, 10000);
 
     // Silent Background OTA Live Update Check (Swiggy/Zomato pattern)
     TrustitNative.checkAndApplyOta({
       app: "partner",
-      currentVersion: "2.2.0",
-    }).then((res) => {
-      if (res?.hasUpdate) {
-        showToast("⚡ Naya OTA update safalta se apply ho gaya!");
-      }
+      currentVersion: "3.6.0",
     }).catch(() => {});
 
     return () => clearInterval(timer);
-  }, []);
+  }, [isAuthenticated, businessId, merchantPhone]);
 
-  // Android Hardware Back Button Navigator (Prevents abrupt app exit)
+  // Android Hardware Back Button Navigator (Respects real tab & subscreen history)
   useEffect(() => {
     let lastBackPress = 0;
     const handleRootBack = () => {
@@ -231,12 +325,11 @@ export default function MerchantNativeAppShell({
           return true;
         }
       } else {
-        // 4. If on another tab besides cockpit
-        if (activeTab !== "cockpit") {
-          setActiveTab("cockpit");
+        // 4. Navigate back through real tab history stack first
+        if (navigateTabBack()) {
           return true;
         }
-        // 5. If on cockpit root, double press back to exit
+        // 5. If at cockpit root, double press back to exit
         const now = Date.now();
         if (now - lastBackPress < 2500) {
           return false; // Let Android exit cleanly
@@ -252,19 +345,15 @@ export default function MerchantNativeAppShell({
     return () => {
       delete (window as any).__handleTrustitBack;
     };
-  }, [selectedOrder, activeIncomingOrder, activeSubScreen, isAuthenticated, authStep, activeTab]);
+  }, [selectedOrder, activeIncomingOrder, activeSubScreen, isAuthenticated, authStep, activeTab, tabHistory]);
 
   // 1. Toggle Store Online / Offline Status
   const toggleStoreStatus = async () => {
     const next = !isStoreOnline;
     setIsStoreOnline(next);
-    showToast(next ? "🟢 Dukaan ab ONLINE hai (Orders Active)" : "🔴 Dukaan ab OFFLINE hai (Orders Paused)");
+    showToast(next ? "🟢 Orders Active" : "🔴 Orders Paused");
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "toggle_outlet", data: { isOpen: next } }),
-      });
+      await postMerchantOp("toggle_outlet", { data: { isOpen: next } });
     } catch {}
   };
 
@@ -274,21 +363,16 @@ export default function MerchantNativeAppShell({
     merchantAudio.playIncomingOrderSiren(7);
     showToast("🚨 Incoming Order Siren Alert Triggered!");
     try {
-      const res = await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "create_sample_order",
-          data: {
-            customerName: "Aman Sharma",
-            customerPhone: "9118643415",
-            customerAddress: "Civil Lines near Gandhi Park, Bahraich",
-            items: [
-              { name: storeCategory === "kirana" ? "Sharbati Chakki Atta (5kg)" : "Special Shahi Paneer", quantity: 1, price: 240 },
-              { name: storeCategory === "kirana" ? "Madhur Sugar (2kg)" : "Butter Naan (2 pcs)", quantity: 2, price: 90 },
-            ],
-          },
-        }),
+      const res = await postMerchantOp("create_sample_order", {
+        data: {
+          customerName: "Aman Sharma",
+          customerPhone: "9118643415",
+          customerAddress: "Civil Lines near Gandhi Park, Bahraich",
+          items: [
+            { name: storeCategory === "kirana" ? "Sharbati Chakki Atta (5kg)" : "Special Shahi Paneer", quantity: 1, price: 240 },
+            { name: storeCategory === "kirana" ? "Madhur Sugar (2kg)" : "Butter Naan (2 pcs)", quantity: 2, price: 90 },
+          ],
+        },
       });
       const data = await res.json();
       if (data.success && data.order) {
@@ -304,52 +388,35 @@ export default function MerchantNativeAppShell({
 
   // 3. Accept Incoming Order
   const handleAcceptOrder = async (prepMins = 20) => {
-    showToast(`Order Accepted! Cooking Prep Time: ${prepMins} mins`);
-    const orderId = activeIncomingOrder?.id || "ORD-7783-09";
+    showToast(`Order Accepted! Prep Time: ${prepMins} mins`);
+    const orderId = activeIncomingOrder?.id || "";
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "order_accept",
-          orderId,
-          data: { prepTimeMinutes: prepMins },
-        }),
-      });
-      fetchDashboard();
+      if (orderId) {
+        await postMerchantOp("order_accept", { orderId, data: { prepTimeMinutes: prepMins } });
+        fetchDashboard();
+      }
     } catch {}
-    setActiveSubScreen(null);
-    setActiveTab("orders");
+    navigateToTab("orders");
   };
 
   // 4. Reject Incoming Order
-  const handleRejectOrder = async (reason = "Kitchen Rush") => {
+  const handleRejectOrder = async (reason = "Out of stock") => {
     showToast("Order Declined.");
-    const orderId = activeIncomingOrder?.id || "ORD-7783-09";
+    const orderId = activeIncomingOrder?.id || "";
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "order_reject",
-          orderId,
-          data: { reason },
-        }),
-      });
-      fetchDashboard();
+      if (orderId) {
+        await postMerchantOp("order_reject", { orderId, data: { reason } });
+        fetchDashboard();
+      }
     } catch {}
     setActiveSubScreen(null);
   };
 
   // 5. Add Product Handler
   const handleAddProduct = async (productData: any) => {
-    showToast(`"${productData.name}" item published to customer app!`);
+    showToast(`"${productData.name}" added to your store catalog!`);
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add_product", data: productData }),
-      });
+      await postMerchantOp("add_product", { data: productData });
       fetchDashboard();
     } catch {}
     setActiveSubScreen(null);
@@ -357,42 +424,28 @@ export default function MerchantNativeAppShell({
 
   // 6. Toggle Stock Handler
   const handleToggleItemStock = async (itemId: string | number, isAvailable: boolean) => {
-    showToast(isAvailable ? "Item marked IN-STOCK" : "Item marked OUT-OF-STOCK");
+    showToast(isAvailable ? "Item marked In Stock" : "Item marked Out of Stock");
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "toggle_item_stock", itemId, data: { isAvailable } }),
-      });
+      await postMerchantOp("toggle_item_stock", { itemId, data: { isAvailable } });
       fetchDashboard();
     } catch {}
   };
 
   // 6b. Delete Product Handler
   const handleDeleteProduct = async (itemId: string | number) => {
-    showToast("Deleting item from catalog...");
+    showToast("Removing item from catalog...");
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete_product", itemId }),
-      });
+      await postMerchantOp("delete_product", { itemId });
       showToast("✓ Item deleted from catalog!");
       fetchDashboard();
     } catch {}
   };
 
-
-
   // 7. Save Store Profile
   const handleSaveProfile = async (profileData: any) => {
     showToast("Saving store profile...");
     try {
-      const res = await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update_profile", data: profileData }),
-      });
+      const res = await postMerchantOp("update_profile", { data: profileData });
       const d = await res.json();
       if (d.success) {
         if (profileData.storeName) setStoreName(profileData.storeName);
@@ -407,13 +460,13 @@ export default function MerchantNativeAppShell({
   const handleSaveLocation = async (locData: any) => {
     showToast(`Updating Geofence (${locData.radius} KM)...`);
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "update_location",
-          data: { latitude: locData.lat, longitude: locData.lng, deliveryRadiusKm: locData.radius },
-        }),
+      await postMerchantOp("update_location", {
+        data: {
+          latitude: locData.lat,
+          longitude: locData.lng,
+          deliveryRadiusKm: locData.radius,
+          address: locData.address,
+        },
       });
       showToast("✓ GPS Location & Radius Saved!");
       fetchDashboard();
@@ -423,17 +476,9 @@ export default function MerchantNativeAppShell({
 
   // 9. Save Operating Hours
   const handleSaveOperatingHours = async (hoursData: any) => {
-    if (hoursData?.autoSave) {
-      showToast("✓ Shift updated in real-time!");
-    } else {
-      showToast("Saving operating hours...");
-    }
+    showToast(hoursData?.autoSave ? "✓ Shift updated in real-time!" : "Saving operating hours...");
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "update_operating_hours", data: hoursData }),
-      });
+      await postMerchantOp("update_operating_hours", { data: hoursData });
       if (!hoursData?.autoSave) {
         showToast("✓ Operating Hours Saved!");
       }
@@ -448,17 +493,12 @@ export default function MerchantNativeAppShell({
   const handleSaveGating = async (gatingData: any) => {
     showToast("Saving review gating link...");
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "update_review_gating",
-          data: {
-            googlePlaceId: gatingData.googlePlaceId,
-            reviewShortLink: gatingData.reviewLink,
-            smartGatingMinStars: gatingData.minStars,
-          },
-        }),
+      await postMerchantOp("update_review_gating", {
+        data: {
+          googlePlaceId: gatingData.googlePlaceId,
+          reviewShortLink: gatingData.reviewLink,
+          smartGatingMinStars: gatingData.minStars,
+        },
       });
       showToast("✓ Google Review Gating Saved!");
       fetchDashboard();
@@ -470,11 +510,7 @@ export default function MerchantNativeAppShell({
   const handleOrderReady = async (orderId: string) => {
     showToast(`Order #${orderId.slice(-6)} marked ready!`);
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "order_ready", orderId }),
-      });
+      await postMerchantOp("order_ready", { orderId });
       fetchDashboard();
     } catch {}
   };
@@ -483,11 +519,7 @@ export default function MerchantNativeAppShell({
   const handleRiderAssigned = async (orderId: string, riderName: string) => {
     showToast(`Rider ${riderName} assigned to #${orderId.slice(-6)}!`);
     try {
-      await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "order_dispatch", orderId, data: { riderName } }),
-      });
+      await postMerchantOp("order_dispatch", { orderId, data: { riderName } });
       fetchDashboard();
     } catch {}
     setActiveSubScreen(null);
@@ -496,11 +528,7 @@ export default function MerchantNativeAppShell({
   // 13. Verify Handover OTP & Deliver
   const handleVerifyDeliver = async (orderId: string, otp: string) => {
     try {
-      const res = await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "order_deliver", orderId, data: { otp } }),
-      });
+      const res = await postMerchantOp("order_deliver", { orderId, data: { otp } });
       const d = await res.json();
       if (d.success) {
         showToast(`✓ Order #${orderId.slice(-6)} delivered!`);
@@ -514,11 +542,7 @@ export default function MerchantNativeAppShell({
   // 14. Cashfree Wallet Recharge
   const handleInitiateCashfree = async (amount: number, credits: number) => {
     try {
-      const res = await fetch("/api/merchant/app-operations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "recharge_wallet", data: { amount, credits } }),
-      });
+      const res = await postMerchantOp("recharge_wallet", { data: { amount, credits } });
       const d = await res.json();
       if (d.success) {
         showToast(`✓ Cashfree UPI session ${d.orderId?.slice(-6)} created!`);
@@ -920,9 +944,9 @@ export default function MerchantNativeAppShell({
           {activeSubScreen === "s05" && (
             <Screen05StoreBrandProfile
               initialStoreName={storeName}
-              initialOwnerName={merchantConfig?.ownerName || "Aman Sharma"}
+              initialOwnerName={ownerName || merchantConfig?.ownerName || "Merchant Partner"}
               initialBusinessType={storeCategory}
-              initialPhone={merchantConfig?.phone || "+919118643415"}
+              initialPhone={merchantPhone || merchantConfig?.phone || ""}
               initialLogoUrl={merchantConfig?.logoUrl}
               onSaveProfile={handleSaveProfile}
               onBack={() => setActiveSubScreen(null)}
@@ -933,14 +957,15 @@ export default function MerchantNativeAppShell({
               initialRadius={merchantConfig?.deliveryRadiusKm || 5.0}
               initialLat={merchantConfig?.latitude ? String(merchantConfig.latitude) : "27.5744"}
               initialLng={merchantConfig?.longitude ? String(merchantConfig.longitude) : "81.5977"}
+              initialAddress={merchantConfig?.address || ""}
               onSaveLocation={handleSaveLocation}
               onBack={() => setActiveSubScreen(null)}
             />
           )}
           {activeSubScreen === "s07" && (
             <Screen07GoogleReviewGating
-              initialPlaceId={merchantConfig?.googlePlaceId || "ChIJ_TrustitShriBalajiBahraich"}
-              initialReviewLink={merchantConfig?.reviewShortLink || `https://trustitreview.com/r/${merchantConfig?.businessId || 'm_9118643415_0601'}`}
+              initialPlaceId={merchantConfig?.googlePlaceId || ""}
+              initialReviewLink={merchantConfig?.reviewShortLink || `https://trustitreview.com/r/${businessId || "store"}`}
               initialMinStars={merchantConfig?.smartGatingMinStars || 4}
               onSaveGating={handleSaveGating}
               onBack={() => setActiveSubScreen(null)}
@@ -967,12 +992,13 @@ export default function MerchantNativeAppShell({
             />
           )}
           {activeSubScreen === "kirana_03" && (
-            <ScreenK03KiranaMasterRates
+            <Screen13MenuExplorer
+              liveCatalog={liveCatalog}
               onBack={() => setActiveSubScreen(null)}
-              onSave={() => {
-                showToast("Kirana master mandi rates updated!");
-                setActiveSubScreen(null);
-              }}
+              onAddProduct={() => setActiveSubScreen("s14")}
+              onStockToggle={() => setActiveSubScreen("s15")}
+              onToggleItemStock={handleToggleItemStock}
+              onDeleteItem={handleDeleteProduct}
             />
           )}
           {activeSubScreen === "kirana_04" && (
@@ -1081,10 +1107,10 @@ export default function MerchantNativeAppShell({
             liveOrdersCount={unreadOrders}
             catalogCount={liveCatalog.length}
             todayEarnings={todayGrossEarnings}
+            reviewStats={reviewStats}
             onOpenParcha={() => setActiveSubScreen("kirana_02")}
-            onOpenRates={() => setActiveSubScreen("kirana_03")}
+            onOpenRates={() => navigateToTab("menu")}
             onOpenStandee={() => setActiveSubScreen("kirana_04")}
-            onBack={() => setAuthStep("category")}
           />
         );
       case "chemist":
@@ -1098,7 +1124,6 @@ export default function MerchantNativeAppShell({
             onOpenRx={() => setActiveSubScreen("chemist_02")}
             onOpenMedicines={() => setActiveSubScreen("chemist_03")}
             onOpenStandee={() => setActiveSubScreen("chemist_04")}
-            onBack={() => setAuthStep("category")}
           />
         );
       case "salon":
@@ -1115,7 +1140,6 @@ export default function MerchantNativeAppShell({
             onOpenQueue={() => setActiveSubScreen("salon_02")}
             onOpenServices={() => setActiveSubScreen("salon_03")}
             onOpenStandee={() => setActiveSubScreen("salon_04")}
-            onBack={() => setAuthStep("category")}
           />
         );
       case "carwash":
@@ -1132,7 +1156,6 @@ export default function MerchantNativeAppShell({
             onOpenBays={() => setActiveSubScreen("carwash_02")}
             onOpenPackages={() => setActiveSubScreen("carwash_03")}
             onOpenStandee={() => setActiveSubScreen("carwash_04")}
-            onBack={() => setAuthStep("category")}
           />
         );
       case "restaurant":
@@ -1145,10 +1168,13 @@ export default function MerchantNativeAppShell({
             isStoreOnline={isStoreOnline}
             onToggleStoreOnline={toggleStoreStatus}
             liveOrdersCount={unreadOrders}
+            preparingCount={liveOrders.filter((o) => o.status === "accepted" || o.status === "preparing").length}
+            outCount={liveOrders.filter((o) => o.status === "out_for_delivery").length}
             catalogCount={liveCatalog.length}
             todayEarnings={todayGrossEarnings}
-            onOpenOrders={() => setActiveTab("orders")}
-            onOpenMenu={() => setActiveTab("menu")}
+            reviewStats={reviewStats}
+            onOpenOrders={() => navigateToTab("orders")}
+            onOpenMenu={() => navigateToTab("menu")}
             onOpenSiren={() => setActiveSubScreen("s02")}
             onOpenOccasion={() => setActiveSubScreen("s04")}
           />
@@ -1156,70 +1182,14 @@ export default function MerchantNativeAppShell({
     }
   };
 
-  // Tab 2: Orders Master Board + Quick Siren / KOT Shortcuts
+  // Tab 2: Live Store Orders Master Board (Clean, no extra top bar)
   const renderOrdersTab = () => {
     return (
       <div className="flex flex-col h-full bg-[#F8FAFC]">
-        {/* Quick Orders Bar */}
-        <div className="bg-white border-b border-slate-200 p-2.5 flex items-center justify-between gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0">
-          <button
-            type="button"
-            onClick={triggerTestSiren}
-            className="px-2.5 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black text-[11px] flex items-center gap-1 shadow-xs shrink-0 active:scale-95 transition"
-          >
-            <span>🚨</span>
-            <span>Incoming Siren</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s11")}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>🖨️</span>
-            <span>Thermal KOT</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s03")}
-            className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>⏳</span>
-            <span>Urgent Queue</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s12")}
-            className="px-2.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>🛵</span>
-            <span>Rider Dispatch</span>
-          </button>
-          {storeCategory === "kirana" && (
-            <button
-              type="button"
-              onClick={() => setActiveSubScreen("kirana_02")}
-              className="px-2.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-            >
-              <span>📝</span>
-              <span>Parcha Viewer</span>
-            </button>
-          )}
-          {storeCategory === "chemist" && (
-            <button
-              type="button"
-              onClick={() => setActiveSubScreen("chemist_02")}
-              className="px-2.5 py-1.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-            >
-              <span>💊</span>
-              <span>Rx Doctor Slip</span>
-            </button>
-          )}
-        </div>
-
-        {/* Master Kanban Orders Board */}
         <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Screen09OrdersMasterBoard
             liveOrders={liveOrders}
+            onBack={() => navigateTabBack()}
             onInspectOrder={(orderId) => {
               const ord = liveOrders.find((o) => o.id === orderId);
               setSelectedOrder(ord || liveOrders[0]);
@@ -1228,7 +1198,7 @@ export default function MerchantNativeAppShell({
             onPrintKot={(orderId) => {
               const ord = liveOrders.find((o) => o.id === orderId);
               setSelectedOrder(ord || liveOrders[0]);
-              handleOrderReady(orderId || liveOrders[0]?.id || "ord_sample");
+              if (orderId) handleOrderReady(orderId);
               setActiveSubScreen("s11");
             }}
             onDispatchRider={(orderId) => {
@@ -1242,100 +1212,27 @@ export default function MerchantNativeAppShell({
     );
   };
 
-  // Tab 3: Menu, Inventory & Mandi Rates
+  // Tab 3: Store Rates & Items Catalog
   const renderMenuTab = () => {
     return (
       <div className="flex flex-col h-full bg-[#F8FAFC]">
-        {/* Menu Actions Header */}
-        <div className="bg-white border-b border-slate-200 p-2.5 flex items-center justify-between gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s14")}
-            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-[11px] flex items-center gap-1 shadow-xs shrink-0 active:scale-95 transition"
-          >
-            <span>+</span>
-            <span>Add Item / Dish</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s15")}
-            className="px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-300 font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>⚡</span>
-            <span>Out-of-Stock Switch</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s16")}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>🏷️</span>
-            <span>Categories</span>
-          </button>
-          {storeCategory === "kirana" && (
-            <button
-              type="button"
-              onClick={() => setActiveSubScreen("kirana_03")}
-              className="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-300 font-black text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-            >
-              <span>🌾</span>
-              <span>Mandi 50+ Rates</span>
-            </button>
-          )}
-          {storeCategory === "chemist" && (
-            <button
-              type="button"
-              onClick={() => setActiveSubScreen("chemist_03")}
-              className="px-2.5 py-1.5 rounded-xl bg-teal-50 text-teal-800 border border-teal-300 font-black text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-            >
-              <span>🧪</span>
-              <span>Medicine Catalog</span>
-            </button>
-          )}
-          {storeCategory === "salon" && (
-            <button
-              type="button"
-              onClick={() => setActiveSubScreen("salon_03")}
-              className="px-2.5 py-1.5 rounded-xl bg-pink-50 text-pink-800 border border-pink-300 font-black text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-            >
-              <span>✂️</span>
-              <span>Grooming Rates</span>
-            </button>
-          )}
-          {storeCategory === "carwash" && (
-            <button
-              type="button"
-              onClick={() => setActiveSubScreen("carwash_03")}
-              className="px-2.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-800 border border-indigo-300 font-black text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-            >
-              <span>🚗</span>
-              <span>Vehicle Packages</span>
-            </button>
-          )}
-        </div>
-
-        {/* Menu Explorer Body */}
         <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {storeCategory === "kirana" ? (
-            <ScreenK03KiranaMasterRates
-              onBack={() => setActiveTab("cockpit")}
-              onSave={() => showToast("Kirana Mandi rates saved!")}
-            />
-          ) : storeCategory === "chemist" ? (
-            <ScreenM03ChemistMedicineCatalog onBack={() => setActiveTab("cockpit")} />
+          {storeCategory === "chemist" ? (
+            <ScreenM03ChemistMedicineCatalog onBack={() => navigateTabBack()} />
           ) : storeCategory === "salon" ? (
             <ScreenS03SalonServicesRateCard
-              onBack={() => setActiveTab("cockpit")}
+              onBack={() => navigateTabBack()}
               onAddService={() => setActiveSubScreen("s14")}
             />
           ) : storeCategory === "carwash" ? (
             <ScreenC03VehicleTypePackages
-              onBack={() => setActiveTab("cockpit")}
+              onBack={() => navigateTabBack()}
               onAddPackage={() => setActiveSubScreen("s14")}
             />
           ) : (
             <Screen13MenuExplorer
               liveCatalog={liveCatalog}
+              onBack={() => navigateTabBack()}
               onAddProduct={() => setActiveSubScreen("s14")}
               onStockToggle={() => setActiveSubScreen("s15")}
               onToggleItemStock={handleToggleItemStock}
@@ -1347,65 +1244,46 @@ export default function MerchantNativeAppShell({
     );
   };
 
-  // Tab 4: QR Standee, Reviews & CRM Marketing
+  // Tab 4: QR Standee & Verified Reviews (Compact Non-Scrolling 3x2 Button Grid)
   const renderStandeeTab = () => {
+    const standeeTools: Array<{
+      id: string;
+      icon: string;
+      label: string;
+      cls: string;
+    }> = [
+      { id: "s17", icon: "📥", label: "Download QR", cls: "bg-blue-600 text-white border-blue-700" },
+      { id: "s18", icon: "🖼️", label: "Gallery", cls: "bg-slate-900 text-white border-slate-900" },
+      { id: "s26", icon: "🎨", label: "AI Poster", cls: "bg-purple-50 text-purple-900 border-purple-200" },
+      { id: "s27", icon: "💬", label: "Wishes", cls: "bg-emerald-50 text-emerald-900 border-emerald-200" },
+      { id: "s21", icon: "🎁", label: "Order Standee", cls: "bg-amber-50 text-amber-900 border-amber-200" },
+      { id: "s25", icon: "🎂", label: "Occasions", cls: "bg-pink-50 text-pink-900 border-pink-200" },
+    ];
+
     return (
       <div className="flex flex-col h-full bg-[#F8FAFC]">
-        {/* Top Marketing Action Strip */}
-        <div className="bg-white border-b border-slate-200 p-2.5 flex items-center justify-between gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden shrink-0">
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s17")}
-            className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-blue-700 to-indigo-600 text-white font-black text-[11px] flex items-center gap-1 shadow-xs shrink-0 active:scale-95 transition"
-          >
-            <span>📥</span>
-            <span>Download Vector QR</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s18")}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-900 text-white font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>🖼️</span>
-            <span>Standee Gallery</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s26")}
-            className="px-2.5 py-1.5 rounded-xl bg-purple-50 text-purple-900 border border-purple-200 font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>🎨</span>
-            <span>AI Festival Poster</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s27")}
-            className="px-2.5 py-1.5 rounded-xl bg-emerald-50 text-emerald-900 border border-emerald-200 font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>💬</span>
-            <span>WhatsApp Wishes</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s21")}
-            className="px-2.5 py-1.5 rounded-xl bg-amber-50 text-amber-900 border border-amber-200 font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>🎁</span>
-            <span>Acrylic Standee Order</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveSubScreen("s25")}
-            className="px-2.5 py-1.5 rounded-xl bg-pink-50 text-pink-900 border border-pink-200 font-bold text-[11px] flex items-center gap-1 shrink-0 active:scale-95 transition"
-          >
-            <span>🎂</span>
-            <span>Occasions CRM</span>
-          </button>
+        {/* Compact 3x2 Non-Scrolling Tool Grid */}
+        <div className="bg-white border-b border-slate-200 p-2 grid grid-cols-3 gap-1.5 shrink-0">
+          {standeeTools.map((tool) => (
+            <button
+              key={tool.id}
+              type="button"
+              onClick={() => setActiveSubScreen(tool.id)}
+              className={`px-2 py-1.5 rounded-xl border text-[10px] font-black flex items-center justify-center gap-1 shadow-2xs active:scale-95 transition truncate ${tool.cls}`}
+            >
+              <span className="text-xs leading-none shrink-0">{tool.icon}</span>
+              <span className="truncate">{tool.label}</span>
+            </button>
+          ))}
         </div>
 
         {/* Customer Reviews Live Feed */}
         <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <Screen19CustomerReviewsFeed
+            reviews={liveReviews}
+            reviewStats={reviewStats}
+            onBack={() => navigateTabBack()}
+            onOpenStandeeQr={() => setActiveSubScreen(storeCategory === "kirana" ? "kirana_04" : "s17")}
             onOpenReply={() => setActiveSubScreen("s20")}
           />
         </div>
@@ -1624,6 +1502,19 @@ export default function MerchantNativeAppShell({
                 if (typeof window !== "undefined") {
                   localStorage.removeItem("trustit_merchant_session");
                 }
+                setBusinessId("");
+                setStoreName("My Store");
+                setOwnerName("Merchant Partner");
+                setMerchantPhone("");
+                setLiveOrders([]);
+                setLiveCatalog([]);
+                setLiveReviews([]);
+                setReviewStats({});
+                setTodayGrossEarnings(0);
+                setUnreadOrders(0);
+                setTabHistory(["cockpit"]);
+                setActiveTab("cockpit");
+                setActiveSubScreen(null);
                 setIsAuthenticated(false);
                 setAuthStep("pitch");
                 showToast("Merchant logged out successfully.");
@@ -1643,6 +1534,58 @@ export default function MerchantNativeAppShell({
   // UN-AUTHENTICATED ONBOARDING / LOGIN VIEW
   // ============================================================
   const renderAuthStack = () => {
+    const activateMerchantSession = (
+      details: { businessId?: string; storeName?: string; ownerName?: string; phone?: string; category?: string } | undefined,
+      toastText: string
+    ) => {
+      const finalStore = details?.storeName || storeName;
+      const finalOwner = details?.ownerName || ownerName;
+      const finalPhone = details?.phone || merchantPhone;
+      const finalBizId = details?.businessId || businessId;
+
+      let cat: MerchantCategory = storeCategory;
+      if (details?.category) {
+        const rawCat = details.category.toLowerCase();
+        if (rawCat.includes("kirana") || rawCat.includes("groc")) cat = "kirana";
+        else if (rawCat.includes("chem") || rawCat.includes("pharm") || rawCat.includes("med")) cat = "chemist";
+        else if (rawCat.includes("salon") || rawCat.includes("spa") || rawCat.includes("beauty")) cat = "salon";
+        else if (rawCat.includes("car") || rawCat.includes("auto") || rawCat.includes("wash")) cat = "carwash";
+        else cat = "restaurant";
+        setStoreCategory(cat);
+      }
+
+      if (finalBizId) setBusinessId(finalBizId);
+      setStoreName(finalStore);
+      setOwnerName(finalOwner);
+      if (finalPhone) setMerchantPhone(finalPhone);
+      setLiveOrders([]);
+      setLiveCatalog([]);
+      setLiveReviews([]);
+      setReviewStats({});
+      setTodayGrossEarnings(0);
+      setUnreadOrders(0);
+      setTabHistory(["cockpit"]);
+      setActiveTab("cockpit");
+      setActiveSubScreen(null);
+      setIsAuthenticated(true);
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem(
+          "trustit_merchant_session",
+          JSON.stringify({
+            isAuthenticated: true,
+            businessId: finalBizId,
+            storeName: finalStore,
+            ownerName: finalOwner,
+            phone: finalPhone,
+            category: cat,
+          })
+        );
+      }
+      showToast(toastText);
+      fetchDashboard(finalBizId, finalPhone);
+    };
+
     return (
       <div className="h-full flex flex-col justify-between bg-white overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {authStep === "pitch" && (
@@ -1671,69 +1614,12 @@ export default function MerchantNativeAppShell({
           <ScreenAuth03MobileKycRegistration
             disableRedirect={true}
             onBack={() => setAuthStep("pitch")}
-            onLoginSuccess={(details) => {
-              const finalStore = details?.storeName || storeName;
-              const finalOwner = details?.ownerName || ownerName;
-              const finalPhone = details?.phone || merchantPhone;
-              let cat: MerchantCategory = "kirana";
-              if (details?.category) {
-                const rawCat = (details.category || "").toLowerCase();
-                if (rawCat.includes("kirana") || rawCat.includes("groc")) cat = "kirana";
-                else if (rawCat.includes("chem") || rawCat.includes("pharm") || rawCat.includes("med")) cat = "chemist";
-                else if (rawCat.includes("salon") || rawCat.includes("spa") || rawCat.includes("beauty")) cat = "salon";
-                else if (rawCat.includes("car") || rawCat.includes("auto") || rawCat.includes("wash")) cat = "carwash";
-                else cat = "restaurant";
-                setStoreCategory(cat);
-              }
-              setStoreName(finalStore);
-              setOwnerName(finalOwner);
-              if (details?.phone) setMerchantPhone(finalPhone);
-              setIsAuthenticated(true);
-              setActiveTab("cockpit");
-              if (typeof window !== "undefined") {
-                localStorage.setItem(
-                  "trustit_merchant_session",
-                  JSON.stringify({
-                    isAuthenticated: true,
-                    storeName: finalStore,
-                    ownerName: finalOwner,
-                    phone: finalPhone,
-                    category: details?.category ? cat : storeCategory,
-                  })
-                );
-              }
-              showToast(`Welcome back, ${finalStore}!`);
-            }}
-            onRegisterComplete={(details) => {
-              if (details?.storeName) setStoreName(details.storeName);
-              if (details?.ownerName) setOwnerName(details.ownerName);
-              if (details?.phone) setMerchantPhone(details.phone);
-              let cat: MerchantCategory = "kirana";
-              if (details?.category) {
-                const rawCat = (details.category || "").toLowerCase();
-                if (rawCat.includes("kirana") || rawCat.includes("groc")) cat = "kirana";
-                else if (rawCat.includes("chem") || rawCat.includes("pharm") || rawCat.includes("med")) cat = "chemist";
-                else if (rawCat.includes("salon") || rawCat.includes("spa") || rawCat.includes("beauty")) cat = "salon";
-                else if (rawCat.includes("car") || rawCat.includes("auto") || rawCat.includes("wash")) cat = "carwash";
-                else cat = "restaurant";
-                setStoreCategory(cat);
-              }
-              setIsAuthenticated(true);
-              setActiveTab("cockpit");
-              if (typeof window !== "undefined") {
-                localStorage.setItem(
-                  "trustit_merchant_session",
-                  JSON.stringify({
-                    isAuthenticated: true,
-                    storeName: details?.storeName || storeName,
-                    ownerName: details?.ownerName || ownerName,
-                    phone: details?.phone || merchantPhone,
-                    category: details?.category ? cat : storeCategory,
-                  })
-                );
-              }
-              showToast(`Store "${details?.storeName || storeName}" registered successfully!`);
-            }}
+            onLoginSuccess={(details) =>
+              activateMerchantSession(details, `Welcome back, ${details?.storeName || storeName}!`)
+            }
+            onRegisterComplete={(details) =>
+              activateMerchantSession(details, `Store "${details?.storeName || storeName}" registered successfully!`)
+            }
           />
         )}
 
@@ -1741,26 +1627,9 @@ export default function MerchantNativeAppShell({
           <ScreenAuth04PartnerLogin
             disableRedirect={true}
             onGoToRegister={() => setAuthStep("kyc")}
-            onLoginSuccess={(details) => {
-              if (details?.storeName) setStoreName(details.storeName);
-              if (details?.ownerName) setOwnerName(details.ownerName);
-              if (details?.phone) setMerchantPhone(details.phone);
-              setIsAuthenticated(true);
-              setActiveTab("cockpit");
-              if (typeof window !== "undefined") {
-                localStorage.setItem(
-                  "trustit_merchant_session",
-                  JSON.stringify({
-                    isAuthenticated: true,
-                    storeName: details?.storeName || storeName,
-                    ownerName: details?.ownerName || ownerName,
-                    phone: details?.phone || merchantPhone,
-                    category: storeCategory,
-                  })
-                );
-              }
-              showToast(`Login successful: ${details?.storeName || storeName}`);
-            }}
+            onLoginSuccess={(details) =>
+              activateMerchantSession(details, `Login successful: ${details?.storeName || storeName}`)
+            }
           />
         )}
       </div>
@@ -1787,8 +1656,7 @@ export default function MerchantNativeAppShell({
           <div className="flex-1 overflow-hidden">{renderAuthStack()}</div>
         ) : (
           <>
-            {/* Top Merchant App Bar */}
-            {/* Persistent Slim Native Header */}
+            {/* Persistent Clean Native Header (Store Info + Online/Offline Switch only) */}
             <header className="bg-white border-b border-slate-200 px-3 py-1.5 flex items-center justify-between shrink-0 shadow-2xs z-10">
               <div className="flex items-center gap-2 min-w-0">
                 <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-blue-700 to-indigo-600 text-white font-black text-xs flex items-center justify-center shadow-xs shrink-0">
@@ -1813,28 +1681,11 @@ export default function MerchantNativeAppShell({
               </div>
 
               {/* Online / Offline Status Hardware Dongle Slider Switch */}
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center shrink-0">
                 <DongleSliderSwitch
                   isOn={isStoreOnline}
                   onToggle={toggleStoreStatus}
                 />
-
-                <Link
-                  href="/merchant/studio"
-                  title="Open Live Visual Studio"
-                  className="w-6 h-6 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 flex items-center justify-center text-[11px] border border-blue-200 transition active:scale-95"
-                >
-                  🎨
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={triggerTestSiren}
-                  title="Test Siren Audio"
-                  className="w-6 h-6 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-[11px] border border-slate-200 transition active:scale-95"
-                >
-                  🔔
-                </button>
               </div>
             </header>
 
@@ -1853,15 +1704,12 @@ export default function MerchantNativeAppShell({
               )}
             </main>
 
-            {/* Bottom 5-Tab Native Navigation Bar (Elevated Orders Center Button) */}
+            {/* Bottom 5-Tab Native Navigation Bar */}
             <nav className="bg-white border-t border-slate-200/90 px-2 py-1 flex items-center justify-around shrink-0 z-20 shadow-md">
               {/* Tab 1: Cockpit */}
               <button
                 type="button"
-                onClick={() => {
-                  setActiveSubScreen(null);
-                  setActiveTab("cockpit");
-                }}
+                onClick={() => navigateToTab("cockpit")}
                 className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition cursor-pointer ${
                   activeTab === "cockpit" && !activeSubScreen
                     ? "text-blue-700 font-black bg-blue-50/80"
@@ -1875,10 +1723,7 @@ export default function MerchantNativeAppShell({
               {/* Tab 2: Menu / Items Catalog */}
               <button
                 type="button"
-                onClick={() => {
-                  setActiveSubScreen(null);
-                  setActiveTab("menu");
-                }}
+                onClick={() => navigateToTab("menu")}
                 className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition cursor-pointer ${
                   activeTab === "menu" && !activeSubScreen
                     ? "text-blue-700 font-black bg-blue-50/80"
@@ -1891,14 +1736,11 @@ export default function MerchantNativeAppShell({
                 </span>
               </button>
 
-              {/* Tab 3: ELEVATED CENTER ORDERS BUTTON (Raised / Floated) */}
+              {/* Tab 3: ELEVATED CENTER ORDERS BUTTON */}
               <div className="relative -top-3.5 flex flex-col items-center">
                 <button
                   type="button"
-                  onClick={() => {
-                    setActiveSubScreen(null);
-                    setActiveTab("orders");
-                  }}
+                  onClick={() => navigateToTab("orders")}
                   className={`w-12 h-12 rounded-full flex items-center justify-center shadow-lg transition active:scale-95 cursor-pointer relative ${
                     activeTab === "orders" && !activeSubScreen
                       ? "bg-gradient-to-tr from-blue-700 to-indigo-600 text-white ring-4 ring-blue-100"
@@ -1925,10 +1767,7 @@ export default function MerchantNativeAppShell({
               {/* Tab 4: QR Standee */}
               <button
                 type="button"
-                onClick={() => {
-                  setActiveSubScreen(null);
-                  setActiveTab("standee");
-                }}
+                onClick={() => navigateToTab("standee")}
                 className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition cursor-pointer ${
                   activeTab === "standee" && !activeSubScreen
                     ? "text-blue-700 font-black bg-blue-50/80"
@@ -1942,10 +1781,7 @@ export default function MerchantNativeAppShell({
               {/* Tab 5: Dukaan More */}
               <button
                 type="button"
-                onClick={() => {
-                  setActiveSubScreen(null);
-                  setActiveTab("more");
-                }}
+                onClick={() => navigateToTab("more")}
                 className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition cursor-pointer ${
                   activeTab === "more" && !activeSubScreen
                     ? "text-blue-700 font-black bg-blue-50/80"

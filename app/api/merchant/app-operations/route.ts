@@ -22,13 +22,28 @@ export async function OPTIONS() {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const requestedBizId = searchParams.get("businessId");
-    const requestedPhone = searchParams.get("phone");
+    const requestedBizId = searchParams.get("businessId")?.trim() || "";
+    const requestedPhone = (searchParams.get("phone") || "").replace(/\D/g, "").slice(-10);
 
-    const config = getMerchantRemoteConfig(requestedBizId || undefined);
+    const admin = createSupabaseAdminClient();
 
-    // 1. Resolve merchant business
+    // 1. Resolve merchant business strictly (by ID, active phone, or authenticated cookie)
     let businessId = requestedBizId;
+    if (!businessId && requestedPhone.length === 10) {
+      const phoneVariants = [`+91${requestedPhone}`, requestedPhone, `91${requestedPhone}`];
+      const { data: matchedBiz } = await admin
+        .from("businesses")
+        .select("id")
+        .in("phone", phoneVariants)
+        .is("deleted_at", null)
+        .order("registration_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (matchedBiz?.id) {
+        businessId = matchedBiz.id;
+      }
+    }
+
     if (!businessId) {
       try {
         const activeMerchant = await getActiveMerchant();
@@ -38,103 +53,153 @@ export async function GET(request: NextRequest) {
       } catch {}
     }
 
+    const config = getMerchantRemoteConfig(businessId || undefined);
+
     if (!businessId) {
-      businessId = config.businessId || "bhr-groc-01";
+      return NextResponse.json({
+        success: true,
+        config,
+        business: null,
+        stats: {
+          todayEarnings: 0,
+          pendingCount: 0,
+          preparingCount: 0,
+          readyCount: 0,
+          outCount: 0,
+          deliveredCount: 0,
+          totalOrdersCount: 0,
+          totalReviews: 0,
+          averageRating: null,
+          totalScans: 0,
+          positivePct: null,
+        },
+        orders: [],
+        catalog: [],
+        reviews: [],
+      });
     }
 
-    const admin = createSupabaseAdminClient();
-
-    // 2. Fetch business profile
-    const { data: dbBusiness } = await admin
-      .from("businesses")
-      .select("id, name, owner, phone, type, address, city, pincode, plan, review_link, location_latitude, location_longitude")
-      .eq("id", businessId)
-      .maybeSingle();
-
-    // 3. Fetch live orders with items
-    const { data: orders } = await admin
-      .from("hyperlocal_orders")
-      .select(`
-        id,
-        status,
-        customer_name,
-        customer_phone,
-        customer_address,
-        total_amount,
-        subtotal_amount,
-        delivery_fee,
-        payment_mode,
-        payment_status,
-        delivery_otp,
-        created_at,
-        accepted_at,
-        ready_at,
-        delivered_at,
-        merchant_prep_time_minutes,
-        hyperlocal_order_items (id, item_name, quantity, unit_price, total_price, is_veg)
-      `)
-      .order("created_at", { ascending: false })
-      .limit(30);
-
-    const effectiveBizId =
-      businessId && businessId.startsWith("bhr-")
-        ? businessId
-        : config.businessCategory === "kirana"
-        ? "bhr-groc-01"
-        : "bhr-sweet-01";
-
-    // 4. Fetch catalog items
-    let { data: catalogItems } = await admin
-      .from("business_catalog_items")
-      .select("id, name, category, price, is_available, item_type, description, image_url, unit")
-      .eq("business_id", effectiveBizId)
-      .order("created_at", { ascending: false });
-
-    // Fallback if this business doesn't have items yet: fetch common items or sample
-    if (!catalogItems || catalogItems.length === 0) {
-      const { data: fallbackCatalog } = await admin
+    // 2. Fetch authentic business profile, orders, catalog, reviews & scan stats in parallel
+    const [bizRes, ordersRes, catalogRes, reviewsRes, scansRes] = await Promise.all([
+      admin
+        .from("businesses")
+        .select("id, name, owner, phone, type, address, city, pincode, plan, review_link, is_outlet_open, location_latitude, location_longitude")
+        .eq("id", businessId)
+        .maybeSingle(),
+      admin
+        .from("hyperlocal_orders")
+        .select(`
+          id,
+          business_id,
+          status,
+          customer_name,
+          customer_phone,
+          customer_address,
+          total_amount,
+          subtotal_amount,
+          delivery_fee,
+          payment_mode,
+          payment_status,
+          delivery_otp,
+          created_at,
+          accepted_at,
+          ready_at,
+          delivered_at,
+          merchant_prep_time_minutes,
+          hyperlocal_order_items (id, item_name, quantity, unit_price, total_price, is_veg)
+        `)
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      admin
         .from("business_catalog_items")
         .select("id, name, category, price, is_available, item_type, description, image_url, unit")
-        .limit(15);
-      catalogItems = fallbackCatalog || [];
-    }
+        .eq("business_id", businessId)
+        .order("created_at", { ascending: false }),
+      admin
+        .from("trustit_reviews")
+        .select("id, rating, review_text, customer_name, submitted_at")
+        .eq("business_id", businessId)
+        .eq("status", "submitted")
+        .order("submitted_at", { ascending: false })
+        .limit(25),
+      admin
+        .from("business_scan_events")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", businessId),
+    ]);
 
-    // 5. Aggregate stats
-    const allOrders = orders || [];
+    const dbBusiness = bizRes.data;
+    const allOrders = ordersRes.data || [];
+    const catalogItems = catalogRes.data || [];
+    const reviewsList = reviewsRes.data || [];
+    const totalScans = scansRes.count ?? 0;
+
+    // 3. Aggregate strictly for THIS merchant (Zero fake fallback numbers)
     const pendingOrders = allOrders.filter((o) => o.status === "placed");
     const preparingOrders = allOrders.filter((o) => o.status === "accepted" || o.status === "preparing");
     const readyOrders = allOrders.filter((o) => o.status === "ready_for_pickup" || o.status === "food_ready");
     const outOrders = allOrders.filter((o) => o.status === "out_for_delivery");
     const deliveredOrders = allOrders.filter((o) => o.status === "delivered");
 
+    const todayKey = new Date().toISOString().slice(0, 10);
     const todayEarnings = allOrders
-      .filter((o) => o.status === "delivered" || o.status === "accepted" || o.status === "preparing")
+      .filter((o) => {
+        const isToday = String(o.created_at || "").startsWith(todayKey);
+        const isCountable = o.status === "delivered" || o.status === "accepted" || o.status === "preparing" || o.status === "ready_for_pickup" || o.status === "out_for_delivery";
+        return isToday && isCountable;
+      })
       .reduce((acc, o) => acc + (Number(o.total_amount) || 0), 0);
+
+    const totalReviews = reviewsList.length;
+    const averageRating = totalReviews > 0
+      ? Number((reviewsList.reduce((sum, r) => sum + Number(r.rating || 0), 0) / totalReviews).toFixed(1))
+      : null;
+    const positiveCount = reviewsList.filter((r) => Number(r.rating || 0) >= 4).length;
+    const positivePct = totalReviews > 0 ? Math.round((positiveCount / totalReviews) * 100) : null;
 
     return NextResponse.json({
       success: true,
-      config,
+      config: {
+        ...config,
+        businessId: dbBusiness?.id || businessId,
+        storeName: dbBusiness?.name || config.storeName,
+        ownerName: dbBusiness?.owner || config.ownerName,
+        phone: dbBusiness?.phone || config.phone,
+        businessCategory: dbBusiness?.type || config.businessCategory,
+        address: dbBusiness?.address || config.address,
+        latitude: dbBusiness?.location_latitude ?? config.latitude,
+        longitude: dbBusiness?.location_longitude ?? config.longitude,
+        isStoreOnline: dbBusiness?.is_outlet_open ?? config.isStoreOnline,
+      },
       business: {
-        id: businessId,
-        name: config.storeName || dbBusiness?.name || "Shri Balaji Daily Needs & General Store",
-        owner: config.ownerName || dbBusiness?.owner || "Aman Sharma",
-        phone: config.phone || dbBusiness?.phone || "+919118643415",
-        type: config.businessCategory || dbBusiness?.type || "kirana",
-        address: config.address || dbBusiness?.address || "Civil Lines, Bahraich",
-        is_outlet_open: config.isStoreOnline,
-        review_link: config.reviewShortLink || dbBusiness?.review_link || `https://trustitreview.com/r/${businessId}`,
+        id: dbBusiness?.id || businessId,
+        name: dbBusiness?.name || "My Store",
+        owner: dbBusiness?.owner || "Merchant Partner",
+        phone: dbBusiness?.phone || "",
+        type: dbBusiness?.type || "kirana",
+        address: dbBusiness?.address || "",
+        location_latitude: dbBusiness?.location_latitude ?? null,
+        location_longitude: dbBusiness?.location_longitude ?? null,
+        is_outlet_open: dbBusiness?.is_outlet_open ?? true,
+        review_link: dbBusiness?.review_link || `https://trustitreview.com/r/${businessId}`,
       },
       stats: {
-        todayEarnings: todayEarnings || 8450,
+        todayEarnings,
         pendingCount: pendingOrders.length,
         preparingCount: preparingOrders.length,
         readyCount: readyOrders.length,
         outCount: outOrders.length,
         deliveredCount: deliveredOrders.length,
         totalOrdersCount: allOrders.length,
+        totalReviews,
+        averageRating,
+        totalScans,
+        positivePct,
       },
       orders: allOrders,
       catalog: catalogItems,
+      reviews: reviewsList,
     });
   } catch (err) {
     return NextResponse.json(
@@ -145,7 +210,7 @@ export async function GET(request: NextRequest) {
 }
 
 function resolveValidBusinessId(category?: string, bizId?: string): string {
-  if (bizId && bizId.startsWith("bhr-")) return bizId;
+  if (bizId && bizId.trim()) return bizId.trim();
   switch (category?.toLowerCase()) {
     case "kirana":
       return "bhr-groc-01";
@@ -167,17 +232,27 @@ export async function POST(request: NextRequest) {
     const { action, businessId, orderId, itemId, data } = body;
 
     const admin = createSupabaseAdminClient();
-    const config = getMerchantRemoteConfig();
+    const config = getMerchantRemoteConfig(businessId || undefined);
     const resolvedBizId = resolveValidBusinessId(data?.category || config.businessCategory, businessId);
 
     // 1. Toggle Store Online / Offline Status
     if (action === "toggle_outlet") {
       const isOpen = Boolean(data?.isOpen);
       const updated = updateMerchantRemoteConfig({ isStoreOnline: isOpen });
+      if (resolvedBizId) {
+        await admin
+          .from("businesses")
+          .update({
+            is_outlet_open: isOpen,
+            allow_taking_orders: isOpen,
+            is_taking_orders: isOpen,
+          })
+          .eq("id", resolvedBizId);
+      }
 
       return NextResponse.json({
         success: true,
-        message: isOpen ? "🟢 Dukaan ab ONLINE hai (Orders Active)" : "🔴 Dukaan ab OFFLINE hai (Orders Paused)",
+        message: isOpen ? "🟢 Orders Active" : "🔴 Orders Paused",
         is_outlet_open: updated.isStoreOnline,
       });
     }
@@ -397,21 +472,43 @@ export async function POST(request: NextRequest) {
         logoUrl: logoUrl || undefined,
       });
 
+      if (resolvedBizId) {
+        const dbPatch: Record<string, string> = {};
+        if (storeName?.trim()) dbPatch.name = storeName.trim();
+        if (ownerName?.trim()) dbPatch.owner = ownerName.trim();
+        if (businessCategory?.trim()) dbPatch.type = businessCategory.trim();
+        if (address?.trim()) dbPatch.address = address.trim();
+        if (Object.keys(dbPatch).length > 0) {
+          await admin.from("businesses").update(dbPatch).eq("id", resolvedBizId);
+        }
+      }
+
       return NextResponse.json({
         success: true,
-        message: "Store Profile safalta se save ho gayi!",
+        message: "Store profile updated!",
         config: updated,
       });
     }
 
     // 12. Update GPS Location & Delivery Radius Geofence
     if (action === "update_location") {
-      const { latitude, longitude, deliveryRadiusKm } = data || {};
+      const { latitude, longitude, deliveryRadiusKm, address } = data || {};
       const updated = updateMerchantRemoteConfig({
         latitude: Number(latitude) || undefined,
         longitude: Number(longitude) || undefined,
         deliveryRadiusKm: Number(deliveryRadiusKm) || undefined,
       });
+
+      if (resolvedBizId && latitude && longitude) {
+        const locPatch: Record<string, unknown> = {
+          location_latitude: Number(latitude),
+          location_longitude: Number(longitude),
+        };
+        if (address && String(address).trim()) {
+          locPatch.address = String(address).trim();
+        }
+        await admin.from("businesses").update(locPatch).eq("id", resolvedBizId);
+      }
 
       return NextResponse.json({
         success: true,

@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import DongleSliderSwitch from "../DongleSliderSwitch";
 
 export interface ScreenK01Props {
   storeName?: string;
@@ -12,6 +11,12 @@ export interface ScreenK01Props {
   liveOrdersCount?: number;
   catalogCount?: number;
   todayEarnings?: number;
+  reviewStats?: {
+    totalReviews?: number;
+    averageRating?: number | null;
+    totalScans?: number;
+    positivePct?: number | null;
+  };
   onOpenParcha?: () => void;
   onOpenRates?: () => void;
   onOpenStandee?: () => void;
@@ -20,27 +25,23 @@ export interface ScreenK01Props {
 
 /**
  * ScreenK01: Pure Multi-Tenant Kirana Cockpit.
- * Zero hardcoded names (No Rajesh ji) - 100% dynamic binding to the authenticated merchant.
- * Hardware-style iOS/Android DongleSliderSwitch for Store Open/Close state.
+ * Zero hardcoded names or dummy numbers - bound strictly to authenticated merchant data.
  */
 export default function ScreenK01KiranaCockpit({
-  storeName = "Mera Kirana Store",
   ownerName = "Merchant Partner",
-  phone = "",
   isStoreOnline = true,
-  onToggleStoreOnline,
-  liveOrdersCount = 3,
-  catalogCount = 26,
-  todayEarnings = 8450,
+  liveOrdersCount = 0,
+  catalogCount = 0,
+  todayEarnings = 0,
+  reviewStats,
   onOpenParcha,
   onOpenRates,
   onOpenStandee,
-  onBack,
 }: ScreenK01Props) {
-  const displayPhone = phone.replace(/\D/g, "");
-  const formattedPhone = displayPhone.length === 10
-    ? `+91 ${displayPhone.slice(0, 5)} ${displayPhone.slice(5)}`
-    : phone || "+91 Verified";
+  const reviewsCount = reviewStats?.totalReviews ?? 0;
+  const ratingLabel = reviewStats?.averageRating != null ? `⭐ ${reviewStats.averageRating}` : "—";
+  const viewsCount = reviewStats?.totalScans ?? 0;
+  const trustLabel = reviewStats?.positivePct != null ? `${reviewStats.positivePct}%` : "—";
 
   return (
     <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3 text-[#0F172A] font-sans select-none overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -57,11 +58,13 @@ export default function ScreenK01KiranaCockpit({
               </h1>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${
-                isStoreOnline
-                  ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                  : "bg-rose-50 text-rose-800 border-rose-300"
-              }`}>
+              <span
+                className={`text-[9px] font-black px-2 py-0.5 rounded-full border ${
+                  isStoreOnline
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-300"
+                    : "bg-rose-50 text-rose-800 border-rose-300"
+                }`}
+              >
                 {isStoreOnline ? "OPEN" : "CLOSED"}
               </span>
               <span className="text-[9px] font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-200">
@@ -70,20 +73,21 @@ export default function ScreenK01KiranaCockpit({
             </div>
           </div>
 
+          {/* Slim Primary Action Strip */}
           <div className="grid grid-cols-2 gap-1.5 pt-2 mt-2 border-t border-slate-100">
             <button
               type="button"
               onClick={onOpenParcha}
-              className="py-1.5 px-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold shadow-xs flex items-center justify-center gap-1 transition active:scale-98"
+              className="py-1 px-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-[10px] font-bold shadow-xs flex items-center justify-center gap-1 transition active:scale-98"
             >
               <span>📄 Live Parchas ({liveOrdersCount})</span>
             </button>
             <button
               type="button"
               onClick={onOpenRates}
-              className="py-1.5 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-[10px] font-bold shadow-2xs flex items-center justify-center gap-1 transition active:scale-98"
+              className="py-1 px-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-[10px] font-bold shadow-2xs flex items-center justify-center gap-1 transition active:scale-98"
             >
-              <span>⚖️ Mandi Kg Rates</span>
+              <span>🏷️ Rates / Items</span>
             </button>
           </div>
         </div>
@@ -122,36 +126,32 @@ export default function ScreenK01KiranaCockpit({
               <span className="text-[11px] font-black text-slate-900">Review &amp; Customer Analytics</span>
             </div>
             <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.2 rounded-full border border-emerald-200">
-              Live Google Sync
+              Live Sync
             </span>
           </div>
 
           <div className="grid grid-cols-4 gap-1.5 text-center">
-            {/* Box 1: Total Reviews */}
             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-1.5">
               <span className="text-[8px] font-bold text-slate-500 uppercase block truncate">Reviews</span>
-              <p className="text-xs font-black text-slate-900 mt-0.5">384</p>
-              <span className="text-[7px] font-bold text-emerald-600 block">+14 this wk</span>
+              <p className="text-xs font-black text-slate-900 mt-0.5">{reviewsCount}</p>
+              <span className="text-[7px] font-bold text-slate-500 block">verified</span>
             </div>
 
-            {/* Box 2: Google Rating */}
             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-1.5">
               <span className="text-[8px] font-bold text-slate-500 uppercase block truncate">Rating</span>
-              <p className="text-xs font-black text-amber-600 mt-0.5">⭐ 4.9</p>
+              <p className="text-xs font-black text-amber-600 mt-0.5">{ratingLabel}</p>
               <span className="text-[7px] font-bold text-slate-500 block">5.0 scale</span>
             </div>
 
-            {/* Box 3: Total Profile Views */}
             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-1.5">
               <span className="text-[8px] font-bold text-slate-500 uppercase block truncate">Views</span>
-              <p className="text-xs font-black text-blue-700 mt-0.5">920</p>
-              <span className="text-[7px] font-bold text-blue-600 block">Local footfall</span>
+              <p className="text-xs font-black text-blue-700 mt-0.5">{viewsCount}</p>
+              <span className="text-[7px] font-bold text-blue-600 block">QR scans</span>
             </div>
 
-            {/* Box 4: Positive Trust % */}
             <div className="bg-slate-50 border border-slate-200/80 rounded-lg p-1.5">
               <span className="text-[8px] font-bold text-slate-500 uppercase block truncate">Trust</span>
-              <p className="text-xs font-black text-emerald-700 mt-0.5">98%</p>
+              <p className="text-xs font-black text-emerald-700 mt-0.5">{trustLabel}</p>
               <span className="text-[7px] font-bold text-emerald-600 block">Positive</span>
             </div>
           </div>
@@ -175,26 +175,13 @@ export default function ScreenK01KiranaCockpit({
             className="p-2.5 rounded-xl bg-white border border-slate-200 shadow-2xs cursor-pointer hover:border-slate-300 transition"
           >
             <div className="flex items-center gap-1.5">
-              <span className="text-sm">⚖️</span>
-              <span className="text-xs font-black text-slate-900">Weight Scale</span>
+              <span className="text-sm">🏷️</span>
+              <span className="text-xs font-black text-slate-900">Rates / Items</span>
             </div>
-            <p className="text-[9px] text-slate-500 mt-0.5">Kg / Gram Rate Master</p>
+            <p className="text-[9px] text-slate-500 mt-0.5">Store Catalog &amp; Pricing</p>
           </div>
         </div>
       </div>
-
-      {/* Footer Navigation Back Button if provided */}
-      {onBack && (
-        <div className="pt-2 border-t border-slate-200">
-          <button
-            type="button"
-            onClick={onBack}
-            className="w-full py-1.5 text-xs text-slate-500 hover:text-slate-900 text-center"
-          >
-            Switch Console Mode
-          </button>
-        </div>
-      )}
     </div>
   );
 }

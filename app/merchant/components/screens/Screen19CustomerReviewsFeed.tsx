@@ -1,57 +1,48 @@
 "use client";
 
-import React, { useState } from "react";
-import UniversalUpgradeModal from "@/app/merchant/components/UniversalUpgradeModal";
+import React from "react";
+
+export interface RealMerchantReview {
+  id: string;
+  customer_name?: string | null;
+  rating: number;
+  review_text: string;
+  submitted_at?: string;
+}
 
 interface Screen19Props {
   onBack?: () => void;
   onOpenReply?: (customerName: string) => void;
+  onOpenStandeeQr?: () => void;
+  reviews?: RealMerchantReview[];
+  reviewStats?: {
+    totalReviews?: number;
+    averageRating?: number | null;
+    totalScans?: number;
+    positivePct?: number | null;
+  };
 }
 
 export default function Screen19CustomerReviewsFeed({
   onBack,
   onOpenReply,
+  onOpenStandeeQr,
+  reviews = [],
+  reviewStats,
 }: Screen19Props) {
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
-  const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState<boolean>(false);
-
-  const allReviews = [
-    {
-      id: 1,
-      name: "Rohit Agarwal",
-      rating: 5,
-      date: "Today, 01:20 PM",
-      verified: true,
-      tags: ["Great Taste", "Fast Service"],
-      comment: "Best cold coffee in Bahraich! Sandwich was fresh and crunchy. Table service was very polite.",
-      reply: "Thank you Rohit ji! We look forward to serving you again soon.",
-    },
-    {
-      id: 2,
-      name: "Dr. Ananya Mishra",
-      rating: 5,
-      date: "Yesterday",
-      verified: true,
-      tags: ["Hygienic Packaging"],
-      comment: "Clean tables, hygienic food preparation, and quick order fulfillment.",
-      reply: null,
-    },
-    {
-      id: 3,
-      name: "Vikas Srivastava",
-      rating: 4,
-      date: "2 days ago",
-      verified: true,
-      tags: ["Good Food"],
-      comment: "Good experience overall. Frappe took 5 mins longer due to rush, but tasted delicious.",
-      reply: null,
-    },
-  ];
+  const totalReviews = reviewStats?.totalReviews ?? reviews.length;
+  const averageRating =
+    reviewStats?.averageRating != null
+      ? reviewStats.averageRating
+      : reviews.length > 0
+      ? Number((reviews.reduce((sum, r) => sum + Number(r.rating || 0), 0) / reviews.length).toFixed(1))
+      : null;
+  const positivePct = reviewStats?.positivePct ?? null;
 
   return (
     <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3 text-[#0F172A] font-sans overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {/* Top Compact Header (No Overlap) */}
       <div>
+        {/* Top Compact Header */}
         <div className="flex items-center justify-between pb-2 border-b border-slate-200">
           <div>
             <span className="text-[9px] font-black uppercase text-blue-700 tracking-wider block">
@@ -62,21 +53,7 @@ export default function Screen19CustomerReviewsFeed({
             </h1>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            {/* Quick Demo Mode Toggle Pill */}
-            <button
-              type="button"
-              onClick={() => setIsSubscribed(!isSubscribed)}
-              className={`text-[9px] font-bold px-2 py-1 rounded-lg border transition ${
-                isSubscribed
-                  ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                  : "bg-amber-50 text-amber-900 border-amber-300"
-              }`}
-              title="Click to toggle Free vs Subscribed View"
-            >
-              {isSubscribed ? "VIP Active ✓" : "Test Free Mode"}
-            </button>
-
+          {onBack && (
             <button
               type="button"
               onClick={onBack}
@@ -84,149 +61,104 @@ export default function Screen19CustomerReviewsFeed({
             >
               ← Back
             </button>
-          </div>
+          )}
         </div>
 
-        {/* Compact Rating Strip (Fits Screen without taking huge vertical space) */}
+        {/* Authentic Rating Strip */}
         <div className="mt-2 bg-white border border-slate-200 rounded-2xl p-2.5 shadow-2xs flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl font-black text-slate-900 leading-none">4.9</span>
+            <span className="text-xl font-black text-slate-900 leading-none">
+              {averageRating != null ? averageRating.toFixed(1) : "—"}
+            </span>
             <div>
-              <div className="flex text-amber-400 text-xs leading-none">★★★★★</div>
+              <div className="flex text-amber-400 text-xs leading-none">
+                {averageRating != null ? "★★★★★" : "☆☆☆☆☆"}
+              </div>
               <span className="text-[9px] text-slate-500 font-bold block mt-0.5">
-                148 Reviews · 88% Positive
+                {totalReviews} Verified {totalReviews === 1 ? "Review" : "Reviews"}
+                {positivePct != null ? ` · ${positivePct}% Positive` : ""}
               </span>
             </div>
           </div>
 
-          {!isSubscribed && (
+          {onOpenStandeeQr && (
             <button
               type="button"
-              onClick={() => setIsUpgradeModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black px-2.5 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1 cursor-pointer"
+              onClick={onOpenStandeeQr}
+              className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-black px-2.5 py-1.5 rounded-xl shadow-xs transition flex items-center gap-1 cursor-pointer"
             >
-              <span>⚡ Unlock All (₹29)</span>
+              <span>🪧 Counter QR</span>
             </button>
           )}
         </div>
 
-        {/* Reviews Feed Container */}
-        <div className="mt-2 space-y-2">
-          {/* REVIEW 1: ALWAYS VISIBLE (Free Unlocked Hook) */}
-          <div className="bg-white border border-slate-200 rounded-2xl p-2.5 shadow-2xs space-y-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-xs font-black text-slate-900 leading-tight">
-                  {allReviews[0].name}
-                </h4>
-                <div className="flex items-center gap-1 text-[10px]">
-                  <span className="text-amber-500 font-bold">★★★★★</span>
-                  <span className="text-slate-300">•</span>
-                  <span className="text-slate-400 text-[9px]">{allReviews[0].date}</span>
-                </div>
-              </div>
-
-              <span className="text-[8px] font-bold bg-emerald-50 text-emerald-800 px-1.5 py-0.2 rounded-full border border-emerald-200">
-                ✓ In-Store QR Scan
-              </span>
-            </div>
-
-            <p className="text-[11px] text-slate-700 leading-relaxed font-medium">
-              "{allReviews[0].comment}"
-            </p>
-
-            {/* Owner Response */}
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-1.5 text-[9px] text-slate-600">
-              <span className="font-bold text-slate-900">Owner Response: </span>
-              <span>{allReviews[0].reply}</span>
-            </div>
-          </div>
-
-          {/* ========================================================== */}
-          {/* IF SUBSCRIBED: SHOW REMAINING REVIEWS IN FULL DETAIL       */}
-          {/* IF FREE: SHOW 1 COMPACT LOCKED TEASER CARD (NO CUT-OFF)    */}
-          {/* ========================================================== */}
-          {isSubscribed ? (
-            allReviews.slice(1).map((r) => (
-              <div
-                key={r.id}
-                className="bg-white border border-slate-200 rounded-2xl p-2.5 shadow-2xs space-y-1"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-xs font-black text-slate-900 leading-tight">{r.name}</h4>
-                    <div className="flex items-center gap-1 text-[10px]">
-                      <span className="text-amber-500 font-bold">{"★".repeat(r.rating)}</span>
-                      <span className="text-slate-300">•</span>
-                      <span className="text-slate-400 text-[9px]">{r.date}</span>
-                    </div>
-                  </div>
-                  <span className="text-[8px] font-bold bg-emerald-50 text-emerald-800 px-1.5 py-0.2 rounded-full border border-emerald-200">
-                    ✓ Verified
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-700 leading-relaxed font-medium">
-                  "{r.comment}"
-                </p>
+        {/* Live Store Reviews or Clean Empty State */}
+        <div className="mt-2.5 space-y-2">
+          {reviews.length === 0 ? (
+            <div className="bg-white border border-slate-200 rounded-2xl p-5 text-center space-y-2 shadow-2xs mt-2">
+              <span className="text-3xl block">⭐</span>
+              <h3 className="text-xs font-black text-slate-900">No Verified Reviews Yet</h3>
+              <p className="text-[10px] text-slate-500 max-w-[240px] mx-auto leading-snug">
+                Customers who scan your store&apos;s official Trustit QR Standee will appear here in real time.
+              </p>
+              {onOpenStandeeQr && (
                 <button
                   type="button"
-                  onClick={() => onOpenReply?.(r.name)}
-                  className="text-[9px] font-bold text-blue-600 hover:text-blue-800 pt-0.5"
+                  onClick={onOpenStandeeQr}
+                  className="mt-1 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black shadow-xs transition active:scale-95"
                 >
-                  💬 Reply to Customer
+                  Open Counter Standee QR →
                 </button>
-              </div>
-            ))
-          ) : (
-            /* COMPACT TEASER CARD (Fits perfectly inside the viewport without overflowing) */
-            <div className="relative bg-gradient-to-br from-amber-50 via-white to-orange-50 border-2 border-dashed border-amber-300 rounded-2xl p-3 shadow-xs text-center space-y-1.5">
-              <div className="flex items-center justify-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-800 flex items-center justify-center text-[10px] font-bold">
-                  🔒
-                </span>
-                <span className="text-xs font-black text-slate-900">
-                  2 More Customer Reviews Waiting
-                </span>
-              </div>
-
-              {/* Blurred Customer Previews */}
-              <div className="flex items-center justify-center gap-2 text-[10px] text-slate-400 filter blur-xs select-none">
-                <span>Dr. Ananya Mishra (5★)</span>
-                <span>•</span>
-                <span>Vikas Srivastava (4★)</span>
-              </div>
-
-              <p className="text-[10px] text-slate-600 max-w-[260px] mx-auto leading-tight">
-                Grahakon ne aapki dukan ki tareef ki hai! Sabhi reviews padhein aur reply dekar trust badhayein.
-              </p>
-
-              <button
-                type="button"
-                onClick={() => setIsUpgradeModalOpen(true)}
-                className="mt-1 w-full py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-[11px] font-black rounded-xl shadow-xs transition flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <span>Unlock All Reviews for ₹29/Month</span>
-                <span>→</span>
-              </button>
+              )}
             </div>
+          ) : (
+            reviews.map((r) => {
+              const dateLabel = r.submitted_at
+                ? new Date(r.submitted_at).toLocaleDateString("en-IN", { day: "numeric", month: "short" })
+                : "Verified";
+              const displayName = r.customer_name?.trim() || "Verified Customer";
+              const stars = "★".repeat(Math.max(1, Math.min(5, Number(r.rating) || 5)));
+              return (
+                <div
+                  key={r.id}
+                  className="bg-white border border-slate-200 rounded-2xl p-2.5 shadow-2xs space-y-1"
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-black text-slate-900 leading-tight">{displayName}</h4>
+                      <div className="flex items-center gap-1 text-[10px]">
+                        <span className="text-amber-500 font-bold">{stars}</span>
+                        <span className="text-slate-300">•</span>
+                        <span className="text-slate-400 text-[9px]">{dateLabel}</span>
+                      </div>
+                    </div>
+                    <span className="text-[8px] font-bold bg-emerald-50 text-emerald-800 px-1.5 py-0.2 rounded-full border border-emerald-200">
+                      ✓ Verified QR
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-700 leading-relaxed font-medium">
+                    &ldquo;{r.review_text}&rdquo;
+                  </p>
+                  {onOpenReply && (
+                    <button
+                      type="button"
+                      onClick={() => onOpenReply(displayName)}
+                      className="text-[9px] font-bold text-blue-600 hover:text-blue-800 pt-0.5"
+                    >
+                      💬 Reply to Customer
+                    </button>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
       </div>
 
-      {/* Footer Disclaimer (Clean & Compact) */}
+      {/* Footer */}
       <div className="pt-2 text-center text-[9px] text-slate-400 font-mono">
-        100% Authentic Customer Feedback Verified via GPS &amp; Table QR
+        100% Authentic Customer Feedback Verified via Store QR
       </div>
-
-      {/* Universal Upgrade Modal */}
-      <UniversalUpgradeModal
-        isOpen={isUpgradeModalOpen}
-        onClose={() => setIsUpgradeModalOpen(false)}
-        reason="reviews"
-        onSuccessPay={() => {
-          setIsSubscribed(true);
-        }}
-      />
     </div>
   );
 }

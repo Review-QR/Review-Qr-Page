@@ -1,8 +1,8 @@
 {
-  "version": "3.5.0",
+  "version": "3.6.0",
   "minAppVersion": "2.2.0",
-  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1794288490450",
-  "updatedAt": "2026-11-10T05:28:10.450Z",
-  "notes": "Official Trustit Merchant Partner release v3.5.0: Native Android hardware GPS bridge and Google Maps reverse-geocoding for instant store address auto-fetch",
-  "sizeBytes": 3475992
+  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1794374518904",
+  "updatedAt": "2026-11-11T05:21:58.905Z",
+  "notes": "Official Trustit Merchant Partner release v3.6.0: Compact OTP UI, clean header, pure Orders Paused/Active toast, tab back history, strict multi-tenant per-merchant DB sync, 3x2 Standee tool grid & zero dummy data",
+  "sizeBytes": 3474454
 }

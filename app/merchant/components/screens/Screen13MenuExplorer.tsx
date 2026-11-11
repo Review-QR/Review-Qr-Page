@@ -16,7 +16,7 @@ export default function Screen13MenuExplorer({
   onAddProduct,
   onStockToggle,
   onBack,
-  liveCatalog,
+  liveCatalog = [],
   onToggleItemStock,
   onDeleteItem,
 }: Screen13Props) {
@@ -26,25 +26,14 @@ export default function Screen13MenuExplorer({
   const [search, setSearch] = useState("");
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState<boolean>(false);
 
-  const defaultItems = [
-    { id: "1", name: "Madhur Pure Sugar (5kg Pack)", cat: "Kirana Mandi", price: 215, type: "veg", inStock: true, orders: 48 },
-    { id: "2", name: "Aashirvaad Shudh Chakki Atta (10kg)", cat: "Flour & Grains", price: 410, type: "veg", inStock: true, orders: 36 },
-    { id: "3", name: "Fortune Sunlite Sunflower Oil (1L)", cat: "Oils & Ghee", price: 135, type: "veg", inStock: true, orders: 52 },
-    { id: "4", name: "Tata Salt Vacuum Evaporated (1kg)", cat: "Spices & Salt", price: 28, type: "veg", inStock: true, orders: 19 },
-    { id: "5", name: "Surf Excel Quick Wash Detergent (1kg)", cat: "Cleaning", price: 140, type: "veg", inStock: false, orders: 27 },
-  ];
-
-  const items = liveCatalog && liveCatalog.length > 0
-    ? liveCatalog.map((item) => ({
-        id: item.id,
-        name: item.name,
-        cat: item.category || "General",
-        price: Number(item.price) || 0,
-        type: item.item_type === "non_veg" ? "non_veg" : "veg",
-        inStock: Boolean(item.is_available),
-        orders: 24,
-      }))
-    : defaultItems;
+  const items = (liveCatalog || []).map((item) => ({
+    id: item.id,
+    name: item.name,
+    cat: item.category || "General",
+    price: Number(item.price) || 0,
+    type: item.item_type === "non_veg" ? "non_veg" : "veg",
+    inStock: Boolean(item.is_available),
+  }));
 
   const categories = ["All", ...Array.from(new Set(items.map((i) => i.cat)))];
 
@@ -56,21 +45,21 @@ export default function Screen13MenuExplorer({
   });
 
   return (
-    <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto">
+    <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {/* Header */}
       <div>
         <div className="flex items-center justify-between pb-2.5 border-b border-slate-200">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-black uppercase text-blue-700 tracking-wider">
-                CATALOG &amp; PRICING MASTER
+                CATALOG &amp; RATES
               </span>
               <span className="text-[9px] font-extrabold px-2 py-0.2 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-300">
-                Live Supabase Synchronized ({items.length} Items)
+                {items.length} Items
               </span>
             </div>
             <h1 className="text-xs font-black text-slate-900 leading-tight">
-              Menu &amp; Items Manager
+              Rates &amp; Items Manager
             </h1>
           </div>
 
@@ -82,13 +71,15 @@ export default function Screen13MenuExplorer({
             >
               + Add Item
             </button>
-            <button
-              type="button"
-              onClick={onBack}
-              className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200 cursor-pointer"
-            >
-              ← Back
-            </button>
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="text-xs text-slate-500 hover:text-slate-900 px-2 py-1 rounded-lg bg-white border border-slate-200 cursor-pointer"
+              >
+                ← Back
+              </button>
+            )}
           </div>
         </div>
 
@@ -161,9 +152,31 @@ export default function Screen13MenuExplorer({
           </div>
         </div>
 
-        {/* Items List */}
+        {/* Items List or Clean Empty State */}
         <div className="mt-2.5 space-y-2">
-          {filteredItems.map((item) => (
+          {filteredItems.length === 0 ? (
+            <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center space-y-2 shadow-2xs mt-3">
+              <span className="text-3xl block">🏷️</span>
+              <h3 className="text-xs font-black text-slate-900">
+                {items.length === 0 ? "No Items or Rates Added Yet" : "No Matching Items"}
+              </h3>
+              <p className="text-[10px] text-slate-500 max-w-[230px] mx-auto leading-snug">
+                {items.length === 0
+                  ? "Add your store products, weights, and prices so customers can browse and order live."
+                  : "Try clearing your search or category filter."}
+              </p>
+              {items.length === 0 && onAddProduct && (
+                <button
+                  type="button"
+                  onClick={onAddProduct}
+                  className="mt-1 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-black shadow-xs transition active:scale-95"
+                >
+                  + Add Your First Item
+                </button>
+              )}
+            </div>
+          ) : (
+            filteredItems.map((item) => (
             <div
               key={item.id}
               className={`p-2.5 rounded-2xl border transition shadow-2xs flex items-center justify-between ${
@@ -206,7 +219,8 @@ export default function Screen13MenuExplorer({
                 )}
               </div>
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
 

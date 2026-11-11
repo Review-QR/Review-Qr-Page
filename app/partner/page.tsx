@@ -11,6 +11,8 @@ interface StoredSession {
   category: MerchantCategory;
   storeName: string;
   ownerName: string;
+  phone: string;
+  businessId: string;
 }
 
 export default function PartnerPage() {
@@ -18,8 +20,10 @@ export default function PartnerPage() {
     ready: false,
     isAuthenticated: false,
     category: "kirana",
-    storeName: "Gupta Kirana & General Store",
+    storeName: "My Store",
     ownerName: "Merchant Partner",
+    phone: "",
+    businessId: "",
   });
 
   useEffect(() => {
@@ -35,6 +39,8 @@ export default function PartnerPage() {
               category: (parsed.category as MerchantCategory) || "kirana",
               storeName: parsed.storeName || "My Store",
               ownerName: parsed.ownerName || "Merchant Partner",
+              phone: parsed.phone || "",
+              businessId: parsed.businessId || "",
             });
             return;
           }
@@ -48,8 +54,10 @@ export default function PartnerPage() {
         ready: true,
         isAuthenticated: false,
         category: "kirana",
-        storeName: "Gupta Kirana & General Store",
+        storeName: "My Store",
         ownerName: "Merchant Partner",
+        phone: "",
+        businessId: "",
       });
     }
   }, []);
@@ -75,6 +83,8 @@ export default function PartnerPage() {
         initialCategory={session.category}
         initialStoreName={session.storeName}
         initialOwnerName={session.ownerName}
+        initialPhone={session.phone}
+        initialBusinessId={session.businessId}
         forceStandalone={true}
       />
     </div>

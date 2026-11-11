@@ -261,7 +261,15 @@ export async function registerMerchantProfile(params: {
     .select("id, name, owner, type")
     .single();
 
-  const finalBizId = createdBiz?.id || businessId;
+  if (bizErr || !createdBiz) {
+    console.error("[registerMerchantProfile] Insert error:", bizErr);
+    return {
+      success: false,
+      message: bizErr?.message || "Failed to create store profile in database.",
+    };
+  }
+
+  const finalBizId = createdBiz.id;
   await establishMerchantAuthSession(finalBizId, `merchant.${phone10}@trustitreview.com`, phone10);
 
   // Update remote runtime config with fresh merchant details
@@ -410,8 +418,9 @@ async function establishMerchantAuthSession(
   }
 
   if (authUser) {
-    // Ensure merchant_accounts mapping exists
-    await admin.from("merchant_accounts").upsert({
+    // Re-bind merchant_accounts safely (handles re-registration after soft-delete cleanly)
+    await admin.from("merchant_accounts").delete().eq("user_id", authUser.id);
+    await admin.from("merchant_accounts").insert({
       user_id: authUser.id,
       business_id: businessId,
     });

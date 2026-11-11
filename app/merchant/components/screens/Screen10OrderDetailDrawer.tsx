@@ -23,10 +23,10 @@ export default function Screen10OrderDetailDrawer({
   const [otpError, setOtpError] = useState<string | null>(null);
   const [otpSuccess, setOtpSuccess] = useState<boolean>(false);
 
-  const orderId = order?.id || "ORD-7783-09";
-  const customerName = order?.customer_name || "Aman Sharma";
-  const customerPhone = order?.customer_phone || "9118643415";
-  const customerAddress = order?.customer_address || "Civil Lines, Near Indira Gandhi Stadium, Bahraich";
+  const orderId = order?.id || "ORD-LIVE";
+  const customerName = order?.customer_name || "Customer";
+  const customerPhone = order?.customer_phone || "";
+  const customerAddress = order?.customer_address || "Bahraich";
   const paymentMode = order?.payment_mode === "cod" ? "Cash on Delivery" : "Cashfree UPI Paid";
   const isPaid = order?.payment_status === "paid" || order?.payment_mode !== "cod";
   const status = order?.status || "placed";
@@ -86,9 +86,19 @@ export default function Screen10OrderDetailDrawer({
             </a>
           </div>
 
-          <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-600">
-            <span className="font-bold text-slate-800 block">Delivery Address:</span>
-            <span>{customerAddress}</span>
+          <div className="pt-2 border-t border-slate-100 text-[11px] text-slate-600 flex items-start justify-between gap-2">
+            <div>
+              <span className="font-bold text-slate-800 block">Delivery Address:</span>
+              <span>{customerAddress}</span>
+            </div>
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(customerAddress)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-2 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-[10px] font-bold shrink-0"
+            >
+              📍 Map
+            </a>
           </div>
 
           {order?.delivery_otp && (
