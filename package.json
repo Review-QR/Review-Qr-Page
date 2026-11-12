@@ -10,7 +10,10 @@
     "typecheck": "tsc --noEmit --incremental false",
     "test": "node --test --test-concurrency=1",
     "test:cashfree": "node --test lib/cashfree-production-readiness.test.mjs lib/cashfree-webhook-handler.test.mjs",
-    "audit:public-indexability": "node scripts/verify-public-indexability.mjs"
+    "audit:public-indexability": "node scripts/verify-public-indexability.mjs",
+    "audit:secrets": "node scripts/git-guard.mjs secret-scan",
+    "preflight": "node scripts/git-guard.mjs preflight",
+    "prepare": "git config core.hooksPath .githooks || true"
   },
   "dependencies": {
     "@capacitor/android": "6.2.0",

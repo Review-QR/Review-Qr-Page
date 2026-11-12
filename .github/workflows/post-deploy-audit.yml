@@ -1,0 +1,44 @@
+name: Post-Deploy Indexability Audit
+
+on:
+  deployment_status:
+  schedule:
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public-indexability-audit:
+    name: Public Indexability Audit
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (
+        github.event.deployment_status.state == 'success' &&
+        github.event.deployment.environment == 'Production'
+      )
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run public indexability audit
+        env:
+          TRUSTIT_AUDIT_BASE_URL: ${{ vars.TRUSTIT_AUDIT_BASE_URL || 'https://trustitreview.com' }}
+        run: pnpm audit:public-indexability
