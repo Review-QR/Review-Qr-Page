@@ -21,15 +21,16 @@
 - [x] `lib/rider-ecosystem.test.mjs` (line 58-75 aur line 135-167) ko inspect aur fix karein:
   - `app/rider/page.tsx` refactored screens (`Screen01AuthStart`, `Screen02OtpVerify`, `Screen06PayoutSetup`, `Screen08ShiftScorecard`, `Screen10Radar`, `Screen15Passbook`, `Screen17SafetySos`, `Screen29CustomerRefusalRto`, `Screen31PenaltyDispute`), hooks (`useRiderAuth.ts`, `useRiderWorkflow.ts`), `lib/audio/rider-siren.ts`, aur `app/api/hyperlocal/rider/route.ts` ke real symbols/wiring ke against assertions update kiye (bina checks relax kiye).
   - Bonus baseline fix: `lib/review-draft-provider.test.mjs:226` ko `app/r/[id]/review-experience.tsx` ke `setError(result.message || "We couldn’t prepare a review suggestion. Please try again.")` ke saath align kiya (34/34 pass).
-- [ ] Full `pnpm test` suite ko 100% green banayein (currently `278/279` pass — sirf `app/merchant/dashboard/profile/profile.test.mjs:109` fail hai kyunki `next.config.ts` mein `Permissions-Policy` abhi Team 1 `@security` ke Wave 1 edit ka wait kar raha hai).
+- [x] Full `pnpm test` suite ko 100% green banayein (`285/285` pass after Wave 1 merge + `lib/security-hardening.test.mjs`).
 
 ### Milestone 4.2 — Security & Auth Regression Tests (Verify Team 1)
-- [ ] Naye unit/integration tests add karein:
-  - CORS allowlist test (trusted origins allowed, random `https://evil.com` blocked).
-  - Unauthenticated requests to `/api/hyperlocal/admin/*` and `/api/merchant/*` return `401`/`403`.
-  - Cross-merchant IDOR test (Merchant A cannot access/modify Merchant B data).
-  - Cashfree webhook signature mismatch returns `401`/`403` + duplicate webhook is idempotent.
-  - Rate-limiter test for OTP endpoints.
+- [x] Naye unit/integration tests (`lib/security-hardening.test.mjs`) add aur verify kiye:
+  - CORS allowlist test (`https://trustitreview.com`, `capacitor://localhost`, `http://localhost` allowed; `https://evil.com`, `null` blocked without wildcard `*`).
+  - `proxy.ts` fail-closed gates (`/api/cron/*`, `/admin*`, `/api/hyperlocal/admin/*`, protected `/merchant/*` & `/api/merchant/*`) + unauthenticated API routes returning `401`/`403`.
+  - Cross-merchant & cross-customer IDOR tests (`/api/merchant/app-operations`, `/api/hyperlocal/orders`).
+  - Cashfree `hord_*` webhook signature mismatch (`401`), tampered amount (`400 tampered_amount_rejected`), aur duplicate paid delivery idempotency (`200 idempotent: true`).
+  - Rate-limiter sliding-window `429 Retry-After` enforcement + `MAX_RATE_LIMIT_KEYS` (`20,000`) eviction (`lib/rate-limiter.ts`, `enforceRateLimit`).
+  - Android release hardening invariants (`android/app/build.gradle`, `capacitor.config.json`, `scripts/build_*_native_apk.mjs`, `AndroidManifest.xml`).
 
 ### Milestone 4.3 — CI/CD Quality Gate (`.github/workflows/ci.yml`)
 - [x] GitHub Actions workflow banayein jo har PR aur push par chalega:
@@ -41,11 +42,11 @@
 
 ### Milestone 4.4 — Release Sign-Off Matrix (Per Merge)
 Har Wave merge hone se pehle ye sab PASS hona chahiye:
-- [ ] `pnpm typecheck` -> `0` errors
-- [ ] `pnpm test` -> `0` failures
-- [ ] `pnpm test:cashfree` -> `0` failures
-- [ ] `pnpm build` -> clean exit `0`
-- [ ] `node scripts/verify_compiled_apk.mjs` (after Team 3 changes)
+- [x] `pnpm typecheck` -> `0` errors
+- [x] `pnpm test` -> `0` failures (`285/285`)
+- [x] `pnpm test:cashfree` -> `0` failures (`23/23`)
+- [ ] `pnpm build` -> clean exit `0` (pending Wave 2 `ignoreBuildErrors: false` + final merge sign-off)
+- [ ] `node scripts/verify_compiled_apk.mjs` (pending full Capacitor/Gradle signed APK build into `public/downloads/Trustit-Merchant-Partner.apk`)
 
 ---
 
@@ -73,5 +74,15 @@ Har Wave merge hone se pehle ye sab PASS hona chahiye:
     - `pnpm test`: `278/279` passed, `1` failed (`app/merchant/dashboard/profile/profile.test.mjs:109` due to `next.config.ts` wildcard `Permissions-Policy`, owned by Team 1).
     - `pnpm audit:public-indexability`: FAILED against live `https://trustitreview.com` (`/: canonical mismatch`, actual `'https://trustitreview.com'` vs expected `'https://trustitreview.com/'`).
     - Local secret-scan check against tracked files flagged `android/app/build.gradle` hardcoded keystore passwords (currently being fixed by Team 3 `@android`) and 0 other production secrets.
-- **Current Status:** `WAVE_1_PARTIAL_WAITING_TEAM1_TEAM3`
-- **Next Exact Step:** Wait for `@security` and `@android` Wave 1 reports on the board, review their diffs, implement Milestone 4.2 security/auth regression tests, and re-run `pnpm typecheck`, `pnpm test`, `pnpm test:cashfree`, `pnpm build`, and `node scripts/verify_compiled_apk.mjs`.
+- **2026-11-12 (Team 4 Wave 2 / Milestone 4.2 — Security & Build Hardening Regression Suite):**
+  - **Completed Tasks:** Merged Wave 1 (`main` `f3ee9d8`), verified `@security` (`188c16c` + `f12e230c`) and `@android` (`0e740eb` + `e8f83cb`) fixes, and created `lib/security-hardening.test.mjs` (`6` runtime + invariant test blocks).
+  - **Files Changed:**
+    - `lib/security-hardening.test.mjs`
+    - `docs/ai-teams/team-4-qa-verification.plan.md`
+  - **Verification Evidence (after `main` merge + new tests):**
+    - `node --test lib/security-hardening.test.mjs`: PASSED `6/6`
+    - `pnpm typecheck`: PASSED (exit `0`)
+    - `pnpm test`: PASSED `285/285` (`0` failures)
+    - `pnpm test:cashfree`: PASSED `23/23` (`0` failures)
+- **Current Status:** `MILESTONE_4_2_COMPLETE`
+- **Next Exact Step:** Wait for Team 2 (`@architecture` Wave 2 `ignoreBuildErrors: false` + `pnpm build`) and any remaining Wave merges to run final Milestone 4.4 full-stack verification (`pnpm build` + `verify_compiled_apk.mjs` if signed APK present).
