@@ -1,8 +1,13 @@
 package com.trustit.customer;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import androidx.activity.OnBackPressedCallback;
 import com.getcapacitor.BridgeActivity;
+import org.json.JSONObject;
 
 public class MainActivity extends BridgeActivity {
     @Override
@@ -54,5 +59,89 @@ public class MainActivity extends BridgeActivity {
         try {
             TrustitNativeBridge.performBackgroundOtaSync(this, getBridge());
         } catch (Exception ignored) {}
+
+        // Inspect cold-launch deep link (e.g., com.trustit.customer://pay/return)
+        handleDeepLinkIntent(getIntent(), true);
+    }
+
+    @Override
+    public void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleDeepLinkIntent(intent, false);
+    }
+
+    private void handleDeepLinkIntent(Intent intent, boolean isColdLaunch) {
+        if (intent == null || !Intent.ACTION_VIEW.equals(intent.getAction())) {
+            return;
+        }
+        Uri data = intent.getData();
+        if (data == null) {
+            return;
+        }
+        if (!"com.trustit.customer".equalsIgnoreCase(data.getScheme()) || !"pay".equalsIgnoreCase(data.getHost())) {
+            return;
+        }
+
+        String orderId = data.getQueryParameter("orderId");
+        if (orderId == null || orderId.trim().isEmpty()) {
+            orderId = data.getQueryParameter("order_id");
+        }
+        String status = data.getQueryParameter("status");
+
+        final JSONObject payload = new JSONObject();
+        try {
+            payload.put("url", data.toString());
+            payload.put("orderId", orderId != null ? orderId : JSONObject.NULL);
+            payload.put("status", status != null ? status : JSONObject.NULL);
+            payload.put("ts", System.currentTimeMillis());
+        } catch (Exception ignored) {
+            return;
+        }
+
+        final String jsPayload = payload.toString()
+            .replace("\u2028", "\\u2028")
+            .replace("\u2029", "\\u2029");
+        final String js = "(function(){ try { var detail = " + jsPayload
+            + "; window.__trustitLastPaymentReturn = detail;"
+            + " window.dispatchEvent(new CustomEvent('trustit:payment-return', { detail: detail }));"
+            + " return true; } catch (e) { return false; } })()";
+
+        dispatchPaymentReturnToWebView(js, isColdLaunch ? 0 : 12);
+    }
+
+    private void dispatchPaymentReturnToWebView(final String js, final int attempt) {
+        final Handler mainHandler = new Handler(Looper.getMainLooper());
+        final Runnable task = new Runnable() {
+            @Override
+            public void run() {
+                if (getBridge() == null || getBridge().getWebView() == null) {
+                    if (attempt < 15) {
+                        mainHandler.postDelayed(() -> dispatchPaymentReturnToWebView(js, attempt + 1), 300);
+                    }
+                    return;
+                }
+                final android.webkit.WebView webView = getBridge().getWebView();
+                if (attempt < 12) {
+                    webView.evaluateJavascript(
+                        "(function(){ try { return typeof window !== 'undefined' && document.readyState === 'complete' && window.location && window.location.href !== 'about:blank'; } catch (e) { return false; } })()",
+                        ready -> {
+                            if ("true".equals(ready)) {
+                                webView.evaluateJavascript(js, null);
+                            } else {
+                                mainHandler.postDelayed(() -> dispatchPaymentReturnToWebView(js, attempt + 1), 350);
+                            }
+                        }
+                    );
+                } else {
+                    webView.evaluateJavascript(js, null);
+                }
+            }
+        };
+        if (Looper.myLooper() == Looper.getMainLooper() && attempt >= 12) {
+            task.run();
+        } else {
+            mainHandler.postDelayed(task, attempt == 0 ? 400 : 0);
+        }
     }
 }

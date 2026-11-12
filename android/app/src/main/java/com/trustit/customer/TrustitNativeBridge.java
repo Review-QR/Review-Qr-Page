@@ -455,6 +455,76 @@ public class TrustitNativeBridge extends Plugin {
     }
 
     /**
+     * 4b. openInAppCheckout: Launches an HTTPS payment checkout URL inside an Android Chrome Custom Tab
+     * over MainActivity so deep-link returns (com.trustit.customer://pay/return) return cleanly in-app.
+     */
+    @PluginMethod
+    public void openInAppCheckout(PluginCall call) {
+        String rawUrl = call.getString("url");
+        if (rawUrl == null || rawUrl.trim().isEmpty()) {
+            call.reject("Checkout URL is required.");
+            return;
+        }
+
+        final String trimmedUrl = rawUrl.trim();
+        final Uri uri;
+        try {
+            uri = Uri.parse(trimmedUrl);
+        } catch (Exception e) {
+            call.reject("Invalid checkout URL.");
+            return;
+        }
+
+        if (uri == null || !"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null || uri.getHost().trim().isEmpty()) {
+            call.reject("Only valid https:// checkout URLs are permitted.");
+            return;
+        }
+
+        final Intent customTabIntent = new Intent(Intent.ACTION_VIEW, uri);
+        Bundle customTabExtras = new Bundle();
+        customTabExtras.putBinder("android.support.customtabs.extra.SESSION", null);
+        customTabIntent.putExtras(customTabExtras);
+        customTabIntent.putExtra("android.support.customtabs.extra.TOOLBAR_COLOR", 0xFF0F172A);
+        customTabIntent.putExtra("android.support.customtabs.extra.TITLE_VISIBILITY", 1);
+        customTabIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+        android.app.Activity activity = getActivity();
+        Context context = getContext();
+        if (activity != null) {
+            activity.runOnUiThread(() -> {
+                try {
+                    activity.startActivity(customTabIntent);
+                    JSObject res = new JSObject();
+                    res.put("opened", true);
+                    res.put("mode", "custom_tab");
+                    call.resolve(res);
+                } catch (Exception e) {
+                    call.reject("Failed to open in-app checkout: " + e.getMessage());
+                }
+            });
+            return;
+        }
+
+        if (context == null) {
+            call.reject("Android context unavailable.");
+            return;
+        }
+
+        customTabIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        new Handler(Looper.getMainLooper()).post(() -> {
+            try {
+                context.startActivity(customTabIntent);
+                JSObject res = new JSObject();
+                res.put("opened", true);
+                res.put("mode", "custom_tab");
+                call.resolve(res);
+            } catch (Exception e) {
+                call.reject("Failed to open in-app checkout: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
      * 5. LIVE SELF-HOSTED OTA UPDATE ENGINE (SWIGGY/ZOMATO STANDARD)
      * Checks server for newer zipped Next.js bundles, downloads in background, and hot-boots cleanly.
      */

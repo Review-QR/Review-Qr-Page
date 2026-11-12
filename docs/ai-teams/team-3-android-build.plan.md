@@ -38,6 +38,11 @@
 - [x] `scripts/build_all_three_apps.mjs` (aur `build_customer_native_apk.mjs`, `build_partner_native_apk.mjs`, `build_rider_native_apk.mjs`) ko update karein taaki wo `build.gradle`, `strings.xml`, ya `src/main/AndroidManifest.xml` overwrite na karein — aur `./gradlew assembleCustomerRelease`, `assemblePartnerRelease`, `assembleRiderRelease` call karein. Also updated `scripts/prepare_embedded_bundle.mjs` to accept `<app> [outDir]` instead of hardcoding `partner.html`.
 - [x] Confirm karein ki `android-customer-bundle/`, `android-embedded-bundle/`, aur `android-rider-bundle/` `.gitignore` aur bundle scripts mein consistent hain.
 
+### Milestone 3.4 — Customer App In-App Payment & Deep Link Return (Board #20)
+- [x] `android/app/src/customer/AndroidManifest.xml` mein `com.trustit.customer.MainActivity` par `ACTION_VIEW` + `DEFAULT` + `BROWSABLE` deep-link `<intent-filter>` (`com.trustit.customer://pay`) sirf `customer` flavor mein add karein (`partner`/`rider` merged manifests unaffected).
+- [x] `android/app/src/main/java/com/trustit/customer/MainActivity.java` mein `onNewIntent(Intent)` override aur `onCreate` `getIntent()` cold-launch inspection add karein jo `window.__trustitLastPaymentReturn = { url, orderId, status, ts }` set kare aur `trustit:payment-return` `CustomEvent` WebView JS mein dispatch kare.
+- [x] `android/app/src/main/java/com/trustit/customer/TrustitNativeBridge.java` mein `openInAppCheckout(PluginCall)` (`https://` strict validation + Android Chrome Custom Tab Intent extras without extra Maven deps, resolving `{ opened: true, mode: "custom_tab" }`) aur `lib/native/trustit-native-service.ts` mein `TrustitNative.openInAppCheckout(url)` (with `window.open` web fallback) add karein.
+
 ---
 
 ## Verification Gate (Done Hone Se Pehle Mandatory)
@@ -61,3 +66,14 @@
     - `node --check` passed on all 5 modified `.mjs` scripts.
   - **Current Status:** `WAVE_1_COMPLETE`
   - **Next Exact Step:** When producing distributable signed APKs, supply `android/keystore.properties` (or `TRUSTIT_*` env vars), run `pnpm build`, run `node scripts/build_all_three_apps.mjs`, and verify with `node scripts/verify_compiled_apk.mjs`. Also consider `git rm --cached android/trustit-production.keystore` + key rotation before public repo exposure.
+- **2026-11-12 (Team 3 Loom Bug Fix — Customer In-App Payment + Deep Link Return, Board #20):**
+  - **Files Changed:** `android/app/src/customer/AndroidManifest.xml`, `android/app/src/main/java/com/trustit/customer/MainActivity.java`, `android/app/src/main/java/com/trustit/customer/TrustitNativeBridge.java`, `lib/native/trustit-native-service.ts`, `docs/ai-teams/team-3-android-build.plan.md`.
+  - **Implementation Details:**
+    1. Added `com.trustit.customer://pay` (`ACTION_VIEW` / `DEFAULT` / `BROWSABLE`) `<intent-filter>` exclusively in `android/app/src/customer/AndroidManifest.xml` on `com.trustit.customer.MainActivity` (`launchMode="singleTask"`).
+    2. Added `onNewIntent(Intent)` + `onCreate` `getIntent()` cold-launch handling in `MainActivity.java`, JSON-escaping `{ url, orderId, status, ts }` via `JSONObject` and evaluating JS once WebView is ready to set `window.__trustitLastPaymentReturn` and dispatch `window.dispatchEvent(new CustomEvent('trustit:payment-return', { detail }))`.
+    3. Added `@PluginMethod public void openInAppCheckout(PluginCall call)` in `TrustitNativeBridge.java` (validates `https://` scheme + non-empty host, launches `Intent.ACTION_VIEW` with standard Chrome Custom Tab extras `android.support.customtabs.extra.SESSION`, `TOOLBAR_COLOR = 0xFF0F172A`, `TITLE_VISIBILITY = 1`, `FLAG_ACTIVITY_NO_HISTORY`, resolving `{ opened: true, mode: "custom_tab" }` with zero new Maven dependencies) and exposed `TrustitNative.openInAppCheckout(url)` in `lib/native/trustit-native-service.ts` with `window.open` web fallback.
+  - **Verification Evidence:**
+    - `pnpm typecheck` (`tsc --noEmit --incremental false`): exited 0.
+    - `node --test lib/customer-ux-fixes.test.mjs`: `6/6` passed.
+    - `.\gradlew.bat lintCustomerRelease lintPartnerRelease lintRiderRelease assembleCustomerRelease assemblePartnerRelease assembleRiderRelease --no-daemon`: `BUILD SUCCESSFUL in 3m 22s` (all 3 flavor lints & release builds passed).
+    - Verified `merged_manifests/customerRelease/AndroidManifest.xml` contains the `com.trustit.customer://pay` `<intent-filter>` while `partnerRelease` and `riderRelease` merged manifests do not.

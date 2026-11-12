@@ -26,6 +26,7 @@ interface TrustitNativeBridgePlugin {
   }>;
   playHapticFeedback(options?: { type?: string }): Promise<{ success: boolean; type?: string }>;
   nativeCheckoutHandoff(options?: { upiUri?: string }): Promise<{ success: boolean; dispatched?: boolean; installedCount?: number }>;
+  openInAppCheckout(options: { url: string }): Promise<{ opened: boolean; mode: string }>;
   checkAndApplyOta(options?: { manifestUrl?: string; currentVersion?: string }): Promise<{ hasUpdate: boolean; appliedVersion?: string; message?: string }>;
 }
 
@@ -296,6 +297,30 @@ export const TrustitNative = {
     }
 
     return { success: false, dispatched: false };
+  },
+
+  /**
+   * Opens an HTTPS checkout page inside an Android Chrome Custom Tab on native,
+   * falling back to window.open in web browsers.
+   */
+  async openInAppCheckout(url: string): Promise<{ opened: boolean; mode: string }> {
+    const plugin = getNativePlugin();
+    if (plugin && typeof plugin.openInAppCheckout === "function") {
+      try {
+        return await plugin.openInAppCheckout({ url });
+      } catch (err: any) {
+        console.warn("[TrustitNative] openInAppCheckout error:", err);
+      }
+    }
+
+    if (typeof window !== "undefined") {
+      try {
+        const openedWindow = window.open(url, "_blank", "noopener,noreferrer");
+        return { opened: Boolean(openedWindow), mode: "web_window" };
+      } catch {}
+    }
+
+    return { opened: false, mode: "unavailable" };
   },
 
   /**
