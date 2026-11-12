@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import {
   createHyperlocalOrder,
   merchantAcceptOrder,
@@ -7,8 +7,10 @@ import {
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getActiveMerchant } from "@/lib/merchant-auth";
 import { getActiveAdminContext } from "@/lib/supabase-server";
+import { verifyRiderSessionToken } from "@/lib/hyperlocal/rider-session";
 import {
   CUSTOMER_SESSION_COOKIE,
+  createCustomerSessionToken,
   enforceRateLimit,
   normalizePhone10,
   verifyCustomerSessionToken,
@@ -112,7 +114,21 @@ export async function POST(request: NextRequest) {
       paymentMode,
       customerNotes: body.customerNotes,
     });
-    return Response.json({ success: true, ...result });
+    const res = NextResponse.json({ success: true, ...result });
+    if (body.customerId || body.customerPhone) {
+      const token = createCustomerSessionToken({
+        customerId: body.customerId,
+        phone: body.customerPhone,
+      });
+      res.cookies.set(CUSTOMER_SESSION_COOKIE, token, {
+        httpOnly: true,
+        sameSite: "lax",
+        secure: process.env.NODE_ENV === "production",
+        path: "/",
+        maxAge: 30 * 24 * 60 * 60,
+      });
+    }
+    return res;
   } catch (err) {
     return Response.json(
       { success: false, error: err instanceof Error ? err.message : "Order creation failed" },
@@ -151,6 +167,37 @@ async function authorizeMerchantOrderMutation(orderId: string): Promise<Response
   return null;
 }
 
+async function authorizeCustomerOrderMutation(
+  request: NextRequest,
+  order: { business_id?: string | null; customer_id?: string | null; customer_phone?: string | null }
+): Promise<Response | null> {
+  const session = verifyCustomerSessionToken(
+    request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value
+  );
+  if (session) {
+    const orderPhone10 = normalizePhone10(order.customer_phone);
+    const matchesId = Boolean(session.customerId && order.customer_id === session.customerId);
+    const matchesPhone = Boolean(session.phone && orderPhone10 && session.phone === orderPhone10);
+    if (matchesId || matchesPhone) return null;
+    return Response.json(
+      { success: false, error: "Forbidden: you do not own this order." },
+      { status: 403 }
+    );
+  }
+
+  const [merchant, adminCtx] = await Promise.all([
+    getActiveMerchant().catch(() => null),
+    getActiveAdminContext().catch(() => null),
+  ]);
+  if (adminCtx) return null;
+  if (merchant && order.business_id && merchant.businessId === order.business_id) return null;
+
+  return Response.json(
+    { success: false, error: "Unauthorized: authenticated customer, merchant, or admin session required." },
+    { status: 401 }
+  );
+}
+
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
@@ -178,7 +225,7 @@ export async function PUT(request: NextRequest) {
       const admin = createSupabaseAdminClient();
       const { data: currentOrder, error: fetchErr } = await admin
         .from("hyperlocal_orders")
-        .select("id, customer_id, customer_phone, status, payment_mode, payment_status, cashfree_payment_id, total_amount")
+        .select("id, business_id, customer_id, customer_phone, status, payment_mode, payment_status, cashfree_payment_id, total_amount")
         .eq("id", orderId)
         .maybeSingle();
 
@@ -186,20 +233,8 @@ export async function PUT(request: NextRequest) {
         return Response.json({ success: false, error: "Order not found" }, { status: 404 });
       }
 
-      const session = verifyCustomerSessionToken(
-        request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value
-      );
-      if (session) {
-        const orderPhone10 = normalizePhone10(currentOrder.customer_phone);
-        const matchesId = Boolean(session.customerId && currentOrder.customer_id === session.customerId);
-        const matchesPhone = Boolean(session.phone && orderPhone10 && session.phone === orderPhone10);
-        if (!matchesId && !matchesPhone) {
-          return Response.json(
-            { success: false, error: "Forbidden: you do not own this order." },
-            { status: 403 }
-          );
-        }
-      }
+      const denied = await authorizeCustomerOrderMutation(request, currentOrder);
+      if (denied) return denied;
 
       const prePrepStatuses = ["placed", "accepted_by_merchant", "accepted", "merchant_accepted"];
       if (!prePrepStatuses.includes(String(currentOrder.status || "").toLowerCase())) {
@@ -246,7 +281,7 @@ export async function PUT(request: NextRequest) {
       const admin = createSupabaseAdminClient();
       const { data: currentOrder } = await admin
         .from("hyperlocal_orders")
-        .select("id, customer_id, customer_phone, payment_status")
+        .select("id, business_id, customer_id, customer_phone, payment_status")
         .eq("id", orderId)
         .maybeSingle();
 
@@ -254,17 +289,8 @@ export async function PUT(request: NextRequest) {
         return Response.json({ success: false, error: "Order not found" }, { status: 404 });
       }
 
-      const session = verifyCustomerSessionToken(
-        request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value
-      );
-      if (session) {
-        const orderPhone10 = normalizePhone10(currentOrder.customer_phone);
-        const matchesId = Boolean(session.customerId && currentOrder.customer_id === session.customerId);
-        const matchesPhone = Boolean(session.phone && orderPhone10 && session.phone === orderPhone10);
-        if (!matchesId && !matchesPhone) {
-          return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
-        }
-      }
+      const denied = await authorizeCustomerOrderMutation(request, currentOrder);
+      if (denied) return denied;
 
       const now = new Date().toISOString();
       const { error } = await admin
@@ -326,9 +352,44 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  if (businessId) {
-    const merchant = await getActiveMerchant().catch(() => null);
-    if (merchant && merchant.businessId !== businessId) {
+  const [adminCtx, merchant] = await Promise.all([
+    getActiveAdminContext().catch(() => null),
+    getActiveMerchant().catch(() => null),
+  ]);
+  const customerSession = verifyCustomerSessionToken(
+    request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value
+  );
+  const rawRiderToken =
+    request.headers.get("Authorization")?.replace(/^Bearer\s+/i, "").trim() ||
+    request.cookies.get("trustit_rider_session")?.value?.trim() ||
+    "";
+  const riderSessionId = rawRiderToken ? verifyRiderSessionToken(rawRiderToken) : null;
+
+  if (!adminCtx && !merchant && !customerSession && !riderSessionId) {
+    return Response.json(
+      { success: false, error: "Unauthorized: active session required." },
+      { status: 401 }
+    );
+  }
+
+  if (businessId && !adminCtx) {
+    if (!merchant) {
+      return Response.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+    if (merchant.businessId !== businessId) {
+      return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+    }
+  }
+
+  if ((customerId || phone) && !adminCtx && !merchant) {
+    if (!customerSession) {
+      return Response.json({ success: false, error: "Unauthorized." }, { status: 401 });
+    }
+    const clean = normalizePhone10(phone);
+    if (customerId && customerSession.customerId && customerId !== customerSession.customerId) {
+      return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+    }
+    if (clean && customerSession.phone && clean !== customerSession.phone) {
       return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
     }
   }
@@ -344,8 +405,17 @@ export async function GET(request: NextRequest) {
     `)
     .order("created_at", { ascending: false });
 
-  if (orderId) query = query.eq("id", orderId);
-  else if (businessId) {
+  if (orderId) {
+    query = query.eq("id", orderId);
+    if (!adminCtx) {
+      if (merchant) query = query.eq("business_id", merchant.businessId);
+      else if (riderSessionId) query = query.eq("rider_id", riderSessionId);
+      else if (customerSession?.customerId) query = query.eq("customer_id", customerSession.customerId);
+      else if (customerSession?.phone) {
+        query = query.or(`customer_phone.eq.${customerSession.phone},customer_phone.eq.+91${customerSession.phone}`);
+      }
+    }
+  } else if (businessId) {
     // Merchant console must ONLY receive confirmed orders:
     // Either Online orders where payment_status = 'paid' (confirmed via Cashfree webhook)
     // OR Cash on Delivery (payment_mode = 'cod')

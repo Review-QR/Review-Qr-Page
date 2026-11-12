@@ -28,6 +28,7 @@ import {
 } from "@/lib/hyperlocal/rider-fleet-engine";
 import { buildCorsHeaders, handleCorsPreflight } from "@/lib/auth-cors";
 import { enforceRateLimit, verifyGoogleIdToken } from "@/lib/auth-api-guards";
+import { getActiveAdminContext } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,13 @@ export async function GET(request: NextRequest) {
   if (session.provided && !session.riderId) {
     return NextResponse.json(
       { error: "Unauthorized: invalid or expired rider session token." },
+      { status: 401, headers: corsHeaders }
+    );
+  }
+  const adminCtx = !session.riderId ? await getActiveAdminContext().catch(() => null) : null;
+  if (!session.riderId && !adminCtx) {
+    return NextResponse.json(
+      { error: "Unauthorized: active rider or admin session required." },
       { status: 401, headers: corsHeaders }
     );
   }
@@ -733,6 +741,20 @@ export async function POST(request: NextRequest) {
         newRider.id,
         200,
         corsHeaders
+      );
+    }
+
+    // ── AUTHENTICATED RIDER MUTATIONS GATE ──
+    if (!session.riderId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: authenticated rider session required." },
+        { status: 401, headers: corsHeaders }
+      );
+    }
+    if (riderId && session.riderId !== riderId) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: rider session mismatch." },
+        { status: 403, headers: corsHeaders }
       );
     }
 

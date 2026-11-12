@@ -94,5 +94,10 @@ Har route par check karein aur fix karein: (1) Auth guard, (2) Role check, (3) O
     - `pnpm typecheck`: PASSED (`tsc --noEmit --incremental false`, exit `0`).
     - `pnpm test:cashfree`: PASSED (`23/23` tests pass).
     - `node --test app/merchant/dashboard/profile/profile.test.mjs`: PASSED (`9/9` tests pass).
+  - **Follow-up Fixes (`@qa` board #11):**
+    - `app/api/hyperlocal/orders/route.ts`: Set `HttpOnly` `CUSTOMER_SESSION_COOKIE` on order creation (`POST`), enforced fail-closed `authorizeCustomerOrderMutation` on `PUT` (`customer_cancel`, `switch_to_cod`), and gated `GET` behind admin, matching merchant, matching customer cookie, or active rider session (`401`/`403` when unauthenticated/mismatched).
+    - `app/api/hyperlocal/rider/route.ts`: Enforced `session.riderId` OR `getActiveAdminContext()` on `GET`, and enforced `session.riderId` (plus `session.riderId === riderId` when provided) on all authenticated `POST` rider mutations.
+    - `app/api/merchant/app-operations/route.ts`: Scoped `getMerchantRemoteConfig(resolvedBizId)` and `updateMerchantRemoteConfig({ businessId: resolvedBizId, ... })` across `update_security_pin`, `add_branch`, `switch_branch`, `manage_staff`, and `update_printer_settings`.
+    - Re-verified after follow-up edits: `pnpm typecheck` PASSED (exit `0`), `pnpm test:cashfree` PASSED (`23/23`), `node --test app/merchant/dashboard/profile/profile.test.mjs` PASSED (`9/9`).
 - **Current Status:** `WAVE_1_COMPLETE`
-- **Next Exact Step:** `@qa` to review security changes and add Milestone 4.2 regression tests; `@android` to verify native `Authorization` forwarding for Partner/Rider `nativeFetch`.
+- **Next Exact Step:** `@qa` to review follow-up fixes and merge/add Milestone 4.2 regression tests; `@android` to verify native `Authorization` forwarding for Partner/Rider `nativeFetch`.

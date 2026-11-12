@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
     // 1. Toggle Store Online / Offline Status
     if (action === "toggle_outlet") {
       const isOpen = Boolean(data?.isOpen);
-      const updated = updateMerchantRemoteConfig({ isStoreOnline: isOpen });
+      const updated = updateMerchantRemoteConfig({ businessId: resolvedBizId, isStoreOnline: isOpen });
       if (resolvedBizId) {
         await admin
           .from("businesses")
@@ -452,6 +452,7 @@ export async function POST(request: NextRequest) {
     if (action === "update_profile") {
       const { storeName, ownerName, businessCategory, address, logoUrl } = data || {};
       const updated = updateMerchantRemoteConfig({
+        businessId: resolvedBizId,
         storeName: storeName?.trim() || undefined,
         ownerName: ownerName?.trim() || undefined,
         businessCategory: businessCategory || undefined,
@@ -481,6 +482,7 @@ export async function POST(request: NextRequest) {
     if (action === "update_location") {
       const { latitude, longitude, deliveryRadiusKm, address } = data || {};
       const updated = updateMerchantRemoteConfig({
+        businessId: resolvedBizId,
         latitude: Number(latitude) || undefined,
         longitude: Number(longitude) || undefined,
         deliveryRadiusKm: Number(deliveryRadiusKm) || undefined,
@@ -510,6 +512,7 @@ export async function POST(request: NextRequest) {
       const fest = isFestivalMode !== undefined ? Boolean(isFestivalMode) : festivalMode !== undefined ? Boolean(festivalMode) : undefined;
       const lunch = isLunchPause !== undefined ? Boolean(isLunchPause) : lunchPause !== undefined ? Boolean(lunchPause) : undefined;
       const updated = updateMerchantRemoteConfig({
+        businessId: resolvedBizId,
         openingTime: openingTime || undefined,
         closingTime: closingTime || undefined,
         isFestivalMode: fest,
@@ -527,6 +530,7 @@ export async function POST(request: NextRequest) {
     if (action === "update_review_gating") {
       const { googlePlaceId, reviewShortLink, smartGatingMinStars } = data || {};
       const updated = updateMerchantRemoteConfig({
+        businessId: resolvedBizId,
         googlePlaceId: googlePlaceId?.trim() || undefined,
         reviewShortLink: reviewShortLink?.trim() || undefined,
         smartGatingMinStars: Number(smartGatingMinStars) || 4,
@@ -548,14 +552,14 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const curConfig = getMerchantRemoteConfig();
+      const curConfig = getMerchantRemoteConfig(resolvedBizId);
       if (curConfig.cashierPin && (!currentPin || curConfig.cashierPin !== currentPin)) {
         return NextResponse.json(
           { success: false, message: "Current PIN is required and must match!" },
           { status: 400 }
         );
       }
-      const updated = updateMerchantRemoteConfig({ cashierPin: newPin });
+      const updated = updateMerchantRemoteConfig({ businessId: resolvedBizId, cashierPin: newPin });
       return NextResponse.json({
         success: true,
         message: "Master Cashier PIN safalta se badal diya gaya!",
@@ -567,6 +571,7 @@ export async function POST(request: NextRequest) {
     if (action === "update_security_settings") {
       const { twoFactorEnabled, loginAlerts } = data || {};
       const updated = updateMerchantRemoteConfig({
+        businessId: resolvedBizId,
         twoFactorEnabled: twoFactorEnabled !== undefined ? Boolean(twoFactorEnabled) : undefined,
         loginAlerts: loginAlerts !== undefined ? Boolean(loginAlerts) : undefined,
       });
@@ -586,7 +591,7 @@ export async function POST(request: NextRequest) {
           { status: 400 }
         );
       }
-      const cur = getMerchantRemoteConfig();
+      const cur = getMerchantRemoteConfig(resolvedBizId);
       const branches = cur.branches || [];
       const newBranch = {
         id: `branch_${Date.now()}`,
@@ -598,7 +603,7 @@ export async function POST(request: NextRequest) {
         pendingOrders: 0,
         revenueToday: "₹0",
       };
-      const updated = updateMerchantRemoteConfig({ branches: [...branches, newBranch] });
+      const updated = updateMerchantRemoteConfig({ businessId: resolvedBizId, branches: [...branches, newBranch] });
       return NextResponse.json({
         success: true,
         message: `New outlet branch "${name}" registered!`,
@@ -609,7 +614,7 @@ export async function POST(request: NextRequest) {
 
     if (action === "switch_branch") {
       const { branchId } = data || {};
-      const cur = getMerchantRemoteConfig();
+      const cur = getMerchantRemoteConfig(resolvedBizId);
       const branches = cur.branches || [];
       const target = branches.find((b) => b.id === branchId);
       if (!target) {
@@ -620,6 +625,7 @@ export async function POST(request: NextRequest) {
         active: b.id === branchId,
       }));
       const updated = updateMerchantRemoteConfig({
+        businessId: resolvedBizId,
         branches: updatedBranches,
         storeName: target.name,
       });
@@ -634,11 +640,11 @@ export async function POST(request: NextRequest) {
     // 14e. Staff Roles & Matrix (Screen 43)
     if (action === "manage_staff") {
       const { actionType, staffMember, targetName } = data || {};
-      const cur = getMerchantRemoteConfig();
+      const cur = getMerchantRemoteConfig(resolvedBizId);
       let staff = cur.staffList || [];
       if (actionType === "revoke") {
         staff = staff.filter((s) => s.name !== targetName);
-        const updated = updateMerchantRemoteConfig({ staffList: staff });
+        const updated = updateMerchantRemoteConfig({ businessId: resolvedBizId, staffList: staff });
         return NextResponse.json({
           success: true,
           message: `✓ Staff access revoked for ${targetName}!`,
@@ -652,7 +658,7 @@ export async function POST(request: NextRequest) {
           );
         }
         staff.push(staffMember);
-        const updated = updateMerchantRemoteConfig({ staffList: staff });
+        const updated = updateMerchantRemoteConfig({ businessId: resolvedBizId, staffList: staff });
         return NextResponse.json({
           success: true,
           message: `✓ ${staffMember.name} has been added to staff list!`,
@@ -665,8 +671,9 @@ export async function POST(request: NextRequest) {
     // 14f. Thermal Printer Settings (Screen 11 & Screen 46)
     if (action === "update_printer_settings") {
       const { paperSize, connectionType, autoCut } = data || {};
-      const cur = getMerchantRemoteConfig();
+      const cur = getMerchantRemoteConfig(resolvedBizId);
       const updated = updateMerchantRemoteConfig({
+        businessId: resolvedBizId,
         printerSettings: {
           paperSize: paperSize || cur.printerSettings?.paperSize || "80mm",
           connectionType: connectionType || cur.printerSettings?.connectionType || "bluetooth",
@@ -785,6 +792,7 @@ export async function POST(request: NextRequest) {
       }
 
       const updated = updateMerchantRemoteConfig({
+        businessId: resolvedBizId,
         bankAccount: {
           accountNumberMask: mask,
           ifsc: cleanIfsc,
