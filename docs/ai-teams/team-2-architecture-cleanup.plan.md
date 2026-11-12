@@ -18,9 +18,9 @@
 ## Task Checklist
 
 ### Milestone 2.1 — TypeScript Strictness Enforcement
-- [ ] `pnpm typecheck` aur `npx next typegen` run karke verify karein ki zero TS errors hain.
-- [ ] `next.config.ts` se `typescript: { ignoreBuildErrors: true }` ko `false` karein (ya hata dein).
-- [ ] `pnpm build` run karke confirm karein ki production build bina type errors ke pass hota hai.
+- [x] `pnpm typecheck` aur `npx next typegen` run karke verify karein ki zero TS errors hain.
+- [x] `next.config.ts` se `typescript: { ignoreBuildErrors: true }` ko `false` karein (ya hata dein).
+- [x] `pnpm build` run karke confirm karein ki production build bina type errors ke pass hota hai.
 
 ### Milestone 2.2 — Root Directory Clutter Cleanup
 - [x] Confirm karein ki root ki purani static HTML/JS files active Next.js App Router ya extension se referenced nahi hain:
@@ -48,9 +48,9 @@
 ---
 
 ## Verification Gate (Done Hone Se Pehle Mandatory)
-- [x] `pnpm typecheck` passes cleanly (Wave 1 verified: exit code `0`).
-- [ ] `next build` passes with `ignoreBuildErrors: false` (Wave 2 after Team 1 merges `next.config.ts`).
-- [x] Koi broken import (`@/lib/...`) nahi bacha (no `lib/` files moved in Wave 1).
+- [x] `pnpm typecheck` passes cleanly (Wave 1 & Wave 2 Milestone 2.1 verified: exit code `0`).
+- [x] `next build` passes with `ignoreBuildErrors: false` (Wave 2 Milestone 2.1 verified with CI placeholder Supabase env vars: exit code `0`, 36/36 static pages).
+- [x] Koi broken import (`@/lib/...`) nahi bacha.
 
 ---
 
@@ -68,5 +68,13 @@
     - Reported `data-supabase-ready.js.txt` at root (unreferenced, outside Wave 1 ownership) and confirmed 0 `loom*` files exist in this worktree.
     - Mapped all 161 `lib/` files (136 non-test + 25 tests) without mass-moving files yet so Wave 1 Security (`Team 1`) and Android (`Team 3`) suffer zero import conflicts.
   - **Verification Evidence:** `pnpm typecheck` (`tsc --noEmit --incremental false`) exited with code `0`; `verify_blueprint.mjs` confirmed 161/161 `lib/` files mapped.
-- **Current Status:** `WAVE_1_COMPLETE`
-- **Next Exact Step:** In Wave 2 (after Team 1 merges `next.config.ts`), set `typescript.ignoreBuildErrors: false`, run `npx next typegen && pnpm typecheck && pnpm build`, reorganize `scripts/`, and execute Phase 2B domain consolidation with transitional shims.
+- **2026-11-12 (Team 2 — Wave 2 Milestone 2.1 Completed):**
+  - **Completed Tasks:** Merged `main` (`f3ee9d8`), enabled strict build-time TypeScript checking (`typescript: { ignoreBuildErrors: false }` in `next.config.ts` without touching CORS/CSP/Permissions-Policy headers), and verified `npx next typegen`, `pnpm typecheck`, and `pnpm build`.
+  - **Files Changed:** `next.config.ts`, `docs/ai-teams/team-2-architecture-cleanup.plan.md`.
+  - **Key Technical Decisions:** Kept `typescript: { ignoreBuildErrors: false }` explicit in `next.config.ts` rather than deleting the block so strict checking remains unmistakable in code review. Noted that `lib/supabase-config.ts` throws at module evaluation during Next page-data collection if `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` are unset (matching `.github/workflows/ci.yml` placeholder env vars resolves it).
+  - **Verification Evidence:**
+    - `npx next typegen`: `✓ Types generated successfully` (exit `0`).
+    - `pnpm typecheck` (`tsc --noEmit --incremental false`): exit `0` (0 TS errors).
+    - `pnpm build` (with `NEXT_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=placeholder-publishable-key`): exit `0` (`✓ Compiled successfully in 8.2s`, `Finished TypeScript in 2.2s`, `36/36` static pages generated).
+- **Current Status:** `WAVE_2_MILESTONE_2_1_COMPLETE`
+- **Next Exact Step:** Reorganize `scripts/` into `scripts/{build,seed,audit,utils}/` + update `package.json`, add shared typed validation contracts, and execute Phase 2B `lib/modules/` domain consolidation with transitional shims (Milestone 2.2 remaining + Milestone 2.3).
