@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { runDailyOccasionAutoDispatcher } from "@/lib/messaging/fast2sms-dispatch";
+import { constantTimeEqual } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  // Check optional CRON_SECRET or Admin authorization
-  const authHeader = request.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
+  const authHeader = request.headers.get("authorization") || "";
+  const cronSecret = (process.env.CRON_SECRET || "").trim();
 
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
-    // If CRON_SECRET is configured, enforce it
-    return NextResponse.json({ message: "Unauthorized cron execution." }, { status: 401 });
+  if (!cronSecret || !constantTimeEqual(authHeader, `Bearer ${cronSecret}`)) {
+    return NextResponse.json({ success: false, message: "Unauthorized cron execution." }, { status: 401 });
   }
 
   try {

@@ -64,18 +64,25 @@ export async function POST(request: Request): Promise<Response> {
       const isSuccess = paymentStatus === "SUCCESS" || eventType === "PAYMENT_SUCCESS_WEBHOOK";
 
       if (isSuccess) {
-        // Anti-tampering check: ensure webhook amount matches order total in database
+        // Anti-tampering & idempotency check: require DB order and exact numeric amount match
         const { data: dbOrder } = await admin
           .from("hyperlocal_orders")
-          .select("total_amount")
+          .select("total_amount, payment_status")
           .eq("id", orderId)
           .maybeSingle();
 
-        const webhookOrderAmount = payload?.data?.order?.order_amount ?? payload?.data?.payment?.payment_amount;
-        if (dbOrder && typeof webhookOrderAmount === "number") {
-          if (Math.abs(Number(webhookOrderAmount) - Number(dbOrder.total_amount)) > 0.01) {
-            return Response.json({ result: "tampered_amount_rejected" }, { status: 400 });
-          }
+        if (!dbOrder) {
+          return Response.json({ result: "order_not_found" }, { status: 404 });
+        }
+
+        if (dbOrder.payment_status === "paid") {
+          return Response.json({ success: true, orderId, paymentStatus: "paid", idempotent: true });
+        }
+
+        const rawAmount = payload?.data?.order?.order_amount ?? payload?.data?.payment?.payment_amount;
+        const webhookOrderAmount = Number(rawAmount);
+        if (!Number.isFinite(webhookOrderAmount) || Math.abs(webhookOrderAmount - Number(dbOrder.total_amount)) > 0.01) {
+          return Response.json({ result: "tampered_amount_rejected" }, { status: 400 });
         }
 
         const cfPaymentId = payload?.data?.payment?.cf_payment_id
@@ -125,9 +132,15 @@ export async function POST(request: Request): Promise<Response> {
         const orderAmount = Number(payload?.data?.order?.order_amount ?? payload?.data?.payment?.payment_amount ?? 0);
         const orderTags = (payload?.data?.order as { order_tags?: Record<string, string> } | undefined)?.order_tags || {};
         const businessId = orderTags.business_id;
-        const credits = Number(orderTags.credits || orderAmount);
+        const orderType = orderTags.order_type;
+        const rawCredits = Number(orderTags.credits || orderAmount);
+        const maxAllowedCredits = Math.ceil(orderAmount * 1.5);
+        const credits =
+          Number.isFinite(rawCredits) && rawCredits > 0 && rawCredits <= maxAllowedCredits
+            ? Math.floor(rawCredits)
+            : Math.floor(orderAmount);
 
-        if (businessId) {
+        if (businessId && orderType === "connect_wallet_recharge" && Number.isFinite(orderAmount) && orderAmount > 0 && credits > 0) {
           await creditMerchantConnectWallet(
             businessId,
             orderAmount,

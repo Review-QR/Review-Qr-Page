@@ -4,6 +4,7 @@ import path from "path";
 import riderManifest from "@/public/bundles/rider-ota-manifest.json";
 import partnerManifest from "@/public/bundles/partner-ota-manifest.json";
 import customerManifest from "@/public/bundles/customer-ota-manifest.json";
+import { buildCorsHeaders, handleCorsPreflight } from "@/lib/auth-cors";
 
 export const dynamic = "force-dynamic";
 
@@ -44,15 +45,8 @@ function readLatestManifest(app: "rider" | "customer" | "partner") {
   return fallback;
 }
 
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
+export async function OPTIONS(request: Request) {
+  return handleCorsPreflight(request, "GET, OPTIONS");
 }
 
 export async function GET(request: Request) {
@@ -75,7 +69,7 @@ export async function GET(request: Request) {
     },
     {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...buildCorsHeaders(request.headers.get("origin"), "GET, OPTIONS"),
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
       },
     }

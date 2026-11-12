@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { generateAndSendEmailOtp } from "@/lib/auth/email-service";
 import { sendCustomerPhoneOtp } from "@/lib/auth/customer-unified-auth";
+import { enforceRateLimit } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   try {
+    const rateLimited = enforceRateLimit(request, "customer_send_otp", 15, 10 * 60_000);
+    if (rateLimited) return rateLimited;
+
     const body = await request.json();
     const { email, phone, channel = "whatsapp" } = body;
 

@@ -4,6 +4,7 @@ import {
   updateRiderRemoteConfig,
   resetRiderRemoteConfig,
 } from "@/lib/hyperlocal/remote-config";
+import { requireAdminApi } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+
   try {
     const body = await request.json();
     if (body.action === "reset") {

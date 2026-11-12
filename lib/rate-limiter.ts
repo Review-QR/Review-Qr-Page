@@ -8,6 +8,7 @@ interface RateLimitRecord {
 }
 
 const rateLimitStore = new Map<string, RateLimitRecord>();
+const MAX_RATE_LIMIT_KEYS = 20_000;
 
 // Periodic cleanup every 5 minutes to prevent memory leaks
 if (typeof setInterval !== "undefined") {
@@ -48,6 +49,12 @@ export function checkRateLimit(key: string, options: RateLimitOptions): RateLimi
 
   let record = rateLimitStore.get(key);
   if (!record) {
+    if (rateLimitStore.size >= MAX_RATE_LIMIT_KEYS) {
+      const oldestKey = rateLimitStore.keys().next().value;
+      if (oldestKey !== undefined) {
+        rateLimitStore.delete(oldestKey);
+      }
+    }
     record = { timestamps: [] };
     rateLimitStore.set(key, record);
   }

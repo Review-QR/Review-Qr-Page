@@ -1,6 +1,7 @@
 import { createHash, createHmac } from "crypto";
 import nodemailer from "nodemailer";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { checkRateLimit } from "@/lib/rate-limiter";
 
 const OTP_EXPIRY_MINUTES = 5;
 const MAX_ATTEMPTS = 5;
@@ -90,6 +91,18 @@ export async function generateAndSendEmailOtp(
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
     return { success: false, message: "Please enter a valid email address." };
+  }
+
+  const rateLimit = checkRateLimit(`customer_email_otp:${cleanEmail}`, {
+    maxRequests: 8,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.success) {
+    const waitMins = Math.max(1, Math.ceil(rateLimit.resetMs / 60_000));
+    return {
+      success: false,
+      message: `Too many OTP requests. Please try again in ${waitMins} minute(s).`,
+    };
   }
 
   const admin = createSupabaseAdminClient();
@@ -568,6 +581,18 @@ export async function sendRiderEmailOtp(
     return { success: false, message: "Please enter a valid email address." };
   }
 
+  const rateLimit = checkRateLimit(`customer_email_otp:${cleanEmail}`, {
+    maxRequests: 8,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.success) {
+    const waitMins = Math.max(1, Math.ceil(rateLimit.resetMs / 60_000));
+    return {
+      success: false,
+      message: `Too many OTP requests. Please try again in ${waitMins} minute(s).`,
+    };
+  }
+
   const admin = createSupabaseAdminClient();
 
   // Rate limit: 30 seconds
@@ -753,6 +778,18 @@ export async function sendMerchantEmailOtp(
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail.includes("@") || !cleanEmail.includes(".")) {
     return { success: false, message: "Please enter a valid email address." };
+  }
+
+  const rateLimit = checkRateLimit(`customer_email_otp:${cleanEmail}`, {
+    maxRequests: 8,
+    windowMs: 10 * 60 * 1000,
+  });
+  if (!rateLimit.success) {
+    const waitMins = Math.max(1, Math.ceil(rateLimit.resetMs / 60_000));
+    return {
+      success: false,
+      message: `Too many OTP requests. Please try again in ${waitMins} minute(s).`,
+    };
   }
 
   const admin = createSupabaseAdminClient();

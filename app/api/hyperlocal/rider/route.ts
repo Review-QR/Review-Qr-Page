@@ -1,3 +1,4 @@
+import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import {
   riderAcceptOrder,
@@ -25,56 +26,107 @@ import {
   recordRiderGpsHeartbeat,
   getRiderPassbook,
 } from "@/lib/hyperlocal/rider-fleet-engine";
+import { buildCorsHeaders, handleCorsPreflight } from "@/lib/auth-cors";
+import { enforceRateLimit, verifyGoogleIdToken } from "@/lib/auth-api-guards";
+import { getActiveAdminContext } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With, Accept, Origin",
-      "Access-Control-Max-Age": "86400",
-    },
-  });
+const RIDER_SESSION_COOKIE = "trustit_rider_session";
+
+function extractSessionRiderId(request: NextRequest): { provided: boolean; riderId: string | null } {
+  const authHeader = request.headers.get("Authorization");
+  const bearer = authHeader?.replace(/^Bearer\s+/i, "").trim();
+  const cookieToken = request.cookies.get(RIDER_SESSION_COOKIE)?.value?.trim();
+  const rawToken = bearer || cookieToken || "";
+  if (!rawToken) return { provided: false, riderId: null };
+  return { provided: true, riderId: verifyRiderSessionToken(rawToken) };
 }
 
-export async function GET(request: Request) {
+function jsonWithRiderCookie(
+  payload: Record<string, unknown>,
+  riderId?: string,
+  status = 200,
+  corsHeaders?: Record<string, string>
+): NextResponse {
+  const res = NextResponse.json(payload, { status, headers: corsHeaders });
+  if (riderId) {
+    res.cookies.set(RIDER_SESSION_COOKIE, signRiderSessionToken(riderId), {
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60,
+    });
+  }
+  return res;
+}
+
+export async function OPTIONS(request: NextRequest) {
+  return handleCorsPreflight(request);
+}
+
+export async function GET(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, "rider_get", 120, 60_000);
+  if (rateLimited) return rateLimited;
+
+  const corsHeaders = buildCorsHeaders(request.headers.get("origin"));
   const { searchParams } = new URL(request.url);
   const riderId = searchParams.get("riderId");
   const email = searchParams.get("email");
   const phone = searchParams.get("phone");
 
+  const session = extractSessionRiderId(request);
+  if (session.provided && !session.riderId) {
+    return NextResponse.json(
+      { error: "Unauthorized: invalid or expired rider session token." },
+      { status: 401, headers: corsHeaders }
+    );
+  }
+  const adminCtx = !session.riderId ? await getActiveAdminContext().catch(() => null) : null;
+  if (!session.riderId && !adminCtx) {
+    return NextResponse.json(
+      { error: "Unauthorized: active rider or admin session required." },
+      { status: 401, headers: corsHeaders }
+    );
+  }
+
   const admin = createSupabaseAdminClient();
   let query = admin.from("delivery_riders").select("*");
 
   if (riderId) {
+    if (session.riderId && session.riderId !== riderId) {
+      return NextResponse.json(
+        { error: "Forbidden: rider session mismatch." },
+        { status: 403, headers: corsHeaders }
+      );
+    }
     query = query.eq("id", riderId);
   } else if (email) {
     query = query.eq("email", email.trim().toLowerCase());
   } else if (phone) {
     const clean = phone.replace(/\D/g, "").slice(-10);
     query = query.or(`phone.eq.${clean},phone.eq.+91${clean}`);
+  } else if (session.riderId) {
+    query = query.eq("id", session.riderId);
   } else {
-    // Check Authorization header for rider session token
-    const authHeader = request.headers.get("Authorization");
-    const token = authHeader?.replace(/^Bearer\s+/i, "");
-    const sessionRiderId = verifyRiderSessionToken(token);
-    if (sessionRiderId) {
-      query = query.eq("id", sessionRiderId);
-    } else {
-      return Response.json(
-        { error: "Unauthorized: Active rider session or identifier required" },
-        { status: 401 }
-      );
-    }
+    return NextResponse.json(
+      { error: "Unauthorized: Active rider session or identifier required" },
+      { status: 401, headers: corsHeaders }
+    );
   }
 
   const { data: rider, error: riderErr } = await query.maybeSingle();
 
   if (riderErr || !rider) {
-    return Response.json({ error: "Rider not found" }, { status: 404 });
+    return NextResponse.json({ error: "Rider not found" }, { status: 404, headers: corsHeaders });
+  }
+
+  if (session.riderId && session.riderId !== rider.id) {
+    return NextResponse.json(
+      { error: "Forbidden: rider session mismatch." },
+      { status: 403, headers: corsHeaders }
+    );
   }
 
   // Active assigned order (if any)
@@ -251,28 +303,61 @@ export async function GET(request: Request) {
     rider.kyc_status === "pending" &&
     Boolean(rider.rejection_reason || (rider.admin_notes && rider.admin_notes.includes("CORRECTION_REQUESTED")));
 
+  const isVerifiedSession = Boolean(session.riderId && session.riderId === rider.id);
+  const maskedBank =
+    typeof rider.bank_account_number === "string" && rider.bank_account_number.length >= 4
+      ? `••••${rider.bank_account_number.slice(-4)}`
+      : null;
+
   const enrichedRider = {
     ...rider,
+    ...(!isVerifiedSession
+      ? {
+          bank_account_number: maskedBank,
+          pan_number: rider.pan_number ? "••••••••••" : null,
+          driving_license_number: rider.driving_license_number ? "••••••••" : null,
+        }
+      : {}),
     display_status: isActionRequired ? "action_required" : rider.kyc_status || "pending",
   };
 
-  return Response.json({
-    rider: enrichedRider,
-    scorecard,
-    activeOrder: activeOrder || null,
-    incomingOrder: incomingDispatchOrder || null,
-    availableOrders: availableOrders || [],
-  });
+  return NextResponse.json(
+    {
+      rider: enrichedRider,
+      scorecard,
+      activeOrder: activeOrder || null,
+      incomingOrder: incomingDispatchOrder || null,
+      availableOrders: availableOrders || [],
+    },
+    { headers: corsHeaders }
+  );
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const corsHeaders = buildCorsHeaders(request.headers.get("origin"));
   try {
     const body = await request.json();
     const { action, riderId, orderId } = body;
     const admin = createSupabaseAdminClient();
+    const session = extractSessionRiderId(request);
+
+    if (session.provided && !session.riderId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: invalid rider session token." },
+        { status: 401, headers: corsHeaders }
+      );
+    }
+    if (session.riderId && riderId && session.riderId !== riderId) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: rider session mismatch." },
+        { status: 403, headers: corsHeaders }
+      );
+    }
 
     // ── 1. SEND OTP (SMS / WhatsApp / Email) ──
     if (action === "send_otp") {
+      const rateLimited = enforceRateLimit(request, "rider_send_otp", 15, 10 * 60_000);
+      if (rateLimited) return rateLimited;
       if (body.channel === "sms") {
         return Response.json(
           {
@@ -305,14 +390,36 @@ export async function POST(request: Request) {
 
     // ── 1B. 1-TAP GOOGLE SIGN-IN FOR RIDERS ──
     if (action === "google_login") {
+      const rateLimited = enforceRateLimit(request, "rider_google_login", 15, 10 * 60_000);
+      if (rateLimited) return rateLimited;
+
       const email = String(body.email || "").trim().toLowerCase();
       const fullName = String(body.fullName || "Google Rider").trim();
       const phone = body.phone ? cleanPhone(String(body.phone)) : "";
+      const idToken = typeof body.idToken === "string" ? body.idToken : "";
 
       if (!email || !email.includes("@")) {
         return Response.json(
           { success: false, message: "Valid email is required for Google Sign-In." },
           { status: 400 }
+        );
+      }
+
+      const requireVerifiedGoogle =
+        process.env.NODE_ENV === "production" &&
+        process.env.ALLOW_UNVERIFIED_GOOGLE_LOGIN !== "true";
+      if (idToken) {
+        const verified = await verifyGoogleIdToken(idToken, email);
+        if (!verified) {
+          return NextResponse.json(
+            { success: false, message: "Invalid or expired Google ID token." },
+            { status: 401, headers: corsHeaders }
+          );
+        }
+      } else if (requireVerifiedGoogle) {
+        return NextResponse.json(
+          { success: false, message: "Google Sign-In requires a verified OAuth token. Please sign in with OTP." },
+          { status: 403, headers: corsHeaders }
         );
       }
 
@@ -327,13 +434,19 @@ export async function POST(request: Request) {
       const { data: existingRider } = await query.maybeSingle();
 
       if (existingRider) {
-        return Response.json({
-          success: true,
-          message: `Welcome back, ${existingRider.full_name}!`,
-          isNewRider: false,
-          rider: existingRider,
-          riderToken: signRiderSessionToken(existingRider.id),
-        });
+        const token = signRiderSessionToken(existingRider.id);
+        return jsonWithRiderCookie(
+          {
+            success: true,
+            message: `Welcome back, ${existingRider.full_name}!`,
+            isNewRider: false,
+            rider: existingRider,
+            riderToken: token,
+          },
+          existingRider.id,
+          200,
+          corsHeaders
+        );
       }
 
       // Register new rider profile with pending KYC (genuine production flow)
@@ -367,17 +480,26 @@ export async function POST(request: Request) {
         .single();
 
       const finalRider = createdRider || newRiderPayload;
-      return Response.json({
-        success: true,
-        message: `Welcome to Trustit Fleet, ${fullName}! Please complete document verification to start deliveries.`,
-        isNewRider: true,
-        rider: finalRider,
-        riderToken: signRiderSessionToken(finalRider.id),
-      });
+      const token = signRiderSessionToken(finalRider.id);
+      return jsonWithRiderCookie(
+        {
+          success: true,
+          message: `Welcome to Trustit Fleet, ${fullName}! Please complete document verification to start deliveries.`,
+          isNewRider: true,
+          rider: finalRider,
+          riderToken: token,
+        },
+        finalRider.id,
+        200,
+        corsHeaders
+      );
     }
 
     // ── 2. VERIFY OTP (SMS / WhatsApp / Email) ──
     if (action === "verify_otp") {
+      const rateLimited = enforceRateLimit(request, "rider_verify_otp", 20, 10 * 60_000);
+      if (rateLimited) return rateLimited;
+
       const phone = body.phone ? cleanPhone(String(body.phone)) : "";
       const otp = String(body.otp || "").trim();
 
@@ -395,12 +517,18 @@ export async function POST(request: Request) {
           .maybeSingle();
 
         if (rider) {
-          return Response.json({
-            success: true,
-            isNewRider: false,
-            rider,
-            riderToken: signRiderSessionToken(rider.id),
-          });
+          const token = signRiderSessionToken(rider.id);
+          return jsonWithRiderCookie(
+            {
+              success: true,
+              isNewRider: false,
+              rider,
+              riderToken: token,
+            },
+            rider.id,
+            200,
+            corsHeaders
+          );
         }
 
         return Response.json({
@@ -413,7 +541,8 @@ export async function POST(request: Request) {
 
       const email = String(body.email || "").trim().toLowerCase();
       const res = await verifyRiderEmailOtp(email, otp);
-      return Response.json(res);
+      const riderIdFromEmail = (res as { rider?: { id?: string } }).rider?.id;
+      return jsonWithRiderCookie(res as Record<string, unknown>, riderIdFromEmail, 200, corsHeaders);
     }
 
     // ── 3. REGISTER / KYC ONBOARDING ──
@@ -457,6 +586,12 @@ export async function POST(request: Request) {
       const { data: existing } = await existingQuery.maybeSingle();
 
       if (existing) {
+        if (existing.is_verified && session.riderId !== existing.id) {
+          return NextResponse.json(
+            { success: false, error: "Unauthorized: verified rider session required to update KYC." },
+            { status: 401, headers: corsHeaders }
+          );
+        }
         const updatePayload: Record<string, unknown> = {
           full_name: fullName.trim(),
           phone: `+91${cleanPhone}`,
@@ -496,7 +631,12 @@ export async function POST(request: Request) {
         if (updateErr) {
           return Response.json({ success: false, error: updateErr.message }, { status: 400 });
         }
-        return Response.json({ success: true, rider: updatedRider });
+        return jsonWithRiderCookie(
+          { success: true, rider: updatedRider, riderToken: signRiderSessionToken(updatedRider.id) },
+          updatedRider.id,
+          200,
+          corsHeaders
+        );
       }
 
       const { data: newRider, error: regError } = await admin
@@ -535,49 +675,34 @@ export async function POST(request: Request) {
         return Response.json({ success: false, error: regError.message }, { status: 400 });
       }
 
-      return Response.json({
-        success: true,
-        rider: newRider,
-        riderToken: signRiderSessionToken(newRider.id),
-      });
+      return jsonWithRiderCookie(
+        {
+          success: true,
+          rider: newRider,
+          riderToken: signRiderSessionToken(newRider.id),
+        },
+        newRider.id,
+        200,
+        corsHeaders
+      );
     }
 
-    // ── 4. QUICK 1-TAP LOGIN / PHONE LOOKUP ──
+    // ── 4. QUICK 1-TAP LOGIN (Disabled: passwordless phone login bypasses OTP) ──
     if (action === "login") {
-      const cleanPhone = String(body.phone || "").replace(/\D/g, "").slice(-10);
-      if (cleanPhone.length < 10) {
-        return Response.json(
-          { success: false, error: "Please enter a valid 10-digit mobile number." },
-          { status: 400 },
-        );
-      }
-
-      const { data: rider } = await admin
-        .from("delivery_riders")
-        .select("*")
-        .or(`phone.eq.${cleanPhone},phone.eq.+91${cleanPhone}`)
-        .maybeSingle();
-
-      if (!rider) {
-        return Response.json(
-          {
-            success: false,
-            notRegistered: true,
-            error: "Rider is not registered with this number. Please register as a new partner.",
-          },
-          { status: 404 },
-        );
-      }
-
-      return Response.json({
-        success: true,
-        rider,
-        riderToken: signRiderSessionToken(rider.id),
-      });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Passwordless phone login is disabled. Please verify your mobile number via OTP.",
+        },
+        { status: 403, headers: corsHeaders }
+      );
     }
 
     // ── 5. LEGACY QUICK REGISTER ──
     if (action === "register") {
+      const rateLimited = enforceRateLimit(request, "rider_legacy_register", 10, 10 * 60_000);
+      if (rateLimited) return rateLimited;
+
       const { fullName, phone, vehicleType, vehicleNumber } = body;
       const cleanPhone = String(phone || "").replace(/\D/g, "").slice(-10);
       if (!fullName?.trim() || cleanPhone.length < 10) {
@@ -594,8 +719,10 @@ export async function POST(request: Request) {
           phone: `+91${cleanPhone}`,
           vehicle_type: vehicleType || "bike",
           vehicle_number: (vehicleNumber || "UP-40-TEMP").toUpperCase().trim(),
-          is_online: true,
-          is_available: true,
+          kyc_status: "pending",
+          is_verified: false,
+          is_online: false,
+          is_available: false,
           rating: 5.0,
         })
         .select()
@@ -605,11 +732,30 @@ export async function POST(request: Request) {
         return Response.json({ success: false, error: regError.message }, { status: 400 });
       }
 
-      return Response.json({
-        success: true,
-        rider: newRider,
-        riderToken: signRiderSessionToken(newRider.id),
-      });
+      return jsonWithRiderCookie(
+        {
+          success: true,
+          rider: newRider,
+          riderToken: signRiderSessionToken(newRider.id),
+        },
+        newRider.id,
+        200,
+        corsHeaders
+      );
+    }
+
+    // ── AUTHENTICATED RIDER MUTATIONS GATE ──
+    if (!session.riderId) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: authenticated rider session required." },
+        { status: 401, headers: corsHeaders }
+      );
+    }
+    if (riderId && session.riderId !== riderId) {
+      return NextResponse.json(
+        { success: false, error: "Forbidden: rider session mismatch." },
+        { status: 403, headers: corsHeaders }
+      );
     }
 
     // ── 6. UPDATE PROFILE / SETTINGS ──
@@ -648,6 +794,12 @@ export async function POST(request: Request) {
 
     // ── 7. INSTANT UPI PAYOUT REQUEST ──
     if (action === "request_payout") {
+      if (!session.riderId || session.riderId !== riderId) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized: authenticated rider session required for payouts." },
+          { status: 401, headers: corsHeaders }
+        );
+      }
       const { destinationUpi } = body;
       const { data: currentRider } = await admin
         .from("delivery_riders")
@@ -688,6 +840,12 @@ export async function POST(request: Request) {
     }
 
     if (action === "update_upi") {
+      if (!session.riderId || session.riderId !== riderId) {
+        return NextResponse.json(
+          { success: false, error: "Unauthorized: authenticated rider session required to change UPI ID." },
+          { status: 401, headers: corsHeaders }
+        );
+      }
       const { upiId } = body;
       if (!upiId || !upiId.includes("@")) {
         return Response.json({ success: false, error: "Please enter a valid UPI ID (e.g. name@oksbi)." }, { status: 400 });
@@ -716,16 +874,35 @@ export async function POST(request: Request) {
 
     // ── 9. DUTY TOGGLE ──
     if (action === "toggle_online") {
-      const { isOnline } = body;
+      const goOnline = Boolean(body.isOnline);
+      if (goOnline) {
+        const { data: riderRecord } = await admin
+          .from("delivery_riders")
+          .select("kyc_status, cash_in_hand")
+          .eq("id", riderId)
+          .maybeSingle();
+        if (!riderRecord || riderRecord.kyc_status !== "approved") {
+          return NextResponse.json(
+            { success: false, error: "KYC verification must be approved before going online." },
+            { status: 403, headers: corsHeaders }
+          );
+        }
+        if (Number(riderRecord.cash_in_hand || 0) >= 2000) {
+          return NextResponse.json(
+            { success: false, error: "Cash-in-hand limit (₹2,000) reached. Deposit COD cash before going online." },
+            { status: 403, headers: corsHeaders }
+          );
+        }
+      }
       await admin
         .from("delivery_riders")
         .update({
-          is_online: Boolean(isOnline),
+          is_online: goOnline,
           updated_at: new Date().toISOString(),
         })
         .eq("id", riderId);
 
-      return Response.json({ success: true, isOnline: Boolean(isOnline) });
+      return Response.json({ success: true, isOnline: goOnline });
     }
 
     // ── 10. ORDER ACCEPT / DECLINE ──
@@ -748,7 +925,8 @@ export async function POST(request: Request) {
           picked_up_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq("id", orderId);
+        .eq("id", orderId)
+        .eq("rider_id", riderId);
 
       return Response.json({ success: true });
     }
@@ -778,18 +956,31 @@ export async function POST(request: Request) {
 
     // ── 13. MERCHANT WAIT COMPENSATION (+₹1/MIN AFTER 5 MINS) ──
     if (action === "wait_compensation") {
-      const { waitMinutes } = body;
-      const res = await recordMerchantWaitCompensation(riderId, orderId, Number(waitMinutes || 6));
+      const waitMinutes = Number(body.waitMinutes || 6);
+      if (!Number.isFinite(waitMinutes) || waitMinutes < 5 || waitMinutes > 120) {
+        return NextResponse.json(
+          { success: false, error: "Wait minutes must be between 5 and 120." },
+          { status: 400, headers: corsHeaders }
+        );
+      }
+      const res = await recordMerchantWaitCompensation(riderId, orderId, waitMinutes);
       return Response.json({ success: true, ...res });
     }
 
     // ── 14. DOORSTEP CHANGE DEFICIT TO WALLET / UPI ──
     if (action === "doorstep_change_wallet") {
-      const { customerPhone, changeAmount, method, upiId } = body;
+      const { customerPhone, method, upiId } = body;
+      const changeAmount = Number(body.changeAmount);
+      if (!Number.isFinite(changeAmount) || changeAmount <= 0 || changeAmount > 5000) {
+        return NextResponse.json(
+          { success: false, error: "Change amount must be between ₹1 and ₹5,000." },
+          { status: 400, headers: corsHeaders }
+        );
+      }
       const res = await refundDoorstepChangeToCustomer(
         orderId,
         customerPhone,
-        Number(changeAmount),
+        changeAmount,
         method || "wallet",
         upiId,
       );
@@ -798,11 +989,18 @@ export async function POST(request: Request) {
 
     // ── 15. CLAIM PARKING / TOLL REIMBURSEMENT ──
     if (action === "claim_parking") {
-      const { amount, receiptPhotoUrl } = body;
+      const { receiptPhotoUrl } = body;
+      const amount = Number(body.amount || 10);
+      if (!Number.isFinite(amount) || amount <= 0 || amount > 500) {
+        return NextResponse.json(
+          { success: false, error: "Parking reimbursement must be between ₹1 and ₹500." },
+          { status: 400, headers: corsHeaders }
+        );
+      }
       const res = await claimParkingTollReimbursement(
         riderId,
         orderId,
-        Number(amount || 10),
+        amount,
         receiptPhotoUrl,
       );
       return Response.json(res);
@@ -833,12 +1031,24 @@ export async function POST(request: Request) {
 
     // ── 18. DAILY HELMET & BAG SELFIE AUDIT ──
     if (action === "verify_helmet_selfie") {
+      const { data: riderRecord } = await admin
+        .from("delivery_riders")
+        .select("kyc_status, cash_in_hand")
+        .eq("id", riderId)
+        .maybeSingle();
+      if (!riderRecord || riderRecord.kyc_status !== "approved") {
+        return NextResponse.json(
+          { success: false, error: "KYC verification must be approved before unlocking shift." },
+          { status: 403, headers: corsHeaders }
+        );
+      }
+      const canGoOnline = Number(riderRecord.cash_in_hand || 0) < 2000;
       await admin
         .from("delivery_riders")
         .update({
           daily_helmet_verified_at: new Date().toISOString(),
-          is_online: true,
-          is_available: true,
+          is_online: canGoOnline,
+          is_available: canGoOnline,
           updated_at: new Date().toISOString(),
         })
         .eq("id", riderId);
