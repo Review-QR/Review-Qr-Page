@@ -203,20 +203,12 @@ export default function CustomerCheckoutAndAddresses({
       targetUrl += `${targetUrl.includes("?") ? "&" : "?"}fromApp=1`;
     }
     try {
-      const openInAppCheckout = (
-        TrustitNative as unknown as {
-          openInAppCheckout?: (url: string) => Promise<{ opened?: boolean; mode?: string }>;
-        }
-      ).openInAppCheckout;
-      if (typeof openInAppCheckout === "function") {
-        const res = await openInAppCheckout(targetUrl);
-        if (res && res.opened === false) {
-          window.open(targetUrl, "_blank", "noopener,noreferrer");
-        }
-        return;
-      }
+      const res = await TrustitNative.openInAppCheckout(targetUrl);
+      if (res?.opened) return;
     } catch {}
-    window.open(targetUrl, "_blank", "noopener,noreferrer");
+    if (!isCapacitorOrLocalhost) {
+      window.open(targetUrl, "_blank", "noopener,noreferrer");
+    }
   };
 
   useEffect(() => {

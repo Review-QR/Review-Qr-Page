@@ -70,7 +70,7 @@ export function checkForbiddenPath(filePath) {
     normalized.startsWith("android/app/build/") ||
     normalized.startsWith("android/.gradle/") ||
     /^temp_.*\.(png|html)$/i.test(base) ||
-    /^loom/i.test(base)
+    (/^loom/i.test(base) && !normalized.endsWith(".test.mjs"))
   ) {
     return `Temporary or build artifact directory/file cannot be committed: ${normalized}`;
   }

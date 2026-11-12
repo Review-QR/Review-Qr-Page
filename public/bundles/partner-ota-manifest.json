@@ -1,8 +1,8 @@
 {
-  "version": "3.6.1",
+  "version": "3.6.2",
   "minAppVersion": "2.2.0",
-  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1794489325692",
-  "updatedAt": "2026-11-12T13:15:25.692Z",
-  "notes": "Partner OTA v3.6.1: Loom bugfix for continuous siren and real pending order",
-  "sizeBytes": 3598231
+  "bundleUrl": "https://trustitreview.com/bundles/partner-bundle-latest.zip?v=1794492699396",
+  "updatedAt": "2026-11-12T14:11:39.396Z",
+  "notes": "Partner OTA v3.6.2: Loom bugfixes",
+  "sizeBytes": 3588460
 }

@@ -1469,20 +1469,11 @@ export default function CustomerSuperAppClient({
   }, [cartItemsList.length, checkoutCartSignature]);
 
   const launchHostedCheckout = useCallback(async (hostedPayUrl: string) => {
-    const openInAppCheckout = (
-      TrustitNative as unknown as {
-        openInAppCheckout?: (url: string) => Promise<{ opened?: boolean; mode?: string }>;
-      }
-    ).openInAppCheckout;
-    if (typeof openInAppCheckout === "function") {
-      const res = await openInAppCheckout(hostedPayUrl);
-      if (res && res.opened === false) {
-        window.open(hostedPayUrl, "_blank", "noopener,noreferrer");
-      }
-      return;
+    const res = await TrustitNative.openInAppCheckout(hostedPayUrl);
+    if (!res.opened) {
+      showToast("In-app Cashfree checkout could not open. Please retry or use Cash on Delivery.");
     }
-    window.open(hostedPayUrl, "_blank", "noopener,noreferrer");
-  }, []);
+  }, [showToast]);
 
   const handlePlaceCodOrder = (targetBizId: string) => {
     if (inFlightPaymentRef.current) return;

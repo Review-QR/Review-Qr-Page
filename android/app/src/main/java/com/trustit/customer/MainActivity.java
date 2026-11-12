@@ -83,6 +83,13 @@ public class MainActivity extends BridgeActivity {
             return;
         }
 
+        dispatchPaymentReturnUri(getBridge(), data, isColdLaunch);
+    }
+
+    public static void dispatchPaymentReturnUri(final com.getcapacitor.Bridge bridge, final Uri data, final boolean isColdLaunch) {
+        if (bridge == null || data == null) {
+            return;
+        }
         String orderId = data.getQueryParameter("orderId");
         if (orderId == null || orderId.trim().isEmpty()) {
             orderId = data.getQueryParameter("order_id");
@@ -107,21 +114,21 @@ public class MainActivity extends BridgeActivity {
             + " window.dispatchEvent(new CustomEvent('trustit:payment-return', { detail: detail }));"
             + " return true; } catch (e) { return false; } })()";
 
-        dispatchPaymentReturnToWebView(js, isColdLaunch ? 0 : 12);
+        dispatchPaymentReturnToWebView(bridge, js, isColdLaunch ? 0 : 12);
     }
 
-    private void dispatchPaymentReturnToWebView(final String js, final int attempt) {
+    private static void dispatchPaymentReturnToWebView(final com.getcapacitor.Bridge bridge, final String js, final int attempt) {
         final Handler mainHandler = new Handler(Looper.getMainLooper());
         final Runnable task = new Runnable() {
             @Override
             public void run() {
-                if (getBridge() == null || getBridge().getWebView() == null) {
+                if (bridge == null || bridge.getWebView() == null) {
                     if (attempt < 15) {
-                        mainHandler.postDelayed(() -> dispatchPaymentReturnToWebView(js, attempt + 1), 300);
+                        mainHandler.postDelayed(() -> dispatchPaymentReturnToWebView(bridge, js, attempt + 1), 300);
                     }
                     return;
                 }
-                final android.webkit.WebView webView = getBridge().getWebView();
+                final android.webkit.WebView webView = bridge.getWebView();
                 if (attempt < 12) {
                     webView.evaluateJavascript(
                         "(function(){ try { return typeof window !== 'undefined' && document.readyState === 'complete' && window.location && window.location.href !== 'about:blank'; } catch (e) { return false; } })()",
@@ -129,7 +136,7 @@ public class MainActivity extends BridgeActivity {
                             if ("true".equals(ready)) {
                                 webView.evaluateJavascript(js, null);
                             } else {
-                                mainHandler.postDelayed(() -> dispatchPaymentReturnToWebView(js, attempt + 1), 350);
+                                mainHandler.postDelayed(() -> dispatchPaymentReturnToWebView(bridge, js, attempt + 1), 350);
                             }
                         }
                     );

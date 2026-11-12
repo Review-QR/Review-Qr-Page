@@ -454,9 +454,41 @@ public class TrustitNativeBridge extends Plugin {
         }
     }
 
+    private static final java.util.Set<String> ALLOWED_UPI_SCHEMES = new java.util.HashSet<>(
+        java.util.Arrays.asList("upi", "tez", "gpay", "phonepe", "paytmmp", "bhim", "credpay", "paytm", "amazonpay", "mobikwik", "freecharge")
+    );
+    private android.app.Dialog activeCheckoutDialog;
+
+    private static boolean isAllowedCheckoutEntryHost(String host) {
+        if (host == null) return false;
+        String lower = host.trim().toLowerCase(Locale.ROOT);
+        return "trustitreview.com".equals(lower)
+            || lower.endsWith(".trustitreview.com")
+            || lower.endsWith(".cashfree.com")
+            || "cashfree.com".equals(lower);
+    }
+
+    private void dismissActiveCheckoutDialog(android.webkit.WebView checkoutWebView) {
+        if (checkoutWebView != null) {
+            try {
+                checkoutWebView.stopLoading();
+                checkoutWebView.loadUrl("about:blank");
+                checkoutWebView.destroy();
+            } catch (Exception ignored) {}
+        }
+        if (activeCheckoutDialog != null) {
+            try {
+                if (activeCheckoutDialog.isShowing()) {
+                    activeCheckoutDialog.dismiss();
+                }
+            } catch (Exception ignored) {}
+            activeCheckoutDialog = null;
+        }
+    }
+
     /**
-     * 4b. openInAppCheckout: Launches an HTTPS payment checkout URL inside an Android Chrome Custom Tab
-     * over MainActivity so deep-link returns (com.trustit.customer://pay/return) return cleanly in-app.
+     * 4b. openInAppCheckout: Renders Cashfree hosted checkout in an embedded in-app WebView Dialog
+     * on https://trustitreview.com so Google Chrome never opens externally while supporting 1-tap UPI app intents.
      */
     @PluginMethod
     public void openInAppCheckout(PluginCall call) {
@@ -475,48 +507,207 @@ public class TrustitNativeBridge extends Plugin {
             return;
         }
 
-        if (uri == null || !"https".equalsIgnoreCase(uri.getScheme()) || uri.getHost() == null || uri.getHost().trim().isEmpty()) {
-            call.reject("Only valid https:// checkout URLs are permitted.");
+        if (uri == null || !"https".equalsIgnoreCase(uri.getScheme()) || !isAllowedCheckoutEntryHost(uri.getHost())) {
+            call.reject("Only allowlisted https:// checkout URLs are permitted.");
             return;
         }
 
-        final Intent customTabIntent = new Intent(Intent.ACTION_VIEW, uri);
-        Bundle customTabExtras = new Bundle();
-        customTabExtras.putBinder("android.support.customtabs.extra.SESSION", null);
-        customTabIntent.putExtras(customTabExtras);
-        customTabIntent.putExtra("android.support.customtabs.extra.TOOLBAR_COLOR", 0xFF0F172A);
-        customTabIntent.putExtra("android.support.customtabs.extra.TITLE_VISIBILITY", 1);
-        customTabIntent.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-
-        android.app.Activity activity = getActivity();
-        Context context = getContext();
-        if (activity != null) {
-            activity.runOnUiThread(() -> {
-                try {
-                    activity.startActivity(customTabIntent);
-                    JSObject res = new JSObject();
-                    res.put("opened", true);
-                    res.put("mode", "custom_tab");
-                    call.resolve(res);
-                } catch (Exception e) {
-                    call.reject("Failed to open in-app checkout: " + e.getMessage());
-                }
-            });
+        final android.app.Activity activity = getActivity();
+        if (activity == null || activity.isFinishing()) {
+            call.reject("Android activity unavailable.");
             return;
         }
 
-        if (context == null) {
-            call.reject("Android context unavailable.");
-            return;
-        }
-
-        customTabIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        new Handler(Looper.getMainLooper()).post(() -> {
+        activity.runOnUiThread(() -> {
             try {
-                context.startActivity(customTabIntent);
+                dismissActiveCheckoutDialog(null);
+
+                final android.app.Dialog dialog = new android.app.Dialog(
+                    activity,
+                    android.R.style.Theme_DeviceDefault_NoActionBar_Fullscreen
+                );
+                activeCheckoutDialog = dialog;
+
+                android.widget.LinearLayout root = new android.widget.LinearLayout(activity);
+                root.setOrientation(android.widget.LinearLayout.VERTICAL);
+                root.setBackgroundColor(android.graphics.Color.parseColor("#0F172A"));
+
+                // Header bar
+                android.widget.LinearLayout header = new android.widget.LinearLayout(activity);
+                header.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+                header.setGravity(android.view.Gravity.CENTER_VERTICAL);
+                header.setBackgroundColor(android.graphics.Color.parseColor("#0F172A"));
+                int padH = (int) (14 * activity.getResources().getDisplayMetrics().density);
+                int padV = (int) (10 * activity.getResources().getDisplayMetrics().density);
+                header.setPadding(padH, padV, padH, padV);
+
+                android.widget.TextView titleView = new android.widget.TextView(activity);
+                titleView.setText("Trustit Secure Checkout • Cashfree");
+                titleView.setTextColor(android.graphics.Color.WHITE);
+                titleView.setTextSize(14f);
+                titleView.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                android.widget.LinearLayout.LayoutParams titleLp = new android.widget.LinearLayout.LayoutParams(
+                    0,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT,
+                    1f
+                );
+                header.addView(titleView, titleLp);
+
+                android.widget.TextView closeBtn = new android.widget.TextView(activity);
+                closeBtn.setText("✕ Close");
+                closeBtn.setTextColor(android.graphics.Color.parseColor("#E2E8F0"));
+                closeBtn.setTextSize(13f);
+                closeBtn.setTypeface(android.graphics.Typeface.DEFAULT_BOLD);
+                closeBtn.setPadding(padH, padV / 2, padH / 2, padV / 2);
+                header.addView(closeBtn);
+                root.addView(header, new android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+                ));
+
+                // Progress bar
+                final android.widget.ProgressBar progressBar = new android.widget.ProgressBar(
+                    activity,
+                    null,
+                    android.R.attr.progressBarStyleHorizontal
+                );
+                progressBar.setIndeterminate(false);
+                progressBar.setMax(100);
+                root.addView(progressBar, new android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    (int) (3 * activity.getResources().getDisplayMetrics().density)
+                ));
+
+                // Dedicated embedded WebView (no @JavascriptInterface, file access disabled)
+                final android.webkit.WebView checkoutWebView = new android.webkit.WebView(activity);
+                android.webkit.WebSettings settings = checkoutWebView.getSettings();
+                settings.setJavaScriptEnabled(true);
+                settings.setDomStorageEnabled(true);
+                settings.setJavaScriptCanOpenWindowsAutomatically(true);
+                settings.setSupportMultipleWindows(false);
+                settings.setAllowFileAccess(false);
+                settings.setAllowContentAccess(false);
+                settings.setMixedContentMode(android.webkit.WebSettings.MIXED_CONTENT_NEVER_ALLOW);
+                android.webkit.CookieManager.getInstance().setAcceptThirdPartyCookies(checkoutWebView, true);
+
+                final String orderIdHint = uri.getQueryParameter("orderId");
+
+                checkoutWebView.setWebChromeClient(new android.webkit.WebChromeClient() {
+                    @Override
+                    public void onProgressChanged(android.webkit.WebView view, int newProgress) {
+                        progressBar.setProgress(newProgress);
+                        progressBar.setVisibility(newProgress >= 100 ? android.view.View.GONE : android.view.View.VISIBLE);
+                    }
+                });
+
+                checkoutWebView.setWebViewClient(new android.webkit.WebViewClient() {
+                    private boolean handleCustomNavigation(Uri navUri) {
+                        if (navUri == null) return false;
+                        String scheme = navUri.getScheme() == null ? "" : navUri.getScheme().toLowerCase(Locale.ROOT);
+
+                        if ("https".equals(scheme)) {
+                            return false; // Stay inside the in-app WebView
+                        }
+
+                        if ("com.trustit.customer".equals(scheme) && "pay".equalsIgnoreCase(navUri.getHost())) {
+                            dismissActiveCheckoutDialog(checkoutWebView);
+                            MainActivity.dispatchPaymentReturnUri(getBridge(), navUri, false);
+                            return true;
+                        }
+
+                        if ("intent".equals(scheme)) {
+                            try {
+                                Intent parsed = Intent.parseUri(navUri.toString(), Intent.URI_INTENT_SCHEME);
+                                String parsedScheme = parsed.getScheme() == null ? "" : parsed.getScheme().toLowerCase(Locale.ROOT);
+                                if (ALLOWED_UPI_SCHEMES.contains(parsedScheme)) {
+                                    parsed.setSelector(null);
+                                    parsed.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                    if (parsed.resolveActivity(activity.getPackageManager()) != null) {
+                                        activity.startActivity(parsed);
+                                        return true;
+                                    }
+                                }
+                                String fallbackUrl = parsed.getStringExtra("browser_fallback_url");
+                                if (fallbackUrl != null && fallbackUrl.toLowerCase(Locale.ROOT).startsWith("https://")) {
+                                    checkoutWebView.loadUrl(fallbackUrl);
+                                    return true;
+                                }
+                            } catch (Exception ignored) {}
+                            return true;
+                        }
+
+                        if (ALLOWED_UPI_SCHEMES.contains(scheme)) {
+                            try {
+                                Intent upiIntent = new Intent(Intent.ACTION_VIEW, navUri);
+                                upiIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                activity.startActivity(upiIntent);
+                            } catch (Exception ex) {
+                                android.widget.Toast.makeText(
+                                    activity,
+                                    "Requested UPI app is not installed on this device.",
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show();
+                            }
+                            return true;
+                        }
+
+                        return true;
+                    }
+
+                    @Override
+                    public boolean shouldOverrideUrlLoading(android.webkit.WebView view, android.webkit.WebResourceRequest request) {
+                        return handleCustomNavigation(request.getUrl());
+                    }
+
+                    @Override
+                    public boolean shouldOverrideUrlLoading(android.webkit.WebView view, String url) {
+                        return handleCustomNavigation(Uri.parse(url));
+                    }
+                });
+
+                root.addView(checkoutWebView, new android.widget.LinearLayout.LayoutParams(
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    0,
+                    1f
+                ));
+
+                final Runnable cancelAndDismiss = () -> {
+                    dismissActiveCheckoutDialog(checkoutWebView);
+                    Uri cancelUri = Uri.parse(
+                        "com.trustit.customer://pay/return?orderId="
+                            + Uri.encode(orderIdHint != null ? orderIdHint : "")
+                            + "&status=cancelled"
+                    );
+                    MainActivity.dispatchPaymentReturnUri(getBridge(), cancelUri, false);
+                };
+
+                closeBtn.setOnClickListener(v -> cancelAndDismiss.run());
+                dialog.setOnCancelListener(d -> cancelAndDismiss.run());
+                dialog.setOnKeyListener((d, keyCode, event) -> {
+                    if (keyCode == android.view.KeyEvent.KEYCODE_BACK && event.getAction() == android.view.KeyEvent.ACTION_UP) {
+                        if (checkoutWebView.canGoBack()) {
+                            checkoutWebView.goBack();
+                        } else {
+                            cancelAndDismiss.run();
+                        }
+                        return true;
+                    }
+                    return false;
+                });
+
+                dialog.setContentView(root);
+                if (dialog.getWindow() != null) {
+                    dialog.getWindow().setLayout(
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                        android.view.ViewGroup.LayoutParams.MATCH_PARENT
+                    );
+                }
+                dialog.show();
+                checkoutWebView.loadUrl(trimmedUrl);
+
                 JSObject res = new JSObject();
                 res.put("opened", true);
-                res.put("mode", "custom_tab");
+                res.put("mode", "in_app_webview");
                 call.resolve(res);
             } catch (Exception e) {
                 call.reject("Failed to open in-app checkout: " + e.getMessage());

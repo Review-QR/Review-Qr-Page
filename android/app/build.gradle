@@ -52,8 +52,8 @@ android {
         customer {
             dimension "app"
             applicationId "com.trustit.customer"
-            versionCode 19
-            versionName "2.7.2"
+            versionCode 20
+            versionName "2.7.5"
             manifestPlaceholders = [
                 mainActivityClass: "com.trustit.customer.MainActivity"
             ]
@@ -61,8 +61,8 @@ android {
         partner {
             dimension "app"
             applicationId "com.trustit.partner"
-            versionCode 24
-            versionName "3.6.0"
+            versionCode 25
+            versionName "3.6.2"
             manifestPlaceholders = [
                 mainActivityClass: "com.trustit.partner.MainActivity"
             ]
@@ -70,8 +70,8 @@ android {
         rider {
             dimension "app"
             applicationId "com.trustit.rider"
-            versionCode 26
-            versionName "5.3.0"
+            versionCode 27
+            versionName "5.3.1"
             manifestPlaceholders = [
                 mainActivityClass: "com.trustit.customer.MainActivity"
             ]

@@ -183,16 +183,16 @@ const timestamp = Date.now();
 // 6. Update rider-ota-manifest.json
 const manifestPath = path.join(publicBundlesDir, 'rider-ota-manifest.json');
 const manifestData = {
-  version: "5.3.0",
+  version: "5.3.1",
   minAppVersion: "2.5.0",
   bundleUrl: `https://trustitreview.com/bundles/rider-bundle-latest.zip?v=${timestamp}`,
   updatedAt: new Date().toISOString(),
-  notes: "Rider Enterprise v5.3.0: Native Android hardware GPS bridge integration (direct satellite & cell tower telemetry), continuous 3.5s real-time hardware location loop, verified Google Maps reverse-geocoding engine with billing active, auto-refresh WebView on OTA update, zero hardcoded fallbacks.",
+  notes: "Rider Enterprise v5.3.1: Stable back navigation, active-order pickup restoration, nativeFetch bridge, and zero hardcoded store/pack fallbacks.",
   sizeBytes: zipStats.size
 };
 
 fs.writeFileSync(manifestPath, JSON.stringify(manifestData, null, 2), 'utf8');
-console.log('✔ Updated public/bundles/rider-ota-manifest.json with version 5.3.0');
+console.log('✔ Updated public/bundles/rider-ota-manifest.json with version 5.3.1');
 console.log(`   Size: ${(zipStats.size / (1024 * 1024)).toFixed(2)} MB (${zipStats.size} bytes)`);
 
 // 7. Clean up temp bundle dir

@@ -300,20 +300,28 @@ export const TrustitNative = {
   },
 
   /**
-   * Opens an HTTPS checkout page inside an Android Chrome Custom Tab on native,
-   * falling back to window.open in web browsers.
+   * Opens an HTTPS checkout page inside an embedded Android WebView Dialog on native
+   * (zero external Chrome browser), falling back to window.open only in plain web browsers.
    */
   async openInAppCheckout(url: string): Promise<{ opened: boolean; mode: string }> {
+    const isNative =
+      typeof window !== "undefined" &&
+      (Boolean((window as any).Capacitor?.isNativePlatform?.()) ||
+        window.location.protocol === "capacitor:" ||
+        (window.location.hostname === "localhost" && (!window.location.port || window.location.port === "80")));
     const plugin = getNativePlugin();
     if (plugin && typeof plugin.openInAppCheckout === "function") {
       try {
         return await plugin.openInAppCheckout({ url });
       } catch (err: any) {
         console.warn("[TrustitNative] openInAppCheckout error:", err);
+        if (isNative) {
+          return { opened: false, mode: "native_error" };
+        }
       }
     }
 
-    if (typeof window !== "undefined") {
+    if (typeof window !== "undefined" && !isNative) {
       try {
         const openedWindow = window.open(url, "_blank", "noopener,noreferrer");
         return { opened: Boolean(openedWindow), mode: "web_window" };
