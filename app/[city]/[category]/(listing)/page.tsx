@@ -2,7 +2,7 @@ import Link from "next/link";
 import TrustitPublicFooter from "@/app/components/trustit-public-footer";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { DiscoveryControls } from "../discovery-controls";
-import { getPublicDiscoveryBusinesses } from "@/lib/public-discovery";
+import { getPublicDiscoveryBusinesses, publicDiscoveryCityExists } from "@/lib/public-discovery";
 import {
   canonicalCategorySlug,
   categoryNameForSlug,
@@ -169,6 +169,7 @@ export async function generateMetadata({
   const canonicalCategory = canonicalCategorySlug(category);
   if (!types.length || !canonicalCategory || !citySlug) notFound();
   const businesses = await getPublicDiscoveryBusinesses(citySlug, types);
+  if (!businesses.length && !(await publicDiscoveryCityExists(citySlug))) notFound();
   const canonicalCity = businesses[0]?.publicCitySlug ?? citySlug;
   if (city !== canonicalCity || category !== canonicalCategory)
     permanentRedirect(`/${canonicalCity}/${canonicalCategory}`);
@@ -223,6 +224,7 @@ export default async function DiscoveryPage({
   const citySlug = slugifyCity(city);
   if (!types.length || !canonicalCategory || !citySlug) notFound();
   const businesses = await getPublicDiscoveryBusinesses(citySlug, types);
+  if (!businesses.length && !(await publicDiscoveryCityExists(citySlug))) notFound();
   const canonicalCity = businesses[0]?.publicCitySlug ?? citySlug;
   if (city !== canonicalCity || category !== canonicalCategory)
     permanentRedirect(`/${canonicalCity}/${canonicalCategory}`);
@@ -636,9 +638,9 @@ export default async function DiscoveryPage({
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-1.5">
-                            {business.matchedItems.map((item) => (
+                            {business.matchedItems.map((item, idx) => (
                               <span
-                                key={item.id}
+                                key={`${item.name}-${idx}`}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-white border border-emerald-200/90 px-2.5 py-1 text-xs text-slate-800 shadow-2xs"
                               >
                                 <span className="size-1.5 rounded-full bg-emerald-500" />
@@ -663,9 +665,9 @@ export default async function DiscoveryPage({
                             )}
                           </div>
                           <div className="flex flex-wrap gap-1.5">
-                            {business.catalogItems.slice(0, 4).map((item) => (
+                            {business.catalogItems.slice(0, 4).map((item, idx) => (
                               <span
-                                key={item.id}
+                                key={`${item.name}-${idx}`}
                                 className="inline-flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-2 py-0.5 text-xs text-slate-800 shadow-2xs"
                               >
                                 <span className="font-semibold text-slate-900">{item.name}</span>

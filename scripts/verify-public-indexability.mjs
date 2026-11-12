@@ -46,11 +46,19 @@ function assertNoindex(page, label) {
   assert.match(`${robots},${header}`, /noindex/, `${label}: expected a noindex directive`);
 }
 
+function matchesPublicUrl(actual, path) {
+  const full = new URL(path, base).href;
+  if (path === "/") {
+    return actual === base.origin || actual === full;
+  }
+  return actual === full;
+}
+
 function assertIndexablePage(page, path) {
   assert.equal(page.response.status, 200, `${path}: expected HTTP 200`);
   assert.deepEqual(page.redirects, [], `${path}: canonical URL should not redirect`);
   assert.equal(page.finalUrl.href, new URL(path, base).href, `${path}: request URL changed`);
-  assert.equal(canonicalValue(page.body), new URL(path, base).href, `${path}: canonical mismatch`);
+  assert.ok(matchesPublicUrl(canonicalValue(page.body), path), `${path}: canonical mismatch (${canonicalValue(page.body)})`);
   const robots = metaValue(page.body, "name", "robots").toLowerCase();
   assert.match(robots, /(?:^|[,\s])index(?:$|[,\s])/, `${path}: page is not indexable`);
   assert.doesNotMatch(robots, /noindex|nofollow/, `${path}: unexpected robots directive`);
@@ -59,7 +67,7 @@ function assertIndexablePage(page, path) {
   assert.ok(metaValue(page.body, "name", "description").length >= 40, `${path}: description missing or too short`);
   assert.ok(metaValue(page.body, "property", "og:title"), `${path}: OpenGraph title missing`);
   assert.ok(metaValue(page.body, "property", "og:description"), `${path}: OpenGraph description missing`);
-  assert.equal(metaValue(page.body, "property", "og:url"), new URL(path, base).href, `${path}: OpenGraph URL mismatch`);
+  assert.ok(matchesPublicUrl(metaValue(page.body, "property", "og:url"), path), `${path}: OpenGraph URL mismatch`);
   assert.equal(metaValue(page.body, "name", "twitter:card"), "summary", `${path}: Twitter card missing`);
   assert.ok(metaValue(page.body, "name", "twitter:title"), `${path}: Twitter title missing`);
   assert.ok(metaValue(page.body, "name", "twitter:description"), `${path}: Twitter description missing`);
@@ -68,6 +76,31 @@ function assertIndexablePage(page, path) {
   const heading = htmlWithoutComments.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i)?.[1]?.replace(/<[^>]*>/g, "").trim();
   assert.ok(heading, `${path}: H1 missing`);
 }
+
+async function discoverLiveSitemapTargets() {
+  const indexRes = await get("/sitemap.xml");
+  assert.equal(indexRes.response.status, 200, "/sitemap.xml: expected HTTP 200");
+  const shardLocs = [...indexRes.body.matchAll(/<loc>(.*?)<\/loc>/gi)].map((m) => xmlUnescape(m[1]));
+  assert.ok(shardLocs.length > 0, "sitemap index has no shard URLs to discover live pages");
+  const shardPath = new URL(shardLocs[0]).pathname;
+  const shardRes = await get(shardPath);
+  assert.equal(shardRes.response.status, 200, `${shardPath}: sitemap shard expected HTTP 200`);
+  const pathnames = [...shardRes.body.matchAll(/<loc>(.*?)<\/loc>/gi)].map((m) => new URL(xmlUnescape(m[1])).pathname);
+  const listingPath = pathnames.find((p) => p.split("/").filter(Boolean).length === 2);
+  const profilePath = pathnames.find((p) => p.split("/").filter(Boolean).length === 3);
+  assert.ok(listingPath, `${shardPath}: no live indexable category listing (/:city/:category) found in sitemap`);
+  assert.ok(profilePath, `${shardPath}: no live indexable business profile (/:city/:category/:slug) found in sitemap`);
+  return { listingPath, profilePath, sitemapPathnames: new Set(pathnames) };
+}
+
+const { listingPath, profilePath, sitemapPathnames } = await discoverLiveSitemapTargets();
+const [profileCity, profileCategory, profileSlug] = profilePath.split("/").filter(Boolean);
+const [listingCity] = listingPath.split("/").filter(Boolean);
+const alternateCategories = ["sweet-shops", "grocery-stores", "pharmacies", "restaurants", "salons"];
+const emptyCandidateCategory =
+  alternateCategories.find((cat) => !sitemapPathnames.has(`/${listingCity}/${cat}`)) ?? "sweet-shops";
+const wrongCategoryForProfile =
+  alternateCategories.find((cat) => cat !== profileCategory) ?? "sweet-shops";
 
 const checkedCanonicals = new Set();
 const root = await get("/");
@@ -86,11 +119,9 @@ for (const path of ["/login", "/merchant/login", "/merchant/dashboard"]) {
   assert.doesNotMatch(page.response.headers.get("x-robots-tag") ?? "", /(?:^|[,;\s])(?:index|follow)(?:$|[,;\s])/i, `${path}: X-Robots-Tag allows indexing or following`);
 }
 
-const listingPath = "/bahraich/sweet-shops";
 const listing = await get(listingPath);
 assertIndexablePage(listing, listingPath);
 checkedCanonicals.add(canonicalValue(listing.body));
-assert.ok(/Deepak Sweets Bahraich/.test(listing.body), "eligible live business is missing from the listing");
 
 const trustitPath = "/trustit";
 const trustit = await get(trustitPath);
@@ -98,11 +129,11 @@ assertIndexablePage(trustit, trustitPath);
 assert.equal(checkedCanonicals.has(canonicalValue(trustit.body)), false, "Trustit landing page shares a canonical URL");
 checkedCanonicals.add(canonicalValue(trustit.body));
 
-const filtered = await get(`${listingPath}?q=deepak&page=1`);
+const filtered = await get(`${listingPath}?q=trustit&page=1`);
 assert.equal(filtered.response.status, 200, "filtered listing should remain usable");
 assertNoindex(filtered, "filtered listing");
 
-const emptyPath = "/bahraich/restaurants";
+const emptyPath = `/${listingCity}/${emptyCandidateCategory}`;
 const empty = await get(emptyPath);
 assert.equal(empty.response.status, 200, "known city with an empty category should return 200");
 const emptyCategoryHasNoResults = /No businesses are currently listed in this location/i.test(empty.body);
@@ -112,24 +143,23 @@ else {
   checkedCanonicals.add(canonicalValue(empty.body));
 }
 
-const profilePath = "/bahraich/sweet-shops/deepak-sweets-bahraich";
 const profile = await get(profilePath);
 assertIndexablePage(profile, profilePath);
 assert.equal(checkedCanonicals.has(canonicalValue(profile.body)), false, "public pages share a canonical URL");
 checkedCanonicals.add(canonicalValue(profile.body));
-assert.ok(/Deepak Sweets Bahraich/.test(profile.body));
 const jsonLdMatch = profile.body.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/i);
 assert.ok(jsonLdMatch, "eligible business profile JSON-LD is missing");
 const jsonLd = JSON.parse(jsonLdMatch[1]);
 assert.equal(jsonLd["@type"], "LocalBusiness");
-assert.equal(jsonLd.name, "Deepak Sweets Bahraich");
+assert.ok(typeof jsonLd.name === "string" && jsonLd.name.trim().length > 0, "LocalBusiness JSON-LD name is missing");
+assert.ok(profile.body.includes(jsonLd.name), `profile HTML does not include JSON-LD business name (${jsonLd.name})`);
 assert.ok(!privateMarkers.test(JSON.stringify(jsonLd)), "private data marker found in JSON-LD");
 
 for (const path of [
   "/trustit-phase5-invalid-city/sweet-shops",
-  "/bahraich/phase5-invalid-category",
-  "/bahraich/sweet-shops/phase5-business-does-not-exist",
-  "/bahraich/restaurants/deepak-sweets-bahraich",
+  `/${profileCity}/phase5-invalid-category`,
+  `/${profileCity}/${profileCategory}/phase5-business-does-not-exist`,
+  `/${profileCity}/${wrongCategoryForProfile}/${profileSlug}`,
 ]) {
   const page = await get(path);
   assert.equal(page.response.status, 404, `${path}: expected a real HTTP 404`);

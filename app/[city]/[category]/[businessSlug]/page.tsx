@@ -406,7 +406,7 @@ export default async function PublicBusinessPage({ params }: { params: Params })
                       </h3>
 
                       <div className="grid gap-3 sm:grid-cols-2">
-                        {items.map((item) => {
+                        {items.map((item, idx) => {
                           const itemWaLink = waPhone
                             ? `https://wa.me/${waPhone}?text=${encodeURIComponent(
                                 `Namaste ${business.name}, I want to enquire/order: ${item.name} (₹${item.price}${item.unit ? ` ${item.unit}` : ""}).`
@@ -415,7 +415,7 @@ export default async function PublicBusinessPage({ params }: { params: Params })
 
                           return (
                             <div
-                              key={item.id}
+                              key={`${catTitle}-${item.name}-${idx}`}
                               className="flex items-start justify-between gap-3 rounded-2xl border border-slate-200/90 bg-white p-4 shadow-2xs transition hover:border-blue-300 hover:shadow-xs"
                             >
                               <div className="min-w-0 flex-1">
