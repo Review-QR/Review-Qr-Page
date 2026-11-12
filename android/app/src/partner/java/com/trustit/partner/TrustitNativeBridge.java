@@ -164,6 +164,13 @@ public class TrustitNativeBridge extends Plugin {
     @PluginMethod
     public void getPairedPrinters(PluginCall call) {
         try {
+            Context context = getContext();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                call.reject("Bluetooth permission not granted. Please allow Nearby Devices / Bluetooth in app settings.");
+                return;
+            }
+
             BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
             if (adapter == null) {
                 call.reject("Device does not support Bluetooth");
@@ -197,10 +204,23 @@ public class TrustitNativeBridge extends Plugin {
     public void printThermalReceipt(PluginCall call) {
         final String address = call.getString("address");
         final String receiptText = call.getString("text", "--- TRUSTIT PARTNER RECEIPT ---\n");
+        final Context context = getContext();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+            call.reject("Bluetooth permission not granted. Please allow Nearby Devices / Bluetooth in app settings.");
+            return;
+        }
 
         new Thread(() -> {
             BluetoothSocket socket = null;
             try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    call.reject("Bluetooth permission not granted.");
+                    return;
+                }
+
                 BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
                 if (adapter == null || !adapter.isEnabled()) {
                     call.reject("Bluetooth is turned off");
@@ -283,6 +303,7 @@ public class TrustitNativeBridge extends Plugin {
                 conn.setConnectTimeout(25000);
                 conn.setReadTimeout(25000);
 
+                boolean hasExplicitCookie = false;
                 if (customHeaders != null) {
                     java.util.Iterator<String> keys = customHeaders.keys();
                     while (keys.hasNext()) {
@@ -290,10 +311,22 @@ public class TrustitNativeBridge extends Plugin {
                         try {
                             String val = customHeaders.getString(key);
                             if (val != null) {
+                                if ("cookie".equalsIgnoreCase(key)) {
+                                    hasExplicitCookie = true;
+                                }
                                 conn.setRequestProperty(key, val);
                             }
                         } catch (Exception ignored) {}
                     }
+                }
+
+                if (!hasExplicitCookie) {
+                    try {
+                        String cookies = android.webkit.CookieManager.getInstance().getCookie(urlStr);
+                        if (cookies != null && !cookies.isEmpty()) {
+                            conn.setRequestProperty("Cookie", cookies);
+                        }
+                    } catch (Exception ignored) {}
                 }
 
                 if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method)) {
@@ -306,6 +339,22 @@ public class TrustitNativeBridge extends Plugin {
                 }
 
                 int status = conn.getResponseCode();
+                try {
+                    android.webkit.CookieManager cm = android.webkit.CookieManager.getInstance();
+                    java.util.Map<String, java.util.List<String>> headerFields = conn.getHeaderFields();
+                    if (headerFields != null) {
+                        for (java.util.Map.Entry<String, java.util.List<String>> entry : headerFields.entrySet()) {
+                            if (entry.getKey() != null && "Set-Cookie".equalsIgnoreCase(entry.getKey()) && entry.getValue() != null) {
+                                for (String cookieHeader : entry.getValue()) {
+                                    if (cookieHeader != null && !cookieHeader.isEmpty()) {
+                                        cm.setCookie(urlStr, cookieHeader);
+                                    }
+                                }
+                            }
+                        }
+                        cm.flush();
+                    }
+                } catch (Exception ignored) {}
                 java.io.InputStream is = (status >= 200 && status < 400) ? conn.getInputStream() : conn.getErrorStream();
                 StringBuilder response = new StringBuilder();
                 if (is != null) {
@@ -631,9 +680,7 @@ public class TrustitNativeBridge extends Plugin {
             public void onLocationChanged(Location location) {
                 if (!responded[0]) {
                     responded[0] = true;
-                    try {
-                        lm.removeUpdates(this);
-                    } catch (Exception ignored) {}
+                    safeRemoveLocationUpdates(lm, this);
                     resolveLocationResult(call, location);
                 }
             }
@@ -646,9 +693,7 @@ public class TrustitNativeBridge extends Plugin {
         final Runnable timeoutRunnable = () -> {
             if (!responded[0]) {
                 responded[0] = true;
-                try {
-                    lm.removeUpdates(listener);
-                } catch (Exception ignored) {}
+                safeRemoveLocationUpdates(lm, listener);
                 if (fallbackLoc != null) {
                     resolveLocationResult(call, fallbackLoc);
                 } else {
@@ -690,6 +735,21 @@ public class TrustitNativeBridge extends Plugin {
         } else {
             call.reject("Location permission is required for live GPS tracking.");
         }
+    }
+
+    // Permission is explicitly verified below and SecurityException is caught; SuppressLint avoids AGP 8.2 1..22 removeUpdates false positive.
+    @android.annotation.SuppressLint("MissingPermission")
+    private void safeRemoveLocationUpdates(LocationManager lm, LocationListener listener) {
+        Context context = getContext();
+        if (lm == null || listener == null || context == null) return;
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        try {
+            lm.removeUpdates(listener);
+        } catch (SecurityException ignored) {
+        } catch (Exception ignored) {}
     }
 
     private void resolveLocationResult(PluginCall call, Location loc) {

@@ -25,11 +25,16 @@ android/.gradle/
 android/app/build/
 android/build/
 android/local.properties
+android/keystore.properties
+android/app/google-services.json
 android/.idea/
 android/*.iml
 android/app/*.iml
+*.keystore
+*.jks
 
 # Temporary files
+android-customer-bundle/
 android-embedded-bundle/
 android-rider-bundle/
 loom*

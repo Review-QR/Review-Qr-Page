@@ -79,6 +79,7 @@ public class TrustitNativeBridge extends Plugin {
                 conn.setConnectTimeout(20000);
                 conn.setReadTimeout(20000);
 
+                boolean hasExplicitCookie = false;
                 if (customHeaders != null) {
                     java.util.Iterator<String> keys = customHeaders.keys();
                     while (keys.hasNext()) {
@@ -86,10 +87,22 @@ public class TrustitNativeBridge extends Plugin {
                         try {
                             String val = customHeaders.getString(key);
                             if (val != null) {
+                                if ("cookie".equalsIgnoreCase(key)) {
+                                    hasExplicitCookie = true;
+                                }
                                 conn.setRequestProperty(key, val);
                             }
                         } catch (Exception ignored) {}
                     }
+                }
+
+                if (!hasExplicitCookie) {
+                    try {
+                        String cookies = android.webkit.CookieManager.getInstance().getCookie(urlStr);
+                        if (cookies != null && !cookies.isEmpty()) {
+                            conn.setRequestProperty("Cookie", cookies);
+                        }
+                    } catch (Exception ignored) {}
                 }
 
                 if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method)) {
@@ -102,6 +115,22 @@ public class TrustitNativeBridge extends Plugin {
                 }
 
                 int status = conn.getResponseCode();
+                try {
+                    android.webkit.CookieManager cm = android.webkit.CookieManager.getInstance();
+                    java.util.Map<String, java.util.List<String>> headerFields = conn.getHeaderFields();
+                    if (headerFields != null) {
+                        for (java.util.Map.Entry<String, java.util.List<String>> entry : headerFields.entrySet()) {
+                            if (entry.getKey() != null && "Set-Cookie".equalsIgnoreCase(entry.getKey()) && entry.getValue() != null) {
+                                for (String cookieHeader : entry.getValue()) {
+                                    if (cookieHeader != null && !cookieHeader.isEmpty()) {
+                                        cm.setCookie(urlStr, cookieHeader);
+                                    }
+                                }
+                            }
+                        }
+                        cm.flush();
+                    }
+                } catch (Exception ignored) {}
                 java.io.InputStream is = (status >= 200 && status < 400) ? conn.getInputStream() : conn.getErrorStream();
                 StringBuilder response = new StringBuilder();
                 if (is != null) {
@@ -234,9 +263,7 @@ public class TrustitNativeBridge extends Plugin {
                     responded[0] = true;
                     if (timeoutRef[0] != null) handler.removeCallbacks(timeoutRef[0]);
                     if (netGraceRef[0] != null) handler.removeCallbacks(netGraceRef[0]);
-                    try {
-                        lm.removeUpdates(this);
-                    } catch (Exception ignored) {}
+                    safeRemoveLocationUpdates(lm, this);
                     resolveLocationResult(call, bestActive[0]);
                 }
             }
@@ -251,9 +278,7 @@ public class TrustitNativeBridge extends Plugin {
             if (!responded[0] && bestActive[0] != null) {
                 responded[0] = true;
                 if (timeoutRef[0] != null) handler.removeCallbacks(timeoutRef[0]);
-                try {
-                    lm.removeUpdates(listener);
-                } catch (Exception ignored) {}
+                safeRemoveLocationUpdates(lm, listener);
                 resolveLocationResult(call, bestActive[0]);
             }
         };
@@ -263,9 +288,7 @@ public class TrustitNativeBridge extends Plugin {
             if (!responded[0]) {
                 responded[0] = true;
                 if (netGraceRef[0] != null) handler.removeCallbacks(netGraceRef[0]);
-                try {
-                    lm.removeUpdates(listener);
-                } catch (Exception ignored) {}
+                safeRemoveLocationUpdates(lm, listener);
                 Location chosen = bestActive[0] != null ? bestActive[0] : fallbackLoc;
                 if (chosen != null) {
                     resolveLocationResult(call, chosen);
@@ -308,6 +331,21 @@ public class TrustitNativeBridge extends Plugin {
         } else {
             call.reject("Location permission is required for live GPS tracking.");
         }
+    }
+
+    // Permission is explicitly verified below and SecurityException is caught; SuppressLint avoids AGP 8.2 1..22 removeUpdates false positive.
+    @android.annotation.SuppressLint("MissingPermission")
+    private void safeRemoveLocationUpdates(LocationManager lm, LocationListener listener) {
+        Context context = getContext();
+        if (lm == null || listener == null || context == null) return;
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        try {
+            lm.removeUpdates(listener);
+        } catch (SecurityException ignored) {
+        } catch (Exception ignored) {}
     }
 
     private void resolveLocationResult(PluginCall call, Location loc) {

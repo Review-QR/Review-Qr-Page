@@ -1,13 +1,55 @@
 import fs from 'fs';
 import path from 'path';
 
-const bundleDir = 'android-embedded-bundle';
+const appKind = (process.argv[2] || 'partner').toLowerCase();
+const bundleDir = process.argv[3] || 'android-embedded-bundle';
+
+const htmlSourceMap = {
+  partner: '.next/server/app/partner.html',
+  rider: '.next/server/app/rider.html',
+  customer: '.next/server/app/order.html',
+};
+
+const brandFilesMap = {
+  partner: [
+    'merchant-icon-192.png',
+    'merchant-icon-512.png',
+    'trustit-icon.svg',
+    'trustit-logo.png',
+    'merchant-sweets-banner.jpg',
+  ],
+  rider: [
+    'rider-icon-192.png',
+    'rider-icon-512.png',
+    'trustit-icon.svg',
+    'trustit-logo.png',
+    'sw-rider.js',
+  ],
+  customer: [
+    'customer-icon-192.png',
+    'customer-icon-512.png',
+    'trustit-icon.svg',
+    'trustit-logo.png',
+  ],
+};
+
+const htmlSrc = htmlSourceMap[appKind];
+if (!htmlSrc) {
+  throw new Error(`Unsupported app kind '${appKind}'. Expected one of: partner, rider, customer`);
+}
+if (!fs.existsSync('.next/static')) {
+  throw new Error('.next/static missing. Run pnpm run build first.');
+}
+if (!fs.existsSync(htmlSrc)) {
+  throw new Error(`${htmlSrc} missing. For dynamic SSR routes (e.g. customer /order), use scripts/package-customer-ota.mjs.`);
+}
+
 if (fs.existsSync(bundleDir)) {
   fs.rmSync(bundleDir, { recursive: true, force: true });
 }
 fs.mkdirSync(bundleDir, { recursive: true });
 
-// 1. Copy .next/static into android-embedded-bundle/_next/static
+// 1. Copy .next/static into bundle/_next/static
 function copyDir(src, dest) {
   fs.mkdirSync(dest, { recursive: true });
   const entries = fs.readdirSync(src, { withFileTypes: true });
@@ -22,11 +64,11 @@ function copyDir(src, dest) {
   }
 }
 
-console.log('Copying .next/static to bundle...');
+console.log(`Copying .next/static to ${bundleDir} (app: ${appKind})...`);
 copyDir('.next/static', path.join(bundleDir, '_next', 'static'));
 
-// 2. Read partner.html
-let html = fs.readFileSync('.next/server/app/partner.html', 'utf8');
+// 2. Read compiled HTML for target app
+let html = fs.readFileSync(htmlSrc, 'utf8');
 
 // Inject the Cloud API interceptor script right after <head>
 const apiInterceptor = `
@@ -73,10 +115,20 @@ const apiInterceptor = `
             if (bridge && typeof bridge.nativeFetch === 'function') {
               try {
                 var bodyStr = typeof body === 'string' ? body : (body ? JSON.stringify(body) : '');
+                var reqHeaders = {};
+                var rawHeaders = (init && init.headers) || (input && input.headers);
+                if (rawHeaders) {
+                  if (typeof Headers !== 'undefined' && rawHeaders instanceof Headers) {
+                    rawHeaders.forEach(function(v, k) { reqHeaders[k] = v; });
+                  } else if (typeof rawHeaders === 'object') {
+                    reqHeaders = Object.assign({}, rawHeaders);
+                  }
+                }
                 var res = await bridge.nativeFetch({
                   url: targetUrl,
                   method: method,
-                  body: bodyStr
+                  body: bodyStr,
+                  headers: reqHeaders
                 });
                 return new Response(res.data, {
                   status: res.status || 200,
@@ -109,13 +161,7 @@ html = html.replace('<head>', '<head>' + apiInterceptor);
 fs.writeFileSync(path.join(bundleDir, 'index.html'), html);
 
 // 3. Copy essential brand icons
-const brandFiles = [
-  'merchant-icon-192.png',
-  'merchant-icon-512.png',
-  'trustit-icon.svg',
-  'trustit-logo.png',
-  'merchant-sweets-banner.jpg'
-];
+const brandFiles = brandFilesMap[appKind] || brandFilesMap.partner;
 for (const bf of brandFiles) {
   const p = path.join('public', bf);
   if (fs.existsSync(p)) {
@@ -123,7 +169,7 @@ for (const bf of brandFiles) {
   }
 }
 
-console.log('Embedded bundle prepared successfully!');
+console.log(`Embedded bundle (${appKind}) prepared successfully at ${bundleDir}!`);
 
 function getDirSize(d) {
   let s = 0;
@@ -135,4 +181,4 @@ function getDirSize(d) {
 }
 
 const totalSize = getDirSize(bundleDir);
-console.log('Total embedded bundle size:', (totalSize / (1024*1024)).toFixed(2), 'MB');
+console.log('Total embedded bundle size:', (totalSize / (1024 * 1024)).toFixed(2), 'MB');

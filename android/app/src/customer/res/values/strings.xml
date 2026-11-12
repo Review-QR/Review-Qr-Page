@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Trustit Customer</string>
+    <string name="title_activity_main">Trustit Customer</string>
+    <string name="package_name">com.trustit.customer</string>
+    <string name="custom_url_scheme">com.trustit.customer</string>
+</resources>

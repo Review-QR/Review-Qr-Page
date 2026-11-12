@@ -5,17 +5,33 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Preserve annotations and WebView @JavascriptInterface bridges
+-keepattributes *Annotation*,JavascriptInterface,Signature,InnerClasses,EnclosingMethod
+-keepclassmembers class * {
+    @android.webkit.JavascriptInterface <methods>;
+}
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# Preserve Trustit native Capacitor plugin bridge and Activities across all flavors
+-keep class com.trustit.**.TrustitNativeBridge { *; }
+-keepclassmembers class com.trustit.**.TrustitNativeBridge { *; }
+-keep class com.trustit.**.MainActivity { *; }
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# Preserve Capacitor core, BridgeActivity, and all @CapacitorPlugin / @PluginMethod entries
+-keep @com.getcapacitor.annotation.CapacitorPlugin public class * {
+    @com.getcapacitor.annotation.PermissionCallback <methods>;
+    @com.getcapacitor.annotation.ActivityCallback <methods>;
+    @com.getcapacitor.annotation.Permission <methods>;
+    @com.getcapacitor.PluginMethod public <methods>;
+}
+-keep public class * extends com.getcapacitor.Plugin { *; }
+-keep public class * extends com.getcapacitor.BridgeActivity { *; }
+-keep class com.getcapacitor.** { *; }
+-dontwarn com.getcapacitor.**
+
+# Preserve Apache Cordova compatibility classes used by Capacitor
+-keep class org.apache.cordova.** { *; }
+-dontwarn org.apache.cordova.**
+
+# Preserve line numbers and obfuscated source file name for crash stack traces
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
