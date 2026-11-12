@@ -4,16 +4,20 @@ import React, { useState } from "react";
 
 interface Screen36Props {
   onBack?: () => void;
+  storeName?: string;
+  city?: string;
+  gstin?: string;
+  invoices?: Array<{ id: string; month: string; amount: string; gst: string; status: string }>;
 }
 
-export default function Screen36GstTaxInvoices({ onBack }: Screen36Props) {
+export default function Screen36GstTaxInvoices({
+  onBack,
+  storeName = "Your Store",
+  city = "",
+  gstin = "",
+  invoices = [],
+}: Screen36Props) {
   const [downloaded, setDownloaded] = useState<string | null>(null);
-
-  const invoices = [
-    { id: "INV-2026-10-881", month: "October 2026", amount: "₹49.00", gst: "₹7.47", status: "Paid" },
-    { id: "INV-2026-09-412", month: "September 2026", amount: "₹49.00", gst: "₹7.47", status: "Paid" },
-    { id: "INV-2026-08-109", month: "August 2026", amount: "₹49.00", gst: "₹7.47", status: "Paid" },
-  ];
 
   const handleDownload = (invId: string) => {
     setDownloaded(invId);
@@ -52,8 +56,11 @@ export default function Screen36GstTaxInvoices({ onBack }: Screen36Props) {
               Input Credit Eligible
             </span>
           </div>
-          <p className="font-bold text-slate-900">Golden Blossom Cafe (GSTIN: 09AAAFG1234F1Z5)</p>
-          <p className="text-[10px] text-slate-500">Civil Lines, Bahraich, UP</p>
+          <p className="font-bold text-slate-900">
+            {storeName}
+            {gstin ? ` (GSTIN: ${gstin})` : ""}
+          </p>
+          <p className="text-[10px] text-slate-500">{city || "Registered Merchant Account"}</p>
         </div>
 
         {/* Invoice List */}
@@ -62,7 +69,15 @@ export default function Screen36GstTaxInvoices({ onBack }: Screen36Props) {
             Billing History
           </span>
 
-          {invoices.map((inv) => (
+          {invoices.length === 0 ? (
+            <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-5 text-center space-y-1">
+              <p className="text-xs font-black text-slate-800">No GST Invoices Generated Yet</p>
+              <p className="text-[10px] text-slate-500">
+                Real GST tax invoices appear here automatically once you complete a subscription or paid service billing cycle.
+              </p>
+            </div>
+          ) : (
+            invoices.map((inv) => (
             <div
               key={inv.id}
               className="bg-white border border-slate-200 rounded-2xl p-3 shadow-2xs space-y-1.5"
@@ -91,7 +106,8 @@ export default function Screen36GstTaxInvoices({ onBack }: Screen36Props) {
                 </button>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 

@@ -36,6 +36,8 @@ import {
   QUICK_COOKING_NOTES,
   DEFAULT_BAHRAICH_BUSINESSES,
   DEFAULT_BAHRAICH_ITEMS,
+  isBusinessAcceptingOrders,
+  OUTLET_PAUSED_DISPLAY_COPY,
   getRestaurantThumbnail,
   estimateStoreEtaMinutes,
   getStoreRating,
@@ -55,6 +57,8 @@ export {
   QUICK_COOKING_NOTES,
   DEFAULT_BAHRAICH_BUSINESSES,
   DEFAULT_BAHRAICH_ITEMS,
+  isBusinessAcceptingOrders,
+  OUTLET_PAUSED_DISPLAY_COPY,
   getRestaurantThumbnail,
 };
 
@@ -93,20 +97,20 @@ export default function CustomerSuperAppClient({
   initialSearchQuery?: string;
   initialStoreName?: string;
 }) {
-  // ── Catalog & Businesses ──
+  // ── Catalog & Businesses (Zero Dummy Fallback in Live UI) ──
   const [businesses, setBusinesses] = useState<SuperAppBusiness[]>(
-    propBusinesses && propBusinesses.length > 0 ? propBusinesses : DEFAULT_BAHRAICH_BUSINESSES,
+    propBusinesses ?? [],
   );
   const [catalogItems, setCatalogItems] = useState<SuperAppCatalogItem[]>(
-    propCatalogItems && propCatalogItems.length > 0 ? propCatalogItems : DEFAULT_BAHRAICH_ITEMS,
+    propCatalogItems ?? [],
   );
 
   useEffect(() => {
-    if (propBusinesses && propBusinesses.length > 0) setBusinesses(propBusinesses);
+    if (propBusinesses) setBusinesses(propBusinesses);
   }, [propBusinesses]);
 
   useEffect(() => {
-    if (propCatalogItems && propCatalogItems.length > 0) setCatalogItems(propCatalogItems);
+    if (propCatalogItems) setCatalogItems(propCatalogItems);
   }, [propCatalogItems]);
 
   useEffect(() => {
@@ -197,7 +201,6 @@ export default function CustomerSuperAppClient({
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [customerAddress, setCustomerAddress] = useState<string>("");
   const [addressVerified, setAddressVerified] = useState<boolean>(false);
-  const [guestMode, setGuestMode] = useState<boolean>(false);
   const [rewardPoints, setRewardPoints] = useState<number>(0);
   const [seenNotifKeys, setSeenNotifKeys] = useState<string[]>([]);
   const [rememberedUser, setRememberedUser] = useState<{
@@ -489,7 +492,9 @@ export default function CustomerSuperAppClient({
       const savedName = localStorage.getItem("trustit_cust_name") || "";
       const savedPhone = localStorage.getItem("trustit_cust_phone") || "";
       const savedAddr = localStorage.getItem("trustit_cust_addr") || "";
-      const savedGuest = localStorage.getItem("trustit_guest_mode") === "1";
+      try {
+        localStorage.removeItem("trustit_guest_mode");
+      } catch {}
       const savedAddrVerified = localStorage.getItem("trustit_addr_verified") === "1";
       const savedSeenNotifs = localStorage.getItem("trustit_seen_notifs");
       const savedLast = localStorage.getItem("trustit_last_customer");
@@ -572,7 +577,6 @@ export default function CustomerSuperAppClient({
         fetchCustomerPoints(undefined, savedPhone, savedEmail);
       }
 
-      if (savedGuest) setGuestMode(true);
       if (savedAddrVerified) setAddressVerified(true);
       if (savedSeenNotifs) {
         try {
@@ -581,7 +585,7 @@ export default function CustomerSuperAppClient({
         } catch {}
       }
 
-      if (!savedId && !savedPhone && !savedGuest) {
+      if (!savedId && !savedPhone) {
         setOnboardingStep(savedLast ? "welcome_back" : "login");
         setIsOnboardingOpen(true);
       }
@@ -794,7 +798,6 @@ export default function CustomerSuperAppClient({
     setCustomerName(rememberedUser.name);
     setCustomerPhone(rememberedUser.phone);
     setCustomerEmail(rememberedUser.email);
-    setGuestMode(false);
     try {
       localStorage.removeItem("trustit_guest_mode");
     } catch {}
@@ -912,7 +915,6 @@ export default function CustomerSuperAppClient({
         const nameToUse = cust.fullName || "Customer";
         setCustomerName(nameToUse);
         if (cust.phone) setCustomerPhone(cust.phone);
-        setGuestMode(false);
         setRewardPoints(Number(cust.rewardPoints ?? 0));
         fetchCustomerPoints(cust.id, cust.phone || loginPhone);
         try {
@@ -1040,7 +1042,6 @@ export default function CustomerSuperAppClient({
         setCustomerEmail(cust.email);
         setCustomerName(cust.fullName);
         if (cust.phone) setCustomerPhone(cust.phone);
-        setGuestMode(false);
         setRewardPoints(Number(cust.rewardPoints ?? 0));
         fetchCustomerPoints(cust.id, cust.phone || loginPhone);
         try {
@@ -1135,7 +1136,6 @@ export default function CustomerSuperAppClient({
         setCustomerEmail(cust.email);
         setCustomerName(cust.fullName || nameToUse);
         if (cust.phone) setCustomerPhone(cust.phone);
-        setGuestMode(false);
         setRewardPoints(Number(cust.rewardPoints ?? 0));
         fetchCustomerPoints(cust.id, cust.phone || "");
         try {
@@ -1171,7 +1171,6 @@ export default function CustomerSuperAppClient({
     setCustomerPhone("");
     setCustomerAddress("");
     setAddressVerified(false);
-    setGuestMode(false);
     setRewardPoints(0);
     setSavedAddresses([]);
     setCustomerPastOrders([]);
@@ -1262,9 +1261,7 @@ export default function CustomerSuperAppClient({
 
   const activeStoreItems = useMemo(() => {
     if (!activeStoreModal) return [];
-    const items = catalogItems.filter((i) => i.business_id === activeStoreModal.id);
-    if (items.length > 0) return items;
-    return DEFAULT_BAHRAICH_ITEMS.filter((i) => i.business_id === activeStoreModal.id);
+    return catalogItems.filter((i) => i.business_id === activeStoreModal.id);
   }, [catalogItems, activeStoreModal]);
 
   // ── Single-Store Cart Math (Matches server createHyperlocalOrder!) ──
@@ -1283,6 +1280,11 @@ export default function CustomerSuperAppClient({
   const cartGrandTotal = cartSubtotal + cartDeliveryFee + cartPlatformFee;
 
   const addLineWithSingleStoreGuard = (item: SuperAppCatalogItem, line: CartLineItem) => {
+    const targetStore = businesses.find((b) => b.id === item.business_id);
+    if (targetStore && !isBusinessAcceptingOrders(targetStore)) {
+      showToast(OUTLET_PAUSED_DISPLAY_COPY);
+      return;
+    }
     const existingStoreId = cartItemsList[0]?.item.business_id;
     if (existingStoreId && existingStoreId !== item.business_id) {
       const currentName =
@@ -1727,9 +1729,28 @@ export default function CustomerSuperAppClient({
           return;
         }
 
-        // In Capacitor Android WebView (origin https://localhost/), Cashfree JS SDK fails with
-        // "Broken Link! https://localhost/ is not enabled". Launch hosted checkout on whitelisted https://trustitreview.com!
+        // Prefer Native Cashfree Drop Checkout SDK (UPI-first with PhonePe/GPay/Paytm + Cards)
+        // inside Android APK so Chrome never opens. Fall back to Hosted Checkout only if native SDK is unavailable.
         if (isCapacitorOrLocalhost) {
+          const nativeDropRes = await TrustitNative.startNativeDropCheckout({
+            paymentSessionId: sessionData.paymentSessionId,
+            orderId: currentOrderId!,
+            environment: sessionData.checkoutMode === "sandbox" ? "SANDBOX" : "PRODUCTION",
+          });
+
+          if (nativeDropRes.launched) {
+            setIsPaymentLaunching(false);
+            setPaymentRetryState({
+              orderId: currentOrderId!,
+              amount: cartGrandTotal || 100,
+              storeName,
+              deliveryOtp: deliveryOtp || "4821",
+              reason:
+                "Complete your UPI / Card payment in the Cashfree sheet. Order will confirm automatically.",
+            });
+            return;
+          }
+
           const hostedPayUrl = `https://trustitreview.com/pay/cashfree?sessionId=${encodeURIComponent(
             sessionData.paymentSessionId,
           )}&orderId=${encodeURIComponent(currentOrderId!)}&mode=${encodeURIComponent(
@@ -2136,7 +2157,7 @@ export default function CustomerSuperAppClient({
         setOnboardingStep("login");
         return true;
       }
-      if (!customerId && !guestMode) return true;
+      if (!customerId && !customerPhone) return true;
       setIsOnboardingOpen(false);
       return true;
     }
@@ -2263,73 +2284,86 @@ export default function CustomerSuperAppClient({
         </div>
       )}
 
-      {/* N-07 to N-12 Home, Categories, Search & Store Cards */}
-      <CustomerHomeAndDiscovery
-        lang={lang}
-        bottomTab={bottomTab}
-        setBottomTab={navigateBottomTab}
-        activeTab={activeTab}
-        setActiveTab={navigateVerticalTab}
-        userLiveLocation={userLiveLocation}
-        districtName={selectedCity}
-        rewardPoints={rewardPoints}
-        isAuthenticated={Boolean(customerId || customerPhone)}
-        onRequestLogin={openLoginOrResume}
-        userCoords={userCoords}
-        customerName={customerName}
-        totalActiveCount={totalActiveCount}
-        unreadNotifCount={unreadNotifCount}
-        onOpenLocationLock={() => {
-          detectLiveLocation(false);
-          setOnboardingStep("gps_lock");
-          setIsOnboardingOpen(true);
-        }}
-        onOpenNotifications={() => {
-          markAllNotificationsSeen();
-          setIsNotificationsOpen(true);
-        }}
-        onOpenActiveOrders={() => {
-          setIsMyBookingsOpen(true);
-          if (customerPhone) fetchActiveBookings(customerPhone);
-        }}
-        onOpenProfile={() => {
-          setIsProfileOpen(true);
-          fetchCustomerPoints(customerId, customerPhone, customerEmail);
-        }}
-        onOpenStandeeScanner={() => setIsStandeeModalOpen(true)}
-        onOpenSmartParcha={handleOpenSmartParcha}
-        onOpenMedicalRx={handleOpenMedicalRx}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        businesses={businesses}
-        filteredBusinesses={filteredBusinesses}
-        catalogItems={catalogItems}
-        favoriteStoreIds={favoriteStoreIds}
-        onSelectStore={handleSelectStore}
-        onQuickAddItem={handleQuickAddItem}
-        cartCount={cartItemsList.reduce((s, l) => s + l.quantity, 0)}
-        cartGrandTotal={cartGrandTotal}
-        cartStoreName={cartStore?.name || "Store"}
-        onOpenCheckout={() => setIsCheckoutOpen(true)}
-        onRegisterSubBack={registerHomeSubBack}
-      />
+      {/* N-07 to N-12 Home, Categories, Search & Store Cards — Strict Login Gate */}
+      {customerId || customerPhone ? (
+        <CustomerHomeAndDiscovery
+          lang={lang}
+          bottomTab={bottomTab}
+          setBottomTab={navigateBottomTab}
+          activeTab={activeTab}
+          setActiveTab={navigateVerticalTab}
+          userLiveLocation={userLiveLocation}
+          districtName={selectedCity}
+          rewardPoints={rewardPoints}
+          isAuthenticated={true}
+          onRequestLogin={openLoginOrResume}
+          userCoords={userCoords}
+          customerName={customerName}
+          totalActiveCount={totalActiveCount}
+          unreadNotifCount={unreadNotifCount}
+          onOpenLocationLock={() => {
+            detectLiveLocation(false);
+            setOnboardingStep("gps_lock");
+            setIsOnboardingOpen(true);
+          }}
+          onOpenNotifications={() => {
+            markAllNotificationsSeen();
+            setIsNotificationsOpen(true);
+          }}
+          onOpenActiveOrders={() => {
+            setIsMyBookingsOpen(true);
+            if (customerPhone) fetchActiveBookings(customerPhone);
+          }}
+          onOpenProfile={() => {
+            setIsProfileOpen(true);
+            fetchCustomerPoints(customerId, customerPhone, customerEmail);
+          }}
+          onOpenStandeeScanner={() => setIsStandeeModalOpen(true)}
+          onOpenSmartParcha={handleOpenSmartParcha}
+          onOpenMedicalRx={handleOpenMedicalRx}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          businesses={businesses}
+          filteredBusinesses={filteredBusinesses}
+          catalogItems={catalogItems}
+          favoriteStoreIds={favoriteStoreIds}
+          onSelectStore={handleSelectStore}
+          onQuickAddItem={handleQuickAddItem}
+          cartCount={cartItemsList.reduce((s, l) => s + l.quantity, 0)}
+          cartGrandTotal={cartGrandTotal}
+          cartStoreName={cartStore?.name || "Store"}
+          onOpenCheckout={() => setIsCheckoutOpen(true)}
+          onRegisterSubBack={registerHomeSubBack}
+        />
+      ) : (
+        <div className="min-h-screen bg-[#faf8ff] flex items-center justify-center p-6">
+          <div className="text-center space-y-2 max-w-xs">
+            <div className="mx-auto h-12 w-12 rounded-2xl bg-[#003178] text-white font-black text-xl flex items-center justify-center shadow">
+              T
+            </div>
+            <div className="text-sm font-black text-[#131b2e]">Trustit Customer Sign-In Required</div>
+            <p className="text-xs text-[#434652]">
+              Please verify your mobile number or Google account to explore live stores and place orders.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsOnboardingOpen(true)}
+              className="rounded-xl bg-[#003178] text-white px-4 py-2 text-xs font-black"
+            >
+              Sign In Now →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* N-02 to N-06 Onboarding, Login +91, WhatsApp OTP, Name+Push, GPS Lock */}
       <CustomerOnboardingModal
-        isOpen={isOnboardingOpen}
+        isOpen={isOnboardingOpen || (!customerId && !customerPhone)}
         onClose={() => {
-          if (!customerId && !guestMode) return;
+          if (!customerId && !customerPhone) return;
           setIsOnboardingOpen(false);
         }}
-        onContinueAsGuest={() => {
-          setGuestMode(true);
-          try {
-            localStorage.setItem("trustit_guest_mode", "1");
-          } catch {}
-          setIsOnboardingOpen(false);
-          showToast(`Exploring ${selectedCity || "local"} stores as Guest`);
-        }}
-        requireAuthChoice={!customerId && !guestMode}
+        requireAuthChoice={!customerId && !customerPhone}
         districtName={selectedCity}
         lang={lang}
         step={onboardingStep}

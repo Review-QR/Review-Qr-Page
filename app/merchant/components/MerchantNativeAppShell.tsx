@@ -258,10 +258,15 @@ export default function MerchantNativeAppShell({
         method: "GET",
       });
       const data = await res.json();
-      if (data.success) {
-        if (data.business?.id && !resolvedBiz) {
-          setBusinessId(data.business.id);
+        if (res.status === 401 || res.status === 403) {
+          setIsAuthenticated(false);
+          setAuthStep("login");
+          return;
         }
+        if (data.success) {
+          if (data.business?.id && !resolvedBiz) {
+            setBusinessId(data.business.id);
+          }
         if (data.config) {
           setMerchantConfig(data.config);
           if (data.config.ownerName && ownerName === "Merchant Partner") setOwnerName(data.config.ownerName);
@@ -285,7 +290,13 @@ export default function MerchantNativeAppShell({
           else if (rawType.includes("salon") || rawType.includes("spa") || rawType.includes("beauty")) setStoreCategory("salon");
           else if (rawType.includes("car") || rawType.includes("auto") || rawType.includes("wash")) setStoreCategory("carwash");
         }
-        if (data.business?.is_outlet_open !== undefined) setIsStoreOnline(data.business.is_outlet_open);
+        if (data.business?.is_outlet_open !== undefined) {
+          setIsStoreOnline(
+            Boolean(data.business.is_outlet_open) &&
+              data.business.is_taking_orders !== false &&
+              data.business.allow_taking_orders !== false,
+          );
+        }
         const ordersList: any[] = Array.isArray(data.orders) ? data.orders : [];
         setLiveOrders(ordersList);
         setLiveCatalog(data.catalog || []);
@@ -404,10 +415,19 @@ export default function MerchantNativeAppShell({
   const toggleStoreStatus = async () => {
     const next = !isStoreOnline;
     setIsStoreOnline(next);
-    showToast(next ? "🟢 Orders Active" : "🔴 Orders Paused");
     try {
-      await postMerchantOp("toggle_outlet", { data: { isOpen: next } });
-    } catch {}
+      const res = await postMerchantOp("toggle_outlet", { data: { isOpen: next } });
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d?.success) {
+        setIsStoreOnline(!next);
+        showToast(`⚠️ ${d?.message || "Could not update outlet status."}`);
+        return;
+      }
+      showToast(next ? "🟢 Orders Active" : "🔴 Orders Paused");
+    } catch {
+      setIsStoreOnline(!next);
+      showToast("⚠️ Network error updating outlet status.");
+    }
   };
 
   // 2. Incoming Siren Alert & Real Simulation Order Trigger
@@ -596,18 +616,32 @@ export default function MerchantNativeAppShell({
     } catch {}
   };
 
-  // 14. Cashfree Wallet Recharge
+  // 14. Cashfree Wallet Recharge (Supports Native Drop SDK + Cashfree Dynamic QR)
   const handleInitiateCashfree = async (amount: number, credits: number) => {
     try {
-      const res = await postMerchantOp("recharge_wallet", { data: { amount, credits } });
+      const res = await postMerchantOp("recharge_wallet", {
+        data: { amount, credits, includeQr: true },
+      });
       const d = await res.json();
       if (d.success) {
-        showToast(`✓ Cashfree UPI session ${d.orderId?.slice(-6)} created!`);
-        fetchDashboard();
-      } else {
-        showToast(`⚠️ ${d.message}`);
+        if (d.paymentSessionId && typeof window !== "undefined") {
+          const dropRes = await TrustitNative.startNativeDropCheckout({
+            paymentSessionId: d.paymentSessionId,
+            orderId: d.orderId,
+            environment: d.checkoutMode === "sandbox" ? "SANDBOX" : "PRODUCTION",
+          });
+          if (dropRes.launched) {
+            showToast(`✓ Cashfree checkout opened (${d.orderId?.slice(-6)})`);
+          }
+        }
+        return d;
       }
-    } catch {}
+      showToast(`⚠️ ${d.message || "Cashfree recharge failed."}`);
+      return d;
+    } catch {
+      showToast("⚠️ Network error initializing Cashfree recharge.");
+      return { success: false, message: "Network error" };
+    }
   };
 
   // Title formatting helper
@@ -937,10 +971,21 @@ export default function MerchantNativeAppShell({
             <Screen35SubscriptionAutoPay onBack={() => setActiveSubScreen(null)} />
           )}
           {activeSubScreen === "s36" && (
-            <Screen36GstTaxInvoices onBack={() => setActiveSubScreen(null)} />
+            <Screen36GstTaxInvoices
+              storeName={storeName}
+              city={merchantConfig?.city || ""}
+              onBack={() => setActiveSubScreen(null)}
+            />
           )}
           {activeSubScreen === "s38" && (
-            <Screen38SettlementBreakdownModal onBack={() => setActiveSubScreen(null)} />
+            <Screen38SettlementBreakdownModal
+              storeName={storeName}
+              grossSales={todayGrossEarnings}
+              ordersCount={liveOrders.filter((o) => o.status === "delivered" || o.status === "completed").length}
+              bankAccountMask={merchantConfig?.bankAccount?.accountNumberMask || ""}
+              ifscCode={merchantConfig?.bankAccount?.ifsc || ""}
+              onBack={() => setActiveSubScreen(null)}
+            />
           )}
           {activeSubScreen === "s39" && (
             <Screen39BankKycPennyDrop
@@ -957,7 +1002,10 @@ export default function MerchantNativeAppShell({
             />
           )}
           {activeSubScreen === "s40" && (
-            <Screen40PayoutExcelDownloader onBack={() => setActiveSubScreen(null)} />
+            <Screen40PayoutExcelDownloader
+              orders={liveOrders}
+              onBack={() => setActiveSubScreen(null)}
+            />
           )}
           {activeSubScreen === "s41" && (
             <Screen41SecurityTwoFactor
@@ -1240,8 +1288,19 @@ export default function MerchantNativeAppShell({
             isStoreOnline={isStoreOnline}
             onToggleStoreOnline={toggleStoreStatus}
             liveOrdersCount={unreadOrders}
-            preparingCount={liveOrders.filter((o) => o.status === "accepted" || o.status === "preparing").length}
-            outCount={liveOrders.filter((o) => o.status === "out_for_delivery").length}
+            preparingCount={
+              liveOrders.filter(
+                (o) => o.status === "accepted_by_merchant" || o.status === "accepted" || o.status === "preparing",
+              ).length
+            }
+            outCount={
+              liveOrders.filter(
+                (o) =>
+                  o.status === "rider_assigned" ||
+                  o.status === "picked_up" ||
+                  o.status === "out_for_delivery",
+              ).length
+            }
             catalogCount={liveCatalog.length}
             todayEarnings={todayGrossEarnings}
             reviewStats={reviewStats}
@@ -1400,16 +1459,16 @@ export default function MerchantNativeAppShell({
                   ₹{todayGrossEarnings.toLocaleString("en-IN")}.00
                 </span>
                 <span className="text-[11px] font-bold text-slate-500 block">
-                  {liveOrders.length || 34} Orders · Direct Auto-Settlement via IMPS / UPI
+                  {liveOrders.length} Live Order(s) · Manual Settlement Mode
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setActiveSubScreen("s39")}
-                className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition"
+                className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-1 shadow-xs transition"
               >
                 <span>🏦</span>
-                <span>Bank Verified</span>
+                <span>{merchantConfig?.bankAccount?.isVerified ? "Bank Linked" : "Bank Details"}</span>
               </button>
             </div>
           </div>
@@ -1427,9 +1486,11 @@ export default function MerchantNativeAppShell({
               >
                 <span className="text-xl block mb-1">🏦</span>
                 <span className="text-xs font-black text-slate-900 block leading-tight">
-                  Bank Account KYC
+                  Bank Account Details
                 </span>
-                <span className="text-[10px] text-slate-500 block mt-0.5">₹1 Penny Drop Verified</span>
+                <span className="text-[10px] text-slate-500 block mt-0.5">
+                  {merchantConfig?.bankAccount?.accountNumberMask || "Manual Settlement Account"}
+                </span>
               </button>
 
               <button
@@ -1923,12 +1984,7 @@ export default function MerchantNativeAppShell({
               type="button"
               onClick={() => {
                 setStoreCategory(cat);
-                if (cat === "kirana") setStoreName("Gupta Kirana & General Store");
-                else if (cat === "chemist") setStoreName("Sanjivani Medicos & Pharmacy");
-                else if (cat === "salon") setStoreName("Looks Unisex Salon & Spa");
-                else if (cat === "carwash") setStoreName("SpeedX Auto Foam Detailing");
-                else setStoreName("Golden Blossom Cafe & Dining");
-                showToast(`Switched to ${cat.toUpperCase()} Cockpit`);
+                showToast(`Viewing ${cat.toUpperCase()} Cockpit`);
               }}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-black transition capitalize ${
                 storeCategory === cat
@@ -1968,17 +2024,19 @@ export default function MerchantNativeAppShell({
             🖥️ Full View
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setIsAuthenticated(!isAuthenticated);
-              setAuthStep(isAuthenticated ? "login" : "login");
-            }}
-            className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition border border-slate-700"
-            title="Toggle between Logged In and Auth screen"
-          >
-            {isAuthenticated ? "🔄 Relog" : "🔑 Auto-Login"}
-          </button>
+          {isAuthenticated && (
+            <button
+              type="button"
+              onClick={() => {
+                setIsAuthenticated(false);
+                setAuthStep("login");
+              }}
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition border border-slate-700"
+              title="Sign out to login screen"
+            >
+              🔄 Sign Out
+            </button>
+          )}
         </div>
       </div>
 

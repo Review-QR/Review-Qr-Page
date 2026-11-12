@@ -26,6 +26,11 @@ interface TrustitNativeBridgePlugin {
   }>;
   playHapticFeedback(options?: { type?: string }): Promise<{ success: boolean; type?: string }>;
   nativeCheckoutHandoff(options?: { upiUri?: string }): Promise<{ success: boolean; dispatched?: boolean; installedCount?: number }>;
+  startNativeDropCheckout(options: {
+    paymentSessionId: string;
+    orderId: string;
+    environment?: "SANDBOX" | "PRODUCTION";
+  }): Promise<{ launched: boolean; mode?: string; message?: string }>;
   openInAppCheckout(options: { url: string }): Promise<{ opened: boolean; mode: string }>;
   checkAndApplyOta(options?: { manifestUrl?: string; currentVersion?: string }): Promise<{ hasUpdate: boolean; appliedVersion?: string; message?: string }>;
 }
@@ -297,6 +302,35 @@ export const TrustitNative = {
     }
 
     return { success: false, dispatched: false };
+  },
+
+  /**
+   * Launches the native Cashfree PG Android SDK Drop Checkout (UPI-first with Cards/Wallets/Netbanking)
+   * directly inside the APK so PhonePe/GPay/Paytm open natively without an external Chrome popup.
+   */
+  async startNativeDropCheckout(options: {
+    paymentSessionId: string;
+    orderId: string;
+    environment?: "SANDBOX" | "PRODUCTION";
+  }): Promise<{ launched: boolean; mode?: string; message?: string }> {
+    const plugin = getNativePlugin();
+    if (plugin && typeof plugin.startNativeDropCheckout === "function") {
+      try {
+        return await plugin.startNativeDropCheckout({
+          paymentSessionId: options.paymentSessionId,
+          orderId: options.orderId,
+          environment: options.environment === "SANDBOX" ? "SANDBOX" : "PRODUCTION",
+        });
+      } catch (err: any) {
+        console.warn("[TrustitNative] startNativeDropCheckout error:", err);
+        return {
+          launched: false,
+          mode: "native_error",
+          message: String(err?.message || err || "Native SDK error"),
+        };
+      }
+    }
+    return { launched: false, mode: "unavailable" };
   },
 
   /**

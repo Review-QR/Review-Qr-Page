@@ -49,9 +49,98 @@ export async function POST(request: Request): Promise<Response> {
   try {
     const text = await cloned.text();
     const payload = JSON.parse(text);
+    const eventType = payload?.type;
     const orderId = payload?.data?.order?.order_id;
-    if (typeof orderId === "string" && orderId.startsWith("hord_")) {
-      // Verify webhook signature for Hyperlocal Super-App Order
+    const targetOrderTag = payload?.data?.order?.order_tags?.target_order_id;
+    const resolvedHyperlocalOrderId =
+      typeof orderId === "string" && orderId.startsWith("hord_")
+        ? orderId
+        : typeof targetOrderTag === "string" && targetOrderTag.startsWith("hord_")
+          ? targetOrderTag
+          : null;
+
+    // A. Hyperlocal Order Refunds (REFUND_STATUS_WEBHOOK)
+    if (
+      eventType === "REFUND_STATUS_WEBHOOK" &&
+      payload?.data?.refund &&
+      (resolvedHyperlocalOrderId || typeof orderId === "string")
+    ) {
+      const timestamp = request.headers.get("x-webhook-timestamp");
+      const signature = request.headers.get("x-webhook-signature");
+      if (!verifyCashfreeWebhookSignature({ rawBody: text, timestamp, signature })) {
+        return Response.json({ result: "unauthorized" }, { status: 401 });
+      }
+
+      const refundData = payload.data.refund as {
+        refund_status?: string;
+        refund_id?: string;
+        cf_refund_id?: string | number;
+        refund_arn?: string;
+        refund_amount?: number;
+        order_id?: string;
+      };
+      const lookupOrderId = resolvedHyperlocalOrderId || refundData.order_id || orderId;
+      const refundStatus = String(refundData.refund_status || "").toUpperCase();
+      if (typeof lookupOrderId === "string" && refundStatus === "SUCCESS") {
+        const admin = createSupabaseAdminClient();
+        const note = `Cashfree Refund Confirmed (ARN: ${refundData.refund_arn || refundData.cf_refund_id || refundData.refund_id || "processed"})`;
+        await admin
+          .from("hyperlocal_orders")
+          .update({
+            payment_status: "refunded",
+            admin_notes: note,
+            updated_at: new Date().toISOString(),
+          })
+          .or(`id.eq.${lookupOrderId},cashfree_order_id.eq.${lookupOrderId}`);
+      }
+      return Response.json({ success: true, eventType, refundStatus });
+    }
+
+    // B. Cashfree Payment Link Event (Rider Doorstep COD QR fallback)
+    if (eventType === "PAYMENT_LINK_EVENT" && payload?.data?.link_status) {
+      const timestamp = request.headers.get("x-webhook-timestamp");
+      const signature = request.headers.get("x-webhook-signature");
+      if (!verifyCashfreeWebhookSignature({ rawBody: text, timestamp, signature })) {
+        return Response.json({ result: "unauthorized" }, { status: 401 });
+      }
+
+      const linkNotes = (payload?.data?.link_notes || {}) as Record<string, string>;
+      const targetOrderId = linkNotes.target_order_id;
+      const linkStatus = String(payload?.data?.link_status || "").toUpperCase();
+      if (typeof targetOrderId === "string" && targetOrderId.startsWith("hord_") && linkStatus === "PAID") {
+        const admin = createSupabaseAdminClient();
+        const { data: dbOrder } = await admin
+          .from("hyperlocal_orders")
+          .select("id, total_amount, payment_status")
+          .eq("id", targetOrderId)
+          .maybeSingle();
+
+        if (!dbOrder) {
+          return Response.json({ result: "order_not_found" }, { status: 404 });
+        }
+        const paidAmount = Number(payload?.data?.link_amount_paid ?? payload?.data?.order?.order_amount ?? 0);
+        if (!Number.isFinite(paidAmount) || paidAmount + 0.01 < Number(dbOrder.total_amount)) {
+          return Response.json({ result: "tampered_amount_rejected" }, { status: 400 });
+        }
+
+        const linkRef = String(payload?.data?.link_id || payload?.data?.cf_link_id || "");
+        const txId = String(payload?.data?.order?.transaction_id || payload?.data?.cf_link_id || linkRef);
+        await admin
+          .from("hyperlocal_orders")
+          .update({
+            payment_status: "paid",
+            payment_mode: "online_cashfree",
+            cashfree_order_id: linkRef || null,
+            cashfree_payment_id: txId || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", targetOrderId);
+      }
+      return Response.json({ success: true, eventType, linkStatus });
+    }
+
+    if (resolvedHyperlocalOrderId) {
+      // Verify webhook signature for Hyperlocal Super-App Order (and Rider QR orders)
       const timestamp = request.headers.get("x-webhook-timestamp");
       const signature = request.headers.get("x-webhook-signature");
       if (!verifyCashfreeWebhookSignature({ rawBody: text, timestamp, signature })) {
@@ -60,7 +149,6 @@ export async function POST(request: Request): Promise<Response> {
 
       const admin = createSupabaseAdminClient();
       const paymentStatus = payload?.data?.payment?.payment_status;
-      const eventType = payload?.type;
       const isSuccess = paymentStatus === "SUCCESS" || eventType === "PAYMENT_SUCCESS_WEBHOOK";
 
       if (isSuccess) {
@@ -68,7 +156,7 @@ export async function POST(request: Request): Promise<Response> {
         const { data: dbOrder } = await admin
           .from("hyperlocal_orders")
           .select("total_amount, payment_status")
-          .eq("id", orderId)
+          .eq("id", resolvedHyperlocalOrderId)
           .maybeSingle();
 
         if (!dbOrder) {
@@ -76,7 +164,7 @@ export async function POST(request: Request): Promise<Response> {
         }
 
         if (dbOrder.payment_status === "paid") {
-          return Response.json({ success: true, orderId, paymentStatus: "paid", idempotent: true });
+          return Response.json({ success: true, orderId: resolvedHyperlocalOrderId, paymentStatus: "paid", idempotent: true });
         }
 
         const rawAmount = payload?.data?.order?.order_amount ?? payload?.data?.payment?.payment_amount;
@@ -94,16 +182,16 @@ export async function POST(request: Request): Promise<Response> {
           .update({
             payment_status: "paid",
             payment_mode: "online_cashfree",
-            cashfree_order_id: orderId,
+            cashfree_order_id: typeof orderId === "string" ? orderId : resolvedHyperlocalOrderId,
             cashfree_payment_id: cfPaymentId,
             updated_at: new Date().toISOString(),
           })
-          .eq("id", orderId);
+          .eq("id", resolvedHyperlocalOrderId);
 
-        return Response.json({ success: true, orderId, paymentStatus: "paid" });
+        return Response.json({ success: true, orderId: resolvedHyperlocalOrderId, paymentStatus: "paid" });
       }
 
-      return Response.json({ success: true, orderId, paymentStatus: paymentStatus || "PENDING" });
+      return Response.json({ success: true, orderId: resolvedHyperlocalOrderId, paymentStatus: paymentStatus || "PENDING" });
     }
 
     if (typeof orderId === "string" && orderId.startsWith("tord_")) {

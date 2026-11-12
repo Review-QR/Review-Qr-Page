@@ -88,9 +88,11 @@ export default function StandaloneRiderProductionApp() {
     declineOrder,
     confirmPickup,
     completeDeliveryWithOtp,
+    requestOrderCancellation,
     claimWaitCompensation,
     refundDoorstepChange,
     claimParkingReimbursement,
+    recentCancelledOrder,
     remitCash,
     handleGoogleLogin,
     requestInstantPayout,
@@ -1086,13 +1088,20 @@ export default function StandaloneRiderProductionApp() {
       title: "14. Dynamic Cashfree UPI QR (COD)",
       component: (
         <Screen14DynamicQr
+          orderId={activeOrder?.id}
           amount={Number(activeOrder?.total_amount || 0)}
           orderCode={activeOrder?.id ? activeOrder.id.slice(-6).toUpperCase() : "TR-LIVE"}
           onPaymentReceived={() => {
             if (activeOrder?.delivery_otp) {
-              completeDeliveryWithOtp(activeOrder.delivery_otp);
+              completeDeliveryWithOtp(activeOrder.delivery_otp, { paidViaCashfreeQr: true });
+            } else {
+              const otp = typeof window !== "undefined" ? window.prompt("Enter customer 4-digit delivery OTP:") : "";
+              if (otp) {
+                completeDeliveryWithOtp(otp, { paidViaCashfreeQr: true });
+              } else {
+                setCurrentScreenId(13);
+              }
             }
-            setCurrentScreenId(15);
           }}
           onBack={() => setCurrentScreenId(13)}
         />
@@ -1111,7 +1120,20 @@ export default function StandaloneRiderProductionApp() {
           onUploadGatePhoto={() => {
             console.log("Customer gate photo recorded");
           }}
-          onCompleteCancellation={() => setCurrentScreenId(15)}
+          onCompleteCancellation={async () => {
+            const res = await requestOrderCancellation(
+              "customer_unreachable",
+              "Customer unreachable after doorstep calls & rescue timer",
+            );
+            if (!res.success && typeof window !== "undefined") {
+              alert(res.error || "Failed to send cancellation request.");
+              return;
+            }
+            if (typeof window !== "undefined") {
+              alert(res.message || "Cancellation request sent to Admin Command Center.");
+            }
+            setCurrentScreenId(13);
+          }}
         />
       ),
     },
@@ -1122,12 +1144,12 @@ export default function StandaloneRiderProductionApp() {
         <Screen28BreakdownRescue
           onBack={() => setCurrentScreenId(13)}
           onRequestBuddy={() => {
-            console.log("Nearest buddy rider pinged: Vikas Mishra");
+            requestOrderCancellation("wrong_address", "Rider vehicle breakdown — buddy handover requested");
           }}
           onCallBuddy={() => {
             if (typeof window !== "undefined") window.location.href = "tel:+919450881200";
           }}
-          onHandoverComplete={() => setCurrentScreenId(15)}
+          onHandoverComplete={() => setCurrentScreenId(7)}
         />
       ),
     },
@@ -1138,13 +1160,36 @@ export default function StandaloneRiderProductionApp() {
         <Screen29CustomerRefusalRto
           onBack={() => setCurrentScreenId(13)}
           onInitiateReturn={() => {
-            console.log("RTO return initiated back to merchant");
+            requestOrderCancellation(
+              "customer_refused",
+              "Customer refused order at doorstep — RTO initiated",
+            );
           }}
-          onConfirmMerchantReturn={() => setCurrentScreenId(15)}
+          onConfirmMerchantReturn={async () => {
+            await requestOrderCancellation(
+              "customer_refused",
+              "RTO package returned to merchant counter — awaiting Admin approval",
+            );
+            setCurrentScreenId(7);
+          }}
         />
       ),
     },
-    { id: 30, title: "30. Contactless Photo POD Watermark", component: <Screen30ContactlessPhotoPod onBack={() => setCurrentScreenId(13)} onConfirmPod={() => { completeDeliveryWithOtp("4492"); setCurrentScreenId(15); }} /> },
+    {
+      id: 30,
+      title: "30. Contactless Photo POD Watermark",
+      component: (
+        <Screen30ContactlessPhotoPod
+          onBack={() => setCurrentScreenId(13)}
+          onConfirmPod={() => {
+            const otp =
+              activeOrder?.delivery_otp ||
+              (typeof window !== "undefined" ? window.prompt("Enter customer 4-digit delivery OTP:") || "" : "");
+            if (otp) completeDeliveryWithOtp(otp);
+          }}
+        />
+      ),
+    },
 
     // Stage 9: Ground-Zero Dilemmas & Rescues
     {
@@ -1155,8 +1200,10 @@ export default function StandaloneRiderProductionApp() {
           onBack={() => setCurrentScreenId(13)}
           onConfirmChangeRefund={(amt, method) => {
             refundDoorstepChange(amt, method);
-            completeDeliveryWithOtp("4492");
-            setCurrentScreenId(15);
+            const otp =
+              activeOrder?.delivery_otp ||
+              (typeof window !== "undefined" ? window.prompt("Enter customer 4-digit delivery OTP:") || "" : "");
+            if (otp) completeDeliveryWithOtp(otp);
           }}
         />
       ),
@@ -1166,10 +1213,24 @@ export default function StandaloneRiderProductionApp() {
       title: "46. Mid-Trip Cancel & Distance Pay",
       component: (
         <Screen46MidTripCancellation
-          orderCode={activeOrder?.id ? activeOrder.id.slice(-6).toUpperCase() : "TR-LIVE"}
-          reason={activeOrder?.cancellation_reason || "Order cancelled by customer"}
-          onBack={() => setCurrentScreenId(10)}
-          onReturnToRadar={() => triggerIncomingOrderRadar(false)}
+          orderCode={
+            recentCancelledOrder?.id
+              ? recentCancelledOrder.id.slice(-6).toUpperCase()
+              : activeOrder?.id
+                ? activeOrder.id.slice(-6).toUpperCase()
+                : "TR-LIVE"
+          }
+          reason={
+            recentCancelledOrder?.cancellation_reason ||
+            recentCancelledOrder?.admin_notes ||
+            activeOrder?.cancellation_reason ||
+            "Order cancelled by Admin / Customer"
+          }
+          onBack={() => setCurrentScreenId(7)}
+          onReturnToRadar={() => {
+            setCurrentScreenId(7);
+            triggerIncomingOrderRadar(false);
+          }}
         />
       ),
     },

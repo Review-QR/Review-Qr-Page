@@ -4,6 +4,8 @@ import React from "react";
 
 interface Screen43Props {
   riderProp?: {
+    id?: string | null;
+    is_verified?: boolean | null;
     full_name?: string | null;
     vehicle_number?: string | null;
     driving_license_number?: string | null;
@@ -84,7 +86,9 @@ export default function Screen43DigitalFleetIdPass({
 
             <div className="flex-1 min-w-0 space-y-0.5">
               <h3 className="text-base font-black text-slate-900">{riderName}</h3>
-              <p className="text-xs font-mono font-bold text-[#0D47A1]">ID: #TR-BHR-4091</p>
+              <p className="text-xs font-mono font-bold text-[#0D47A1]">
+                ID: #{riderProp?.id ? riderProp.id.slice(0, 8).toUpperCase() : "PENDING"}
+              </p>
               <p className="text-[11px] text-slate-600 font-medium">Vehicle: {vehicleText}</p>
               <p className="text-[10px] text-slate-500">DL No: {dlText}</p>
             </div>
@@ -94,19 +98,18 @@ export default function Screen43DigitalFleetIdPass({
           <div className="mt-3.5 p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-3">
             <div className="space-y-0.5">
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-500 block">
-                Police / Checkpoint QR
+                Police / Checkpoint Verification
               </span>
               <p className="text-xs font-bold text-slate-900">Active Duty Partner Pass</p>
-              <p className="text-[10px] text-slate-500">Bahraich Hyperlocal Delivery Network</p>
+              <p className="text-[10px] text-slate-500">Trustit Hyperlocal Delivery Network</p>
               <span className="inline-block mt-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
                 Essential Goods Courier
               </span>
             </div>
 
-            {/* Simulated Police QR */}
             <div className="w-16 h-16 rounded-xl bg-white border border-slate-300 p-1 flex items-center justify-center shadow-2xs shrink-0">
               <div className="w-full h-full bg-slate-900 rounded-lg flex items-center justify-center text-white text-[9px] font-mono font-bold text-center p-1 leading-tight">
-                [POLICE SCAN]
+                {riderProp?.is_verified ? "VERIFIED" : "KYC WAIT"}
               </div>
             </div>
           </div>

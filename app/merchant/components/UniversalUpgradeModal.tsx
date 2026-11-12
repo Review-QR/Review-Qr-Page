@@ -38,7 +38,9 @@ export default function UniversalUpgradeModal({
   const [selectedPlan, setSelectedPlan] = useState<"basic" | "standard" | "premium">(defaultPlan);
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">("monthly");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
-  const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [cashfreeQrImage, setCashfreeQrImage] = useState<string | null>(null);
+  const [cashfreePayUrl, setCashfreePayUrl] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
@@ -85,6 +87,9 @@ export default function UniversalUpgradeModal({
 
   const handlePay = async () => {
     setIsProcessing(true);
+    setPaymentError(null);
+    setCashfreeQrImage(null);
+    setCashfreePayUrl(null);
     try {
       const planAmount =
         selectedPlan === "basic"
@@ -98,21 +103,35 @@ export default function UniversalUpgradeModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "recharge_wallet",
-          data: { amount: planAmount, planId: selectedPlan, billingCycle },
+          data: { amount: planAmount, planId: selectedPlan, billingCycle, includeQr: true },
         }),
       });
       const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.success) {
+        setPaymentError(data?.message || "Please sign in as a Merchant to upgrade via Cashfree.");
+        return;
+      }
+
+      if (data.qrCodeImage) setCashfreeQrImage(data.qrCodeImage);
+      if (data.qrCodeUrl) setCashfreePayUrl(data.qrCodeUrl);
 
       if (data?.paymentUrl && typeof window !== "undefined") {
         window.location.href = data.paymentUrl;
         return;
       }
 
-      if (onSuccessPay) onSuccessPay(selectedPlan);
-      onClose();
+      if (data?.paymentSessionId && typeof window !== "undefined" && (window as any).Cashfree) {
+        const cf = (window as any).Cashfree({ mode: data.checkoutMode || "production" });
+        await cf.checkout({
+          paymentSessionId: data.paymentSessionId,
+          redirectTarget: "_modal",
+        });
+      } else if (!data.qrCodeImage) {
+        setPaymentError("Cashfree checkout session created. Scan UPI QR or open merchant dashboard billing.");
+      }
     } catch {
-      if (onSuccessPay) onSuccessPay(selectedPlan);
-      onClose();
+      setPaymentError("Network error connecting to Cashfree checkout. Please try again.");
     } finally {
       setIsProcessing(false);
     }
@@ -439,9 +458,27 @@ export default function UniversalUpgradeModal({
                 Baad me dekhein
               </button>
 
+              {paymentError && (
+                <p className="text-[11px] font-bold text-rose-700 mr-2">{paymentError}</p>
+              )}
+              {cashfreeQrImage && (
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-1.5 mr-2">
+                  <img src={cashfreeQrImage} alt="Cashfree QR" className="w-12 h-12 rounded" />
+                  {cashfreePayUrl && (
+                    <a
+                      href={cashfreePayUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-black text-emerald-800 underline"
+                    >
+                      Pay Link →
+                    </a>
+                  )}
+                </div>
+              )}
               <button
                 type="button"
-                disabled={isProcessing || paymentSuccess}
+                disabled={isProcessing}
                 onClick={handlePay}
                 className="w-2/3 sm:w-auto flex-1 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-xs sm:text-sm font-black shadow-lg shadow-emerald-600/25 hover:from-emerald-700 hover:to-teal-700 transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
@@ -449,11 +486,6 @@ export default function UniversalUpgradeModal({
                   <>
                     <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                     <span>Opening Cashfree UPI...</span>
-                  </>
-                ) : paymentSuccess ? (
-                  <>
-                    <span className="text-base">🎉</span>
-                    <span>Recharge Successful! Unlocking...</span>
                   </>
                 ) : (
                   <>

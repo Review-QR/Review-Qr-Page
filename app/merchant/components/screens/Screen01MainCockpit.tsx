@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import DongleSliderSwitch from "../DongleSliderSwitch";
 
 export interface Screen01Props {
@@ -33,6 +33,7 @@ export interface Screen01Props {
 export default function Screen01MainCockpit({
   ownerName = "Business Partner",
   isStoreOnline = true,
+  onToggleStoreOnline,
   liveOrdersCount = 0,
   preparingCount = 0,
   outCount = 0,
@@ -42,8 +43,6 @@ export default function Screen01MainCockpit({
   onOpenSiren,
   onOpenOccasion,
 }: Screen01Props) {
-  const [ordersPaused, setOrdersPaused] = useState(false);
-
   const reviewsCount = reviewStats?.totalReviews ?? 0;
   const ratingLabel = reviewStats?.averageRating != null ? `⭐ ${reviewStats.averageRating}` : "—";
   const viewsCount = reviewStats?.totalScans ?? 0;
@@ -73,14 +72,14 @@ export default function Screen01MainCockpit({
               </span>
               <button
                 type="button"
-                onClick={() => setOrdersPaused(!ordersPaused)}
+                onClick={onToggleStoreOnline}
                 className={`text-[9px] font-bold px-2 py-0.5 rounded-full border transition ${
-                  ordersPaused
+                  !isStoreOnline
                     ? "bg-amber-100 border-amber-300 text-amber-900"
                     : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                 }`}
               >
-                {ordersPaused ? "⏸️ Paused" : "▶️ Active"}
+                {!isStoreOnline ? "⏸️ Paused" : "▶️ Active"}
               </button>
             </div>
           </div>

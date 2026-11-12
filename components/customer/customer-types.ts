@@ -29,7 +29,25 @@ export type SuperAppBusiness = {
   location_latitude: number | null;
   location_longitude: number | null;
   is_verified?: boolean | null;
+  is_outlet_open?: boolean | null;
+  allow_taking_orders?: boolean | null;
+  is_taking_orders?: boolean | null;
+  merchant_status?: string | null;
 };
+
+export const OUTLET_PAUSED_DISPLAY_COPY = "Currently not expecting the order";
+
+export function isBusinessAcceptingOrders(biz?: Partial<SuperAppBusiness> | null): boolean {
+  if (!biz) return false;
+  if (biz.is_outlet_open === false) return false;
+  if (biz.allow_taking_orders === false) return false;
+  if (biz.is_taking_orders === false) return false;
+  const ms = String(biz.merchant_status || "").toLowerCase();
+  if (ms === "suspended" || ms === "inactive" || ms === "blocked" || ms === "deleted") {
+    return false;
+  }
+  return true;
+}
 
 export type SuperAppCatalogItem = {
   id: string;

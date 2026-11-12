@@ -19,7 +19,7 @@ const apps = [
     outputApk: 'Trustit-Customer.apk',
     shortApk: 'trustit-customer.apk',
     prepareBundle: () => {
-      execSync('node scripts/package-customer-ota.mjs 2.7.5', { cwd: rootDir, stdio: 'inherit' });
+      execSync('node scripts/package-customer-ota.mjs 2.7.6', { cwd: rootDir, stdio: 'inherit' });
     },
   },
   {

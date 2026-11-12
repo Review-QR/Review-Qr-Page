@@ -4,24 +4,27 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 export const dynamic = "force-dynamic";
 
 const BASE_BUSINESS_FIELDS =
-  "id, name, city, type, address, phone, location_latitude, location_longitude";
+  "id, name, city, type, address, phone, location_latitude, location_longitude, merchant_status";
 
 /**
  * Live hyperlocal discovery feed for Customer Super-App & Android APK clients.
- * Always reflects admin-controlled `businesses.is_verified` state cleanly.
+ * Always reflects admin-controlled `businesses.is_verified` and live outlet order-taking flags cleanly.
  */
 export async function GET() {
   try {
     const admin = createSupabaseAdminClient();
 
     let businesses: Array<Record<string, unknown>> = [];
-    const withVerified = await admin
+    const withFlags = await admin
       .from("businesses")
-      .select(`${BASE_BUSINESS_FIELDS}, is_verified`)
+      .select(`${BASE_BUSINESS_FIELDS}, is_verified, is_outlet_open, allow_taking_orders, is_taking_orders`)
       .is("deleted_at", null)
       .order("name", { ascending: true });
 
-    if (withVerified.error && withVerified.error.message?.toLowerCase().includes("is_verified")) {
+    if (
+      withFlags.error &&
+      /is_verified|is_outlet_open|allow_taking_orders|is_taking_orders/i.test(withFlags.error.message || "")
+    ) {
       const fallback = await admin
         .from("businesses")
         .select(BASE_BUSINESS_FIELDS)
@@ -31,18 +34,39 @@ export async function GET() {
       if (fallback.error) {
         return NextResponse.json({ success: false, error: fallback.error.message }, { status: 500 });
       }
-      businesses = (fallback.data || []).map((b) => ({ ...b, is_verified: false }));
-    } else if (withVerified.error) {
+      businesses = (fallback.data || []).map((b) => ({
+        ...b,
+        is_verified: false,
+        is_outlet_open: true,
+        allow_taking_orders: false,
+        is_taking_orders: false,
+      }));
+    } else if (withFlags.error) {
       return NextResponse.json(
-        { success: false, error: withVerified.error.message },
+        { success: false, error: withFlags.error.message },
         { status: 500 },
       );
     } else {
-      businesses = (withVerified.data || []).map((b) => ({
-        ...b,
-        is_verified: Boolean((b as { is_verified?: boolean | null }).is_verified),
-      }));
+      businesses = (withFlags.data || []).map((b) => {
+        const row = b as {
+          is_verified?: boolean | null;
+          is_outlet_open?: boolean | null;
+          allow_taking_orders?: boolean | null;
+          is_taking_orders?: boolean | null;
+        };
+        return {
+          ...b,
+          is_verified: Boolean(row.is_verified),
+          is_outlet_open: row.is_outlet_open !== false,
+          allow_taking_orders: Boolean(row.allow_taking_orders),
+          is_taking_orders: Boolean(row.is_taking_orders),
+        };
+      });
     }
+
+    businesses = businesses.filter(
+      (b) => !b.merchant_status || b.merchant_status === "active"
+    );
 
     const activeBizIds = new Set(businesses.map((b) => String(b.id)));
     const { data: items } = await admin

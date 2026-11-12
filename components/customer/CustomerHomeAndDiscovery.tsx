@@ -483,7 +483,16 @@ export default function CustomerHomeAndDiscovery({
                         store.location_latitude,
                         store.location_longitude,
                       );
-                      const openStatus = isStoreCurrentlyOpen();
+                      const isAccepting =
+                        store.is_outlet_open !== false &&
+                        store.allow_taking_orders !== false &&
+                        store.is_taking_orders !== false &&
+                        !["suspended", "inactive", "blocked", "deleted"].includes(
+                          String(store.merchant_status || "").toLowerCase(),
+                        );
+                      const openStatus = isAccepting
+                        ? isStoreCurrentlyOpen()
+                        : { isOpen: false, label: "Paused", hours: "" };
                       const sampleDish = catalogItems.find((i) => i.business_id === store.id);
                       const isFav = favoriteStoreIds.includes(store.id);
 
@@ -492,7 +501,11 @@ export default function CustomerHomeAndDiscovery({
                           key={store.id}
                           type="button"
                           onClick={() => onSelectStore(store)}
-                          className="rounded-3xl border border-[#eaedff] bg-white p-3 text-left flex gap-3 hover:border-[#003178]/40 hover:shadow-sm transition group"
+                          className={`rounded-3xl border p-3 text-left flex gap-3 transition group ${
+                            isAccepting
+                              ? "border-[#eaedff] bg-white hover:border-[#003178]/40 hover:shadow-sm"
+                              : "border-slate-300 bg-slate-100 grayscale opacity-85"
+                          }`}
                         >
                           <div className="relative w-24 h-24 rounded-2xl overflow-hidden shrink-0 bg-[#f2f3ff]">
                             <img
@@ -500,11 +513,15 @@ export default function CustomerHomeAndDiscovery({
                               alt={store.name}
                               className="w-full h-full object-cover group-hover:scale-105 transition"
                             />
-                {Boolean(store.is_verified) && (
+                {!isAccepting ? (
+                  <span className="absolute inset-x-1 bottom-1 rounded-md bg-slate-900/90 text-white px-1.5 py-0.5 text-[8.5px] font-black text-center leading-tight shadow-sm">
+                    Currently not expecting the order
+                  </span>
+                ) : Boolean(store.is_verified) ? (
                   <span className="absolute top-1.5 left-1.5 rounded-md bg-emerald-600/95 text-white px-1.5 py-0.5 text-[9px] font-black shadow-sm ring-1 ring-white/40">
                     ✓ Verified
                   </span>
-                )}
+                ) : null}
                           </div>
 
                           <div className="flex-1 min-w-0 flex flex-col justify-between">
@@ -517,8 +534,14 @@ export default function CustomerHomeAndDiscovery({
                                   ★ {getStoreRating(store.id)}
                                 </span>
                               </div>
-                              <div className="text-[11px] font-semibold text-[#006875] mt-0.5">
-                                {eta} mins • {dist} km • {openStatus.label} {isFav ? "❤️" : ""}
+                              <div
+                                className={`text-[11px] font-semibold mt-0.5 ${
+                                  isAccepting ? "text-[#006875]" : "text-slate-600 font-bold"
+                                }`}
+                              >
+                                {isAccepting
+                                  ? `${eta} mins • ${dist} km • ${openStatus.label} ${isFav ? "❤️" : ""}`
+                                  : "Currently not expecting the order"}
                               </div>
                               <p className="text-[11px] text-[#434652] truncate mt-1">
                                 {sampleDish
@@ -531,7 +554,9 @@ export default function CustomerHomeAndDiscovery({
                               <span className="text-[#737783] truncate max-w-[140px]">
                                 {store.address || displayDistrict}
                               </span>
-                              <span className="font-black text-[#003178] shrink-0">Open →</span>
+                              <span className="font-black text-[#003178] shrink-0">
+                                {isAccepting ? "Open →" : "View Menu →"}
+                              </span>
                             </div>
                           </div>
                         </button>
@@ -588,10 +613,19 @@ export default function CustomerHomeAndDiscovery({
                     .slice(0, 4)
                     .map((item) => {
                       const store = businesses.find((b) => b.id === item.business_id);
+                      const isStorePaused =
+                        !store ||
+                        store.is_outlet_open === false ||
+                        store.allow_taking_orders === false ||
+                        store.is_taking_orders === false;
                       return (
                         <div
                           key={item.id}
-                          className="rounded-2xl border border-[#eaedff] bg-white p-2.5 flex flex-col justify-between gap-2 shadow-2xs"
+                          className={`rounded-2xl border p-2.5 flex flex-col justify-between gap-2 shadow-2xs ${
+                            isStorePaused
+                              ? "border-slate-300 bg-slate-100 grayscale opacity-80"
+                              : "border-[#eaedff] bg-white"
+                          }`}
                         >
                           <div className="min-w-0">
                             <div className="text-[11.5px] font-black text-[#131b2e] line-clamp-1">
@@ -599,16 +633,22 @@ export default function CustomerHomeAndDiscovery({
                             </div>
                             <div className="text-[10px] text-[#737783] truncate">
                               {store?.name || displayDistrict}
+                              {isStorePaused ? " • Paused" : ""}
                             </div>
                           </div>
                           <div className="flex items-center justify-between gap-1">
                             <span className="text-xs font-black text-[#003178]">₹{item.price}</span>
                             <button
                               type="button"
-                              onClick={() => onQuickAddItem(item)}
-                              className="rounded-lg bg-[#f2f3ff] hover:bg-[#003178] hover:text-white border border-[#dae2fd] px-2.5 py-1 text-[10px] font-black text-[#003178] transition"
+                              disabled={isStorePaused}
+                              onClick={() => !isStorePaused && onQuickAddItem(item)}
+                              className={`rounded-lg border px-2.5 py-1 text-[10px] font-black transition ${
+                                isStorePaused
+                                  ? "border-slate-300 bg-slate-200 text-slate-500 cursor-not-allowed"
+                                  : "bg-[#f2f3ff] hover:bg-[#003178] hover:text-white border-[#dae2fd] text-[#003178]"
+                              }`}
                             >
-                              + Add
+                              {isStorePaused ? "Paused" : "+ Add"}
                             </button>
                           </div>
                         </div>

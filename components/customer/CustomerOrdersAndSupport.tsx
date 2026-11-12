@@ -630,10 +630,10 @@ export default function CustomerOrdersAndSupport({
             <div className="flex-1 overflow-y-auto p-4 space-y-3 text-xs">
               {["placed", "accepted_by_merchant", "accepted", "merchant_accepted"].includes(
                 supportOrder.status,
-              ) && (
+              ) ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 p-3 space-y-2">
                   <div className="font-black text-rose-900">
-                    Pre-Preparation Cancel Eligible (100% Refund)
+                    Cancel Order (100% Instant Refund if Paid Online)
                   </div>
                   <select
                     value={cancelReason}
@@ -650,8 +650,8 @@ export default function CustomerOrdersAndSupport({
                       const res = await onCustomerCancelOrder(supportOrder.id, cancelReason);
                       setCancelFeedback({
                         msg: res.success
-                          ? "Order cancelled cleanly before kitchen preparation."
-                          : res.error || "Please chat with support below.",
+                          ? "Order cancelled cleanly. Any online payment is being refunded."
+                          : res.error || "Please request Admin escalation below.",
                         utr: res.refundUtr,
                       });
                     }}
@@ -660,7 +660,49 @@ export default function CustomerOrdersAndSupport({
                     Cancel Order &amp; Initiate Refund →
                   </button>
                 </div>
-              )}
+              ) : !["delivered", "completed", "cancelled", "rejected"].includes(supportOrder.status) ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3 space-y-2">
+                  <div className="font-black text-amber-900">
+                    Order In Progress — Request Cancellation Review
+                  </div>
+                  <select
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    className="w-full rounded-xl border border-amber-200 bg-white px-2.5 py-1.5 text-xs"
+                  >
+                    <option>Order is taking too long</option>
+                    <option>Emergency / unable to receive delivery</option>
+                    <option>Ordered wrong items / address</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const r = await fetch("/api/hyperlocal/orders", {
+                          method: "PUT",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            action: "customer_request_cancel",
+                            orderId: supportOrder.id,
+                            reason: cancelReason,
+                          }),
+                        });
+                        const d = await r.json();
+                        setCancelFeedback({
+                          msg: d.success
+                            ? d.message || "Cancellation request sent to Admin Support Desk."
+                            : d.error || "Failed to send cancellation request.",
+                        });
+                      } catch {
+                        setCancelFeedback({ msg: "Network error sending cancellation request." });
+                      }
+                    }}
+                    className="w-full rounded-xl bg-amber-600 hover:bg-amber-700 py-2 font-black text-white"
+                  >
+                    Request Order Cancellation →
+                  </button>
+                </div>
+              ) : null}
 
               {cancelFeedback && (
                 <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3 space-y-1">

@@ -52,8 +52,8 @@ android {
         customer {
             dimension "app"
             applicationId "com.trustit.customer"
-            versionCode 20
-            versionName "2.7.5"
+            versionCode 21
+            versionName "2.7.6"
             manifestPlaceholders = [
                 mainActivityClass: "com.trustit.customer.MainActivity"
             ]
@@ -61,8 +61,8 @@ android {
         partner {
             dimension "app"
             applicationId "com.trustit.partner"
-            versionCode 25
-            versionName "3.6.2"
+            versionCode 26
+            versionName "3.6.3"
             manifestPlaceholders = [
                 mainActivityClass: "com.trustit.partner.MainActivity"
             ]
@@ -70,8 +70,8 @@ android {
         rider {
             dimension "app"
             applicationId "com.trustit.rider"
-            versionCode 27
-            versionName "5.3.1"
+            versionCode 28
+            versionName "5.3.2"
             manifestPlaceholders = [
                 mainActivityClass: "com.trustit.customer.MainActivity"
             ]
@@ -125,6 +125,7 @@ dependencies {
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
     implementation project(':capacitor-cordova-android-plugins')
+    implementation 'com.cashfree.pg:api:2.6.1'
 }
 
 apply from: 'capacitor.build.gradle'

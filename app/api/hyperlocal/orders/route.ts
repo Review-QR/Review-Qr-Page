@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  cancelHyperlocalOrderWithRefund,
   createHyperlocalOrder,
   merchantAcceptOrder,
   merchantMarkFoodReady,
@@ -253,11 +254,45 @@ export async function PUT(request: NextRequest) {
       return Response.json(result);
     }
 
+    if (action === "delivered") {
+      const denied = await authorizeMerchantOrderMutation(orderId);
+      if (denied) return denied;
+      const admin = createSupabaseAdminClient();
+      const now = new Date().toISOString();
+      const { data: ord } = await admin
+        .from("hyperlocal_orders")
+        .select("id, rider_id, payment_mode, payment_status")
+        .eq("id", orderId)
+        .maybeSingle();
+      if (!ord) {
+        return Response.json({ success: false, error: "Order not found" }, { status: 404 });
+      }
+      const nextPaymentStatus =
+        ord.payment_status === "paid" || ord.payment_mode !== "cod" ? "paid" : "cod_collected";
+      const { error } = await admin
+        .from("hyperlocal_orders")
+        .update({
+          status: "delivered",
+          delivered_at: now,
+          payment_status: nextPaymentStatus,
+          updated_at: now,
+        })
+        .eq("id", orderId);
+      if (error) throw new Error(error.message);
+      if (ord.rider_id) {
+        await admin
+          .from("delivery_riders")
+          .update({ is_available: true, updated_at: now })
+          .eq("id", ord.rider_id);
+      }
+      return Response.json({ success: true, status: "delivered" });
+    }
+
     if (action === "customer_cancel") {
       const admin = createSupabaseAdminClient();
       const { data: currentOrder, error: fetchErr } = await admin
         .from("hyperlocal_orders")
-        .select("id, business_id, customer_id, customer_phone, status, payment_mode, payment_status, cashfree_payment_id, total_amount")
+        .select("id, business_id, customer_id, customer_phone, status, payment_mode, payment_status, cashfree_order_id, total_amount")
         .eq("id", orderId)
         .maybeSingle();
 
@@ -274,27 +309,48 @@ export async function PUT(request: NextRequest) {
           {
             success: false,
             requiresSupport: true,
-            error: "Kitchen preparation or dispatch has already started. Please use 24×7 Support Chat.",
+            error: "Kitchen preparation or dispatch has already started. Submit a cancellation request for Admin review.",
           },
           { status: 400 },
         );
       }
 
-      const now = new Date().toISOString();
-      const isPaidOnline =
-        currentOrder.payment_mode === "online_cashfree" && currentOrder.payment_status === "paid";
-      const refundUtr = isPaidOnline
-        ? `UTR${Date.now().toString().slice(-8)}${orderId.replace(/[^0-9]/g, "").slice(-4).padStart(4, "0")}`
-        : null;
+      const cancelResult = await cancelHyperlocalOrderWithRefund({
+        orderId,
+        cancelledBy: "customer",
+        reason: reason || "Cancelled by customer before preparation",
+        issueRefund: true,
+      });
 
+      return Response.json(cancelResult);
+    }
+
+    if (action === "customer_request_cancel") {
+      const admin = createSupabaseAdminClient();
+      const { data: currentOrder } = await admin
+        .from("hyperlocal_orders")
+        .select("id, business_id, customer_id, customer_phone, status")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      if (!currentOrder) {
+        return Response.json({ success: false, error: "Order not found" }, { status: 404 });
+      }
+      const denied = await authorizeCustomerOrderMutation(request, currentOrder);
+      if (denied) return denied;
+
+      if (["delivered", "completed", "cancelled", "rejected"].includes(String(currentOrder.status || ""))) {
+        return Response.json({ success: false, error: "Order is already closed." }, { status: 400 });
+      }
+
+      const now = new Date().toISOString();
+      const noteText = `[CUSTOMER_CANCEL_REQUEST] ${String(reason || "Customer requested mid-prep cancellation").trim()}`;
       const { error } = await admin
         .from("hyperlocal_orders")
         .update({
-          status: "cancelled",
-          cancelled_by: "customer",
-          cancellation_reason: reason || "Cancelled by customer before preparation",
-          ...(isPaidOnline ? { payment_status: "refunded" } : {}),
-          ...(refundUtr ? { admin_notes: `Instant Refund UTR: ${refundUtr}` } : {}),
+          dispute_status: "customer_refused",
+          dispute_reported_at: now,
+          dispute_notes: noteText,
           updated_at: now,
         })
         .eq("id", orderId);
@@ -302,10 +358,7 @@ export async function PUT(request: NextRequest) {
       if (error) throw new Error(error.message);
       return Response.json({
         success: true,
-        status: "cancelled",
-        paymentStatus: isPaidOnline ? "refunded" : currentOrder.payment_status,
-        refundUtr,
-        refundAmount: isPaidOnline ? Number(currentOrder.total_amount || 0) : 0,
+        message: "Cancellation request sent to Admin Support Command Center.",
       });
     }
 
@@ -342,20 +395,14 @@ export async function PUT(request: NextRequest) {
     if (action === "reject" || action === "cancel") {
       const denied = await authorizeMerchantOrderMutation(orderId);
       if (denied) return denied;
-      const admin = createSupabaseAdminClient();
-      const now = new Date().toISOString();
-      const { error } = await admin
-        .from("hyperlocal_orders")
-        .update({
-          status: "rejected",
-          cancelled_by: "merchant",
-          cancellation_reason: reason || "Declined by restaurant",
-          updated_at: now,
-        })
-        .eq("id", orderId);
-
-      if (error) throw new Error(error.message);
-      return Response.json({ success: true, status: "rejected" });
+      const result = await cancelHyperlocalOrderWithRefund({
+        orderId,
+        cancelledBy: "merchant",
+        reason: reason || "Declined by restaurant",
+        issueRefund: true,
+        targetStatus: "rejected",
+      });
+      return Response.json(result);
     }
 
     return Response.json({ success: false, error: "Invalid action" }, { status: 400 });

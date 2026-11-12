@@ -41,19 +41,25 @@ export async function POST(req: Request) {
     const updates: Record<string, boolean> = {};
     if (typeof isOutletOpen === "boolean") {
       updates.is_outlet_open = isOutletOpen;
+      if (!isOutletOpen) {
+        updates.is_taking_orders = false;
+      }
     }
-    if (typeof isTakingOrders === "boolean") {
+    if (typeof isTakingOrders === "boolean" && updates.is_outlet_open !== false) {
       updates.is_taking_orders = isTakingOrders;
     }
 
     if (Object.keys(updates).length > 0) {
-      try {
-        await supabase
-          .from("businesses")
-          .update(updates)
-          .eq("id", merchant.businessId);
-      } catch (dbErr) {
-        console.warn("Outlet status DB update note:", dbErr);
+      const { error: dbErr } = await supabase
+        .from("businesses")
+        .update(updates)
+        .eq("id", merchant.businessId);
+      if (dbErr) {
+        console.error("Outlet status DB update failed:", dbErr);
+        return NextResponse.json(
+          { error: dbErr.message || "Failed to update outlet status" },
+          { status: 500 },
+        );
       }
     }
 

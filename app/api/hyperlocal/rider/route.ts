@@ -180,7 +180,7 @@ export async function GET(request: NextRequest) {
     const { data: pendingOrders } = await admin
       .from("hyperlocal_orders")
       .select("id, dispatch_target_rider_id, dispatch_expires_at, status")
-      .in("status", ["placed", "accepted_by_merchant", "ready_for_pickup"])
+      .in("status", ["accepted_by_merchant", "preparing", "ready_for_pickup"])
       .is("rider_id", null)
       .or("payment_status.eq.paid,payment_mode.eq.cod")
       .order("created_at", { ascending: true })
@@ -233,7 +233,7 @@ export async function GET(request: NextRequest) {
       hyperlocal_order_items (*),
       businesses (name, city, address, phone, location_latitude, location_longitude)
     `)
-    .in("status", ["placed", "accepted_by_merchant", "ready_for_pickup"])
+    .in("status", ["accepted_by_merchant", "preparing", "ready_for_pickup"])
     .is("rider_id", null)
     .or("payment_status.eq.paid,payment_mode.eq.cod")
     .order("created_at", { ascending: false })
@@ -321,6 +321,22 @@ export async function GET(request: NextRequest) {
     display_status: isActionRequired ? "action_required" : rider.kyc_status || "pending",
   };
 
+  const twoHoursAgoIso = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+  const { data: recentCancelledOrder } = !activeOrder
+    ? await admin
+        .from("hyperlocal_orders")
+        .select(`
+          id, status, cancellation_reason, admin_notes, cancelled_by, updated_at, total_amount,
+          businesses (name, city)
+        `)
+        .eq("rider_id", rider.id)
+        .eq("status", "cancelled")
+        .gte("updated_at", twoHoursAgoIso)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    : { data: null };
+
   return NextResponse.json(
     {
       rider: enrichedRider,
@@ -328,6 +344,7 @@ export async function GET(request: NextRequest) {
       activeOrder: activeOrder || null,
       incomingOrder: incomingDispatchOrder || null,
       availableOrders: availableOrders || [],
+      recentCancelledOrder: recentCancelledOrder || null,
     },
     { headers: corsHeaders }
   );
@@ -950,21 +967,47 @@ export async function POST(request: NextRequest) {
       return Response.json(res);
     }
 
-    // ── 12. REPORT DOORSTEP DISPUTE / CUSTOMER REFUSAL ──
-    if (action === "report_dispute") {
+    // ── 12. REPORT DOORSTEP DISPUTE / CUSTOMER REFUSAL / RIDER CANCEL REQUEST ──
+    if (action === "report_dispute" || action === "request_cancellation") {
       const { reason, notes } = body;
-      await admin
+      const validDisputeReasons = ["customer_refused", "customer_unreachable", "wrong_address"] as const;
+      const mappedDisputeStatus = validDisputeReasons.includes(reason)
+        ? reason
+        : reason === "unreachable"
+          ? "customer_unreachable"
+          : "customer_refused";
+      const prefix = action === "request_cancellation" ? "[RIDER_CANCEL_REQUEST] " : "";
+      const noteBody =
+        notes ||
+        (action === "request_cancellation"
+          ? `Rider requested Admin cancellation (${reason || "doorstep_issue"})`
+          : "Customer refused delivery at doorstep");
+
+      const { error: disputeErr } = await admin
         .from("hyperlocal_orders")
         .update({
-          dispute_status: reason || "customer_refused",
+          dispute_status: mappedDisputeStatus,
           dispute_reported_at: new Date().toISOString(),
-          dispute_notes: notes || "Customer refused delivery at doorstep",
+          dispute_notes: `${prefix}${noteBody}`,
           updated_at: new Date().toISOString(),
         })
         .eq("id", orderId)
         .eq("rider_id", riderId);
 
-      return Response.json({ success: true, message: "Dispute reported to Admin Command Center." });
+      if (disputeErr) {
+        return NextResponse.json(
+          { success: false, error: disputeErr.message },
+          { status: 500, headers: corsHeaders }
+        );
+      }
+
+      return Response.json({
+        success: true,
+        message:
+          action === "request_cancellation"
+            ? "Cancellation request submitted to Admin Command Center."
+            : "Dispute reported to Admin Command Center.",
+      });
     }
 
     // ── 13. MERCHANT WAIT COMPENSATION (+₹1/MIN AFTER 5 MINS) ──

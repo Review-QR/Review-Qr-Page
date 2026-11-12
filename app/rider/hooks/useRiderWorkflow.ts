@@ -87,6 +87,7 @@ export function useRiderWorkflow() {
   const [todayEarnings, setTodayEarnings] = useState<number>(0);
   const [todayTripsCount, setTodayTripsCount] = useState<number>(0);
   const [activeOrder, setActiveOrder] = useState<HyperlocalOrder | null>(null);
+  const [recentCancelledOrder, setRecentCancelledOrder] = useState<Partial<HyperlocalOrder> | null>(null);
   const [incomingOrder, setIncomingOrder] = useState<(HyperlocalOrder & { secondsRemaining: number }) | null>(null);
   const [isSirenPlaying, setIsSirenPlaying] = useState<boolean>(false);
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
@@ -96,6 +97,7 @@ export function useRiderWorkflow() {
   const activeOrderRef = useRef(activeOrder);
   const incomingOrderRef = useRef(incomingOrder);
   const currentScreenIdRef = useRef(currentScreenId);
+  const acknowledgedCancelRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     activeOrderRef.current = activeOrder;
@@ -143,6 +145,11 @@ export function useRiderWorkflow() {
           parsed?.phone === "9876543210"
         ) {
           clearAllRiderStorage();
+          return;
+        }
+        const sessionToken = localStorage.getItem("trustit_rider_session_token");
+        if (!sessionToken) {
+          setCurrentScreenId(1);
           return;
         }
         if (parsed && parsed.id && parsed.id !== "rider_new_partner") {
@@ -199,10 +206,14 @@ export function useRiderWorkflow() {
               }
             }
           } catch {
-            // Network offline fallback to local verification state
+            // Stay on auth screen if network verification failed without session verification
+            if (!cancelled && !sessionToken) {
+              setCurrentScreenId(1);
+              return;
+            }
           }
 
-          if (!cancelled && parsed.full_name && parsed.is_verified) {
+          if (!cancelled && parsed.full_name && parsed.is_verified && sessionToken) {
             setRider(parsed);
             setCurrentScreenId(7);
             setIsOnline(Boolean(parsed.is_online));
@@ -319,6 +330,15 @@ export function useRiderWorkflow() {
           ) {
             setCurrentScreenId(40);
           }
+        }
+
+        if (data.recentCancelledOrder?.id && !acknowledgedCancelRef.current.has(data.recentCancelledOrder.id)) {
+          acknowledgedCancelRef.current.add(data.recentCancelledOrder.id);
+          setActiveOrder(null);
+          setRecentCancelledOrder(data.recentCancelledOrder);
+          riderAudio.stopSiren();
+          setIsSirenPlaying(false);
+          setCurrentScreenId(46);
         }
 
         const incoming = data.incomingOrder || data.incomingDispatchOrder;
@@ -439,10 +459,37 @@ export function useRiderWorkflow() {
   /**
    * 6. Complete Delivery with 4-Digit Secret OTP
    */
-  const completeDeliveryWithOtp = useCallback(async (otp: string) => {
+  const completeDeliveryWithOtp = useCallback(async (
+    otp: string,
+    options?: { paidViaCashfreeQr?: boolean },
+  ) => {
     const expectedOtp = activeOrder?.delivery_otp;
     if (expectedOtp && otp !== expectedOtp) {
       alert("❌ Invalid Delivery OTP. Please verify the 4-digit OTP shown on customer's Trustit app.");
+      return false;
+    }
+
+    try {
+      if (activeOrder?.id) {
+        const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "deliver_with_otp",
+            riderId: rider.id,
+            orderId: activeOrder.id,
+            otp,
+            paidViaCashfreeQr: Boolean(options?.paidViaCashfreeQr),
+          }),
+        });
+        const data = await res.json().catch(() => null);
+        if (!res.ok || !data?.success) {
+          alert(`❌ ${data?.error || "Could not complete delivery with OTP."}`);
+          return false;
+        }
+      }
+    } catch {
+      alert("❌ Network error verifying delivery OTP.");
       return false;
     }
 
@@ -452,7 +499,11 @@ export function useRiderWorkflow() {
 
     // Dynamic pay including surge from Remote Config
     const tripPay = (activeOrder?.delivery_fee ?? remoteConfig.baseDeliveryPay) + (remoteConfig.isSurgeActive ? remoteConfig.surgeBonusAmount : 0);
-    const codAmount = activeOrder?.payment_mode === "cod" ? (activeOrder?.total_amount ?? 0) : 0;
+    const isPaidOnline =
+      Boolean(options?.paidViaCashfreeQr) ||
+      activeOrder?.payment_status === "paid" ||
+      activeOrder?.payment_mode !== "cod";
+    const codAmount = !isPaidOnline ? (activeOrder?.total_amount ?? 0) : 0;
 
     // Update balances
     setWalletBalance((w) => w + tripPay);
@@ -462,20 +513,40 @@ export function useRiderWorkflow() {
       setCashInHand((c) => c + codAmount);
     }
 
-    try {
-      if (activeOrder?.id) {
-        await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "deliver_with_otp", riderId: rider.id, orderId: activeOrder.id, otp }),
-        });
-      }
-    } catch {}
-
     setActiveOrder(null);
     setCurrentScreenId(15); // Show Daily Earnings Passbook
     return true;
   }, [soundEnabled, remoteConfig, rider.id, activeOrder]);
+
+  /**
+   * 6b. Request Order Cancellation / Report Doorstep Dispute to Admin
+   */
+  const requestOrderCancellation = useCallback(async (
+    reason: "customer_refused" | "customer_unreachable" | "wrong_address",
+    notes?: string,
+  ) => {
+    if (!activeOrder?.id) return { success: false, error: "No active order" };
+    try {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "request_cancellation",
+          riderId: rider.id,
+          orderId: activeOrder.id,
+          reason,
+          notes,
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        return { success: false, error: data?.error || "Failed to send cancellation request." };
+      }
+      return { success: true, message: data.message };
+    } catch {
+      return { success: false, error: "Network error submitting cancellation request." };
+    }
+  }, [rider.id, activeOrder]);
 
   /**
    * 7. Accrue Wait Compensation (+₹1/min after 5 mins)
@@ -668,6 +739,7 @@ export function useRiderWorkflow() {
     todayEarnings,
     todayTripsCount,
     activeOrder,
+    recentCancelledOrder,
     incomingOrder,
     isSirenPlaying,
     soundEnabled,
@@ -682,6 +754,7 @@ export function useRiderWorkflow() {
     declineOrder,
     confirmPickup,
     completeDeliveryWithOtp,
+    requestOrderCancellation,
     claimWaitCompensation,
     refundDoorstepChange,
     claimParkingReimbursement,

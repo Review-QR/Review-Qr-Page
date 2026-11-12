@@ -58,6 +58,11 @@ public class TrustitNativeBridge extends Plugin {
     private PowerManager.WakeLock wakeLock = null;
 
     @PluginMethod
+    public void startNativeDropCheckout(PluginCall call) {
+        com.trustit.customer.CashfreeDropCheckoutHelper.startDropCheckout(call, getActivity(), getBridge());
+    }
+
+    @PluginMethod
     public void playEmergencySiren(PluginCall call) {
         try {
             Context context = getContext();

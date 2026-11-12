@@ -8,7 +8,6 @@ export const dynamic = "force-dynamic";
 
 function MerchantAppContent() {
   const searchParams = useSearchParams();
-  const authParam = searchParams.get("auth");
   const stepParam = searchParams.get("step") as "pitch" | "category" | "kyc" | "login" | null;
   const catParam = searchParams.get("cat") as MerchantCategory | null;
   const storeParam = searchParams.get("store");
@@ -18,11 +17,11 @@ function MerchantAppContent() {
 
   return (
     <MerchantNativeAppShell
-      initialAuth={authParam === "true"}
-      initialAuthStep={stepParam || "pitch"}
+      initialAuth={false}
+      initialAuthStep={stepParam && stepParam !== "pitch" ? stepParam : "login"}
       initialCategory={catParam || "kirana"}
-      initialStoreName={storeParam || "Ankit Shukla General Store"}
-      initialOwnerName={ownerParam || "Ankit Shukla"}
+      initialStoreName={storeParam || "My Store"}
+      initialOwnerName={ownerParam || "Merchant Partner"}
       initialSubScreen={subParam || null}
       forceStandalone={standaloneParam === "true"}
     />

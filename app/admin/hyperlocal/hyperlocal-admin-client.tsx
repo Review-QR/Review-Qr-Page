@@ -144,7 +144,7 @@ export default function HyperlocalLiveAdminClient() {
     return () => clearInterval(interval);
   }, [fetchOrders, fetchSettlements, viewMode]);
 
-  async function handleConfirmDoorstepCancel() {
+  async function handleConfirmDoorstepCancel(mode: "admin_cancel_refund" | "cancel_refusal" = "admin_cancel_refund") {
     if (!cancelModalOrder) return;
     setIsActionPending(true);
     setActionError(null);
@@ -153,9 +153,14 @@ export default function HyperlocalLiveAdminClient() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          action: "cancel_refusal",
+          action: mode,
           orderId: cancelModalOrder.id,
-          adminNotes: adminNote || "Customer refused delivery at doorstep",
+          adminNotes:
+            adminNote ||
+            (mode === "cancel_refusal"
+              ? "Customer refused delivery at doorstep"
+              : "Cancelled & refunded by Admin"),
+          issueRefund: mode === "admin_cancel_refund",
           cancelledBy: "admin",
         }),
       });
@@ -164,7 +169,12 @@ export default function HyperlocalLiveAdminClient() {
         setCancelModalOrder(null);
         setAdminNote("");
         setActionError(null);
-        setToastMessage(`✅ Order cancelled. Rider credited ₹${data.result?.riderCompensated || 35} trip fee. Active delivery unlocked.`);
+        const refundNote = data.result?.refundId ? ` Cashfree Refund ID: ${data.result.refundId}.` : "";
+        const riderNote =
+          mode === "cancel_refusal"
+            ? ` Rider credited ₹${data.result?.riderCompensated || 35} trip fee.`
+            : " Assigned rider unlocked.";
+        setToastMessage(`✅ Order cancelled.${refundNote}${riderNote}`);
         await fetchOrders();
         await fetchSettlements();
       } else {
@@ -750,7 +760,7 @@ export default function HyperlocalLiveAdminClient() {
                               }}
                               className="w-full rounded-xl bg-rose-600 hover:bg-rose-700 py-1.5 text-[11px] font-bold text-white transition shadow-xs"
                             >
-                              🛑 Cancel Order (Doorstep Refusal)
+                              🛑 Cancel Order / Approve Refund
                             </button>
                           )}
                           {isDisputed && (
@@ -1213,21 +1223,31 @@ export default function HyperlocalLiveAdminClient() {
               </div>
             )}
 
-            <div className="flex gap-2 pt-1">
+            <div className="flex flex-col gap-2 pt-1">
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={isActionPending}
+                  onClick={() => handleConfirmDoorstepCancel("admin_cancel_refund")}
+                  className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-500 py-2.5 text-xs font-black text-white transition disabled:opacity-50 shadow-xs"
+                >
+                  {isActionPending ? "Processing..." : "Approve Cancel + Cashfree Refund"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCancelModalOrder(null)}
+                  className="rounded-xl bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
+                >
+                  Back
+                </button>
+              </div>
               <button
                 type="button"
                 disabled={isActionPending}
-                onClick={handleConfirmDoorstepCancel}
-                className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-500 py-2.5 text-xs font-black text-white transition disabled:opacity-50 shadow-xs"
+                onClick={() => handleConfirmDoorstepCancel("cancel_refusal")}
+                className="w-full rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 py-2 text-[11px] font-black text-rose-800 transition disabled:opacity-50"
               >
-                {isActionPending ? "Cancelling & Settling..." : "Confirm Cancel & Settle Payouts"}
-              </button>
-              <button
-                type="button"
-                onClick={() => setCancelModalOrder(null)}
-                className="rounded-xl bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-200"
-              >
-                Back
+                Doorstep Refusal (Credit ₹35 Rider Fee, No Refund)
               </button>
             </div>
           </div>

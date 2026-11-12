@@ -49,7 +49,7 @@ export default function PartnerPage() {
         console.error("Failed to parse merchant session:", err);
       }
 
-      // No active session: Start at fresh onboarding pitch
+      // No active session: Require login immediately
       setSession({
         ready: true,
         isAuthenticated: false,
@@ -79,7 +79,7 @@ export default function PartnerPage() {
     <div className="relative w-full h-full">
       <MerchantNativeAppShell
         initialAuth={session.isAuthenticated}
-        initialAuthStep="pitch"
+        initialAuthStep="login"
         initialCategory={session.category}
         initialStoreName={session.storeName}
         initialOwnerName={session.ownerName}

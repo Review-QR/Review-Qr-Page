@@ -16,25 +16,13 @@ const PUBLIC_MERCHANT_PATHS = [
   "/merchant",
   "/merchant/login",
   "/merchant/register",
-  "/merchant/flow",
 ];
 
 function isPublicMerchantPage(request: NextRequest): boolean {
-  const { pathname, searchParams } = request.nextUrl;
-  if (
-    PUBLIC_MERCHANT_PATHS.some(
-      (p) => pathname === p || (p !== "/merchant" && pathname.startsWith(`${p}/`))
-    )
-  ) {
-    return true;
-  }
-  if (
-    pathname === "/merchant/app" &&
-    (searchParams.get("auth") === "true" || Boolean(searchParams.get("step")))
-  ) {
-    return true;
-  }
-  return false;
+  const { pathname } = request.nextUrl;
+  return PUBLIC_MERCHANT_PATHS.some(
+    (p) => pathname === p || (p !== "/merchant" && pathname.startsWith(`${p}/`))
+  );
 }
 
 function isPublicMerchantApi(pathname: string): boolean {
@@ -176,8 +164,19 @@ export async function proxy(request: NextRequest) {
     }),
   };
 
-  // 3. Fail-closed gate for /admin/* and /api/hyperlocal/admin/*
-  const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/");
+  // 3. Fail-closed gate for /admin/*, /api/hyperlocal/admin/*, and internal preview/test consoles
+  const PROTECTED_INTERNAL_PATHS = [
+    "/businesses",
+    "/qr-codes",
+    "/merchant-preview",
+    "/rider-app",
+    "/rider-preview",
+    "/test-flight",
+  ];
+  const isProtectedInternalPage = PROTECTED_INTERNAL_PATHS.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`)
+  );
+  const isAdminPage = pathname === "/admin" || pathname.startsWith("/admin/") || isProtectedInternalPage;
   const isAdminApi = pathname.startsWith("/api/hyperlocal/admin/");
   if (isAdminPage || isAdminApi) {
     try {

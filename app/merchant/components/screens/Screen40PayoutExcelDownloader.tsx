@@ -4,26 +4,38 @@ import React, { useState } from "react";
 
 interface Screen40Props {
   onBack?: () => void;
+  orders?: Array<{
+    id: string;
+    created_at?: string;
+    total_amount?: number;
+    payment_mode?: string;
+    payment_status?: string;
+    status?: string;
+  }>;
 }
 
-export default function Screen40PayoutExcelDownloader({ onBack }: Screen40Props) {
+export default function Screen40PayoutExcelDownloader({ onBack, orders = [] }: Screen40Props) {
   const [downloading, setDownloading] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState("oct_2026");
+  const completedOrders = orders.filter((o) => o.status === "delivered" || o.status === "completed");
+  const totalGross = completedOrders.reduce((s, o) => s + Number(o.total_amount || 0), 0);
 
   const handleDownload = () => {
+    if (completedOrders.length === 0) return;
     setDownloading(true);
     try {
-      const csvContent =
-        "Settlement Date,Cycle UTR,Orders Count,Gross Customer Billing (INR),Payment Gateway MDR (INR),Platform Fee (INR),TDS 194-O (INR),Net Amount Deposited (INR),Bank Account Mask,Bank Name,NPCI Status\n" +
-        "2026-10-31,CMS992144820,18,5840.00,102.20,0.00,5.84,5731.96,•••• •••• 4512,State Bank of India,CREDITED_SUCCESS\n" +
-        "2026-10-30,CMS991823194,22,7410.00,129.68,0.00,7.41,7272.91,•••• •••• 4512,State Bank of India,CREDITED_SUCCESS\n" +
-        "2026-10-29,CMS990714210,14,4620.00,80.85,0.00,4.62,4534.53,•••• •••• 4512,State Bank of India,CREDITED_SUCCESS\n" +
-        "2026-10-28,CMS989412039,19,6120.00,107.10,0.00,6.12,6006.78,•••• •••• 4512,State Bank of India,CREDITED_SUCCESS\n";
+      const header = "Order ID,Created At,Total Amount (INR),Payment Mode,Payment Status,Order Status\n";
+      const rows = completedOrders
+        .map(
+          (o) =>
+            `${o.id},${o.created_at || ""},${Number(o.total_amount || 0).toFixed(2)},${o.payment_mode || ""},${o.payment_status || ""},${o.status || ""}`,
+        )
+        .join("\n");
+      const csvContent = `${header}${rows}\n`;
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = `Trustit_Payout_Ledger_${selectedMonth}.csv`;
+      link.download = `Trustit_Live_Orders_Ledger_${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -64,37 +76,23 @@ export default function Screen40PayoutExcelDownloader({ onBack }: Screen40Props)
           </p>
         </div>
 
-        {/* Download Options */}
+        {/* Download Summary */}
         <div className="mt-3 bg-white border border-slate-200 rounded-2xl p-3.5 shadow-xs space-y-3">
-          <div>
-            <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">
-              Select Financial Month
-            </label>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full px-2.5 py-1.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-800 bg-slate-50"
-            >
-              <option value="oct_2026">October 2026 (₹48,920.00 Total Payouts)</option>
-              <option value="sep_2026">September 2026 (₹42,150.00 Total Payouts)</option>
-              <option value="aug_2026">August 2026 (₹38,900.00 Total Payouts)</option>
-            </select>
-          </div>
-
           <div className="space-y-1 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
             <div className="flex justify-between">
-              <span>Total Transactions:</span>
-              <span className="font-bold text-slate-900">142 Orders</span>
+              <span>Completed Live Orders:</span>
+              <span className="font-bold text-slate-900">{completedOrders.length} Orders</span>
             </div>
             <div className="flex justify-between">
-              <span>Total Settled to Bank:</span>
-              <span className="font-bold text-emerald-700 font-mono">₹47,941.60</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Total MDR Fees Deducted:</span>
-              <span className="font-mono text-slate-700">₹978.40</span>
+              <span>Total Gross Order Value:</span>
+              <span className="font-bold text-emerald-700 font-mono">₹{totalGross.toFixed(2)}</span>
             </div>
           </div>
+          {completedOrders.length === 0 && (
+            <p className="text-[10px] text-slate-500 text-center">
+              No completed orders recorded yet for export.
+            </p>
+          )}
         </div>
       </div>
 
@@ -102,15 +100,16 @@ export default function Screen40PayoutExcelDownloader({ onBack }: Screen40Props)
       <div className="pt-2">
         {downloading ? (
           <div className="w-full py-2.5 rounded-xl bg-emerald-600 text-white font-bold text-xs text-center shadow-xs">
-            ✓ Payout_Ledger_Oct_2026.xlsx Downloaded!
+            ✓ Live CSV Downloaded!
           </div>
         ) : (
           <button
             type="button"
+            disabled={completedOrders.length === 0}
             onClick={handleDownload}
-            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5"
+            className="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5"
           >
-            <span>📥 Download Excel Spreadsheet (.xlsx)</span>
+            <span>📥 Download Live Statement (.csv)</span>
           </button>
         )}
       </div>

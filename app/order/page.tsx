@@ -58,7 +58,8 @@ export default async function CustomerOrderPortalPage({
   const admin = createSupabaseAdminClient();
 
   // 1. Fetch active businesses across all 4 super-app verticals
-  const baseFields = "id, name, city, type, address, phone, location_latitude, location_longitude";
+  const baseFields =
+    "id, name, city, type, address, phone, location_latitude, location_longitude, is_outlet_open, allow_taking_orders, is_taking_orders, merchant_status";
   const withVerifiedRes = await admin
     .from("businesses")
     .select(`${baseFields}, is_verified`)
@@ -86,6 +87,10 @@ export default async function CustomerOrderPortalPage({
     location_latitude: (b.location_latitude as number | null) ?? null,
     location_longitude: (b.location_longitude as number | null) ?? null,
     is_verified: Boolean(b.is_verified),
+    is_outlet_open: b.is_outlet_open === undefined ? true : Boolean(b.is_outlet_open),
+    allow_taking_orders: b.allow_taking_orders === undefined ? true : Boolean(b.allow_taking_orders),
+    is_taking_orders: b.is_taking_orders === undefined ? true : Boolean(b.is_taking_orders),
+    merchant_status: (b.merchant_status as string | null) ?? "active",
   }));
 
   // 2. Fetch catalog items for active businesses only

@@ -288,14 +288,6 @@ export function CustomerOnboardingModal({
               >
                 {t(lang, "Use another mobile number", "दूसरा मोबाइल नंबर इस्तेमाल करें")}
               </button>
-
-              <button
-                type="button"
-                onClick={() => (onContinueAsGuest ? onContinueAsGuest() : onClose())}
-                className="w-full rounded-xl border border-[#003178]/25 bg-[#f2f3ff] hover:bg-[#eaedff] py-2 text-[11.5px] font-extrabold text-[#003178] transition"
-              >
-                {t(lang, "Continue as Guest →", "गेस्ट के रूप में जारी रखें →")}
-              </button>
             </div>
           )}
 
@@ -383,15 +375,17 @@ export function CustomerOnboardingModal({
                 </div>
               )}
 
-              <div>
-                <button
-                  type="button"
-                  onClick={() => (onContinueAsGuest ? onContinueAsGuest() : onClose())}
-                  className="w-full rounded-xl border border-[#003178]/25 bg-[#f2f3ff] hover:bg-[#eaedff] py-2 text-[11.5px] font-extrabold text-[#003178] transition"
-                >
-                  {t(lang, "Continue as Guest →", "गेस्ट के रूप में जारी रखें →")}
-                </button>
-              </div>
+              {!requireAuthChoice && (
+                <div>
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="w-full rounded-xl border border-[#c3c6d4] bg-[#faf8ff] hover:bg-[#f2f3ff] py-2 text-[11.5px] font-bold text-[#434652] transition"
+                  >
+                    {t(lang, "Cancel", "बंद करें")}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

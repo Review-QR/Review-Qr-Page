@@ -165,7 +165,8 @@ export default function ProductsClient({ merchant, products, initialOrders }: Pr
       await loadCashfreeSdk();
 
       if (window.Cashfree) {
-        const cashfree = window.Cashfree({ mode: "sandbox" });
+        const cashfreeMode = (result as { checkoutMode?: "sandbox" | "production" }).checkoutMode || "production";
+        const cashfree = window.Cashfree({ mode: cashfreeMode });
         await cashfree.checkout({
           paymentSessionId: result.paymentSessionId,
           redirectTarget: "_modal",

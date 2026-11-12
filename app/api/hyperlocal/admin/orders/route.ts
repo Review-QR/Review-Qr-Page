@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { adminCancelOrderDoorstepRefusal } from "@/lib/hyperlocal/hyperlocal-service";
+import {
+  adminCancelOrderDoorstepRefusal,
+  cancelHyperlocalOrderWithRefund,
+} from "@/lib/hyperlocal/hyperlocal-service";
 import { requireAdminApi } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
@@ -105,6 +108,17 @@ export async function POST(request: Request) {
 
     if (!orderId) {
       return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
+    }
+
+    if (action === "admin_cancel_refund") {
+      const result = await cancelHyperlocalOrderWithRefund({
+        orderId,
+        cancelledBy: "admin",
+        reason: adminNotes || body.reason || "Cancelled by Admin",
+        issueRefund: body.issueRefund !== false,
+        adminNotes,
+      });
+      return NextResponse.json({ success: true, result });
     }
 
     if (action === "cancel_refusal") {

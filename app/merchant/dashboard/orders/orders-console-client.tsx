@@ -72,6 +72,7 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
   const [prepTimeMinutes, setPrepTimeMinutes] = useState(20);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [actionSuccess, setActionSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Siren alert & KOT state
   const [isSirenMuted, setIsSirenMuted] = useState(false);
@@ -270,15 +271,22 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
 
   async function handleAcceptOrder(orderId: string) {
     setIsSubmitting(true);
+    setActionError(null);
     try {
-      await fetch(`/api/hyperlocal/orders`, {
+      const res = await fetch(`/api/hyperlocal/orders`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "accept", orderId, prepTimeMinutes }),
-      }).catch(() => {});
-
+      });
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d?.success) {
+        setActionError(d?.error || "Failed to accept order.");
+        return;
+      }
       setActionSuccess(`Order accepted! Kitchen prep timer set to ${prepTimeMinutes} mins.`);
       refreshData();
+    } catch {
+      setActionError("Network error accepting order.");
     } finally {
       setIsSubmitting(false);
     }
@@ -286,15 +294,22 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
 
   async function handleMarkFoodReady(orderId: string) {
     setIsSubmitting(true);
+    setActionError(null);
     try {
-      await fetch(`/api/hyperlocal/orders`, {
+      const res = await fetch(`/api/hyperlocal/orders`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "ready", orderId }),
-      }).catch(() => {});
-
+      });
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d?.success) {
+        setActionError(d?.error || "Failed to mark order ready.");
+        return;
+      }
       setActionSuccess("Order marked Ready for Pickup! Nearest Rider alerted.");
       refreshData();
+    } catch {
+      setActionError("Network error marking order ready.");
     } finally {
       setIsSubmitting(false);
     }
@@ -302,15 +317,22 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
 
   async function handleMarkDelivered(orderId: string) {
     setIsSubmitting(true);
+    setActionError(null);
     try {
-      await fetch(`/api/hyperlocal/orders`, {
+      const res = await fetch(`/api/hyperlocal/orders`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "delivered", orderId }),
-      }).catch(() => {});
-
+      });
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d?.success) {
+        setActionError(d?.error || "Failed to mark order delivered.");
+        return;
+      }
       setActionSuccess("Order marked as Delivered!");
       refreshData();
+    } catch {
+      setActionError("Network error marking order delivered.");
     } finally {
       setIsSubmitting(false);
     }
@@ -318,15 +340,26 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
 
   async function handleRejectOrder(orderId: string, reason = "Declined by restaurant") {
     setIsSubmitting(true);
+    setActionError(null);
     try {
-      await fetch(`/api/hyperlocal/orders`, {
+      const res = await fetch(`/api/hyperlocal/orders`, {
         method: "PUT",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ action: "reject", orderId, reason }),
-      }).catch(() => {});
-
-      setActionSuccess("Order declined and marked cancelled.");
+      });
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d?.success) {
+        setActionError(d?.error || "Failed to decline order.");
+        return;
+      }
+      setActionSuccess(
+        d.refundId
+          ? `Order declined & Cashfree refund initiated (${d.refundId}).`
+          : "Order declined and marked cancelled.",
+      );
       refreshData();
+    } catch {
+      setActionError("Network error declining order.");
     } finally {
       setIsSubmitting(false);
     }
@@ -406,6 +439,13 @@ export default function UniversalOrdersConsoleClient({ business }: Props) {
         <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs font-bold flex items-center justify-between">
           <span>✓ {actionSuccess}</span>
           <button type="button" onClick={() => setActionSuccess(null)} className="text-emerald-700">✕</button>
+        </div>
+      )}
+
+      {actionError && (
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-800 text-xs font-bold flex items-center justify-between">
+          <span>⚠️ {actionError}</span>
+          <button type="button" onClick={() => setActionError(null)} className="text-rose-700">✕</button>
         </div>
       )}
 

@@ -4,9 +4,23 @@ import React from "react";
 
 interface Screen38Props {
   onBack?: () => void;
+  storeName?: string;
+  grossSales?: number;
+  ordersCount?: number;
+  bankAccountMask?: string;
+  ifscCode?: string;
 }
 
-export default function Screen38SettlementBreakdownModal({ onBack }: Screen38Props) {
+export default function Screen38SettlementBreakdownModal({
+  onBack,
+  storeName = "Registered Store",
+  grossSales = 0,
+  ordersCount = 0,
+  bankAccountMask = "",
+  ifscCode = "",
+}: Screen38Props) {
+  const mdrFee = Number((grossSales * 0.0175).toFixed(2));
+  const netCredited = Math.max(0, Number((grossSales - mdrFee).toFixed(2)));
   return (
     <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto">
       {/* Header */}
@@ -17,7 +31,7 @@ export default function Screen38SettlementBreakdownModal({ onBack }: Screen38Pro
               SETTLEMENT VOUCHER
             </span>
             <h1 className="text-xs font-black text-slate-900 leading-tight">
-              Payout Breakdown (Nov 03)
+              Live Escrow Breakdown
             </h1>
           </div>
           <button
@@ -37,28 +51,23 @@ export default function Screen38SettlementBreakdownModal({ onBack }: Screen38Pro
 
           <div className="space-y-1.5 text-xs">
             <div className="flex justify-between items-center text-slate-800">
-              <span>Gross Customer Collections (8 Orders)</span>
-              <span className="font-mono font-bold text-slate-900">₹2,840.00</span>
+              <span>Gross Customer Collections ({ordersCount} Orders)</span>
+              <span className="font-mono font-bold text-slate-900">₹{grossSales.toFixed(2)}</span>
             </div>
 
             <div className="flex justify-between items-center text-slate-600">
-              <span>Trustit Hyperlocal Platform Fee (Standard Plan)</span>
+              <span>Trustit Hyperlocal Platform Fee</span>
               <span className="font-mono text-emerald-700">₹0.00</span>
             </div>
 
             <div className="flex justify-between items-center text-slate-600">
-              <span>Cashfree Gateway MDR (1.75% + GST)</span>
-              <span className="font-mono text-rose-700">-₹56.80</span>
-            </div>
-
-            <div className="flex justify-between items-center text-slate-600">
-              <span>Customer Tips Passed 100% to Merchant</span>
-              <span className="font-mono text-emerald-700">+₹0.00</span>
+              <span>Estimated Gateway MDR (1.75%)</span>
+              <span className="font-mono text-rose-700">-₹{mdrFee.toFixed(2)}</span>
             </div>
 
             <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-sm font-black text-slate-950">
-              <span>Net Amount Credited to Bank:</span>
-              <span className="font-mono text-emerald-700">₹2,783.20</span>
+              <span>Estimated Net Settlement:</span>
+              <span className="font-mono text-emerald-700">₹{netCredited.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -66,23 +75,19 @@ export default function Screen38SettlementBreakdownModal({ onBack }: Screen38Pro
         {/* Bank Wire Details */}
         <div className="mt-3 bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5 text-xs">
           <span className="text-[10px] font-bold uppercase text-slate-500 block">
-            Wire Information
+            Account Information (Manual Settlement Mode)
           </span>
           <div className="flex justify-between text-[11px] text-slate-700">
             <span>Beneficiary:</span>
-            <span className="font-bold text-slate-900">Golden Blossom Cafe</span>
-          </div>
-          <div className="flex justify-between text-[11px] text-slate-700">
-            <span>Bank:</span>
-            <span className="font-bold text-slate-900">HDFC Bank, Civil Lines Bahraich</span>
+            <span className="font-bold text-slate-900">{storeName}</span>
           </div>
           <div className="flex justify-between text-[11px] text-slate-700">
             <span>Account Number:</span>
-            <span className="font-mono text-slate-900">•••• •••• 4091</span>
+            <span className="font-mono text-slate-900">{bankAccountMask || "Not linked yet"}</span>
           </div>
           <div className="flex justify-between text-[11px] text-slate-700">
             <span>IFSC Code:</span>
-            <span className="font-mono text-slate-900">HDFC0001892</span>
+            <span className="font-mono text-slate-900">{ifscCode || "Pending"}</span>
           </div>
         </div>
       </div>

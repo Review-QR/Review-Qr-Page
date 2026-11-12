@@ -128,18 +128,10 @@ const fallbackBankAccounts = new Map<string, MerchantBankAccount>();
 const fallbackChangeRequests = new Map<string, MerchantBankChangeRequest[]>();
 
 /**
- * Check if the merchant is an automated test / demo business
+ * Test merchant shortcut disabled in production — every business sees real DB data only.
  */
-export function isTestMerchant(businessId: string): boolean {
-  if (!businessId) return false;
-  const lower = businessId.toLowerCase();
-  return (
-    lower.startsWith("test-") ||
-    lower.includes("demo") ||
-    lower === "bhr-demo" ||
-    lower === "biz_demo_bahraich" ||
-    lower === "test_business_id"
-  );
+export function isTestMerchant(_businessId: string): boolean {
+  return false;
 }
 
 /**
@@ -264,7 +256,7 @@ export async function submitBankChangeRequest(
     otpCode: string;
   },
 ): Promise<{ success: boolean; message: string; requestId?: string }> {
-  if (input.otpCode !== "123456" && input.otpCode.length !== 6) {
+  if (!/^\d{6}$/.test(input.otpCode || "")) {
     return { success: false, message: "Invalid OTP. Please enter the 6-digit OTP sent to registered mobile." };
   }
 

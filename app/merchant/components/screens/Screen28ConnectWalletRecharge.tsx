@@ -2,10 +2,20 @@
 
 import React, { useState } from "react";
 
+interface CashfreeRechargeResponse {
+  success?: boolean;
+  message?: string;
+  orderId?: string;
+  paymentSessionId?: string;
+  qrCodeImage?: string | null;
+  qrCodeUrl?: string | null;
+  paymentUrl?: string | null;
+}
+
 interface Screen28Props {
   onBack?: () => void;
   onRechargeSuccess?: () => void;
-  onInitiateCashfree?: (amount: number, credits: number) => Promise<void>;
+  onInitiateCashfree?: (amount: number, credits: number) => Promise<CashfreeRechargeResponse | void>;
 }
 
 export default function Screen28ConnectWalletRecharge({
@@ -16,6 +26,8 @@ export default function Screen28ConnectWalletRecharge({
   const [selectedPack, setSelectedPack] = useState<number>(199);
   const [recharging, setRecharging] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [qrCodeImage, setQrCodeImage] = useState<string | null>(null);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string | null>(null);
 
   const packs = [
     { price: 99, credits: 110, rate: "₹0.90 / msg", popular: false },
@@ -25,37 +37,48 @@ export default function Screen28ConnectWalletRecharge({
 
   const handleRecharge = async () => {
     setRecharging(true);
-    setStatusMessage("Connecting to Cashfree UPI Gateway...");
+    setQrCodeImage(null);
+    setQrCodeUrl(null);
+    setStatusMessage("Creating Cashfree UPI / QR session...");
     const pack = packs.find((p) => p.price === selectedPack) || packs[1];
 
     try {
+      let data: CashfreeRechargeResponse | null = null;
       if (onInitiateCashfree) {
-        await onInitiateCashfree(pack.price, pack.credits);
+        const res = await onInitiateCashfree(pack.price, pack.credits);
+        if (res) data = res;
       } else {
         const res = await fetch("/api/merchant/app-operations", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             action: "recharge_wallet",
-            data: { amount: pack.price, credits: pack.credits },
+            data: { amount: pack.price, credits: pack.credits, includeQr: true },
           }),
         });
-        const data = await res.json();
-        if (data.success && data.paymentSessionId) {
-          setStatusMessage(`Cashfree Session ${data.orderId.slice(-8)} Created!`);
-          if (data.paymentUrl && typeof window !== "undefined") {
-            window.location.href = data.paymentUrl;
-            return;
-          }
-          onRechargeSuccess?.();
-        } else {
-          setStatusMessage(data.message || "Recharge initiated");
-          onRechargeSuccess?.();
-        }
+        data = await res.json();
       }
+
+      if (!data?.success) {
+        setStatusMessage(data?.message || "Failed to initialize Cashfree payment session.");
+        return;
+      }
+
+      if (data.qrCodeImage) setQrCodeImage(data.qrCodeImage);
+      if (data.qrCodeUrl) setQrCodeUrl(data.qrCodeUrl);
+
+      if (data.paymentUrl && typeof window !== "undefined") {
+        window.location.href = data.paymentUrl;
+        return;
+      }
+      setStatusMessage(
+        data.qrCodeImage
+          ? `Cashfree UPI QR ready for Order ${data.orderId?.slice(-8) || ""}. Scan below or complete checkout.`
+          : `Cashfree Session ${data.orderId?.slice(-8) || ""} ready!`,
+      );
+      if (data.orderId && !data.qrCodeImage) onRechargeSuccess?.();
     } catch {
-      setStatusMessage("Recharge request dispatched.");
-      onRechargeSuccess?.();
+      setStatusMessage("Network error creating Cashfree recharge session.");
     } finally {
       setRecharging(false);
     }
@@ -145,6 +168,22 @@ export default function Screen28ConnectWalletRecharge({
         {statusMessage && (
           <div className="mt-2.5 p-2 rounded-xl bg-purple-100 border border-purple-300 text-center text-xs font-bold text-purple-900">
             {statusMessage}
+          </div>
+        )}
+
+        {qrCodeImage && (
+          <div className="mt-2.5 bg-white border border-purple-200 rounded-2xl p-3 text-center space-y-2 shadow-2xs">
+            <img src={qrCodeImage} alt="Cashfree UPI QR" className="w-40 h-40 mx-auto rounded-lg" />
+            {qrCodeUrl && (
+              <a
+                href={qrCodeUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block text-[11px] font-bold text-purple-700 underline"
+              >
+                Open Cashfree UPI Link →
+              </a>
+            )}
           </div>
         )}
       </div>

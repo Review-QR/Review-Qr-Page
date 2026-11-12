@@ -330,7 +330,13 @@ export default function CustomerStorefrontAndVerticals({
               <img
                 src={getRestaurantThumbnail(activeStore.name)}
                 alt={activeStore.name}
-                className="w-full h-full object-cover opacity-55"
+                className={`w-full h-full object-cover opacity-55 ${
+                  activeStore.is_outlet_open === false ||
+                  activeStore.allow_taking_orders === false ||
+                  activeStore.is_taking_orders === false
+                    ? "grayscale"
+                    : ""
+                }`}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#001945] via-[#003178]/50 to-transparent" />
               <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
@@ -385,6 +391,14 @@ export default function CustomerStorefrontAndVerticals({
             </div>
 
             {/* Store Info Strip & Verified Reviews Trigger (N-15) */}
+            {(activeStore.is_outlet_open === false ||
+              activeStore.allow_taking_orders === false ||
+              activeStore.is_taking_orders === false) && (
+              <div className="bg-slate-900 text-white px-4 py-2 text-xs font-extrabold flex items-center justify-between gap-2 shrink-0">
+                <span>⛔ Currently not expecting the order</span>
+                <span className="text-[10px] font-semibold text-slate-300">Read-only menu</span>
+              </div>
+            )}
             <div className="bg-white px-4 py-2.5 border-b border-[#eaedff] flex items-center justify-between gap-2 shrink-0">
               <button
                 type="button"
@@ -487,21 +501,31 @@ export default function CustomerStorefrontAndVerticals({
                         />
                       )}
                       <div className="flex items-center gap-1">
-                        <button
-                          type="button"
-                          onClick={() => onQuickAddItem(item)}
-                          className="rounded-xl bg-[#003178] hover:bg-[#0d47a1] text-white px-3 py-1.5 text-[11px] font-black shadow-xs transition"
-                        >
-                          + Add
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onOpenCustomizer(item)}
-                          className="rounded-xl border border-[#c3c6d4] bg-[#f2f3ff] text-[#003178] px-2 py-1.5 text-[10px] font-bold"
-                          title="Customize portion & add-ons"
-                        >
-                          ⚙️
-                        </button>
+                        {activeStore.is_outlet_open === false ||
+                        activeStore.allow_taking_orders === false ||
+                        activeStore.is_taking_orders === false ? (
+                          <span className="rounded-xl border border-slate-300 bg-slate-100 text-slate-500 px-3 py-1.5 text-[10.5px] font-bold">
+                            Unavailable
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => onQuickAddItem(item)}
+                              className="rounded-xl bg-[#003178] hover:bg-[#0d47a1] text-white px-3 py-1.5 text-[11px] font-black shadow-xs transition"
+                            >
+                              + Add
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => onOpenCustomizer(item)}
+                              className="rounded-xl border border-[#c3c6d4] bg-[#f2f3ff] text-[#003178] px-2 py-1.5 text-[10px] font-bold"
+                              title="Customize portion & add-ons"
+                            >
+                              ⚙️
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>

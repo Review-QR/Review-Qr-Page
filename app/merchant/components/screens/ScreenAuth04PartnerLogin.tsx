@@ -322,10 +322,15 @@ export default function ScreenAuth04PartnerLogin({
           <button
             type="button"
             disabled={isLoading || !bizId || !password}
-            onClick={() => handleVerifyOtp("123456")}
+            onClick={() => {
+              setErrorMsg(
+                "Business ID password sign-in is disabled for security. Please use WhatsApp OTP or Google 1-Tap above.",
+              );
+              setTab("whatsapp");
+            }}
             className="w-full py-2.5 rounded-xl bg-slate-950 hover:bg-slate-900 disabled:opacity-50 text-white text-xs font-black shadow-md flex items-center justify-center gap-1.5 transition active:scale-98"
           >
-            {isLoading ? "Authenticating..." : "Sign In With Business ID →"}
+            Sign In With WhatsApp OTP →
           </button>
         )}
       </div>

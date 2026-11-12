@@ -21,27 +21,49 @@ export default function CashfreePaymentModal({
   isOpen,
   onClose,
   plan,
-  shopName = "Golden Blossom Cafe",
+  shopName = "Your Store",
   onPaymentSuccess,
 }: CashfreePaymentModalProps) {
   const [activeTab, setActiveTab] = useState<"upi_apps" | "upi_qr" | "cards">("upi_apps");
   const [selectedApp, setSelectedApp] = useState<"phonepe" | "gpay" | "paytm" | "bhim">("phonepe");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSimulatePayment = () => {
+  const handleSimulatePayment = async () => {
     setIsProcessing(true);
-    setTimeout(() => {
+    setPaymentError(null);
+    try {
+      const res = await fetch("/api/merchant/app-operations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "recharge_wallet",
+          data: { amount: plan.price, planId: plan.id, includeQr: true },
+        }),
+      });
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        setPaymentError(data?.message || "Failed to initialize Cashfree payment.");
+        return;
+      }
+      if (data.qrCodeUrl && typeof window !== "undefined") {
+        window.open(data.qrCodeUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+      if (onPaymentSuccess && data.paymentStatus === "PAID") {
+        setIsSuccess(true);
+        onPaymentSuccess(plan.id);
+      } else {
+        setPaymentError("Complete Cashfree checkout in the opened tab to activate plan.");
+      }
+    } catch {
+      setPaymentError("Network error initializing Cashfree checkout.");
+    } finally {
       setIsProcessing(false);
-      setIsSuccess(true);
-      setTimeout(() => {
-        setIsSuccess(false);
-        onClose();
-        if (onPaymentSuccess) onPaymentSuccess(plan.id);
-      }, 1800);
-    }, 1500);
+    }
   };
 
   return (

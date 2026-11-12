@@ -2,24 +2,35 @@
 
 import React, { useState } from "react";
 
+interface SettlementRow {
+  date: string;
+  orders: number;
+  gross: number;
+  net: number;
+  utr: string;
+  status: string;
+}
+
 interface Screen37Props {
   onBack?: () => void;
   onInspectSettlement?: () => void;
   onOpenBankKyc?: () => void;
+  bankAccountMask?: string;
+  todayGrossEarnings?: number;
+  deliveredOrdersCount?: number;
+  settlements?: SettlementRow[];
 }
 
 export default function Screen37DailySettlementLedger({
   onBack,
   onInspectSettlement,
   onOpenBankKyc,
+  bankAccountMask = "",
+  todayGrossEarnings = 0,
+  deliveredOrdersCount = 0,
+  settlements = [],
 }: Screen37Props) {
   const [range, setRange] = useState<"today" | "week" | "month">("today");
-
-  const settlements = [
-    { date: "Today (Nov 03)", orders: 8, gross: 2840, net: 2783.2, utr: "CMS-992144820", status: "In Transit (10:00 AM)" },
-    { date: "Yesterday (Nov 02)", orders: 14, gross: 4920, net: 4821.6, utr: "CMS-991823194", status: "Transferred ✓" },
-    { date: "Nov 01, 2026", orders: 11, gross: 3650, net: 3577.0, utr: "CMS-990714210", status: "Transferred ✓" },
-  ];
 
   return (
     <div className="w-full h-full bg-[#F8FAFC] flex flex-col justify-between p-3.5 sm:p-4 text-[#0F172A] font-sans overflow-y-auto">
@@ -55,20 +66,20 @@ export default function Screen37DailySettlementLedger({
           </div>
 
           <div className="pt-1">
-            <p className="text-2xl font-black font-mono">₹2,783.20</p>
+            <p className="text-2xl font-black font-mono">₹{todayGrossEarnings.toFixed(2)}</p>
             <span className="text-[10px] text-emerald-100">
-              From 8 completed orders (Gross: ₹2,840.00)
+              From {deliveredOrdersCount} live completed order(s)
             </span>
           </div>
 
           <div className="pt-2 border-t border-white/20 flex items-center justify-between text-[10px]">
-            <span>Bank: HDFC Bank •••• 4091</span>
+            <span>{bankAccountMask ? `Bank: ${bankAccountMask}` : "Bank Account Not Linked Yet"}</span>
             <button
               type="button"
               onClick={onOpenBankKyc}
               className="text-white underline font-bold"
             >
-              Verify KYC →
+              {bankAccountMask ? "Manage Bank →" : "Add Bank Details →"}
             </button>
           </div>
         </div>
@@ -94,7 +105,15 @@ export default function Screen37DailySettlementLedger({
 
         {/* Settlement Ledger Table */}
         <div className="mt-2.5 space-y-2">
-          {settlements.map((s, i) => (
+          {settlements.length === 0 ? (
+            <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-5 text-center space-y-1.5">
+              <p className="text-xs font-black text-slate-800">No Payout Settlements Generated Yet</p>
+              <p className="text-[10px] text-slate-500 leading-relaxed">
+                Cashfree Automated Payouts is not enabled yet. Once orders settle via Trustit Manual / Escrow cycle, live UTR records will appear here.
+              </p>
+            </div>
+          ) : (
+            settlements.map((s, i) => (
             <div
               key={i}
               className="bg-white border border-slate-200 rounded-2xl p-3 shadow-2xs space-y-1.5"
@@ -123,13 +142,14 @@ export default function Screen37DailySettlementLedger({
                 </button>
               </div>
             </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
       {/* Footer */}
       <div className="pt-2 text-center text-[10px] text-slate-500 font-mono">
-        Direct Bank Payouts Powered by Cashfree Nodal Escrow Gateway
+        Payouts &amp; Penny Drop Not Active Yet (Manual Settlement Mode)
       </div>
     </div>
   );

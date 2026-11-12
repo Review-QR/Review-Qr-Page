@@ -5,6 +5,9 @@ import {
   updateMerchantRemoteConfig,
 } from "@/lib/merchant/merchant-remote-config";
 import { createCashfreeWalletRechargeOrder } from "@/lib/wallet/cashfree-wallet-service";
+import { createCashfreeDynamicQr } from "@/lib/hyperlocal/cashfree-pg-qr-refund";
+import { dispatchCascadingRadar } from "@/lib/hyperlocal/dispatch-engine";
+import { cancelHyperlocalOrderWithRefund } from "@/lib/hyperlocal/hyperlocal-service";
 import { buildCorsHeaders, handleCorsPreflight } from "@/lib/auth-cors";
 import { requireMerchantApi } from "@/lib/auth-api-guards";
 
@@ -61,7 +64,9 @@ export async function GET(request: NextRequest) {
     const [bizRes, ordersRes, catalogRes, reviewsRes, scansRes] = await Promise.all([
       admin
         .from("businesses")
-        .select("id, name, owner, phone, type, address, city, pincode, plan, review_link, is_outlet_open, location_latitude, location_longitude")
+        .select(
+          "id, name, owner, phone, type, address, city, pincode, plan, review_link, is_outlet_open, allow_taking_orders, is_taking_orders, is_verified, merchant_status, location_latitude, location_longitude",
+        )
         .eq("id", businessId)
         .maybeSingle(),
       admin
@@ -115,16 +120,29 @@ export async function GET(request: NextRequest) {
 
     // 3. Aggregate strictly for THIS merchant (Zero fake fallback numbers)
     const pendingOrders = allOrders.filter((o) => o.status === "placed");
-    const preparingOrders = allOrders.filter((o) => o.status === "accepted" || o.status === "preparing");
+    const preparingOrders = allOrders.filter(
+      (o) => o.status === "accepted_by_merchant" || o.status === "accepted" || o.status === "preparing",
+    );
     const readyOrders = allOrders.filter((o) => o.status === "ready_for_pickup" || o.status === "food_ready");
-    const outOrders = allOrders.filter((o) => o.status === "out_for_delivery");
-    const deliveredOrders = allOrders.filter((o) => o.status === "delivered");
+    const outOrders = allOrders.filter(
+      (o) => o.status === "rider_assigned" || o.status === "picked_up" || o.status === "out_for_delivery",
+    );
+    const deliveredOrders = allOrders.filter((o) => o.status === "delivered" || o.status === "completed");
 
     const todayKey = new Date().toISOString().slice(0, 10);
     const todayEarnings = allOrders
       .filter((o) => {
         const isToday = String(o.created_at || "").startsWith(todayKey);
-        const isCountable = o.status === "delivered" || o.status === "accepted" || o.status === "preparing" || o.status === "ready_for_pickup" || o.status === "out_for_delivery";
+        const isCountable =
+          o.status === "delivered" ||
+          o.status === "completed" ||
+          o.status === "accepted_by_merchant" ||
+          o.status === "accepted" ||
+          o.status === "preparing" ||
+          o.status === "ready_for_pickup" ||
+          o.status === "rider_assigned" ||
+          o.status === "picked_up" ||
+          o.status === "out_for_delivery";
         return isToday && isCountable;
       })
       .reduce((acc, o) => acc + (Number(o.total_amount) || 0), 0);
@@ -148,7 +166,10 @@ export async function GET(request: NextRequest) {
         address: dbBusiness?.address || config.address,
         latitude: dbBusiness?.location_latitude ?? config.latitude,
         longitude: dbBusiness?.location_longitude ?? config.longitude,
-        isStoreOnline: dbBusiness?.is_outlet_open ?? config.isStoreOnline,
+        isStoreOnline:
+          Boolean(dbBusiness?.is_outlet_open ?? config.isStoreOnline) &&
+          dbBusiness?.is_taking_orders !== false &&
+          dbBusiness?.allow_taking_orders !== false,
       },
       business: {
         id: dbBusiness?.id || businessId,
@@ -160,6 +181,10 @@ export async function GET(request: NextRequest) {
         location_latitude: dbBusiness?.location_latitude ?? null,
         location_longitude: dbBusiness?.location_longitude ?? null,
         is_outlet_open: dbBusiness?.is_outlet_open ?? true,
+        allow_taking_orders: dbBusiness?.allow_taking_orders ?? true,
+        is_taking_orders: dbBusiness?.is_taking_orders ?? true,
+        is_verified: dbBusiness?.is_verified ?? false,
+        merchant_status: dbBusiness?.merchant_status || "active",
         review_link: dbBusiness?.review_link || `https://trustitreview.com/r/${businessId}`,
       },
       stats: {
@@ -209,33 +234,63 @@ export async function POST(request: NextRequest) {
     // 1. Toggle Store Online / Offline Status
     if (action === "toggle_outlet") {
       const isOpen = Boolean(data?.isOpen);
-      const updated = updateMerchantRemoteConfig({ businessId: resolvedBizId, isStoreOnline: isOpen });
-      if (resolvedBizId) {
-        await admin
-          .from("businesses")
-          .update({
-            is_outlet_open: isOpen,
-            allow_taking_orders: isOpen,
-            is_taking_orders: isOpen,
-          })
-          .eq("id", resolvedBizId);
+      if (!resolvedBizId) {
+        return NextResponse.json(
+          { success: false, message: "Business ID not found for merchant session." },
+          { status: 400 }
+        );
       }
+
+      if (isOpen) {
+        const { data: bizPerm } = await admin
+          .from("businesses")
+          .select("allow_taking_orders, merchant_status")
+          .eq("id", resolvedBizId)
+          .maybeSingle();
+        if (bizPerm && bizPerm.allow_taking_orders === false) {
+          return NextResponse.json(
+            {
+              success: false,
+              message: "Order taking permission is paused by Admin. Contact Trustit support.",
+            },
+            { status: 403 }
+          );
+        }
+      }
+
+      const { error: dbErr } = await admin
+        .from("businesses")
+        .update({
+          is_outlet_open: isOpen,
+          is_taking_orders: isOpen,
+        })
+        .eq("id", resolvedBizId);
+
+      if (dbErr) {
+        return NextResponse.json(
+          { success: false, message: dbErr.message || "Failed to update outlet status." },
+          { status: 500 }
+        );
+      }
+
+      const updated = updateMerchantRemoteConfig({ businessId: resolvedBizId, isStoreOnline: isOpen });
 
       return NextResponse.json({
         success: true,
         message: isOpen ? "🟢 Orders Active" : "🔴 Orders Paused",
         is_outlet_open: updated.isStoreOnline,
+        is_taking_orders: isOpen,
       });
     }
 
-    // 2. Accept Order (With Kitchen Prep Time)
+    // 2. Accept Order (With Kitchen Prep Time + Trigger Rider Radar)
     if (action === "order_accept") {
       const prepMinutes = Number(data?.prepTimeMinutes) || 20;
       const now = new Date().toISOString();
-      await admin
+      const { error: acceptErr } = await admin
         .from("hyperlocal_orders")
         .update({
-          status: "accepted",
+          status: "accepted_by_merchant",
           accepted_at: now,
           merchant_prep_time_minutes: prepMinutes,
           updated_at: now,
@@ -243,16 +298,32 @@ export async function POST(request: NextRequest) {
         .eq("id", orderId)
         .eq("business_id", resolvedBizId);
 
+      if (acceptErr) {
+        return NextResponse.json(
+          { success: false, message: acceptErr.message || "Failed to accept order." },
+          { status: 500 }
+        );
+      }
+
+      let dispatchInfo: Awaited<ReturnType<typeof dispatchCascadingRadar>> | null = null;
+      try {
+        dispatchInfo = await dispatchCascadingRadar(orderId);
+      } catch (dispErr) {
+        console.warn("Rider radar dispatch warning after merchant accept:", dispErr);
+      }
+
       return NextResponse.json({
         success: true,
-        message: `Order #${orderId.slice(-6)} accepted! Cooking prep time: ${prepMinutes} mins.`,
+        status: "accepted_by_merchant",
+        dispatch: dispatchInfo,
+        message: `Order #${orderId.slice(-6)} accepted! Prep time: ${prepMinutes} mins.`,
       });
     }
 
-    // 3. Mark Food Ready / KOT Printed
+    // 3. Mark Food Ready / KOT Printed (+ Ensure Rider Radar Dispatched)
     if (action === "order_ready") {
       const now = new Date().toISOString();
-      await admin
+      const { error: readyErr } = await admin
         .from("hyperlocal_orders")
         .update({
           status: "ready_for_pickup",
@@ -262,30 +333,43 @@ export async function POST(request: NextRequest) {
         .eq("id", orderId)
         .eq("business_id", resolvedBizId);
 
+      if (readyErr) {
+        return NextResponse.json(
+          { success: false, message: readyErr.message || "Failed to mark order ready." },
+          { status: 500 }
+        );
+      }
+
+      let dispatchInfo: Awaited<ReturnType<typeof dispatchCascadingRadar>> | null = null;
+      try {
+        dispatchInfo = await dispatchCascadingRadar(orderId);
+      } catch (dispErr) {
+        console.warn("Rider radar dispatch warning on order_ready:", dispErr);
+      }
+
       return NextResponse.json({
         success: true,
+        status: "ready_for_pickup",
+        dispatch: dispatchInfo,
         message: `Order #${orderId.slice(-6)} marked ready for rider pickup!`,
       });
     }
 
-    // 4. Reject / Cancel Order
+    // 4. Reject / Cancel Order (With Genuine Cashfree Refund + Rider Release)
     if (action === "order_reject") {
       const reason = data?.reason || "Item temporarily out of stock";
-      const now = new Date().toISOString();
-      await admin
-        .from("hyperlocal_orders")
-        .update({
-          status: "rejected",
-          cancelled_by: "merchant",
-          cancellation_reason: reason,
-          updated_at: now,
-        })
-        .eq("id", orderId)
-        .eq("business_id", resolvedBizId);
+      const result = await cancelHyperlocalOrderWithRefund({
+        orderId,
+        cancelledBy: "merchant",
+        reason,
+        issueRefund: true,
+        targetStatus: "rejected",
+      });
 
       return NextResponse.json({
         success: true,
-        message: `Order #${orderId.slice(-6)} declined.`,
+        result,
+        message: `Order #${orderId.slice(-6)} declined${result.refundId ? ` & refund ${result.refundId} initiated` : ""}.`,
       });
     }
 
@@ -715,12 +799,35 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, message: orderResult.error }, { status: 500 });
       }
 
+      let qrCodeImage: string | null = null;
+      let qrCodeUrl: string | null = null;
+      if (data?.includeQr === true) {
+        const qrRes = await createCashfreeDynamicQr({
+          internalOrderId: orderResult.orderId,
+          amount,
+          customerName: auth.merchant.businessName || "Trustit Merchant",
+          customerPhone: auth.merchant.registeredMobile || "9999999999",
+          purpose: `Trustit Wallet Recharge (${credits} Credits)`,
+          orderTags: {
+            source: "merchant_wallet_recharge",
+            business_id: resolvedBizId,
+            wallet_order_id: orderResult.orderId,
+          },
+        });
+        if (qrRes.success) {
+          qrCodeImage = qrRes.qrDataUrl;
+          qrCodeUrl = qrRes.paymentUrl;
+        }
+      }
+
       return NextResponse.json({
         success: true,
         message: `Cashfree recharge session created for ₹${amount}!`,
         orderId: orderResult.orderId,
         paymentSessionId: orderResult.paymentSessionId,
         checkoutMode: orderResult.environment,
+        qrCodeImage,
+        qrCodeUrl,
       });
     }
 
@@ -753,9 +860,10 @@ export async function POST(request: NextRequest) {
         : "https://sandbox.cashfree.com/verification";
 
       let verifiedLive = false;
-      let utrRef = `TEST_IMPS_${Date.now()}`;
-      let registeredBankName = holderName || "Verified Merchant";
-      let statusNote = "";
+      let utrRef: string | null = null;
+      let registeredBankName = holderName || "Merchant Partner";
+      let statusNote =
+        "Bank details saved for manual settlement — Cashfree ₹1 Penny Drop Verification Suite is not enabled yet.";
 
       if (clientId && clientSecret) {
         try {
@@ -781,13 +889,14 @@ export async function POST(request: NextRequest) {
             utrRef = cfData.utr || cfData.reference_id || `UTR_${Date.now()}`;
             registeredBankName = cfData.name_at_bank || holderName || "Verified Partner";
             statusNote = "Live ₹1 IMPS penny drop confirmed by Cashfree NPCI gateway.";
-          } else if (cfRes.status === 401 || cfData.code === "authentication_failed") {
-            statusNote = "Bank details saved. Note: Cashfree Verification Suite API keys require activation on your Cashfree merchant dashboard for automated ₹1 penny drop.";
+          } else if (cfRes.status === 401 || cfRes.status === 403 || cfData.code === "authentication_failed") {
+            statusNote =
+              "Bank details saved for manual settlement — Cashfree Verification Suite (Penny Drop) is not enabled on your Cashfree account yet.";
           } else {
-            statusNote = cfData.message || "Bank details recorded for manual branch review.";
+            statusNote = cfData.message || "Bank details saved for manual review.";
           }
         } catch {
-          statusNote = "Gateway connection timeout. Bank details stored securely.";
+          statusNote = "Gateway connection timeout. Bank details saved for manual review.";
         }
       }
 
@@ -797,18 +906,19 @@ export async function POST(request: NextRequest) {
           accountNumberMask: mask,
           ifsc: cleanIfsc,
           holderName: registeredBankName,
-          isVerified: true,
+          isVerified: verifiedLive,
           verifiedLive,
-          utr: utrRef,
+          utr: utrRef ?? undefined,
           updatedAt: new Date().toISOString(),
         },
       });
 
       return NextResponse.json({
         success: true,
+        verifiedLive,
         message: verifiedLive
           ? `₹1.00 IMPS penny drop successful! Beneficiary: ${registeredBankName} (UTR: ${utrRef})`
-          : `Bank Account Linked (${cleanIfsc})! ${statusNote}`,
+          : `Bank details saved (${cleanIfsc}). ${statusNote}`,
         bankAccount: updated.bankAccount,
       });
     }

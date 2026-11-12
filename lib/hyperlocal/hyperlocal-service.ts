@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { generateHyperlocalOrderId, generateDeliveryOtp, isValidHyperlocalOrderId } from "./order-id";
 import { findNearestAvailableRiders, dispatchCascadingRadar } from "./dispatch-engine";
 import { calculatePayoutSplits } from "./split-calculator";
+import { createCashfreeOrderRefund } from "./cashfree-pg-qr-refund";
 import type {
   HyperlocalOrder,
   HyperlocalOrderItem,
@@ -33,6 +34,31 @@ export interface CreateHyperlocalOrderInput {
   customerNotes?: string;
 }
 
+export const OUTLET_PAUSED_MESSAGE =
+  "Currently not expecting the order. This outlet has temporarily paused incoming orders.";
+
+export function assertBusinessAcceptingOrders(business: {
+  deleted_at?: string | null;
+  merchant_status?: string | null;
+  is_outlet_open?: boolean | null;
+  allow_taking_orders?: boolean | null;
+  is_taking_orders?: boolean | null;
+} | null) {
+  if (!business || business.deleted_at) {
+    throw new Error("Business not found.");
+  }
+  if (business.merchant_status && business.merchant_status !== "active") {
+    throw new Error(OUTLET_PAUSED_MESSAGE);
+  }
+  if (
+    business.is_outlet_open === false ||
+    business.allow_taking_orders === false ||
+    business.is_taking_orders === false
+  ) {
+    throw new Error(OUTLET_PAUSED_MESSAGE);
+  }
+}
+
 /**
  * Creates a hyperlocal order, assigns 4-digit OTP, calculates escrow splits,
  * and searches for nearest delivery riders.
@@ -40,16 +66,19 @@ export interface CreateHyperlocalOrderInput {
 export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
   const admin = createSupabaseAdminClient();
 
-  // 1. Fetch business details for shop coordinates
+  // 1. Fetch business details for shop coordinates + live outlet accepting-order state
   const { data: business, error: bizError } = await admin
     .from("businesses")
-    .select("id, name, city, type, phone, location_latitude, location_longitude, address")
+    .select(
+      "id, name, city, type, phone, location_latitude, location_longitude, address, deleted_at, merchant_status, is_outlet_open, allow_taking_orders, is_taking_orders"
+    )
     .eq("id", input.businessId)
     .maybeSingle();
 
   if (bizError || !business) {
     throw new Error("Business not found.");
   }
+  assertBusinessAcceptingOrders(business);
 
   // 2. Fetch business catalog to enforce tamper-proof menu pricing
   const { data: catalogItems } = await admin
@@ -349,7 +378,7 @@ export async function riderCompleteDeliveryWithOtp(
 
   const { data: order, error } = await admin
     .from("hyperlocal_orders")
-    .select("id, delivery_otp, total_amount, payment_mode, rider_id, status, otp_attempts")
+    .select("id, delivery_otp, total_amount, payment_mode, payment_status, rider_id, status, otp_attempts")
     .eq("id", orderId)
     .maybeSingle();
 
@@ -382,6 +411,8 @@ export async function riderCompleteDeliveryWithOtp(
   }
 
   const now = new Date().toISOString();
+  const alreadyPaidDigitally =
+    order.payment_status === "paid" || order.payment_mode !== "cod";
 
   // 1. Atomic status transition: only mark delivered if status != 'delivered'
   const { data: updatedOrder, error: updateOrderErr } = await admin
@@ -390,7 +421,7 @@ export async function riderCompleteDeliveryWithOtp(
       status: "delivered",
       delivered_at: now,
       updated_at: now,
-      payment_status: order.payment_mode === "cod" ? "cod_collected" : "paid",
+      payment_status: alreadyPaidDigitally ? "paid" : "cod_collected",
       otp_attempts: 0,
     })
     .eq("id", orderId)
@@ -411,7 +442,7 @@ export async function riderCompleteDeliveryWithOtp(
 
   const riderPayout = split?.rider_payout || 35;
 
-  // 3. Update Rider wallet, COD cash handling & performance stats
+  // 3. Update Rider wallet, COD cash handling (only if collected as physical cash) & stats
   const { data: rider } = await admin
     .from("delivery_riders")
     .select("cash_in_hand, wallet_balance, total_deliveries_count, total_earnings")
@@ -423,7 +454,10 @@ export async function riderCompleteDeliveryWithOtp(
   const currentDeliveries = Number(rider?.total_deliveries_count || 0);
   const currentTotalEarnings = Number(rider?.total_earnings || 0);
 
-  const newCashInHand = order.payment_mode === "cod" ? currentCash + Number(order.total_amount) : currentCash;
+  const newCashInHand =
+    !alreadyPaidDigitally && order.payment_mode === "cod"
+      ? currentCash + Number(order.total_amount)
+      : currentCash;
   const newWalletBalance = currentWallet + Number(riderPayout);
 
   await admin
@@ -467,6 +501,12 @@ export async function bookDigitalServiceToken(input: {
   slotTime?: string;
 }) {
   const admin = createSupabaseAdminClient();
+  const { data: business } = await admin
+    .from("businesses")
+    .select("deleted_at, merchant_status, is_outlet_open, allow_taking_orders, is_taking_orders")
+    .eq("id", input.businessId)
+    .maybeSingle();
+  assertBusinessAcceptingOrders(business);
   const today = new Date().toISOString().slice(0, 10);
 
   // Count existing tokens today for token numbering
@@ -520,6 +560,12 @@ export async function createParchaOrder(input: {
   customerNotes?: string;
 }) {
   const admin = createSupabaseAdminClient();
+  const { data: business } = await admin
+    .from("businesses")
+    .select("deleted_at, merchant_status, is_outlet_open, allow_taking_orders, is_taking_orders")
+    .eq("id", input.businessId)
+    .maybeSingle();
+  assertBusinessAcceptingOrders(business);
   const orderId = generateHyperlocalOrderId();
   const deliveryOtp = generateDeliveryOtp();
 
@@ -595,7 +641,7 @@ export async function updateParchaMerchantQuote(input: {
     .update({
       subtotal_amount: quote,
       total_amount: totalAmount,
-      status: "merchant_accepted",
+      status: "accepted_by_merchant",
       accepted_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -710,5 +756,106 @@ export async function adminCancelOrderDoorstepRefusal(
     orderId,
     riderCompensated: riderPayout,
     status: "cancelled",
+  };
+}
+
+/**
+ * Unified cancellation + genuine Cashfree PG refund + Rider release.
+ * Used by Admin order cancellation/approval, Customer cancel, and Merchant reject.
+ */
+export async function cancelHyperlocalOrderWithRefund(input: {
+  orderId: string;
+  cancelledBy: "customer" | "merchant" | "admin";
+  reason: string;
+  issueRefund: boolean;
+  targetStatus?: "cancelled" | "rejected";
+  adminNotes?: string;
+}) {
+  if (!isValidHyperlocalOrderId(input.orderId)) {
+    throw new Error("Invalid order ID.");
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data: order, error } = await admin
+    .from("hyperlocal_orders")
+    .select(
+      "id, status, rider_id, payment_mode, payment_status, cashfree_order_id, cashfree_payment_id, total_amount"
+    )
+    .eq("id", input.orderId)
+    .maybeSingle();
+
+  if (error || !order) throw new Error("Order not found.");
+  if (order.status === "delivered" || order.status === "completed") {
+    throw new Error("Cannot cancel an already delivered order.");
+  }
+  if (order.status === "cancelled" || order.status === "rejected") {
+    return {
+      success: true,
+      orderId: order.id,
+      status: order.status,
+      paymentStatus: order.payment_status,
+      refundId: null,
+      refundStatus: order.payment_status === "refunded" ? "ALREADY_REFUNDED" : "NOT_APPLICABLE",
+      refundAmount: 0,
+    };
+  }
+
+  let refundResult: Awaited<ReturnType<typeof createCashfreeOrderRefund>> | null = null;
+  const isPaidOnline =
+    order.payment_status === "paid" && Boolean(order.cashfree_order_id || order.payment_mode === "online_cashfree");
+
+  if (input.issueRefund && isPaidOnline) {
+    const cfOrderRef = String(order.cashfree_order_id || order.id);
+    refundResult = await createCashfreeOrderRefund({
+      cfOrderId: cfOrderRef,
+      refundAmount: Number(order.total_amount),
+      refundNote: input.reason,
+      refundSpeed: "STANDARD",
+    });
+    if (!refundResult.success) {
+      throw new Error(`Cashfree refund failed: ${refundResult.error}`);
+    }
+  }
+
+  const now = new Date().toISOString();
+  const nextStatus = input.targetStatus || "cancelled";
+  const refundNote = refundResult?.success
+    ? `Cashfree Refund ${refundResult.refundStatus} (ID: ${refundResult.refundId}${refundResult.refundArn ? `, ARN: ${refundResult.refundArn}` : ""})`
+    : input.adminNotes || null;
+
+  const { error: updateErr } = await admin
+    .from("hyperlocal_orders")
+    .update({
+      status: nextStatus,
+      cancelled_by: input.cancelledBy,
+      cancellation_reason: input.reason,
+      dispute_status: "resolved",
+      dispatch_target_rider_id: null,
+      dispatch_expires_at: null,
+      ...(refundResult?.success ? { payment_status: "refunded" } : {}),
+      ...(refundNote ? { admin_notes: refundNote } : {}),
+      updated_at: now,
+    })
+    .eq("id", order.id);
+
+  if (updateErr) throw new Error(updateErr.message);
+
+  // Release rider so active delivery lockout clears across apps immediately
+  if (order.rider_id) {
+    await admin
+      .from("delivery_riders")
+      .update({ is_available: true, updated_at: now })
+      .eq("id", order.rider_id);
+  }
+
+  return {
+    success: true,
+    orderId: order.id,
+    status: nextStatus,
+    paymentStatus: refundResult?.success ? "refunded" : order.payment_status,
+    refundId: refundResult?.success ? refundResult.refundId : null,
+    refundArn: refundResult?.success ? refundResult.refundArn : null,
+    refundStatus: refundResult?.success ? refundResult.refundStatus : "NOT_APPLICABLE",
+    refundAmount: refundResult?.success ? refundResult.refundAmount : 0,
   };
 }

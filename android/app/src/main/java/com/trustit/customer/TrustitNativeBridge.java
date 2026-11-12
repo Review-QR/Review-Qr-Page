@@ -10,11 +10,16 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.AudioAttributes;
+import android.media.AudioManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.os.VibratorManager;
@@ -49,6 +54,9 @@ import java.util.Locale;
     }
 )
 public class TrustitNativeBridge extends Plugin {
+
+    private Ringtone currentRingtone = null;
+    private PowerManager.WakeLock sirenWakeLock = null;
 
     /**
      * 1. nativeFetch: Native Android HttpURLConnection executor running on a background thread.
@@ -484,6 +492,15 @@ public class TrustitNativeBridge extends Plugin {
             } catch (Exception ignored) {}
             activeCheckoutDialog = null;
         }
+    }
+
+    /**
+     * 4a. startNativeDropCheckout: Launches Cashfree PG Android SDK Drop Checkout
+     * (UPI-first with PhonePe/GPay/Paytm + Cards/Wallets/Netbanking) natively inside the app.
+     */
+    @PluginMethod
+    public void startNativeDropCheckout(PluginCall call) {
+        CashfreeDropCheckoutHelper.startDropCheckout(call, getActivity(), getBridge());
     }
 
     /**
@@ -956,5 +973,97 @@ public class TrustitNativeBridge extends Plugin {
                 call.reject("OTA error: " + e.getMessage(), err);
             }
         }).start();
+    }
+
+    /**
+     * Native Alarm-stream emergency siren for Customer & Rider order dispatch alerts.
+     */
+    @PluginMethod
+    public void playEmergencySiren(PluginCall call) {
+        try {
+            Context context = getContext();
+
+            if (context != null) {
+                try {
+                    PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+                    if (pm != null && (sirenWakeLock == null || !sirenWakeLock.isHeld())) {
+                        sirenWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Trustit::OrderSirenLock");
+                        sirenWakeLock.acquire(45000L);
+                    }
+                } catch (Exception ignored) {}
+
+                Uri alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+                if (alarmUri == null) {
+                    alarmUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+                }
+                if (alarmUri != null) {
+                    if (currentRingtone != null && currentRingtone.isPlaying()) {
+                        currentRingtone.stop();
+                    }
+                    currentRingtone = RingtoneManager.getRingtone(context, alarmUri);
+                    if (currentRingtone != null) {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            currentRingtone.setAudioAttributes(
+                                new AudioAttributes.Builder()
+                                    .setUsage(AudioAttributes.USAGE_ALARM)
+                                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                                    .build()
+                            );
+                        } else {
+                            currentRingtone.setStreamType(AudioManager.STREAM_ALARM);
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            currentRingtone.setLooping(true);
+                        }
+                        currentRingtone.play();
+                    }
+                }
+
+                Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+                if (vibrator != null && vibrator.hasVibrator()) {
+                    long[] pattern = {0, 600, 300, 600, 300, 800};
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        vibrator.vibrate(VibrationEffect.createWaveform(pattern, -1));
+                    } else {
+                        vibrator.vibrate(pattern, -1);
+                    }
+                }
+            }
+
+            JSObject res = new JSObject();
+            res.put("success", true);
+            res.put("channel", "STREAM_ALARM");
+            res.put("message", "Order siren sounding on hardware alarm stream");
+            call.resolve(res);
+        } catch (Exception e) {
+            call.reject("Failed to trigger order siren: " + e.getMessage());
+        }
+    }
+
+    @PluginMethod
+    public void stopEmergencySiren(PluginCall call) {
+        try {
+            if (currentRingtone != null && currentRingtone.isPlaying()) {
+                currentRingtone.stop();
+                currentRingtone = null;
+            }
+            if (sirenWakeLock != null && sirenWakeLock.isHeld()) {
+                sirenWakeLock.release();
+                sirenWakeLock = null;
+            }
+            Context context = getContext();
+            if (context != null) {
+                Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+                if (vibrator != null) {
+                    vibrator.cancel();
+                }
+            }
+            JSObject res = new JSObject();
+            res.put("success", true);
+            res.put("message", "Siren stopped");
+            call.resolve(res);
+        } catch (Exception e) {
+            call.reject("Failed to stop siren: " + e.getMessage());
+        }
     }
 }

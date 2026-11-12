@@ -32,6 +32,10 @@
 -keep class org.apache.cordova.** { *; }
 -dontwarn org.apache.cordova.**
 
+# Preserve Cashfree Android PG SDK classes & callbacks under R8 minification
+-keep class com.cashfree.** { *; }
+-dontwarn com.cashfree.**
+
 # Preserve line numbers and obfuscated source file name for crash stack traces
 -keepattributes SourceFile,LineNumberTable
 -renamesourcefileattribute SourceFile

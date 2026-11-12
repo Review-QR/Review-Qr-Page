@@ -102,15 +102,10 @@ export async function createCashfreeHyperlocalPaymentOrder(
   try {
     client = createCashfreeClient();
   } catch (err) {
-    // If Cashfree server credentials are not configured in local/test environment,
-    // provide a safe simulated session for seamless UX testing.
     return {
-      success: true,
-      orderId: input.orderId,
-      paymentSessionId: `mock_session_${randomUUID().replaceAll("-", "").slice(0, 20)}`,
-      orderStatus: "ACTIVE",
-      checkoutMode: "sandbox",
-      upiString: "",
+      success: false,
+      error: err instanceof Error ? err.message : "Cashfree payment gateway credentials are not configured.",
+      httpStatus: 503,
     };
   }
 
@@ -158,9 +153,18 @@ export async function createCashfreeHyperlocalPaymentOrder(
 
     if (!response.ok) {
       const errText = await response.text();
+      let detail = `Cashfree order creation failed with status ${response.status}`;
+      try {
+        const parsedErr = JSON.parse(errText) as { message?: string; code?: string };
+        if (parsedErr?.message) {
+          detail = parsedErr.code ? `${parsedErr.message} (${parsedErr.code})` : parsedErr.message;
+        }
+      } catch {
+        if (errText.trim()) detail = errText.trim();
+      }
       return {
         success: false,
-        error: `Cashfree order creation failed with status ${response.status}`,
+        error: detail,
         httpStatus: response.status,
       };
     }
@@ -242,25 +246,11 @@ export async function verifyCashfreeHyperlocalPayment(
   let client;
   try {
     client = createCashfreeClient();
-  } catch {
-    // If Cashfree client not configured, allow mock verification for sandbox simulation
-    const now = new Date().toISOString();
-    await admin
-      .from("hyperlocal_orders")
-      .update({
-        payment_status: "paid",
-        payment_mode: "online_cashfree",
-        updated_at: now,
-      })
-      .eq("id", orderId);
-
+  } catch (err) {
     return {
-      status: "VERIFIED_SUCCESS",
-      orderId,
-      paymentId: `sim_${randomUUID().slice(0, 12)}`,
-      amount: Number(order.total_amount),
-      currency: "INR",
-      paidAt: now,
+      status: "VERIFICATION_ERROR",
+      reason: err instanceof Error ? err.message : "Cashfree payment gateway credentials unavailable.",
+      httpStatus: 503,
     };
   }
 
@@ -350,13 +340,15 @@ export async function verifyCashfreeHyperlocalPayment(
       }
     }
 
-    // 3. Mark order as paid in Supabase
+    // 3. Mark order as paid in Supabase (recording Cashfree IDs for real PG refunds)
     const now = new Date().toISOString();
     await admin
       .from("hyperlocal_orders")
       .update({
         payment_status: "paid",
         payment_mode: "online_cashfree",
+        cashfree_order_id: orderId,
+        cashfree_payment_id: paymentId,
         updated_at: now,
       })
       .eq("id", orderId);
