@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import BahraichInteractiveMap from "./BahraichInteractiveMap";
+import { stripGooglePlusCode } from "@/lib/hyperlocal/address-format";
 import {
   CartLineItem,
   CustomerSavedAddress,
@@ -69,7 +70,13 @@ interface CheckoutAndAddressesProps {
   onUseGpsForPin: () => Promise<DetectedGpsLocation | null>;
   onRegisterSubBack?: (handler: (() => boolean) | null) => void;
   // N-24 Payment Retry (08:42 Stock Hold)
-  paymentRetryState: { orderId: string; amount: number; storeName: string; reason: string } | null;
+  paymentRetryState: {
+    orderId: string;
+    amount: number;
+    storeName: string;
+    reason: string;
+    hostedPayUrl?: string;
+  } | null;
   onRetryCashfree: (orderId: string) => void;
   onSwitchOrderToCod: (orderId: string) => void;
   onDismissPaymentRetry: () => void;
@@ -182,12 +189,21 @@ export default function CustomerCheckoutAndAddresses({
       const gps = await onUseGpsForPin();
       if (gps) {
         setPinCoords({ lat: gps.lat, lng: gps.lng });
-        if (gps.street || gps.mohalla || gps.locationName) {
-          setMohalla(gps.street || gps.mohalla || gps.locationName || "");
+        const cleanMohalla = stripGooglePlusCode(gps.mohalla || gps.locationName || gps.street);
+        const cleanFormatted = stripGooglePlusCode(gps.formattedAddress);
+        const cleanLandmark = stripGooglePlusCode(gps.landmark);
+        if (cleanMohalla) {
+          setMohalla(cleanMohalla);
+        } else if (cleanFormatted) {
+          setMohalla(cleanFormatted);
         }
-        if (gps.formattedAddress && gps.formattedAddress !== gps.locationName) {
-          setRoad(gps.formattedAddress);
-        }
+        const landmarkVal =
+          cleanLandmark && cleanLandmark.toLowerCase() !== cleanMohalla.toLowerCase()
+            ? cleanLandmark
+            : cleanFormatted && cleanFormatted.toLowerCase() !== cleanMohalla.toLowerCase()
+              ? cleanFormatted
+              : "";
+        setRoad(landmarkVal);
         if (gps.pincode) setPincode(gps.pincode);
         if (gps.city) setDistrict(gps.city);
       }
@@ -425,7 +441,7 @@ export default function CustomerCheckoutAndAddresses({
                     )}
 
                     <div className="rounded-xl bg-[#f2f3ff] px-3 py-2 text-[11px] font-semibold text-[#131b2e]">
-                      {customerAddress || "Tap 'Change / Pin Map' to verify your delivery address"}
+                      {stripGooglePlusCode(customerAddress) || "Tap 'Change / Pin Map' to verify your delivery address"}
                     </div>
 
                     <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-[10.5px] font-bold text-emerald-900">
@@ -622,7 +638,7 @@ export default function CustomerCheckoutAndAddresses({
       {/* ── N-21 & N-22: Saved Bahraich Addresses & Dropoff Pin Modal ── */}
       {isAddressModalOpen && (
         <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-slate-950/65 p-0 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white overflow-hidden shadow-2xl max-h-[92vh] flex flex-col">
+          <div className="w-full max-w-md rounded-t-3xl sm:rounded-3xl bg-white overflow-hidden shadow-2xl min-h-[72vh] sm:min-h-[520px] max-h-[92vh] flex flex-col">
             <div className="bg-[#003178] text-white px-4 py-3.5 flex items-center justify-between shrink-0">
               <div>
                 <div className="text-[10px] font-bold uppercase tracking-wider text-[#9cf0ff]">
@@ -711,7 +727,9 @@ export default function CustomerCheckoutAndAddresses({
                             {addr.tag || addr.label || "Home"}
                             {addr.isDefault ? " • Default" : ""}
                           </div>
-                          <div className="text-[11px] text-[#131b2e] mt-0.5">{addr.street}</div>
+                          <div className="text-[11px] text-[#131b2e] mt-0.5 leading-relaxed">
+                            {stripGooglePlusCode(addr.street) || addr.street}
+                          </div>
                         </button>
                         <button
                           type="button"
@@ -872,8 +890,8 @@ export default function CustomerCheckoutAndAddresses({
                     await onSaveAddressRecord({
                       tag: newTag,
                       houseNo: houseNo || "Gate Pin",
-                      mohalla: pin.mohalla,
-                      road: pin.addressText,
+                      mohalla: stripGooglePlusCode(pin.mohalla) || pin.mohalla,
+                      road: stripGooglePlusCode(pin.addressText),
                       pincode: pin.pincode,
                       district: "Bahraich",
                       lat: pin.lat,
@@ -914,6 +932,16 @@ export default function CustomerCheckoutAndAddresses({
                 <strong className="font-mono">{holdMins}:{holdSecs}</strong> mins.
               </div>
               <div className="text-[11px] text-[#434652]">{paymentRetryState.reason}</div>
+              {paymentRetryState.hostedPayUrl && (
+                <a
+                  href={paymentRetryState.hostedPayUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center rounded-2xl bg-[#059669] hover:bg-emerald-700 py-3 font-black text-white shadow-md"
+                >
+                  ⚡ Open Cashfree Payment Page (₹{paymentRetryState.amount}) →
+                </a>
+              )}
               <button
                 type="button"
                 onClick={() => onRetryCashfree(paymentRetryState.orderId)}

@@ -72,8 +72,10 @@ public class TrustitNativeBridge extends Plugin {
                 java.net.URL url = new java.net.URL(urlStr);
                 conn = (java.net.HttpURLConnection) url.openConnection();
                 conn.setRequestMethod(method != null ? method.toUpperCase(Locale.ROOT) : "POST");
+                conn.setUseCaches(false);
                 conn.setRequestProperty("Content-Type", "application/json");
                 conn.setRequestProperty("Accept", "application/json");
+                conn.setRequestProperty("Cache-Control", "no-cache, no-store, must-revalidate");
                 conn.setConnectTimeout(20000);
                 conn.setReadTimeout(20000);
 
@@ -188,20 +190,16 @@ public class TrustitNativeBridge extends Plugin {
             }
         } catch (SecurityException ignored) {}
 
-        // Short-circuit only when last known location is genuinely fresh (< 20s old & accurate)
+        // Short-circuit only when last known GPS fix is genuinely fresh (< 8s old & pinpoint <= 25m)
         long bestAge = bestLoc != null ? (nowMs - bestLoc.getTime()) : Long.MAX_VALUE;
         boolean bestIsFreshGps =
             bestLoc != null &&
             LocationManager.GPS_PROVIDER.equals(bestLoc.getProvider()) &&
-            bestAge < 20_000 &&
-            (!bestLoc.hasAccuracy() || bestLoc.getAccuracy() <= 55f);
-        boolean bestIsPinpointNet =
-            bestLoc != null &&
-            bestAge < 15_000 &&
+            bestAge < 8_000 &&
             bestLoc.hasAccuracy() &&
-            bestLoc.getAccuracy() <= 50f;
+            bestLoc.getAccuracy() <= 25f;
 
-        if (bestIsFreshGps || bestIsPinpointNet) {
+        if (bestIsFreshGps) {
             resolveLocationResult(call, bestLoc);
             return;
         }

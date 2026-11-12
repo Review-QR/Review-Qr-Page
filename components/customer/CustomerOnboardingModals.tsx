@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { stripGooglePlusCode } from "@/lib/hyperlocal/address-format";
 import {
   BAHRAICH_POPULAR_AREAS,
   CustomerLanguage,
@@ -163,7 +164,7 @@ export function CustomerOnboardingModal({
   React.useEffect(() => {
     if (!userLiveLocation) return;
     if (!profileLocality) {
-      setProfileLocality(userLiveLocation);
+      setProfileLocality(stripGooglePlusCode(userLiveLocation) || userLiveLocation);
     }
     if (addrPincode && (!profileCityPincode || profileCityPincode === "Bahraich, 271801")) {
       setProfileCityPincode(`Bahraich, ${addrPincode}`);
@@ -174,17 +175,24 @@ export function CustomerOnboardingModal({
     setGpsPrefillNote("");
     const detected = await onDetectGps();
     if (detected) {
-      const detectedLocality =
-        detected.street || detected.mohalla || detected.locationName || detected.formattedAddress || "";
+      const detectedLocality = stripGooglePlusCode(
+        detected.mohalla || detected.locationName || detected.street || detected.formattedAddress || "",
+      );
       if (detectedLocality) {
         setProfileLocality(detectedLocality);
+      }
+      if (detected.landmark) {
+        const cleanLm = stripGooglePlusCode(detected.landmark);
+        if (cleanLm && cleanLm.toLowerCase() !== detectedLocality.toLowerCase()) {
+          setProfileLandmark(cleanLm);
+        }
       }
       const detectedCity = detected.city || "Bahraich";
       const detectedPin = detected.pincode || addrPincode || "271801";
       setProfileCityPincode(`${detectedCity}, ${detectedPin}`);
       setGpsPrefillNote("Location auto-filled from GPS. Please enter your House / Flat No. and Landmark.");
     } else if (userLiveLocation) {
-      setProfileLocality(userLiveLocation);
+      setProfileLocality(stripGooglePlusCode(userLiveLocation) || userLiveLocation);
       setProfileCityPincode(`Bahraich, ${addrPincode || "271801"}`);
     }
   };

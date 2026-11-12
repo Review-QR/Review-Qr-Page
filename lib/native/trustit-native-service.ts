@@ -124,7 +124,7 @@ export const TrustitNative = {
   /**
    * High-accuracy hardware GPS coordinates & reverse geocoded address via Android Fused/LocationManager.
    */
-  async getPreciseLocation(): Promise<{
+  async getPreciseLocation(options?: { forceFresh?: boolean }): Promise<{
     latitude: number;
     longitude: number;
     accuracy?: number;
@@ -138,16 +138,38 @@ export const TrustitNative = {
     city?: string;
     pincode?: string;
   }> {
+    const forceFresh = Boolean(options?.forceFresh);
+    const maxAgeAllowed = forceFresh ? 15_000 : 35_000;
+    let nativeFallback: {
+      latitude: number;
+      longitude: number;
+      accuracy?: number;
+      speed?: number;
+      bearing?: number;
+      altitude?: number;
+      provider?: string;
+      timestamp?: number;
+      address?: string;
+      mohalla?: string;
+      city?: string;
+      pincode?: string;
+    } | null = null;
+
     const plugin = getNativePlugin();
     if (plugin && typeof plugin.getPreciseLocation === "function") {
       try {
         const res = await plugin.getPreciseLocation();
         const fixAgeMs = res?.timestamp ? Math.abs(Date.now() - res.timestamp) : 0;
-        if (res && res.latitude && res.longitude && fixAgeMs < 120_000) {
-          return res;
-        }
+        const isAccurateEnough =
+          !forceFresh || ((res?.accuracy ?? 999) <= 45 && res?.provider !== "network");
         if (res && res.latitude && res.longitude) {
-          console.warn("[TrustitNative] Native GPS fix is stale (" + Math.round(fixAgeMs / 1000) + "s old), trying WebView geolocation.");
+          if (fixAgeMs < maxAgeAllowed && isAccurateEnough) {
+            return res;
+          }
+          nativeFallback = res;
+          console.warn(
+            `[TrustitNative] Native fix (${res.provider || "?"}, acc=${res.accuracy ?? "?"}m, age=${Math.round(fixAgeMs / 1000)}s) needs fresher high-accuracy check.`,
+          );
         }
       } catch (err) {
         console.warn("Native location fallback to web navigator:", err);
@@ -157,21 +179,36 @@ export const TrustitNative = {
     if (typeof window !== "undefined" && navigator.geolocation) {
       return new Promise((resolve) => {
         navigator.geolocation.getCurrentPosition(
-          (pos) => resolve({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-            accuracy: pos.coords.accuracy,
-            speed: pos.coords.speed || 0,
-            bearing: pos.coords.heading || 0,
-            altitude: pos.coords.altitude || 0,
-            provider: "browser",
-            timestamp: pos.timestamp,
-            address: `GPS (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`,
-            mohalla: "Live Telemetry",
-            city: "UP",
-            pincode: "",
-          }),
+          (pos) => {
+            const webLoc = {
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              accuracy: pos.coords.accuracy,
+              speed: pos.coords.speed || 0,
+              bearing: pos.coords.heading || 0,
+              altitude: pos.coords.altitude || 0,
+              provider: "browser",
+              timestamp: pos.timestamp,
+              address: `GPS (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`,
+              mohalla: "Live Telemetry",
+              city: "UP",
+              pincode: "",
+            };
+            if (
+              nativeFallback &&
+              (nativeFallback.accuracy ?? 999) < pos.coords.accuracy &&
+              (!forceFresh || Math.abs(Date.now() - (nativeFallback.timestamp || 0)) < 25_000)
+            ) {
+              resolve(nativeFallback);
+              return;
+            }
+            resolve(webLoc);
+          },
           () => {
+            if (nativeFallback) {
+              resolve(nativeFallback);
+              return;
+            }
             // Second attempt with network/Wi-Fi accuracy for indoor reliability
             navigator.geolocation.getCurrentPosition(
               (pos) => resolve({
@@ -204,6 +241,8 @@ export const TrustitNative = {
         );
       });
     }
+
+    if (nativeFallback) return nativeFallback;
 
     return {
       latitude: 0,

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from "react";
-import { FolderOpen, Camera, RefreshCw, X } from "lucide-react";
+import { FolderOpen, Camera, RefreshCw, X, ShoppingCart } from "lucide-react";
 import {
   SuperAppBusiness,
   SuperAppCatalogItem,
@@ -428,10 +428,27 @@ export default function CustomerStorefrontAndVerticals({
             </div>
 
             {/* Menu List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 pb-20 space-y-3">
               {filteredStoreItems.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[#c3c6d4] bg-white p-6 text-center text-xs text-[#737783]">
-                  No menu items matched &ldquo;{inStoreSearch}&rdquo;. Try clearing filters.
+                <div className="rounded-2xl border border-dashed border-[#c3c6d4] bg-white p-6 text-center space-y-2 text-xs text-[#434652]">
+                  <div className="text-xl">🍽️</div>
+                  <div className="font-extrabold text-[#131b2e]">
+                    {storeItems.length === 0
+                      ? `${activeStore.name} is updating their live menu card.`
+                      : `No menu items matched “${inStoreSearch}”.`}
+                  </div>
+                  {(inStoreSearch || inStoreVegOnly) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInStoreSearch("");
+                        setInStoreVegOnly(false);
+                      }}
+                      className="rounded-xl bg-[#f2f3ff] border border-[#dae2fd] px-3 py-1.5 text-[11px] font-bold text-[#003178]"
+                    >
+                      Clear Menu Filters
+                    </button>
+                  )}
                 </div>
               ) : (
                 filteredStoreItems.map((item) => (
@@ -492,20 +509,22 @@ export default function CustomerStorefrontAndVerticals({
               )}
             </div>
 
-            {/* Sticky Cart Footer */}
+            {/* Compact Floating Cart Icon with Notification Badge */}
             {cartItemsList.length > 0 && (
-              <div className="bg-white border-t border-[#c3c6d4]/60 p-3.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={onOpenCheckout}
-                  className="w-full rounded-2xl bg-[#003178] hover:bg-[#0d47a1] text-white py-3 px-4 flex items-center justify-between text-xs font-black shadow-lg transition"
-                >
-                  <span>
-                    {cartItemsList.reduce((s, l) => s + l.quantity, 0)} Item(s) • Single Store Order
+              <button
+                type="button"
+                onClick={onOpenCheckout}
+                aria-label="Open Cart Checkout"
+                className="fixed bottom-5 right-5 z-20 flex items-center gap-2 rounded-2xl bg-[#003178] hover:bg-[#0d47a1] text-white pl-3 pr-3.5 py-2.5 shadow-2xl border border-white/25 transition active:scale-95"
+              >
+                <span className="relative flex items-center justify-center">
+                  <ShoppingCart className="h-5 w-5" strokeWidth={2.3} />
+                  <span className="absolute -top-2 -right-2.5 min-w-[18px] h-[18px] rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center px-1 shadow-sm ring-2 ring-[#003178]">
+                    {cartItemsList.reduce((s, l) => s + l.quantity, 0)}
                   </span>
-                  <span>View Cart ₹{cartGrandTotal} →</span>
-                </button>
-              </div>
+                </span>
+                <span className="text-xs font-black pl-1">₹{cartGrandTotal}</span>
+              </button>
             )}
           </div>
         </div>

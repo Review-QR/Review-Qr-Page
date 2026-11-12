@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { stripGooglePlusCode } from "@/lib/hyperlocal/address-format";
 import {
   SuperAppBusiness,
   calcDistanceKm,
@@ -193,11 +194,15 @@ export default function BahraichInteractiveMap({
     const timer = setTimeout(async () => {
       setIsGeocodingPin(true);
       try {
-        const res = await fetch(`/api/hyperlocal/reverse-geocode?lat=${pinPos.lat}&lng=${pinPos.lng}`);
+        const res = await fetch(`/api/hyperlocal/reverse-geocode?lat=${pinPos.lat}&lng=${pinPos.lng}&_ts=${Date.now()}`, {
+          cache: "no-store",
+        });
         if (res.ok && active) {
           const data = await res.json();
-          setPinLabel(data.formattedAddress || data.locationName || `Bahraich (${pinPos.lat.toFixed(4)}, ${pinPos.lng.toFixed(4)})`);
-          setPinMohalla(data.mohalla || data.locationName || "Civil Lines");
+          const cleanLabel = stripGooglePlusCode(data.formattedAddress || data.locationName);
+          const cleanMohalla = stripGooglePlusCode(data.mohalla || data.locationName);
+          setPinLabel(cleanLabel || `Bahraich (${pinPos.lat.toFixed(4)}, ${pinPos.lng.toFixed(4)})`);
+          setPinMohalla(cleanMohalla || "Civil Lines");
           setPinPincode(data.pincode || "271801");
         }
       } catch {
@@ -677,6 +682,7 @@ export default function BahraichInteractiveMap({
                   if (gps) {
                     setPinPos(gps);
                     setCenter(gps);
+                    setZoom(17);
                   }
                 }}
                 className="shrink-0 rounded-xl border border-[#003178]/30 bg-[#f2f3ff] px-2.5 py-1.5 text-[11px] font-bold text-[#003178]"

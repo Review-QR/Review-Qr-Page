@@ -78,6 +78,7 @@ export type DetectedGpsLocation = {
   lng: number;
   locationName?: string;
   mohalla?: string;
+  landmark?: string;
   street?: string;
   city?: string;
   pincode?: string;

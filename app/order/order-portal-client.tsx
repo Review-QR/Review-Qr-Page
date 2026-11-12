@@ -5,6 +5,7 @@ import { formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
 import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
 import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotificationBanner";
 import { TrustitNative } from "@/lib/native/trustit-native-service";
+import { stripGooglePlusCode } from "@/lib/hyperlocal/address-format";
 import CustomerHomeAndDiscovery from "@/components/customer/CustomerHomeAndDiscovery";
 import {
   CustomerBrandSplash,
@@ -316,6 +317,8 @@ export default function CustomerSuperAppClient({
     amount: number;
     storeName: string;
     reason: string;
+    hostedPayUrl?: string;
+    deliveryOtp?: string;
   } | null>(null);
   const [confirmedOrderOverlay, setConfirmedOrderOverlay] = useState<{
     orderId: string;
@@ -381,17 +384,20 @@ export default function CustomerSuperAppClient({
   };
 
   // Fetch Customer Past & Running Orders
-  const fetchCustomerPoints = useCallback(async (cId?: string, phone?: string) => {
+  const fetchCustomerPoints = useCallback(async (cId?: string, phone?: string, email?: string) => {
     const targetId = cId || "";
     const targetPhone = phone || "";
-    if (!targetId && targetPhone.length < 10) return;
+    const targetEmail = email || "";
+    if (!targetId && targetPhone.length < 10 && !targetEmail) return;
     try {
       const params = new URLSearchParams();
       if (targetId) params.set("customerId", targetId);
       if (targetPhone) params.set("phone", targetPhone);
+      if (targetEmail) params.set("email", targetEmail);
       params.set("_ts", String(Date.now()));
-      const res = await fetch(`/api/customer/points?${params.toString()}`, {
+      const res = await TrustitNative.nativeFetch(`/api/customer/points?${params.toString()}`, {
         cache: "no-store",
+        headers: { "Cache-Control": "no-cache" },
       });
       const data = await res.json().catch(() => null);
       if (data?.success && typeof data.rewardPoints === "number") {
@@ -522,7 +528,7 @@ export default function CustomerSuperAppClient({
       }
 
       if (savedId) {
-        fetchCustomerPoints(savedId, savedPhone);
+        fetchCustomerPoints(savedId, savedPhone, savedEmail);
         fetch(`/api/customer/addresses?customerId=${encodeURIComponent(savedId)}`)
           .then((r) => (r.ok ? r.json() : null))
           .then((d) => {
@@ -555,8 +561,8 @@ export default function CustomerSuperAppClient({
           })
           .catch(() => {});
         fetchCustomerOrders(savedId, savedPhone);
-      } else if (savedPhone) {
-        fetchCustomerPoints(undefined, savedPhone);
+      } else if (savedPhone || savedEmail) {
+        fetchCustomerPoints(undefined, savedPhone, savedEmail);
       }
 
       if (savedGuest) setGuestMode(true);
@@ -576,12 +582,20 @@ export default function CustomerSuperAppClient({
   }, [fetchCustomerOrders, fetchCustomerPoints]);
 
   useEffect(() => {
-    if (customerPhone && customerPhone.length >= 10) {
-      fetchActiveBookings(customerPhone);
-      const interval = setInterval(() => fetchActiveBookings(customerPhone), 12000);
+    if ((customerPhone && customerPhone.length >= 10) || customerId || customerEmail) {
+      if (customerPhone && customerPhone.length >= 10) {
+        fetchActiveBookings(customerPhone);
+      }
+      fetchCustomerPoints(customerId, customerPhone, customerEmail);
+      const interval = setInterval(() => {
+        if (customerPhone && customerPhone.length >= 10) {
+          fetchActiveBookings(customerPhone);
+        }
+        fetchCustomerPoints(customerId, customerPhone, customerEmail);
+      }, 12000);
       return () => clearInterval(interval);
     }
-  }, [customerPhone, fetchActiveBookings]);
+  }, [customerId, customerPhone, customerEmail, fetchActiveBookings, fetchCustomerPoints]);
 
   const resolveReverseGeocodeAndApply = useCallback(
     async (
@@ -597,19 +611,21 @@ export default function CustomerSuperAppClient({
         if (res.ok) geocodeData = await res.json();
       } catch {}
 
-      const resolvedName =
+      const rawName =
         geocodeData?.locationName && !String(geocodeData.locationName).includes("GPS:")
           ? geocodeData.locationName
           : fallback?.mohalla || geocodeData?.locationName || `Live GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
-      const mohalla = geocodeData?.mohalla || fallback?.mohalla || resolvedName;
+      const resolvedName = stripGooglePlusCode(rawName) || rawName;
+      const mohalla = stripGooglePlusCode(geocodeData?.mohalla || fallback?.mohalla || resolvedName) || resolvedName;
+      const landmark = stripGooglePlusCode(geocodeData?.landmark || "");
       const district = geocodeData?.district || geocodeData?.city || fallback?.city || "Bahraich";
       const pincode = geocodeData?.pincode || fallback?.pincode || "271801";
-      const formatted = geocodeData?.formattedAddress || resolvedName;
+      const formatted = stripGooglePlusCode(geocodeData?.formattedAddress || resolvedName) || resolvedName;
 
       setUserLiveLocation(resolvedName);
       setSelectedCity(district);
       setAddrPincode(pincode);
-      setCustomerAddress((prev) => prev || formatted);
+      setCustomerAddress((prev) => stripGooglePlusCode(prev) || formatted);
 
       try {
         localStorage.setItem(
@@ -632,7 +648,8 @@ export default function CustomerSuperAppClient({
         lng,
         locationName: resolvedName,
         mohalla,
-        street: formatted || mohalla || resolvedName,
+        landmark,
+        street: mohalla || formatted || resolvedName,
         city: district,
         pincode,
         formattedAddress: formatted,
@@ -644,9 +661,21 @@ export default function CustomerSuperAppClient({
   // ── N-06 Early GPS Detection (Matches Rider App Pinpoint Accuracy) ──
   const detectLiveLocation = useCallback(
     async (silent = false): Promise<DetectedGpsLocation | null> => {
-      if (!silent) setIsDetectingGps(true);
+      if (!silent) {
+        setIsDetectingGps(true);
+        try {
+          const saved = localStorage.getItem("trustit_customer_location");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.manualPin) {
+              delete parsed.manualPin;
+              localStorage.setItem("trustit_customer_location", JSON.stringify(parsed));
+            }
+          }
+        } catch {}
+      }
       try {
-        const loc = await TrustitNative.getPreciseLocation();
+        const loc = await TrustitNative.getPreciseLocation({ forceFresh: !silent });
         const lat = loc.latitude;
         const lng = loc.longitude;
         if (!Number.isFinite(lat) || !Number.isFinite(lng) || (Math.abs(lat) < 0.01 && Math.abs(lng) < 0.01)) {
@@ -678,7 +707,7 @@ export default function CustomerSuperAppClient({
         const ageMs = typeof parsed.time === "number" ? Date.now() - parsed.time : Number.MAX_SAFE_INTEGER;
         if (parsed.manualPin && ageMs < 15 * 60_000 && parsed.locationName && !String(parsed.locationName).includes("0.0000")) {
           hasRecentManualPin = true;
-          setUserLiveLocation(parsed.locationName);
+          setUserLiveLocation(stripGooglePlusCode(parsed.locationName) || parsed.locationName);
           if (parsed.district || parsed.city) setSelectedCity(parsed.district || parsed.city);
           if (parsed.pincode) setAddrPincode(parsed.pincode);
           if (parsed.lat && parsed.lng && Math.abs(parsed.lat) > 0.01) {
@@ -694,8 +723,8 @@ export default function CustomerSuperAppClient({
 
     const handleVisibilityRefresh = () => {
       if (document.visibilityState !== "visible") return;
-      if (customerId || (customerPhone && customerPhone.length >= 10)) {
-        fetchCustomerPoints(customerId, customerPhone);
+      if (customerId || (customerPhone && customerPhone.length >= 10) || customerEmail) {
+        fetchCustomerPoints(customerId, customerPhone, customerEmail);
       }
       try {
         const saved = localStorage.getItem("trustit_customer_location");
@@ -718,7 +747,7 @@ export default function CustomerSuperAppClient({
           const lat = pos.coords.latitude;
           const lng = pos.coords.longitude;
           if (pos.coords.accuracy > 250) return;
-          if (Math.abs(lat - lastWatchedLat) < 0.0011 && Math.abs(lng - lastWatchedLng) < 0.0011) return;
+          if (Math.abs(lat - lastWatchedLat) < 0.0004 && Math.abs(lng - lastWatchedLng) < 0.0004) return;
           try {
             const saved = localStorage.getItem("trustit_customer_location");
             const parsed = saved ? JSON.parse(saved) : null;
@@ -730,7 +759,7 @@ export default function CustomerSuperAppClient({
           await resolveReverseGeocodeAndApply(lat, lng);
         },
         () => {},
-        { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 },
+        { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
       );
     }
 
@@ -741,7 +770,7 @@ export default function CustomerSuperAppClient({
         navigator.geolocation.clearWatch(watchId);
       }
     };
-  }, [detectLiveLocation, resolveReverseGeocodeAndApply, customerId, customerPhone, fetchCustomerPoints]);
+  }, [detectLiveLocation, resolveReverseGeocodeAndApply, customerId, customerPhone, customerEmail, fetchCustomerPoints]);
 
   // ── Auth Handlers (N-02 to N-05) ──
   const openLoginOrResume = () => {
@@ -1425,6 +1454,60 @@ export default function CustomerSuperAppClient({
     });
   };
 
+  // Preload Cashfree JS SDK on web origins when Checkout opens (zero delay on Pay tap)
+  useEffect(() => {
+    if (!isCheckoutOpen || typeof window === "undefined") return;
+    const isCapacitorOrLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1" ||
+      Boolean((window as any).Capacitor?.isNativePlatform?.());
+    if (!isCapacitorOrLocalhost) {
+      loadCashfreeSdk().catch(() => {});
+    }
+  }, [isCheckoutOpen]);
+
+  // Auto-verify hosted Cashfree payment when Capacitor app returns from external browser
+  useEffect(() => {
+    if (!paymentRetryState?.orderId || !paymentRetryState?.hostedPayUrl) return;
+    let active = true;
+    const checkPaid = async () => {
+      try {
+        const res = await TrustitNative.nativeFetch(
+          `/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(paymentRetryState.orderId)}&_ts=${Date.now()}`,
+        );
+        const verifyData = await res.json().catch(() => null);
+        if (active && verifyData?.status === "VERIFIED_SUCCESS") {
+          TrustitNative.playHapticFeedback("success");
+          setCart({});
+          setRiderTip(0);
+          setPaymentRetryState(null);
+          setIsCheckoutOpen(false);
+          setActiveStoreModal(null);
+          setConfirmedOrderOverlay({
+            orderId: paymentRetryState.orderId,
+            displayCode: formatUnifiedOrderCode(paymentRetryState.orderId, paymentRetryState.storeName),
+            storeName: paymentRetryState.storeName,
+            deliveryOtp: paymentRetryState.deliveryOtp || "4821",
+            paymentLabel: "Cashfree Paid ✓",
+          });
+          fetchActiveBookings(customerPhone);
+        }
+      } catch {}
+    };
+    const timer = setInterval(checkPaid, 3000);
+    const onResume = () => {
+      if (document.visibilityState === "visible") checkPaid();
+    };
+    document.addEventListener("visibilitychange", onResume);
+    window.addEventListener("focus", checkPaid);
+    return () => {
+      active = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", onResume);
+      window.removeEventListener("focus", checkPaid);
+    };
+  }, [paymentRetryState, customerPhone, fetchActiveBookings]);
+
   const handleInitiateCashfreeGateway = (targetBizId: string, existingOrderId?: string) => {
     setIsPaymentLaunching(true);
     startTransition(async () => {
@@ -1448,6 +1531,12 @@ export default function CustomerSuperAppClient({
           deliveryOtp = orderData.deliveryOtp;
         }
 
+        const isCapacitorOrLocalhost =
+          typeof window !== "undefined" &&
+          (window.location.hostname === "localhost" ||
+            window.location.hostname === "127.0.0.1" ||
+            Boolean((window as any).Capacitor?.isNativePlatform?.()));
+
         const storeName = businesses.find((b) => b.id === targetBizId)?.name || "Bahraich Partner";
         const resSession = await fetch("/api/hyperlocal/payment/session", {
           method: "POST",
@@ -1460,6 +1549,7 @@ export default function CustomerSuperAppClient({
             customerName: customerName || "Trustit Customer",
             customerPhone,
             customerEmail: customerEmail || undefined,
+            returnUrl: `https://trustitreview.com/pay/cashfree?order_id=${encodeURIComponent(currentOrderId!)}&returned=1`,
           }),
         });
         const sessionData = await resSession.json();
@@ -1470,6 +1560,30 @@ export default function CustomerSuperAppClient({
             amount: cartGrandTotal,
             storeName,
             reason: sessionData.error || "Payment session initialization timed out.",
+          });
+          return;
+        }
+
+        // In Capacitor Android WebView (origin https://localhost/), Cashfree JS SDK fails with
+        // "Broken Link! https://localhost/ is not enabled". Launch hosted checkout on whitelisted https://trustitreview.com!
+        if (isCapacitorOrLocalhost) {
+          const hostedPayUrl = `https://trustitreview.com/pay/cashfree?sessionId=${encodeURIComponent(
+            sessionData.paymentSessionId,
+          )}&orderId=${encodeURIComponent(currentOrderId!)}&mode=${encodeURIComponent(
+            sessionData.checkoutMode || "sandbox",
+          )}`;
+          setIsPaymentLaunching(false);
+          try {
+            window.open(hostedPayUrl, "_blank", "noopener,noreferrer");
+          } catch {}
+          setPaymentRetryState({
+            orderId: currentOrderId!,
+            amount: cartGrandTotal || 100,
+            storeName,
+            deliveryOtp: deliveryOtp || "4821",
+            hostedPayUrl,
+            reason:
+              "Complete your UPI / Card payment in the secure browser window. This screen will auto-confirm as soon as payment succeeds.",
           });
           return;
         }
@@ -2004,7 +2118,7 @@ export default function CustomerSuperAppClient({
         }}
         onOpenProfile={() => {
           setIsProfileOpen(true);
-          fetchCustomerPoints(customerId, customerPhone);
+          fetchCustomerPoints(customerId, customerPhone, customerEmail);
         }}
         onOpenStandeeScanner={() => setIsStandeeModalOpen(true)}
         onOpenSmartParcha={handleOpenSmartParcha}

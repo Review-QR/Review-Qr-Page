@@ -44,17 +44,20 @@ export async function GET() {
       }));
     }
 
+    const activeBizIds = new Set(businesses.map((b) => String(b.id)));
     const { data: items } = await admin
       .from("business_catalog_items")
       .select("id, business_id, name, category, price, item_type, is_available, image_url, description")
       .eq("is_available", true)
       .order("name", { ascending: true });
 
+    const activeItems = (items || []).filter((it) => activeBizIds.has(String(it.business_id)));
+
     return NextResponse.json({
       success: true,
       businesses,
-      items: items || [],
-      catalogItems: items || [],
+      items: activeItems,
+      catalogItems: activeItems,
     });
   } catch (err) {
     return NextResponse.json(

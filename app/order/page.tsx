@@ -88,13 +88,16 @@ export default async function CustomerOrderPortalPage({
     is_verified: Boolean(b.is_verified),
   }));
 
-  // 2. Fetch catalog items for businesses
+  // 2. Fetch catalog items for active businesses only
+  const activeBizIds = new Set(businesses.map((b) => b.id));
   const { data: rawItems } = await admin
     .from("business_catalog_items")
     .select("id, business_id, name, category, price, item_type, is_available, image_url, description")
     .eq("is_available", true);
 
-  const catalogItems: SuperAppCatalogItem[] = (rawItems || []).map((i) => ({
+  const catalogItems: SuperAppCatalogItem[] = (rawItems || [])
+    .filter((i) => activeBizIds.has(String(i.business_id)))
+    .map((i) => ({
     id: i.id,
     business_id: i.business_id,
     name: i.name,

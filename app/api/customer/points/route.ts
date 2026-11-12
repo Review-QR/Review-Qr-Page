@@ -11,20 +11,35 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const customerId = searchParams.get("customerId")?.trim();
+    const customerId = searchParams.get("customerId")?.trim() || "";
     const rawPhone = searchParams.get("phone")?.trim() || "";
+    const email = searchParams.get("email")?.trim().toLowerCase() || "";
     const phone10 = rawPhone.replace(/\D/g, "").slice(-10);
 
-    if (!customerId && phone10.length !== 10) {
+    if (!customerId && phone10.length !== 10 && !email) {
       return NextResponse.json(
-        { success: false, error: "Customer ID or valid 10-digit phone is required." },
+        { success: false, error: "Customer ID, email, or valid 10-digit phone is required." },
         { status: 400 },
       );
     }
 
     const admin = createSupabaseAdminClient();
-    const selectWithPoints = "id, full_name, phone, reward_points";
-    const rows: Array<{ id: string; full_name?: string | null; phone?: string | null; reward_points?: number | null }> = [];
+    const selectWithPoints = "id, full_name, phone, email, reward_points";
+    const rows: Array<{
+      id: string;
+      full_name?: string | null;
+      phone?: string | null;
+      email?: string | null;
+      reward_points?: number | null;
+    }> = [];
+
+    const pushUnique = (list: typeof rows | null | undefined) => {
+      for (const r of list || []) {
+        if (!rows.some((existing) => existing.id === r.id)) {
+          rows.push(r);
+        }
+      }
+    };
 
     if (customerId) {
       const { data, error } = await admin
@@ -46,7 +61,7 @@ export async function GET(request: NextRequest) {
         }
         return NextResponse.json({ success: false, error: error.message }, { status: 500 });
       }
-      if (data) rows.push(data);
+      if (data) pushUnique([data]);
     }
 
     const effectivePhone10 =
@@ -55,13 +70,13 @@ export async function GET(request: NextRequest) {
         : (rows[0]?.phone || "").replace(/\D/g, "").slice(-10);
 
     if (effectivePhone10.length === 10) {
-      const { data: phoneRows, error: phoneErr } = await admin
+      const { data: exactPhoneRows, error: exactErr } = await admin
         .from("customers")
         .select(selectWithPoints)
-        .or(`phone.eq.${effectivePhone10},phone.eq.91${effectivePhone10},phone.eq.+91${effectivePhone10},phone.ilike.%${effectivePhone10}%`)
+        .in("phone", [effectivePhone10, `91${effectivePhone10}`, `+91${effectivePhone10}`])
         .limit(10);
 
-      if (phoneErr && phoneErr.message?.toLowerCase().includes("reward_points")) {
+      if (exactErr && exactErr.message?.toLowerCase().includes("reward_points")) {
         return NextResponse.json(
           {
             success: true,
@@ -72,11 +87,24 @@ export async function GET(request: NextRequest) {
           { headers: { "Cache-Control": "no-store, max-age=0" } },
         );
       }
-      for (const r of phoneRows || []) {
-        if (!rows.some((existing) => existing.id === r.id)) {
-          rows.push(r);
-        }
-      }
+      pushUnique(exactPhoneRows);
+
+      const { data: fuzzyPhoneRows } = await admin
+        .from("customers")
+        .select(selectWithPoints)
+        .ilike("phone", `%${effectivePhone10}%`)
+        .limit(10);
+      pushUnique(fuzzyPhoneRows);
+    }
+
+    const effectiveEmail = email || rows[0]?.email?.trim().toLowerCase() || "";
+    if (effectiveEmail && effectiveEmail.includes("@")) {
+      const { data: emailRows } = await admin
+        .from("customers")
+        .select(selectWithPoints)
+        .ilike("email", effectiveEmail)
+        .limit(5);
+      pushUnique(emailRows);
     }
 
     const rewardPoints = rows.reduce(

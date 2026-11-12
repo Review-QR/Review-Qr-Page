@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { stripGooglePlusCode } from "@/lib/hyperlocal/address-format";
 
 export const dynamic = "force-dynamic";
 
@@ -6,6 +7,7 @@ export const dynamic = "force-dynamic";
 interface CachedLocation {
   name: string;
   mohalla?: string;
+  landmark?: string;
   city?: string;
   district?: string;
   pincode?: string;
@@ -14,7 +16,7 @@ interface CachedLocation {
   timestamp: number;
 }
 const geocodeCache = new Map<string, CachedLocation>();
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache per micro-grid (~100m)
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes cache per ~11m micro-grid
 
 function normalizeDistrictName(raw: string): string {
   return raw
@@ -29,8 +31,8 @@ function isDivisionName(raw: string): boolean {
 }
 
 function getCacheKey(lat: number, lng: number): string {
-  // Round to ~100m precision (3 decimal places)
-  return `${lat.toFixed(3)},${lng.toFixed(3)}`;
+  // Round to ~11m precision (4 decimal places) so adjacent mohallas don't collide
+  return `${lat.toFixed(4)},${lng.toFixed(4)}`;
 }
 
 export async function OPTIONS() {
@@ -73,12 +75,13 @@ export async function GET(request: Request) {
   if (cached && now - cached.timestamp < CACHE_TTL_MS) {
     return NextResponse.json(
       {
-        locationName: cached.name,
-        mohalla: cached.mohalla || cached.name,
+        locationName: stripGooglePlusCode(cached.name),
+        mohalla: stripGooglePlusCode(cached.mohalla || cached.name),
+        landmark: stripGooglePlusCode(cached.landmark || ""),
         city: cached.city || "Bahraich",
         district: cached.district || cached.city || "Bahraich",
         pincode: cached.pincode || "271801",
-        formattedAddress: cached.formattedAddress || cached.name,
+        formattedAddress: stripGooglePlusCode(cached.formattedAddress || cached.name),
         source: cached.source || "cache",
         cached: true,
         lat,
@@ -87,7 +90,7 @@ export async function GET(request: Request) {
       {
         headers: {
           "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600",
+          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
         },
       }
     );
@@ -95,6 +98,7 @@ export async function GET(request: Request) {
 
   let resolvedName: string | null = null;
   let resolvedMohalla: string = "";
+  let resolvedLandmark: string = "";
   let resolvedCity: string = "Bahraich";
   let resolvedDistrict: string = "Bahraich";
   let resolvedPincode: string = "271801";
@@ -112,40 +116,63 @@ export async function GET(request: Request) {
       if (googleRes.ok) {
         const googleData = await googleRes.json();
         if (googleData.status === "OK" && Array.isArray(googleData.results) && googleData.results.length > 0) {
-          const first = googleData.results[0];
-          resolvedFormattedAddress = first.formatted_address || "";
+          const resultsList = googleData.results as Array<{
+            formatted_address?: string;
+            types?: string[];
+            address_components?: Array<{ long_name: string; types: string[] }>;
+          }>;
+          const nonPlusResult =
+            resultsList.find((r) => !(r.types || []).includes("plus_code")) || resultsList[0];
+          const first = resultsList[0];
+          resolvedFormattedAddress = stripGooglePlusCode(
+            nonPlusResult.formatted_address || first.formatted_address || "",
+          );
 
-          let sublocality = "";
+          let sublocality2 = "";
+          let sublocality1 = "";
+          let neighborhood = "";
+          let poi = "";
           let locality = "";
           let adminLevel3 = "";
           let adminLevel2 = "";
           let postalCode = "";
           let route = "";
 
-          const allComponents = [
-            ...(first.address_components || []),
-            ...((googleData.results[1]?.address_components as typeof first.address_components) || []),
-          ];
+          const allComponents = resultsList
+            .slice(0, 4)
+            .flatMap((r) => r.address_components || []);
 
           for (const comp of allComponents) {
-            if (comp.types.includes("sublocality") || comp.types.includes("sublocality_level_1") || comp.types.includes("sublocality_level_2")) {
-              if (!sublocality) sublocality = comp.long_name;
+            const name = stripGooglePlusCode(comp.long_name);
+            if (!name) continue;
+            if (comp.types.includes("plus_code")) continue;
+            if (comp.types.includes("sublocality_level_2")) {
+              if (!sublocality2) sublocality2 = name;
+            } else if (comp.types.includes("sublocality_level_1") || comp.types.includes("sublocality")) {
+              if (!sublocality1) sublocality1 = name;
             } else if (comp.types.includes("neighborhood")) {
-              if (!sublocality) sublocality = comp.long_name;
+              if (!neighborhood) neighborhood = name;
+            } else if (comp.types.includes("point_of_interest") || comp.types.includes("establishment") || comp.types.includes("premise")) {
+              if (!poi) poi = name;
             } else if (comp.types.includes("locality")) {
-              if (!locality) locality = comp.long_name;
+              if (!locality) locality = name;
             } else if (comp.types.includes("administrative_area_level_3")) {
-              if (!adminLevel3) adminLevel3 = comp.long_name;
+              if (!adminLevel3) adminLevel3 = name;
             } else if (comp.types.includes("administrative_area_level_2")) {
-              if (!adminLevel2) adminLevel2 = comp.long_name;
+              if (!adminLevel2) adminLevel2 = name;
             } else if (comp.types.includes("postal_code")) {
-              if (!postalCode) postalCode = comp.long_name;
+              if (!postalCode) postalCode = name;
             } else if (comp.types.includes("route")) {
-              if (!route) route = comp.long_name;
+              if (!route && !/^unnamed\s+road$/i.test(name)) route = name;
             }
           }
 
-          resolvedMohalla = sublocality || route || locality || "";
+          const bestSublocality = neighborhood || sublocality2 || sublocality1 || route || "";
+          resolvedMohalla =
+            [route, bestSublocality].filter((v, idx, arr) => v && arr.indexOf(v) === idx).slice(0, 2).join(", ") ||
+            locality ||
+            "";
+          resolvedLandmark = poi || (route && route !== bestSublocality ? route : "") || sublocality1 || "";
           const cleanLevel3 = adminLevel3 && !isDivisionName(adminLevel3) ? normalizeDistrictName(adminLevel3) : "";
           const cleanLevel2 = adminLevel2 && !isDivisionName(adminLevel2) ? normalizeDistrictName(adminLevel2) : "";
           const cleanLocality = locality ? normalizeDistrictName(locality) : "";
@@ -155,14 +182,15 @@ export async function GET(request: Request) {
           resolvedCity = resolvedDist;
           if (postalCode) resolvedPincode = postalCode;
 
-          if (sublocality && locality && sublocality !== locality) {
-            resolvedName = `${sublocality}, ${locality}`;
-          } else if (locality && resolvedDist && locality !== resolvedDist) {
+          const headerArea = bestSublocality || route;
+          if (headerArea && locality && headerArea.toLowerCase() !== locality.toLowerCase()) {
+            resolvedName = `${headerArea}, ${locality}`;
+          } else if (locality && resolvedDist && locality.toLowerCase() !== resolvedDist.toLowerCase()) {
             resolvedName = `${locality}, ${resolvedDist}`;
           } else if (locality) {
             resolvedName = `${locality}`;
-          } else if (first.formatted_address) {
-            const parts = first.formatted_address.split(",").map((p: string) => p.trim());
+          } else if (resolvedFormattedAddress) {
+            const parts = resolvedFormattedAddress.split(",").map((p: string) => p.trim()).filter(Boolean);
             resolvedName = parts.slice(0, 2).join(", ");
           }
 
@@ -283,26 +311,33 @@ export async function GET(request: Request) {
     source = "raw";
   }
 
+  const cleanLocationName = stripGooglePlusCode(resolvedName) || `GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+  const cleanMohalla = stripGooglePlusCode(resolvedMohalla) || cleanLocationName;
+  const cleanLandmark = stripGooglePlusCode(resolvedLandmark);
+  const cleanFormatted = stripGooglePlusCode(resolvedFormattedAddress) || cleanLocationName;
+
   // Cache resolved address
   geocodeCache.set(cacheKey, {
-    name: resolvedName,
-    mohalla: resolvedMohalla,
+    name: cleanLocationName,
+    mohalla: cleanMohalla,
+    landmark: cleanLandmark,
     city: resolvedCity,
     district: resolvedDistrict || resolvedCity,
     pincode: resolvedPincode,
-    formattedAddress: resolvedFormattedAddress,
+    formattedAddress: cleanFormatted,
     source,
     timestamp: now,
   });
 
   return NextResponse.json(
     {
-      locationName: resolvedName,
-      mohalla: resolvedMohalla || resolvedName,
+      locationName: cleanLocationName,
+      mohalla: cleanMohalla,
+      landmark: cleanLandmark,
       city: resolvedCity || "Bahraich",
       district: resolvedDistrict || resolvedCity || "Bahraich",
       pincode: resolvedPincode || "271801",
-      formattedAddress: resolvedFormattedAddress || resolvedName,
+      formattedAddress: cleanFormatted,
       source,
       lat,
       lng,

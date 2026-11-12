@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import { ShoppingCart } from "lucide-react";
 import { calculatePointsInrValue } from "@/lib/customer-points";
+import { stripGooglePlusCode } from "@/lib/hyperlocal/address-format";
 import {
   SuperAppBusiness,
   SuperAppCatalogItem,
@@ -131,7 +133,7 @@ export default function CustomerHomeAndDiscovery({
     const q = searchQuery.trim().toLowerCase();
     if (q.length < 2) return [];
     return catalogItems
-      .filter((i) => i.is_available && matchesCatalogQuery(i, q))
+      .filter((i) => i.is_available && businesses.some((b) => b.id === i.business_id) && matchesCatalogQuery(i, q))
       .slice(0, 8)
       .map((item) => ({
         item,
@@ -157,7 +159,7 @@ export default function CustomerHomeAndDiscovery({
             </span>
             <div className="min-w-0">
               <div className="flex items-center gap-1 text-xs font-black text-[#003178] truncate">
-                <span>📍 {userLiveLocation}</span>
+                <span>📍 {stripGooglePlusCode(userLiveLocation) || userLiveLocation}</span>
                 <span className="text-[10px]">▾</span>
               </div>
               <div className="text-[10px] font-semibold text-[#737783] truncate">
@@ -499,7 +501,7 @@ export default function CustomerHomeAndDiscovery({
                               className="w-full h-full object-cover group-hover:scale-105 transition"
                             />
                 {Boolean(store.is_verified) && (
-                  <span className="absolute top-1.5 left-1.5 rounded-md bg-[#003178]/90 text-white px-1.5 py-0.5 text-[9px] font-black">
+                  <span className="absolute top-1.5 left-1.5 rounded-md bg-emerald-600/95 text-white px-1.5 py-0.5 text-[9px] font-black shadow-sm ring-1 ring-white/40">
                     ✓ Verified
                   </span>
                 )}
@@ -565,8 +567,8 @@ export default function CustomerHomeAndDiscovery({
               </button>
             </section>
 
-            {/* Popular Local Picks */}
-            {catalogItems.filter((i) => i.is_available).length > 0 && (
+            {/* Popular Local Picks (Strictly from active stores) */}
+            {catalogItems.filter((i) => i.is_available && businesses.some((b) => b.id === i.business_id)).length > 0 && (
               <section className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-black uppercase tracking-wider text-[#434652]">
@@ -582,7 +584,7 @@ export default function CustomerHomeAndDiscovery({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {catalogItems
-                    .filter((i) => i.is_available)
+                    .filter((i) => i.is_available && businesses.some((b) => b.id === i.business_id))
                     .slice(0, 4)
                     .map((item) => {
                       const store = businesses.find((b) => b.id === item.business_id);
@@ -619,22 +621,23 @@ export default function CustomerHomeAndDiscovery({
         )}
       </main>
 
-      {/* ── Sticky Single-Store Cart Strip ── */}
+      {/* ── Compact Floating Cart Icon with Notification Badge ── */}
       {cartCount > 0 && (
-        <div className="fixed bottom-16 left-0 right-0 z-30 px-3">
-          <div className="max-w-md mx-auto">
-            <button
-              type="button"
-              onClick={onOpenCheckout}
-              className="w-full rounded-2xl bg-[#003178] hover:bg-[#0d47a1] text-white px-4 py-2.5 shadow-xl flex items-center justify-between text-xs font-black border border-white/20"
-            >
-              <span className="truncate">
-                🛒 {cartCount} Item(s) • {cartStoreName}
-              </span>
-              <span className="shrink-0 ml-2">Checkout ₹{cartGrandTotal} →</span>
-            </button>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={onOpenCheckout}
+          aria-label={`Open cart checkout (${cartCount} items, ₹${cartGrandTotal})`}
+          title={`Checkout ${cartCount} item(s) • ${cartStoreName} • ₹${cartGrandTotal}`}
+          className="fixed bottom-20 right-4 z-40 flex items-center gap-2 rounded-2xl bg-[#003178] hover:bg-[#0d47a1] text-white pl-3 pr-3.5 py-2.5 shadow-2xl border border-white/25 transition active:scale-95"
+        >
+          <span className="relative flex items-center justify-center">
+            <ShoppingCart className="h-5 w-5" strokeWidth={2.3} />
+            <span className="absolute -top-2 -right-2.5 min-w-[18px] h-[18px] rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center px-1 shadow-sm ring-2 ring-[#003178]">
+              {cartCount}
+            </span>
+          </span>
+          <span className="text-xs font-black pl-1">₹{cartGrandTotal}</span>
+        </button>
       )}
 
       {/* ── 5-Tab Bottom Navigation Bar (Option B: Home, Categories, Orders [Center Raised Live], Scan QR, Account) ── */}
