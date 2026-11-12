@@ -79,6 +79,7 @@ public class TrustitNativeBridge extends Plugin {
                 conn.setConnectTimeout(20000);
                 conn.setReadTimeout(20000);
 
+                boolean hasExplicitCookie = false;
                 if (customHeaders != null) {
                     java.util.Iterator<String> keys = customHeaders.keys();
                     while (keys.hasNext()) {
@@ -86,10 +87,22 @@ public class TrustitNativeBridge extends Plugin {
                         try {
                             String val = customHeaders.getString(key);
                             if (val != null) {
+                                if ("cookie".equalsIgnoreCase(key)) {
+                                    hasExplicitCookie = true;
+                                }
                                 conn.setRequestProperty(key, val);
                             }
                         } catch (Exception ignored) {}
                     }
+                }
+
+                if (!hasExplicitCookie) {
+                    try {
+                        String cookies = android.webkit.CookieManager.getInstance().getCookie(urlStr);
+                        if (cookies != null && !cookies.isEmpty()) {
+                            conn.setRequestProperty("Cookie", cookies);
+                        }
+                    } catch (Exception ignored) {}
                 }
 
                 if ("POST".equalsIgnoreCase(method) || "PUT".equalsIgnoreCase(method) || "PATCH".equalsIgnoreCase(method)) {
@@ -102,6 +115,22 @@ public class TrustitNativeBridge extends Plugin {
                 }
 
                 int status = conn.getResponseCode();
+                try {
+                    android.webkit.CookieManager cm = android.webkit.CookieManager.getInstance();
+                    java.util.Map<String, java.util.List<String>> headerFields = conn.getHeaderFields();
+                    if (headerFields != null) {
+                        for (java.util.Map.Entry<String, java.util.List<String>> entry : headerFields.entrySet()) {
+                            if (entry.getKey() != null && "Set-Cookie".equalsIgnoreCase(entry.getKey()) && entry.getValue() != null) {
+                                for (String cookieHeader : entry.getValue()) {
+                                    if (cookieHeader != null && !cookieHeader.isEmpty()) {
+                                        cm.setCookie(urlStr, cookieHeader);
+                                    }
+                                }
+                            }
+                        }
+                        cm.flush();
+                    }
+                } catch (Exception ignored) {}
                 java.io.InputStream is = (status >= 200 && status < 400) ? conn.getInputStream() : conn.getErrorStream();
                 StringBuilder response = new StringBuilder();
                 if (is != null) {

@@ -115,10 +115,20 @@ const apiInterceptor = `
             if (bridge && typeof bridge.nativeFetch === 'function') {
               try {
                 var bodyStr = typeof body === 'string' ? body : (body ? JSON.stringify(body) : '');
+                var reqHeaders = {};
+                var rawHeaders = (init && init.headers) || (input && input.headers);
+                if (rawHeaders) {
+                  if (typeof Headers !== 'undefined' && rawHeaders instanceof Headers) {
+                    rawHeaders.forEach(function(v, k) { reqHeaders[k] = v; });
+                  } else if (typeof rawHeaders === 'object') {
+                    reqHeaders = Object.assign({}, rawHeaders);
+                  }
+                }
                 var res = await bridge.nativeFetch({
                   url: targetUrl,
                   method: method,
-                  body: bodyStr
+                  body: bodyStr,
+                  headers: reqHeaders
                 });
                 return new Response(res.data, {
                   status: res.status || 200,
