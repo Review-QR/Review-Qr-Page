@@ -99,5 +99,17 @@ Har route par check karein aur fix karein: (1) Auth guard, (2) Role check, (3) O
     - `app/api/hyperlocal/rider/route.ts`: Enforced `session.riderId` OR `getActiveAdminContext()` on `GET`, and enforced `session.riderId` (plus `session.riderId === riderId` when provided) on all authenticated `POST` rider mutations.
     - `app/api/merchant/app-operations/route.ts`: Scoped `getMerchantRemoteConfig(resolvedBizId)` and `updateMerchantRemoteConfig({ businessId: resolvedBizId, ... })` across `update_security_pin`, `add_branch`, `switch_branch`, `manage_staff`, and `update_printer_settings`.
     - Re-verified after follow-up edits: `pnpm typecheck` PASSED (exit `0`), `pnpm test:cashfree` PASSED (`23/23`), `node --test app/merchant/dashboard/profile/profile.test.mjs` PASSED (`9/9`).
-- **Current Status:** `WAVE_1_COMPLETE`
-- **Next Exact Step:** `@qa` to review follow-up fixes and merge/add Milestone 4.2 regression tests; `@android` to verify native `Authorization` forwarding for Partner/Rider `nativeFetch`.
+- **2026-11-12 (Board #21 Urgent Loom Fix — Duplicate Orders + Customer In-App Cashfree Return):**
+  - **Files Modified:**
+    - `lib/hyperlocal/hyperlocal-service.ts` (`createHyperlocalOrder`): Added business ownership check on explicit `existingOrder` (`id`) and a 120-second DB idempotency guard for unpaid `online_cashfree` orders (`payment_status = 'pending'`, non-cancelled, matching `business_id` + `customer_phone` + `total_amount`) returning `alreadyExists: true` with the existing `orderId`. Added uniform `alreadyExists: false` on new order returns.
+    - `app/api/hyperlocal/orders/route.ts` (`POST`): Added concurrent in-flight promise deduplication for `online_cashfree` orders keyed by store + normalized phone + sorted items, plus consistent `customerPhone` trimming.
+    - `app/api/hyperlocal/payment/session/route.ts` (`POST`): Added `resolveSafeCashfreeReturnUrl` validating `returnUrl` against `trustitreview.com` / `www.trustitreview.com` (and localhost only outside production) while preserving `&fromApp=1` when `fromApp` or `returnUrl` indicates app origin.
+    - `app/order/order-portal-client.tsx`: Added synchronous `inFlightPaymentRef` and `activeDraftOrderRef` / `activeDraftOrderId` bound to `checkoutCartSignature` (reusing existing unpaid draft order ID instead of creating duplicate pending rows on retry/re-tap; clearing on completion or cart/store changes), switched hosted checkout launch on Capacitor/localhost to `TrustitNative.openInAppCheckout` (with `&fromApp=1` and `window.open` fallback), and wired `window.addEventListener("trustit:payment-return", ...)` + `visibilitychange` + `focus` + `__trustitLastPaymentReturn` check to immediately verify and confirm paid orders in-app.
+    - `components/customer/CustomerCheckoutAndAddresses.tsx`: Added double-submit lock + `disabled` guards on Checkout, Retry Cashfree, and Switch-to-COD buttons, and routed the N-24 hosted payment button through `TrustitNative.openInAppCheckout` (preserving `&fromApp=1` on native/localhost) instead of a raw `_blank` anchor.
+    - `app/pay/cashfree/page.tsx`: Tracked `fromApp=1` (URL param, `sessionStorage`, and Android UA) and triggered `com.trustit.customer://pay/return?orderId=...&status=...` automatically on `paid`/`failed`/`cancelled` verification as well as on `"Return to Trustit App →"` tap.
+  - **Verification Output (Board #21):**
+    - `pnpm typecheck`: PASSED (`tsc --noEmit --incremental false`, exit `0`).
+    - `pnpm test`: PASSED (`285/285` tests pass).
+    - `pnpm test:cashfree`: PASSED (`23/23` tests pass).
+- **Current Status:** `BOARD_21_LOOM_FIX_COMPLETE`
+- **Next Exact Step:** `@coordinator` to integrate `swarm-security-6ea0a766` with `@android` (`#20`) and `@architecture` (`#22`) branches on `main`.

@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import BahraichInteractiveMap from "./BahraichInteractiveMap";
 import { stripGooglePlusCode } from "@/lib/hyperlocal/address-format";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 import {
   CartLineItem,
   CustomerSavedAddress,
@@ -166,6 +167,57 @@ export default function CustomerCheckoutAndAddresses({
   const [showSchedulePicker, setShowSchedulePicker] = useState(false);
   const [holdSeconds, setHoldSeconds] = useState(522); // 08:42 stock hold timer for N-24
   const [isAutoDetectingAddr, setIsAutoDetectingAddr] = useState(false);
+  const [isLocalSubmitLocked, setIsLocalSubmitLocked] = useState(false);
+  const submitGuardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (!isSubmitting && !isPaymentLaunching) {
+      setIsLocalSubmitLocked(false);
+    }
+  }, [isSubmitting, isPaymentLaunching]);
+
+  useEffect(() => {
+    return () => {
+      if (submitGuardTimerRef.current) clearTimeout(submitGuardTimerRef.current);
+    };
+  }, []);
+
+  const handleCheckoutButtonClick = () => {
+    if (isSubmitting || isPaymentLaunching || isLocalSubmitLocked) return;
+    setIsLocalSubmitLocked(true);
+    if (submitGuardTimerRef.current) clearTimeout(submitGuardTimerRef.current);
+    submitGuardTimerRef.current = setTimeout(() => {
+      setIsLocalSubmitLocked(false);
+    }, 1500);
+    onPlaceOrder();
+  };
+
+  const handleOpenHostedPaymentUrl = async (rawUrl: string) => {
+    let targetUrl = rawUrl;
+    const isCapacitorOrLocalhost =
+      typeof window !== "undefined" &&
+      (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1" ||
+        Boolean((window as any).Capacitor?.isNativePlatform?.()));
+    if (isCapacitorOrLocalhost && !targetUrl.includes("fromApp=1")) {
+      targetUrl += `${targetUrl.includes("?") ? "&" : "?"}fromApp=1`;
+    }
+    try {
+      const openInAppCheckout = (
+        TrustitNative as unknown as {
+          openInAppCheckout?: (url: string) => Promise<{ opened?: boolean; mode?: string }>;
+        }
+      ).openInAppCheckout;
+      if (typeof openInAppCheckout === "function") {
+        const res = await openInAppCheckout(targetUrl);
+        if (res && res.opened === false) {
+          window.open(targetUrl, "_blank", "noopener,noreferrer");
+        }
+        return;
+      }
+    } catch {}
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
+  };
 
   useEffect(() => {
     if (!onRegisterSubBack) return;
@@ -619,11 +671,11 @@ export default function CustomerCheckoutAndAddresses({
               <div className="bg-white border-t border-[#c3c6d4]/60 p-4 shrink-0">
                 <button
                   type="button"
-                  disabled={isSubmitting || isPaymentLaunching}
-                  onClick={onPlaceOrder}
+                  disabled={isSubmitting || isPaymentLaunching || isLocalSubmitLocked}
+                  onClick={handleCheckoutButtonClick}
                   className="w-full rounded-2xl bg-[#003178] hover:bg-[#0d47a1] py-3.5 text-xs font-black text-white shadow-lg disabled:opacity-50 transition"
                 >
-                  {isSubmitting || isPaymentLaunching
+                  {isSubmitting || isPaymentLaunching || isLocalSubmitLocked
                     ? "Connecting Securely..."
                     : paymentMethodChoice === "online_cashfree"
                       ? `⚡ Pay ₹${grandTotal} via Cashfree UPI / Card →`
@@ -933,26 +985,27 @@ export default function CustomerCheckoutAndAddresses({
               </div>
               <div className="text-[11px] text-[#434652]">{paymentRetryState.reason}</div>
               {paymentRetryState.hostedPayUrl && (
-                <a
-                  href={paymentRetryState.hostedPayUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => handleOpenHostedPaymentUrl(paymentRetryState.hostedPayUrl!)}
                   className="block w-full text-center rounded-2xl bg-[#059669] hover:bg-emerald-700 py-3 font-black text-white shadow-md"
                 >
                   ⚡ Open Cashfree Payment Page (₹{paymentRetryState.amount}) →
-                </a>
+                </button>
               )}
               <button
                 type="button"
+                disabled={isSubmitting || isPaymentLaunching || isLocalSubmitLocked}
                 onClick={() => onRetryCashfree(paymentRetryState.orderId)}
-                className="w-full rounded-2xl bg-[#003178] hover:bg-[#0d47a1] py-3 font-black text-white"
+                className="w-full rounded-2xl bg-[#003178] hover:bg-[#0d47a1] py-3 font-black text-white disabled:opacity-50"
               >
                 🔄 Retry Cashfree UPI (₹{paymentRetryState.amount})
               </button>
               <button
                 type="button"
+                disabled={isSubmitting || isPaymentLaunching || isLocalSubmitLocked}
                 onClick={() => onSwitchOrderToCod(paymentRetryState.orderId)}
-                className="w-full rounded-2xl border border-[#003d27] bg-emerald-50 hover:bg-emerald-100 py-3 font-black text-[#003d27]"
+                className="w-full rounded-2xl border border-[#003d27] bg-emerald-50 hover:bg-emerald-100 py-3 font-black text-[#003d27] disabled:opacity-50"
               >
                 💵 Switch to Cash on Delivery (COD)
               </button>

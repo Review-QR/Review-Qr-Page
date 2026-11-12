@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useState, useCallback } from "react";
+import React, { Suspense, useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 
 function loadCashfreeScript(): Promise<void> {
@@ -33,16 +33,59 @@ function CashfreeHostedCheckoutInner() {
   const orderId = params.get("orderId") || params.get("order_id") || "";
   const mode = params.get("mode") === "production" ? "production" : "sandbox";
   const returned = params.get("returned") === "1" || (!sessionId && Boolean(orderId));
+  const fromAppParam = params.get("fromApp") === "1";
 
-  const [status, setStatus] = useState<"launching" | "verifying" | "paid" | "pending" | "error">(
+  const [status, setStatus] = useState<"launching" | "verifying" | "paid" | "pending" | "failed" | "error">(
     returned ? "verifying" : sessionId ? "launching" : "error",
   );
+  const [returnOutcome, setReturnOutcome] = useState<"paid" | "failed" | "cancelled" | "pending">("pending");
   const [message, setMessage] = useState<string>(
     returned
       ? "Verifying your Cashfree UPI / Card payment..."
       : sessionId
         ? "Opening Cashfree Secure UPI Checkout..."
         : "Missing payment session details.",
+  );
+  const hasAutoReturnedRef = useRef(false);
+
+  const shouldDeepLinkToApp = useCallback(() => {
+    if (fromAppParam) return true;
+    if (typeof window !== "undefined") {
+      try {
+        const raw = sessionStorage.getItem("trustit_cf_last");
+        if (raw) {
+          const parsed = JSON.parse(raw) as { fromApp?: boolean };
+          if (parsed?.fromApp) return true;
+        }
+      } catch {}
+    }
+    if (typeof navigator !== "undefined" && /Android/i.test(navigator.userAgent)) {
+      return true;
+    }
+    return false;
+  }, [fromAppParam]);
+
+  const triggerAppReturn = useCallback(
+    (outcome: "paid" | "failed" | "cancelled" | "pending") => {
+      if (typeof window === "undefined") return;
+      if (shouldDeepLinkToApp() && orderId) {
+        const deepLink = `com.trustit.customer://pay/return?orderId=${encodeURIComponent(orderId)}&status=${encodeURIComponent(outcome)}`;
+        window.location.href = deepLink;
+        setTimeout(() => {
+          if (document.visibilityState === "visible") {
+            try {
+              window.close();
+            } catch {}
+          }
+        }, 1200);
+        return;
+      }
+      try {
+        window.close();
+      } catch {}
+      window.location.href = "/order";
+    },
+    [orderId, shouldDeepLinkToApp],
   );
 
   const launchCheckout = useCallback(async () => {
@@ -55,7 +98,10 @@ function CashfreeHostedCheckoutInner() {
       setStatus("launching");
       setMessage("Connecting to Cashfree UPI / Card Gateway...");
       try {
-        sessionStorage.setItem("trustit_cf_last", JSON.stringify({ sessionId, orderId, mode }));
+        sessionStorage.setItem(
+          "trustit_cf_last",
+          JSON.stringify({ sessionId, orderId, mode, fromApp: fromAppParam }),
+        );
       } catch {}
       await loadCashfreeScript();
       const cf = (window as any).Cashfree({ mode });
@@ -67,7 +113,7 @@ function CashfreeHostedCheckoutInner() {
       setStatus("error");
       setMessage(err instanceof Error ? err.message : "Could not launch Cashfree checkout.");
     }
-  }, [sessionId, orderId, mode]);
+  }, [sessionId, orderId, mode, fromAppParam]);
 
   const verifyOrder = useCallback(async () => {
     if (!orderId) {
@@ -86,20 +132,36 @@ function CashfreeHostedCheckoutInner() {
         const data = await res.json().catch(() => null);
         if (data?.status === "VERIFIED_SUCCESS") {
           setStatus("paid");
-          setMessage("Payment verified! Please switch back to the Trustit Customer app to track your order.");
+          setReturnOutcome("paid");
+          setMessage("Payment verified! Returning to the Trustit Customer app...");
+          if (!hasAutoReturnedRef.current && shouldDeepLinkToApp()) {
+            hasAutoReturnedRef.current = true;
+            triggerAppReturn("paid");
+          }
           return;
         }
         if (data?.status === "FAILED" || data?.status === "USER_DROPPED") {
-          setStatus("pending");
-          setMessage("Payment was cancelled or incomplete. Switch back to the Trustit Customer app to retry or switch to COD.");
+          const outcome = data.status === "USER_DROPPED" ? "cancelled" : "failed";
+          setStatus("failed");
+          setReturnOutcome(outcome);
+          setMessage(
+            outcome === "cancelled"
+              ? "Payment was cancelled. Returning to Trustit app so you can retry or switch to COD."
+              : "Payment failed. Returning to Trustit app so you can retry or switch to COD.",
+          );
+          if (!hasAutoReturnedRef.current && shouldDeepLinkToApp()) {
+            hasAutoReturnedRef.current = true;
+            triggerAppReturn(outcome);
+          }
           return;
         }
       } catch {}
       await new Promise((r) => setTimeout(r, 1500));
     }
     setStatus("pending");
-    setMessage("Payment is still confirming. Switch back to the Trustit Customer app — it will sync automatically.");
-  }, [orderId]);
+    setReturnOutcome("pending");
+    setMessage("Payment is still confirming. Tap below to return to the Trustit Customer app.");
+  }, [orderId, shouldDeepLinkToApp, triggerAppReturn]);
 
   useEffect(() => {
     if (returned) {
@@ -113,7 +175,7 @@ function CashfreeHostedCheckoutInner() {
     <main className="min-h-screen bg-[#f4f6ff] flex items-center justify-center p-4">
       <div className="w-full max-w-sm rounded-3xl bg-white border border-[#dae2fd] shadow-xl p-6 text-center space-y-4">
         <div className="mx-auto h-14 w-14 rounded-2xl bg-[#003178] text-white flex items-center justify-center text-2xl font-black shadow-md">
-          {status === "paid" ? "✓" : status === "error" ? "!" : "⚡"}
+          {status === "paid" ? "✓" : status === "error" || status === "failed" ? "!" : "⚡"}
         </div>
 
         <div className="space-y-1">
@@ -127,9 +189,11 @@ function CashfreeHostedCheckoutInner() {
                 ? "Opening Cashfree..."
                 : status === "verifying"
                   ? "Confirming Payment..."
-                  : status === "pending"
-                    ? "Payment Pending"
-                    : "Checkout Notice"}
+                  : status === "failed"
+                    ? "Payment Incomplete"
+                    : status === "pending"
+                      ? "Payment Pending"
+                      : "Checkout Notice"}
           </h1>
           <p className="text-xs text-[#434652] leading-relaxed">{message}</p>
           {orderId && (
@@ -147,19 +211,16 @@ function CashfreeHostedCheckoutInner() {
           </button>
         )}
 
-        {(status === "paid" || status === "pending") && (
+        {(status === "paid" || status === "pending" || status === "failed") && (
           <div className="space-y-2">
             <button
               type="button"
-              onClick={() => {
-                window.close();
-                window.location.href = "/order";
-              }}
+              onClick={() => triggerAppReturn(returnOutcome)}
               className="w-full rounded-2xl bg-[#059669] hover:bg-emerald-700 py-3 text-xs font-black text-white shadow-md"
             >
               Return to Trustit App →
             </button>
-            {status === "pending" && orderId && (
+            {(status === "pending" || status === "failed") && orderId && (
               <button
                 type="button"
                 onClick={verifyOrder}
@@ -176,7 +237,7 @@ function CashfreeHostedCheckoutInner() {
             type="button"
             onClick={() => {
               if (sessionId) launchCheckout();
-              else window.location.href = "/order";
+              else triggerAppReturn("failed");
             }}
             className="w-full rounded-2xl bg-[#003178] py-3 text-xs font-black text-white"
           >

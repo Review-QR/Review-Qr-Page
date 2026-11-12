@@ -162,6 +162,26 @@ export default function MerchantNativeAppShell({
   const [isSirenActive, setIsSirenActive] = useState<boolean>(false);
   const [statusNotification, setStatusNotification] = useState<string | null>(null);
 
+  const dismissedSirenOrderIdsRef = useRef<Set<string>>(new Set());
+  const activeIncomingOrderRef = useRef<any>(null);
+  const activeSubScreenRef = useRef<string | null>(initialSubScreen);
+
+  useEffect(() => {
+    activeIncomingOrderRef.current = activeIncomingOrder;
+  }, [activeIncomingOrder]);
+
+  useEffect(() => {
+    activeSubScreenRef.current = activeSubScreen;
+  }, [activeSubScreen]);
+
+  const acknowledgeSirenOrder = (orderId?: string | null) => {
+    TrustitNative.stopOrderSiren();
+    setIsSirenActive(false);
+    if (orderId) {
+      dismissedSirenOrderIdsRef.current.add(orderId);
+    }
+  };
+
   // Notification helper
   const showToast = (msg: string) => {
     setStatusNotification(msg);
@@ -266,7 +286,8 @@ export default function MerchantNativeAppShell({
           else if (rawType.includes("car") || rawType.includes("auto") || rawType.includes("wash")) setStoreCategory("carwash");
         }
         if (data.business?.is_outlet_open !== undefined) setIsStoreOnline(data.business.is_outlet_open);
-        setLiveOrders(data.orders || []);
+        const ordersList: any[] = Array.isArray(data.orders) ? data.orders : [];
+        setLiveOrders(ordersList);
         setLiveCatalog(data.catalog || []);
         setLiveReviews(data.reviews || []);
         if (data.stats) {
@@ -278,6 +299,30 @@ export default function MerchantNativeAppShell({
             totalScans: Number(data.stats.totalScans || 0),
             positivePct: data.stats.positivePct ?? null,
           });
+        }
+
+        // Auto-open incoming order siren ONLY once per newly detected 'placed' order ID
+        const nextPendingOrder = ordersList.find(
+          (o) => o?.status === "placed" && o?.id && !dismissedSirenOrderIdsRef.current.has(o.id)
+        );
+        if (nextPendingOrder) {
+          if (activeIncomingOrderRef.current?.id !== nextPendingOrder.id) {
+            setActiveIncomingOrder(nextPendingOrder);
+          }
+          if (activeSubScreenRef.current !== "s02") {
+            setActiveSubScreen("s02");
+          }
+        } else if (
+          activeIncomingOrderRef.current &&
+          !ordersList.some(
+            (o) => o?.id === activeIncomingOrderRef.current.id && o?.status === "placed"
+          )
+        ) {
+          setActiveIncomingOrder(null);
+          if (activeSubScreenRef.current === "s02") {
+            TrustitNative.stopOrderSiren();
+            setActiveSubScreen(null);
+          }
         }
       }
     } catch {}
@@ -310,11 +355,19 @@ export default function MerchantNativeAppShell({
         return true;
       }
       if (activeIncomingOrder) {
+        acknowledgeSirenOrder(activeIncomingOrder.id);
         setActiveIncomingOrder(null);
+        if (activeSubScreen === "s02") {
+          setActiveSubScreen(null);
+        }
         return true;
       }
       // 2. If inside a sub-screen
       if (activeSubScreen) {
+        if (activeSubScreen === "s02") {
+          const pendingId = activeIncomingOrder?.id || liveOrders.find((o) => o.status === "placed")?.id;
+          acknowledgeSirenOrder(pendingId);
+        }
         setActiveSubScreen(null);
         return true;
       }
@@ -360,7 +413,6 @@ export default function MerchantNativeAppShell({
   // 2. Incoming Siren Alert & Real Simulation Order Trigger
   const triggerTestSiren = async () => {
     setIsSirenActive(true);
-    merchantAudio.playIncomingOrderSiren(7);
     showToast("🚨 Incoming Order Siren Alert Triggered!");
     try {
       const res = await postMerchantOp("create_sample_order", {
@@ -383,13 +435,15 @@ export default function MerchantNativeAppShell({
       }
     } catch {}
     setActiveSubScreen("s02");
-    setTimeout(() => setIsSirenActive(false), 7000);
   };
 
   // 3. Accept Incoming Order
   const handleAcceptOrder = async (prepMins = 20) => {
+    const targetOrder = activeIncomingOrder || liveOrders.find((o) => o.status === "placed") || null;
+    const orderId = targetOrder?.id || "";
+    acknowledgeSirenOrder(orderId);
+    setActiveIncomingOrder(null);
     showToast(`Order Accepted! Prep Time: ${prepMins} mins`);
-    const orderId = activeIncomingOrder?.id || "";
     try {
       if (orderId) {
         await postMerchantOp("order_accept", { orderId, data: { prepTimeMinutes: prepMins } });
@@ -401,8 +455,11 @@ export default function MerchantNativeAppShell({
 
   // 4. Reject Incoming Order
   const handleRejectOrder = async (reason = "Out of stock") => {
+    const targetOrder = activeIncomingOrder || liveOrders.find((o) => o.status === "placed") || null;
+    const orderId = targetOrder?.id || "";
+    acknowledgeSirenOrder(orderId);
+    setActiveIncomingOrder(null);
     showToast("Order Declined.");
-    const orderId = activeIncomingOrder?.id || "";
     try {
       if (orderId) {
         await postMerchantOp("order_reject", { orderId, data: { reason } });
@@ -690,6 +747,11 @@ export default function MerchantNativeAppShell({
           <button
             type="button"
             onClick={() => {
+              if (activeSubScreen === "s02") {
+                const pendingId = activeIncomingOrder?.id || liveOrders.find((o) => o.status === "placed")?.id;
+                acknowledgeSirenOrder(pendingId);
+                setActiveIncomingOrder(null);
+              }
               setActiveSubScreen(null);
             }}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-black transition border border-slate-200 active:scale-95"
@@ -710,13 +772,23 @@ export default function MerchantNativeAppShell({
 
         {/* Subscreen Content */}
         <div className="flex-1 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {activeSubScreen === "s02" && (
-            <Screen02IncomingOrderSiren
-              onAccept={handleAcceptOrder}
-              onDecline={() => handleRejectOrder("Kitchen Rush")}
-              onBack={() => setActiveSubScreen(null)}
-            />
-          )}
+          {activeSubScreen === "s02" && (() => {
+            const currentSirenOrder =
+              activeIncomingOrder || liveOrders.find((o) => o.status === "placed") || null;
+            return (
+              <Screen02IncomingOrderSiren
+                order={currentSirenOrder}
+                onAccept={handleAcceptOrder}
+                onDecline={() => handleRejectOrder("Kitchen Rush")}
+                onMute={() => acknowledgeSirenOrder(currentSirenOrder?.id)}
+                onBack={() => {
+                  acknowledgeSirenOrder(currentSirenOrder?.id);
+                  setActiveIncomingOrder(null);
+                  setActiveSubScreen(null);
+                }}
+              />
+            );
+          })()}
           {activeSubScreen === "s03" && (
             <Screen03UrgentQueueDrawer
               onAcceptOrder={() => handleAcceptOrder(20)}
@@ -1175,7 +1247,15 @@ export default function MerchantNativeAppShell({
             reviewStats={reviewStats}
             onOpenOrders={() => navigateToTab("orders")}
             onOpenMenu={() => navigateToTab("menu")}
-            onOpenSiren={() => setActiveSubScreen("s02")}
+            onOpenSiren={() => {
+              const firstPending = liveOrders.find((o) => o.status === "placed");
+              if (firstPending) {
+                setActiveIncomingOrder(firstPending);
+                setActiveSubScreen("s02");
+              } else {
+                navigateToTab("orders");
+              }
+            }}
             onOpenOccasion={() => setActiveSubScreen("s04")}
           />
         );

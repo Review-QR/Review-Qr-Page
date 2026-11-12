@@ -11,6 +11,14 @@ export interface HyperlocalOrderItem {
   price?: number;
 }
 
+interface Screen12BusinessInfo {
+  id?: string;
+  name?: string;
+  address?: string;
+  city?: string;
+  phone?: string;
+}
+
 interface Screen12Props {
   onPickupConfirmed?: () => void;
   onBack?: () => void;
@@ -19,12 +27,10 @@ interface Screen12Props {
   shopPhone?: string;
   activeOrder?: {
     id: string;
-    businesses?: {
-      name?: string;
-      address?: string;
-      phone?: string;
-    } | null;
-    hyperlocal_order_items?: HyperlocalOrderItem[];
+    businesses?: Screen12BusinessInfo | Screen12BusinessInfo[] | null;
+    business?: Screen12BusinessInfo | null;
+    hyperlocal_order_items?: (HyperlocalOrderItem & { unit_price?: number; total_price?: number })[];
+    items?: (HyperlocalOrderItem & { unit_price?: number; total_price?: number })[];
   } | null;
 }
 
@@ -36,21 +42,42 @@ export default function Screen12StorePickup({
   shopPhone,
   activeOrder,
 }: Screen12Props) {
-  const storeName = activeOrder?.businesses?.name || "Verified Store Partner";
-  const storeAddress = activeOrder?.businesses?.address || "Bahraich Commercial Center";
-  const phoneToCall = activeOrder?.businesses?.phone || shopPhone || "+919118643415";
+  const businessInfo = Array.isArray(activeOrder?.businesses)
+    ? activeOrder?.businesses[0]
+    : activeOrder?.businesses || activeOrder?.business || null;
+
+  const storeName =
+    businessInfo?.name ||
+    (activeOrder?.id ? "Store details loading..." : "No active store assigned");
+  const storeAddress =
+    businessInfo?.address ||
+    businessInfo?.city ||
+    (activeOrder?.id ? "Fetching pickup address..." : "Accept an order to view pickup address");
+  const phoneToCall = businessInfo?.phone || shopPhone || "";
 
   // Dynamic items list
-  const rawItems = activeOrder?.hyperlocal_order_items || [];
-  const normalizedItems: { id: string; label: string }[] =
-    rawItems.length > 0
-      ? rawItems.map((item, idx) => ({
+  const rawItems = activeOrder?.hyperlocal_order_items || activeOrder?.items || [];
+  const hasRealItems = rawItems.length > 0;
+  const normalizedItems: { id: string; label: string; priceLabel?: string }[] = hasRealItems
+    ? rawItems.map((item, idx) => {
+        const qty = Number(item.quantity) || 1;
+        const unitOrTotal = Number(item.total_price ?? item.price ?? (item.unit_price ? item.unit_price * qty : 0));
+        return {
           id: item.id || `item_${idx}`,
-          label: `${item.quantity || 1} × ${item.item_name || item.product_name || item.name || "Item"}`,
-        }))
-      : [
-          { id: "def_1", label: "1 × Order Package (Standard Merchant Pack)" },
-        ];
+          label: `${qty} × ${item.item_name || item.product_name || item.name || "Item"}`,
+          priceLabel: unitOrTotal > 0 ? `₹${unitOrTotal.toLocaleString("en-IN")}` : undefined,
+        };
+      })
+    : [
+        {
+          id: "parcel_confirm",
+          label: activeOrder?.id
+            ? "Order items syncing — verify packed parcel count with merchant"
+            : "No active order items loaded",
+        },
+      ];
+
+  const itemsSignature = `${activeOrder?.id || "none"}:${normalizedItems.map((i) => i.id).join(",")}`;
 
   const [checkedMap, setCheckedMap] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -59,6 +86,17 @@ export default function Screen12StorePickup({
     });
     return initial;
   });
+
+  useEffect(() => {
+    setCheckedMap((prev) => {
+      const next: Record<string, boolean> = {};
+      normalizedItems.forEach((item) => {
+        next[item.id] = Boolean(prev[item.id]);
+      });
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsSignature]);
 
   const [kotOtp, setKotOtp] = useState<string>("");
   const [waitTimerSeconds, setWaitTimerSeconds] = useState(0); // Starts at 0s for genuine run
@@ -112,11 +150,12 @@ export default function Screen12StorePickup({
             </div>
             <button
               type="button"
+              disabled={!onCallShop && !phoneToCall}
               onClick={() => {
                 if (onCallShop) onCallShop();
-                else if (typeof window !== "undefined") window.location.href = `tel:${phoneToCall}`;
+                else if (phoneToCall && typeof window !== "undefined") window.location.href = `tel:${phoneToCall}`;
               }}
-              className="px-2 py-1 rounded-lg bg-blue-50 text-[#0D47A1] border border-blue-200 text-[10px] font-bold hover:bg-blue-100 active:scale-95 transition-all"
+              className="px-2 py-1 rounded-lg bg-blue-50 text-[#0D47A1] border border-blue-200 text-[10px] font-bold hover:bg-blue-100 active:scale-95 transition-all disabled:opacity-50"
             >
               📞 Call Shop
             </button>
@@ -157,7 +196,7 @@ export default function Screen12StorePickup({
         <div className="mt-2 bg-white border border-slate-200 rounded-xl p-2.5 shadow-2xs space-y-1.5">
           <div className="flex items-center justify-between">
             <span className="text-[10px] font-black text-slate-900 uppercase tracking-wider">
-              Item Checklist ({normalizedItems.length} Items)
+              {hasRealItems ? `Item Checklist (${normalizedItems.length} Items)` : "Pickup Verification"}
             </span>
             <button
               type="button"
@@ -187,13 +226,18 @@ export default function Screen12StorePickup({
                   />
                   <span className="font-bold text-slate-800 text-[10px]">{item.label}</span>
                 </div>
-                <span
-                  className={`text-[9px] font-bold px-1 py-0.2 rounded ${
-                    checkedMap[item.id] ? "text-emerald-600 bg-emerald-50" : "text-slate-400 bg-slate-100"
-                  }`}
-                >
-                  {checkedMap[item.id] ? "Packed ✓" : "Tap"}
-                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {item.priceLabel && (
+                    <span className="text-[9px] font-mono font-bold text-slate-600">{item.priceLabel}</span>
+                  )}
+                  <span
+                    className={`text-[9px] font-bold px-1 py-0.2 rounded ${
+                      checkedMap[item.id] ? "text-emerald-600 bg-emerald-50" : "text-slate-400 bg-slate-100"
+                    }`}
+                  >
+                    {checkedMap[item.id] ? "Packed ✓" : "Tap"}
+                  </span>
+                </div>
               </label>
             ))}
           </div>

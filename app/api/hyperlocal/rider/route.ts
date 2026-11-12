@@ -908,7 +908,20 @@ export async function POST(request: NextRequest) {
     // ── 10. ORDER ACCEPT / DECLINE ──
     if (action === "accept_order") {
       const res = await riderAcceptOrder(orderId, riderId);
-      return Response.json(res);
+      let populatedOrder = null;
+      if (orderId) {
+        const { data: orderData } = await admin
+          .from("hyperlocal_orders")
+          .select(`
+            *,
+            hyperlocal_order_items (*),
+            businesses (id, name, city, address, phone, location_latitude, location_longitude)
+          `)
+          .eq("id", orderId)
+          .maybeSingle();
+        populatedOrder = orderData || null;
+      }
+      return Response.json({ ...res, order: populatedOrder });
     }
 
     if (action === "decline_order") {
