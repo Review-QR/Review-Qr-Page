@@ -1,59 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { getActiveMerchant } from "@/lib/merchant-auth";
 import {
   getMerchantRemoteConfig,
   updateMerchantRemoteConfig,
 } from "@/lib/merchant/merchant-remote-config";
 import { createCashfreeWalletRechargeOrder } from "@/lib/wallet/cashfree-wallet-service";
+import { buildCorsHeaders, handleCorsPreflight } from "@/lib/auth-cors";
+import { requireMerchantApi } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-  "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization, Accept, Origin",
-};
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return handleCorsPreflight(request);
 }
 
 export async function GET(request: NextRequest) {
+  const corsHeaders = buildCorsHeaders(request.headers.get("origin"));
   try {
+    const auth = await requireMerchantApi();
+    if (!auth.ok) return auth.response;
+
     const { searchParams } = new URL(request.url);
     const requestedBizId = searchParams.get("businessId")?.trim() || "";
-    const requestedPhone = (searchParams.get("phone") || "").replace(/\D/g, "").slice(-10);
+    if (requestedBizId && requestedBizId !== auth.merchant.businessId) {
+      return NextResponse.json(
+        { success: false, message: "Forbidden: business mismatch." },
+        { status: 403, headers: corsHeaders }
+      );
+    }
 
     const admin = createSupabaseAdminClient();
-
-    // 1. Resolve merchant business strictly (by ID, active phone, or authenticated cookie)
-    let businessId = requestedBizId;
-    if (!businessId && requestedPhone.length === 10) {
-      const phoneVariants = [`+91${requestedPhone}`, requestedPhone, `91${requestedPhone}`];
-      const { data: matchedBiz } = await admin
-        .from("businesses")
-        .select("id")
-        .in("phone", phoneVariants)
-        .is("deleted_at", null)
-        .order("registration_date", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (matchedBiz?.id) {
-        businessId = matchedBiz.id;
-      }
-    }
-
-    if (!businessId) {
-      try {
-        const activeMerchant = await getActiveMerchant();
-        if (activeMerchant) {
-          businessId = activeMerchant.businessId;
-        }
-      } catch {}
-    }
-
-    const config = getMerchantRemoteConfig(businessId || undefined);
+    const businessId = auth.merchant.businessId;
+    const config = getMerchantRemoteConfig(businessId);
 
     if (!businessId) {
       return NextResponse.json({
@@ -209,31 +187,24 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function resolveValidBusinessId(category?: string, bizId?: string): string {
-  if (bizId && bizId.trim()) return bizId.trim();
-  switch (category?.toLowerCase()) {
-    case "kirana":
-      return "bhr-groc-01";
-    case "chemist":
-      return "bhr-pharm-01";
-    case "salon":
-      return "bhr-salon-01";
-    case "carwash":
-      return "bhr-auto-01";
-    case "restaurant":
-    default:
-      return "bhr-sweet-01";
-  }
-}
-
 export async function POST(request: NextRequest) {
+  const corsHeaders = buildCorsHeaders(request.headers.get("origin"));
   try {
+    const auth = await requireMerchantApi();
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const { action, businessId, orderId, itemId, data } = body;
 
+    if (businessId && String(businessId).trim() !== auth.merchant.businessId) {
+      return NextResponse.json(
+        { success: false, message: "Forbidden: business mismatch." },
+        { status: 403, headers: corsHeaders }
+      );
+    }
+
     const admin = createSupabaseAdminClient();
-    const config = getMerchantRemoteConfig(businessId || undefined);
-    const resolvedBizId = resolveValidBusinessId(data?.category || config.businessCategory, businessId);
+    const resolvedBizId = auth.merchant.businessId;
 
     // 1. Toggle Store Online / Offline Status
     if (action === "toggle_outlet") {
@@ -269,7 +240,8 @@ export async function POST(request: NextRequest) {
           merchant_prep_time_minutes: prepMinutes,
           updated_at: now,
         })
-        .eq("id", orderId);
+        .eq("id", orderId)
+        .eq("business_id", resolvedBizId);
 
       return NextResponse.json({
         success: true,
@@ -287,7 +259,8 @@ export async function POST(request: NextRequest) {
           ready_at: now,
           updated_at: now,
         })
-        .eq("id", orderId);
+        .eq("id", orderId)
+        .eq("business_id", resolvedBizId);
 
       return NextResponse.json({
         success: true,
@@ -307,7 +280,8 @@ export async function POST(request: NextRequest) {
           cancellation_reason: reason,
           updated_at: now,
         })
-        .eq("id", orderId);
+        .eq("id", orderId)
+        .eq("business_id", resolvedBizId);
 
       return NextResponse.json({
         success: true,
@@ -327,7 +301,8 @@ export async function POST(request: NextRequest) {
           admin_notes: `Dispatched with ${riderName}`,
           updated_at: now,
         })
-        .eq("id", orderId);
+        .eq("id", orderId)
+        .eq("business_id", resolvedBizId);
 
       return NextResponse.json({
         success: true,
@@ -344,9 +319,14 @@ export async function POST(request: NextRequest) {
         .from("hyperlocal_orders")
         .select("delivery_otp, status")
         .eq("id", orderId)
+        .eq("business_id", resolvedBizId)
         .maybeSingle();
 
-      if (dbOrder && dbOrder.delivery_otp && inputOtp && dbOrder.delivery_otp !== inputOtp) {
+      if (!dbOrder) {
+        return NextResponse.json({ success: false, message: "Order not found." }, { status: 404 });
+      }
+
+      if (dbOrder.delivery_otp && dbOrder.delivery_otp !== inputOtp) {
         return NextResponse.json(
           { success: false, message: "Galat OTP! Kripya customer se sahi 4-digit OTP mangein." },
           { status: 400 }
@@ -361,7 +341,8 @@ export async function POST(request: NextRequest) {
           delivered_at: now,
           updated_at: now,
         })
-        .eq("id", orderId);
+        .eq("id", orderId)
+        .eq("business_id", resolvedBizId);
 
       return NextResponse.json({
         success: true,
@@ -409,7 +390,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, message: "Item ID required" }, { status: 400 });
       }
 
-      await admin.from("business_catalog_items").delete().eq("id", itemId);
+      await admin
+        .from("business_catalog_items")
+        .delete()
+        .eq("id", itemId)
+        .eq("business_id", resolvedBizId);
 
       return NextResponse.json({
         success: true,
@@ -426,7 +411,8 @@ export async function POST(request: NextRequest) {
           is_available: isAvailable,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", itemId);
+        .eq("id", itemId)
+        .eq("business_id", resolvedBizId);
 
       return NextResponse.json({
         success: true,
@@ -442,7 +428,8 @@ export async function POST(request: NextRequest) {
           await admin
             .from("business_catalog_items")
             .update({ price: Number(r.price), updated_at: new Date().toISOString() })
-            .eq("id", r.id);
+            .eq("id", r.id)
+            .eq("business_id", resolvedBizId);
         } else if (r.name && r.price) {
           await admin.from("business_catalog_items").insert({
             business_id: resolvedBizId,
@@ -562,9 +549,9 @@ export async function POST(request: NextRequest) {
         );
       }
       const curConfig = getMerchantRemoteConfig();
-      if (curConfig.cashierPin && currentPin && curConfig.cashierPin !== currentPin) {
+      if (curConfig.cashierPin && (!currentPin || curConfig.cashierPin !== currentPin)) {
         return NextResponse.json(
-          { success: false, message: "Current PIN is incorrect!" },
+          { success: false, message: "Current PIN is required and must match!" },
           { status: 400 }
         );
       }
@@ -696,14 +683,25 @@ export async function POST(request: NextRequest) {
     // 15. Real Cashfree Wallet / Boost Credits Top-up
     if (action === "recharge_wallet") {
       const amount = Number(data?.amount || 199);
-      const credits = Number(data?.credits || 250);
+      if (!Number.isFinite(amount) || amount < 10 || amount > 100_000) {
+        return NextResponse.json(
+          { success: false, message: "Recharge amount must be between ₹10 and ₹1,00,000." },
+          { status: 400 }
+        );
+      }
+      const rawCredits = Number(data?.credits || amount);
+      const maxAllowedCredits = Math.ceil(amount * 1.5);
+      const credits =
+        Number.isFinite(rawCredits) && rawCredits >= amount && rawCredits <= maxAllowedCredits
+          ? Math.floor(rawCredits)
+          : Math.floor(amount);
 
       const orderResult = await createCashfreeWalletRechargeOrder({
         businessId: resolvedBizId,
         amount,
         credits,
-        merchantName: "Trustit Merchant",
-        merchantPhone: "9118643415",
+        merchantName: auth.merchant.businessName || "Trustit Merchant",
+        merchantPhone: auth.merchant.registeredMobile || undefined,
       });
 
       if (!orderResult.success) {
@@ -807,8 +805,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 17. Create Real Hyperlocal Order (for live testing with siren)
+    // 17. Create Real Hyperlocal Order (for live testing with siren - disabled in production)
     if (action === "create_sample_order") {
+      if (process.env.NODE_ENV === "production") {
+        return NextResponse.json(
+          { success: false, message: "Sample order injection is disabled in production." },
+          { status: 403 }
+        );
+      }
       const sampleOrderId = `hord_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
       const sampleItems = data?.items || [
         { name: "Special Shahi Paneer", quantity: 1, price: 240 },

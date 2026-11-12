@@ -5,23 +5,28 @@ import {
   registerMerchantProfile,
   authenticateMerchantWithGoogle,
 } from "@/lib/auth/merchant-unified-auth";
+import { buildCorsHeaders, handleCorsPreflight } from "@/lib/auth-cors";
+import { enforceRateLimit } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-  "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Authorization, Accept, Origin",
-};
-
-export async function OPTIONS() {
-  return new NextResponse(null, { status: 204, headers: corsHeaders });
+export async function OPTIONS(request: NextRequest) {
+  return handleCorsPreflight(request);
 }
 
 export async function POST(request: NextRequest) {
+  const corsHeaders = buildCorsHeaders(request.headers.get("origin"));
   try {
     const body = await request.json();
-    const { action, phone, otp, storeName, ownerName, category, city, address, latitude, longitude, email, fullName, channel } = body;
+    const { action, phone, otp, storeName, ownerName, category, city, address, latitude, longitude, email, fullName, channel, idToken } = body;
+
+    const rateLimited = enforceRateLimit(
+      request,
+      `merchant_auth:${typeof action === "string" ? action : "unknown"}`,
+      20,
+      10 * 60_000
+    );
+    if (rateLimited) return rateLimited;
 
     // 1. Send OTP (SMS disabled by DLT, WhatsApp active)
     if (action === "send_otp") {
@@ -68,7 +73,7 @@ export async function POST(request: NextRequest) {
           { status: 400, headers: corsHeaders }
         );
       }
-      const res = await authenticateMerchantWithGoogle(email, fullName, phone);
+      const res = await authenticateMerchantWithGoogle(email, fullName, phone, idToken);
       return NextResponse.json(res, { status: res.success ? 200 : 400, headers: corsHeaders });
     }
 

@@ -1,10 +1,11 @@
 import "server-only";
 
-import { createHash } from "crypto";
+import { createHash, createHmac } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createMerchantActionClient } from "@/lib/supabase-merchant-server";
 import { cleanPhone } from "@/lib/auth/customer-unified-auth";
 import { checkRateLimit } from "@/lib/rate-limiter";
+import { verifyGoogleIdToken } from "@/lib/auth-api-guards";
 import { normalizeTrustitPhone } from "@/lib/trustit-onboarding";
 import { updateMerchantRemoteConfig } from "@/lib/merchant/merchant-remote-config";
 
@@ -15,10 +16,16 @@ function hashCode(code: string): string {
 }
 
 function deterministicPassword(identifier: string): string {
-  return createHash("sha256")
-    .update(`trustit_merchant_secret_salt_${identifier}`)
-    .digest("hex")
-    .slice(0, 24) + "A1!";
+  const secret =
+    process.env.MERCHANT_AUTH_HMAC_SECRET ||
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    "trustit_merchant_secret_salt";
+  return (
+    createHmac("sha256", secret)
+      .update(identifier)
+      .digest("hex")
+      .slice(0, 28) + "A1!"
+  );
 }
 
 /**
@@ -82,12 +89,20 @@ export async function sendMerchantWhatsAppOtp(
     }
   }
 
+  const isProd = process.env.NODE_ENV === "production";
+  if (!dispatchedRealWhatsApp && isProd && process.env.ALLOW_DEV_OTP_FALLBACK !== "true") {
+    return {
+      success: false,
+      message: "WhatsApp OTP delivery is temporarily unavailable. Please try again shortly.",
+    };
+  }
+
   return {
     success: true,
     message: dispatchedRealWhatsApp
       ? `Official OTP sent to WhatsApp (+91 ${phone10})`
       : `Verification code sent to WhatsApp (+91 ${phone10})`,
-    previewOtp: otpCode,
+    ...(!isProd ? { previewOtp: otpCode } : {}),
   };
 }
 
@@ -131,7 +146,9 @@ export async function verifyMerchantWhatsAppOtp(
     .order("created_at", { ascending: false })
     .limit(1);
 
-  if (fetchErr || !records || records.length === 0) {
+  let record = (records && records[0]) || null;
+
+  if (fetchErr || !record) {
     // Also check standard destination in case created under raw phone
     const { data: fallbackRecords } = await admin
       .from("customer_auth_codes")
@@ -148,24 +165,42 @@ export async function verifyMerchantWhatsAppOtp(
         message: "Code has expired or does not exist. Please request a new code.",
       };
     }
+    record = fallbackRecords[0];
   }
 
-  const record = (records && records[0]) || null;
-  if (record) {
-    const submittedHash = hashCode(cleanOtp);
-    if (submittedHash !== record.code_hash) {
-      return {
-        success: false,
-        message: "Invalid verification code. Please check and try again.",
-      };
-    }
-
-    // Mark code consumed
+  if ((record.attempts || 0) >= 5) {
     await admin
       .from("customer_auth_codes")
       .update({ consumed_at: now })
       .eq("id", record.id);
+    return {
+      success: false,
+      message: "Too many failed verification attempts. Please request a new code.",
+    };
   }
+
+  const submittedHash = hashCode(cleanOtp);
+  if (submittedHash !== record.code_hash) {
+    const nextAttempts = (record.attempts || 0) + 1;
+    await admin
+      .from("customer_auth_codes")
+      .update({ attempts: nextAttempts })
+      .eq("id", record.id);
+    const remaining = Math.max(0, 5 - nextAttempts);
+    return {
+      success: false,
+      message:
+        remaining > 0
+          ? `Invalid verification code. ${remaining} attempt(s) remaining.`
+          : "Too many failed attempts. Please request a new code.",
+    };
+  }
+
+  // Mark code consumed
+  await admin
+    .from("customer_auth_codes")
+    .update({ consumed_at: now })
+    .eq("id", record.id);
 
   // Look up merchant in businesses table
   const phoneVariants = [`+91${phone10}`, phone10, `91${phone10}`];
@@ -299,7 +334,8 @@ export async function registerMerchantProfile(params: {
 export async function authenticateMerchantWithGoogle(
   email: string,
   fullName: string,
-  phone?: string
+  phone?: string,
+  idToken?: string
 ): Promise<{
   success: boolean;
   message: string;
@@ -310,9 +346,29 @@ export async function authenticateMerchantWithGoogle(
   const cleanName = fullName?.trim() || "Merchant Partner";
   const phone10 = phone ? cleanPhone(phone) : null;
 
+  if (!cleanEmail || !cleanEmail.includes("@")) {
+    return { success: false, message: "A valid Google email address is required." };
+  }
+
+  const requireVerifiedGoogle =
+    process.env.NODE_ENV === "production" &&
+    process.env.ALLOW_UNVERIFIED_GOOGLE_LOGIN !== "true";
+
+  if (idToken) {
+    const verified = await verifyGoogleIdToken(idToken, cleanEmail);
+    if (!verified) {
+      return { success: false, message: "Invalid or expired Google ID token." };
+    }
+  } else if (requireVerifiedGoogle) {
+    return {
+      success: false,
+      message: "Google Sign-In requires a verified OAuth token. Please sign in with WhatsApp OTP.",
+    };
+  }
+
   const admin = createSupabaseAdminClient();
 
-  // Check if profile exists by email in merchant_profiles or owner name
+  // Check if profile exists by verified email in merchant_profiles
   const { data: existingProfiles } = await admin
     .from("merchant_profiles")
     .select("user_id, email")
@@ -337,23 +393,23 @@ export async function authenticateMerchantWithGoogle(
     }
   }
 
-  // Check if any business has this owner or phone
-  let bizQuery = admin.from("businesses").select("id, name");
-  if (phone10) {
-    bizQuery = bizQuery.or(`phone.eq.+91${phone10},phone.eq.${phone10}`);
-  } else {
-    bizQuery = bizQuery.eq("owner", cleanName);
-  }
-  const { data: existingBiz } = await bizQuery.limit(1);
+  // Only match existing business if a valid 10-digit phone is provided (never match by owner display name)
+  if (phone10 && phone10.length === 10) {
+    const { data: existingBiz } = await admin
+      .from("businesses")
+      .select("id, name")
+      .or(`phone.eq.+91${phone10},phone.eq.${phone10}`)
+      .limit(1);
 
-  if (existingBiz && existingBiz.length > 0) {
-    await establishMerchantAuthSession(existingBiz[0].id, cleanEmail, phone10);
-    return {
-      success: true,
-      message: `Welcome back to ${existingBiz[0].name}!`,
-      businessId: existingBiz[0].id,
-      redirectUrl: "/merchant/app",
-    };
+    if (existingBiz && existingBiz.length > 0) {
+      await establishMerchantAuthSession(existingBiz[0].id, cleanEmail, phone10);
+      return {
+        success: true,
+        message: `Welcome back to ${existingBiz[0].name}!`,
+        businessId: existingBiz[0].id,
+        redirectUrl: "/merchant/app",
+      };
+    }
   }
 
   // Create new starter business for Google merchant

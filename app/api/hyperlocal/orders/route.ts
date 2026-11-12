@@ -1,15 +1,105 @@
+import { NextRequest } from "next/server";
 import {
   createHyperlocalOrder,
   merchantAcceptOrder,
   merchantMarkFoodReady,
 } from "@/lib/hyperlocal/hyperlocal-service";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { getActiveMerchant } from "@/lib/merchant-auth";
+import { getActiveAdminContext } from "@/lib/supabase-server";
+import {
+  CUSTOMER_SESSION_COOKIE,
+  enforceRateLimit,
+  normalizePhone10,
+  verifyCustomerSessionToken,
+} from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const rateLimited = enforceRateLimit(request, "hyperlocal_create_order", 20, 5 * 60_000);
+    if (rateLimited) return rateLimited;
+
     const body = await request.json();
+    const paymentMode = body.paymentMode || "cod";
+    if (paymentMode !== "cod" && paymentMode !== "online_cashfree") {
+      return Response.json(
+        { success: false, error: "Invalid payment mode. Use 'cod' or 'online_cashfree'." },
+        { status: 400 }
+      );
+    }
+
+    const rawItems = Array.isArray(body.items) ? body.items : [];
+    if (rawItems.length === 0 || rawItems.length > 50) {
+      return Response.json(
+        { success: false, error: "Order must contain between 1 and 50 items." },
+        { status: 400 }
+      );
+    }
+
+    const admin = createSupabaseAdminClient();
+    const { data: catalogRows } = await admin
+      .from("business_catalog_items")
+      .select("id, name, price, is_available")
+      .eq("business_id", body.businessId);
+
+    const catalogById = new Map((catalogRows || []).map((r) => [r.id, r]));
+    const catalogByName = new Map(
+      (catalogRows || []).map((r) => [String(r.name || "").trim().toLowerCase(), r])
+    );
+
+    const sanitizedItems = [];
+    for (const item of rawItems) {
+      const qty = Number(item?.quantity);
+      if (!Number.isInteger(qty) || qty <= 0 || qty > 50) {
+        return Response.json(
+          { success: false, error: "Invalid item quantity." },
+          { status: 400 }
+        );
+      }
+
+      const catalogMatch =
+        (item?.catalogItemId && catalogById.get(item.catalogItemId)) ||
+        catalogByName.get(String(item?.item_name || "").trim().toLowerCase());
+
+      if (catalogMatch) {
+        if (catalogMatch.is_available === false) {
+          return Response.json(
+            { success: false, error: `Item "${catalogMatch.name}" is currently out of stock.` },
+            { status: 400 }
+          );
+        }
+        sanitizedItems.push({
+          ...item,
+          catalogItemId: catalogMatch.id,
+          item_name: catalogMatch.name,
+          quantity: qty,
+          unit_price: Number(catalogMatch.price),
+        });
+      } else {
+        const unitPrice = Number(item?.unit_price);
+        const isParchaOrder = body.orderType === "parcha_order";
+        if (!isParchaOrder && (catalogRows?.length || 0) > 0) {
+          return Response.json(
+            { success: false, error: `Item "${item?.item_name || "unknown"}" is not in store catalog.` },
+            { status: 400 }
+          );
+        }
+        if (!Number.isFinite(unitPrice) || unitPrice <= 0 || unitPrice > 100_000) {
+          return Response.json(
+            { success: false, error: "Invalid item price." },
+            { status: 400 }
+          );
+        }
+        sanitizedItems.push({
+          ...item,
+          quantity: qty,
+          unit_price: unitPrice,
+        });
+      }
+    }
+
     const result = await createHyperlocalOrder({
       orderId: body.orderId,
       customerId: body.customerId,
@@ -18,8 +108,8 @@ export async function POST(request: Request) {
       customerName: body.customerName,
       customerPhone: body.customerPhone,
       customerAddress: body.customerAddress,
-      items: body.items || [],
-      paymentMode: body.paymentMode || "cod",
+      items: sanitizedItems,
+      paymentMode,
       customerNotes: body.customerNotes,
     });
     return Response.json({ success: true, ...result });
@@ -31,7 +121,37 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+async function authorizeMerchantOrderMutation(orderId: string): Promise<Response | null> {
+  const [merchant, adminCtx] = await Promise.all([
+    getActiveMerchant().catch(() => null),
+    getActiveAdminContext().catch(() => null),
+  ]);
+  if (adminCtx) return null;
+  if (!merchant) {
+    return Response.json(
+      { success: false, error: "Unauthorized: merchant or admin session required." },
+      { status: 401 }
+    );
+  }
+  const admin = createSupabaseAdminClient();
+  const { data: dbOrder } = await admin
+    .from("hyperlocal_orders")
+    .select("business_id")
+    .eq("id", orderId)
+    .maybeSingle();
+  if (!dbOrder) {
+    return Response.json({ success: false, error: "Order not found." }, { status: 404 });
+  }
+  if (dbOrder.business_id !== merchant.businessId) {
+    return Response.json(
+      { success: false, error: "Forbidden: order belongs to another merchant." },
+      { status: 403 }
+    );
+  }
+  return null;
+}
+
+export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
     const { action, orderId, prepTimeMinutes, reason } = body;
@@ -41,11 +161,15 @@ export async function PUT(request: Request) {
     }
 
     if (action === "accept") {
+      const denied = await authorizeMerchantOrderMutation(orderId);
+      if (denied) return denied;
       const result = await merchantAcceptOrder(orderId, prepTimeMinutes || 20);
       return Response.json(result);
     }
 
     if (action === "ready") {
+      const denied = await authorizeMerchantOrderMutation(orderId);
+      if (denied) return denied;
       const result = await merchantMarkFoodReady(orderId);
       return Response.json(result);
     }
@@ -54,12 +178,27 @@ export async function PUT(request: Request) {
       const admin = createSupabaseAdminClient();
       const { data: currentOrder, error: fetchErr } = await admin
         .from("hyperlocal_orders")
-        .select("id, status, payment_mode, payment_status, cashfree_payment_id, total_amount")
+        .select("id, customer_id, customer_phone, status, payment_mode, payment_status, cashfree_payment_id, total_amount")
         .eq("id", orderId)
         .maybeSingle();
 
       if (fetchErr || !currentOrder) {
         return Response.json({ success: false, error: "Order not found" }, { status: 404 });
+      }
+
+      const session = verifyCustomerSessionToken(
+        request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value
+      );
+      if (session) {
+        const orderPhone10 = normalizePhone10(currentOrder.customer_phone);
+        const matchesId = Boolean(session.customerId && currentOrder.customer_id === session.customerId);
+        const matchesPhone = Boolean(session.phone && orderPhone10 && session.phone === orderPhone10);
+        if (!matchesId && !matchesPhone) {
+          return Response.json(
+            { success: false, error: "Forbidden: you do not own this order." },
+            { status: 403 }
+          );
+        }
       }
 
       const prePrepStatuses = ["placed", "accepted_by_merchant", "accepted", "merchant_accepted"];
@@ -105,6 +244,28 @@ export async function PUT(request: Request) {
 
     if (action === "switch_to_cod") {
       const admin = createSupabaseAdminClient();
+      const { data: currentOrder } = await admin
+        .from("hyperlocal_orders")
+        .select("id, customer_id, customer_phone, payment_status")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      if (!currentOrder) {
+        return Response.json({ success: false, error: "Order not found" }, { status: 404 });
+      }
+
+      const session = verifyCustomerSessionToken(
+        request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value
+      );
+      if (session) {
+        const orderPhone10 = normalizePhone10(currentOrder.customer_phone);
+        const matchesId = Boolean(session.customerId && currentOrder.customer_id === session.customerId);
+        const matchesPhone = Boolean(session.phone && orderPhone10 && session.phone === orderPhone10);
+        if (!matchesId && !matchesPhone) {
+          return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+        }
+      }
+
       const now = new Date().toISOString();
       const { error } = await admin
         .from("hyperlocal_orders")
@@ -121,6 +282,8 @@ export async function PUT(request: Request) {
     }
 
     if (action === "reject" || action === "cancel") {
+      const denied = await authorizeMerchantOrderMutation(orderId);
+      if (denied) return denied;
       const admin = createSupabaseAdminClient();
       const now = new Date().toISOString();
       const { error } = await admin
@@ -146,12 +309,29 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, "hyperlocal_orders_get", 60, 60_000);
+  if (rateLimited) return rateLimited;
+
   const { searchParams } = new URL(request.url);
   const businessId = searchParams.get("businessId");
   const phone = searchParams.get("phone");
   const customerId = searchParams.get("customerId");
   const orderId = searchParams.get("orderId");
+
+  if (!orderId && !businessId && !customerId && !phone) {
+    return Response.json(
+      { success: false, error: "An orderId, businessId, customerId, or phone filter is required." },
+      { status: 400 }
+    );
+  }
+
+  if (businessId) {
+    const merchant = await getActiveMerchant().catch(() => null);
+    if (merchant && merchant.businessId !== businessId) {
+      return Response.json({ success: false, error: "Forbidden." }, { status: 403 });
+    }
+  }
 
   const admin = createSupabaseAdminClient();
   let query = admin
@@ -180,8 +360,6 @@ export async function GET(request: Request) {
   } else if (phone) {
     const clean = phone.replace(/\D/g, "").slice(-10);
     query = query.or(`customer_phone.eq.${clean},customer_phone.eq.+91${clean}`);
-  } else {
-    query = query.limit(20);
   }
 
   const { data, error } = await query;

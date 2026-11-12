@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { calculatePointsInrValue } from "@/lib/customer-points";
+import {
+  CUSTOMER_SESSION_COOKIE,
+  enforceRateLimit,
+  isUuid,
+  verifyCustomerSessionToken,
+} from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
@@ -10,17 +16,42 @@ export const dynamic = "force-dynamic";
  */
 export async function GET(request: NextRequest) {
   try {
+    const rateLimited = enforceRateLimit(request, "customer_points", 45, 60_000);
+    if (rateLimited) return rateLimited;
+
     const { searchParams } = new URL(request.url);
     const customerId = searchParams.get("customerId")?.trim() || "";
     const rawPhone = searchParams.get("phone")?.trim() || "";
     const email = searchParams.get("email")?.trim().toLowerCase() || "";
     const phone10 = rawPhone.replace(/\D/g, "").slice(-10);
 
+    if (customerId && !isUuid(customerId)) {
+      return NextResponse.json(
+        { success: false, error: "Invalid Customer ID format." },
+        { status: 400 },
+      );
+    }
+
     if (!customerId && phone10.length !== 10 && !email) {
       return NextResponse.json(
         { success: false, error: "Customer ID, email, or valid 10-digit phone is required." },
         { status: 400 },
       );
+    }
+
+    const session = verifyCustomerSessionToken(
+      request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value
+    );
+    if (session) {
+      if (customerId && session.customerId && session.customerId !== customerId) {
+        return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
+      }
+      if (phone10.length === 10 && session.phone && session.phone !== phone10) {
+        return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
+      }
+      if (email && session.email && session.email !== email) {
+        return NextResponse.json({ success: false, error: "Forbidden." }, { status: 403 });
+      }
     }
 
     const admin = createSupabaseAdminClient();
@@ -88,13 +119,6 @@ export async function GET(request: NextRequest) {
         );
       }
       pushUnique(exactPhoneRows);
-
-      const { data: fuzzyPhoneRows } = await admin
-        .from("customers")
-        .select(selectWithPoints)
-        .ilike("phone", `%${effectivePhone10}%`)
-        .limit(10);
-      pushUnique(fuzzyPhoneRows);
     }
 
     const effectiveEmail = email || rows[0]?.email?.trim().toLowerCase() || "";

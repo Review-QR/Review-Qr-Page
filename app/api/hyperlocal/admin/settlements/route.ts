@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireActiveAdmin } from "@/lib/supabase-server";
+import { requireAdminApi } from "@/lib/auth-api-guards";
 import {
   getPendingMerchantSettlements,
   getPendingRiderPayouts,
@@ -16,7 +16,8 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    await requireActiveAdmin();
+    const auth = await requireAdminApi();
+    if (!auth.ok) return auth.response;
 
     const [pendingMerchants, pendingRiders, kpis] = await Promise.all([
       getPendingMerchantSettlements(),
@@ -39,7 +40,8 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireActiveAdmin();
+    const auth = await requireAdminApi();
+    if (!auth.ok) return auth.response;
 
     const body = await request.json();
     const { action } = body;

@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { stripGooglePlusCode } from "@/lib/hyperlocal/address-format";
+import { buildCorsHeaders, handleCorsPreflight } from "@/lib/auth-cors";
+import { enforceRateLimit } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
@@ -35,18 +37,15 @@ function getCacheKey(lat: number, lng: number): string {
   return `${lat.toFixed(4)},${lng.toFixed(4)}`;
 }
 
-export async function OPTIONS() {
-  return new NextResponse(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
-    },
-  });
+export async function OPTIONS(request: Request) {
+  return handleCorsPreflight(request, "GET, OPTIONS");
 }
 
 export async function GET(request: Request) {
+  const rateLimited = enforceRateLimit(request, "hyperlocal_reverse_geocode", 60, 60_000);
+  if (rateLimited) return rateLimited;
+
+  const corsHeaders = buildCorsHeaders(request.headers.get("origin"), "GET, OPTIONS");
   const { searchParams } = new URL(request.url);
   const latStr = searchParams.get("lat");
   const lngStr = searchParams.get("lng");
@@ -89,7 +88,7 @@ export async function GET(request: Request) {
       },
       {
         headers: {
-          "Access-Control-Allow-Origin": "*",
+          ...corsHeaders,
           "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
         },
       }
@@ -345,7 +344,7 @@ export async function GET(request: Request) {
     },
     {
       headers: {
-        "Access-Control-Allow-Origin": "*",
+        ...corsHeaders,
         "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
       },
     }

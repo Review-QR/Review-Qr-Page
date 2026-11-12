@@ -348,7 +348,8 @@ export async function verifyCustomerPhoneOtp(
 export async function authenticateCustomerWithGoogle(
   email: string,
   fullName: string,
-  phone?: string
+  phone?: string,
+  idToken?: string
 ): Promise<{
   success: boolean;
   message: string;
@@ -357,6 +358,23 @@ export async function authenticateCustomerWithGoogle(
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail || !cleanEmail.includes("@")) {
     return { success: false, message: "A valid email is required for Google Sign-In." };
+  }
+
+  const requireVerifiedGoogle =
+    process.env.NODE_ENV === "production" &&
+    process.env.ALLOW_UNVERIFIED_GOOGLE_LOGIN !== "true";
+
+  if (idToken) {
+    const { verifyGoogleIdToken } = await import("@/lib/auth-api-guards");
+    const verified = await verifyGoogleIdToken(idToken, cleanEmail);
+    if (!verified) {
+      return { success: false, message: "Invalid or expired Google ID token." };
+    }
+  } else if (requireVerifiedGoogle) {
+    return {
+      success: false,
+      message: "Google Sign-In requires verified OAuth credentials. Please use OTP verification.",
+    };
   }
 
   const cleanName = fullName?.trim() || "Google User";

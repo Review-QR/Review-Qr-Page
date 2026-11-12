@@ -1,10 +1,20 @@
+import { NextRequest } from "next/server";
 import { bookDigitalServiceToken } from "@/lib/hyperlocal/hyperlocal-service";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import {
+  CUSTOMER_SESSION_COOKIE,
+  enforceRateLimit,
+  normalizePhone10,
+  verifyCustomerSessionToken,
+} from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const rateLimited = enforceRateLimit(request, "hyperlocal_tokens_book", 20, 5 * 60_000);
+    if (rateLimited) return rateLimited;
+
     const body = await request.json();
     const result = await bookDigitalServiceToken({
       businessId: body.businessId,
@@ -23,7 +33,10 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
+  const rateLimited = enforceRateLimit(request, "hyperlocal_tokens_get", 60, 60_000);
+  if (rateLimited) return rateLimited;
+
   const { searchParams } = new URL(request.url);
   const businessId = searchParams.get("businessId");
   const phone = searchParams.get("phone");
@@ -33,9 +46,16 @@ export async function GET(request: Request) {
   const admin = createSupabaseAdminClient();
 
   if (phone) {
+    const clean = normalizePhone10(phone);
+    const session = verifyCustomerSessionToken(
+      request.cookies.get(CUSTOMER_SESSION_COOKIE)?.value
+    );
+    if (session && session.phone && clean && session.phone !== clean) {
+      return Response.json({ error: "Forbidden." }, { status: 403 });
+    }
     const { data, error } = await admin
       .from("service_tokens_and_slots")
-      .select("*, businesses (name, city, address, phone)")
+      .select("id, business_id, token_number, service_type, slot_time, status, booking_date, created_at, businesses (name, city, address, phone)")
       .eq("customer_phone", phone)
       .order("created_at", { ascending: false })
       .limit(20);
@@ -50,7 +70,7 @@ export async function GET(request: Request) {
   if (tokenId) {
     const { data, error } = await admin
       .from("service_tokens_and_slots")
-      .select("*, businesses (name, city, address, phone)")
+      .select("id, business_id, token_number, service_type, slot_time, status, booking_date, created_at, businesses (name, city, address, phone)")
       .eq("id", tokenId)
       .maybeSingle();
 
@@ -67,7 +87,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await admin
     .from("service_tokens_and_slots")
-    .select("*")
+    .select("id, business_id, token_number, service_type, slot_time, status, booking_date, created_at")
     .eq("business_id", businessId)
     .eq("booking_date", today)
     .order("token_number", { ascending: true });

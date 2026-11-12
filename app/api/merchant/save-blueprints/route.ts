@@ -1,10 +1,20 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
+import { requireAdminApi } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { success: false, error: "Blueprint filesystem writes are disabled in production." },
+      { status: 403 }
+    );
+  }
+  const auth = await requireAdminApi();
+  if (!auth.ok) return auth.response;
+
   try {
     const body = await req.json();
     const { blueprints, finalizedCount } = body;
@@ -31,6 +41,10 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
+  if (process.env.NODE_ENV === "production") {
+    const auth = await requireAdminApi();
+    if (!auth.ok) return auth.response;
+  }
   try {
     const filePath = path.join(process.cwd(), "scripts", "merchant_selected_screen_blueprints.json");
     if (fs.existsSync(filePath)) {

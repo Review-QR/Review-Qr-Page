@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +65,9 @@ function haversineKm(a: LatLng, b: LatLng): number {
 }
 
 export async function GET(request: Request) {
+  const rateLimited = enforceRateLimit(request, "hyperlocal_directions", 60, 60_000);
+  if (rateLimited) return rateLimited;
+
   const { searchParams } = new URL(request.url);
   const query = searchParams.get("query")?.trim();
 

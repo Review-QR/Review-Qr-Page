@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { requireAdminApi } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   try {
+    const auth = await requireAdminApi();
+    if (!auth.ok) return auth.response;
+
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get("status") || "all";
     const admin = createSupabaseAdminClient();
@@ -57,6 +61,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireAdminApi();
+    if (!auth.ok) return auth.response;
+
     const body = await request.json();
     const { action, riderId } = body;
 

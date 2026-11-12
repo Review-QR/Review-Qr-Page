@@ -3,10 +3,19 @@ import type { NextConfig } from "next";
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
   {
     key: "Permissions-Policy",
-    value: "camera=*, microphone=*, geolocation=*, display-capture=*",
+    value: "camera=(), microphone=(), geolocation=(self)",
   },
+];
+
+const trustedApiOrigins = [
+  "https://trustitreview.com",
+  "https://www.trustitreview.com",
+  "capacitor://localhost",
+  "http://localhost",
+  "https://localhost",
 ];
 
 const nextConfig: NextConfig = {
@@ -71,18 +80,62 @@ const nextConfig: NextConfig = {
       });
     }
 
-    const corsHeaders = [
-      { key: "Access-Control-Allow-Origin", value: "*" },
+    const corsBaseHeaders = [
+      { key: "Vary", value: "Origin" },
       { key: "Access-Control-Allow-Methods", value: "GET, POST, PUT, DELETE, OPTIONS, PATCH" },
       { key: "Access-Control-Allow-Headers", value: "X-Requested-With, Content-Type, Authorization, Accept, Origin" },
       { key: "Access-Control-Max-Age", value: "86400" },
     ];
 
-    // CSP is intentionally omitted: Next.js runtime scripts and the dynamically
-    // loaded Cashfree Web Checkout SDK need a nonce-aware policy to avoid breakage.
+    const corsOriginRules = trustedApiOrigins.map((origin) => ({
+      source: "/api/:path*",
+      has: [{ type: "header" as const, key: "origin", value: origin }],
+      headers: [
+        { key: "Access-Control-Allow-Origin", value: origin },
+        { key: "Access-Control-Allow-Credentials", value: "true" },
+      ],
+    }));
+
+    if (process.env.NODE_ENV !== "production") {
+      corsOriginRules.push({
+        source: "/api/:path*",
+        has: [
+          {
+            type: "header" as const,
+            key: "origin",
+            value: "(?<devOrigin>https?://(?:localhost|127\\.0\\.0\\.1)(?::\\d+)?|https://[^.]+\\.trycloudflare\\.com)",
+          },
+        ],
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: ":devOrigin" },
+          { key: "Access-Control-Allow-Credentials", value: "true" },
+        ],
+      });
+    }
+
+    // Nonce-aware Content-Security-Policy-Report-Only is emitted dynamically in proxy.ts.
     return [
-      { source: "/api/:path*", headers: [...headers, ...corsHeaders] },
-      { source: "/:path*", headers }
+      { source: "/api/:path*", headers: [...headers, ...corsBaseHeaders] },
+      ...corsOriginRules,
+      { source: "/:path*", headers },
+      {
+        source: "/rider/:path*",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(), geolocation=(self), display-capture=()",
+          },
+        ],
+      },
+      {
+        source: "/merchant/:path*",
+        headers: [
+          {
+            key: "Permissions-Policy",
+            value: "camera=(self), microphone=(), geolocation=(self), display-capture=()",
+          },
+        ],
+      },
     ];
   },
 };
