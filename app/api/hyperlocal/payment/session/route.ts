@@ -4,13 +4,49 @@ import { enforceRateLimit } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
 
+function resolveSafeCashfreeReturnUrl(orderId: string, rawReturnUrl: unknown, fromAppFlag: unknown): string {
+  let isFromApp = fromAppFlag === true || fromAppFlag === "1";
+
+  const canonical = new URL("https://trustitreview.com/pay/cashfree");
+  canonical.searchParams.set("order_id", orderId);
+  canonical.searchParams.set("returned", "1");
+
+  if (typeof rawReturnUrl === "string" && rawReturnUrl.trim()) {
+    try {
+      const parsed = new URL(rawReturnUrl.trim());
+      if (parsed.searchParams.get("fromApp") === "1") {
+        isFromApp = true;
+      }
+      const isProd = process.env.NODE_ENV === "production";
+      const allowedHost =
+        parsed.hostname === "trustitreview.com" ||
+        parsed.hostname === "www.trustitreview.com" ||
+        (!isProd && (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1"));
+      const allowedProto = parsed.protocol === "https:" || (!isProd && parsed.protocol === "http:");
+      if (allowedHost && allowedProto && (parsed.pathname === "/pay/cashfree" || parsed.pathname === "/order")) {
+        if (isFromApp) {
+          parsed.searchParams.set("fromApp", "1");
+        }
+        return parsed.toString();
+      }
+    } catch {
+      // Fall back to safe canonical return URL below
+    }
+  }
+
+  if (isFromApp) {
+    canonical.searchParams.set("fromApp", "1");
+  }
+  return canonical.toString();
+}
+
 export async function POST(request: Request) {
   try {
     const rateLimited = enforceRateLimit(request, "hyperlocal_payment_session", 20, 10 * 60_000);
     if (rateLimited) return rateLimited;
 
     const body = await request.json();
-    const { orderId, businessId, businessName, customerName, customerPhone, customerEmail, returnUrl } = body;
+    const { orderId, businessId, businessName, customerName, customerPhone, customerEmail, returnUrl, fromApp } = body;
 
     if (!orderId || !businessId) {
       return Response.json(
@@ -52,6 +88,8 @@ export async function POST(request: Request) {
       return Response.json({ success: false, error: "Invalid authoritative order amount." }, { status: 400 });
     }
 
+    const safeReturnUrl = resolveSafeCashfreeReturnUrl(String(orderId), returnUrl, fromApp);
+
     const result = await createCashfreeHyperlocalPaymentOrder({
       orderId,
       amount: authoritativeAmount,
@@ -60,7 +98,7 @@ export async function POST(request: Request) {
       customerName,
       customerPhone,
       customerEmail,
-      returnUrl,
+      returnUrl: safeReturnUrl,
     });
 
     if (!result.success) {

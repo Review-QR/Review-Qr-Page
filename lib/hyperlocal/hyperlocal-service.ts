@@ -88,14 +88,17 @@ export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
     : generateHyperlocalOrderId();
   const deliveryOtp = generateDeliveryOtp();
 
-  // Idempotency check: if order with this ID already exists, return existing order safely
+  // Idempotency check 1: if order with this ID already exists, return existing order safely
   const { data: existingOrder } = await admin
     .from("hyperlocal_orders")
-    .select("id, status, payment_status, total_amount, delivery_otp")
+    .select("id, business_id, status, payment_status, total_amount, delivery_otp")
     .eq("id", orderId)
     .maybeSingle();
 
   if (existingOrder) {
+    if (existingOrder.business_id && existingOrder.business_id !== input.businessId) {
+      throw new Error("Order ID does not belong to this business.");
+    }
     return {
       orderId: existingOrder.id,
       totalAmount: Number(existingOrder.total_amount),
@@ -104,6 +107,40 @@ export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
       deliveryOtp: existingOrder.delivery_otp,
       alreadyExists: true,
     };
+  }
+
+  // Idempotency check 2: reuse recent unpaid online_cashfree order for the same store, phone, and total within 120s
+  const normalizedPhone = input.customerPhone?.trim();
+  if (input.paymentMode === "online_cashfree" && normalizedPhone) {
+    const windowStartIso = new Date(Date.now() - 120_000).toISOString();
+    const { data: recentUnpaidOrders } = await admin
+      .from("hyperlocal_orders")
+      .select("id, status, payment_status, total_amount, delivery_otp, created_at")
+      .eq("business_id", input.businessId)
+      .eq("customer_phone", normalizedPhone)
+      .eq("payment_mode", "online_cashfree")
+      .eq("payment_status", "pending")
+      .neq("status", "cancelled")
+      .gte("created_at", windowStartIso)
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    const matchingRecent = (recentUnpaidOrders || []).find(
+      (ord) =>
+        ord.payment_status === "pending" &&
+        Math.abs(Number(ord.total_amount) - totalAmount) < 0.01,
+    );
+
+    if (matchingRecent) {
+      return {
+        orderId: matchingRecent.id,
+        totalAmount: Number(matchingRecent.total_amount),
+        status: matchingRecent.status,
+        paymentStatus: matchingRecent.payment_status,
+        deliveryOtp: matchingRecent.delivery_otp,
+        alreadyExists: true,
+      };
+    }
   }
 
   // Validate customer_id against public.customers table if provided
@@ -194,6 +231,7 @@ export async function createHyperlocalOrder(input: CreateHyperlocalOrderInput) {
     platformFee,
     nearestRidersCount: nearestRiders.length,
     nearestRiders,
+    alreadyExists: false as boolean,
   };
 }
 

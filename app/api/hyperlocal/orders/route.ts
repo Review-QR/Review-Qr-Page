@@ -18,6 +18,9 @@ import {
 
 export const dynamic = "force-dynamic";
 
+type CreateOrderResult = Awaited<ReturnType<typeof createHyperlocalOrder>>;
+const inFlightCashfreeOrderRequests = new Map<string, Promise<CreateOrderResult>>();
+
 export async function POST(request: NextRequest) {
   try {
     const rateLimited = enforceRateLimit(request, "hyperlocal_create_order", 20, 5 * 60_000);
@@ -102,18 +105,47 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const result = await createHyperlocalOrder({
+    const orderInput = {
       orderId: body.orderId,
       customerId: body.customerId,
       businessId: body.businessId,
       orderType: body.orderType || "food_delivery",
       customerName: body.customerName,
-      customerPhone: body.customerPhone,
+      customerPhone: typeof body.customerPhone === "string" ? body.customerPhone.trim() : body.customerPhone,
       customerAddress: body.customerAddress,
       items: sanitizedItems,
       paymentMode,
       customerNotes: body.customerNotes,
-    });
+    };
+
+    let result: CreateOrderResult;
+    const phoneKey = normalizePhone10(orderInput.customerPhone) || String(orderInput.customerPhone || "");
+    const itemKey = sanitizedItems
+      .map((it) => `${String(it.item_name || "").trim().toLowerCase()}:${it.quantity}:${it.unit_price}`)
+      .sort()
+      .join("|");
+    const dedupeKey =
+      paymentMode === "online_cashfree" && body.businessId && phoneKey
+        ? `${body.businessId}:${phoneKey}:${itemKey}`
+        : "";
+
+    const existingPromise = dedupeKey ? inFlightCashfreeOrderRequests.get(dedupeKey) : undefined;
+    if (existingPromise) {
+      const shared = await existingPromise;
+      result = { ...shared, alreadyExists: true };
+    } else {
+      const promise = createHyperlocalOrder(orderInput);
+      if (dedupeKey) {
+        inFlightCashfreeOrderRequests.set(dedupeKey, promise);
+      }
+      try {
+        result = await promise;
+      } finally {
+        if (dedupeKey) {
+          inFlightCashfreeOrderRequests.delete(dedupeKey);
+        }
+      }
+    }
     const res = NextResponse.json({ success: true, ...result });
     if (body.customerId || body.customerPhone) {
       const token = createCustomerSessionToken({
