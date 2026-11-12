@@ -1,0 +1,148 @@
+name: CI Quality Gate
+
+on:
+  push:
+    branches:
+      - main
+      - nextjs-migration
+      - codex/**
+  pull_request:
+    branches:
+      - main
+      - nextjs-migration
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quality-gate:
+    name: Typecheck, Tests, Secret Scan & Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Secret scan check
+        run: |
+          node - <<'EOF'
+          const fs = require("node:fs");
+          const { execSync } = require("node:child_process");
+
+          const files = execSync("git ls-files", { encoding: "utf8" })
+            .trim()
+            .split(/\r?\n/)
+            .filter(Boolean);
+
+          const patterns = [
+            {
+              name: "JWT / Supabase key",
+              re: /eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}/,
+            },
+            {
+              name: "Private key block",
+              re: /-----BEGIN (?:RSA |EC |OPENSSH |PGP )?PRIVATE KEY-----/,
+            },
+            {
+              name: "AWS access key",
+              re: /\bAKIA[0-9A-Z]{16}\b/,
+            },
+            {
+              name: "Hardcoded secret assignment",
+              re: /\b(?:SUPABASE_SECRET_KEY|SUPABASE_SERVICE_ROLE_KEY|CASHFREE_CLIENT_SECRET|FAST2SMS_API_KEY|OPENAI_API_KEY)[^\S\r\n]*=[^\S\r\n]*["']?[A-Za-z0-9_./+=-]{12,}/,
+            },
+            {
+              name: "Hardcoded Android keystore password",
+              re: /\b(?:storePassword|keyPassword)\s+["'][^"']+["']/,
+            },
+          ];
+
+          const findings = [];
+          for (const file of files) {
+            if (
+              file === ".env.example" ||
+              file.endsWith(".test.mjs") ||
+              file.startsWith("docs/") ||
+              file.startsWith("archive/") ||
+              /\.(png|jpg|jpeg|webp|gif|svg|ico|apk|jar|keystore|jks|woff2?|ttf|pdf)$/i.test(file)
+            ) {
+              continue;
+            }
+            if (!fs.existsSync(file)) continue;
+            const content = fs.readFileSync(file, "utf8");
+            for (const { name, re } of patterns) {
+              if (re.test(content)) {
+                findings.push(`${name}: ${file}`);
+              }
+            }
+          }
+
+          if (findings.length > 0) {
+            console.error("Secret scan failed! Potential secrets detected:");
+            for (const finding of findings) console.error(" -", finding);
+            process.exit(1);
+          }
+          console.log(`Secret scan passed (${files.length} tracked files checked).`);
+          EOF
+
+      - name: Run TypeScript typecheck
+        run: pnpm typecheck
+
+      - name: Run automated test suite
+        run: pnpm test
+
+      - name: Run Cashfree regression suite
+        run: pnpm test:cashfree
+
+      - name: Build Next.js application
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co' }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || 'placeholder-publishable-key' }}
+        run: pnpm build
+
+  public-indexability-audit:
+    name: Public Indexability Audit
+    runs-on: ubuntu-latest
+    needs: quality-gate
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 12.6.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run public indexability audit
+        env:
+          TRUSTIT_AUDIT_BASE_URL: ${{ vars.TRUSTIT_AUDIT_BASE_URL || 'https://trustitreview.com' }}
+        run: pnpm audit:public-indexability
