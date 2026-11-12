@@ -145,6 +145,18 @@ export default function StandaloneRiderProductionApp() {
     batteryLevelRef.current = batteryLevel;
   }, [batteryLevel]);
 
+  const currentScreenIdRef = useRef<number>(currentScreenId);
+  useEffect(() => {
+    currentScreenIdRef.current = currentScreenId;
+  }, [currentScreenId]);
+
+  const activeOrderRef = useRef(activeOrder);
+  useEffect(() => {
+    activeOrderRef.current = activeOrder;
+  }, [activeOrder]);
+
+  const hasShownLowBatteryAlertRef = useRef<boolean>(false);
+
   // PWA Install & Lockscreen Push State
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBanner, setShowInstallBanner] = useState<boolean>(false);
@@ -236,24 +248,45 @@ export default function StandaloneRiderProductionApp() {
   // 2. REAL BATTERY SENSOR & AUTO CRITICAL SAFE MODE (<15%)
   // ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (typeof window !== "undefined" && "getBattery" in navigator) {
-      (navigator as any).getBattery().then((battery: any) => {
-        const updateBattery = () => {
-          const level = Math.round(battery.level * 100);
-          setBatteryLevel(level);
-          setIsBatteryCharging(Boolean(battery.charging));
+    if (typeof window === "undefined" || !("getBattery" in navigator)) return;
 
-          if (level <= 15 && !battery.charging && currentScreenId !== 48) {
+    let cancelled = false;
+    let batteryObj: any = null;
+    const updateBattery = () => {
+      if (!batteryObj || cancelled) return;
+      const level = Math.round(batteryObj.level * 100);
+      const charging = Boolean(batteryObj.charging);
+      setBatteryLevel(level);
+      setIsBatteryCharging(charging);
+
+      if (level <= 15 && !charging) {
+        if (!hasShownLowBatteryAlertRef.current) {
+          hasShownLowBatteryAlertRef.current = true;
+          if (currentScreenIdRef.current !== 48) {
             setCurrentScreenId(48);
           }
-        };
+        }
+      } else {
+        hasShownLowBatteryAlertRef.current = false;
+      }
+    };
 
-        updateBattery();
-        battery.addEventListener("levelchange", updateBattery);
-        battery.addEventListener("chargingchange", updateBattery);
-      }).catch(() => {});
-    }
-  }, [currentScreenId, setCurrentScreenId]);
+    (navigator as any).getBattery().then((battery: any) => {
+      if (cancelled) return;
+      batteryObj = battery;
+      updateBattery();
+      battery.addEventListener("levelchange", updateBattery);
+      battery.addEventListener("chargingchange", updateBattery);
+    }).catch(() => {});
+
+    return () => {
+      cancelled = true;
+      if (batteryObj) {
+        batteryObj.removeEventListener("levelchange", updateBattery);
+        batteryObj.removeEventListener("chargingchange", updateBattery);
+      }
+    };
+  }, [setCurrentScreenId]);
 
   // ─────────────────────────────────────────────────────────────
   // 3. REAL GPS TELEMETRY & LOCALITY WATCHER (24x7 ACTIVE, AUTO REVERSE-GEOCODE)
@@ -449,69 +482,115 @@ export default function StandaloneRiderProductionApp() {
   // Synchronize internal history stack whenever currentScreenId advances
   useEffect(() => {
     const stack = screenHistoryRef.current;
-    if (stack[stack.length - 1] !== currentScreenId) {
-      stack.push(currentScreenId);
+    // When entering active pickup/delivery screens, strip transient radar/lockscreen overlays from history
+    if (currentScreenId === 12 || currentScreenId === 40) {
+      const cleaned = stack.filter((id) => id !== 10 && id !== 11 && id !== 21 && id !== 22);
+      screenHistoryRef.current = cleaned.length > 0 ? cleaned : [7];
+    }
+    const activeStack = screenHistoryRef.current;
+    if (activeStack[activeStack.length - 1] !== currentScreenId) {
+      activeStack.push(currentScreenId);
     }
   }, [currentScreenId]);
 
   // Navigate to previous (last) screen, prevent unintentional exit
-  const handleHardwareBack = useCallback(() => {
+  const handleHardwareBack = useCallback((): boolean => {
     const stack = screenHistoryRef.current;
-    const isRootScreen = currentScreenId === 1 || currentScreenId === 7 || currentScreenId === 19;
+    const cur = currentScreenIdRef.current;
+    const curOrder = activeOrderRef.current;
+    const isRootScreen = cur === 1 || cur === 7 || cur === 19;
+
+    // On Store Pickup (Screen 12) with an active order, return directly to Cockpit (7) instead of Screen 11 loop
+    if (cur === 12 && curOrder) {
+      screenHistoryRef.current = [7];
+      setCurrentScreenId(7);
+      return true;
+    }
 
     if (!isRootScreen && stack.length > 1) {
-      // Pop the active screen
+      // Pop the active screen and skip stale transient alert/OTP screens
       stack.pop();
-      // Navigate to the immediate previous screen
-      let previousScreen = stack[stack.length - 1] || 1;
-      // Never pop back to OTP verification (Screen 2) if OTP was already verified
-      if (previousScreen === 2 && currentScreenId !== 2) {
+      while (stack.length > 1) {
+        const candidate = stack[stack.length - 1];
+        if (
+          (candidate === 2 && cur !== 2) ||
+          (curOrder && (candidate === 10 || candidate === 11 || candidate === 21 || candidate === 22))
+        ) {
+          stack.pop();
+          continue;
+        }
+        break;
+      }
+      let previousScreen = stack[stack.length - 1] || (cur === 1 ? 1 : 7);
+      if (previousScreen === 2 && cur !== 2) {
         previousScreen = 1;
       }
       setCurrentScreenId(previousScreen);
-      return;
+      return true;
     }
 
     // At root screen (Screen 01, Screen 07 Cockpit, or Screen 19 Pending)
     const now = Date.now();
     if (now - lastBackPressTimeRef.current < 2000) {
       const capApp = (window as any).Capacitor?.Plugins?.App;
-      capApp?.exitApp?.();
-    } else {
-      lastBackPressTimeRef.current = now;
-      setBackToast("Press back again to exit");
-      setTimeout(() => setBackToast(null), 2000);
+      if (capApp?.exitApp) {
+        capApp.exitApp();
+        return true;
+      }
+      return false;
     }
-  }, [currentScreenId, setCurrentScreenId]);
+
+    lastBackPressTimeRef.current = now;
+    setBackToast("Press back again to exit");
+    setTimeout(() => setBackToast(null), 2000);
+    return true;
+  }, [setCurrentScreenId]);
+
+  const handleHardwareBackRef = useRef<() => boolean>(handleHardwareBack);
+  useEffect(() => {
+    handleHardwareBackRef.current = handleHardwareBack;
+  }, [handleHardwareBack]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    let cancelled = false;
     let listenerHandle: any = null;
+    const invokeBack = () => handleHardwareBackRef.current();
+
     try {
       const capApp = (window as any).Capacitor?.Plugins?.App;
       if (capApp?.addListener) {
-        capApp.addListener("backButton", handleHardwareBack).then((h: any) => {
-          listenerHandle = h;
+        capApp.addListener("backButton", invokeBack).then((h: any) => {
+          if (cancelled) {
+            h?.remove?.();
+          } else {
+            listenerHandle = h;
+          }
         });
       }
     } catch {}
 
-    // Maintain WebView history buffer so native Android back never kills the WebView
-    window.history.pushState({ screen: currentScreenId }, "", window.location.pathname);
+    // Maintain WebView history buffer once on mount so native Android back never kills the WebView
+    window.history.pushState({ screen: currentScreenIdRef.current }, "", window.location.pathname);
 
-    const onPop = (e: PopStateEvent) => {
+    const onPop = () => {
       // Re-push state so WebView history stack never collapses to 0
-      window.history.pushState({ screen: currentScreenId }, "", window.location.pathname);
-      handleHardwareBack();
+      window.history.pushState({ screen: currentScreenIdRef.current }, "", window.location.pathname);
+      invokeBack();
     };
     window.addEventListener("popstate", onPop);
+    (window as any).__handleTrustitBack = invokeBack;
 
     return () => {
+      cancelled = true;
       window.removeEventListener("popstate", onPop);
       listenerHandle?.remove?.();
+      if ((window as any).__handleTrustitBack === invokeBack) {
+        delete (window as any).__handleTrustitBack;
+      }
     };
-  }, [handleHardwareBack, currentScreenId]);
+  }, []);
 
   // ─────────────────────────────────────────────────────────────
   // 4. OFFLINE DEAD-ZONE CACHING (BAHRAICH 2G RESILIENCE)
@@ -929,10 +1008,12 @@ export default function StandaloneRiderProductionApp() {
         <Screen12StorePickup
           activeOrder={activeOrder as any}
           onPickupConfirmed={() => { confirmPickup(); setCurrentScreenId(40); }}
-          onBack={() => setCurrentScreenId(11)}
+          onBack={() => setCurrentScreenId(activeOrder ? 7 : 11)}
           onMerchantDelay={() => setCurrentScreenId(23)}
           onCallShop={() => {
-            const phone = activeOrder?.business?.phone || (activeOrder as any)?.businesses?.phone;
+            const rawBiz = (activeOrder as any)?.businesses ?? activeOrder?.business;
+            const biz = Array.isArray(rawBiz) ? rawBiz[0] : rawBiz;
+            const phone = biz?.phone;
             if (typeof window !== "undefined" && phone) window.location.href = `tel:${phone}`;
           }}
         />

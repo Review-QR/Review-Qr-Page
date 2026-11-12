@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { riderAudio } from "@/lib/audio/rider-siren";
+import { TrustitNative } from "@/lib/native/trustit-native-service";
 import type { DeliveryRider, HyperlocalOrder } from "@/lib/hyperlocal/types";
 import {
   type RiderRemoteConfig,
@@ -92,11 +93,27 @@ export function useRiderWorkflow() {
   const [remoteConfig, setRemoteConfig] = useState<RiderRemoteConfig>(DEFAULT_RIDER_REMOTE_CONFIG);
   const [sessionNotice, setSessionNotice] = useState<string | null>(null);
 
+  const activeOrderRef = useRef(activeOrder);
+  const incomingOrderRef = useRef(incomingOrder);
+  const currentScreenIdRef = useRef(currentScreenId);
+
+  useEffect(() => {
+    activeOrderRef.current = activeOrder;
+  }, [activeOrder]);
+
+  useEffect(() => {
+    incomingOrderRef.current = incomingOrder;
+  }, [incomingOrder]);
+
+  useEffect(() => {
+    currentScreenIdRef.current = currentScreenId;
+  }, [currentScreenId]);
+
   // 1. Fetch Remote Config on Mount
   useEffect(() => {
     async function loadRemoteConfig() {
       try {
-        const res = await fetch("/api/hyperlocal/remote-config");
+        const res = await TrustitNative.nativeFetch("/api/hyperlocal/remote-config");
         if (res.ok) {
           const data = await res.json();
           if (data.config) {
@@ -131,7 +148,7 @@ export function useRiderWorkflow() {
         if (parsed && parsed.id && parsed.id !== "rider_new_partner") {
           // Verify with live DB that this rider has NOT been deleted by Admin
           try {
-            const res = await fetch(`/api/hyperlocal/rider?riderId=${encodeURIComponent(parsed.id)}`);
+            const res = await TrustitNative.nativeFetch(`/api/hyperlocal/rider?riderId=${encodeURIComponent(parsed.id)}`);
             if (cancelled) return;
 
             if (res.status === 404) {
@@ -157,7 +174,23 @@ export function useRiderWorkflow() {
 
                 if (liveRider.is_verified && liveRider.kyc_status === "approved") {
                   setIsOnline(Boolean(liveRider.is_online));
-                  setCurrentScreenId(7);
+                  if (data.activeOrder) {
+                    setActiveOrder(data.activeOrder);
+                    const status = data.activeOrder.status;
+                    if (status === "rider_assigned") {
+                      setCurrentScreenId(12);
+                    } else if (
+                      status === "picked_up" ||
+                      status === "out_for_delivery" ||
+                      status === "arrived_at_doorstep"
+                    ) {
+                      setCurrentScreenId(40);
+                    } else {
+                      setCurrentScreenId(7);
+                    }
+                  } else {
+                    setCurrentScreenId(7);
+                  }
                 } else {
                   setIsOnline(false);
                   setCurrentScreenId(liveRider.full_name?.trim() ? 19 : 48);
@@ -206,7 +239,7 @@ export function useRiderWorkflow() {
 
     setIsOnline(nextState);
     try {
-      await fetch("/api/hyperlocal/rider", {
+      await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "toggle_online", riderId: rider.id, isOnline: nextState }),
@@ -223,7 +256,7 @@ export function useRiderWorkflow() {
     let cancelled = false;
     const guardInterval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/hyperlocal/rider?riderId=${encodeURIComponent(rider.id)}`);
+        const res = await TrustitNative.nativeFetch(`/api/hyperlocal/rider?riderId=${encodeURIComponent(rider.id)}`);
         if (cancelled) return;
         if (res.status === 404) {
           clearAllRiderStorage();
@@ -258,7 +291,7 @@ export function useRiderWorkflow() {
     let isSubscribed = true;
     const pollInterval = setInterval(async () => {
       try {
-        const res = await fetch(`/api/hyperlocal/rider?riderId=${rider.id}`);
+        const res = await TrustitNative.nativeFetch(`/api/hyperlocal/rider?riderId=${encodeURIComponent(rider.id)}`);
         if (res.status === 404) {
           if (!isSubscribed) return;
           clearAllRiderStorage();
@@ -274,8 +307,27 @@ export function useRiderWorkflow() {
         const data = await res.json();
         if (!isSubscribed) return;
 
+        if (data.activeOrder && !activeOrderRef.current) {
+          setActiveOrder(data.activeOrder);
+          const status = data.activeOrder.status;
+          const curScreen = currentScreenIdRef.current;
+          if (status === "rider_assigned" && curScreen !== 12 && curScreen !== 23) {
+            setCurrentScreenId(12);
+          } else if (
+            (status === "picked_up" || status === "out_for_delivery" || status === "arrived_at_doorstep") &&
+            curScreen !== 40
+          ) {
+            setCurrentScreenId(40);
+          }
+        }
+
         const incoming = data.incomingOrder || data.incomingDispatchOrder;
-        if (incoming && (!incomingOrder || incomingOrder.id !== incoming.id)) {
+        if (
+          incoming &&
+          !activeOrderRef.current &&
+          !data.activeOrder &&
+          (!incomingOrderRef.current || incomingOrderRef.current.id !== incoming.id)
+        ) {
           setIncomingOrder({
             ...incoming,
             secondsRemaining: incoming.secondsRemaining || 29,
@@ -288,10 +340,6 @@ export function useRiderWorkflow() {
             setIsSirenPlaying(true);
           }
           setCurrentScreenId(10);
-        }
-
-        if (data.activeOrder && !activeOrder) {
-          setActiveOrder(data.activeOrder);
         }
 
         if (data.scorecard) {
@@ -307,7 +355,7 @@ export function useRiderWorkflow() {
       isSubscribed = false;
       clearInterval(pollInterval);
     };
-  }, [isOnline, activeOrder, incomingOrder, soundEnabled, rider.id]);
+  }, [isOnline, activeOrder, soundEnabled, rider.id]);
 
   /**
    * 2. Trigger Proximity Siren Radar (Simulated Incoming Order)
@@ -333,16 +381,21 @@ export function useRiderWorkflow() {
     setIsSirenPlaying(false);
     setIncomingOrder(null);
     setActiveOrder(orderToAccept);
+    setCurrentScreenId(12); // Advance to Store Pickup
 
     try {
-      await fetch("/api/hyperlocal/rider", {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "accept_order", riderId: rider.id, orderId: orderToAccept.id }),
       });
+      if (res.ok) {
+        const data = await res.json().catch(() => null);
+        if (data?.order) {
+          setActiveOrder(data.order);
+        }
+      }
     } catch {}
-
-    setCurrentScreenId(12); // Advance to Store Pickup
   }, [rider.id, incomingOrder]);
 
   /**
@@ -356,7 +409,7 @@ export function useRiderWorkflow() {
     if (!orderToDeclineId) return;
 
     try {
-      await fetch("/api/hyperlocal/rider", {
+      await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "decline_order", riderId: rider.id, orderId: orderToDeclineId }),
@@ -372,8 +425,9 @@ export function useRiderWorkflow() {
     const currentOrderId = activeOrder?.id;
     if (!currentOrderId) return;
 
+    setActiveOrder((prev) => (prev ? { ...prev, status: "picked_up" } : prev));
     try {
-      await fetch("/api/hyperlocal/rider", {
+      await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "pickup_order", riderId: rider.id, orderId: currentOrderId }),
@@ -410,7 +464,7 @@ export function useRiderWorkflow() {
 
     try {
       if (activeOrder?.id) {
-        await fetch("/api/hyperlocal/rider", {
+        await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "deliver_with_otp", riderId: rider.id, orderId: activeOrder.id, otp }),
@@ -434,7 +488,7 @@ export function useRiderWorkflow() {
 
     try {
       if (activeOrder?.id) {
-        await fetch("/api/hyperlocal/rider", {
+        await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "wait_compensation", riderId: rider.id, orderId: activeOrder.id, waitMinutes }),
@@ -449,7 +503,7 @@ export function useRiderWorkflow() {
   const refundDoorstepChange = useCallback(async (changeAmount: number, method: "wallet" | "upi") => {
     try {
       if (activeOrder?.id) {
-        await fetch("/api/hyperlocal/rider", {
+        await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -471,7 +525,7 @@ export function useRiderWorkflow() {
     setWalletBalance((w) => w + amount);
     try {
       if (activeOrder?.id) {
-        await fetch("/api/hyperlocal/rider", {
+        await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "claim_parking", riderId: rider.id, orderId: activeOrder.id, amount }),
@@ -497,7 +551,7 @@ export function useRiderWorkflow() {
     const partnerEmail = user?.email || "new.partner@trustit.in";
 
     try {
-      const res = await fetch("/api/hyperlocal/rider", {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -543,7 +597,7 @@ export function useRiderWorkflow() {
       return { success: false, error: "Please configure a valid UPI ID (e.g. name@oksbi) in your profile." };
     }
     try {
-      const res = await fetch("/api/hyperlocal/rider", {
+      const res = await TrustitNative.nativeFetch("/api/hyperlocal/rider", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -576,7 +630,7 @@ export function useRiderWorkflow() {
     const nextConfig = { ...remoteConfig, ...updates, lastUpdatedAt: new Date().toISOString() };
     setRemoteConfig(nextConfig);
     try {
-      await fetch("/api/hyperlocal/remote-config", {
+      await TrustitNative.nativeFetch("/api/hyperlocal/remote-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ updates }),

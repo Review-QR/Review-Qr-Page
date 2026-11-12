@@ -38,6 +38,7 @@ export default function Screen01MainCockpit({
   outCount = 0,
   todayEarnings = 0,
   reviewStats,
+  onOpenOrders,
   onOpenSiren,
   onOpenOccasion,
 }: Screen01Props) {
@@ -99,15 +100,19 @@ export default function Screen01MainCockpit({
 
           <div className="grid grid-cols-2 gap-1.5">
             <div 
-              onClick={onOpenSiren}
+              onClick={onOpenOrders || onOpenSiren}
               className="cursor-pointer bg-amber-50/80 hover:bg-amber-100/80 border border-amber-200 rounded-lg p-2 transition"
             >
               <div className="flex items-center justify-between">
                 <span className="text-[9px] font-bold text-amber-900">⏳ New Pending</span>
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                {liveOrdersCount > 0 && (
+                  <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
+                )}
               </div>
               <p className="text-sm font-black text-amber-950 mt-0.5">{liveOrdersCount} Orders</p>
-              <span className="text-[8px] font-medium text-amber-700">Click to preview siren</span>
+              <span className="text-[8px] font-medium text-amber-700">
+                {liveOrdersCount > 0 ? "Tap to view orders" : "No pending orders"}
+              </span>
             </div>
 
             <div className="bg-blue-50/60 border border-blue-200 rounded-lg p-2">
@@ -215,18 +220,22 @@ export default function Screen01MainCockpit({
 
       {/* Persistent Bottom Urgent Queue Bar */}
       <div 
-        onClick={onOpenSiren}
+        onClick={onOpenOrders || onOpenSiren}
         className="mt-3 cursor-pointer bg-slate-900 text-white rounded-2xl p-2.5 flex items-center justify-between shadow-md border border-slate-800"
       >
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+          <span className={`w-2.5 h-2.5 rounded-full ${liveOrdersCount > 0 ? "bg-rose-500 animate-ping" : "bg-emerald-500"}`}></span>
           <div>
             <p className="text-[11px] font-extrabold leading-tight">Urgent Incoming Orders Queue</p>
-            <p className="text-[9px] text-slate-400">{liveOrdersCount} Orders needing acceptance (01:45 remaining)</p>
+            <p className="text-[9px] text-slate-400">
+              {liveOrdersCount > 0
+                ? `${liveOrdersCount} ${liveOrdersCount === 1 ? "order" : "orders"} awaiting acceptance`
+                : "All incoming orders handled"}
+            </p>
           </div>
         </div>
         <span className="text-[10px] font-bold px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg transition">
-          Accept Orders →
+          {liveOrdersCount > 0 ? "Accept Orders →" : "View Orders →"}
         </span>
       </div>
     </div>
