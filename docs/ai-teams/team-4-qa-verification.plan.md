@@ -43,9 +43,9 @@
 ### Milestone 4.4 — Release Sign-Off Matrix (Per Merge)
 Har Wave merge hone se pehle ye sab PASS hona chahiye:
 - [x] `pnpm typecheck` -> `0` errors
-- [x] `pnpm test` -> `0` failures (`285/285`)
+- [x] `pnpm test` -> `0` failures (`291/291`)
 - [x] `pnpm test:cashfree` -> `0` failures (`23/23`)
-- [ ] `pnpm build` -> clean exit `0` (pending Wave 2 `ignoreBuildErrors: false` + final merge sign-off)
+- [x] `pnpm build` -> clean exit `0` (`36/36` static pages, strict TS `ignoreBuildErrors: false`)
 - [ ] `node scripts/verify_compiled_apk.mjs` (pending full Capacitor/Gradle signed APK build into `public/downloads/Trustit-Merchant-Partner.apk`)
 
 ---
@@ -84,5 +84,16 @@ Har Wave merge hone se pehle ye sab PASS hona chahiye:
     - `pnpm typecheck`: PASSED (exit `0`)
     - `pnpm test`: PASSED `285/285` (`0` failures)
     - `pnpm test:cashfree`: PASSED `23/23` (`0` failures)
-- **Current Status:** `MILESTONE_4_2_COMPLETE`
-- **Next Exact Step:** Wait for Team 2 (`@architecture` Wave 2 `ignoreBuildErrors: false` + `pnpm build`) and any remaining Wave merges to run final Milestone 4.4 full-stack verification (`pnpm build` + `verify_compiled_apk.mjs` if signed APK present).
+- **2026-11-12 (Team 4 Wave 3 / Loom Bugfix Regressions & Milestone 4.4 Release Verification):**
+  - **Completed Tasks:** Merged all 3 Loom bug-fix branches (`main` `d03f8bb`), added `lib/loom-bugfix-regressions.test.mjs` (`6` runtime + invariant tests), and ran the full QA verification gate (`typecheck`, `pnpm test`, `pnpm test:cashfree`, `pnpm build`).
+  - **Files Changed:**
+    - `lib/loom-bugfix-regressions.test.mjs`
+    - `docs/ai-teams/team-4-qa-verification.plan.md`
+  - **Verification Evidence (after `main` merge `d03f8bb` + new regression suite):**
+    - `node --test lib/loom-bugfix-regressions.test.mjs`: PASSED `6/6`
+    - `pnpm typecheck`: PASSED (exit `0`)
+    - `pnpm test`: PASSED `291/291` (`0` failures, `0` skipped)
+    - `pnpm test:cashfree`: PASSED `23/23` (`0` failures)
+    - `pnpm build` (with CI placeholder `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` when `.env.local` absent): PASSED (`✓ Compiled successfully in 45s`, `Finished TypeScript in 10.5s`, `36/36` static pages, exit `0`)
+- **Current Status:** `LOOM_QA_VERIFICATION_COMPLETE`
+- **Next Exact Step:** Commit `lib/loom-bugfix-regressions.test.mjs` and `docs/ai-teams/team-4-qa-verification.plan.md` locally, report to `@coordinator`, and run `node scripts/verify_compiled_apk.mjs` once a signed partner APK is generated into `public/downloads/`.
