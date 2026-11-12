@@ -142,8 +142,12 @@ export const TrustitNative = {
     if (plugin && typeof plugin.getPreciseLocation === "function") {
       try {
         const res = await plugin.getPreciseLocation();
-        if (res && res.latitude && res.longitude) {
+        const fixAgeMs = res?.timestamp ? Math.abs(Date.now() - res.timestamp) : 0;
+        if (res && res.latitude && res.longitude && fixAgeMs < 120_000) {
           return res;
+        }
+        if (res && res.latitude && res.longitude) {
+          console.warn("[TrustitNative] Native GPS fix is stale (" + Math.round(fixAgeMs / 1000) + "s old), trying WebView geolocation.");
         }
       } catch (err) {
         console.warn("Native location fallback to web navigator:", err);
@@ -167,16 +171,36 @@ export const TrustitNative = {
             city: "UP",
             pincode: "",
           }),
-          () => resolve({
-            latitude: 0,
-            longitude: 0,
-            accuracy: 999,
-            address: "Location Permission Required",
-            mohalla: "",
-            city: "",
-            pincode: "",
-          }),
-          { enableHighAccuracy: true, timeout: 12000 }
+          () => {
+            // Second attempt with network/Wi-Fi accuracy for indoor reliability
+            navigator.geolocation.getCurrentPosition(
+              (pos) => resolve({
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+                speed: pos.coords.speed || 0,
+                bearing: pos.coords.heading || 0,
+                altitude: pos.coords.altitude || 0,
+                provider: "browser-network",
+                timestamp: pos.timestamp,
+                address: `GPS (${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)})`,
+                mohalla: "Live Telemetry",
+                city: "UP",
+                pincode: "",
+              }),
+              () => resolve({
+                latitude: 0,
+                longitude: 0,
+                accuracy: 999,
+                address: "Location Permission Required",
+                mohalla: "",
+                city: "",
+                pincode: "",
+              }),
+              { enableHighAccuracy: false, maximumAge: 15000, timeout: 8000 }
+            );
+          },
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 8000 }
         );
       });
     }

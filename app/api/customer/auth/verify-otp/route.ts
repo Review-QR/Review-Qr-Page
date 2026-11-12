@@ -24,15 +24,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(result);
     }
 
-    // 2. Profile Creation (existing contract)
+    // 2. Profile Creation (existing contract + phone-only fallback)
     if (action === "create_profile") {
-      if (!email || !fullName) {
+      const cleanPhoneDigits = typeof phone === "string" ? phone.replace(/\D/g, "").slice(-10) : "";
+      const resolvedEmail =
+        typeof email === "string" && email.includes("@")
+          ? email.trim().toLowerCase()
+          : cleanPhoneDigits.length === 10
+            ? `${cleanPhoneDigits}@customer.trustitreview.com`
+            : "";
+      if (!resolvedEmail || !fullName) {
         return NextResponse.json(
-          { success: false, message: "Email and Full Name are required to create profile." },
+          { success: false, message: "Phone/Email and Full Name are required to create profile." },
           { status: 400 },
         );
       }
-      const result = await createCustomerProfile(email, fullName, phone);
+      const result = await createCustomerProfile(resolvedEmail, fullName, cleanPhoneDigits || phone);
       if (!result.success) {
         return NextResponse.json(result, { status: 400 });
       }

@@ -264,6 +264,13 @@ export default async function HomePage() {
       icon: "🪪",
     },
     {
+      href: "/admin/hyperlocal?tab=points",
+      title: "🎁 Customer Points & Top-Up",
+      description: "Search customers and top-up loyalty points (350 Points = ₹100)",
+      tone: "purple",
+      icon: "✨",
+    },
+    {
       href: "/businesses",
       title: "Add / Manage Business",
       description: "Manage business profiles and plans",

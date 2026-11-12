@@ -1,12 +1,12 @@
 import fs from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import { execSync, spawn } from 'child_process';
 
 const rootDir = process.cwd();
 const bundleDir = path.join(rootDir, 'android-customer-bundle');
 const publicBundlesDir = path.join(rootDir, 'public', 'bundles');
 
-const targetVersion = process.argv[2] || '2.5.0';
+const targetVersion = process.argv[2] || '2.6.0';
 
 console.log('========================================================');
 console.log(`🚀 TRUSTIT CUSTOMER SUPER-APP — OTA v${targetVersion} PACKAGER`);
@@ -41,23 +41,46 @@ if (!fs.existsSync(staticSrc)) {
 copyDir(staticSrc, path.join(bundleDir, '_next', 'static'));
 console.log('✔ Embedded Next.js compiled chunks into android-customer-bundle/_next/static');
 
-// 3. Fetch rendered /order HTML from local server
+// 3. Render /order HTML directly from the freshly compiled .next build
 let html = '';
-try {
+const useExisting3000 = process.argv.includes('--use-existing-3000');
+if (useExisting3000) {
   const res = await fetch('http://localhost:3000/order');
-  if (res.ok) {
-    html = await res.text();
-    console.log(`✔ Fetched Customer Super App HTML from /order (${html.length} bytes)`);
-  } else {
-    throw new Error(`Failed to fetch /order: status ${res.status}`);
-  }
-} catch (e) {
-  console.warn(`Could not fetch from http://localhost:3000/order: ${e.message}. Falling back to .next/server/app/order.html if present`);
-  const orderHtmlPath = path.join(rootDir, '.next', 'server', 'app', 'order.html');
-  if (fs.existsSync(orderHtmlPath)) {
-    html = fs.readFileSync(orderHtmlPath, 'utf8');
-  } else {
-    throw new Error(`Cannot locate Customer Super App HTML. Make sure the local dev server is running on port 3000.`);
+  if (!res.ok) throw new Error(`Failed to fetch http://localhost:3000/order: status ${res.status}`);
+  html = await res.text();
+  console.log(`✔ Fetched Customer Super App HTML from http://localhost:3000/order (${html.length} bytes)`);
+} else {
+  const nextBin = path.join(rootDir, 'node_modules', 'next', 'dist', 'bin', 'next');
+  const tempPort = 3199;
+  const serverProc = spawn(process.execPath, [nextBin, 'start', '-p', String(tempPort), '-H', '127.0.0.1'], {
+    cwd: rootDir,
+    stdio: 'pipe',
+  });
+  let serverStderr = '';
+  serverProc.stderr?.on('data', (d) => {
+    serverStderr += String(d);
+  });
+
+  try {
+    const deadline = Date.now() + 25000;
+    while (Date.now() < deadline) {
+      try {
+        const res = await fetch(`http://127.0.0.1:${tempPort}/order`);
+        if (res.ok) {
+          html = await res.text();
+          console.log(`✔ Rendered fresh Customer Super App HTML from .next build (${html.length} bytes)`);
+          break;
+        }
+      } catch {}
+      await new Promise((r) => setTimeout(r, 400));
+    }
+    if (!html) {
+      throw new Error(`Timed out rendering /order from ephemeral next start: ${serverStderr}`);
+    }
+  } finally {
+    try {
+      serverProc.kill('SIGTERM');
+    } catch {}
   }
 }
 
@@ -189,8 +212,11 @@ if (fs.existsSync(zipPath)) {
   fs.unlinkSync(zipPath);
 }
 
-execSync(`tar -a -c -f "${zipPath}" -C "${bundleDir}" .`);
-console.log('✔ Created ZIP archive at public/bundles/customer-bundle-latest.zip');
+// Archive top-level items explicitly (NOT `.`) so ZipInputStream never sees a `./` root entry
+const topEntries = fs.readdirSync(bundleDir);
+const quotedEntries = topEntries.map((name) => `"${name.replace(/"/g, '\\"')}"`).join(' ');
+execSync(`tar -a -c -f "${zipPath}" -C "${bundleDir}" ${quotedEntries}`);
+console.log('✔ Created clean ZIP archive (no ./ root entry) at public/bundles/customer-bundle-latest.zip');
 
 const zipStats = fs.statSync(zipPath);
 const timestamp = Date.now();
@@ -202,7 +228,7 @@ const manifestData = {
   minAppVersion: "2.2.0",
   bundleUrl: `https://trustitreview.com/bundles/customer-bundle-latest.zip?v=${timestamp}`,
   updatedAt: new Date().toISOString(),
-  notes: `Customer Super-App v${targetVersion}: Google Maps Geocoding API with active billing key, high-precision native hardware GPS bridge, interactive tap-to-detect location header, auto-filled accurate delivery address, zero fake fallbacks.`,
+  notes: `Customer Super-App v${targetVersion}: Guest + WhatsApp OTP gate, slim Reward Points banner (350 pts = ₹100), dynamic district GPS detection, admin verified shop badges, horizontal drawer icon, and Option B bottom navigation.`,
   sizeBytes: zipStats.size
 };
 
@@ -210,12 +236,13 @@ fs.writeFileSync(manifestPath, JSON.stringify(manifestData, null, 2), 'utf8');
 console.log(`✔ Updated public/bundles/customer-ota-manifest.json with version ${targetVersion}`);
 console.log(`   Size: ${(zipStats.size / (1024 * 1024)).toFixed(2)} MB (${zipStats.size} bytes)`);
 
-// 7. Sync into android/app/src/main/assets/public for clean native embedded boot
+// 7. Sync cleanly into android/app/src/main/assets/public for embedded APK boot
 const androidAssetsPublic = path.join(rootDir, 'android', 'app', 'src', 'main', 'assets', 'public');
+console.log('🔄 Syncing fresh bundle into android/app/src/main/assets/public...');
 if (fs.existsSync(androidAssetsPublic)) {
-  console.log('🔄 Syncing fresh bundle into android/app/src/main/assets/public...');
-  copyDir(bundleDir, androidAssetsPublic);
-  console.log('✔ Synced directly into Android assets');
+  fs.rmSync(androidAssetsPublic, { recursive: true, force: true });
 }
+copyDir(bundleDir, androidAssetsPublic);
+console.log('✔ Synced directly into Android assets');
 
 console.log(`\n🎉 Customer Super-App OTA v${targetVersion} successfully packaged and ready!`);

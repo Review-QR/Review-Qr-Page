@@ -32,6 +32,7 @@ async function requireActiveAdmin() {
 function revalidateMerchantLists() {
   revalidatePath("/merchants");
   revalidatePath("/merchants/deleted");
+  revalidatePath("/order");
 }
 
 export async function softDeleteMerchantAction(
@@ -201,4 +202,55 @@ export async function toggleAllowTakingOrdersAction(
   } catch {
     return { success: false, message: "Server error updating order permission." };
   }
+}
+
+export async function toggleBusinessVerifiedAction(
+  businessIdInput: unknown,
+  isVerified: boolean
+): Promise<{ success: boolean; isVerified: boolean; message: string }> {
+  const admin = await requireActiveAdmin();
+  if (!admin) {
+    return {
+      success: false,
+      isVerified: !isVerified,
+      message: "Unauthorized: Active admin required.",
+    };
+  }
+
+  if (typeof businessIdInput !== "string" || !BUSINESS_ID_PATTERN.test(businessIdInput)) {
+    return {
+      success: false,
+      isVerified: !isVerified,
+      message: "Invalid merchant identifier.",
+    };
+  }
+
+  const adminClient = createSupabaseAdminClient();
+  const { error } = await adminClient
+    .from("businesses")
+    .update({
+      is_verified: Boolean(isVerified),
+      verified_at: isVerified ? new Date().toISOString() : null,
+    })
+    .eq("id", businessIdInput);
+
+  if (error) {
+    const hint = error.message?.toLowerCase().includes("is_verified")
+      ? " (Run SQL migration 20261112090000_customer_points_and_merchant_verified.sql first)"
+      : "";
+    return {
+      success: false,
+      isVerified: !isVerified,
+      message: `Could not update verified badge: ${error.message}${hint}`,
+    };
+  }
+
+  revalidateMerchantLists();
+  return {
+    success: true,
+    isVerified: Boolean(isVerified),
+    message: isVerified
+      ? "Merchant marked as ✓ Verified on Trustit Super-App."
+      : "Merchant marked as Unverified.",
+  };
 }

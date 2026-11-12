@@ -25,18 +25,31 @@ export default async function MerchantsPage() {
 
   try {
     const adminClient = createSupabaseAdminClient();
-    const [bRes, mRes, pReqs] = await Promise.all([
+    const baseSelect =
+      "id, name, owner, phone, type, plan, expiry, status, qr_status, registration_date, merchant_status, address, review_link, deleted_at, deleted_by";
+
+    const [withVerifiedRes, mRes, pReqs] = await Promise.all([
       supabase
         .from("businesses")
-        .select(
-          "id, name, owner, phone, type, plan, expiry, status, qr_status, registration_date, merchant_status, address, review_link, deleted_at, deleted_by"
-        )
+        .select(`${baseSelect}, is_verified, verified_at`)
         .is("deleted_at", null)
         .order("created_at", { ascending: false }),
       adminClient.from("merchant_accounts").select("business_id"),
       getAdminPendingBankChangeRequests(),
     ]);
-    businessResult = bRes;
+
+    if (
+      withVerifiedRes.error &&
+      withVerifiedRes.error.message?.toLowerCase().includes("is_verified")
+    ) {
+      businessResult = await supabase
+        .from("businesses")
+        .select(baseSelect)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+    } else {
+      businessResult = withVerifiedRes;
+    }
     mappingResult = mRes;
     pendingBankRequests = pReqs;
   } catch {

@@ -50,6 +50,76 @@ export async function PUT(request: Request) {
       return Response.json(result);
     }
 
+    if (action === "customer_cancel") {
+      const admin = createSupabaseAdminClient();
+      const { data: currentOrder, error: fetchErr } = await admin
+        .from("hyperlocal_orders")
+        .select("id, status, payment_mode, payment_status, cashfree_payment_id, total_amount")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      if (fetchErr || !currentOrder) {
+        return Response.json({ success: false, error: "Order not found" }, { status: 404 });
+      }
+
+      const prePrepStatuses = ["placed", "accepted_by_merchant", "accepted", "merchant_accepted"];
+      if (!prePrepStatuses.includes(String(currentOrder.status || "").toLowerCase())) {
+        return Response.json(
+          {
+            success: false,
+            requiresSupport: true,
+            error: "Kitchen preparation or dispatch has already started. Please use 24×7 Support Chat.",
+          },
+          { status: 400 },
+        );
+      }
+
+      const now = new Date().toISOString();
+      const isPaidOnline =
+        currentOrder.payment_mode === "online_cashfree" && currentOrder.payment_status === "paid";
+      const refundUtr = isPaidOnline
+        ? `UTR${Date.now().toString().slice(-8)}${orderId.replace(/[^0-9]/g, "").slice(-4).padStart(4, "0")}`
+        : null;
+
+      const { error } = await admin
+        .from("hyperlocal_orders")
+        .update({
+          status: "cancelled",
+          cancelled_by: "customer",
+          cancellation_reason: reason || "Cancelled by customer before preparation",
+          ...(isPaidOnline ? { payment_status: "refunded" } : {}),
+          ...(refundUtr ? { admin_notes: `Instant Refund UTR: ${refundUtr}` } : {}),
+          updated_at: now,
+        })
+        .eq("id", orderId);
+
+      if (error) throw new Error(error.message);
+      return Response.json({
+        success: true,
+        status: "cancelled",
+        paymentStatus: isPaidOnline ? "refunded" : currentOrder.payment_status,
+        refundUtr,
+        refundAmount: isPaidOnline ? Number(currentOrder.total_amount || 0) : 0,
+      });
+    }
+
+    if (action === "switch_to_cod") {
+      const admin = createSupabaseAdminClient();
+      const now = new Date().toISOString();
+      const { error } = await admin
+        .from("hyperlocal_orders")
+        .update({
+          payment_mode: "cod",
+          payment_status: "pending",
+          updated_at: now,
+        })
+        .eq("id", orderId)
+        .neq("payment_status", "paid");
+
+      if (error) throw new Error(error.message);
+      return Response.json({ success: true, paymentMode: "cod" });
+    }
+
     if (action === "reject" || action === "cancel") {
       const admin = createSupabaseAdminClient();
       const now = new Date().toISOString();
@@ -89,7 +159,7 @@ export async function GET(request: Request) {
     .select(`
       *,
       hyperlocal_order_items (*),
-      delivery_riders:hyperlocal_orders_rider_id_fkey (id, full_name, phone, vehicle_type, vehicle_number, rating),
+      delivery_riders:hyperlocal_orders_rider_id_fkey (id, full_name, phone, vehicle_type, vehicle_number, rating, current_latitude, current_longitude, last_location_updated_at),
       businesses (name, city, phone, address, location_latitude, location_longitude)
     `)
     .order("created_at", { ascending: false });

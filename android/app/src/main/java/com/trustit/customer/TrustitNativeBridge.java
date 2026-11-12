@@ -163,19 +163,23 @@ public class TrustitNativeBridge extends Plugin {
             return;
         }
 
-        // 1. Check for immediate cached / last known location
+        // 1. Check for immediate cached / last known location (ignore stale fixes > 90s old)
         Location bestLoc = null;
+        long nowMs = System.currentTimeMillis();
         try {
             Location gpsLoc = gpsEnabled ? lm.getLastKnownLocation(LocationManager.GPS_PROVIDER) : null;
             Location netLoc = networkEnabled ? lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER) : null;
+            if (gpsLoc != null && (nowMs - gpsLoc.getTime() > 90_000)) gpsLoc = null;
+            if (netLoc != null && (nowMs - netLoc.getTime() > 90_000)) netLoc = null;
+
             if (gpsLoc != null && netLoc != null) {
-                long gpsAge = System.currentTimeMillis() - gpsLoc.getTime();
-                if (gpsAge < 30000 && gpsLoc.getAccuracy() <= netLoc.getAccuracy() + 10) {
+                long gpsAge = nowMs - gpsLoc.getTime();
+                if (gpsAge < 30_000 && (!gpsLoc.hasAccuracy() || gpsLoc.getAccuracy() <= 55f)) {
                     bestLoc = gpsLoc;
-                } else if (gpsLoc.getTime() >= netLoc.getTime()) {
-                    bestLoc = gpsLoc;
-                } else {
+                } else if (netLoc.hasAccuracy() && netLoc.getAccuracy() <= 60f && (nowMs - netLoc.getTime() < 20_000)) {
                     bestLoc = netLoc;
+                } else {
+                    bestLoc = gpsLoc.getTime() >= netLoc.getTime() ? gpsLoc : netLoc;
                 }
             } else if (gpsLoc != null) {
                 bestLoc = gpsLoc;
@@ -184,26 +188,58 @@ public class TrustitNativeBridge extends Plugin {
             }
         } catch (SecurityException ignored) {}
 
-        // If last known location is fresh (< 8 seconds old), return immediately
-        if (bestLoc != null && (System.currentTimeMillis() - bestLoc.getTime() < 8000)) {
+        // Short-circuit only when last known location is genuinely fresh (< 20s old & accurate)
+        long bestAge = bestLoc != null ? (nowMs - bestLoc.getTime()) : Long.MAX_VALUE;
+        boolean bestIsFreshGps =
+            bestLoc != null &&
+            LocationManager.GPS_PROVIDER.equals(bestLoc.getProvider()) &&
+            bestAge < 20_000 &&
+            (!bestLoc.hasAccuracy() || bestLoc.getAccuracy() <= 55f);
+        boolean bestIsPinpointNet =
+            bestLoc != null &&
+            bestAge < 15_000 &&
+            bestLoc.hasAccuracy() &&
+            bestLoc.getAccuracy() <= 50f;
+
+        if (bestIsFreshGps || bestIsPinpointNet) {
             resolveLocationResult(call, bestLoc);
             return;
         }
 
-        // 2. Request fresh real-time satellite / cell-tower fix
+        // 2. Request fresh real-time GPS + Network updates (indoor Wi-Fi/Cell friendly)
         final Location fallbackLoc = bestLoc;
+        final Location[] bestActive = new Location[]{null};
         final boolean[] responded = new boolean[]{false};
         final Handler handler = new Handler(Looper.getMainLooper());
+        final Runnable[] timeoutRef = new Runnable[1];
+        final Runnable[] netGraceRef = new Runnable[1];
+        final long requestStartMs = System.currentTimeMillis();
 
         final LocationListener listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-                if (!responded[0]) {
+                if (responded[0]) return;
+                boolean isGps = LocationManager.GPS_PROVIDER.equals(location.getProvider());
+                boolean isPinpoint = location.hasAccuracy() && location.getAccuracy() <= 50f;
+                boolean prevWasGps = bestActive[0] != null && LocationManager.GPS_PROVIDER.equals(bestActive[0].getProvider());
+
+                if (
+                    bestActive[0] == null ||
+                    (isGps && !prevWasGps) ||
+                    (isGps == prevWasGps && location.hasAccuracy() && (!bestActive[0].hasAccuracy() || location.getAccuracy() < bestActive[0].getAccuracy()))
+                ) {
+                    bestActive[0] = location;
+                }
+
+                long elapsed = System.currentTimeMillis() - requestStartMs;
+                if (isGps || isPinpoint || elapsed >= 2500) {
                     responded[0] = true;
+                    if (timeoutRef[0] != null) handler.removeCallbacks(timeoutRef[0]);
+                    if (netGraceRef[0] != null) handler.removeCallbacks(netGraceRef[0]);
                     try {
                         lm.removeUpdates(this);
                     } catch (Exception ignored) {}
-                    resolveLocationResult(call, location);
+                    resolveLocationResult(call, bestActive[0]);
                 }
             }
 
@@ -212,42 +248,57 @@ public class TrustitNativeBridge extends Plugin {
             @Override public void onProviderDisabled(String provider) {}
         };
 
-        final Runnable timeoutRunnable = () -> {
-            if (!responded[0]) {
+        // If network fix arrived early (>50m accuracy indoors), promote it after 2.5s if GPS hasn't locked
+        netGraceRef[0] = () -> {
+            if (!responded[0] && bestActive[0] != null) {
                 responded[0] = true;
+                if (timeoutRef[0] != null) handler.removeCallbacks(timeoutRef[0]);
                 try {
                     lm.removeUpdates(listener);
                 } catch (Exception ignored) {}
-                if (fallbackLoc != null) {
-                    resolveLocationResult(call, fallbackLoc);
+                resolveLocationResult(call, bestActive[0]);
+            }
+        };
+        handler.postDelayed(netGraceRef[0], 2600);
+
+        timeoutRef[0] = () -> {
+            if (!responded[0]) {
+                responded[0] = true;
+                if (netGraceRef[0] != null) handler.removeCallbacks(netGraceRef[0]);
+                try {
+                    lm.removeUpdates(listener);
+                } catch (Exception ignored) {}
+                Location chosen = bestActive[0] != null ? bestActive[0] : fallbackLoc;
+                if (chosen != null) {
+                    resolveLocationResult(call, chosen);
                 } else {
-                    call.reject("GPS satellite timeout: No satellite fix acquired within 4.5s.");
+                    call.reject("Fresh GPS fix unavailable within 8s.");
                 }
             }
         };
 
-        handler.postDelayed(timeoutRunnable, 4500);
+        handler.postDelayed(timeoutRef[0], 8000);
 
         try {
             if (gpsEnabled) {
-                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 0, listener, Looper.getMainLooper());
+                lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 500, 0, listener, Looper.getMainLooper());
             }
             if (networkEnabled) {
-                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 0, listener, Looper.getMainLooper());
-            }
-        } catch (SecurityException se) {
-            handler.removeCallbacks(timeoutRunnable);
-            if (fallbackLoc != null) {
-                resolveLocationResult(call, fallbackLoc);
-            } else {
-                call.reject("Security exception requesting location updates: " + se.getMessage());
+                lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 500, 0, listener, Looper.getMainLooper());
             }
         } catch (Exception e) {
-            handler.removeCallbacks(timeoutRunnable);
-            if (fallbackLoc != null) {
-                resolveLocationResult(call, fallbackLoc);
-            } else {
-                call.reject("Failed to request location updates: " + e.getMessage());
+            if (!responded[0]) {
+                responded[0] = true;
+                if (timeoutRef[0] != null) handler.removeCallbacks(timeoutRef[0]);
+                if (netGraceRef[0] != null) handler.removeCallbacks(netGraceRef[0]);
+                if (fallbackLoc != null) {
+                    resolveLocationResult(call, fallbackLoc);
+                } else {
+                    String prefix = (e instanceof SecurityException)
+                        ? "Security exception requesting location updates: "
+                        : "Failed to request location updates: ";
+                    call.reject(prefix + e.getMessage());
+                }
             }
         }
     }
@@ -369,226 +420,243 @@ public class TrustitNativeBridge extends Plugin {
 
     /**
      * 5. LIVE SELF-HOSTED OTA UPDATE ENGINE (SWIGGY/ZOMATO STANDARD)
-     * Checks server for new zipped Next.js bundles, downloads in background, and hot-boots without APK reinstall.
+     * Checks server for newer zipped Next.js bundles, downloads in background, and hot-boots cleanly.
      */
+    private static final Object OTA_SYNC_LOCK = new Object();
+
+    public static String getInstalledApkVersion(Context ctx) {
+        try {
+            android.content.pm.PackageInfo info = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0);
+            if (info != null && info.versionName != null && !info.versionName.trim().isEmpty()) {
+                return info.versionName.trim();
+            }
+        } catch (Exception ignored) {}
+        return "2.6.0";
+    }
+
+    public static int compareSemver(String a, String b) {
+        String[] aParts = (a == null ? "" : a.trim()).split("\\.");
+        String[] bParts = (b == null ? "" : b.trim()).split("\\.");
+        int len = Math.max(aParts.length, bParts.length);
+        for (int i = 0; i < len; i++) {
+            int av = 0;
+            int bv = 0;
+            try { if (i < aParts.length) av = Integer.parseInt(aParts[i].replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
+            try { if (i < bParts.length) bv = Integer.parseInt(bParts[i].replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
+            if (av != bv) return Integer.compare(av, bv);
+        }
+        return 0;
+    }
+
+    public static String maxSemver(String a, String b) {
+        return compareSemver(a, b) >= 0 ? a : b;
+    }
+
+    /**
+     * Clears any stale cached OTA folder if the user installed a newer native APK.
+     */
+    public static void syncInstalledApkBaseline(Context ctx) {
+        try {
+            String installedApkVersion = getInstalledApkVersion(ctx);
+            android.content.SharedPreferences capPrefs = ctx.getSharedPreferences("CapWebViewSettings", Context.MODE_PRIVATE);
+            android.content.SharedPreferences otaPrefs = ctx.getSharedPreferences("TrustitOtaSettings", Context.MODE_PRIVATE);
+
+            String recordedApkVersion = capPrefs.getString("apkVersion", "");
+            String storedOtaVersion = otaPrefs.getString("activeVersion", "");
+
+            boolean apkChanged = !installedApkVersion.equals(recordedApkVersion);
+            boolean otaNotNewerThanApk = storedOtaVersion.isEmpty() || compareSemver(storedOtaVersion, installedApkVersion) <= 0;
+
+            if (apkChanged || otaNotNewerThanApk) {
+                capPrefs.edit()
+                    .remove("serverBasePath")
+                    .putString("apkVersion", installedApkVersion)
+                    .apply();
+                if (otaNotNewerThanApk) {
+                    otaPrefs.edit().putString("activeVersion", installedApkVersion).apply();
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private static void deleteDirRecursive(java.io.File fileOrDir) {
+        if (fileOrDir == null || !fileOrDir.exists()) return;
+        java.io.File[] children = fileOrDir.listFiles();
+        if (children != null) {
+            for (java.io.File child : children) {
+                deleteDirRecursive(child);
+            }
+        }
+        fileOrDir.delete();
+    }
+
+    private static JSObject syncOtaInternal(Context ctx, com.getcapacitor.Bridge bridge, String manifestUrlOverride, String jsVersionHint) throws Exception {
+        synchronized (OTA_SYNC_LOCK) {
+            syncInstalledApkBaseline(ctx);
+
+            String pkg = ctx.getPackageName().toLowerCase();
+            String appName = "customer";
+            if (pkg.contains("rider")) {
+                appName = "rider";
+            } else if (pkg.contains("partner") || pkg.contains("merchant")) {
+                appName = "partner";
+            }
+
+            String installedApkVersion = getInstalledApkVersion(ctx);
+            android.content.SharedPreferences otaPrefs = ctx.getSharedPreferences("TrustitOtaSettings", Context.MODE_PRIVATE);
+            String storedActive = otaPrefs.getString("activeVersion", installedApkVersion);
+            String baselineVersion = maxSemver(maxSemver(storedActive, installedApkVersion), jsVersionHint != null ? jsVersionHint : installedApkVersion);
+
+            String baseUrl = (manifestUrlOverride != null && !manifestUrlOverride.isEmpty())
+                ? manifestUrlOverride
+                : "https://trustitreview.com/api/hyperlocal/ota?app=" + appName;
+            String sep = baseUrl.contains("?") ? "&" : "?";
+
+            java.net.URL url = new java.net.URL(baseUrl + sep + "current=" + baselineVersion);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(12000);
+            conn.setReadTimeout(12000);
+
+            int code = conn.getResponseCode();
+            if (code != 200) {
+                conn.disconnect();
+                JSObject res = new JSObject();
+                res.put("hasUpdate", false);
+                res.put("status", code);
+                return res;
+            }
+
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line);
+            reader.close();
+            conn.disconnect();
+
+            org.json.JSONObject manifest = new org.json.JSONObject(sb.toString());
+            boolean hasUpdate = manifest.optBoolean("hasUpdate", false);
+            String latestVersion = manifest.optString("version", "");
+            String bundleUrl = manifest.optString("bundleUrl", "");
+
+            if (!hasUpdate || latestVersion.isEmpty() || compareSemver(latestVersion, baselineVersion) <= 0 || bundleUrl.isEmpty()) {
+                JSObject res = new JSObject();
+                res.put("hasUpdate", false);
+                res.put("activeVersion", baselineVersion);
+                return res;
+            }
+
+            java.io.File otaBaseDir = new java.io.File(ctx.getFilesDir(), "trustit_ota");
+            if (!otaBaseDir.exists()) otaBaseDir.mkdirs();
+
+            java.io.File tempDir = new java.io.File(otaBaseDir, "v_" + latestVersion.replace(".", "_") + "_tmp");
+            java.io.File targetDir = new java.io.File(otaBaseDir, "v_" + latestVersion.replace(".", "_"));
+            deleteDirRecursive(tempDir);
+            tempDir.mkdirs();
+
+            java.net.URL zipUrl = new java.net.URL(bundleUrl);
+            java.net.HttpURLConnection zipConn = (java.net.HttpURLConnection) zipUrl.openConnection();
+            zipConn.setConnectTimeout(30000);
+            zipConn.setReadTimeout(60000);
+            int zipCode = zipConn.getResponseCode();
+            if (zipCode != 200) {
+                zipConn.disconnect();
+                deleteDirRecursive(tempDir);
+                throw new Exception("OTA download failed: HTTP " + zipCode);
+            }
+
+            try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(zipConn.getInputStream())) {
+                java.util.zip.ZipEntry entry;
+                byte[] buf = new byte[8192];
+                String tempRootCanonical = tempDir.getCanonicalPath();
+                String canonicalTemp = tempRootCanonical + java.io.File.separator;
+                while ((entry = zis.getNextEntry()) != null) {
+                    java.io.File destFile = new java.io.File(tempDir, entry.getName());
+                    String destCanonical = destFile.getCanonicalPath();
+                    if (!destCanonical.equals(tempRootCanonical) && !destCanonical.startsWith(canonicalTemp)) {
+                        throw new SecurityException("Invalid ZIP entry path: " + entry.getName());
+                    }
+                    if (entry.isDirectory()) {
+                        destFile.mkdirs();
+                    } else {
+                        java.io.File parent = destFile.getParentFile();
+                        if (parent != null && !parent.exists()) parent.mkdirs();
+                        try (java.io.FileOutputStream fos = new java.io.FileOutputStream(destFile)) {
+                            int count;
+                            while ((count = zis.read(buf)) != -1) {
+                                fos.write(buf, 0, count);
+                            }
+                        }
+                    }
+                    zis.closeEntry();
+                }
+            }
+            zipConn.disconnect();
+
+            java.io.File tempIndex = new java.io.File(tempDir, "index.html");
+            if (!tempIndex.exists()) {
+                deleteDirRecursive(tempDir);
+                throw new Exception("Corrupt OTA package: index.html not found");
+            }
+
+            deleteDirRecursive(targetDir);
+            if (!tempDir.renameTo(targetDir)) {
+                deleteDirRecursive(tempDir);
+                throw new Exception("Failed to activate OTA directory");
+            }
+
+            otaPrefs.edit().putString("activeVersion", latestVersion).apply();
+            android.content.SharedPreferences capPrefs = ctx.getSharedPreferences("CapWebViewSettings", Context.MODE_PRIVATE);
+            capPrefs.edit()
+                .putString("serverBasePath", targetDir.getAbsolutePath())
+                .putString("apkVersion", installedApkVersion)
+                .apply();
+
+            if (bridge != null && bridge.getActivity() != null) {
+                bridge.getActivity().runOnUiThread(() -> {
+                    try {
+                        if (bridge.getWebView() != null) {
+                            bridge.getWebView().clearCache(true);
+                        }
+                    } catch (Exception ignored) {}
+                    bridge.setServerBasePath(targetDir.getAbsolutePath());
+                });
+            }
+
+            JSObject res = new JSObject();
+            res.put("hasUpdate", true);
+            res.put("appliedVersion", latestVersion);
+            res.put("message", "Live OTA update applied successfully without APK reinstall!");
+            return res;
+        }
+    }
+
     public static void performBackgroundOtaSync(Context ctx, com.getcapacitor.Bridge bridge) {
         new Thread(() -> {
             try {
-                String pkg = ctx.getPackageName().toLowerCase();
-                String appName = "customer";
-                if (pkg.contains("rider")) {
-                    appName = "rider";
-                } else if (pkg.contains("partner") || pkg.contains("merchant")) {
-                    appName = "partner";
-                }
-
-                final String manifestUrl = "https://trustitreview.com/api/hyperlocal/ota?app=" + appName;
-                android.content.SharedPreferences otaPrefs = ctx.getSharedPreferences("TrustitOtaSettings", Context.MODE_PRIVATE);
-                String activeOtaVersion = otaPrefs.getString("activeVersion", "2.2.0");
-
-                java.net.URL url = new java.net.URL(manifestUrl + "&current=" + activeOtaVersion);
-                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setConnectTimeout(10000);
-                conn.setReadTimeout(10000);
-
-                if (conn.getResponseCode() != 200) return;
-
-                java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) sb.append(line);
-                reader.close();
-                conn.disconnect();
-
-                org.json.JSONObject manifest = new org.json.JSONObject(sb.toString());
-                boolean hasUpdate = manifest.optBoolean("hasUpdate", false);
-                String latestVersion = manifest.optString("version", "");
-                String bundleUrl = manifest.optString("bundleUrl", "");
-
-                if (!hasUpdate || latestVersion.isEmpty() || latestVersion.equals(activeOtaVersion) || bundleUrl.isEmpty()) {
-                    return;
-                }
-
-                java.io.File otaBaseDir = new java.io.File(ctx.getFilesDir(), "trustit_ota");
-                if (!otaBaseDir.exists()) otaBaseDir.mkdirs();
-
-                java.io.File targetDir = new java.io.File(otaBaseDir, "v_" + latestVersion.replace(".", "_"));
-                if (!targetDir.exists()) targetDir.mkdirs();
-
-                java.net.URL zipUrl = new java.net.URL(bundleUrl);
-                java.net.HttpURLConnection zipConn = (java.net.HttpURLConnection) zipUrl.openConnection();
-                zipConn.setConnectTimeout(30000);
-                zipConn.setReadTimeout(60000);
-                if (zipConn.getResponseCode() != 200) return;
-
-                try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(zipConn.getInputStream())) {
-                    java.util.zip.ZipEntry entry;
-                    byte[] buf = new byte[8192];
-                    while ((entry = zis.getNextEntry()) != null) {
-                        java.io.File destFile = new java.io.File(targetDir, entry.getName());
-                        if (entry.isDirectory()) {
-                            destFile.mkdirs();
-                        } else {
-                            java.io.File parent = destFile.getParentFile();
-                            if (parent != null && !parent.exists()) parent.mkdirs();
-                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(destFile)) {
-                                int count;
-                                while ((count = zis.read(buf)) != -1) {
-                                    fos.write(buf, 0, count);
-                                }
-                            }
-                        }
-                        zis.closeEntry();
-                    }
-                }
-                zipConn.disconnect();
-
-                java.io.File indexFile = new java.io.File(targetDir, "index.html");
-                if (!indexFile.exists()) return;
-
-                otaPrefs.edit().putString("activeVersion", latestVersion).apply();
-
-                android.content.SharedPreferences capPrefs = ctx.getSharedPreferences("CapWebViewSettings", Context.MODE_PRIVATE);
-                capPrefs.edit().putString("serverBasePath", targetDir.getAbsolutePath()).apply();
-
-                if (bridge != null && bridge.getActivity() != null) {
-                    bridge.getActivity().runOnUiThread(() -> {
-                        try {
-                            if (bridge.getWebView() != null) {
-                                bridge.getWebView().clearCache(true);
-                            }
-                        } catch (Exception ignored) {}
-                        bridge.setServerBasePath(targetDir.getAbsolutePath());
-                        // Silent OTA update without intrusive UI Toast
-                        // android.widget.Toast.makeText(ctx, "⚡ Trustit OTA: Updated to v" + latestVersion, android.widget.Toast.LENGTH_LONG).show();
-                    });
-                }
+                syncOtaInternal(ctx, bridge, null, null);
             } catch (Exception ignored) {}
         }).start();
     }
 
     @PluginMethod
     public void checkAndApplyOta(PluginCall call) {
-        String pkg = getContext().getPackageName().toLowerCase();
-        String appName = "customer";
-        if (pkg.contains("rider")) {
-            appName = "rider";
-        } else if (pkg.contains("partner") || pkg.contains("merchant")) {
-            appName = "partner";
-        }
-
-        final String manifestUrl = call.getString("manifestUrl", "https://trustitreview.com/api/hyperlocal/ota?app=" + appName);
-        final String currentVersion = call.getString("currentVersion", "2.2.0");
+        final String manifestUrl = call.getString("manifestUrl", "");
+        final String currentVersion = call.getString("currentVersion", "");
 
         new Thread(() -> {
-            java.net.HttpURLConnection conn = null;
             try {
-                Context ctx = getContext();
-                android.content.SharedPreferences otaPrefs = ctx.getSharedPreferences("TrustitOtaSettings", Context.MODE_PRIVATE);
-                String activeOtaVersion = otaPrefs.getString("activeVersion", currentVersion);
-
-                String sep = manifestUrl.contains("?") ? "&" : "?";
-                java.net.URL url = new java.net.URL(manifestUrl + sep + "current=" + activeOtaVersion);
-                conn = (java.net.HttpURLConnection) url.openConnection();
-                conn.setRequestMethod("GET");
-                conn.setConnectTimeout(15000);
-                conn.setReadTimeout(15000);
-
-                if (conn.getResponseCode() != 200) {
-                    JSObject res = new JSObject();
-                    res.put("hasUpdate", false);
-                    res.put("status", conn.getResponseCode());
-                    call.resolve(res);
-                    return;
-                }
-
-                java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
-                StringBuilder sb = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) sb.append(line);
-                reader.close();
-
-                org.json.JSONObject manifest = new org.json.JSONObject(sb.toString());
-                boolean hasUpdate = manifest.optBoolean("hasUpdate", false);
-                String latestVersion = manifest.optString("version", "");
-                String bundleUrl = manifest.optString("bundleUrl", "");
-
-                if (!hasUpdate || latestVersion.isEmpty() || latestVersion.equals(activeOtaVersion) || bundleUrl.isEmpty()) {
-                    JSObject res = new JSObject();
-                    res.put("hasUpdate", false);
-                    res.put("activeVersion", activeOtaVersion);
-                    call.resolve(res);
-                    return;
-                }
-
-                java.io.File otaBaseDir = new java.io.File(ctx.getFilesDir(), "trustit_ota");
-                if (!otaBaseDir.exists()) otaBaseDir.mkdirs();
-
-                java.io.File targetDir = new java.io.File(otaBaseDir, "v_" + latestVersion.replace(".", "_"));
-                if (!targetDir.exists()) targetDir.mkdirs();
-
-                java.net.URL zipUrl = new java.net.URL(bundleUrl);
-                java.net.HttpURLConnection zipConn = (java.net.HttpURLConnection) zipUrl.openConnection();
-                zipConn.setConnectTimeout(30000);
-                zipConn.setReadTimeout(60000);
-                if (zipConn.getResponseCode() != 200) {
-                    call.reject("OTA download failed: HTTP " + zipConn.getResponseCode());
-                    return;
-                }
-
-                try (java.util.zip.ZipInputStream zis = new java.util.zip.ZipInputStream(zipConn.getInputStream())) {
-                    java.util.zip.ZipEntry entry;
-                    byte[] buf = new byte[8192];
-                    while ((entry = zis.getNextEntry()) != null) {
-                        java.io.File destFile = new java.io.File(targetDir, entry.getName());
-                        if (entry.isDirectory()) {
-                            destFile.mkdirs();
-                        } else {
-                            java.io.File parent = destFile.getParentFile();
-                            if (parent != null && !parent.exists()) parent.mkdirs();
-                            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(destFile)) {
-                                int count;
-                                while ((count = zis.read(buf)) != -1) {
-                                    fos.write(buf, 0, count);
-                                }
-                            }
-                        }
-                        zis.closeEntry();
-                    }
-                }
-                zipConn.disconnect();
-
-                java.io.File indexFile = new java.io.File(targetDir, "index.html");
-                if (!indexFile.exists()) {
-                    call.reject("Corrupt OTA package: index.html not found");
-                    return;
-                }
-
-                otaPrefs.edit().putString("activeVersion", latestVersion).apply();
-
-                android.content.SharedPreferences capPrefs = ctx.getSharedPreferences("CapWebViewSettings", Context.MODE_PRIVATE);
-                capPrefs.edit().putString("serverBasePath", targetDir.getAbsolutePath()).apply();
-
-                getActivity().runOnUiThread(() -> {
-                    getBridge().setServerBasePath(targetDir.getAbsolutePath());
-                    try {
-                        if (getBridge().getWebView() != null) getBridge().getWebView().reload();
-                    } catch (Exception ignored) {}
-                });
-
-                JSObject res = new JSObject();
-                res.put("hasUpdate", true);
-                res.put("appliedVersion", latestVersion);
-                res.put("message", "Live OTA update applied successfully without APK reinstall!");
+                JSObject res = syncOtaInternal(
+                    getContext(),
+                    getBridge(),
+                    manifestUrl.isEmpty() ? null : manifestUrl,
+                    currentVersion.isEmpty() ? null : currentVersion
+                );
                 call.resolve(res);
-
             } catch (Exception e) {
                 JSObject err = new JSObject();
                 err.put("error", e.getMessage());
                 call.reject("OTA error: " + e.getMessage(), err);
-            } finally {
-                if (conn != null) conn.disconnect();
             }
         }).start();
     }

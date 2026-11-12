@@ -33,4 +33,6 @@ export type Business = {
   allow_taking_orders?: boolean | null;
   is_taking_orders?: boolean | null;
   logo_url?: string | null;
+  is_verified?: boolean | null;
+  verified_at?: string | null;
 };

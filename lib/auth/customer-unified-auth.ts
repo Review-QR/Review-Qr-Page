@@ -3,7 +3,7 @@ import "server-only";
 import { createHash } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { checkRateLimit } from "@/lib/rate-limiter";
-import type { CustomerProfile } from "./email-service";
+import { fetchCustomerRewardPoints, type CustomerProfile } from "./email-service";
 
 const OTP_EXPIRY_MINUTES = 5;
 
@@ -287,17 +287,22 @@ export async function verifyCustomerPhoneOtp(
 
   if (existingCustomer && existingCustomer.length > 0) {
     const cust = existingCustomer[0];
+    const hasRealName =
+      typeof cust.full_name === "string" &&
+      cust.full_name.trim().length > 0 &&
+      cust.full_name.trim().toLowerCase() !== "trustit customer";
     return {
       success: true,
       message: "Verification successful!",
       customer: {
         id: cust.id,
         email: cust.email,
-        fullName: cust.full_name,
+        fullName: hasRealName ? cust.full_name : "",
         phone: cust.phone || phone10,
         createdAt: cust.created_at,
+        rewardPoints: await fetchCustomerRewardPoints(cust.id),
       },
-      isNewCustomer: false,
+      isNewCustomer: !hasRealName,
     };
   }
 
@@ -330,6 +335,7 @@ export async function verifyCustomerPhoneOtp(
       fullName: createdCustomer.full_name,
       phone: createdCustomer.phone,
       createdAt: createdCustomer.created_at,
+      rewardPoints: 0,
     },
     isNewCustomer: !fullName?.trim(),
   };
@@ -385,6 +391,7 @@ export async function authenticateCustomerWithGoogle(
         fullName: cust.full_name,
         phone: cust.phone || phone10,
         createdAt: cust.created_at,
+        rewardPoints: await fetchCustomerRewardPoints(cust.id),
       },
     };
   }
@@ -414,6 +421,7 @@ export async function authenticateCustomerWithGoogle(
       fullName: created.full_name,
       phone: created.phone,
       createdAt: created.created_at,
+      rewardPoints: 0,
     },
   };
 }

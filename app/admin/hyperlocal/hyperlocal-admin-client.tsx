@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { HyperlocalOrder } from "@/lib/hyperlocal/types";
 import { formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
 import RiderApprovalsPanel from "./rider-approvals-panel";
+import AdminCustomerPointsPanel from "@/components/admin/AdminCustomerPointsPanel";
 
 interface OrderStats {
   active: number;
@@ -56,15 +57,18 @@ interface SettlementKPIs {
 }
 
 export default function HyperlocalLiveAdminClient() {
-  const [viewMode, setViewMode] = useState<"orders" | "settlements" | "riders">("orders");
+  const [viewMode, setViewMode] = useState<"orders" | "settlements" | "riders" | "points">("orders");
   const [pendingRidersCount, setPendingRidersCount] = useState<number>(0);
 
   // Check URL tab param on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("tab") === "riders") {
+      const tab = params.get("tab");
+      if (tab === "riders") {
         setViewMode("riders");
+      } else if (tab === "points") {
+        setViewMode("points");
       }
     }
   }, []);
@@ -418,6 +422,18 @@ export default function HyperlocalLiveAdminClient() {
               </span>
             )}
           </button>
+
+          <button
+            type="button"
+            onClick={() => setViewMode("points")}
+            className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 ${
+              viewMode === "points"
+                ? "bg-[#003178] text-white shadow-2xs font-black"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+          >
+            <span>🎁 Customer Points</span>
+          </button>
         </div>
 
         {/* Status indicator */}
@@ -434,6 +450,8 @@ export default function HyperlocalLiveAdminClient() {
           )}
         </div>
       </div>
+
+      {viewMode === "points" && <AdminCustomerPointsPanel />}
 
       {/* ═════════════════════════════════════════════════════════════════ */}
       {/* ── VIEW 1: LIVE ORDERS & DOORSTEP AUDIT ── */}

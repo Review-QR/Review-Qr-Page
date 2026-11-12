@@ -7,6 +7,7 @@ interface CachedLocation {
   name: string;
   mohalla?: string;
   city?: string;
+  district?: string;
   pincode?: string;
   formattedAddress?: string;
   source: string;
@@ -14,6 +15,18 @@ interface CachedLocation {
 }
 const geocodeCache = new Map<string, CachedLocation>();
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache per micro-grid (~100m)
+
+function normalizeDistrictName(raw: string): string {
+  return raw
+    .replace(/\s+District$/i, "")
+    .replace(/\s+Mandal$/i, "")
+    .replace(/\s+Division$/i, "")
+    .trim();
+}
+
+function isDivisionName(raw: string): boolean {
+  return /\b(division|mandal)\b/i.test(raw);
+}
 
 function getCacheKey(lat: number, lng: number): string {
   // Round to ~100m precision (3 decimal places)
@@ -63,6 +76,7 @@ export async function GET(request: Request) {
         locationName: cached.name,
         mohalla: cached.mohalla || cached.name,
         city: cached.city || "Bahraich",
+        district: cached.district || cached.city || "Bahraich",
         pincode: cached.pincode || "271801",
         formattedAddress: cached.formattedAddress || cached.name,
         source: cached.source || "cache",
@@ -82,6 +96,7 @@ export async function GET(request: Request) {
   let resolvedName: string | null = null;
   let resolvedMohalla: string = "";
   let resolvedCity: string = "Bahraich";
+  let resolvedDistrict: string = "Bahraich";
   let resolvedPincode: string = "271801";
   let resolvedFormattedAddress: string = "";
   let source: "google" | "mapbox" | "nominatim" | "raw" = "raw";
@@ -102,34 +117,48 @@ export async function GET(request: Request) {
 
           let sublocality = "";
           let locality = "";
-          let district = "";
+          let adminLevel3 = "";
+          let adminLevel2 = "";
           let postalCode = "";
           let route = "";
 
-          for (const comp of first.address_components || []) {
+          const allComponents = [
+            ...(first.address_components || []),
+            ...((googleData.results[1]?.address_components as typeof first.address_components) || []),
+          ];
+
+          for (const comp of allComponents) {
             if (comp.types.includes("sublocality") || comp.types.includes("sublocality_level_1") || comp.types.includes("sublocality_level_2")) {
               if (!sublocality) sublocality = comp.long_name;
             } else if (comp.types.includes("neighborhood")) {
               if (!sublocality) sublocality = comp.long_name;
             } else if (comp.types.includes("locality")) {
-              locality = comp.long_name;
+              if (!locality) locality = comp.long_name;
+            } else if (comp.types.includes("administrative_area_level_3")) {
+              if (!adminLevel3) adminLevel3 = comp.long_name;
             } else if (comp.types.includes("administrative_area_level_2")) {
-              district = comp.long_name;
+              if (!adminLevel2) adminLevel2 = comp.long_name;
             } else if (comp.types.includes("postal_code")) {
-              postalCode = comp.long_name;
+              if (!postalCode) postalCode = comp.long_name;
             } else if (comp.types.includes("route")) {
-              route = comp.long_name;
+              if (!route) route = comp.long_name;
             }
           }
 
           resolvedMohalla = sublocality || route || locality || "";
-          resolvedCity = locality || district || "Bahraich";
+          const cleanLevel3 = adminLevel3 && !isDivisionName(adminLevel3) ? normalizeDistrictName(adminLevel3) : "";
+          const cleanLevel2 = adminLevel2 && !isDivisionName(adminLevel2) ? normalizeDistrictName(adminLevel2) : "";
+          const cleanLocality = locality ? normalizeDistrictName(locality) : "";
+          // Prefer specific administrative district (level_3 in states with divisions like UP, level_2 elsewhere), then locality
+          const resolvedDist = cleanLevel3 || cleanLevel2 || cleanLocality || normalizeDistrictName(adminLevel2) || "Bahraich";
+          resolvedDistrict = resolvedDist;
+          resolvedCity = resolvedDist;
           if (postalCode) resolvedPincode = postalCode;
 
           if (sublocality && locality && sublocality !== locality) {
             resolvedName = `${sublocality}, ${locality}`;
-          } else if (locality && district && locality !== district) {
-            resolvedName = `${locality}, ${district}`;
+          } else if (locality && resolvedDist && locality !== resolvedDist) {
+            resolvedName = `${locality}, ${resolvedDist}`;
           } else if (locality) {
             resolvedName = `${locality}`;
           } else if (first.formatted_address) {
@@ -176,7 +205,11 @@ export async function GET(request: Request) {
             }
 
             resolvedMohalla = text || "";
-            if (districtOrCity) resolvedCity = districtOrCity;
+            if (districtOrCity) {
+              const cleanDc = normalizeDistrictName(districtOrCity);
+              resolvedCity = cleanDc;
+              resolvedDistrict = cleanDc;
+            }
             if (postCode) resolvedPincode = postCode;
 
             if (text && districtOrCity && !text.toLowerCase().includes(districtOrCity.toLowerCase())) {
@@ -223,7 +256,8 @@ export async function GET(request: Request) {
         const district = addr.county || addr.state_district || addr.city || "Bahraich";
 
         resolvedMohalla = local || "";
-        resolvedCity = district;
+        resolvedCity = normalizeDistrictName(district);
+        resolvedDistrict = resolvedCity;
         if (addr.postcode) resolvedPincode = addr.postcode;
 
         if (local && district && !local.toLowerCase().includes(district.toLowerCase())) {
@@ -254,6 +288,7 @@ export async function GET(request: Request) {
     name: resolvedName,
     mohalla: resolvedMohalla,
     city: resolvedCity,
+    district: resolvedDistrict || resolvedCity,
     pincode: resolvedPincode,
     formattedAddress: resolvedFormattedAddress,
     source,
@@ -265,6 +300,7 @@ export async function GET(request: Request) {
       locationName: resolvedName,
       mohalla: resolvedMohalla || resolvedName,
       city: resolvedCity || "Bahraich",
+      district: resolvedDistrict || resolvedCity || "Bahraich",
       pincode: resolvedPincode || "271801",
       formattedAddress: resolvedFormattedAddress || resolvedName,
       source,

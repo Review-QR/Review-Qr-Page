@@ -1,7 +1,7 @@
 "use client";
 
 import type { AdminBankChangeItem } from "@/lib/bank-payouts-service";
-import { approveBankChangeAction, rejectBankChangeAction, toggleAllowTakingOrdersAction } from "@/app/merchants/actions";
+import { approveBankChangeAction, rejectBankChangeAction, toggleAllowTakingOrdersAction, toggleBusinessVerifiedAction } from "@/app/merchants/actions";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -160,14 +160,18 @@ function DetailDialog({
   provisioned,
   onClose,
   onOpenQr,
+  onVerifiedChange,
 }: {
   business: Business;
   provisioned: boolean;
   onClose: () => void;
   onOpenQr: (business: Business) => void;
+  onVerifiedChange: (businessId: string, nextVerified: boolean) => void;
 }) {
   const [allowedTakingOrders, setAllowedTakingOrders] = useState(Boolean(business.allow_taking_orders));
   const [isTogglingOrders, setIsTogglingOrders] = useState(false);
+  const [isVerifiedBadge, setIsVerifiedBadge] = useState(Boolean(business.is_verified));
+  const [isTogglingVerified, setIsTogglingVerified] = useState(false);
   const merchantStatus = business.merchant_status || "pending";
   const detailGroups = [
     {
@@ -197,6 +201,7 @@ function DetailDialog({
       items: [
         ["Merchant Status", merchantStatus],
         ["Account State", provisioned ? "Provisioned" : "Not Provisioned"],
+        ["Customer App Verified Badge", isVerifiedBadge ? "✓ Verified (Visible)" : "Unverified"],
         ["Taking Orders Permission", allowedTakingOrders ? "Allowed (Active)" : "Disallowed (Paused)"],
       ] as const,
     },
@@ -288,6 +293,32 @@ function DetailDialog({
           </button>
           <button
             type="button"
+            disabled={isTogglingVerified}
+            onClick={async () => {
+              setIsTogglingVerified(true);
+              const nextVal = !isVerifiedBadge;
+              const res = await toggleBusinessVerifiedAction(business.id, nextVal);
+              if (res.success) {
+                setIsVerifiedBadge(nextVal);
+                onVerifiedChange(business.id, nextVal);
+              }
+              alert(res.message);
+              setIsTogglingVerified(false);
+            }}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-bold shadow-xs transition ${
+              isVerifiedBadge
+                ? "bg-amber-100 text-amber-900 border border-amber-300 hover:bg-amber-200"
+                : "bg-[#003178] text-white hover:bg-blue-900"
+            }`}
+          >
+            {isTogglingVerified
+              ? "Updating..."
+              : isVerifiedBadge
+              ? "✕ Unverify Merchant"
+              : "✓ Mark Merchant Verified"}
+          </button>
+          <button
+            type="button"
             disabled={isTogglingOrders}
             onClick={async () => {
               setIsTogglingOrders(true);
@@ -324,6 +355,7 @@ function MerchantActions({
   provisioned,
   onProvisioned,
   onStatusChange,
+  onVerifiedChange,
   onView,
   onOpenQr,
   onDelete,
@@ -332,12 +364,15 @@ function MerchantActions({
   provisioned: boolean;
   onProvisioned: (businessId: string) => void;
   onStatusChange: (businessId: string, status: MerchantStatus) => void;
+  onVerifiedChange: (businessId: string, isVerified: boolean) => void;
   onView: () => void;
   onOpenQr: () => void;
   onDelete: () => void;
 }) {
   const status = normalized(business.merchant_status || "pending");
   const canManage = provisioned && (status === "active" || status === "suspended");
+  const isVerified = Boolean(business.is_verified);
+  const [togglingVerify, setTogglingVerify] = useState(false);
   const handleProvisioned = useCallback(
     () => onProvisioned(business.id),
     [business.id, onProvisioned]
@@ -347,9 +382,34 @@ function MerchantActions({
     [business.id, onStatusChange]
   );
 
+  async function handleToggleVerify() {
+    if (togglingVerify) return;
+    setTogglingVerify(true);
+    const nextVal = !isVerified;
+    const res = await toggleBusinessVerifiedAction(business.id, nextVal);
+    if (res.success) {
+      onVerifiedChange(business.id, nextVal);
+    } else {
+      alert(res.message);
+    }
+    setTogglingVerify(false);
+  }
+
   return (
     <div className="flex min-w-64 flex-col items-start gap-2">
       <div className="flex flex-wrap items-start gap-2">
+        <button
+          type="button"
+          disabled={togglingVerify}
+          onClick={handleToggleVerify}
+          className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
+            isVerified
+              ? "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+              : "border-slate-300 bg-slate-50 text-slate-700 hover:bg-slate-100"
+          }`}
+        >
+          {togglingVerify ? "Saving…" : isVerified ? "✓ Verified" : "Mark Verified"}
+        </button>
         <button type="button" onClick={onView} className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50">View</button>
         <button type="button" onClick={onOpenQr} className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-bold text-blue-700 transition hover:bg-blue-100">Merchant QR</button>
         {status === "pending" && !provisioned ? (
@@ -656,6 +716,17 @@ export default function MerchantManagement({
     );
   }, []);
 
+  const updateVerified = useCallback((businessId: string, isVerified: boolean) => {
+    setRows((current) =>
+      current.map((business) =>
+        business.id === businessId ? { ...business, is_verified: isVerified } : business
+      )
+    );
+    setSelectedBusiness((current) =>
+      current && current.id === businessId ? { ...current, is_verified: isVerified } : current
+    );
+  }, []);
+
   const selectedProvisioned = selectedBusiness
     ? provisionedIds.has(selectedBusiness.id)
     : false;
@@ -824,6 +895,7 @@ export default function MerchantManagement({
                           provisioned={provisioned}
                           onProvisioned={markProvisioned}
                           onStatusChange={updateStatus}
+                          onVerifiedChange={updateVerified}
                           onView={() => setSelectedBusiness(business)}
                           onOpenQr={() => setQrTargetBusiness(business)}
                           onDelete={() => { setDeleteNotice(""); setDeleteNoticeIsError(false); setDeleteTarget(business); }}
@@ -851,6 +923,7 @@ export default function MerchantManagement({
           provisioned={selectedProvisioned}
           onClose={() => setSelectedBusiness(null)}
           onOpenQr={(b) => setQrTargetBusiness(b)}
+          onVerifiedChange={updateVerified}
         />
       )}
       {deleteTarget && (

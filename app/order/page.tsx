@@ -58,21 +58,34 @@ export default async function CustomerOrderPortalPage({
   const admin = createSupabaseAdminClient();
 
   // 1. Fetch active businesses across all 4 super-app verticals
-  const { data: rawBusinesses } = await admin
+  const baseFields = "id, name, city, type, address, phone, location_latitude, location_longitude";
+  const withVerifiedRes = await admin
     .from("businesses")
-    .select("id, name, city, type, address, phone, location_latitude, location_longitude")
+    .select(`${baseFields}, is_verified`)
     .is("deleted_at", null)
     .order("name", { ascending: true });
 
-  const businesses: SuperAppBusiness[] = (rawBusinesses || []).map((b) => ({
-    id: b.id,
-    name: b.name,
-    city: b.city || "Bahraich",
-    type: b.type || "Retail",
-    address: b.address,
-    phone: b.phone,
-    location_latitude: b.location_latitude,
-    location_longitude: b.location_longitude,
+  const rawBusinesses =
+    withVerifiedRes.error && withVerifiedRes.error.message?.toLowerCase().includes("is_verified")
+      ? (
+          await admin
+            .from("businesses")
+            .select(baseFields)
+            .is("deleted_at", null)
+            .order("name", { ascending: true })
+        ).data
+      : withVerifiedRes.data;
+
+  const businesses: SuperAppBusiness[] = (rawBusinesses || []).map((b: Record<string, unknown>) => ({
+    id: String(b.id),
+    name: String(b.name),
+    city: String(b.city || "Bahraich"),
+    type: String(b.type || "Retail"),
+    address: (b.address as string | null) ?? null,
+    phone: (b.phone as string | null) ?? null,
+    location_latitude: (b.location_latitude as number | null) ?? null,
+    location_longitude: (b.location_longitude as number | null) ?? null,
+    is_verified: Boolean(b.is_verified),
   }));
 
   // 2. Fetch catalog items for businesses

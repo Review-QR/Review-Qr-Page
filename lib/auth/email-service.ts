@@ -11,6 +11,26 @@ export interface CustomerProfile {
   fullName: string;
   phone: string | null;
   createdAt: string;
+  rewardPoints?: number;
+}
+
+/**
+ * Safely fetches reward_points for a customer without breaking logins if the
+ * SQL migration has not yet been executed on a target environment.
+ */
+export async function fetchCustomerRewardPoints(customerId: string): Promise<number> {
+  try {
+    const admin = createSupabaseAdminClient();
+    const { data, error } = await admin
+      .from("customers")
+      .select("reward_points")
+      .eq("id", customerId)
+      .maybeSingle();
+    if (error || !data) return 0;
+    return Math.max(0, Number((data as { reward_points?: number | null }).reward_points ?? 0));
+  } catch {
+    return 0;
+  }
 }
 
 export interface CustomerSavedAddress {
@@ -276,6 +296,7 @@ export async function verifyEmailOtp(
       fullName: updated?.full_name || existingCustomer.full_name,
       phone: updated?.phone || existingCustomer.phone,
       createdAt: updated?.created_at || existingCustomer.created_at,
+      rewardPoints: await fetchCustomerRewardPoints(updated?.id || existingCustomer.id),
     };
   } else {
     // Create new customer with their actual name
@@ -303,6 +324,7 @@ export async function verifyEmailOtp(
       fullName: created.full_name,
       phone: created.phone,
       createdAt: created.created_at,
+      rewardPoints: 0,
     };
   }
 
@@ -406,6 +428,7 @@ export async function createCustomerProfile(
       fullName: created.full_name,
       phone: created.phone,
       createdAt: created.created_at,
+      rewardPoints: await fetchCustomerRewardPoints(created.id),
     },
   };
 }

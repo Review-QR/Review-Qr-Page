@@ -228,7 +228,16 @@ const stringsXml = `<?xml version='1.0' encoding='utf-8'?>
 </resources>
 `;
 fs.writeFileSync(path.join(resDir, 'values', 'strings.xml'), stringsXml);
-console.log('✔ strings.xml and build.gradle updated.');
+const manifestPath = path.join(androidAppDir, 'src', 'main', 'AndroidManifest.xml');
+if (fs.existsSync(manifestPath)) {
+  let manifest = fs.readFileSync(manifestPath, 'utf8');
+  manifest = manifest.replace(
+    /android:name="(?:com\.trustit\.[^"]+\.)?MainActivity"/,
+    'android:name="com.trustit.partner.MainActivity"',
+  );
+  fs.writeFileSync(manifestPath, manifest);
+}
+console.log('✔ strings.xml, build.gradle, and AndroidManifest.xml updated.');
 
 // 4. Update Adaptive Launcher Icons (Amber / Orange Store Canopy)
 console.log('\n🎨 Step 4: Installing Partner Adaptive Icons & Splash Screens...');

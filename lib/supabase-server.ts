@@ -47,11 +47,14 @@ export async function createSupabaseActionClient() {
   return createSupabaseClient(true);
 }
 
-export async function requireActiveAdmin() {
+export async function getActiveAdminContext(): Promise<{
+  userId: string;
+  email: string | null;
+} | null> {
   const supabase = await createSupabaseServerClient();
   const { data, error: authError } = await supabase.auth.getClaims();
   const userId = data?.claims.sub;
-  if (authError || !userId) redirect("/login");
+  if (authError || !userId) return null;
 
   const { data: admin, error: adminError } = await supabase
     .from("admin_users")
@@ -60,5 +63,12 @@ export async function requireActiveAdmin() {
     .eq("is_active", true)
     .maybeSingle();
 
-  if (adminError || !admin) redirect("/login?error=not_admin");
+  if (adminError || !admin) return null;
+  const email = typeof data?.claims.email === "string" ? data.claims.email : null;
+  return { userId, email };
+}
+
+export async function requireActiveAdmin() {
+  const admin = await getActiveAdminContext();
+  if (!admin) redirect("/login?error=not_admin");
 }

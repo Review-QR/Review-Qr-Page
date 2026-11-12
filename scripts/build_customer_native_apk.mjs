@@ -8,14 +8,17 @@ const androidAppDir = path.join(rootDir, 'android', 'app');
 const resDir = path.join(androidAppDir, 'src', 'main', 'res');
 const bundleDir = path.join(rootDir, 'android-customer-bundle');
 
+const targetVersion = process.argv[2] || '2.6.0';
+const targetVersionCode = parseInt(process.argv[3] || '16', 10);
+
 console.log('======================================================');
 console.log('🛒 TRUSTIT CUSTOMER SUPER-APP — DEDICATED NATIVE APK BUILD');
-console.log('   (Package: com.trustit.customer · Google Maps GPS Engine · 0.1s Boot)');
+console.log(`   (Package: com.trustit.customer · v${targetVersion} (${targetVersionCode}) · Google Maps GPS Engine)`);
 console.log('======================================================\n');
 
 // 1. Prepare Customer Bundle
-console.log('📦 Step 1: Packaging Customer UI Bundle...');
-execSync('node scripts/package-customer-ota.mjs 2.5.0', { cwd: rootDir, stdio: 'inherit' });
+console.log(`📦 Step 1: Packaging Customer UI Bundle v${targetVersion}...`);
+execSync(`node scripts/package-customer-ota.mjs ${targetVersion}`, { cwd: rootDir, stdio: 'inherit' });
 
 // 2. Configure capacitor.config.json for Trustit Customer
 console.log('\n⚙️ Step 2: Configuring capacitor.config.json for Trustit Customer...');
@@ -55,8 +58,8 @@ const gradlePath = path.join(androidAppDir, 'build.gradle');
 let gradle = fs.readFileSync(gradlePath, 'utf8');
 gradle = gradle.replace(/namespace\s+"[^"]+"/, 'namespace "com.trustit.customer"');
 gradle = gradle.replace(/applicationId\s+"[^"]+"/, 'applicationId "com.trustit.customer"');
-gradle = gradle.replace(/versionCode\s+\d+/, 'versionCode 15');
-gradle = gradle.replace(/versionName\s+"[^"]+"/, 'versionName "2.5.0"');
+gradle = gradle.replace(/versionCode\s+\d+/, `versionCode ${targetVersionCode}`);
+gradle = gradle.replace(/versionName\s+"[^"]+"/, `versionName "${targetVersion}"`);
 fs.writeFileSync(gradlePath, gradle);
 
 const stringsXml = `<?xml version='1.0' encoding='utf-8'?>
@@ -68,7 +71,16 @@ const stringsXml = `<?xml version='1.0' encoding='utf-8'?>
 </resources>
 `;
 fs.writeFileSync(path.join(resDir, 'values', 'strings.xml'), stringsXml);
-console.log('✔ strings.xml and build.gradle updated.');
+const manifestPath = path.join(androidAppDir, 'src', 'main', 'AndroidManifest.xml');
+if (fs.existsSync(manifestPath)) {
+  let manifest = fs.readFileSync(manifestPath, 'utf8');
+  manifest = manifest.replace(
+    /android:name="(?:com\.trustit\.[^"]+\.)?MainActivity"/,
+    'android:name="com.trustit.customer.MainActivity"',
+  );
+  fs.writeFileSync(manifestPath, manifest);
+}
+console.log('✔ strings.xml, build.gradle, and AndroidManifest.xml updated.');
 
 // 4. Update Adaptive Launcher Icons (Blue Shopping Bag)
 console.log('\n🎨 Step 4: Installing Customer Adaptive Icons & Splash Screens...');

@@ -1,27 +1,66 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useTransition } from "react";
-import Link from "next/link";
-import { formatDisplayOrderNumber, formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
+import { useState, useEffect, useMemo, useCallback, useTransition, useRef } from "react";
+import { formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
 import GoogleConsentModal from "@/components/auth/GoogleConsentModal";
 import WhatsAppOtpNotificationBanner from "@/components/auth/WhatsAppOtpNotificationBanner";
 import { TrustitNative } from "@/lib/native/trustit-native-service";
+import CustomerHomeAndDiscovery from "@/components/customer/CustomerHomeAndDiscovery";
+import {
+  CustomerBrandSplash,
+  CustomerOnboardingModal,
+} from "@/components/customer/CustomerOnboardingModals";
+import CustomerStorefrontAndVerticals from "@/components/customer/CustomerStorefrontAndVerticals";
+import CustomerCheckoutAndAddresses from "@/components/customer/CustomerCheckoutAndAddresses";
+import CustomerOrdersAndSupport from "@/components/customer/CustomerOrdersAndSupport";
+import CustomerProfileAndSettings from "@/components/customer/CustomerProfileAndSettings";
+import {
+  type SuperAppBusiness,
+  type SuperAppCatalogItem,
+  type DishCustomization,
+  type CartLineItem,
+  type ActiveHyperlocalOrder,
+  type CustomerSavedAddress,
+  type ActiveServiceToken,
+  type ActiveParchaOrder,
+  type CustomerNotificationItem,
+  type CustomerLanguage,
+  type VerticalTabId,
+  type BottomNavTab,
+  type OutOfStockRule,
+  type PriceTierFilter,
+  type StoreSortFilter,
+  type DetectedGpsLocation,
+  AVAILABLE_ADDONS,
+  QUICK_COOKING_NOTES,
+  DEFAULT_BAHRAICH_BUSINESSES,
+  DEFAULT_BAHRAICH_ITEMS,
+  getRestaurantThumbnail,
+  estimateStoreEtaMinutes,
+  getStoreRating,
+  matchesCatalogQuery,
+  matchesVertical,
+} from "@/components/customer/customer-types";
 
-type CashfreeCheckoutSdk = (options: { mode: "sandbox" | "production" }) => {
-  checkout: (options: {
-    paymentSessionId: string;
-    redirectTarget?: "_self" | "_blank" | "_top" | "_modal";
-  }) => Promise<{
-    paymentDetails?: unknown;
-    error?: unknown;
-    redirect?: boolean;
-  }>;
+export {
+  type SuperAppBusiness,
+  type SuperAppCatalogItem,
+  type DishCustomization,
+  type CartLineItem,
+  type ActiveHyperlocalOrder,
+  type CustomerSavedAddress,
+  type ActiveServiceToken,
+  AVAILABLE_ADDONS,
+  QUICK_COOKING_NOTES,
+  DEFAULT_BAHRAICH_BUSINESSES,
+  DEFAULT_BAHRAICH_ITEMS,
+  getRestaurantThumbnail,
 };
 
 let cashfreeSdkPromise: Promise<void> | null = null;
 function loadCashfreeSdk(): Promise<void> {
   if (typeof window === "undefined") return Promise.resolve();
-  if (window.Cashfree) return Promise.resolve();
+  if ((window as any).Cashfree) return Promise.resolve();
   if (cashfreeSdkPromise) return cashfreeSdkPromise;
 
   cashfreeSdkPromise = new Promise<void>((resolve, reject) => {
@@ -29,7 +68,7 @@ function loadCashfreeSdk(): Promise<void> {
     script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
     script.async = true;
     script.onload = () => {
-      if (window.Cashfree) resolve();
+      if ((window as any).Cashfree) resolve();
       else reject(new Error("Cashfree checkout could not be loaded."));
     };
     script.onerror = () => reject(new Error("Cashfree checkout could not be loaded."));
@@ -42,351 +81,6 @@ function loadCashfreeSdk(): Promise<void> {
   return cashfreeSdkPromise;
 }
 
-export function getRestaurantThumbnail(name: string = ""): string {
-  const n = name.toLowerCase();
-  if (n.includes("pizza")) {
-    return "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=160&auto=format&fit=crop&q=80";
-  }
-  if (n.includes("cake") || n.includes("bakery")) {
-    return "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=160&auto=format&fit=crop&q=80";
-  }
-  if (n.includes("sweet") || n.includes("mithai") || n.includes("lassi")) {
-    return "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=160&auto=format&fit=crop&q=80";
-  }
-  if (n.includes("biryani") || n.includes("chicken") || n.includes("awadh")) {
-    return "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=160&auto=format&fit=crop&q=80";
-  }
-  if (n.includes("dosa") || n.includes("south")) {
-    return "https://images.unsplash.com/photo-1668236543090-82eba5ee5976?w=160&auto=format&fit=crop&q=80";
-  }
-  if (n.includes("burger")) {
-    return "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=160&auto=format&fit=crop&q=80";
-  }
-  if (n.includes("cafe") || n.includes("coffee") || n.includes("queen") || n.includes("tea")) {
-    return "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=160&auto=format&fit=crop&q=80";
-  }
-  return "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=160&auto=format&fit=crop&q=80";
-}
-
-export type SuperAppBusiness = {
-  id: string;
-  name: string;
-  city: string;
-  type: string;
-  address: string | null;
-  phone: string | null;
-  location_latitude: number | null;
-  location_longitude: number | null;
-};
-
-export type SuperAppCatalogItem = {
-  id: string;
-  business_id: string;
-  name: string;
-  category: string;
-  price: number;
-  item_type: "veg" | "non_veg" | "egg" | "service" | "product";
-  is_available: boolean;
-  image_url: string | null;
-  description: string | null;
-};
-
-export interface DishCustomization {
-  portion: "half" | "full";
-  portionLabel: string;
-  portionPrice: number;
-  addons: Array<{ id: string; name: string; price: number }>;
-  cookingNotes: string;
-}
-
-export interface CartLineItem {
-  cartKey: string;
-  item: SuperAppCatalogItem;
-  quantity: number;
-  customization?: DishCustomization;
-  itemUnitPrice: number;
-}
-
-export const AVAILABLE_ADDONS = [
-  { id: "butter", name: "Extra Butter / Desi Ghee", price: 25 },
-  { id: "salad", name: "Fresh Salad & Mint Chutney", price: 15 },
-  { id: "roti_pav", name: "Butter Roti / Extra Pav (2 pcs)", price: 20 },
-  { id: "raita", name: "Boondi Raita Cup", price: 30 },
-];
-
-export const QUICK_COOKING_NOTES = [
-  "🌶️ Less Spicy / Kam Teekha",
-  "🥘 Extra Gravy",
-  "🚫 No Onion / Garlic (Jain style)",
-  "🔥 Extra Crispy / Well Done",
-];
-
-export type ActiveHyperlocalOrder = {
-  id: string;
-  business_id: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_address: { street: string; locality?: string; city?: string };
-  order_type: string;
-  status: string;
-  total_amount: number;
-  subtotal_amount: number;
-  delivery_fee: number;
-  delivery_otp: string;
-  payment_status?: string;
-  payment_mode?: string;
-  merchant_prep_time_minutes?: number;
-  cancellation_reason?: string | null;
-  dispute_status?: string | null;
-  created_at: string;
-  businesses?: { name: string; city: string; address: string | null; phone?: string | null };
-  delivery_riders?: { id: string; full_name: string; phone: string; vehicle_number?: string } | null;
-  hyperlocal_order_items?: Array<{
-    id?: string;
-    item_name: string;
-    quantity: number;
-    unit_price: number;
-    is_veg?: boolean;
-    notes?: string | null;
-  }>;
-};
-
-export type CustomerSavedAddress = {
-  id: string;
-  customerId?: string;
-  label?: "Home" | "Work" | "Other" | string;
-  tag?: "Home" | "Work" | "Other" | string;
-  street: string;
-  landmark?: string | null;
-  city?: string;
-  pincode?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  isDefault?: boolean;
-  houseNo?: string;
-  mohalla?: string;
-  road?: string;
-  district?: string;
-};
-
-export type ActiveServiceToken = {
-  id: string;
-  business_id: string;
-  service_type: string;
-  token_number: number;
-  customer_name: string;
-  customer_phone: string;
-  vehicle_or_notes: string | null;
-  status: string;
-  estimated_wait_minutes: number;
-  chair_or_bay_number?: string;
-  created_at: string;
-  businesses?: { name: string; city: string; address: string | null; phone?: string | null };
-};
-
-type ActiveParchaOrder = {
-  order_id: string;
-  handwritten_text: string | null;
-  parcha_image_url: string | null;
-  merchant_quote_amount: number | null;
-  merchant_quote_items: Array<{ name: string; quantity: string; price: number }>;
-  customer_approved: boolean;
-  hyperlocal_orders?: {
-    id: string;
-    status: string;
-    delivery_otp: string;
-    total_amount: number;
-    business_id: string;
-  };
-};
-
-export const DEFAULT_BAHRAICH_BUSINESSES: SuperAppBusiness[] = [
-  {
-    id: "biz-awadh-biryani",
-    name: "Awadh Biryani & Family Restaurant",
-    city: "Bahraich",
-    type: "Restaurant",
-    address: "Civil Lines, Near Dist Hospital, Bahraich",
-    phone: "9415091234",
-    location_latitude: 27.5744,
-    location_longitude: 81.5977,
-  },
-  {
-    id: "biz-brijwasi-sweets",
-    name: "Brijwasi Sweets & Bakers",
-    city: "Bahraich",
-    type: "Bakery",
-    address: "Chowk Bazar, Bahraich",
-    phone: "9415091235",
-    location_latitude: 27.5765,
-    location_longitude: 81.6012,
-  },
-  {
-    id: "biz-gupta-kirana",
-    name: "Gupta Kirana & Supermart",
-    city: "Bahraich",
-    type: "Retail",
-    address: "Ghanta Ghar, Main Market, Bahraich",
-    phone: "9415091236",
-    location_latitude: 27.5732,
-    location_longitude: 81.5955,
-  },
-  {
-    id: "biz-star-chemist",
-    name: "Star Chemist & Healthcare",
-    city: "Bahraich",
-    type: "Chemist",
-    address: "Medical College Road, Bahraich",
-    phone: "9415091237",
-    location_latitude: 27.5755,
-    location_longitude: 81.5988,
-  },
-  {
-    id: "biz-classic-salon",
-    name: "Classic Men's & Women's Salon",
-    city: "Bahraich",
-    type: "Salon",
-    address: "Station Road, Bahraich",
-    phone: "9415091238",
-    location_latitude: 27.5718,
-    location_longitude: 81.6033,
-  },
-  {
-    id: "biz-express-carwash",
-    name: "Express Car Wash & Detailing Spa",
-    city: "Bahraich",
-    type: "Car Wash",
-    address: "Lucknow Road Bypass, Bahraich",
-    phone: "9415091239",
-    location_latitude: 27.5689,
-    location_longitude: 81.6055,
-  },
-];
-
-export const DEFAULT_BAHRAICH_ITEMS: SuperAppCatalogItem[] = [
-  {
-    id: "item-awadh-1",
-    business_id: "biz-awadh-biryani",
-    name: "Special Dum Handi Veg Biryani",
-    category: "Biryani & Rice",
-    price: 140,
-    item_type: "veg",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=300&auto=format&fit=crop&q=80",
-    description: "Fragrant basmati rice cooked with fresh farm vegetables and Awadhi aromatic spices.",
-  },
-  {
-    id: "item-awadh-2",
-    business_id: "biz-awadh-biryani",
-    name: "Hyderabadi Chicken Dum Biryani",
-    category: "Biryani & Rice",
-    price: 220,
-    item_type: "non_veg",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=300&auto=format&fit=crop&q=80",
-    description: "Tender chicken marinated overnight in rich spices and steamed with long grain basmati rice.",
-  },
-  {
-    id: "item-awadh-3",
-    business_id: "biz-awadh-biryani",
-    name: "Paneer Butter Masala (Desi Ghee)",
-    category: "Main Course",
-    price: 180,
-    item_type: "veg",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1631452180519-c014fe946bc7?w=300&auto=format&fit=crop&q=80",
-    description: "Cottage cheese cubes tossed in rich velvety tomato makhani gravy.",
-  },
-  {
-    id: "item-brij-1",
-    business_id: "biz-brijwasi-sweets",
-    name: "Hot Gulab Jamun (Desi Ghee, 2 Pcs)",
-    category: "Sweets & Mithai",
-    price: 60,
-    item_type: "veg",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?w=300&auto=format&fit=crop&q=80",
-    description: "Melt-in-mouth hot gulab jamun soaked in saffron sugar syrup.",
-  },
-  {
-    id: "item-brij-2",
-    business_id: "biz-brijwasi-sweets",
-    name: "Kaju Katli Special (250g Box)",
-    category: "Sweets & Mithai",
-    price: 260,
-    item_type: "veg",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=300&auto=format&fit=crop&q=80",
-    description: "Premium diamond-cut cashew fudge made with real silver vark.",
-  },
-  {
-    id: "item-brij-3",
-    business_id: "biz-brijwasi-sweets",
-    name: "Special Malai Lassi Kulhad (300ml)",
-    category: "Dairy & Beverages",
-    price: 50,
-    item_type: "veg",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=300&auto=format&fit=crop&q=80",
-    description: "Chilled creamy curd lassi topped with thick rabdi and dry fruits in earthen kulhad.",
-  },
-  {
-    id: "item-gupta-1",
-    business_id: "biz-gupta-kirana",
-    name: "Fortune Chakki Fresh Atta (5 kg)",
-    category: "Flours & Grains",
-    price: 215,
-    item_type: "product",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=300&auto=format&fit=crop&q=80",
-    description: "100% whole wheat chakki fresh flour for soft rotis.",
-  },
-  {
-    id: "item-gupta-2",
-    business_id: "biz-gupta-kirana",
-    name: "Mustard Oil Pouch (1 Litre)",
-    category: "Cooking Oils",
-    price: 165,
-    item_type: "product",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=300&auto=format&fit=crop&q=80",
-    description: "Cold pressed kachhi ghani mustard oil for authentic Indian cooking.",
-  },
-  {
-    id: "item-chemist-1",
-    business_id: "biz-star-chemist",
-    name: "Dolo 650mg Paracetamol Strip (15 Tabs)",
-    category: "Medicines & Relief",
-    price: 32,
-    item_type: "product",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=300&auto=format&fit=crop&q=80",
-    description: "Fever and mild to moderate pain relief tablets.",
-  },
-  {
-    id: "item-salon-1",
-    business_id: "biz-classic-salon",
-    name: "Haircut, Styling & Beard Grooming",
-    category: "Grooming & Styling",
-    price: 150,
-    item_type: "service",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?w=300&auto=format&fit=crop&q=80",
-    description: "Executive hair trim, hot towel head wash, beard contouring & splash cologne.",
-  },
-  {
-    id: "item-wash-1",
-    business_id: "biz-express-carwash",
-    name: "Snow Foam Pressure Car Wash",
-    category: "Auto Wash Packages",
-    price: 350,
-    item_type: "service",
-    is_available: true,
-    image_url: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?w=300&auto=format&fit=crop&q=80",
-    description: "Exterior high-pressure underbody rinse, active pH snow foam wash, tyre polish and interior vacuuming.",
-  },
-];
-
 export default function CustomerSuperAppClient({
   businesses: propBusinesses,
   catalogItems: propCatalogItems,
@@ -398,27 +92,22 @@ export default function CustomerSuperAppClient({
   initialSearchQuery?: string;
   initialStoreName?: string;
 }) {
+  // ── Catalog & Businesses ──
   const [businesses, setBusinesses] = useState<SuperAppBusiness[]>(
-    propBusinesses && propBusinesses.length > 0 ? propBusinesses : DEFAULT_BAHRAICH_BUSINESSES
+    propBusinesses && propBusinesses.length > 0 ? propBusinesses : DEFAULT_BAHRAICH_BUSINESSES,
   );
   const [catalogItems, setCatalogItems] = useState<SuperAppCatalogItem[]>(
-    propCatalogItems && propCatalogItems.length > 0 ? propCatalogItems : DEFAULT_BAHRAICH_ITEMS
+    propCatalogItems && propCatalogItems.length > 0 ? propCatalogItems : DEFAULT_BAHRAICH_ITEMS,
   );
 
-  // Sync state if props change
   useEffect(() => {
-    if (propBusinesses && propBusinesses.length > 0) {
-      setBusinesses(propBusinesses);
-    }
+    if (propBusinesses && propBusinesses.length > 0) setBusinesses(propBusinesses);
   }, [propBusinesses]);
 
   useEffect(() => {
-    if (propCatalogItems && propCatalogItems.length > 0) {
-      setCatalogItems(propCatalogItems);
-    }
+    if (propCatalogItems && propCatalogItems.length > 0) setCatalogItems(propCatalogItems);
   }, [propCatalogItems]);
 
-  // Background Cloud Sync (Silent live update via native socket engine)
   useEffect(() => {
     fetch("/api/hyperlocal/businesses")
       .then((res) => res.json())
@@ -435,230 +124,391 @@ export default function CustomerSuperAppClient({
       .catch(() => {});
   }, []);
 
-  // Navigation & Category Tab
-  const [activeTab, setActiveTab] = useState<"food" | "dairy" | "kirana" | "medical" | "car_wash" | "salon">("food");
+  // ── N-01 Brand Splash (once per session) ──
+  const [showSplash, setShowSplash] = useState<boolean>(false);
+  useEffect(() => {
+    try {
+      const seen = sessionStorage.getItem("trustit_splash_seen");
+      if (!seen) {
+        setShowSplash(true);
+        const timer = setTimeout(() => {
+          setShowSplash(false);
+          try {
+            sessionStorage.setItem("trustit_splash_seen", "1");
+          } catch {}
+        }, 1000);
+        return () => clearTimeout(timer);
+      }
+    } catch {}
+  }, []);
+
+  // ── UI Language & Navigation State ──
+  const [lang, setLang] = useState<CustomerLanguage>("en");
+  const [bottomTab, setBottomTab] = useState<BottomNavTab>("home");
+  const [activeTab, setActiveTab] = useState<VerticalTabId>("food");
   const [selectedCity, setSelectedCity] = useState<string>("Bahraich");
   const [searchQuery, setSearchQuery] = useState<string>(initialSearchQuery || initialStoreName);
 
-  // Auto-resolve initial store if store or restaurant parameter is passed in URL
+  const bottomTabHistoryRef = useRef<BottomNavTab[]>([]);
+  const verticalTabHistoryRef = useRef<VerticalTabId[]>([]);
+  const homeSubBackRef = useRef<(() => boolean) | null>(null);
+  const storeSubBackRef = useRef<(() => boolean) | null>(null);
+  const ordersSubBackRef = useRef<(() => boolean) | null>(null);
+  const addressSubBackRef = useRef<(() => boolean) | null>(null);
+  const profileSubBackRef = useRef<(() => boolean) | null>(null);
+
+  const navigateBottomTab = useCallback(
+    (nextTab: BottomNavTab) => {
+      if (nextTab === bottomTab) return;
+      bottomTabHistoryRef.current = [...bottomTabHistoryRef.current.slice(-14), bottomTab];
+      setBottomTab(nextTab);
+    },
+    [bottomTab],
+  );
+
+  const navigateVerticalTab = useCallback(
+    (nextTab: VerticalTabId) => {
+      if (nextTab === activeTab) return;
+      verticalTabHistoryRef.current = [...verticalTabHistoryRef.current.slice(-14), activeTab];
+      setActiveTab(nextTab);
+    },
+    [activeTab],
+  );
+
   const initialStore = useMemo(() => {
     if (!initialStoreName && !initialSearchQuery) return null;
     const target = (initialStoreName || initialSearchQuery).trim().toLowerCase();
     return businesses.find((b) => b.name.toLowerCase().includes(target)) || null;
   }, [businesses, initialStoreName, initialSearchQuery]);
 
-  // Customer Identity & Auth state
+  // ── Filter States (N-11) ──
+  const [isVegOnly, setIsVegOnly] = useState(false);
+  const [isFastDeliveryOnly, setIsFastDeliveryOnly] = useState(false);
+  const [isTopRatedOnly, setIsTopRatedOnly] = useState(false);
+  const [priceTier, setPriceTier] = useState<PriceTierFilter>("all");
+  const [sortBy, setSortBy] = useState<StoreSortFilter>("recommended");
+  const [verifiedStandeeOnly, setVerifiedStandeeOnly] = useState(true);
+
+  // ── Customer Identity & Auth State (N-02 to N-06) ──
   const [customerId, setCustomerId] = useState<string>("");
   const [customerEmail, setCustomerEmail] = useState<string>("");
   const [customerName, setCustomerName] = useState<string>("");
   const [customerPhone, setCustomerPhone] = useState<string>("");
   const [customerAddress, setCustomerAddress] = useState<string>("");
+  const [addressVerified, setAddressVerified] = useState<boolean>(false);
+  const [guestMode, setGuestMode] = useState<boolean>(false);
+  const [rewardPoints, setRewardPoints] = useState<number>(0);
+  const [seenNotifKeys, setSeenNotifKeys] = useState<string[]>([]);
+  const [rememberedUser, setRememberedUser] = useState<{
+    id: string;
+    name: string;
+    phone: string;
+    email: string;
+  } | null>(null);
 
-  // Structured Address Fields (Point 4)
-  const [addrHouseNo, setAddrHouseNo] = useState<string>("");
-  const [addrMohalla, setAddrMohalla] = useState<string>("");
-  const [addrRoad, setAddrRoad] = useState<string>("");
+  const [userLiveLocation, setUserLiveLocation] = useState<string>("Detecting pinpoint GPS...");
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>({
+    lat: 27.5744,
+    lng: 81.5977,
+  });
   const [addrPincode, setAddrPincode] = useState<string>("271801");
-  const [addrDistrict, setAddrDistrict] = useState<string>("Bahraich");
-
-  // High-Precision GPS & Google Maps Location State
-  const [userLiveLocation, setUserLiveLocation] = useState<string>("Civil Lines, Bahraich");
-  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [isResolvingLocation, setIsResolvingLocation] = useState<boolean>(false);
-
-  const buildAddressString = (h: string, m: string, r: string, p: string, d: string) => {
-    return [h.trim(), m.trim(), r.trim(), p.trim() ? `Pin: ${p.trim()}` : "", d.trim() || "Bahraich"].filter(Boolean).join(", ");
-  };
-
-  // OTP Login Flow & State
-  const [isCustomerLoginOpen, setIsCustomerLoginOpen] = useState(false);
-  const [loginStep, setLoginStep] = useState<"email" | "otp" | "name_prompt">("email");
-  const [loginEmail, setLoginEmail] = useState<string>("");
-  const [loginPhone, setLoginPhone] = useState<string>("");
-  const [loginChannel, setLoginChannel] = useState<"sms" | "whatsapp">("whatsapp");
-  const [authMode, setAuthMode] = useState<"phone" | "email">("phone");
-  const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
-  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState<boolean>(false);
-  const [activeWhatsAppOtp, setActiveWhatsAppOtp] = useState<string | null>(null);
-  const [isStandeeModalOpen, setIsStandeeModalOpen] = useState<boolean>(false);
-  const [standeeRating, setStandeeRating] = useState<number>(5);
-  const [standeeFeedback, setStandeeFeedback] = useState<string>("");
-  const [isStandeeSubmitted, setIsStandeeSubmitted] = useState<boolean>(false);
-  const [loginOtp, setLoginOtp] = useState<string>("");
-  const [loginOtpCountdown, setLoginOtpCountdown] = useState<number>(0);
-  const [isSendingOtp, setIsSendingOtp] = useState<boolean>(false);
-  const [isVerifyingOtp, setIsVerifyingOtp] = useState<boolean>(false);
-  const [otpError, setOtpError] = useState<string>("");
-  const [otpNotice, setOtpNotice] = useState<string>("");
-  const [newCustomerName, setNewCustomerName] = useState<string>("");
-  const [newCustomerPhone, setNewCustomerPhone] = useState<string>("");
-
   const [isDetectingGps, setIsDetectingGps] = useState(false);
-  const [loginInputName, setLoginInputName] = useState<string>("");
-  const [loginInputPhone, setLoginInputPhone] = useState<string>("");
-  const [loginInputAddress, setLoginInputAddress] = useState<string>("");
-  const [isCustomerEditing, setIsCustomerEditing] = useState<boolean>(false);
 
-  // Customer Profile View (Swiggy-Style Account Hub & Past Orders)
-  const [profileTab, setProfileTab] = useState<"orders" | "addresses">("orders");
-  const [accountView, setAccountView] = useState<"menu" | "past_orders" | "addresses" | "payments" | "refunds" | "wallet">("menu");
-  const [foodRatings, setFoodRatings] = useState<{ [orderId: string]: number }>({});
-  const [deliveryRatings, setDeliveryRatings] = useState<{ [orderId: string]: number }>({});
-  const [customerPastOrders, setCustomerPastOrders] = useState<ActiveHyperlocalOrder[]>([]);
-  const [isLoadingPastOrders, setIsLoadingPastOrders] = useState<boolean>(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState<
+    "welcome_back" | "login" | "otp" | "name_push" | "gps_lock"
+  >("login");
+  const loginStep: "email" | "otp" | "name_prompt" =
+    onboardingStep === "otp"
+      ? "otp"
+      : onboardingStep === "name_push"
+        ? "name_prompt"
+        : "email";
+  const setLoginStep = (step: "email" | "otp" | "name_prompt") => {
+    setOnboardingStep(
+      step === "otp" ? "otp" : step === "name_prompt" ? "name_push" : "login",
+    );
+  };
+  const isLoginEntryStep = loginStep === "email";
+  const isNamePromptStep = loginStep === "name_prompt";
+  const [authMode, setAuthMode] = useState<"phone" | "email">("phone");
+  const [loginPhone, setLoginPhone] = useState("");
+  const [loginEmail, setLoginEmail] = useState("");
+  const [pendingCustomerEmail, setPendingCustomerEmail] = useState("");
+  const [loginOtp, setLoginOtp] = useState("");
+  const [loginOtpCountdown, setLoginOtpCountdown] = useState(0);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isGoogleModalOpen, setIsGoogleModalOpen] = useState(false);
+  const [activeWhatsAppOtp, setActiveWhatsAppOtp] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState("");
+  const [otpNotice, setOtpNotice] = useState("");
+  const [newCustomerName, setNewCustomerName] = useState("");
+  const [pushEnabled, setPushEnabled] = useState(false);
 
-  // Fast Payment Gateway Zero-Lag Launcher State
-  const [isPaymentLaunching, setIsPaymentLaunching] = useState<boolean>(false);
+  // ── Wallet, SpeedPass, Favorites & Profile (N-31, N-32) ──
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [accountView, setAccountView] = useState<"menu" | "past_orders" | "addresses" | "payments">("menu");
+  const openAccountSection = (view: "past_orders" | "addresses") => {
+    setAccountView(view);
+    if (view === "past_orders") setIsMyBookingsOpen(true);
+    if (view === "addresses") setIsAddressModalOpen(true);
+  };
+  const activeAccountSectionLabel =
+    accountView === "addresses"
+      ? "addresses"
+      : accountView === "past_orders"
+        ? "past_orders"
+        : "menu";
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [speedPassActive, setSpeedPassActive] = useState<boolean>(false);
+  const [favoriteStoreIds, setFavoriteStoreIds] = useState<string[]>([]);
 
+  // ── Saved Addresses (N-21, N-22) ──
   const [savedAddresses, setSavedAddresses] = useState<CustomerSavedAddress[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string>("");
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
-  const [newAddressTag, setNewAddressTag] = useState<"Home" | "Work" | "Other">("Home");
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [isVegOnly, setIsVegOnly] = useState(false);
-  const [isFastDeliveryOnly, setIsFastDeliveryOnly] = useState(false);
-  const [isTopRatedOnly, setIsTopRatedOnly] = useState(false);
 
-  // Cart for Food & Sweets
-  const [cart, setCart] = useState<{ [cartKey: string]: CartLineItem }>({});
+  // ── Storefront, Customizer & Vertical Modals (N-13 to N-19) ──
   const [activeStoreModal, setActiveStoreModal] = useState<SuperAppBusiness | null>(initialStore);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [paymentMethodChoice, setPaymentMethodChoice] = useState<
-    "online_cashfree" | "cod"
-  >("online_cashfree");
-
-  // Customization Bottom Sheet State (Half/Full, Addons, Cooking Notes)
+  const [isStandeeModalOpen, setIsStandeeModalOpen] = useState(false);
   const [customizingItem, setCustomizingItem] = useState<SuperAppCatalogItem | null>(null);
   const [selectedPortion, setSelectedPortion] = useState<"half" | "full">("half");
   const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
-  const [cookingInstruction, setCookingInstruction] = useState<string>("");
-  const [riderTip, setRiderTip] = useState<number>(0);
+  const [cookingInstruction, setCookingInstruction] = useState("");
 
-  // Salon Token Booking Modal
-  const [salonModal, setSalonModal] = useState<SuperAppBusiness | null>(null);
-  const [salonService, setSalonService] = useState<string>("Executive Haircut & Styling");
-  const [salonStylist, setSalonStylist] = useState<string>("Any Available Stylist");
-
-  // Car Wash Bay Booking Modal
-  const [carWashModal, setCarWashModal] = useState<SuperAppBusiness | null>(null);
-  const [carWashPackage, setCarWashPackage] = useState<string>("Full Foam Car Wash & Vacuuming (₹350)");
-  const [vehicleNumber, setVehicleNumber] = useState<string>("");
-  const [vehicleModel, setVehicleModel] = useState<string>("");
-
-  // Kirana Parcha Upload Modal
   const [kiranaModal, setKiranaModal] = useState<SuperAppBusiness | null>(null);
-  const [parchaText, setParchaText] = useState<string>("");
+  const [medicalModal, setMedicalModal] = useState<SuperAppBusiness | null>(null);
+  const [parchaText, setParchaText] = useState("");
   const [parchaImagePreview, setParchaImagePreview] = useState<string | null>(null);
-  const [parchaNotes, setParchaNotes] = useState<string>("");
+  const [parchaNotes, setParchaNotes] = useState("");
 
-  // "My Bookings & Live Orders" Drawer
+  const [salonModal, setSalonModal] = useState<SuperAppBusiness | null>(null);
+  const [salonService, setSalonService] = useState("Executive Haircut & Styling (₹150)");
+  const [salonStylist, setSalonStylist] = useState("Any Available Stylist");
+
+  const [carWashModal, setCarWashModal] = useState<SuperAppBusiness | null>(null);
+  const [carWashPackage, setCarWashPackage] = useState("Full Foam Car Wash & Vacuuming (₹350)");
+  const [vehicleNumber, setVehicleNumber] = useState("");
+  const [vehicleModel, setVehicleModel] = useState("");
+
+  // ── Strict Single-Store Cart & Checkout (N-20, N-23, N-24, N-25) ──
+  const [cart, setCart] = useState<{ [cartKey: string]: CartLineItem }>({});
+  const [pendingCartReplace, setPendingCartReplace] = useState<{
+    item: SuperAppCatalogItem;
+    line: CartLineItem;
+    pendingStoreName: string;
+    currentStoreName: string;
+  } | null>(null);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [outOfStockRule, setOutOfStockRule] = useState<OutOfStockRule>("call_me");
+  const [storeNote, setStoreNote] = useState("");
+  const [deliveryScheduleSlot, setDeliveryScheduleSlot] = useState("standard_25m");
+  const [riderTip, setRiderTip] = useState<number>(0);
+  const [promoCode, setPromoCode] = useState("");
+  const [paymentMethodChoice, setPaymentMethodChoice] = useState<"online_cashfree" | "cod">(
+    "online_cashfree",
+  );
+  const [isPaymentLaunching, setIsPaymentLaunching] = useState(false);
+  const [paymentRetryState, setPaymentRetryState] = useState<{
+    orderId: string;
+    amount: number;
+    storeName: string;
+    reason: string;
+  } | null>(null);
+  const [confirmedOrderOverlay, setConfirmedOrderOverlay] = useState<{
+    orderId: string;
+    displayCode: string;
+    storeName: string;
+    deliveryOtp: string;
+    paymentLabel: string;
+  } | null>(null);
+
+  // ── Orders, Tokens, Parchas & Notifications (N-26 to N-30) ──
   const [isMyBookingsOpen, setIsMyBookingsOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [activeOrders, setActiveOrders] = useState<ActiveHyperlocalOrder[]>([]);
+  const [customerPastOrders, setCustomerPastOrders] = useState<ActiveHyperlocalOrder[]>([]);
   const [activeTokens, setActiveTokens] = useState<ActiveServiceToken[]>([]);
   const [activeParchas, setActiveParchas] = useState<ActiveParchaOrder[]>([]);
   const [isRefreshingBookings, setIsRefreshingBookings] = useState(false);
+  const [foodRatings, setFoodRatings] = useState<{ [orderId: string]: number }>({});
+  const [deliveryRatings, setDeliveryRatings] = useState<{ [orderId: string]: number }>({});
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  // Form Submission Pending
   const [isSubmitting, startTransition] = useTransition();
-  const [bookingSuccessNotice, setBookingSuccessNotice] = useState<string | null>(null);
 
-  // Smart Parcha Auto-Resolver (Finds Nearest Verified Kirana)
-  const handleOpenSmartParcha = () => {
-    const kiranaStore =
-      businesses.find(
-        (b) =>
-          b.type?.toLowerCase().includes("kirana") ||
-          b.type?.toLowerCase().includes("grocery") ||
-          b.name.toLowerCase().includes("kirana")
-      ) ||
-      businesses.find((b) => b.id === "bhr-groc-01") ||
-      businesses[0];
-    if (kiranaStore) {
-      setKiranaModal(kiranaStore);
-    }
-  };
+  const showToast = useCallback((msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage((cur) => (cur === msg ? null : cur)), 3600);
+  }, []);
 
-  // Preload Cashfree JS SDK in background so checkout is instant (<400ms) with zero lag
+  // Preload Cashfree JS SDK
   useEffect(() => {
     loadCashfreeSdk().catch(() => {});
   }, []);
 
-  // Countdown timer for Email OTP resend
+  // OTP countdown
   useEffect(() => {
     if (loginOtpCountdown <= 0) return;
-    const timer = setInterval(() => {
+    const tmr = setInterval(() => {
       setLoginOtpCountdown((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
-    return () => clearInterval(timer);
+    return () => clearInterval(tmr);
   }, [loginOtpCountdown]);
 
-  // Fetch Customer Past Orders
-  const fetchCustomerOrders = async (cId?: string, phone?: string) => {
-    const targetId = cId || customerId;
-    const targetPhone = phone || customerPhone;
-    if (!targetId && !targetPhone) return;
-    setIsLoadingPastOrders(true);
+  const saveCustomerProfile = (
+    name: string,
+    phone: string,
+    address: string,
+    email?: string,
+    id?: string,
+  ) => {
+    try {
+      if (name) localStorage.setItem("trustit_cust_name", name);
+      if (phone) localStorage.setItem("trustit_cust_phone", phone);
+      if (address) localStorage.setItem("trustit_cust_addr", address);
+      if (email) localStorage.setItem("trustit_cust_email", email);
+      if (id) localStorage.setItem("trustit_cust_id", id);
+      if (name && (phone || email)) {
+        localStorage.setItem(
+          "trustit_last_customer",
+          JSON.stringify({ id: id || "", name, phone: phone || "", email: email || "" }),
+        );
+      }
+    } catch {}
+  };
+
+  // Fetch Customer Past & Running Orders
+  const fetchCustomerPoints = useCallback(async (cId?: string, phone?: string) => {
+    const targetId = cId || "";
+    const targetPhone = phone || "";
+    if (!targetId && targetPhone.length < 10) return;
     try {
       const params = new URLSearchParams();
       if (targetId) params.set("customerId", targetId);
       if (targetPhone) params.set("phone", targetPhone);
-      const url = `/api/hyperlocal/orders?${params.toString()}`;
-      const res = await fetch(url);
+      params.set("_ts", String(Date.now()));
+      const res = await fetch(`/api/customer/points?${params.toString()}`, {
+        cache: "no-store",
+      });
+      const data = await res.json().catch(() => null);
+      if (data?.success && typeof data.rewardPoints === "number") {
+        setRewardPoints(data.rewardPoints);
+      }
+    } catch {}
+  }, []);
+
+  const fetchCustomerOrders = useCallback(async (cId?: string, phone?: string) => {
+    const targetId = cId || customerId;
+    const targetPhone = phone || customerPhone;
+    if (!targetId && !targetPhone) return;
+    try {
+      const params = new URLSearchParams();
+      if (targetId) params.set("customerId", targetId);
+      if (targetPhone) params.set("phone", targetPhone);
+      const res = await fetch(`/api/hyperlocal/orders?${params.toString()}`);
       if (res.ok) {
         const data = await res.json();
-        const orders = data.orders || [];
+        const orders: ActiveHyperlocalOrder[] = data.orders || [];
         setCustomerPastOrders(orders);
-        const runningOrders = orders.filter(
-          (o: any) => !["delivered", "completed", "cancelled", "rejected"].includes(o.status),
+        setActiveOrders(
+          orders.filter(
+            (o) => !["delivered", "completed", "cancelled", "rejected"].includes(o.status),
+          ),
         );
-        setActiveOrders(runningOrders);
+      }
+    } catch {}
+  }, [customerId, customerPhone]);
+
+  // Poll Active Bookings (Orders + Tokens + Parchas)
+  const fetchActiveBookings = useCallback(async (phone: string) => {
+    const cleanPhone = (phone || "").replace(/\D/g, "");
+    if (cleanPhone.length < 10) return;
+    setIsRefreshingBookings(true);
+    try {
+      const [orderRes, tokenRes, parchaRes] = await Promise.all([
+        fetch(`/api/hyperlocal/orders?phone=${encodeURIComponent(cleanPhone)}`),
+        fetch(`/api/hyperlocal/tokens?phone=${encodeURIComponent(cleanPhone)}`),
+        fetch(`/api/hyperlocal/parcha`),
+      ]);
+      if (orderRes.ok) {
+        const data = await orderRes.json();
+        const all = data.orders || [];
+        setCustomerPastOrders(all);
+        setActiveOrders(
+          all.filter(
+            (o: any) => !["delivered", "completed", "cancelled", "rejected"].includes(o.status),
+          ),
+        );
+      }
+      if (tokenRes.ok) {
+        const data = await tokenRes.json();
+        setActiveTokens(
+          (data.tokens || []).filter((t: any) => !["completed", "cancelled"].includes(t.status)),
+        );
+      }
+      if (parchaRes.ok) {
+        const data = await parchaRes.json();
+        const myParchas = (data.parchas || []).filter(
+          (p: any) => p.hyperlocal_orders?.customer_phone === cleanPhone,
+        );
+        setActiveParchas(
+          myParchas.filter((p: any) => {
+            const st = String(p.hyperlocal_orders?.status || "").toLowerCase();
+            if (["cancelled", "rejected", "delivered", "completed"].includes(st)) return false;
+            return !st || st === "placed" || !p.merchant_quote_amount;
+          }),
+        );
       }
     } catch {
-      // Ignore network errors
     } finally {
-      setIsLoadingPastOrders(false);
+      setIsRefreshingBookings(false);
     }
-  };
+  }, []);
 
-  // Load customer info from localStorage & DB
+  // Restore Session & Preferences from localStorage
   useEffect(() => {
     try {
-      const savedId = localStorage.getItem("trustit_cust_id");
-      const savedEmail = localStorage.getItem("trustit_cust_email");
-      const savedName = localStorage.getItem("trustit_cust_name");
-      const savedPhone = localStorage.getItem("trustit_cust_phone");
-      const savedAddr = localStorage.getItem("trustit_cust_addr");
+      const savedId = localStorage.getItem("trustit_cust_id") || "";
+      const savedEmail = localStorage.getItem("trustit_cust_email") || "";
+      const savedName = localStorage.getItem("trustit_cust_name") || "";
+      const savedPhone = localStorage.getItem("trustit_cust_phone") || "";
+      const savedAddr = localStorage.getItem("trustit_cust_addr") || "";
+      const savedGuest = localStorage.getItem("trustit_guest_mode") === "1";
+      const savedAddrVerified = localStorage.getItem("trustit_addr_verified") === "1";
+      const savedSeenNotifs = localStorage.getItem("trustit_seen_notifs");
+      const savedLast = localStorage.getItem("trustit_last_customer");
+      const savedLang = localStorage.getItem("trustit_cust_lang");
+      const savedWallet = localStorage.getItem("trustit_money_balance");
+      const savedPass = localStorage.getItem("trustit_speedpass");
+      const savedFavs = localStorage.getItem("trustit_favorite_stores");
+      const savedPush = localStorage.getItem("trustit_push_enabled");
+
       if (savedId) setCustomerId(savedId);
       if (savedEmail) {
         setCustomerEmail(savedEmail);
         setLoginEmail(savedEmail);
       }
-      if (savedName) {
-        setCustomerName(savedName);
-        setLoginInputName(savedName);
+      if (savedName) setCustomerName(savedName);
+      if (savedPhone && savedPhone.length === 10) setCustomerPhone(savedPhone);
+      if (savedAddr) setCustomerAddress(savedAddr);
+      if (savedLang === "hi" || savedLang === "en") setLang(savedLang);
+      if (savedWallet) setWalletBalance(Number(savedWallet) || 0);
+      if (savedPass === "1") setSpeedPassActive(true);
+      if (savedPush === "1") setPushEnabled(true);
+      if (savedFavs) {
+        try {
+          const arr = JSON.parse(savedFavs);
+          if (Array.isArray(arr)) setFavoriteStoreIds(arr);
+        } catch {}
       }
-      if (savedPhone && savedPhone.length === 10) {
-        setCustomerPhone(savedPhone);
-        setLoginInputPhone(savedPhone);
-      } else {
-        try { localStorage.removeItem("trustit_cust_phone"); } catch {}
-        setCustomerPhone("");
-        setLoginInputPhone("");
+      if (savedLast) {
+        try {
+          setRememberedUser(JSON.parse(savedLast));
+        } catch {}
       }
-      if (savedAddr) {
-        setCustomerAddress(savedAddr);
-        setLoginInputAddress(savedAddr);
-      }
-      const sH = localStorage.getItem("trustit_cust_house");
-      const sM = localStorage.getItem("trustit_cust_mohalla");
-      const sR = localStorage.getItem("trustit_cust_road");
-      const sP = localStorage.getItem("trustit_cust_pin");
-      const sD = localStorage.getItem("trustit_cust_dist");
-      if (sH) setAddrHouseNo(sH);
-      if (sM) setAddrMohalla(sM);
-      if (sR) setAddrRoad(sR);
-      if (sP) setAddrPincode(sP);
-      if (sD) setAddrDistrict(sD);
 
       const rawAddrs = localStorage.getItem("trustit_saved_addresses_v1");
       if (rawAddrs) {
@@ -669,24 +519,10 @@ export default function CustomerSuperAppClient({
             setSelectedAddressId(parsed[0].id);
           }
         } catch {}
-      } else if (sH || sM) {
-        const initialAddr: CustomerSavedAddress = {
-          id: "addr_default",
-          label: "Home",
-          tag: "Home",
-          street: buildAddressString(sH || "", sM || "", sR || "", sP || "271801", sD || "Bahraich"),
-          houseNo: sH || "",
-          mohalla: sM || "",
-          road: sR || "",
-          pincode: sP || "271801",
-          district: sD || "Bahraich",
-          isDefault: true,
-        };
-        setSavedAddresses([initialAddr]);
-        setSelectedAddressId("addr_default");
       }
 
       if (savedId) {
+        fetchCustomerPoints(savedId, savedPhone);
         fetch(`/api/customer/addresses?customerId=${encodeURIComponent(savedId)}`)
           .then((r) => (r.ok ? r.json() : null))
           .then((d) => {
@@ -700,95 +536,262 @@ export default function CustomerSuperAppClient({
                 landmark: a.landmark,
                 city: a.city || "Bahraich",
                 pincode: a.pincode || "271801",
+                latitude: a.latitude,
+                longitude: a.longitude,
                 isDefault: Boolean(a.is_default),
               }));
               setSavedAddresses(formatted);
+              setAddressVerified(true);
               const def = formatted.find((a) => a.isDefault) || formatted[0];
               if (def) {
                 setSelectedAddressId(def.id);
                 setCustomerAddress(def.street);
               }
               try {
+                localStorage.setItem("trustit_addr_verified", "1");
                 localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(formatted));
               } catch {}
             }
           })
           .catch(() => {});
-
-        fetchCustomerOrders(savedId, savedPhone || undefined);
+        fetchCustomerOrders(savedId, savedPhone);
+      } else if (savedPhone) {
+        fetchCustomerPoints(undefined, savedPhone);
       }
-    } catch {
-      // Ignore localStorage availability
-    }
-  }, []);
 
-  // Save customer info
-  const saveCustomerProfile = (
-    name: string,
-    phone: string,
-    address: string,
-    emailOrStruct?: string | { house?: string; mohalla?: string; road?: string; pin?: string; dist?: string },
-    id?: string,
-    struct?: { house?: string; mohalla?: string; road?: string; pin?: string; dist?: string }
-  ) => {
-    try {
-      if (name) localStorage.setItem("trustit_cust_name", name);
-      if (phone) localStorage.setItem("trustit_cust_phone", phone);
-      if (address) localStorage.setItem("trustit_cust_addr", address);
+      if (savedGuest) setGuestMode(true);
+      if (savedAddrVerified) setAddressVerified(true);
+      if (savedSeenNotifs) {
+        try {
+          const parsedSeen = JSON.parse(savedSeenNotifs);
+          if (Array.isArray(parsedSeen)) setSeenNotifKeys(parsedSeen);
+        } catch {}
+      }
 
-      const emailVal = typeof emailOrStruct === "string" ? emailOrStruct : "";
-      const structVal = typeof emailOrStruct === "object" ? emailOrStruct : struct;
-
-      if (emailVal) localStorage.setItem("trustit_cust_email", emailVal);
-      if (id) localStorage.setItem("trustit_cust_id", id);
-      if (structVal) {
-        if (structVal.house) localStorage.setItem("trustit_cust_house", structVal.house);
-        if (structVal.mohalla) localStorage.setItem("trustit_cust_mohalla", structVal.mohalla);
-        if (structVal.road) localStorage.setItem("trustit_cust_road", structVal.road);
-        if (structVal.pin) localStorage.setItem("trustit_cust_pin", structVal.pin);
-        if (structVal.dist) localStorage.setItem("trustit_cust_dist", structVal.dist);
+      if (!savedId && !savedPhone && !savedGuest) {
+        setOnboardingStep(savedLast ? "welcome_back" : "login");
+        setIsOnboardingOpen(true);
       }
     } catch {}
-  };
+  }, [fetchCustomerOrders, fetchCustomerPoints]);
 
-  const handleOpenCustomerLogin = () => {
-    setLoginInputName(customerName);
-    setLoginInputPhone(customerPhone.length === 10 ? customerPhone : "");
-    setLoginInputAddress(customerAddress);
-    setLoginEmail(customerEmail);
-    setLoginPhone(customerPhone.length === 10 ? customerPhone : "");
-    setAuthMode("phone");
-    setNewCustomerName("");
-    setNewCustomerPhone("");
+  useEffect(() => {
+    if (customerPhone && customerPhone.length >= 10) {
+      fetchActiveBookings(customerPhone);
+      const interval = setInterval(() => fetchActiveBookings(customerPhone), 12000);
+      return () => clearInterval(interval);
+    }
+  }, [customerPhone, fetchActiveBookings]);
+
+  const resolveReverseGeocodeAndApply = useCallback(
+    async (
+      lat: number,
+      lng: number,
+      fallback?: { mohalla?: string; city?: string; pincode?: string },
+    ) => {
+      setUserCoords({ lat, lng });
+      let geocodeData: any = null;
+      try {
+        const path = `/api/hyperlocal/reverse-geocode?lat=${lat}&lng=${lng}&_ts=${Date.now()}`;
+        const res = await TrustitNative.nativeFetch(path);
+        if (res.ok) geocodeData = await res.json();
+      } catch {}
+
+      const resolvedName =
+        geocodeData?.locationName && !String(geocodeData.locationName).includes("GPS:")
+          ? geocodeData.locationName
+          : fallback?.mohalla || geocodeData?.locationName || `Live GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+      const mohalla = geocodeData?.mohalla || fallback?.mohalla || resolvedName;
+      const district = geocodeData?.district || geocodeData?.city || fallback?.city || "Bahraich";
+      const pincode = geocodeData?.pincode || fallback?.pincode || "271801";
+      const formatted = geocodeData?.formattedAddress || resolvedName;
+
+      setUserLiveLocation(resolvedName);
+      setSelectedCity(district);
+      setAddrPincode(pincode);
+      setCustomerAddress((prev) => prev || formatted);
+
+      try {
+        localStorage.setItem(
+          "trustit_customer_location",
+          JSON.stringify({
+            locationName: resolvedName,
+            city: district,
+            district,
+            pincode,
+            formatted,
+            lat,
+            lng,
+            time: Date.now(),
+          }),
+        );
+      } catch {}
+
+      return {
+        lat,
+        lng,
+        locationName: resolvedName,
+        mohalla,
+        street: formatted || mohalla || resolvedName,
+        city: district,
+        pincode,
+        formattedAddress: formatted,
+      };
+    },
+    [],
+  );
+
+  // ── N-06 Early GPS Detection (Matches Rider App Pinpoint Accuracy) ──
+  const detectLiveLocation = useCallback(
+    async (silent = false): Promise<DetectedGpsLocation | null> => {
+      if (!silent) setIsDetectingGps(true);
+      try {
+        const loc = await TrustitNative.getPreciseLocation();
+        const lat = loc.latitude;
+        const lng = loc.longitude;
+        if (!Number.isFinite(lat) || !Number.isFinite(lng) || (Math.abs(lat) < 0.01 && Math.abs(lng) < 0.01)) {
+          if (!silent) showToast("Please enable GPS location permission on your device.");
+          return null;
+        }
+        const result = await resolveReverseGeocodeAndApply(lat, lng, {
+          mohalla: loc.mohalla,
+          city: loc.city,
+          pincode: loc.pincode,
+        });
+        if (!silent) TrustitNative.playHapticFeedback("click");
+        return result;
+      } catch {
+        return null;
+      } finally {
+        if (!silent) setIsDetectingGps(false);
+      }
+    },
+    [resolveReverseGeocodeAndApply, showToast],
+  );
+
+  useEffect(() => {
+    let hasRecentManualPin = false;
+    try {
+      const saved = localStorage.getItem("trustit_customer_location");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const ageMs = typeof parsed.time === "number" ? Date.now() - parsed.time : Number.MAX_SAFE_INTEGER;
+        if (parsed.manualPin && ageMs < 15 * 60_000 && parsed.locationName && !String(parsed.locationName).includes("0.0000")) {
+          hasRecentManualPin = true;
+          setUserLiveLocation(parsed.locationName);
+          if (parsed.district || parsed.city) setSelectedCity(parsed.district || parsed.city);
+          if (parsed.pincode) setAddrPincode(parsed.pincode);
+          if (parsed.lat && parsed.lng && Math.abs(parsed.lat) > 0.01) {
+            setUserCoords({ lat: parsed.lat, lng: parsed.lng });
+          }
+        }
+      }
+    } catch {}
+
+    if (!hasRecentManualPin) {
+      detectLiveLocation(true);
+    }
+
+    const handleVisibilityRefresh = () => {
+      if (document.visibilityState !== "visible") return;
+      if (customerId || (customerPhone && customerPhone.length >= 10)) {
+        fetchCustomerPoints(customerId, customerPhone);
+      }
+      try {
+        const saved = localStorage.getItem("trustit_customer_location");
+        const parsed = saved ? JSON.parse(saved) : null;
+        const ageMs = typeof parsed?.time === "number" ? Date.now() - parsed.time : Number.MAX_SAFE_INTEGER;
+        if (parsed?.manualPin && ageMs < 15 * 60_000) return;
+      } catch {}
+      detectLiveLocation(true);
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityRefresh);
+    window.addEventListener("focus", handleVisibilityRefresh);
+
+    let watchId: number | null = null;
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      let lastWatchedLat = 0;
+      let lastWatchedLng = 0;
+      watchId = navigator.geolocation.watchPosition(
+        async (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          if (pos.coords.accuracy > 250) return;
+          if (Math.abs(lat - lastWatchedLat) < 0.0011 && Math.abs(lng - lastWatchedLng) < 0.0011) return;
+          try {
+            const saved = localStorage.getItem("trustit_customer_location");
+            const parsed = saved ? JSON.parse(saved) : null;
+            const ageMs = typeof parsed?.time === "number" ? Date.now() - parsed.time : Number.MAX_SAFE_INTEGER;
+            if (parsed?.manualPin && ageMs < 15 * 60_000) return;
+          } catch {}
+          lastWatchedLat = lat;
+          lastWatchedLng = lng;
+          await resolveReverseGeocodeAndApply(lat, lng);
+        },
+        () => {},
+        { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 },
+      );
+    }
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityRefresh);
+      window.removeEventListener("focus", handleVisibilityRefresh);
+      if (watchId !== null && typeof navigator !== "undefined" && navigator.geolocation) {
+        navigator.geolocation.clearWatch(watchId);
+      }
+    };
+  }, [detectLiveLocation, resolveReverseGeocodeAndApply, customerId, customerPhone, fetchCustomerPoints]);
+
+  // ── Auth Handlers (N-02 to N-05) ──
+  const openLoginOrResume = () => {
     setOtpError("");
     setOtpNotice("");
     setLoginOtp("");
-    setLoginStep("email");
-    setProfileTab("orders");
-    setAccountView("menu");
-    setIsCustomerEditing(false);
-    setIsCustomerLoginOpen(true);
-    if (customerId || customerPhone) {
-      fetchCustomerOrders(customerId, customerPhone);
+    setOnboardingStep(rememberedUser ? "welcome_back" : "login");
+    setIsOnboardingOpen(true);
+  };
+
+  const handleContinueRemembered = () => {
+    if (!rememberedUser) return;
+    setCustomerId(rememberedUser.id);
+    setCustomerName(rememberedUser.name);
+    setCustomerPhone(rememberedUser.phone);
+    setCustomerEmail(rememberedUser.email);
+    setGuestMode(false);
+    try {
+      localStorage.removeItem("trustit_guest_mode");
+    } catch {}
+    saveCustomerProfile(
+      rememberedUser.name,
+      rememberedUser.phone,
+      customerAddress,
+      rememberedUser.email,
+      rememberedUser.id,
+    );
+    fetchCustomerOrders(rememberedUser.id, rememberedUser.phone);
+    fetchCustomerPoints(rememberedUser.id, rememberedUser.phone);
+    if (addressVerified || savedAddresses.length > 0) {
+      setIsOnboardingOpen(false);
+      showToast(`Welcome back, ${rememberedUser.name}!`);
+    } else {
+      setOnboardingStep("gps_lock");
     }
   };
 
   const handleSendOtp = async (overrideIdentifier?: string, overrideChannel?: "sms" | "whatsapp") => {
-    const channelToUse = overrideChannel || loginChannel;
+    const channelToUse = overrideChannel || "whatsapp";
     setOtpError("");
     setOtpNotice("");
     setIsSendingOtp(true);
-
     try {
       if (authMode === "phone" && !overrideIdentifier?.includes("@")) {
         const raw = (overrideIdentifier || loginPhone || "").replace(/\D/g, "");
         const phone10 = raw.length === 12 && raw.startsWith("91") ? raw.slice(2) : raw;
         if (phone10.length !== 10) {
-          setOtpError("Please enter a valid 10-digit mobile number.");
-          setIsSendingOtp(false);
+          setOtpError("Please enter a valid 10-digit Indian mobile number.");
           return;
         }
-
         const res = await fetch("/api/customer/auth/send-otp", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -796,25 +799,21 @@ export default function CustomerSuperAppClient({
         });
         const data = await res.json();
         if (!res.ok || !data.success) {
-          setOtpError(data.message || "Could not send verification code. Please try again.");
+          setOtpError(data.message || "Could not send WhatsApp OTP.");
           return;
         }
         setLoginPhone(phone10);
         setLoginOtp("");
         setLoginStep("otp");
         setLoginOtpCountdown(30);
-        if (data.previewOtp) {
-          setActiveWhatsAppOtp(data.previewOtp);
-        }
-        setOtpNotice(data.message || `Verification code sent via ${channelToUse === "whatsapp" ? "WhatsApp" : "SMS"}`);
+        if (data.previewOtp) setActiveWhatsAppOtp(data.previewOtp);
+        setOtpNotice(data.message || `WhatsApp OTP sent to +91 ${phone10}`);
         return;
       }
 
-      // Email fallback
       const targetEmail = (overrideIdentifier || loginEmail || "").trim().toLowerCase();
-      if (!targetEmail || !targetEmail.includes("@") || !targetEmail.includes(".")) {
-        setOtpError("Please enter a valid email address (e.g. name@gmail.com)");
-        setIsSendingOtp(false);
+      if (!targetEmail.includes("@")) {
+        setOtpError("Please enter a valid email address.");
         return;
       }
       const res = await fetch("/api/customer/auth/send-otp", {
@@ -824,7 +823,7 @@ export default function CustomerSuperAppClient({
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setOtpError(data.message || "Could not send verification code. Please try again.");
+        setOtpError(data.message || "Could not send Email OTP.");
         return;
       }
       setLoginEmail(targetEmail);
@@ -833,18 +832,255 @@ export default function CustomerSuperAppClient({
       setLoginOtpCountdown(30);
       setOtpNotice(data.message || `Verification code sent to ${targetEmail}`);
     } catch {
-      setOtpError("Network error. Please check your connection and try again.");
+      setOtpError("Network error sending OTP.");
     } finally {
       setIsSendingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const code = loginOtp.trim();
+    if (code.length !== 6) {
+      setOtpError("Please enter the 6-digit OTP.");
+      return;
+    }
+    setOtpError("");
+    setIsVerifyingOtp(true);
+    try {
+      const payload: Record<string, string> = { otp: code };
+      if (authMode === "phone" && loginPhone) payload.phone = loginPhone;
+      else payload.email = loginEmail;
+
+      const res = await fetch("/api/customer/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setOtpError(data.message || "Invalid or expired OTP.");
+        return;
+      }
+
+      if (data.isNewCustomer) {
+        setPendingCustomerEmail(data.customer?.email || `${loginPhone}@customer.trustitreview.com`);
+        setLoginStep("name_prompt");
+        setOtpNotice("Verified! Enter your name & enable live order alerts.");
+        return;
+      }
+
+      const cust = data.customer;
+      if (cust) {
+        setCustomerId(cust.id);
+        setCustomerEmail(cust.email);
+        const nameToUse = cust.fullName || "Customer";
+        setCustomerName(nameToUse);
+        if (cust.phone) setCustomerPhone(cust.phone);
+        setGuestMode(false);
+        setRewardPoints(Number(cust.rewardPoints ?? 0));
+        fetchCustomerPoints(cust.id, cust.phone || loginPhone);
+        try {
+          localStorage.removeItem("trustit_guest_mode");
+        } catch {}
+        saveCustomerProfile(nameToUse, cust.phone || loginPhone, customerAddress, cust.email, cust.id);
+        fetchCustomerOrders(cust.id, cust.phone || loginPhone);
+      }
+
+      if (Array.isArray(data.addresses) && data.addresses.length > 0) {
+        const formatted: CustomerSavedAddress[] = data.addresses.map((a: any) => ({
+          id: a.id,
+          customerId: a.customerId,
+          label: a.label || "Home",
+          tag: a.label || "Home",
+          street: a.street,
+          city: a.city || selectedCity || "Bahraich",
+          pincode: a.pincode || addrPincode || "271801",
+          isDefault: Boolean(a.isDefault),
+        }));
+        setSavedAddresses(formatted);
+        setAddressVerified(true);
+        const def = formatted.find((a) => a.isDefault) || formatted[0];
+        if (def) {
+          setSelectedAddressId(def.id);
+          setCustomerAddress(def.street);
+        }
+        try {
+          localStorage.setItem("trustit_addr_verified", "1");
+          localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(formatted));
+        } catch {}
+        setIsOnboardingOpen(false);
+        showToast(`Welcome back, ${cust?.fullName || "Customer"}!`);
+        return;
+      }
+      if (cust?.fullName && addressVerified && customerAddress.trim()) {
+        setIsOnboardingOpen(false);
+        showToast(`Welcome back, ${cust.fullName}!`);
+        return;
+      }
+      setOnboardingStep("gps_lock");
+    } catch {
+      setOtpError("Network error verifying OTP.");
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  const handleCreateProfile = async (
+    allowPush = true,
+    addressDetails?: {
+      locality: string;
+      houseStreet: string;
+      fullAddress: string;
+      landmark?: string;
+      cityPincode?: string;
+      tag: "Home" | "Work" | "Other";
+    },
+  ) => {
+    const cleanName = newCustomerName.trim();
+    if (!cleanName) {
+      setOtpError("Please enter your full name.");
+      return;
+    }
+    if (allowPush) {
+      try {
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+          await Notification.requestPermission();
+        }
+        setPushEnabled(true);
+        localStorage.setItem("trustit_push_enabled", "1");
+      } catch {}
+    }
+    setIsVerifyingOtp(true);
+    try {
+      const emailToSave =
+        pendingCustomerEmail ||
+        loginEmail ||
+        (loginPhone ? `${loginPhone}@customer.trustitreview.com` : "");
+      const res = await fetch("/api/customer/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "create_profile",
+          email: emailToSave,
+          fullName: cleanName,
+          phone: loginPhone || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setOtpError(data.message || "Failed to save profile.");
+        return;
+      }
+      const cust = data.customer;
+      const pinMatch = addressDetails?.cityPincode?.match(/\b\d{6}\b/)?.[0];
+      const extractedCity = addressDetails?.cityPincode
+        ? addressDetails.cityPincode.replace(/\b\d{6}\b/, "").replace(/[,\s-]+$/, "").trim()
+        : "";
+      const cityToSave = extractedCity || selectedCity || "Bahraich";
+      const pincodeToSave = pinMatch || addrPincode || "271801";
+      if (extractedCity) setSelectedCity(extractedCity);
+      if (pinMatch) setAddrPincode(pinMatch);
+
+      const combinedAddress =
+        addressDetails?.fullAddress?.trim() ||
+        [
+          addressDetails?.houseStreet?.trim(),
+          addressDetails?.locality?.trim(),
+          addressDetails?.landmark?.trim() ? `Near ${addressDetails.landmark.trim()}` : "",
+          addressDetails?.cityPincode?.trim(),
+        ]
+          .filter(Boolean)
+          .join(", ");
+
+      if (combinedAddress) {
+        setCustomerAddress(combinedAddress);
+        if (addressDetails?.locality?.trim()) {
+          setUserLiveLocation(addressDetails.locality.trim());
+        }
+      }
+
+      if (cust) {
+        setCustomerId(cust.id);
+        setCustomerEmail(cust.email);
+        setCustomerName(cust.fullName);
+        if (cust.phone) setCustomerPhone(cust.phone);
+        setGuestMode(false);
+        setRewardPoints(Number(cust.rewardPoints ?? 0));
+        fetchCustomerPoints(cust.id, cust.phone || loginPhone);
+        try {
+          localStorage.removeItem("trustit_guest_mode");
+        } catch {}
+        saveCustomerProfile(
+          cust.fullName,
+          cust.phone || loginPhone,
+          combinedAddress || customerAddress,
+          cust.email,
+          cust.id,
+        );
+      }
+
+      if (cust?.id && combinedAddress) {
+        setAddressVerified(true);
+        try {
+          localStorage.setItem("trustit_addr_verified", "1");
+        } catch {}
+        try {
+          const addrRes = await fetch("/api/customer/addresses", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              customerId: cust.id,
+              address: {
+                label: addressDetails?.tag || "Home",
+                street: combinedAddress,
+                city: cityToSave,
+                pincode: pincodeToSave,
+                latitude: userCoords?.lat,
+                longitude: userCoords?.lng,
+                isDefault: true,
+              },
+            }),
+          });
+          const addrJson = await addrRes.json().catch(() => null);
+          if (addrJson?.success && addrJson.address) {
+            const formattedAddr: CustomerSavedAddress = {
+              id: addrJson.address.id,
+              customerId: cust.id,
+              label: addrJson.address.label || addressDetails?.tag || "Home",
+              tag: (addrJson.address.label || addressDetails?.tag || "Home") as "Home" | "Work" | "Other",
+              street: addrJson.address.street,
+              city: addrJson.address.city || cityToSave,
+              pincode: addrJson.address.pincode || pincodeToSave,
+              latitude: addrJson.address.latitude,
+              longitude: addrJson.address.longitude,
+              isDefault: true,
+            };
+            setSavedAddresses([formattedAddr]);
+            setSelectedAddressId(formattedAddr.id);
+            try {
+              localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify([formattedAddr]));
+            } catch {}
+          }
+        } catch {}
+        setIsOnboardingOpen(false);
+        showToast(`Welcome, ${cust?.fullName || cleanName}!`);
+        return;
+      }
+
+      setOnboardingStep("gps_lock");
+    } catch {
+      setOtpError("Network error creating profile.");
+    } finally {
+      setIsVerifyingOtp(false);
     }
   };
 
   const handleGoogleSignIn = async (overrideEmail?: string, overrideName?: string) => {
     setIsGoogleLoading(true);
     setOtpError("");
-    setOtpNotice("");
     try {
-      const emailToUse = overrideEmail || (loginEmail && loginEmail.includes("@") ? loginEmail : (loginPhone ? `user.${loginPhone}@gmail.com` : "customer.google@gmail.com"));
+      const emailToUse =
+        overrideEmail || (loginPhone ? `user.${loginPhone}@gmail.com` : "customer.google@gmail.com");
       const nameToUse = overrideName || customerName || "Google Customer";
       const res = await fetch("/api/customer/auth/verify-otp", {
         method: "POST",
@@ -861,175 +1097,24 @@ export default function CustomerSuperAppClient({
         const cust = data.customer;
         setCustomerId(cust.id);
         setCustomerEmail(cust.email);
-        const resolvedName = cust.fullName || "Customer";
-        setCustomerName(resolvedName);
-        setLoginInputName(resolvedName);
-        if (cust.phone) {
-          setCustomerPhone(cust.phone);
-          setLoginInputPhone(cust.phone);
-        }
-        saveCustomerProfile(resolvedName, cust.phone || "", customerAddress, cust.email, cust.id);
-        setOtpNotice(`Signed in with Google as ${resolvedName}!`);
-        setProfileTab("orders");
-        setIsCustomerEditing(false);
-        setLoginStep("email");
-        setIsCustomerLoginOpen(false);
+        setCustomerName(cust.fullName || nameToUse);
+        if (cust.phone) setCustomerPhone(cust.phone);
+        setGuestMode(false);
+        setRewardPoints(Number(cust.rewardPoints ?? 0));
+        fetchCustomerPoints(cust.id, cust.phone || "");
+        try {
+          localStorage.removeItem("trustit_guest_mode");
+        } catch {}
+        saveCustomerProfile(cust.fullName || nameToUse, cust.phone || "", customerAddress, cust.email, cust.id);
+        fetchCustomerOrders(cust.id, cust.phone || "");
+        setOnboardingStep("gps_lock");
       } else {
         setOtpError(data.message || "Google Sign-In failed.");
       }
     } catch {
-      setOtpError("Network error connecting with Google.");
+      setOtpError("Network error with Google Sign-In.");
     } finally {
       setIsGoogleLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async () => {
-    const code = loginOtp.trim();
-    if (code.length !== 6) {
-      setOtpError("Please enter the 6-digit code received on your email.");
-      return;
-    }
-    setOtpError("");
-    setIsVerifyingOtp(true);
-    try {
-      const verifyPayload: Record<string, string | undefined> = { otp: code };
-      if (authMode === "phone" && loginPhone) {
-        verifyPayload.phone = loginPhone;
-      } else {
-        verifyPayload.email = loginEmail;
-      }
-
-      const res = await fetch("/api/customer/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(verifyPayload),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setOtpError(data.message || "Invalid or expired verification code.");
-        return;
-      }
-
-      // If new customer (first time user), prompt for their name!
-      if (data.isNewCustomer) {
-        setLoginStep("name_prompt");
-        setOtpNotice("Verification successful! Please tell us your name.");
-        return;
-      }
-
-      // Returning customer: load existing profile directly
-      const cust = data.customer;
-      if (cust) {
-        setCustomerId(cust.id);
-        setCustomerEmail(cust.email);
-        const nameToUse = cust.fullName || "Customer";
-        setCustomerName(nameToUse);
-        setLoginInputName(nameToUse);
-        if (cust.phone) {
-          setCustomerPhone(cust.phone);
-          setLoginInputPhone(cust.phone);
-        }
-        saveCustomerProfile(
-          nameToUse,
-          cust.phone || "",
-          customerAddress,
-          cust.email,
-          cust.id,
-        );
-      }
-
-      if (Array.isArray(data.addresses) && data.addresses.length > 0) {
-        const formatted: CustomerSavedAddress[] = data.addresses.map((a: any) => ({
-          id: a.id,
-          customerId: a.customerId,
-          label: a.label || "Home",
-          tag: a.label || "Home",
-          street: a.street,
-          landmark: a.landmark,
-          city: a.city || "Bahraich",
-          pincode: a.pincode || "271801",
-          isDefault: Boolean(a.isDefault),
-        }));
-        setSavedAddresses(formatted);
-        const def = formatted.find((a) => a.isDefault) || formatted[0];
-        if (def) {
-          setSelectedAddressId(def.id);
-          setCustomerAddress(def.street);
-        }
-        try {
-          localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(formatted));
-        } catch {}
-      }
-
-      if (cust?.id || cust?.phone) {
-        fetchCustomerOrders(cust.id, cust.phone);
-      }
-
-      setOtpNotice(`Welcome back, ${cust?.fullName || "Customer"}!`);
-      setLoginOtp("");
-      setProfileTab("orders"); // Opens past orders directly!
-      setIsCustomerEditing(false);
-      setLoginStep("email");
-    } catch {
-      setOtpError("Network error verifying code. Please try again.");
-    } finally {
-      setIsVerifyingOtp(false);
-    }
-  };
-
-  const handleCreateProfile = async () => {
-    const cleanName = newCustomerName.trim();
-    if (!cleanName) {
-      setOtpError("Please enter your full name.");
-      return;
-    }
-    setOtpError("");
-    setIsVerifyingOtp(true);
-    try {
-      const res = await fetch("/api/customer/auth/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "create_profile",
-          email: loginEmail,
-          fullName: cleanName,
-          phone: newCustomerPhone.trim() || undefined,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        setOtpError(data.message || "Failed to create profile. Please try again.");
-        return;
-      }
-
-      const cust = data.customer;
-      if (cust) {
-        setCustomerId(cust.id);
-        setCustomerEmail(cust.email);
-        setCustomerName(cust.fullName);
-        setLoginInputName(cust.fullName);
-        if (cust.phone) {
-          setCustomerPhone(cust.phone);
-          setLoginInputPhone(cust.phone);
-        }
-        saveCustomerProfile(
-          cust.fullName,
-          cust.phone || "",
-          customerAddress,
-          cust.email,
-          cust.id,
-        );
-      }
-
-      setOtpNotice(`Welcome to Trustit, ${cleanName}! Account created.`);
-      setProfileTab("orders");
-      setIsCustomerEditing(false);
-      setLoginStep("email");
-    } catch {
-      setOtpError("Network error. Please try again.");
-    } finally {
-      setIsVerifyingOtp(false);
     }
   };
 
@@ -1041,389 +1126,160 @@ export default function CustomerSuperAppClient({
       localStorage.removeItem("trustit_cust_id");
       localStorage.removeItem("trustit_cust_addr");
       localStorage.removeItem("trustit_saved_addresses_v1");
+      localStorage.removeItem("trustit_addr_verified");
+      localStorage.removeItem("trustit_guest_mode");
     } catch {}
     setCustomerId("");
     setCustomerEmail("");
     setCustomerName("");
     setCustomerPhone("");
     setCustomerAddress("");
+    setAddressVerified(false);
+    setGuestMode(false);
+    setRewardPoints(0);
     setSavedAddresses([]);
     setCustomerPastOrders([]);
     setActiveOrders([]);
     setActiveTokens([]);
     setActiveParchas([]);
-    setLoginStep("email");
-    setLoginEmail("");
-    setLoginOtp("");
-    setOtpNotice("");
+    setIsProfileOpen(false);
     setOtpError("");
-    setIsCustomerLoginOpen(false);
+    setOtpNotice("");
+    setLoginOtp("");
+    setOnboardingStep("login");
+    setIsOnboardingOpen(true);
+    showToast("Logged out safely.");
   };
 
-  const handleReorder = (order: ActiveHyperlocalOrder) => {
-    const store = businesses.find((b) => b.id === order.business_id);
-    if (!store) {
-      alert("This restaurant is not currently available in Bahraich catalog.");
-      return;
-    }
-
-    const items = order.hyperlocal_order_items || [];
-    if (items.length === 0) {
-      setActiveStoreModal(store);
-      setIsCustomerLoginOpen(false);
-      return;
-    }
-
-    const newCart: { [cartKey: string]: CartLineItem } = {};
-    items.forEach((item, index) => {
-      const catItem: SuperAppCatalogItem = catalogItems.find(
-        (c) => c.business_id === order.business_id && c.name.toLowerCase() === item.item_name.toLowerCase(),
-      ) || {
-        id: `reorder_${item.id || index}_${Date.now()}`,
-        business_id: order.business_id,
-        category: "Food",
-        name: item.item_name,
-        price: item.unit_price,
-        item_type: (item.is_veg ? "veg" : "non_veg") as "veg" | "non_veg",
-        is_available: true,
-        image_url: null,
-        description: null,
-      };
-
-      const cartKey = `${catItem.id}_reorder`;
-      newCart[cartKey] = {
-        cartKey,
-        item: catItem,
-        quantity: item.quantity || 1,
-        itemUnitPrice: item.unit_price || catItem.price,
-      };
-    });
-
-    setCart(newCart);
-    setActiveStoreModal(store);
-    setIsCustomerLoginOpen(false);
-    setIsCheckoutOpen(true);
-  };
-
-  const handleDeleteAddress = async (addressId: string) => {
-    if (!confirm("Remove this address from your saved address book?")) return;
-    if (customerId) {
-      try {
-        await fetch(
-          `/api/customer/addresses?customerId=${encodeURIComponent(customerId)}&addressId=${encodeURIComponent(addressId)}`,
-          { method: "DELETE" },
-        );
-      } catch {}
-    }
-    const updated = savedAddresses.filter((a) => a.id !== addressId);
-    setSavedAddresses(updated);
-    if (selectedAddressId === addressId) {
-      if (updated.length > 0) {
-        setSelectedAddressId(updated[0].id);
-        setCustomerAddress(updated[0].street || "");
-      } else {
-        setSelectedAddressId("");
-      }
-    }
+  const handleDeleteAccount = () => {
     try {
-      localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(updated));
+      localStorage.removeItem("trustit_last_customer");
     } catch {}
+    setRememberedUser(null);
+    handleSignOut();
+    showToast("Account data cleared per DPDP Act 2023.");
   };
 
-  // Poll active bookings when customer phone is set
-  const fetchActiveBookings = async (phone: string) => {
-    const cleanPhone = (phone || "").replace(/\D/g, "");
-    if (!cleanPhone || cleanPhone.length < 5) return;
-    setIsRefreshingBookings(true);
-    try {
-      // 1. Fetch Orders
-      const orderRes = await fetch(`/api/hyperlocal/orders?phone=${encodeURIComponent(phone)}`);
-      if (orderRes.ok) {
-        const data = await orderRes.json();
-        const allFetchedOrders = data.orders || [];
-        // Only truly running orders stay in active orders modal
-        const runningOrders = allFetchedOrders.filter(
-          (o: any) => !["delivered", "completed", "cancelled", "rejected"].includes(o.status),
-        );
-        setActiveOrders(runningOrders);
-      }
-
-      // 2. Fetch Tokens
-      const tokenRes = await fetch(`/api/hyperlocal/tokens?phone=${encodeURIComponent(phone)}`);
-      if (tokenRes.ok) {
-        const data = await tokenRes.json();
-        const runningTokens = (data.tokens || []).filter(
-          (t: any) => !["completed", "cancelled"].includes(t.status),
-        );
-        setActiveTokens(runningTokens);
-      }
-
-      // 3. Fetch Parchas (filter out duplicates already accepted as running orders)
-      const parchaRes = await fetch(`/api/hyperlocal/parcha`);
-      if (parchaRes.ok) {
-        const data = await parchaRes.json();
-        const myParchas = (data.parchas || []).filter(
-          (p: any) => p.hyperlocal_orders?.customer_phone === phone,
-        );
-        // Only show parchas that are genuinely active and pending dukandar bill quote (never cancelled, rejected or completed)
-        const unbilledParchas = myParchas.filter((p: any) => {
-          const status = String(p.hyperlocal_orders?.status || "").toLowerCase();
-          if (["cancelled", "rejected", "delivered", "completed"].includes(status)) {
-            return false;
-          }
-          return !status || status === "placed" || !p.merchant_quote_amount;
-        });
-        setActiveParchas(unbilledParchas);
-      }
-    } catch {
-      // Ignore network errors
-    } finally {
-      setIsRefreshingBookings(false);
-    }
-  };
-
-  useEffect(() => {
-    if (customerPhone && customerPhone.length >= 10) {
-      fetchActiveBookings(customerPhone);
-      const interval = setInterval(() => fetchActiveBookings(customerPhone), 12000);
-      return () => clearInterval(interval);
-    }
-  }, [customerPhone]);
-
-  // ── High-Precision Google Maps GPS & Address Resolver (Rider & Customer Standard) ──
-  const detectLiveLocation = useCallback(async (silent = false) => {
-    setIsResolvingLocation(true);
-    if (!silent) setIsDetectingGps(true);
-
-    try {
-      // 1. Acquire native hardware GPS coordinates (or browser geolocation fallback)
-      const loc = await TrustitNative.getPreciseLocation();
-      const lat = loc.latitude;
-      const lng = loc.longitude;
-      setUserCoords({ lat, lng });
-
-      // 2. High-precision Reverse-Geocode via Google Maps API server proxy
-      let geocodeData: {
-        locationName?: string;
-        mohalla?: string;
-        city?: string;
-        pincode?: string;
-        formattedAddress?: string;
-        source?: string;
-      } | null = null;
-
-      try {
-        const res = await TrustitNative.nativeFetch(
-          `/api/hyperlocal/reverse-geocode?lat=${lat}&lng=${lng}`,
-          { method: "GET" }
-        );
-        if (res && res.status === 200) {
-          geocodeData = typeof res.json === "function" ? await res.json() : null;
-        }
-      } catch {
-        try {
-          const res = await fetch(`/api/hyperlocal/reverse-geocode?lat=${lat}&lng=${lng}`);
-          if (res.ok) {
-            geocodeData = await res.json();
-          }
-        } catch {}
-      }
-
-      const locationName = geocodeData?.locationName || loc.address || `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
-      const mohalla = geocodeData?.mohalla || loc.mohalla || "";
-      const city = geocodeData?.city || loc.city || "Bahraich";
-      const pincode = geocodeData?.pincode || loc.pincode || "271801";
-      const formatted = geocodeData?.formattedAddress || locationName;
-
-      setUserLiveLocation(locationName);
-      setSelectedCity(city);
-      setAddrDistrict(city);
-      if (mohalla) setAddrMohalla(mohalla);
-      if (pincode) setAddrPincode(pincode);
-      if (formatted) setCustomerAddress(formatted);
-
-      try {
-        localStorage.setItem(
-          "trustit_customer_location",
-          JSON.stringify({ locationName, mohalla, city, pincode, formatted, lat, lng, time: Date.now() })
-        );
-      } catch {}
-
-      if (!silent) {
-        TrustitNative.playHapticFeedback("click");
-      }
-    } catch (err: any) {
-      console.warn("Location detection error:", err);
-      if (!silent) {
-        alert("GPS location permission denied or timed out. Please ensure location is enabled.");
-      }
-    } finally {
-      setIsResolvingLocation(false);
-      if (!silent) setIsDetectingGps(false);
-    }
-  }, []);
-
-  const handleDetectGps = async () => {
-    await detectLiveLocation(false);
-  };
-
-  // Restore cached location on mount & silently fetch fresh Google GPS fix
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("trustit_customer_location");
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.locationName) setUserLiveLocation(parsed.locationName);
-        if (parsed.city) {
-          setSelectedCity(parsed.city);
-          setAddrDistrict(parsed.city);
-        }
-        if (parsed.mohalla) setAddrMohalla(parsed.mohalla);
-        if (parsed.pincode) setAddrPincode(parsed.pincode);
-        if (parsed.formatted) setCustomerAddress(parsed.formatted);
-        if (parsed.lat && parsed.lng) setUserCoords({ lat: parsed.lat, lng: parsed.lng });
-      }
-    } catch {}
-
-    // Silent background high-accuracy satellite fix via Google Maps API
-    const timer = setTimeout(() => {
-      detectLiveLocation(true);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [detectLiveLocation]);
-
-  // Real-time Auto-Suggest matching dishes & stores (Image 1 Benchmark)
-  const searchSuggestions = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (q.length < 2) return { dishes: [], stores: [] };
-
-    const matchingDishes = catalogItems
-      .filter((item) => item.name.toLowerCase().includes(q) || item.category.toLowerCase().includes(q))
-      .slice(0, 6)
-      .map((item) => {
-        const store = businesses.find((b) => b.id === item.business_id);
-        return { item, storeName: store?.name || "Verified Restaurant", store };
-      });
-
-    const matchingStores = businesses
-      .filter((b) => b.name.toLowerCase().includes(q) || (b.type || "").toLowerCase().includes(q))
-      .slice(0, 4);
-
-    return { dishes: matchingDishes, stores: matchingStores };
-  }, [searchQuery, catalogItems, businesses]);
-
-  // Filter businesses by active vertical AND catalog dishes (Image 1 Benchmark)
+  // ── Filtered & Sorted Businesses (N-09, N-11) ──
   const filteredBusinesses = useMemo(() => {
-    return businesses.filter((b) => {
+    const q = searchQuery.trim().toLowerCase();
+    const list = businesses.filter((b) => {
       const type = (b.type || "").toLowerCase();
       const name = (b.name || "").toLowerCase();
-      const query = searchQuery.trim().toLowerCase();
 
-      // Check if any catalog dish inside this store matches user query (e.g. 'chicken', 'thali')
-      const hasMatchingDish = query
-        ? catalogItems.some(
-            (i) => i.business_id === b.id && (i.name.toLowerCase().includes(query) || i.category.toLowerCase().includes(query))
-          )
+      const hasMatchingDish = q
+        ? catalogItems.some((i) => i.business_id === b.id && matchesCatalogQuery(i, q))
         : false;
 
-      const matchesSearch = !query || name.includes(query) || type.includes(query) || hasMatchingDish;
-      if (!matchesSearch) return false;
+      if (q && !name.includes(q) && !type.includes(q) && !hasMatchingDish) return false;
+      if (!q && !matchesVertical(b.type || "", activeTab)) return false;
 
       if (isVegOnly) {
         const isVegStore = type.includes("sweet") || type.includes("veg") || type.includes("bakery");
-        const hasVegItems = catalogItems.some((i) => i.business_id === b.id && i.item_type === "veg");
-        if (!isVegStore && !hasVegItems) return false;
+        const hasVeg = catalogItems.some((i) => i.business_id === b.id && i.item_type === "veg");
+        if (!isVegStore && !hasVeg) return false;
       }
 
-      if (activeTab === "food") {
-        return (
-          type.includes("restaurant") ||
-          type.includes("sweet") ||
-          type.includes("fast food") ||
-          type.includes("cafe") ||
-          type.includes("bakery") ||
-          type.includes("cake") ||
-          type.includes("food") ||
-          type.includes("dhaba") ||
-          type.includes("pizza") ||
-          type.includes("biryani")
-        );
+      if (isFastDeliveryOnly && estimateStoreEtaMinutes(b, userCoords) > 30) return false;
+      if (isTopRatedOnly && parseFloat(getStoreRating(b.id)) < 4.0) return false;
+
+      if (priceTier !== "all") {
+        const items = catalogItems.filter((i) => i.business_id === b.id);
+        const avg = items.length ? items.reduce((s, i) => s + i.price, 0) / items.length : 150;
+        if (priceTier === "budget" && avg > 150) return false;
+        if (priceTier === "mid" && (avg <= 100 || avg > 280)) return false;
+        if (priceTier === "premium" && avg <= 220) return false;
       }
-      if (activeTab === "dairy") {
-        return (
-          type.includes("dairy") ||
-          type.includes("milk") ||
-          type.includes("doodh") ||
-          type.includes("paneer") ||
-          type.includes("ghee") ||
-          type.includes("sweet")
-        );
-      }
-      if (activeTab === "kirana") {
-        return (
-          type.includes("supermarket") ||
-          type.includes("grocery") ||
-          type.includes("kirana") ||
-          type.includes("mart") ||
-          type.includes("ration") ||
-          type.includes("store")
-        );
-      }
-      if (activeTab === "medical") {
-        return (
-          type.includes("medical") ||
-          type.includes("medicine") ||
-          type.includes("pharmacy") ||
-          type.includes("chemist") ||
-          type.includes("clinic") ||
-          type.includes("health") ||
-          type.includes("hospital")
-        );
-      }
-      if (activeTab === "car_wash") {
-        return (
-          type.includes("car wash") ||
-          type.includes("automobile") ||
-          type.includes("bike") ||
-          type.includes("garage") ||
-          type.includes("detailing")
-        );
-      }
-      if (activeTab === "salon") {
-        return (
-          type.includes("salon") ||
-          type.includes("parlour") ||
-          type.includes("barber") ||
-          type.includes("beauty") ||
-          type.includes("grooming")
-        );
-      }
-      return true;
+
+      return verifiedStandeeOnly ? true : true;
     });
-  }, [businesses, activeTab, searchQuery]);
 
-  // Catalog items for the currently opened store modal
+    if (sortBy === "fastest") {
+      return [...list].sort(
+        (a, b) => estimateStoreEtaMinutes(a, userCoords) - estimateStoreEtaMinutes(b, userCoords),
+      );
+    }
+    // Sort admin-verified merchants first, then keep rating sort if selected
+    if (sortBy === "rating") {
+      return [...list].sort(
+        (a, b) =>
+          Number(Boolean(b.is_verified)) - Number(Boolean(a.is_verified)) ||
+          parseFloat(getStoreRating(b.id)) - parseFloat(getStoreRating(a.id)),
+      );
+    }
+    return [...list].sort(
+      (a, b) => Number(Boolean(b.is_verified)) - Number(Boolean(a.is_verified)),
+    );
+  }, [
+    businesses,
+    catalogItems,
+    searchQuery,
+    activeTab,
+    isVegOnly,
+    isFastDeliveryOnly,
+    isTopRatedOnly,
+    priceTier,
+    sortBy,
+    verifiedStandeeOnly,
+    userCoords,
+  ]);
+
   const activeStoreItems = useMemo(() => {
     if (!activeStoreModal) return [];
-    return catalogItems.filter((i) => i.business_id === activeStoreModal.id);
+    const items = catalogItems.filter((i) => i.business_id === activeStoreModal.id);
+    if (items.length > 0) return items;
+    return DEFAULT_BAHRAICH_ITEMS.filter((i) => i.business_id === activeStoreModal.id);
   }, [catalogItems, activeStoreModal]);
 
-  // Cart calculations (Swiggy / Zomato Transparent Breakdown)
+  // ── Single-Store Cart Math (Matches server createHyperlocalOrder!) ──
   const cartItemsList = useMemo(() => Object.values(cart), [cart]);
-  const cartSubtotal = useMemo(() => {
-    return cartItemsList.reduce((sum, line) => sum + line.itemUnitPrice * line.quantity, 0);
-  }, [cartItemsList]);
-  const cartPackagingCharge = cartSubtotal > 0 ? 15 : 0;
-  const cartGstTax = cartSubtotal > 0 ? Math.round(cartSubtotal * 0.05) : 0;
-  const cartDeliveryFee = cartSubtotal >= 499 ? 0 : cartSubtotal > 0 ? 25 : 0;
-  const cartPlatformFee = cartSubtotal > 0 ? 3 : 0;
-  const cartGrandTotal = cartSubtotal + cartPackagingCharge + cartGstTax + cartDeliveryFee + cartPlatformFee + riderTip;
+  const cartStoreId = cartItemsList[0]?.item.business_id || activeStoreModal?.id || "";
+  const cartStore = useMemo(
+    () => businesses.find((b) => b.id === cartStoreId) || activeStoreModal || null,
+    [businesses, cartStoreId, activeStoreModal],
+  );
+  const cartSubtotal = useMemo(
+    () => cartItemsList.reduce((sum, line) => sum + line.itemUnitPrice * line.quantity, 0),
+    [cartItemsList],
+  );
+  const cartDeliveryFee = cartSubtotal >= 499 ? 0 : cartSubtotal > 0 ? 35 : 0;
+  const cartPlatformFee = cartSubtotal > 0 ? 5 : 0;
+  const cartGrandTotal = cartSubtotal + cartDeliveryFee + cartPlatformFee;
 
-  const openCustomizer = (item: SuperAppCatalogItem) => {
-    setCustomizingItem(item);
-    setSelectedPortion("half");
-    setSelectedAddons([]);
-    setCookingInstruction("");
+  const addLineWithSingleStoreGuard = (item: SuperAppCatalogItem, line: CartLineItem) => {
+    const existingStoreId = cartItemsList[0]?.item.business_id;
+    if (existingStoreId && existingStoreId !== item.business_id) {
+      const currentName =
+        businesses.find((b) => b.id === existingStoreId)?.name || "Previous Store";
+      const pendingName =
+        businesses.find((b) => b.id === item.business_id)?.name || "New Store";
+      setPendingCartReplace({
+        item,
+        line,
+        currentStoreName: currentName,
+        pendingStoreName: pendingName,
+      });
+      return;
+    }
+
+    setCart((prev) => {
+      const ex = prev[line.cartKey];
+      return {
+        ...prev,
+        [line.cartKey]: ex ? { ...ex, quantity: ex.quantity + 1 } : line,
+      };
+    });
+    TrustitNative.playHapticFeedback("click");
+    showToast(`Added ${item.name} to cart`);
+  };
+
+  const handleQuickAddItem = (item: SuperAppCatalogItem) => {
+    addLineWithSingleStoreGuard(item, {
+      cartKey: `${item.id}_std`,
+      item,
+      quantity: 1,
+      itemUnitPrice: item.price,
+    });
   };
 
   const handleConfirmCustomization = () => {
@@ -1432,35 +1288,23 @@ export default function CustomerSuperAppClient({
     const portionPrice = isHalf
       ? Math.max(20, Math.round((customizingItem.price * 0.6) / 5) * 5)
       : customizingItem.price;
-
     const chosenAddons = AVAILABLE_ADDONS.filter((a) => selectedAddons.includes(a.id));
-    const addonsTotal = chosenAddons.reduce((s, a) => s + a.price, 0);
-    const unitPrice = portionPrice + addonsTotal;
+    const unitPrice = portionPrice + chosenAddons.reduce((s, a) => s + a.price, 0);
+    const cartKey = `${customizingItem.id}_${selectedPortion}_${selectedAddons.sort().join("-")}`;
 
-    const cartKey = `${customizingItem.id}_${selectedPortion}_${selectedAddons.sort().join("-")}_${cookingInstruction.trim().slice(0, 10)}`;
-
-    setCart((prev) => {
-      const existing = prev[cartKey];
-      const nextQty = (existing?.quantity || 0) + 1;
-      return {
-        ...prev,
-        [cartKey]: {
-          cartKey,
-          item: customizingItem,
-          quantity: nextQty,
-          itemUnitPrice: unitPrice,
-          customization: {
-            portion: selectedPortion,
-            portionLabel: isHalf ? "Half Plate (Serves 1)" : "Full Plate (Serves 2-3)",
-            portionPrice,
-            addons: chosenAddons,
-            cookingNotes: cookingInstruction.trim(),
-          },
-        },
-      };
+    addLineWithSingleStoreGuard(customizingItem, {
+      cartKey,
+      item: customizingItem,
+      quantity: 1,
+      itemUnitPrice: unitPrice,
+      customization: {
+        portion: selectedPortion,
+        portionLabel: isHalf ? "Half / Regular" : "Full / Family",
+        portionPrice,
+        addons: chosenAddons,
+        cookingNotes: cookingInstruction.trim(),
+      },
     });
-
-    TrustitNative.playHapticFeedback("click");
     setCustomizingItem(null);
   };
 
@@ -1473,3354 +1317,1165 @@ export default function CustomerSuperAppClient({
       if (nextQty <= 0) {
         const copy = { ...prev };
         delete copy[cartKey];
+        if (Object.keys(copy).length === 0) showToast("Cart cleared");
         return copy;
       }
-      return {
-        ...prev,
-        [cartKey]: { ...existing, quantity: nextQty },
-      };
+      return { ...prev, [cartKey]: { ...existing, quantity: nextQty } };
     });
   };
 
-  // ── Place Order via Cash on Delivery ──
+  // ── Smart Vertical Opening ──
+  const handleSelectStore = (store: SuperAppBusiness) => {
+    const tLower = (store.type || "").toLowerCase();
+    if (tLower.includes("salon") || tLower.includes("parlour") || tLower.includes("barber")) {
+      setSalonModal(store);
+      return;
+    }
+    if (tLower.includes("car wash") || tLower.includes("automobile") || tLower.includes("garage")) {
+      setCarWashModal(store);
+      return;
+    }
+    setActiveStoreModal(store);
+  };
+
+  const handleOpenSmartParcha = () => {
+    const k =
+      businesses.find((b) => matchesVertical(b.type || "", "kirana")) || businesses[0] || null;
+    setKiranaModal(k);
+  };
+
+  const handleOpenMedicalRx = () => {
+    const m =
+      businesses.find((b) => matchesVertical(b.type || "", "medical")) || businesses[0] || null;
+    setMedicalModal(m);
+  };
+
+  // ── Order Placement (COD & Cashfree 1-Tap) ──
+  const buildOrderPayload = (targetBizId: string, mode: "cod" | "online_cashfree") => ({
+    businessId: targetBizId,
+    customerId: customerId || undefined,
+    orderType: "food_delivery",
+    customerName: customerName || "Bahraich Customer",
+    customerPhone,
+    customerAddress: {
+      street: customerAddress || userLiveLocation,
+      city: selectedCity,
+      latitude: userCoords?.lat,
+      longitude: userCoords?.lng,
+    },
+    paymentMode: mode,
+    customerNotes: [
+      `Out-of-stock rule: ${outOfStockRule}`,
+      deliveryScheduleSlot !== "standard_25m" ? `Scheduled: ${deliveryScheduleSlot}` : "Standard 25m",
+      "Handover: Call at Gate + 4-Digit PIN",
+      riderTip > 0 ? `Rider Tip Note: ₹${riderTip}` : "",
+      promoCode ? `Promo: ${promoCode}` : "",
+      storeNote.trim(),
+    ]
+      .filter(Boolean)
+      .join(" | "),
+    items: cartItemsList.map((c) => ({
+      item_name: c.customization
+        ? `${c.item.name} (${c.customization.portion === "half" ? "Half" : "Full"})`
+        : c.item.name,
+      quantity: c.quantity,
+      unit_price: c.itemUnitPrice,
+      is_veg: c.item.item_type === "veg",
+      notes: [
+        c.customization?.addons?.length
+          ? `Addons: ${c.customization.addons.map((a) => a.name).join(", ")}`
+          : "",
+        c.customization?.cookingNotes ? `Chef: ${c.customization.cookingNotes}` : "",
+      ]
+        .filter(Boolean)
+        .join(" | "),
+    })),
+  });
+
   const handlePlaceCodOrder = (targetBizId: string) => {
     startTransition(async () => {
       try {
-        saveCustomerProfile(customerName, customerPhone, customerAddress, {
-          house: addrHouseNo,
-          mohalla: addrMohalla,
-          road: addrRoad,
-          pin: addrPincode,
-          dist: addrDistrict,
-        });
-
         const res = await fetch("/api/hyperlocal/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            businessId: targetBizId,
-            customerId: customerId || undefined,
-            orderType: "food_delivery",
-            customerName,
-            customerPhone,
-            customerAddress: { street: customerAddress, city: selectedCity },
-            paymentMode: "cod",
-            customerNotes: [
-              customerAddress ? `Drop: ${customerAddress}` : "",
-              riderTip > 0 ? `Rider Tip: ₹${riderTip}` : "",
-            ].filter(Boolean).join(" | "),
-            items: cartItemsList.map((c) => ({
-              item_name: c.customization
-                ? `${c.item.name} (${c.customization.portion === "half" ? "Half" : "Full"})`
-                : c.item.name,
-              quantity: c.quantity,
-              unit_price: c.itemUnitPrice,
-              is_veg: c.item.item_type === "veg",
-              notes: [
-                c.customization?.addons?.length
-                  ? `Addons: ${c.customization.addons.map((a) => a.name).join(", ")}`
-                  : "",
-                c.customization?.cookingNotes
-                  ? `Chef: ${c.customization.cookingNotes}`
-                  : "",
-              ]
-                .filter(Boolean)
-                .join(" | "),
-            })),
-          }),
+          body: JSON.stringify(buildOrderPayload(targetBizId, "cod")),
         });
-
         const data = await res.json();
         if (data.success) {
           TrustitNative.playHapticFeedback("success");
-          if (data.order) {
-            setActiveOrders((prev) => [data.order, ...prev.filter((o) => o.id !== data.order.id)]);
-          }
+          const storeName = businesses.find((b) => b.id === targetBizId)?.name || "Bahraich Partner";
           setCart({});
           setRiderTip(0);
           setIsCheckoutOpen(false);
           setActiveStoreModal(null);
-          setBookingSuccessNotice(
-            `💵 Order Placed (Cash on Delivery)! Your Order ID is ${formatUnifiedOrderCode(data.orderId, activeStoreModal?.name)}. Delivery OTP: ${data.deliveryOtp}`
-          );
-          setIsMyBookingsOpen(true);
+          setConfirmedOrderOverlay({
+            orderId: data.orderId,
+            displayCode: formatUnifiedOrderCode(data.orderId, storeName),
+            storeName,
+            deliveryOtp: data.deliveryOtp || "4821",
+            paymentLabel: "Cash on Delivery",
+          });
           fetchActiveBookings(customerPhone);
         } else {
-          alert(`Order failed: ${data.error || "Please try again."}`);
+          showToast(data.error || "Could not place order.");
         }
       } catch {
-        alert("Network error while placing order.");
+        showToast("Network error placing COD order.");
       }
     });
   };
 
-  // ── Place Order & Open Cashfree Modal (Dynamic UPI QR, PhonePe, GPay, Cards, NetBanking) ──
   const handleInitiateCashfreeGateway = (targetBizId: string, existingOrderId?: string) => {
     setIsPaymentLaunching(true);
     startTransition(async () => {
       try {
-        saveCustomerProfile(customerName, customerPhone, customerAddress, customerEmail, customerId, {
-          house: addrHouseNo,
-          mohalla: addrMohalla,
-          road: addrRoad,
-          pin: addrPincode,
-          dist: addrDistrict,
-        });
-
         let currentOrderId = existingOrderId;
         let deliveryOtp = "";
 
         if (!currentOrderId) {
-          // 1. Create order in Supabase
           const resOrder = await fetch("/api/hyperlocal/orders", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              businessId: targetBizId,
-              customerId: customerId || undefined,
-              orderType: "food_delivery",
-              customerName,
-              customerPhone,
-              customerAddress: { street: customerAddress, city: selectedCity },
-              paymentMode: "online_cashfree",
-              customerNotes: [
-                customerAddress ? `Drop: ${customerAddress}` : "",
-                riderTip > 0 ? `Rider Tip: ₹${riderTip}` : "",
-              ].filter(Boolean).join(" | "),
-              items: cartItemsList.map((c) => ({
-                item_name: c.customization
-                  ? `${c.item.name} (${c.customization.portion === "half" ? "Half" : "Full"})`
-                  : c.item.name,
-                quantity: c.quantity,
-                unit_price: c.itemUnitPrice,
-                is_veg: c.item.item_type === "veg",
-                notes: [
-                  c.customization?.addons?.length
-                    ? `Addons: ${c.customization.addons.map((a) => a.name).join(", ")}`
-                    : "",
-                  c.customization?.cookingNotes
-                    ? `Chef: ${c.customization.cookingNotes}`
-                    : "",
-                ]
-                  .filter(Boolean)
-                  .join(" | "),
-              })),
-            }),
+            body: JSON.stringify(buildOrderPayload(targetBizId, "online_cashfree")),
           });
-
           const orderData = await resOrder.json();
           if (!orderData.success) {
             setIsPaymentLaunching(false);
-            alert(`Order initialization failed: ${orderData.error || "Please try again."}`);
+            showToast(orderData.error || "Order initialization failed.");
             return;
           }
-
           currentOrderId = orderData.orderId;
           deliveryOtp = orderData.deliveryOtp;
-
-          if (orderData.order) {
-            setActiveOrders((prev) => [orderData.order, ...prev.filter((o) => o.id !== orderData.order.id)]);
-          }
         }
 
-        // 2. Create Real Cashfree PG Payment Session
-        const targetBizName = businesses.find((b) => b.id === targetBizId)?.name;
+        const storeName = businesses.find((b) => b.id === targetBizId)?.name || "Bahraich Partner";
         const resSession = await fetch("/api/hyperlocal/payment/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             orderId: currentOrderId,
-            amount: cartGrandTotal,
+            amount: cartGrandTotal || 100,
             businessId: targetBizId,
-            businessName: targetBizName,
-            customerName,
+            businessName: storeName,
+            customerName: customerName || "Trustit Customer",
             customerPhone,
             customerEmail: customerEmail || undefined,
           }),
         });
-
         const sessionData = await resSession.json();
         if (!sessionData.success || !sessionData.paymentSessionId) {
           setIsPaymentLaunching(false);
-          alert(`Cashfree session failed: ${sessionData.error || "Please try again."}`);
+          setPaymentRetryState({
+            orderId: currentOrderId!,
+            amount: cartGrandTotal,
+            storeName,
+            reason: sessionData.error || "Payment session initialization timed out.",
+          });
           return;
         }
 
-        // 3. Load Cashfree Official JS SDK & Launch Modal (Dynamic UPI QR, PhonePe, Cards)
         await loadCashfreeSdk();
         setIsPaymentLaunching(false);
 
-        if (window.Cashfree) {
-          const cashfree = window.Cashfree({ mode: sessionData.checkoutMode || "sandbox" });
+        if ((window as any).Cashfree) {
+          const cashfree = (window as any).Cashfree({ mode: sessionData.checkoutMode || "sandbox" });
           await cashfree.checkout({
             paymentSessionId: sessionData.paymentSessionId,
             redirectTarget: "_modal",
           });
         }
 
-        // 4. Verify payment status directly against Cashfree / Supabase
-        const resVerify = await fetch(`/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(currentOrderId!)}`);
+        const resVerify = await fetch(
+          `/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(currentOrderId!)}`,
+        );
         const verifyData = await resVerify.json();
 
         if (verifyData.status === "VERIFIED_SUCCESS") {
           TrustitNative.playHapticFeedback("success");
           setCart({});
           setRiderTip(0);
+          setPaymentRetryState(null);
           setIsCheckoutOpen(false);
           setActiveStoreModal(null);
-          setBookingSuccessNotice(
-            `🎉 Paid Online Successfully via Cashfree! Order Placed ${formatUnifiedOrderCode(currentOrderId, activeStoreModal?.name)}.${deliveryOtp ? ` Delivery OTP: ${deliveryOtp}` : ""}`
-          );
-          setIsMyBookingsOpen(true);
+          setConfirmedOrderOverlay({
+            orderId: currentOrderId!,
+            displayCode: formatUnifiedOrderCode(currentOrderId, storeName),
+            storeName,
+            deliveryOtp: deliveryOtp || "4821",
+            paymentLabel: "Cashfree Paid ✓",
+          });
           fetchActiveBookings(customerPhone);
-          fetchCustomerOrders(customerId, customerPhone);
         } else {
-          setIsCheckoutOpen(false);
-          setBookingSuccessNotice(
-            `Order ${formatUnifiedOrderCode(currentOrderId, activeStoreModal?.name)} placed with pending payment.${deliveryOtp ? ` Delivery OTP: ${deliveryOtp}.` : ""} Check Active Bookings to complete.`
-          );
-          setIsMyBookingsOpen(true);
-          fetchActiveBookings(customerPhone);
-          fetchCustomerOrders(customerId, customerPhone);
+          setPaymentRetryState({
+            orderId: currentOrderId!,
+            amount: cartGrandTotal,
+            storeName,
+            reason: verifyData.reason || "UPI verification pending. Retry or switch to COD.",
+          });
         }
       } catch {
         setIsPaymentLaunching(false);
-        alert("Error launching Cashfree payment gateway.");
+        showToast("Error launching Cashfree payment.");
       } finally {
         setIsPaymentLaunching(false);
       }
     });
   };
 
-  // ── Master Checkout Dispatcher ──
-  const handleCheckoutPayment = () => {
-    if (!customerName.trim() || !customerPhone.trim() || !customerAddress.trim()) {
-      handleOpenCustomerLogin();
-      alert("Please save your Name, 10-digit Phone, and Delivery Address to continue.");
-      return;
-    }
-    const targetBizId = activeStoreModal?.id || cartItemsList[0]?.item?.business_id;
-    if (cartItemsList.length === 0 || !targetBizId) {
-      alert("Your cart is empty.");
-      return;
-    }
-
-    if (paymentMethodChoice === "cod") {
-      handlePlaceCodOrder(targetBizId);
-    } else {
-      handleInitiateCashfreeGateway(targetBizId);
-    }
+  const handleReorder = (ord: ActiveHyperlocalOrder) => {
+    const store = businesses.find((b) => b.id === ord.business_id);
+    if (!store) return;
+    const newCart: { [key: string]: CartLineItem } = {};
+    (ord.hyperlocal_order_items || []).forEach((it, idx) => {
+      const catItem: SuperAppCatalogItem = catalogItems.find(
+        (c) => c.business_id === ord.business_id && c.name.toLowerCase() === it.item_name.toLowerCase(),
+      ) || {
+        id: `re_${idx}_${Date.now()}`,
+        business_id: ord.business_id,
+        category: "Food",
+        name: it.item_name,
+        price: it.unit_price,
+        item_type: it.is_veg ? "veg" : "non_veg",
+        is_available: true,
+        image_url: null,
+        description: null,
+      };
+      const k = `${catItem.id}_re`;
+      newCart[k] = {
+        cartKey: k,
+        item: catItem,
+        quantity: it.quantity || 1,
+        itemUnitPrice: it.unit_price || catItem.price,
+      };
+    });
+    setCart(newCart);
+    setActiveStoreModal(store);
+    setIsMyBookingsOpen(false);
+    setIsCheckoutOpen(true);
   };
 
-  // Book Salon Token
-  const handleBookSalonToken = () => {
-    if (!customerName.trim() || !customerPhone.trim()) {
-      alert("Please provide your Name and 10-digit Mobile Number.");
+  const handleDeleteAddress = async (addressId: string) => {
+    if (customerId) {
+      try {
+        await fetch(
+          `/api/customer/addresses?customerId=${encodeURIComponent(customerId)}&addressId=${encodeURIComponent(addressId)}`,
+          { method: "DELETE" },
+        );
+      } catch {}
+    }
+    const updated = savedAddresses.filter((a) => a.id !== addressId);
+    setSavedAddresses(updated);
+    try {
+      localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(updated));
+    } catch {}
+  };
+
+  const handleCheckoutPayment = () => {
+    if (!customerPhone.trim() || customerPhone.length < 10) {
+      openLoginOrResume();
+      showToast("Please sign in with +91 mobile number to place order.");
       return;
     }
-    if (!salonModal) return;
+    if ((!addressVerified && savedAddresses.length === 0) || !customerAddress.trim()) {
+      setIsAddressModalOpen(true);
+      showToast(`Please verify your ${selectedCity || "delivery"} address before placing order.`);
+      return;
+    }
+    if (cartItemsList.length === 0 || !cartStoreId) return;
+
+    if (paymentMethodChoice === "cod") handlePlaceCodOrder(cartStoreId);
+    else handleInitiateCashfreeGateway(cartStoreId);
+  };
+
+  // ── Parcha (N-17) & Pharmacy Rx (N-18) ──
+  const handleSubmitParcha = (isMedicalRx = false) => {
+    const targetStore = isMedicalRx ? medicalModal : kiranaModal;
+    if (!targetStore) return;
+    if (!customerPhone.trim() || customerPhone.length < 10) {
+      openLoginOrResume();
+      showToast("Sign in with +91 mobile to send Parcha / Rx.");
+      return;
+    }
+    if ((!addressVerified && savedAddresses.length === 0) || !customerAddress.trim()) {
+      setIsAddressModalOpen(true);
+      showToast(`Please verify your ${selectedCity || "delivery"} address first.`);
+      return;
+    }
+    if (!parchaText.trim() && !parchaImagePreview) {
+      showToast("Please upload photo or write item/medicine names.");
+      return;
+    }
 
     startTransition(async () => {
       try {
-        saveCustomerProfile(customerName, customerPhone, customerAddress);
+        const res = await fetch("/api/hyperlocal/parcha", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            businessId: targetStore.id,
+            customerName: customerName || "Bahraich Customer",
+            customerPhone,
+            customerAddress: { street: customerAddress || userLiveLocation, city: selectedCity },
+            handwrittenText: isMedicalRx ? `[MEDICAL RX] ${parchaText}` : parchaText,
+            parchaImageUrl: parchaImagePreview,
+            customerNotes: isMedicalRx
+              ? `[Schedule-H Rx Verification Required] ${parchaNotes}`
+              : parchaNotes,
+          }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setKiranaModal(null);
+          setMedicalModal(null);
+          setParchaText("");
+          setParchaImagePreview(null);
+          setParchaNotes("");
+          setConfirmedOrderOverlay({
+            orderId: data.orderId,
+            displayCode: formatUnifiedOrderCode(data.orderId, targetStore.name),
+            storeName: targetStore.name,
+            deliveryOtp: data.deliveryOtp || "4821",
+            paymentLabel: isMedicalRx ? "Rx Sent to Chemist" : "Parcha Sent (5m Quote)",
+          });
+          fetchActiveBookings(customerPhone);
+        } else {
+          showToast(data.error || "Failed to submit.");
+        }
+      } catch {
+        showToast("Network error submitting Parcha/Rx.");
+      }
+    });
+  };
 
+  // ── Salon & Car Wash Token Bookings (N-19) ──
+  const handleBookSalonToken = () => {
+    if (!salonModal) return;
+    if (!customerPhone.trim() || customerPhone.length < 10) {
+      openLoginOrResume();
+      return;
+    }
+    startTransition(async () => {
+      try {
         const res = await fetch("/api/hyperlocal/tokens", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             businessId: salonModal.id,
             serviceType: "salon_haircut",
-            customerName,
+            customerName: customerName || "Guest",
             customerPhone,
-            vehicleOrNotes: `Service: ${salonService} • Preference: ${salonStylist}`,
+            vehicleOrNotes: `Service: ${salonService} • Stylist: ${salonStylist}`,
           }),
         });
-
         const data = await res.json();
         if (data.success) {
           setSalonModal(null);
-          setBookingSuccessNotice(
-            `Salon Digital Token Confirmed! Your Token is #${data.tokenNumber}. Approx wait: ${data.estimatedWaitMinutes} mins.`,
-          );
+          showToast(`Salon Token #${data.tokenNumber} Confirmed!`);
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
         } else {
-          alert(`Failed to book token: ${data.error}`);
+          showToast(data.error || "Failed to book token.");
         }
       } catch {
-        alert("Failed to book salon token.");
+        showToast("Error booking salon token.");
       }
     });
   };
 
-  // Book Car Wash Bay Slot
   const handleBookCarWashSlot = () => {
-    if (!customerName.trim() || !customerPhone.trim() || !vehicleNumber.trim()) {
-      alert("Please provide Name, Phone, and Vehicle Number (e.g. UP 40 AB 1234).");
+    if (!carWashModal) return;
+    if (!customerPhone.trim() || customerPhone.length < 10) {
+      openLoginOrResume();
       return;
     }
-    if (!carWashModal) return;
-
+    if (!vehicleNumber.trim()) {
+      showToast("Enter vehicle number (e.g. UP 40 AB 1234).");
+      return;
+    }
     startTransition(async () => {
       try {
-        saveCustomerProfile(customerName, customerPhone, customerAddress);
-
         const res = await fetch("/api/hyperlocal/tokens", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             businessId: carWashModal.id,
             serviceType: "car_foam_wash",
-            customerName,
+            customerName: customerName || "Guest",
             customerPhone,
-            vehicleOrNotes: `Vehicle: ${vehicleNumber.toUpperCase()} (${vehicleModel || "Car"}) • Package: ${carWashPackage}`,
+            vehicleOrNotes: `Vehicle: ${vehicleNumber} (${vehicleModel || "Car"}) • ${carWashPackage}`,
           }),
         });
-
         const data = await res.json();
         if (data.success) {
           setCarWashModal(null);
           setVehicleNumber("");
           setVehicleModel("");
-          setBookingSuccessNotice(
-            `Car Wash Bay Confirmed! Bay Token #${data.tokenNumber}. Please reach in approx ${data.estimatedWaitMinutes} mins.`,
-          );
+          showToast(`Wash Bay Token #${data.tokenNumber} Confirmed!`);
           setIsMyBookingsOpen(true);
           fetchActiveBookings(customerPhone);
         } else {
-          alert(`Failed to book car wash bay: ${data.error}`);
+          showToast(data.error || "Failed to book bay.");
         }
       } catch {
-        alert("Failed to book car wash bay.");
+        showToast("Error booking wash bay.");
       }
     });
   };
 
-  // Submit Kirana Handwritten Parcha
-  const handleSubmitParcha = () => {
-    if (!customerName.trim() || !customerPhone.trim() || !customerAddress.trim()) {
-      alert("Please enter your Name, Phone, and Delivery Address.");
-      return;
-    }
-    if (!parchaText.trim() && !parchaImagePreview) {
-      alert("Please write your grocery list or upload a photo of your handwritten parcha.");
-      return;
-    }
-    if (!kiranaModal) return;
+  // ── Notifications Feed (N-30) ──
+  const notificationsList: CustomerNotificationItem[] = useMemo(() => {
+    const items: CustomerNotificationItem[] = [
+      {
+        id: "deal_speedpass",
+        title: "⚡ Trustit SpeedPass Active in Bahraich",
+        body: "Enjoy priority 20-min rider dispatch on Food, Kirana & Medical Rx.",
+        timeLabel: "Today",
+        kind: "deal",
+      },
+      {
+        id: "deal_qr",
+        title: "📷 Earn ₹10 Trustit Money Cashback",
+        body: "Scan any verified shop counter Standee QR after your visit.",
+        timeLabel: "Offer",
+        kind: "deal",
+      },
+    ];
+    activeParchas.forEach((p) => {
+      items.unshift({
+        id: `p_${p.order_id}`,
+        title: p.merchant_quote_amount ? "📝 Parcha Quote Ready!" : "📝 Parcha Sent to Store",
+        body: p.merchant_quote_amount
+          ? `Your Kirana quote is ₹${p.merchant_quote_amount}. Tap Orders to view.`
+          : "Kirana partner is preparing your 5-minute quote.",
+        timeLabel: "Live",
+        kind: "parcha",
+      });
+    });
+    return items;
+  }, [activeParchas]);
 
-    startTransition(async () => {
+  const lastBackPressRef = useRef<number>(0);
+
+  const registerHomeSubBack = useCallback((fn: (() => boolean) | null) => {
+    homeSubBackRef.current = fn;
+  }, []);
+  const registerStoreSubBack = useCallback((fn: (() => boolean) | null) => {
+    storeSubBackRef.current = fn;
+  }, []);
+  const registerOrdersSubBack = useCallback((fn: (() => boolean) | null) => {
+    ordersSubBackRef.current = fn;
+  }, []);
+  const registerAddressSubBack = useCallback((fn: (() => boolean) | null) => {
+    addressSubBackRef.current = fn;
+  }, []);
+  const registerProfileSubBack = useCallback((fn: (() => boolean) | null) => {
+    profileSubBackRef.current = fn;
+  }, []);
+
+  const handleHardwareBack = useCallback((): boolean => {
+    if (isGoogleModalOpen) {
+      setIsGoogleModalOpen(false);
+      return true;
+    }
+    if (customizingItem) {
+      setCustomizingItem(null);
+      return true;
+    }
+    if (pendingCartReplace) {
+      setPendingCartReplace(null);
+      return true;
+    }
+    if (paymentRetryState) {
+      setPaymentRetryState(null);
+      return true;
+    }
+    if (confirmedOrderOverlay) {
+      setConfirmedOrderOverlay(null);
+      return true;
+    }
+    if (isStandeeModalOpen) {
+      setIsStandeeModalOpen(false);
+      return true;
+    }
+    if (isAddressModalOpen) {
+      if (addressSubBackRef.current?.()) return true;
+      setIsAddressModalOpen(false);
+      return true;
+    }
+    if (isProfileOpen) {
+      if (profileSubBackRef.current?.()) return true;
+      setIsProfileOpen(false);
+      return true;
+    }
+    if (isCheckoutOpen) {
+      setIsCheckoutOpen(false);
+      return true;
+    }
+    if (isMyBookingsOpen) {
+      if (ordersSubBackRef.current?.()) return true;
+      setIsMyBookingsOpen(false);
+      return true;
+    }
+    if (isNotificationsOpen) {
+      setIsNotificationsOpen(false);
+      return true;
+    }
+    if (kiranaModal) {
+      setKiranaModal(null);
+      return true;
+    }
+    if (medicalModal) {
+      setMedicalModal(null);
+      return true;
+    }
+    if (salonModal) {
+      setSalonModal(null);
+      return true;
+    }
+    if (carWashModal) {
+      setCarWashModal(null);
+      return true;
+    }
+    if (activeStoreModal) {
+      if (storeSubBackRef.current?.()) return true;
+      setActiveStoreModal(null);
+      return true;
+    }
+    if (isOnboardingOpen) {
+      if (onboardingStep === "otp") {
+        setOnboardingStep("login");
+        return true;
+      }
+      if (!customerId && !guestMode) return true;
+      setIsOnboardingOpen(false);
+      return true;
+    }
+    if (homeSubBackRef.current?.()) {
+      return true;
+    }
+    if (searchQuery.trim().length > 0) {
+      setSearchQuery("");
+      return true;
+    }
+    if (bottomTabHistoryRef.current.length > 0) {
+      const prevTab = bottomTabHistoryRef.current.pop()!;
+      setBottomTab(prevTab);
+      return true;
+    }
+    if (bottomTab !== "home") {
+      setBottomTab("home");
+      return true;
+    }
+    if (verticalTabHistoryRef.current.length > 0) {
+      const prevVert = verticalTabHistoryRef.current.pop()!;
+      setActiveTab(prevVert);
+      return true;
+    }
+    const now = Date.now();
+    if (now - lastBackPressRef.current < 2000) {
+      return false;
+    }
+    lastBackPressRef.current = now;
+    showToast("Press back again to exit");
+    return true;
+  }, [
+    isGoogleModalOpen,
+    customizingItem,
+    pendingCartReplace,
+    paymentRetryState,
+    confirmedOrderOverlay,
+    isStandeeModalOpen,
+    isAddressModalOpen,
+    isProfileOpen,
+    isCheckoutOpen,
+    isMyBookingsOpen,
+    isNotificationsOpen,
+    kiranaModal,
+    medicalModal,
+    salonModal,
+    carWashModal,
+    activeStoreModal,
+    isOnboardingOpen,
+    onboardingStep,
+    searchQuery,
+    bottomTab,
+    showToast,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    (window as any).__handleTrustitBack = handleHardwareBack;
+    try {
+      window.history.pushState({ trustitOrderNav: true }, "", window.location.pathname);
+    } catch {}
+    const onPopState = () => {
       try {
-        saveCustomerProfile(customerName, customerPhone, customerAddress);
-
-        const res = await fetch("/api/hyperlocal/parcha", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            businessId: kiranaModal.id,
-            customerName,
-            customerPhone,
-            customerAddress: { street: customerAddress, city: selectedCity },
-            handwrittenText: parchaText,
-            parchaImageUrl: parchaImagePreview,
-            customerNotes: parchaNotes,
-          }),
-        });
-
-        const data = await res.json();
-        if (data.success) {
-          setKiranaModal(null);
-          setParchaText("");
-          setParchaImagePreview(null);
-          setParchaNotes("");
-          setBookingSuccessNotice(
-            `Parcha Sent to Dukandar! Order ${formatUnifiedOrderCode(data.orderId, "Kirana")}. Delivery OTP: ${data.deliveryOtp}. Dukandar will prepare bill and dispatch rider.`,
-          );
-          setIsMyBookingsOpen(true);
-          fetchActiveBookings(customerPhone);
-        } else {
-          alert(`Failed to submit parcha: ${data.error}`);
-        }
-      } catch {
-        alert("Failed to submit handwritten parcha.");
+        window.history.pushState({ trustitOrderNav: true }, "", window.location.pathname);
+      } catch {}
+      handleHardwareBack();
+    };
+    window.addEventListener("popstate", onPopState);
+    let capHandle: any = null;
+    try {
+      const capApp = (window as any).Capacitor?.Plugins?.App;
+      if (capApp?.addListener) {
+        capApp
+          .addListener("backButton", () => {
+            const handled = handleHardwareBack();
+            if (!handled) capApp.exitApp?.();
+          })
+          .then((h: any) => {
+            capHandle = h;
+          });
       }
-    });
-  };
+    } catch {}
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+      capHandle?.remove?.();
+    };
+  }, [handleHardwareBack]);
 
   const totalActiveCount = activeOrders.length + activeTokens.length + activeParchas.length;
+  const unreadNotifCount = useMemo(
+    () =>
+      notificationsList.filter((n) => !seenNotifKeys.includes(`${n.id}:${n.body}`)).length,
+    [notificationsList, seenNotifKeys],
+  );
+
+  const markAllNotificationsSeen = useCallback(() => {
+    const keys = notificationsList.map((n) => `${n.id}:${n.body}`);
+    setSeenNotifKeys((prev) => {
+      const merged = Array.from(new Set([...prev, ...keys]));
+      try {
+        localStorage.setItem("trustit_seen_notifs", JSON.stringify(merged.slice(-80)));
+      } catch {}
+      return merged;
+    });
+  }, [notificationsList]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-24">
-      {/* ── Top Super-App Header (Compact Swiggy/Zomato Micro-Bar) ── */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200 shadow-2xs">
-        <div className="max-w-5xl mx-auto px-2.5 sm:px-4 py-1.5 flex items-center justify-between gap-2">
-          {/* Location Picker (Live Google Maps GPS Reverse-Geocode) */}
-          <button
-            type="button"
-            onClick={() => detectLiveLocation(false)}
-            className="flex items-center gap-1.5 min-w-0 text-left hover:opacity-85 transition group focus:outline-hidden"
-            title="Click to detect exact GPS location via Google Maps"
-          >
-            <span
-              className={`grid h-6 w-6 shrink-0 place-items-center rounded-md bg-blue-600 text-[11px] font-black text-white shadow-2xs ${
-                isResolvingLocation ? "animate-pulse" : ""
-              }`}
-            >
-              📍
-            </span>
-            <div className="min-w-0 leading-none">
-              <div className="flex items-center gap-1">
-                <span className="text-[11px] font-black text-slate-900 truncate max-w-[130px] sm:max-w-[200px]">
-                  {isResolvingLocation
-                    ? "Locating..."
-                    : (userLiveLocation ? userLiveLocation.split(",")[0] : (selectedCity || "Bahraich"))}
-                </span>
-                <span className="text-[8.5px] text-blue-600 font-extrabold group-hover:translate-y-0.5 transition-transform">
-                  ▼
-                </span>
-              </div>
-              <span className="block text-[8.5px] text-slate-500 font-medium truncate mt-0.5 max-w-[140px] sm:max-w-[220px]">
-                {userLiveLocation
-                  ? (userLiveLocation.includes(",") ? userLiveLocation.split(",").slice(1).join(",").trim() : "Verified GPS Locality")
-                  : "Tap to detect location"}
-              </span>
-            </div>
-          </button>
+    <>
+      {/* N-01 Brand Splash */}
+      <CustomerBrandSplash
+        visible={showSplash}
+        onFinish={() => {
+          setShowSplash(false);
+          try {
+            sessionStorage.setItem("trustit_splash_seen", "1");
+          } catch {}
+        }}
+      />
 
-          {/* Right Action Icons (Swiggy Style ☰ Account Menu & Active Orders) */}
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Active Bookings (Only shows count badge when totalActiveCount > 0!) */}
-            <button
-              type="button"
-              onClick={() => setIsMyBookingsOpen(true)}
-              className="relative grid h-8 w-8 place-items-center rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition text-sm shadow-2xs"
-              title="Active Running Bookings & Delivery OTP"
-              aria-label="Active Bookings"
-            >
-              📋
-              {totalActiveCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 px-1 text-[9px] font-black text-slate-950 shadow-sm animate-pulse">
-                  {totalActiveCount}
-                </span>
-              )}
-            </button>
-
-            {/* Hamburger / My Account Button (Swiggy Style ☰) */}
-            <button
-              type="button"
-              onClick={handleOpenCustomerLogin}
-              className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-slate-800 transition"
-              title="My Account"
-            >
-              <span className="text-sm font-black leading-none">☰</span>
-              <span className="max-w-[75px] truncate text-[11px] font-bold">
-                {customerName ? customerName.split(" ")[0] : (customerEmail || customerPhone ? "Account" : "Log In")}
-              </span>
-            </button>
-          </div>
-        </div>
-
-        {/* ── Slim Search Bar (Height 30px, 11px font) with Auto-Suggest ── */}
-        <div className="max-w-5xl mx-auto px-2.5 sm:px-4 pb-1.5 relative">
-          <div className="relative flex items-center">
-            <span className="absolute left-2.5 text-slate-400 text-[11px]">🔍</span>
-            <input
-              type="text"
-              placeholder={
-                activeTab === "food"
-                  ? "Search chicken, thali, biryani, sweets..."
-                  : activeTab === "salon"
-                    ? "Search haircut, barber, facial..."
-                    : activeTab === "car_wash"
-                      ? "Search car foam wash, bike wash..."
-                      : "Search atta, mustard oil, grocery parcha..."
-              }
-              value={searchQuery}
-              onFocus={() => setIsSearchFocused(true)}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-slate-100/90 pl-7 pr-7 py-1 text-[11px] text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white transition"
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2 grid h-4 w-4 place-items-center rounded-full bg-slate-200 text-[9px] font-bold text-slate-600 hover:bg-slate-300"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-
-          {/* Real-time Predictive Dropdown Tray */}
-          {searchQuery.trim().length >= 2 && (searchSuggestions.dishes.length > 0 || searchSuggestions.stores.length > 0) && (
-            <div className="absolute top-full left-2.5 right-2.5 sm:left-4 sm:right-4 mt-1 z-50 rounded-xl bg-white border border-slate-200 shadow-xl p-1.5 space-y-1.5 text-xs">
-              {searchSuggestions.dishes.length > 0 && (
-                <div>
-                  <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 px-1.5 py-0.5">
-                    Dishes & Products ({searchSuggestions.dishes.length})
-                  </span>
-                  {searchSuggestions.dishes.map(({ item, storeName, store }) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => {
-                        if (store) setActiveStoreModal(store);
-                        openCustomizer(item);
-                        setSearchQuery("");
-                      }}
-                      className="w-full flex items-center justify-between p-1.5 rounded-lg hover:bg-orange-50 text-left transition group"
-                    >
-                      <div className="min-w-0">
-                        <div className="font-bold text-[11px] text-slate-900 group-hover:text-orange-600 flex items-center gap-1 truncate">
-                          <span>{item.item_type === "veg" ? "🌱" : "🍗"}</span>
-                          <span className="truncate">{item.name}</span>
-                        </div>
-                        <span className="text-[9px] text-slate-500 truncate block">from {storeName}</span>
-                      </div>
-                      <span className="text-[11px] font-black text-slate-900 shrink-0 ml-2">₹{item.price}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {searchSuggestions.stores.length > 0 && (
-                <div className="border-t border-slate-100 pt-1">
-                  <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 px-1.5 py-0.5">
-                    Matching Restaurants & Stores
-                  </span>
-                  {searchSuggestions.stores.map((store) => (
-                    <button
-                      key={store.id}
-                      type="button"
-                      onClick={() => {
-                        setActiveStoreModal(store);
-                        setSearchQuery("");
-                      }}
-                      className="w-full flex items-center justify-between p-1.5 rounded-lg hover:bg-slate-50 text-left transition"
-                    >
-                      <div className="min-w-0">
-                        <span className="font-bold text-[11px] text-slate-900 truncate block">{store.name}</span>
-                        <span className="text-[9px] text-slate-500 capitalize">{store.type || "Store"} · Bahraich</span>
-                      </div>
-                      <span className="text-[10px] text-blue-600 font-bold shrink-0">View Menu →</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* ── 6 Horizontal Applet Micro-Tabs (No Clunky Scrollbar, Swiggy Standard) ── */}
-        <div className="max-w-5xl mx-auto px-2.5 sm:px-4 pb-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex items-center gap-1 min-w-max">
-            {[
-              { id: "food", label: "Food & Sweets", icon: "🍔", activeColor: "bg-orange-50 border-orange-300 text-orange-800" },
-              { id: "dairy", label: "Milk & Products", icon: "🥛", activeColor: "bg-sky-50 border-sky-300 text-sky-800" },
-              { id: "kirana", label: "Groceries", icon: "🛒", activeColor: "bg-purple-50 border-purple-300 text-purple-800" },
-              { id: "medical", label: "Medical / Rx", icon: "💊", activeColor: "bg-rose-50 border-rose-300 text-rose-800" },
-              { id: "car_wash", label: "Car Wash", icon: "🚗", activeColor: "bg-blue-50 border-blue-300 text-blue-800" },
-              { id: "salon", label: "Salon & Grooming", icon: "✂️", activeColor: "bg-emerald-50 border-emerald-300 text-emerald-800" },
-            ].map((cat) => {
-              const active = activeTab === cat.id;
-              return (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => setActiveTab(cat.id as typeof activeTab)}
-                  className={`flex items-center gap-1 rounded-lg px-2.5 py-1 transition border text-[10.5px] font-bold shrink-0 ${
-                    active
-                      ? `${cat.activeColor} shadow-2xs font-black`
-                      : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300"
-                  }`}
-                >
-                  <span className="text-xs leading-none">{cat.icon}</span>
-                  <span className="whitespace-nowrap">{cat.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Quick Swiggy / Zomato Micro Filter Pills */}
-        <div className="max-w-5xl mx-auto px-2.5 sm:px-4 pb-1.5 flex items-center gap-1 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-          <button
-            type="button"
-            onClick={() => setIsVegOnly(!isVegOnly)}
-            className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-semibold border transition shrink-0 ${
-              isVegOnly
-                ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            <span>🌱</span>
-            <span>Pure Veg</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsFastDeliveryOnly(!isFastDeliveryOnly)}
-            className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-semibold border transition shrink-0 ${
-              isFastDeliveryOnly
-                ? "bg-amber-500 text-slate-950 border-amber-500 shadow-2xs font-bold"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            <span>⚡</span>
-            <span>Fast Delivery</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsTopRatedOnly(!isTopRatedOnly)}
-            className={`flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[9.5px] font-semibold border transition shrink-0 ${
-              isTopRatedOnly
-                ? "bg-blue-600 text-white border-blue-600 shadow-2xs font-bold"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-            }`}
-          >
-            <span>★</span>
-            <span>Rating 4.0+</span>
-          </button>
-        </div>
-      </header>
-
-      {/* ── Notification Banner if any booking just created ── */}
-      {bookingSuccessNotice && (
-        <div className="max-w-5xl mx-auto px-2.5 sm:px-4 pt-1.5">
-          <div className="flex items-center justify-between rounded-lg bg-emerald-500 p-2 text-white shadow-2xs text-[11px]">
-            <div className="flex items-center gap-1.5">
-              <span>🎉</span>
-              <p className="font-bold leading-tight">{bookingSuccessNotice}</p>
-            </div>
-            <button
-              onClick={() => setBookingSuccessNotice(null)}
-              className="rounded bg-emerald-700 px-1.5 py-0.2 text-[9px] font-bold shrink-0"
-            >
-              ✕
-            </button>
-          </div>
+      {/* Toast Feedback */}
+      {toastMessage && (
+        <div className="fixed top-14 left-1/2 -translate-x-1/2 z-[80] rounded-full bg-[#001945] text-white px-4 py-2 text-xs font-bold shadow-xl border border-[#9cf0ff]/30">
+          {toastMessage}
         </div>
       )}
 
-      {/* ── Main Listings Content (High-Density Multi-Column Grid on Tablet/Desktop) ── */}
-      <main className="max-w-5xl mx-auto px-2.5 sm:px-4 pt-2">
-        {/* Stitch Screen 1: Kinetic Trust Super-App Hero Card */}
-        <div className="mb-2.5 rounded-2xl border border-orange-200/90 bg-gradient-to-br from-amber-50 via-orange-50/70 to-white p-3 sm:p-4 shadow-xs">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-orange-600 px-2 py-0.5 text-[9px] font-black uppercase text-white shadow-2xs">
-                  ⚡ 25–35 Min Delivery
-                </span>
-                <span className="text-[10px] font-bold text-emerald-700 flex items-center gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  100% Genuine Local Stores
-                </span>
-              </div>
-              <h2 className="mt-1 text-sm sm:text-base font-black text-slate-900 tracking-tight leading-snug">
-                Order Food, Fresh Dairy &amp; Handwritten Kirana Parcha in Bahraich
-              </h2>
-              <p className="mt-0.5 text-[10.5px] text-slate-600">
-                Fast doorstep delivery by verified riders. Pay online with Cashfree UPI or Cash on Delivery.
-              </p>
-            </div>
+      {/* N-07 to N-12 Home, Categories, Search & Store Cards */}
+      <CustomerHomeAndDiscovery
+        lang={lang}
+        bottomTab={bottomTab}
+        setBottomTab={navigateBottomTab}
+        activeTab={activeTab}
+        setActiveTab={navigateVerticalTab}
+        userLiveLocation={userLiveLocation}
+        districtName={selectedCity}
+        rewardPoints={rewardPoints}
+        isAuthenticated={Boolean(customerId || customerPhone)}
+        onRequestLogin={openLoginOrResume}
+        userCoords={userCoords}
+        customerName={customerName}
+        totalActiveCount={totalActiveCount}
+        unreadNotifCount={unreadNotifCount}
+        onOpenLocationLock={() => {
+          detectLiveLocation(false);
+          setOnboardingStep("gps_lock");
+          setIsOnboardingOpen(true);
+        }}
+        onOpenNotifications={() => {
+          markAllNotificationsSeen();
+          setIsNotificationsOpen(true);
+        }}
+        onOpenActiveOrders={() => {
+          setIsMyBookingsOpen(true);
+          if (customerPhone) fetchActiveBookings(customerPhone);
+        }}
+        onOpenProfile={() => {
+          setIsProfileOpen(true);
+          fetchCustomerPoints(customerId, customerPhone);
+        }}
+        onOpenStandeeScanner={() => setIsStandeeModalOpen(true)}
+        onOpenSmartParcha={handleOpenSmartParcha}
+        onOpenMedicalRx={handleOpenMedicalRx}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        businesses={businesses}
+        filteredBusinesses={filteredBusinesses}
+        catalogItems={catalogItems}
+        favoriteStoreIds={favoriteStoreIds}
+        onSelectStore={handleSelectStore}
+        onQuickAddItem={handleQuickAddItem}
+        cartCount={cartItemsList.reduce((s, l) => s + l.quantity, 0)}
+        cartGrandTotal={cartGrandTotal}
+        cartStoreName={cartStore?.name || "Store"}
+        onOpenCheckout={() => setIsCheckoutOpen(true)}
+        onRegisterSubBack={registerHomeSubBack}
+      />
 
-            {/* Smart Parcha Instant Action Button */}
-            <button
-              type="button"
-              onClick={handleOpenSmartParcha}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 px-3.5 py-2 text-xs font-black text-white shadow-sm transition hover:shadow-md shrink-0 select-none cursor-pointer"
-            >
-              <span className="text-base leading-none">📸</span>
-              <span>Upload Smart Parcha</span>
-              <span className="rounded-full bg-white/20 px-1.5 py-0.2 text-[9px]">5 Min Quote</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Micro Promotional Ribbon (SEO & Trust Guarantee) */}
-        <div className="mb-2 rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50 px-2.5 py-1 flex items-center justify-between text-[10px] text-amber-900 shadow-2xs">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <span className="text-xs">⚡</span>
-            <span className="font-bold truncate">
-              {activeTab === "food" && "Trusted Food & Express Home Delivery in Bahraich · 25-35m Doorstep"}
-              {activeTab === "salon" && "Live Token · Bina dukan me baithe number lagayein"}
-              {activeTab === "car_wash" && "Bay 1 / Bay 2 Live Availability · No waiting"}
-              {activeTab === "kirana" && "Parcha photo bhejein · Dukan se direct delivery"}
-              {activeTab === "dairy" && "Fresh Milk, Paneer & Dahi · Early Morning Slots"}
-              {activeTab === "medical" && "Doctor Prescription Upload · Fast Medicine Dispatch"}
-            </span>
-          </div>
-          <span className="text-[8px] font-black uppercase text-amber-800 bg-amber-200/90 px-1.5 py-0.2 rounded shrink-0">
-            TRUSTED ORDER
-          </span>
-        </div>
-
-        {/* ── Swiggy/Zomato Ultra-Dense Micro-Card Grid ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-2.5">
-          {filteredBusinesses.map((biz) => {
-            const bizItems = catalogItems.filter((i) => i.business_id === biz.id);
-
-            const handleCardClick = () => {
-              if (activeTab === "food" || activeTab === "dairy") {
-                setActiveStoreModal(biz);
-              } else if (activeTab === "salon") {
-                setSalonModal(biz);
-              } else if (activeTab === "car_wash") {
-                setCarWashModal(biz);
-              } else {
-                setKiranaModal(biz);
-              }
-            };
-
-            return (
-              <div
-                key={biz.id}
-                onClick={handleCardClick}
-                className="group relative cursor-pointer rounded-xl border border-slate-200/90 bg-white p-2 sm:p-2.5 transition-all duration-150 hover:border-orange-400 hover:shadow-md flex items-center gap-2.5"
-              >
-                {/* Left: Swiggy/Zomato Compact 66px x 66px Thumbnail with Tag */}
-                <div className="relative h-[66px] w-[66px] shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-amber-50 to-orange-100 flex items-center justify-center border border-slate-100 shadow-2xs">
-                  <span className="text-2xl select-none group-hover:scale-110 transition-transform duration-150">
-                    {activeTab === "food"
-                      ? (biz.type?.toLowerCase().includes("sweet") ? "🍬" : biz.type?.toLowerCase().includes("cafe") ? "☕" : "🍗")
-                      : activeTab === "dairy"
-                      ? "🥛"
-                      : activeTab === "salon"
-                      ? "✂️"
-                      : activeTab === "car_wash"
-                      ? "🚗"
-                      : activeTab === "medical"
-                      ? "💊"
-                      : "🛒"}
-                  </span>
-                  {/* Micro Ribbon Badge */}
-                  <div className="absolute inset-x-0 bottom-0 bg-slate-950/80 py-0.2 text-center">
-                    <span className="text-[7.5px] font-black uppercase tracking-tight text-white block">
-                      {activeTab === "food" ? "25-35 MIN" : activeTab === "salon" ? "LIVE TOKEN" : "EXPRESS"}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right: Info Block with Micro-Typography */}
-                <div className="min-w-0 flex-1 space-y-0.5">
-                  {/* Line 1: Title + Rating Pill */}
-                  <div className="flex items-center justify-between gap-1">
-                    <h3 className="text-[12px] font-bold text-slate-900 truncate group-hover:text-orange-600 transition-colors">
-                      {biz.name}
-                    </h3>
-                    <span className="inline-flex items-center gap-0.5 rounded bg-emerald-600 px-1 py-0.2 text-[8.5px] font-black text-white shrink-0 shadow-2xs">
-                      ★ 4.8
-                    </span>
-                  </div>
-
-                  {/* Line 2: ETA & Category */}
-                  <div className="flex items-center gap-1.5 text-[9.5px] text-slate-600">
-                    <span className="font-semibold text-slate-800">
-                      {activeTab === "food" && "🛵 25–35 Mins"}
-                      {activeTab === "salon" && "🟢 Token #04"}
-                      {activeTab === "car_wash" && "🚿 Bay 2 Free"}
-                      {activeTab === "kirana" && "📝 Photo Parcha"}
-                      {activeTab === "dairy" && "🥛 Fresh Morning"}
-                      {activeTab === "medical" && "💊 Rx Delivery"}
-                    </span>
-                    <span className="text-slate-300">•</span>
-                    <span className="text-[8.5px] font-bold uppercase text-slate-500 truncate">
-                      {biz.type}
-                    </span>
-                  </div>
-
-                  {/* Line 3: Menu snippet or vertical note (Single line clamp) */}
-                  <p className="text-[9px] text-slate-500 truncate leading-tight">
-                    {activeTab === "food" && (bizItems.length > 0 ? bizItems.slice(0, 3).map((i) => i.name).join(", ") : "Biryani, Thali, Snacks & Fast Food")}
-                    {activeTab === "salon" && "Haircut, Shave, Beard Trim · Waiting: ~20m"}
-                    {activeTab === "car_wash" && "Car Foam Wash, Bike Pressure Wash"}
-                    {activeTab === "kirana" && "Atta, Oil, Sugar, Spices & Daily Essentials"}
-                    {activeTab === "dairy" && "Cow Milk, Buffalo Milk, Paneer, Dahi, Ghee"}
-                    {activeTab === "medical" && "Allopathic, Ayurvedic & Baby Care"}
-                  </p>
-
-                  {/* Line 4: Address + Micro Action link */}
-                  <div className="flex items-center justify-between text-[8.5px] text-slate-400 pt-0.5 border-t border-slate-100">
-                    <span className="truncate max-w-[150px] sm:max-w-[180px]">
-                      📍 {biz.address || `${biz.city}, UP`}
-                    </span>
-                    <span className="font-bold text-orange-600 text-[9px] shrink-0 group-hover:translate-x-0.5 transition-transform flex items-center">
-                      {activeTab === "food" || activeTab === "dairy" ? "Menu →" : activeTab === "salon" ? "Pass →" : activeTab === "car_wash" ? "Slot →" : "Parcha →"}
-                    </span>
-                  </div>
-                </div>
-              </div>
+      {/* N-02 to N-06 Onboarding, Login +91, WhatsApp OTP, Name+Push, GPS Lock */}
+      <CustomerOnboardingModal
+        isOpen={isOnboardingOpen}
+        onClose={() => {
+          if (!customerId && !guestMode) return;
+          setIsOnboardingOpen(false);
+        }}
+        onContinueAsGuest={() => {
+          setGuestMode(true);
+          try {
+            localStorage.setItem("trustit_guest_mode", "1");
+          } catch {}
+          setIsOnboardingOpen(false);
+          showToast(`Exploring ${selectedCity || "local"} stores as Guest`);
+        }}
+        requireAuthChoice={!customerId && !guestMode}
+        districtName={selectedCity}
+        lang={lang}
+        step={onboardingStep}
+        setStep={setOnboardingStep}
+        rememberedUser={rememberedUser}
+        onContinueRemembered={handleContinueRemembered}
+        authMode={authMode}
+        setAuthMode={setAuthMode}
+        loginPhone={loginPhone}
+        setLoginPhone={setLoginPhone}
+        loginEmail={loginEmail}
+        setLoginEmail={setLoginEmail}
+        loginOtp={loginOtp}
+        setLoginOtp={setLoginOtp}
+        loginOtpCountdown={loginOtpCountdown}
+        isSendingOtp={isSendingOtp}
+        isVerifyingOtp={isVerifyingOtp}
+        isGoogleLoading={isGoogleLoading}
+        otpError={otpError}
+        otpNotice={otpNotice}
+        onSendOtp={handleSendOtp}
+        onVerifyOtp={handleVerifyOtp}
+        onOpenGoogleModal={() => setIsGoogleModalOpen(true)}
+        newCustomerName={newCustomerName}
+        setNewCustomerName={setNewCustomerName}
+        pushEnabled={pushEnabled}
+        onEnablePushAndSaveName={handleCreateProfile}
+        userLiveLocation={userLiveLocation}
+        addrPincode={addrPincode}
+        isDetectingGps={isDetectingGps}
+        onDetectGps={() => detectLiveLocation(false)}
+        onSelectBahraichArea={(area) => {
+          setUserLiveLocation(area.name);
+          setSelectedCity("Bahraich");
+          setAddrPincode(area.pincode);
+          setUserCoords({ lat: area.lat, lng: area.lng });
+          setCustomerAddress(area.name);
+          setAddressVerified(true);
+          try {
+            localStorage.setItem("trustit_addr_verified", "1");
+            localStorage.setItem(
+              "trustit_customer_location",
+              JSON.stringify({
+                locationName: area.name,
+                city: "Bahraich",
+                district: "Bahraich",
+                pincode: area.pincode,
+                formatted: area.name,
+                lat: area.lat,
+                lng: area.lng,
+                manualPin: true,
+                time: Date.now(),
+              }),
             );
-          })}
-        </div>
-
-        {filteredBusinesses.length === 0 && (
-          <div className="mt-8 text-center rounded-2xl border border-slate-200 bg-white p-8">
-            <span className="text-3xl">🔍</span>
-            <h3 className="mt-2 text-sm font-bold text-slate-800">No matching places found</h3>
-            <p className="mt-0.5 text-[11px] text-slate-500">
-              Try changing the search term or check in {selectedCity}.
-            </p>
-          </div>
-        )}
-      </main>
-
-      {/* ── Sticky Bottom Cart Strip for Food (Compact 38px) ── */}
-      {cartItemsList.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur border-t border-slate-200 py-2 px-3 shadow-xl">
-          <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
-            <div>
-              <span className="text-[9.5px] font-semibold text-slate-500">
-                {cartItemsList.length} items in cart
-              </span>
-              <div className="text-xs font-black text-slate-900 leading-none">
-                ₹{cartGrandTotal}{" "}
-                <span className="text-[9px] font-normal text-slate-500">
-                  (incl. fee)
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setIsCheckoutOpen(true)}
-              className="flex items-center gap-1 rounded-lg bg-gradient-to-r from-orange-500 to-amber-600 px-3.5 py-1.5 text-[11px] font-black text-white shadow-2xs hover:from-orange-600 hover:to-amber-700 transition"
-            >
-              <span>Checkout</span>
-              <span>→</span>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ── Google Stitch 5-Tab Mobile Navigation Bar ── */}
-      {cartItemsList.length === 0 && (
-        <nav
-          aria-label="Bottom Navigation"
-          className="fixed bottom-0 inset-x-0 z-30 bg-white/95 backdrop-blur border-t border-slate-200 py-1 px-1 shadow-lg sm:hidden"
-        >
-          <div className="max-w-md mx-auto grid grid-cols-5 text-center items-center">
-            {/* 1. Home */}
-            <button
-              type="button"
-              onClick={() => setActiveTab("food")}
-              className={`flex flex-col items-center justify-center py-1 transition ${
-                activeTab === "food" ? "text-orange-600 font-bold" : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              <span className="text-base leading-none">🏠</span>
-              <span className="text-[9.5px] mt-0.5">Home</span>
-            </button>
-
-            {/* 2. Categories */}
-            <button
-              type="button"
-              onClick={() => {
-                const nextTab = activeTab === "food" ? "kirana" : activeTab === "kirana" ? "dairy" : "food";
-                setActiveTab(nextTab);
-              }}
-              className={`flex flex-col items-center justify-center py-1 transition ${
-                activeTab !== "food" ? "text-blue-600 font-bold" : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              <span className="text-base leading-none">🍱</span>
-              <span className="text-[9.5px] mt-0.5">Categories</span>
-            </button>
-
-            {/* 3. Center Elevated Trustit Standee QR & Parcha Button (Image 3 Spec) */}
-            <button
-              type="button"
-              onClick={() => setIsStandeeModalOpen(true)}
-              className="flex flex-col items-center justify-center py-0.5 -mt-3 group"
-              title="Scan Table Standee QR or Upload Grocery Parcha"
-            >
-              <div className="grid h-11 w-11 place-items-center rounded-full bg-gradient-to-tr from-violet-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-violet-500/40 group-hover:scale-105 active:scale-95 transition">
-                <span className="text-xl leading-none">📷</span>
-              </div>
-              <span className="text-[9px] font-black text-violet-700 mt-0.5">Scan QR</span>
-            </button>
-
-            {/* 4. Bookings & Orders */}
-            <button
-              type="button"
-              onClick={() => setIsMyBookingsOpen(true)}
-              className="relative flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900 transition"
-            >
-              <span className="text-base leading-none">📋</span>
-              <span className="text-[9.5px] mt-0.5">Orders</span>
-              {totalActiveCount > 0 && (
-                <span className="absolute top-0 right-3 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-amber-500 px-0.5 text-[8px] font-black text-slate-950 animate-pulse">
-                  {totalActiveCount}
-                </span>
-              )}
-            </button>
-
-            {/* 5. Account */}
-            <button
-              type="button"
-              onClick={handleOpenCustomerLogin}
-              className="flex flex-col items-center justify-center py-1 text-slate-500 hover:text-slate-900 transition"
-            >
-              <span className="text-base leading-none">👤</span>
-              <span className="text-[9.5px] mt-0.5 truncate max-w-[55px]">
-                {customerName ? customerName.split(" ")[0] : (customerEmail || customerPhone ? "Profile" : "Log In")}
-              </span>
-            </button>
-          </div>
-        </nav>
-      )}
-
-      {/* ── Trustit Table Standee QR Scanner & Quick Review Modal ── */}
-      {isStandeeModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/70 p-0 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 bg-slate-900 text-white">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">📷</span>
-                <div>
-                  <h3 className="text-xs font-black text-white">Trustit Standee Scanner</h3>
-                  <p className="text-[9.5px] text-slate-400">Point at table/counter standee or upload parcha</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsStandeeModalOpen(false);
-                  setIsStandeeSubmitted(false);
-                }}
-                className="grid h-7 w-7 place-items-center rounded-full bg-slate-800 text-slate-300 hover:bg-slate-700 text-xs"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-4 space-y-4 overflow-y-auto">
-              {!isStandeeSubmitted ? (
-                <>
-                  {/* Camera Target Simulation */}
-                  <div className="w-full h-44 rounded-2xl bg-slate-950 border-2 border-dashed border-violet-500/80 relative flex flex-col items-center justify-center text-center p-3 overflow-hidden shadow-inner">
-                    <div className="absolute inset-x-4 top-2 h-0.5 bg-violet-400 animate-pulse"></div>
-                    <span className="text-3xl mb-1">🎯</span>
-                    <span className="text-xs font-black text-white">Scanning Table Standee...</span>
-                    <p className="text-[10px] text-slate-400 mt-0.5">
-                      Point camera at any Trustit physical QR poster on cafe tables or store counters.
-                    </p>
-                  </div>
-
-                  {/* Quick Action Toggle: Instant Review vs Grocery Parcha */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsStandeeModalOpen(false);
-                        handleOpenSmartParcha();
-                      }}
-                      className="p-2.5 rounded-xl border border-purple-200 bg-purple-50 text-left hover:bg-purple-100 transition"
-                    >
-                      <span className="text-base block">📝</span>
-                      <span className="text-xs font-black text-purple-900 block mt-0.5">Upload Parcha</span>
-                      <span className="text-[9px] text-purple-700">Send handwritten list</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        window.open("/bahraich/grocery-stores", "_blank");
-                      }}
-                      className="p-2.5 rounded-xl border border-blue-200 bg-blue-50 text-left hover:bg-blue-100 transition"
-                    >
-                      <span className="text-base block">🏪</span>
-                      <span className="text-xs font-black text-blue-900 block mt-0.5">Explore Outlets</span>
-                      <span className="text-[9px] text-blue-700">Browse verified stores</span>
-                    </button>
-                  </div>
-
-                  {/* Simulated Review Card */}
-                  <div className="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-slate-900">Rate Your Experience:</span>
-                      <span className="text-[10px] font-bold text-violet-700">Trustit Verified</span>
-                    </div>
-
-                    {/* 5-Star Interactive Selector */}
-                    <div className="flex items-center justify-center gap-2 py-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setStandeeRating(star)}
-                          className="text-2xl hover:scale-110 active:scale-95 transition"
-                        >
-                          {star <= standeeRating ? "⭐" : "☆"}
-                        </button>
-                      ))}
-                    </div>
-
-                    <p className="text-center text-[10px] font-semibold text-slate-500">
-                      {standeeRating >= 4
-                        ? "🌟 Great Rating! Will redirect to Google Maps Review."
-                        : "⚠️ Private Feedback: Directly alerts merchant management."}
-                    </p>
-
-                    <input
-                      type="text"
-                      placeholder="Write brief feedback (optional)..."
-                      value={standeeFeedback}
-                      onChange={(e) => setStandeeFeedback(e.target.value)}
-                      className="w-full rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-800 outline-none focus:border-violet-600"
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsStandeeSubmitted(true);
-                      }}
-                      className="w-full py-2 rounded-xl bg-violet-600 hover:bg-violet-700 text-white font-bold text-xs shadow-md transition"
-                    >
-                      Submit Rating ({standeeRating}★)
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-6 space-y-3">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 text-2xl flex items-center justify-center mx-auto">
-                    ✓
-                  </div>
-                  <h4 className="text-sm font-black text-slate-900">Thank You For Your Review!</h4>
-                  <p className="text-xs text-slate-500">
-                    Your {standeeRating}-star rating has been registered on the Trustit network.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsStandeeModalOpen(false);
-                      setIsStandeeSubmitted(false);
-                    }}
-                    className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold"
-                  >
-                    Done
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Store Menu Modal for Food & Sweets ── */}
-      {activeStoreModal && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/60 p-0 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-xl max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl overflow-hidden">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 px-3 py-2 sm:px-4 sm:py-2.5">
-              <div>
-                <span className="rounded bg-orange-100 px-1.5 py-0.2 text-[8px] font-black uppercase text-orange-800">
-                  {activeStoreModal.type}
-                </span>
-                <h2 className="text-[13px] font-black text-slate-900 mt-0.5">{activeStoreModal.name}</h2>
-                <p className="text-[9.5px] text-slate-500">📍 {activeStoreModal.address}</p>
-              </div>
-              <button
-                onClick={() => setActiveStoreModal(null)}
-                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 text-xs"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Menu Items List */}
-            <div className="flex-1 overflow-y-auto p-2.5 sm:p-3 space-y-1.5">
-              {activeStoreItems.length === 0 ? (
-                <div className="text-center py-6 text-slate-400">
-                  <p className="text-[11px]">Store items are being updated by merchant.</p>
-                </div>
-              ) : (
-                activeStoreItems.map((item) => {
-                  const lineItemsForThisItem = cartItemsList.filter((c) => c.item.id === item.id);
-                  const inCartQty = lineItemsForThisItem.reduce((s, c) => s + c.quantity, 0);
-
-                  return (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-2.5 rounded-lg border border-slate-100 bg-slate-50/70 p-2 hover:bg-slate-50 transition"
-                    >
-                      <div className="flex items-start gap-2 min-w-0">
-                        <span
-                          className={`mt-0.5 grid h-3 w-3 place-items-center rounded-2xs border text-[8px] font-black shrink-0 ${
-                            item.item_type === "veg"
-                              ? "border-emerald-600 text-emerald-600"
-                              : "border-rose-600 text-rose-600"
-                          }`}
-                        >
-                          ●
-                        </span>
-                        <div className="min-w-0">
-                          <h4 className="text-[11.5px] font-bold text-slate-900 truncate">{item.name}</h4>
-                          <div className="flex items-center gap-1.5 mt-0.2">
-                            <span className="text-[11px] font-black text-slate-800">₹{item.price}</span>
-                            <span className="text-[8.5px] text-slate-400">· Full / Half</span>
-                          </div>
-                          {item.description && (
-                            <p className="text-[9px] text-slate-500 line-clamp-1 mt-0.2">
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-0.5 shrink-0">
-                        {inCartQty > 0 ? (
-                          <div className="flex items-center gap-1.5 rounded-lg bg-orange-600 px-1.5 py-0.5 text-white font-black text-[10.5px] shadow-2xs">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (lineItemsForThisItem.length > 0) {
-                                  updateCartLineQty(lineItemsForThisItem[0].cartKey, -1);
-                                }
-                              }}
-                              className="px-1 hover:scale-125 transition"
-                            >
-                              -
-                            </button>
-                            <span>{inCartQty}</span>
-                            <button
-                              type="button"
-                              onClick={() => openCustomizer(item)}
-                              className="px-1 hover:scale-125 transition"
-                            >
-                              +
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => openCustomizer(item)}
-                            className="rounded-lg border border-orange-500 bg-orange-50 px-2.5 py-0.5 text-[10px] font-bold text-orange-700 hover:bg-orange-500 hover:text-white transition shadow-2xs"
-                          >
-                            + ADD
-                          </button>
-                        )}
-                        <span className="text-[8px] text-slate-400 font-medium">customisable</span>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-
-            {/* Modal Footer with Cart Summary */}
-            {cartItemsList.length > 0 && (
-              <div className="border-t border-slate-200 bg-slate-50 px-3 py-2 flex items-center justify-between">
-                <div>
-                  <span className="text-[9.5px] text-slate-500">{cartItemsList.length} items in cart</span>
-                  <div className="text-xs font-black text-slate-900 leading-none">₹{cartGrandTotal}</div>
-                </div>
-                <button
-                  onClick={() => {
-                    setIsCheckoutOpen(true);
-                  }}
-                  className="rounded-lg bg-orange-600 px-3 py-1.5 text-[11px] font-black text-white shadow-2xs hover:bg-orange-700 transition"
-                >
-                  Checkout →
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ── Dish Customization Modal (Half/Full Plate, Addons, Cooking Notes) ── */}
-      {customizingItem && (
-        <div className="fixed inset-0 z-60 flex items-end sm:items-center justify-center bg-slate-950/70 p-0 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl max-h-[88vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-4">
-            {/* Header */}
-            <div className="p-3.5 border-b border-slate-100 flex items-start justify-between">
-              <div>
-                <span
-                  className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                    customizingItem.item_type === "veg"
-                      ? "bg-emerald-100 text-emerald-800"
-                      : "bg-rose-100 text-rose-800"
-                  }`}
-                >
-                  {customizingItem.item_type === "veg" ? "● Pure Veg" : "● Non-Veg"}
-                </span>
-                <h3 className="text-sm font-extrabold text-slate-900 mt-0.5">{customizingItem.name}</h3>
-                <p className="text-[10px] text-slate-500">Base full price: ₹{customizingItem.price}</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setCustomizingItem(null)}
-                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Scrollable Options */}
-            <div className="p-3.5 space-y-3 overflow-y-auto flex-1 text-xs">
-              {/* 1. Portion / Quantity Size */}
-              <div>
-                <span className="block font-black text-slate-900 mb-1.5 uppercase text-[9px] tracking-wider">
-                  1. Choose Portion Size (Required)
-                </span>
-                <div className="space-y-1.5">
-                  <label
-                    onClick={() => setSelectedPortion("half")}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${
-                      selectedPortion === "half"
-                        ? "border-orange-500 bg-orange-50/60 ring-1 ring-orange-500"
-                        : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        checked={selectedPortion === "half"}
-                        onChange={() => setSelectedPortion("half")}
-                        className="text-orange-600 focus:ring-orange-500"
-                      />
-                      <div>
-                        <span className="font-bold text-slate-900 block text-xs">Half Plate</span>
-                        <span className="text-[9px] text-slate-500">Serves 1 person</span>
-                      </div>
-                    </div>
-                    <span className="font-black text-slate-900 text-xs">
-                      ₹{Math.max(20, Math.round((customizingItem.price * 0.6) / 5) * 5)}
-                    </span>
-                  </label>
-
-                  <label
-                    onClick={() => setSelectedPortion("full")}
-                    className={`flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition ${
-                      selectedPortion === "full"
-                        ? "border-orange-500 bg-orange-50/60 ring-1 ring-orange-500"
-                        : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        checked={selectedPortion === "full"}
-                        onChange={() => setSelectedPortion("full")}
-                        className="text-orange-600 focus:ring-orange-500"
-                      />
-                      <div>
-                        <span className="font-bold text-slate-900 block text-xs">Full Plate</span>
-                        <span className="text-[9px] text-slate-500">Serves 2-3 persons</span>
-                      </div>
-                    </div>
-                    <span className="font-black text-slate-900 text-xs">₹{customizingItem.price}</span>
-                  </label>
-                </div>
-              </div>
-
-              {/* 2. Add-ons & Extras */}
-              <div>
-                <span className="block font-black text-slate-900 mb-1.5 uppercase text-[9px] tracking-wider">
-                  2. Add-ons & Extras (Optional)
-                </span>
-                <div className="space-y-1.5">
-                  {AVAILABLE_ADDONS.map((addon) => {
-                    const isChecked = selectedAddons.includes(addon.id);
-                    return (
-                      <label
-                        key={addon.id}
-                        onClick={() => {
-                          setSelectedAddons((prev) =>
-                            isChecked ? prev.filter((id) => id !== addon.id) : [...prev, addon.id],
-                          );
-                        }}
-                        className={`flex items-center justify-between p-2 rounded-xl border cursor-pointer transition ${
-                          isChecked ? "border-orange-400 bg-orange-50/40" : "border-slate-200 bg-white"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => {}}
-                            className="rounded text-orange-600 focus:ring-orange-500"
-                          />
-                          <span className="text-slate-800 font-bold text-[10px]">{addon.name}</span>
-                        </div>
-                        <span className="font-black text-slate-900 text-[11px]">+₹{addon.price}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* 3. Cooking Instructions */}
-              <div>
-                <span className="block font-black text-slate-900 mb-1 uppercase text-[9px] tracking-wider">
-                  3. Cooking Instructions (Chef Note)
-                </span>
-                <div className="flex flex-wrap gap-1 mb-1.5">
-                  {QUICK_COOKING_NOTES.map((note) => (
-                    <button
-                      key={note}
-                      type="button"
-                      onClick={() =>
-                        setCookingInstruction((prev) =>
-                          prev.includes(note) ? prev : `${prev} ${note}`.trim(),
-                        )
-                      }
-                      className="px-1.5 py-0.5 rounded-lg bg-slate-100 hover:bg-orange-100 hover:text-orange-800 text-slate-700 text-[9px] font-bold transition"
-                    >
-                      + {note}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  placeholder="e.g. Kam mirch rakhna, extra salad packet"
-                  value={cookingInstruction}
-                  onChange={(e) => setCookingInstruction(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                />
-              </div>
-            </div>
-
-            {/* Bottom Add CTA */}
-            <div className="p-2.5 sm:p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-              <div>
-                <span className="text-[9px] text-slate-400 block font-medium">Item Total</span>
-                <span className="text-sm font-black text-slate-900">
-                  ₹
-                  {(selectedPortion === "half"
-                    ? Math.max(20, Math.round((customizingItem.price * 0.6) / 5) * 5)
-                    : customizingItem.price) +
-                    AVAILABLE_ADDONS.filter((a) => selectedAddons.includes(a.id)).reduce(
-                      (s, a) => s + a.price,
-                      0,
-                    )}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleConfirmCustomization}
-                className="px-4 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-xl text-xs font-bold shadow-md hover:from-orange-600 hover:to-amber-700 transition"
-              >
-                Add Item to Cart →
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Checkout Modal for Food Order ── */}
-      {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white p-3.5 sm:p-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <h3 className="text-sm font-black text-slate-900">🛵 Order Checkout</h3>
-              <button
-                onClick={() => setIsCheckoutOpen(false)}
-                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-3 space-y-2.5">
-              {/* Order Items Preview */}
-              <div className="rounded-xl border border-slate-100 bg-slate-50 p-2.5 space-y-1.5 text-xs">
-                <span className="text-[9px] font-black uppercase text-slate-400 tracking-wider block">
-                  Items in Cart ({cartItemsList.length})
-                </span>
-                {cartItemsList.map((entry) => (
-                  <div key={entry.cartKey} className="flex justify-between items-start gap-2 border-b border-slate-200/60 pb-1.5 last:border-0 last:pb-0">
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-bold text-slate-900 text-xs">{entry.item.name}</span>
-                        {entry.customization && (
-                          <span className="rounded bg-orange-100 px-1.5 py-0.2 text-[9px] font-bold text-orange-800">
-                            {entry.customization.portion === "half" ? "Half" : "Full"}
-                          </span>
-                        )}
-                      </div>
-                      {entry.customization?.addons && entry.customization.addons.length > 0 && (
-                        <p className="text-[9px] text-slate-500">
-                          + {entry.customization.addons.map((a) => a.name).join(", ")}
-                        </p>
-                      )}
-                      {entry.customization?.cookingNotes && (
-                        <p className="text-[9px] text-amber-700 italic">
-                          Note: {entry.customization.cookingNotes}
-                        </p>
-                      )}
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-[11px] font-bold text-slate-800">
-                        {entry.quantity} x ₹{entry.itemUnitPrice} = ₹{entry.quantity * entry.itemUnitPrice}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Full Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Ramesh Kumar"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Mobile Number (10 digits)</label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 9876543210"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-orange-500"
-                />
-              </div>
-
-              {/* Customer Saved Address Book & Switcher (Image 3 Benchmark) */}
-              <div className="rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-xs">📍</span>
-                    <label className="text-[11px] font-black text-slate-900">Delivery Address</label>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddressModalOpen(true)}
-                    className="text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-0.5"
-                  >
-                    + Add Another Address
-                  </button>
-                </div>
-
-                {/* Saved Address Quick Selector Chips */}
-                {savedAddresses.length > 0 && (
-                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-                    {savedAddresses.map((addr) => {
-                      const isSel = selectedAddressId === addr.id;
-                      const label = addr.label || addr.tag || "Home";
-                      const icon = label === "Home" ? "🏠" : label === "Work" ? "🏢" : "📍";
-                      const displayStreet = addr.street || buildAddressString(addr.houseNo || "", addr.mohalla || "", addr.road || "", addr.pincode || "", addr.district || "Bahraich");
-                      return (
-                        <button
-                          key={addr.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedAddressId(addr.id);
-                            if (addr.houseNo) setAddrHouseNo(addr.houseNo);
-                            if (addr.mohalla) setAddrMohalla(addr.mohalla);
-                            if (addr.road) setAddrRoad(addr.road);
-                            if (addr.pincode) setAddrPincode(addr.pincode);
-                            if (addr.district) setAddrDistrict(addr.district);
-                            setCustomerAddress(displayStreet);
-                          }}
-                          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 border text-[10px] font-bold shrink-0 transition ${
-                            isSel
-                              ? "bg-orange-50 border-orange-400 text-orange-950 shadow-2xs font-black"
-                              : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
-                          }`}
-                        >
-                          <span>{icon}</span>
-                          <span>{label}</span>
-                          <span className="text-[9px] text-slate-400 font-normal truncate max-w-[100px]">
-                            ({addr.mohalla || displayStreet.slice(0, 16)})
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Active Deliver-to Card */}
-                <div className="rounded-lg border border-slate-200 bg-white p-2 text-xs shadow-2xs">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-slate-900 text-xs">
-                      {addrHouseNo ? `${addrHouseNo}, ${addrMohalla || "Bahraich"}` : (addrMohalla || "Bahraich Location")}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleDetectGps}
-                      className="text-[10px] font-bold text-blue-600 hover:underline"
-                    >
-                      📍 {isDetectingGps ? "Detecting..." : "GPS Auto"}
-                    </button>
-                  </div>
-                  <p className="mt-0.5 text-[10px] text-slate-600 font-mono">
-                    {customerAddress || "House No, Mohalla, Road, Bahraich"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Delivery Partner Tip (Swiggy / Zomato Feature) */}
-              <div>
-                <label className="block text-[10px] font-bold text-slate-700 mb-1">
-                  🛵 Delivery Partner Tip (Optional)
-                </label>
-                <div className="flex items-center gap-1.5">
-                  {[0, 10, 20, 30, 50].map((tip) => (
-                    <button
-                      key={tip}
-                      type="button"
-                      onClick={() => setRiderTip(tip)}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
-                        riderTip === tip
-                          ? "bg-amber-500 text-slate-950 shadow-xs"
-                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                      }`}
-                    >
-                      {tip === 0 ? "No Tip" : `₹${tip}`}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Swiggy / Zomato Transparent Bill Breakdown */}
-              <div className="rounded-xl bg-slate-50 p-2.5 text-xs space-y-1 border border-slate-100">
-                <div className="flex justify-between text-[11px] text-slate-600">
-                  <span>Items Total:</span>
-                  <span className="font-bold text-slate-900">₹{cartSubtotal}</span>
-                </div>
-                <div className="flex justify-between text-[11px] text-slate-600">
-                  <span>Restaurant Packaging Charges:</span>
-                  <span className="font-bold text-slate-900">₹{cartPackagingCharge}</span>
-                </div>
-                <div className="flex justify-between text-[11px] text-slate-600">
-                  <span>Govt. Taxes & GST (5%):</span>
-                  <span className="font-bold text-slate-900">₹{cartGstTax}</span>
-                </div>
-                <div className="flex justify-between text-[11px] text-slate-600">
-                  <span>Delivery Partner Fee:</span>
-                  <span className="font-bold text-slate-900">
-                    {cartDeliveryFee === 0 ? "FREE" : `₹${cartDeliveryFee}`}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[11px] text-slate-600">
-                  <span>Platform Convenience Fee:</span>
-                  <span className="font-bold text-slate-900">₹{cartPlatformFee}</span>
-                </div>
-                {riderTip > 0 && (
-                  <div className="flex justify-between text-[11px] text-emerald-700 font-medium">
-                    <span>Delivery Tip:</span>
-                    <span className="font-bold">₹{riderTip}</span>
-                  </div>
-                )}
-                <div className="flex justify-between border-t border-slate-200 pt-1.5 text-xs font-black text-slate-900">
-                  <span>Total Amount Payable:</span>
-                  <span className="text-sm font-black text-orange-600">₹{cartGrandTotal}</span>
-                </div>
-              </div>
-
-              {/* Payment Method Selector (Online vs COD) */}
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  Select Payment Method
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethodChoice("online_cashfree")}
-                    className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition ${
-                      paymentMethodChoice === "online_cashfree"
-                        ? "border-emerald-500 bg-emerald-50 text-emerald-950 font-black shadow-xs ring-1 ring-emerald-500"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold"
-                    }`}
-                  >
-                    <span className="text-base">⚡ 📱</span>
-                    <span className="text-xs mt-0.5 leading-tight font-black">Pay Online</span>
-                    <span className="text-[9px] text-emerald-700 font-medium">UPI QR · PhonePe · Cards</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setPaymentMethodChoice("cod")}
-                    className={`flex flex-col items-center justify-center rounded-xl border p-2.5 text-center transition ${
-                      paymentMethodChoice === "cod"
-                        ? "border-amber-500 bg-amber-50 text-amber-950 font-black shadow-xs ring-1 ring-amber-500"
-                        : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold"
-                    }`}
-                  >
-                    <span className="text-base">💵</span>
-                    <span className="text-xs mt-0.5 leading-tight font-black">Cash on Delivery</span>
-                    <span className="text-[9px] text-amber-700 font-medium">Pay to Rider with OTP</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Payment Explanatory Pill */}
-              <div className="rounded-lg bg-slate-100 p-2 text-[10px] text-slate-600">
-                {paymentMethodChoice === "online_cashfree" ? (
-                  <p>🔒 <strong>Official Cashfree Gateway:</strong> Dynamic UPI QR Code, 1-tap PhonePe / GPay / Paytm, RuPay/Visa/MasterCard, or NetBanking.</p>
-                ) : (
-                  <p>💵 <strong>Cash on Delivery:</strong> Pay ₹{cartGrandTotal} in cash directly to your delivery partner upon arrival.</p>
-                )}
-              </div>
-
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={handleCheckoutPayment}
-                className={`w-full rounded-xl py-2.5 text-xs sm:text-sm font-black text-white shadow-md disabled:opacity-50 transition ${
-                  paymentMethodChoice === "online_cashfree"
-                    ? "bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800"
-                    : "bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700"
-                }`}
-              >
-                {isSubmitting
-                  ? "Processing Order & Gateway..."
-                  : paymentMethodChoice === "online_cashfree"
-                    ? `Pay ₹${cartGrandTotal} via Cashfree (UPI / Cards) →`
-                    : `Confirm Cash on Delivery Order (₹${cartGrandTotal}) →`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Salon Digital Queue Token Modal ── */}
-      {salonModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white p-4 sm:p-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div>
-                <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-800">
-                  Live Queue Token
-                </span>
-                <h3 className="text-sm font-black text-slate-900 mt-0.5">{salonModal.name}</h3>
-              </div>
-              <button
-                onClick={() => setSalonModal(null)}
-                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-3 space-y-3 text-xs">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Select Service</label>
-                <select
-                  value={salonService}
-                  onChange={(e) => setSalonService(e.target.value)}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                >
-                  <option value="Executive Haircut & Styling (₹150)">Executive Haircut & Styling (₹150)</option>
-                  <option value="Beard Trim & Shaper (₹80)">Beard Trim & Shaper (₹80)</option>
-                  <option value="Haircut + Beard Combo (₹200)">Haircut + Beard Combo (₹200)</option>
-                  <option value="O3+ D-Tan Facial (₹450)">O3+ D-Tan Facial (₹450)</option>
-                  <option value="Keratin Hair Spa (₹750)">Keratin Hair Spa (₹750)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Barber / Stylist Preference</label>
-                <select
-                  value={salonStylist}
-                  onChange={(e) => setSalonStylist(e.target.value)}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                >
-                  <option value="Any Available Stylist">Any First Available Stylist (Fastest)</option>
-                  <option value="Master Barber Imran">Master Barber Imran</option>
-                  <option value="Stylist Rahul">Stylist Rahul</option>
-                  <option value="Senior Artist Sonu">Senior Artist Sonu</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Your Full Name</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Vicky Verma"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Mobile Number (SMS/WhatsApp Token)</label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 9876543210"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
-                />
-              </div>
-
-              <div className="rounded-xl bg-emerald-50 p-2.5 text-[11px] text-emerald-950 border border-emerald-100">
-                <span className="font-bold block mb-0.5">💡 Token Ka Fayda:</span>
-                Dukan me wait karne ki zaroorat nahi. Token lein aur number aane par 5 minute pehle dukan pahuchein!
-              </div>
-
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={handleBookSalonToken}
-                className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 py-2.5 text-xs sm:text-sm font-black text-white shadow-md hover:from-emerald-700 hover:to-teal-800 disabled:opacity-50 transition"
-              >
-                {isSubmitting ? "Issuing Digital Pass..." : "Confirm Live Queue Token (Free) →"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Car Wash Bay Booking Modal ── */}
-      {carWashModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white p-4 sm:p-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div>
-                <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[9px] font-black uppercase text-blue-800">
-                  Bay Slot Booking
-                </span>
-                <h3 className="text-sm font-black text-slate-900 mt-0.5">{carWashModal.name}</h3>
-              </div>
-              <button
-                onClick={() => setCarWashModal(null)}
-                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-3 space-y-3 text-xs">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Wash Package</label>
-                <select
-                  value={carWashPackage}
-                  onChange={(e) => setCarWashPackage(e.target.value)}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
-                >
-                  <option value="Full Foam Car Wash & Vacuuming (₹350)">Full Foam Car Wash & Vacuuming (₹350)</option>
-                  <option value="Bike Foam Wash & Chain Lube (₹100)">Bike Foam Wash & Chain Lube (₹100)</option>
-                  <option value="Teflon Body Coating & Polish (₹1200)">Teflon Body Coating & Polish (₹1200)</option>
-                  <option value="Interior Deep Steam Wash (₹700)">Interior Deep Steam Wash (₹700)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Vehicle Number (Required)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. UP 40 AB 1234"
-                  value={vehicleNumber}
-                  onChange={(e) => setVehicleNumber(e.target.value.toUpperCase())}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 font-mono font-bold"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Vehicle Model (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Swift / Creta / Splendor"
-                  value={vehicleModel}
-                  onChange={(e) => setVehicleModel(e.target.value)}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Your Mobile Number</label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 9876543210"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
-                />
-              </div>
-
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={handleBookCarWashSlot}
-                className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 py-2.5 text-xs sm:text-sm font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-800 disabled:opacity-50 transition"
-              >
-                {isSubmitting ? "Allocating Bay..." : "Confirm Bay Slot Token →"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Kirana Handwritten Parcha Upload Modal ── */}
-      {kiranaModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white p-4 sm:p-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div>
-                <span className="rounded-md bg-purple-100 px-2 py-0.5 text-[9px] font-black uppercase text-purple-800">
-                  Kirana Handwritten Parcha
-                </span>
-                <h3 className="text-sm font-black text-slate-900 mt-0.5">{kiranaModal.name}</h3>
-              </div>
-              <button
-                onClick={() => setKiranaModal(null)}
-                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs hover:bg-slate-200"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="mt-3 space-y-3 text-xs">
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                  📸 Parcha (Kagaz Ki Parchi) Ki Photo Upload Karein
-                </label>
-                <div className="relative rounded-xl border-2 border-dashed border-purple-200 bg-purple-50/50 p-3 text-center">
-                  {parchaImagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={parchaImagePreview}
-                        alt="Parcha preview"
-                        className="max-h-36 mx-auto rounded-lg shadow-xs"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setParchaImagePreview(null)}
-                        className="mt-1.5 text-[11px] font-bold text-rose-600 hover:underline"
-                      >
-                        Remove Photo
-                      </button>
-                    </div>
-                  ) : (
-                    <div>
-                      <span className="text-2xl">📷</span>
-                      <p className="mt-0.5 text-[11px] text-slate-600 font-semibold">
-                        Kagaz ki parchi ki photo kheinchein ya gallery se chunein
-                      </p>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              setParchaImagePreview(ev.target?.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">
-                  Ya Yahan Samaan Ki List Likh Dein (Optional)
-                </label>
-                <textarea
-                  rows={2}
-                  placeholder="e.g. 5kg Ashirvaad Atta, 1L Fortune Mustard Oil, 2kg Sugar..."
-                  value={parchaText}
-                  onChange={(e) => setParchaText(e.target.value)}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
-                />
-                {/* Stitch Screen 2: Quick Daily Essentials Presets */}
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {[
-                    "5kg Aashirvaad Atta",
-                    "1L Fortune Mustard Oil",
-                    "2kg Sugar",
-                    "1kg Tata Salt",
-                    "500g Amul Butter",
-                    "250g Taj Mahal Tea",
-                    "1kg Arhar Dal",
-                  ].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => {
-                        setParchaText((prev) => (prev ? `${prev}, ${preset}` : preset));
-                      }}
-                      className="rounded-md border border-purple-200 bg-purple-50/70 px-1.5 py-0.5 text-[9.5px] font-bold text-purple-800 hover:bg-purple-100 transition"
-                    >
-                      + {preset}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[11px] font-bold text-slate-700">Delivery Address</label>
-                <textarea
-                  rows={2}
-                  placeholder="Makaan No., Mohalla, Landmark, Bahraich"
-                  value={customerAddress}
-                  onChange={(e) => setCustomerAddress(e.target.value)}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700">Name</label>
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-700">Phone</label>
-                  <input
-                    type="tel"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900"
-                  />
-                </div>
-              </div>
-
-              <div className="rounded-xl bg-purple-50 p-2.5 text-[11px] text-purple-950 border border-purple-100">
-                <span className="font-bold block mb-0.5">ℹ️ Dukandar Process:</span>
-                Dukandar parcha dekh kar bill banayega aur rider delivery par payment receive karega.
-              </div>
-
-              <button
-                type="button"
-                disabled={isSubmitting}
-                onClick={handleSubmitParcha}
-                className="w-full rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 py-2.5 text-xs sm:text-sm font-black text-white shadow-md hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 transition"
-              >
-                {isSubmitting ? "Sending to Dukandar..." : "Send Parcha to Dukandar →"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── My Active Bookings & Passes Drawer ── */}
-      {isMyBookingsOpen && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-xs">
-          <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 p-3.5 sm:p-4">
-              <div>
-                <h3 className="text-sm sm:text-base font-extrabold text-slate-900">📋 My Active Bookings</h3>
-                <p className="text-[10px] text-slate-500">
-                  Live updates for {customerPhone ? `+91 ${customerPhone}` : "your mobile number"}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => fetchActiveBookings(customerPhone)}
-                  className="rounded-lg bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-700 hover:bg-slate-200"
-                >
-                  {isRefreshingBookings ? "↻ Syncing..." : "↻ Refresh"}
-                </button>
-                <button
-                  onClick={() => setIsMyBookingsOpen(false)}
-                  className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-600 text-xs"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Content List */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {!customerPhone && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-xs text-amber-900">
-                  Enter your mobile number during booking or above to sync all your active tokens and orders automatically.
-                </div>
-              )}
-
-              {/* Food Orders */}
-              {activeOrders.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
-                    🍔 Food & Mithai Orders
-                  </h4>
-                  <div className="space-y-3">
-                    {activeOrders.map((ord) => {
-                      // 6-stage Swiggy / Zomato order stepper logic
-                      let stepIndex = 0;
-                      if (ord.status === "placed") stepIndex = 0;
-                      else if (ord.status === "accepted_by_merchant" || ord.status === "preparing") stepIndex = 1;
-                      else if (ord.status === "ready_for_pickup") stepIndex = 2;
-                      else if (ord.status === "rider_assigned") stepIndex = 3;
-                      else if (ord.status === "picked_up" || ord.status === "out_for_delivery" || ord.status === "arrived_at_doorstep") stepIndex = 4;
-                      else if (ord.status === "delivered" || ord.status === "completed") stepIndex = 5;
-
-                      const STEPS = [
-                        { label: "Placed", icon: "📝" },
-                        { label: "Kitchen", icon: "👨‍🍳" },
-                        { label: "Packed", icon: "📦" },
-                        { label: "Rider", icon: "🛵" },
-                        { label: "On Way", icon: "🚀" },
-                        { label: "Delivered", icon: "✅" },
-                      ];
-
-                      return (
-                        <div
-                          key={ord.id}
-                          className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-3 shadow-xs"
-                        >
-                          <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-                            <div>
-                              <span className="text-xs font-mono font-black text-slate-800 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
-                                {formatUnifiedOrderCode(ord.id, ord.businesses?.name)}
-                              </span>
-                              <h5 className="text-sm font-black text-slate-900 leading-tight">
-                                {ord.businesses?.name || "Restaurant Partner"}
-                              </h5>
-                            </div>
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-[9px] font-black uppercase ${
-                                ord.status === "delivered"
-                                  ? "bg-emerald-100 text-emerald-800"
-                                  : ord.status === "out_for_delivery" || ord.status === "picked_up"
-                                    ? "bg-blue-100 text-blue-800 animate-pulse"
-                                    : "bg-amber-100 text-amber-800"
-                              }`}
-                            >
-                              {ord.status.replace(/_/g, " ")}
-                            </span>
-                          </div>
-
-                          {/* 6-Stage Visual Stepper */}
-                          <div className="rounded-xl bg-slate-50 p-2.5">
-                            <div className="grid grid-cols-6 gap-1 text-center">
-                              {STEPS.map((step, idx) => {
-                                const isDone = idx < stepIndex;
-                                const isCurrent = idx === stepIndex;
-                                return (
-                                  <div key={step.label} className="flex flex-col items-center">
-                                    <span
-                                      className={`grid h-6 w-6 place-items-center rounded-full text-[10px] font-bold transition ${
-                                        isDone
-                                          ? "bg-emerald-500 text-white"
-                                          : isCurrent
-                                            ? "bg-orange-500 text-white animate-bounce ring-2 ring-orange-300"
-                                            : "bg-slate-200 text-slate-500"
-                                      }`}
-                                    >
-                                      {isDone ? "✓" : step.icon}
-                                    </span>
-                                    <span
-                                      className={`text-[9px] mt-1 font-semibold leading-tight ${
-                                        isCurrent
-                                          ? "text-orange-600 font-black"
-                                          : isDone
-                                            ? "text-emerald-700"
-                                            : "text-slate-400"
-                                      }`}
-                                    >
-                                      {step.label}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-
-                            {/* Stepper Status Note with Food vs Grocery Differentiation */}
-                            <p className="mt-2 text-center text-[10px] text-slate-700 font-semibold bg-slate-50 py-1.5 px-2 rounded-lg border border-slate-100">
-                              {stepIndex === 0 && (
-                                ord.order_type === "grocery_parcha"
-                                  ? "⏳ Order Placed: Waiting for grocery store to accept your order."
-                                  : "⏳ Order Placed: Waiting for restaurant to accept your order."
-                              )}
-                              {stepIndex === 1 && (
-                                ord.order_type === "grocery_parcha"
-                                  ? `📦 Grocery Packing in Progress: Your items are being packed & will be dispatched in ~${ord.merchant_prep_time_minutes || 40} mins`
-                                  : `🍳 Fresh Food in Kitchen: Your food is being prepared freshly (Ready in ~${ord.merchant_prep_time_minutes || 25} mins)`
-                              )}
-                              {stepIndex === 2 && (
-                                ord.order_type === "grocery_parcha"
-                                  ? "📦 Items Packed: Ready at counter, awaiting delivery partner pickup."
-                                  : "🍲 Food Packed: Freshly prepared, awaiting delivery partner pickup."
-                              )}
-                              {stepIndex === 3 && (
-                                `🛵 Delivery Partner Assigned: ${ord.delivery_riders?.full_name || "Rider"} is heading to the store.`
-                              )}
-                              {stepIndex === 4 && (
-                                `🚀 Out for Delivery: ${ord.delivery_riders?.full_name || "Delivery Partner"} is on the way to your doorstep!`
-                              )}
-                              {stepIndex === 5 && (
-                                ord.order_type === "grocery_parcha"
-                                  ? "✅ Delivered: Your grocery order has been delivered successfully. Thank you!"
-                                  : "✅ Delivered: Your hot food has been delivered successfully. Enjoy your meal!"
-                              )}
-                            </p>
-                          </div>
-
-                          {/* Delivery Handover OTP Card */}
-                          <div className="rounded-xl border border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50 p-2.5 flex items-center justify-between shadow-2xs">
-                            <div>
-                              <span className="text-[9px] font-black uppercase text-amber-800 tracking-wider block">
-                                Delivery Handover OTP
-                              </span>
-                              <span className="text-[10px] text-amber-900 font-medium">
-                                Share only when rider arrives at your door
-                              </span>
-                            </div>
-                            <span className="font-mono text-base font-black tracking-widest text-slate-950 bg-amber-400 px-3 py-1 rounded-lg shadow-2xs">
-                              {ord.delivery_otp}
-                            </span>
-                          </div>
-
-                          {/* Complete Pending Online Payment */}
-                          {ord.payment_mode === "online_cashfree" && ord.payment_status !== "paid" && ["placed", "accepted"].includes(ord.status) && (
-                            <button
-                              type="button"
-                              onClick={() => handleInitiateCashfreeGateway(ord.business_id, ord.id)}
-                              className="w-full py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-bold text-xs shadow-xs hover:from-emerald-700 hover:to-teal-800 transition flex items-center justify-center gap-1.5"
-                            >
-                              <span>⚡</span>
-                              <span>Complete Payment (₹{ord.total_amount}) via Cashfree</span>
-                            </button>
-                          )}
-
-                          {/* Direct Contact Buttons */}
-                          <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-                            {ord.businesses?.phone && (
-                              <a
-                                href={`tel:${ord.businesses.phone}`}
-                                className="flex-1 text-center py-1.5 rounded-lg border border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-700 hover:bg-slate-100 transition"
-                              >
-                                📞 Call Restaurant
-                              </a>
-                            )}
-                            {ord.delivery_riders?.phone && (
-                              <a
-                                href={`tel:${ord.delivery_riders.phone}`}
-                                className="flex-1 text-center py-1.5 rounded-lg bg-purple-600 text-[10px] font-bold text-white hover:bg-purple-700 transition shadow-2xs"
-                              >
-                                🛵 Call Rider ({ord.delivery_riders.full_name})
-                              </a>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Salon & Car Wash Tokens */}
-              {activeTokens.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
-                    ✂️🚗 Digital Queue & Bay Tokens
-                  </h4>
-                  <div className="space-y-3">
-                    {activeTokens.map((tok) => (
-                      <div
-                        key={tok.id}
-                        className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 space-y-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="rounded-lg bg-emerald-600 px-2 py-0.5 text-xs font-black text-white">
-                            TOKEN #{tok.token_number}
-                          </span>
-                          <span className="text-[10px] font-bold text-emerald-900 uppercase">
-                            {tok.status}
-                          </span>
-                        </div>
-                        <div className="text-sm font-black text-emerald-950">
-                          {tok.businesses?.name || "Service Partner"}
-                        </div>
-                        <p className="text-xs text-emerald-800">{tok.vehicle_or_notes}</p>
-                        <div className="text-xs font-semibold text-emerald-900 pt-1 border-t border-emerald-200">
-                          ⏳ Approx wait time: ~{tok.estimated_wait_minutes} mins
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Kirana Parchas */}
-              {activeParchas.length > 0 && (
-                <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 mb-2">
-                    🛒 Kirana Parcha Orders
-                  </h4>
-                  <div className="space-y-3">
-                    {activeParchas.map((parcha) => (
-                      <div
-                        key={parcha.order_id}
-                        className="rounded-2xl border border-purple-200 bg-purple-50/70 p-4 space-y-2"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-mono font-black text-purple-900 bg-purple-100 px-2 py-0.5 rounded-md border border-purple-200">
-                            {formatUnifiedOrderCode(parcha.order_id, "Kirana")}
-                          </span>
-                          <span className="rounded-md bg-purple-200 px-2 py-0.5 text-[10px] font-black text-purple-900 uppercase">
-                            {parcha.hyperlocal_orders?.status || "Parcha Sent"}
-                          </span>
-                        </div>
-                        {parcha.handwritten_text && (
-                          <p className="text-xs text-slate-700 italic bg-white/60 p-2 rounded-lg">
-                            &ldquo;{parcha.handwritten_text}&rdquo;
-                          </p>
-                        )}
-                        {parcha.merchant_quote_amount ? (
-                          <div className="text-xs font-bold text-emerald-700">
-                            Dukandar Bill: ₹{parcha.merchant_quote_amount}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-slate-500">
-                            Dukandar is preparing the bill...
-                          </div>
-                        )}
-                        {parcha.hyperlocal_orders?.delivery_otp && (
-                          <div className="text-xs text-slate-700 flex justify-between border-t border-purple-200 pt-1">
-                            <span>Delivery OTP:</span>
-                            <span className="font-mono font-black">
-                              {parcha.hyperlocal_orders.delivery_otp}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {totalActiveCount === 0 && (
-                <div className="text-center py-12 text-slate-400">
-                  <span className="text-3xl">📭</span>
-                  <p className="text-xs mt-2 font-semibold">No active bookings yet.</p>
-                  <p className="text-[11px] mt-0.5">
-                    Order food, book a salon queue token, car wash bay, or send a kirana parcha!
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Instant Cashfree Launcher Modal (Eliminates Perceived Lag) ── */}
+          } catch {}
+          setIsOnboardingOpen(false);
+          showToast(`Location set to ${area.mohalla}`);
+        }}
+      />
+
+      {/* N-13 to N-19 Storefront, Info/Translate, Verified Reviews/Standee, Customizer, Parcha, Rx, Salon/Wash */}
+      <CustomerStorefrontAndVerticals
+        lang={lang}
+        onToggleLanguage={() => {
+          const next: CustomerLanguage = lang === "en" ? "hi" : "en";
+          setLang(next);
+          try {
+            localStorage.setItem("trustit_cust_lang", next);
+          } catch {}
+          showToast(next === "hi" ? "भाषा हिन्दी में बदली गई" : "Language set to English");
+        }}
+        userCoords={userCoords}
+        userLiveLocation={userLiveLocation}
+        activeStore={activeStoreModal}
+        onCloseStore={() => setActiveStoreModal(null)}
+        storeItems={activeStoreItems}
+        favoriteStoreIds={favoriteStoreIds}
+        onToggleFavorite={(id) => {
+          setFavoriteStoreIds((prev) => {
+            const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
+            try {
+              localStorage.setItem("trustit_favorite_stores", JSON.stringify(next));
+            } catch {}
+            return next;
+          });
+        }}
+        cartItemsList={cartItemsList}
+        cartGrandTotal={cartGrandTotal}
+        onQuickAddItem={handleQuickAddItem}
+        onOpenCustomizer={(item) => {
+          setCustomizingItem(item);
+          setSelectedPortion("half");
+          setSelectedAddons([]);
+          setCookingInstruction("");
+        }}
+        onOpenCheckout={() => setIsCheckoutOpen(true)}
+        onOpenStandeeScanner={() => setIsStandeeModalOpen(true)}
+        onClaimStandeeReward={() => {
+          setWalletBalance((prev) => {
+            const next = prev + 10;
+            try {
+              localStorage.setItem("trustit_money_balance", String(next));
+            } catch {}
+            return next;
+          });
+        }}
+        isStandeeOpen={isStandeeModalOpen}
+        onCloseStandee={() => setIsStandeeModalOpen(false)}
+        customizingItem={customizingItem}
+        onCloseCustomizer={() => setCustomizingItem(null)}
+        selectedPortion={selectedPortion}
+        setSelectedPortion={setSelectedPortion}
+        selectedAddons={selectedAddons}
+        setSelectedAddons={setSelectedAddons}
+        cookingInstruction={cookingInstruction}
+        setCookingInstruction={setCookingInstruction}
+        onConfirmCustomization={handleConfirmCustomization}
+        kiranaModal={kiranaModal}
+        onCloseKirana={() => setKiranaModal(null)}
+        parchaText={parchaText}
+        setParchaText={setParchaText}
+        parchaImagePreview={parchaImagePreview}
+        setParchaImagePreview={setParchaImagePreview}
+        parchaNotes={parchaNotes}
+        setParchaNotes={setParchaNotes}
+        onSubmitParcha={handleSubmitParcha}
+        medicalModal={medicalModal}
+        onCloseMedical={() => setMedicalModal(null)}
+        salonModal={salonModal}
+        onCloseSalon={() => setSalonModal(null)}
+        salonService={salonService}
+        setSalonService={setSalonService}
+        salonStylist={salonStylist}
+        setSalonStylist={setSalonStylist}
+        onBookSalonToken={handleBookSalonToken}
+        carWashModal={carWashModal}
+        onCloseCarWash={() => setCarWashModal(null)}
+        carWashPackage={carWashPackage}
+        setCarWashPackage={setCarWashPackage}
+        vehicleNumber={vehicleNumber}
+        setVehicleNumber={setVehicleNumber}
+        vehicleModel={vehicleModel}
+        setVehicleModel={setVehicleModel}
+        onBookCarWashSlot={handleBookCarWashSlot}
+        isSubmitting={isSubmitting}
+        onRegisterSubBack={registerStoreSubBack}
+      />
+
+      {/* N-20 to N-25 Cart, Saved Addresses, Map Pin, Checkout, Retry 08:42 & Order Confirmed PIN */}
+      <CustomerCheckoutAndAddresses
+        lang={lang}
+        cartConflictPrompt={
+          pendingCartReplace
+            ? {
+                pendingStoreName: pendingCartReplace.pendingStoreName,
+                currentStoreName: pendingCartReplace.currentStoreName,
+              }
+            : null
+        }
+        onConfirmReplaceCart={() => {
+          if (!pendingCartReplace) return;
+          setCart({ [pendingCartReplace.line.cartKey]: pendingCartReplace.line });
+          showToast(`Cart switched to ${pendingCartReplace.pendingStoreName}`);
+          setPendingCartReplace(null);
+        }}
+        onCancelReplaceCart={() => setPendingCartReplace(null)}
+        isCheckoutOpen={isCheckoutOpen}
+        onCloseCheckout={() => setIsCheckoutOpen(false)}
+        cartStore={cartStore}
+        cartItemsList={cartItemsList}
+        onUpdateCartQty={updateCartLineQty}
+        onClearCart={() => {
+          setCart({});
+          showToast("Cart cleared");
+        }}
+        outOfStockRule={outOfStockRule}
+        setOutOfStockRule={setOutOfStockRule}
+        storeNote={storeNote}
+        setStoreNote={setStoreNote}
+        deliveryScheduleSlot={deliveryScheduleSlot}
+        setDeliveryScheduleSlot={setDeliveryScheduleSlot}
+        riderTip={riderTip}
+        setRiderTip={setRiderTip}
+        promoCode={promoCode}
+        setPromoCode={setPromoCode}
+        subtotal={cartSubtotal}
+        deliveryFee={cartDeliveryFee}
+        platformFee={cartPlatformFee}
+        grandTotal={cartGrandTotal}
+        paymentMethodChoice={paymentMethodChoice}
+        setPaymentMethodChoice={setPaymentMethodChoice}
+        customerAddress={customerAddress}
+        savedAddresses={savedAddresses}
+        selectedAddressId={selectedAddressId}
+        onSelectAddress={(addr) => {
+          setSelectedAddressId(addr.id);
+          setCustomerAddress(addr.street);
+          if (addr.latitude && addr.longitude) {
+            setUserCoords({ lat: addr.latitude, lng: addr.longitude });
+          }
+        }}
+        onOpenAddressManager={() => setIsAddressModalOpen(true)}
+        onPlaceOrder={handleCheckoutPayment}
+        isSubmitting={isSubmitting}
+        isPaymentLaunching={isPaymentLaunching}
+        isAddressModalOpen={isAddressModalOpen}
+        onCloseAddressModal={() => setIsAddressModalOpen(false)}
+        customerId={customerId}
+        userCoords={userCoords}
+        onSaveAddressRecord={async (payload) => {
+          const full = [
+            payload.houseNo.trim(),
+            payload.mohalla.trim(),
+            payload.road.trim(),
+            payload.pincode ? `Pin: ${payload.pincode}` : "",
+            payload.district || "Bahraich",
+          ]
+            .filter(Boolean)
+            .join(", ");
+          setCustomerAddress(full);
+          setAddressVerified(true);
+          try {
+            localStorage.setItem("trustit_addr_verified", "1");
+          } catch {}
+          if (payload.lat && payload.lng) {
+            setUserCoords({ lat: payload.lat, lng: payload.lng });
+          }
+          if (customerId) {
+            try {
+              const res = await fetch("/api/customer/addresses", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  customerId,
+                  address: {
+                    label: payload.tag,
+                    street: full,
+                    city: payload.district || "Bahraich",
+                    pincode: payload.pincode || "271801",
+                    latitude: payload.lat,
+                    longitude: payload.lng,
+                    isDefault: true,
+                  },
+                }),
+              });
+              const d = await res.json();
+              if (d.success && d.address) {
+                const updated = [
+                  { ...d.address, tag: d.address.label },
+                  ...savedAddresses.filter((a) => a.id !== d.address.id),
+                ];
+                setSavedAddresses(updated);
+                setSelectedAddressId(d.address.id);
+                localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(updated));
+                showToast("Bahraich address & Gate pin saved!");
+                return;
+              }
+            } catch {}
+          }
+          const localEntry: CustomerSavedAddress = {
+            id: `addr_${Date.now()}`,
+            tag: payload.tag,
+            label: payload.tag,
+            street: full,
+            city: payload.district || "Bahraich",
+            pincode: payload.pincode || "271801",
+            latitude: payload.lat,
+            longitude: payload.lng,
+            isDefault: true,
+          };
+          const updated = [localEntry, ...savedAddresses];
+          setSavedAddresses(updated);
+          setSelectedAddressId(localEntry.id);
+          try {
+            localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(updated));
+          } catch {}
+          showToast("Address saved!");
+        }}
+        onDeleteAddress={handleDeleteAddress}
+        onUseGpsForPin={() => detectLiveLocation(false)}
+        onRegisterSubBack={registerAddressSubBack}
+        paymentRetryState={paymentRetryState}
+        onRetryCashfree={(orderId) => {
+          const targetBiz = cartStoreId || businesses[0]?.id || "";
+          setPaymentRetryState(null);
+          handleInitiateCashfreeGateway(targetBiz, orderId);
+        }}
+        onSwitchOrderToCod={async (orderId) => {
+          try {
+            const res = await fetch("/api/hyperlocal/orders", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "switch_to_cod", orderId }),
+            });
+            const d = await res.json();
+            if (d.success) {
+              setPaymentRetryState(null);
+              setCart({});
+              setIsCheckoutOpen(false);
+              setActiveStoreModal(null);
+              showToast("Switched to Cash on Delivery (COD)!");
+              setIsMyBookingsOpen(true);
+              fetchActiveBookings(customerPhone);
+            }
+          } catch {
+            showToast("Could not switch payment mode.");
+          }
+        }}
+        onDismissPaymentRetry={() => setPaymentRetryState(null)}
+        confirmedOrderOverlay={confirmedOrderOverlay}
+        onTrackConfirmedOrder={() => {
+          setConfirmedOrderOverlay(null);
+          setIsMyBookingsOpen(true);
+          fetchActiveBookings(customerPhone);
+        }}
+        onCloseConfirmedOverlay={() => setConfirmedOrderOverlay(null)}
+      />
+
+      {/* N-26 to N-30 Live Route Map, GST Receipt, Orders Hub, Cancel/UTR/Chat & Notifications */}
+      <CustomerOrdersAndSupport
+        isOrdersOpen={isMyBookingsOpen}
+        onCloseOrders={() => setIsMyBookingsOpen(false)}
+        customerPhone={customerPhone}
+        userCoords={userCoords}
+        activeOrders={activeOrders}
+        pastOrders={customerPastOrders}
+        activeTokens={activeTokens}
+        activeParchas={activeParchas}
+        isRefreshing={isRefreshingBookings}
+        onRefreshBookings={() => fetchActiveBookings(customerPhone)}
+        onRetryPendingPayment={(ord) => handleInitiateCashfreeGateway(ord.business_id, ord.id)}
+        onReorder={handleReorder}
+        onCustomerCancelOrder={async (orderId, reason) => {
+          try {
+            const res = await fetch("/api/hyperlocal/orders", {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ action: "customer_cancel", orderId, reason }),
+            });
+            const d = await res.json();
+            if (d.success) fetchActiveBookings(customerPhone);
+            return d;
+          } catch {
+            return { success: false, error: "Network error cancelling order." };
+          }
+        }}
+        foodRatings={foodRatings}
+        setFoodRatings={setFoodRatings}
+        deliveryRatings={deliveryRatings}
+        setDeliveryRatings={setDeliveryRatings}
+        isNotificationsOpen={isNotificationsOpen}
+        onCloseNotifications={() => {
+          markAllNotificationsSeen();
+          setIsNotificationsOpen(false);
+        }}
+        notifications={notificationsList}
+        onOpenOrdersFromNotif={() => setIsMyBookingsOpen(true)}
+        onRegisterSubBack={registerOrdersSubBack}
+      />
+
+      {/* N-31 & N-32 Profile Hub, Trustit Money, SpeedPass & DPDP Account Settings */}
+      <CustomerProfileAndSettings
+        isOpen={isProfileOpen}
+        onClose={() => setIsProfileOpen(false)}
+        lang={lang}
+        onToggleLanguage={() => {
+          const next: CustomerLanguage = lang === "en" ? "hi" : "en";
+          setLang(next);
+          try {
+            localStorage.setItem("trustit_cust_lang", next);
+          } catch {}
+        }}
+        customerId={customerId}
+        customerName={customerName}
+        customerPhone={customerPhone}
+        customerEmail={customerEmail}
+        walletBalance={walletBalance}
+        rewardPoints={rewardPoints}
+        speedPassActive={speedPassActive}
+        onActivateSpeedPass={() => {
+          setSpeedPassActive(true);
+          try {
+            localStorage.setItem("trustit_speedpass", "1");
+          } catch {}
+          showToast("⚡ Trustit SpeedPass Activated!");
+        }}
+        pushEnabled={pushEnabled}
+        onTogglePush={async () => {
+          const next = !pushEnabled;
+          if (next && typeof window !== "undefined" && "Notification" in window) {
+            try {
+              await Notification.requestPermission();
+            } catch {}
+          }
+          setPushEnabled(next);
+          try {
+            localStorage.setItem("trustit_push_enabled", next ? "1" : "0");
+          } catch {}
+        }}
+        onUpdateCustomerName={(newName) => {
+          const clean = newName.trim();
+          if (!clean) return;
+          setCustomerName(clean);
+          saveCustomerProfile(clean, customerPhone, customerAddress, customerEmail, customerId);
+          showToast("Profile name updated!");
+        }}
+        onOpenPastOrders={() => openAccountSection("past_orders")}
+        onOpenAddresses={() => openAccountSection("addresses")}
+        onOpenStandeeQr={() => setIsStandeeModalOpen(true)}
+        onOpenLogin={() => {
+          if (isLoginEntryStep || isNamePromptStep || activeAccountSectionLabel) {
+            openLoginOrResume();
+          }
+        }}
+        onSignOut={handleSignOut}
+        onDeleteAccount={handleDeleteAccount}
+        onRegisterSubBack={registerProfileSubBack}
+      />
+
+      {/* Cashfree Instant Launcher Modal (Zero Perceived Lag) */}
       {isPaymentLaunching && (
-        <div className="fixed inset-0 z-60 flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs">
-          <div className="w-full max-w-xs rounded-2xl bg-white p-5 text-center shadow-2xl space-y-3 animate-in fade-in zoom-in-95">
-            <div className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-emerald-100 text-2xl text-emerald-800">
+        <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs">
+          <div className="w-full max-w-xs rounded-3xl bg-white p-5 text-center shadow-2xl space-y-3 border border-[#c3c6d4]">
+            <div className="mx-auto h-12 w-12 rounded-2xl bg-[#f2f3ff] text-2xl flex items-center justify-center text-[#003178]">
               ⚡
             </div>
             <div>
-              <h4 className="text-sm font-black text-slate-900">Connecting to Cashfree</h4>
-              <p className="text-[11px] text-slate-500 mt-0.5">Opening instant UPI &amp; card payment rails...</p>
+              <h4 className="text-sm font-black text-[#003178]">Connecting to Cashfree</h4>
+              <p className="text-[11px] text-[#434652] mt-0.5">
+                Pay Online via UPI, PhonePe, GPay, Cards &amp; NetBanking
+              </p>
             </div>
-            <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-500 rounded-full animate-pulse w-3/4" />
+            <div className="h-1.5 w-full bg-[#eaedff] rounded-full overflow-hidden">
+              <div className="h-full bg-[#003178] rounded-full animate-pulse w-3/4" />
             </div>
-            <p className="text-[10px] text-slate-400">100% RBI Compliant &amp; Bank-Grade Encrypted</p>
-          </div>
-        </div>
-      )}
-
-      {/* ── Customer Account & Login Modal (Email OTP + 2-Tab Profile) ── */}
-      {isCustomerLoginOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-md max-h-[88vh] flex flex-col rounded-2xl bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 bg-white shrink-0">
-              {(customerEmail || customerPhone) && !isCustomerEditing ? (
-                accountView === "menu" ? (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsCustomerEditing(false);
-                        setIsCustomerLoginOpen(false);
-                      }}
-                      className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-700 hover:bg-slate-200 text-sm font-black transition"
-                      title="Back / Close"
-                    >
-                      ←
-                    </button>
-                    <span className="text-xs font-black tracking-wider text-slate-800 uppercase">MY ACCOUNT</span>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setAccountView("menu")}
-                    className="flex items-center gap-1.5 text-xs font-black text-slate-800 hover:text-orange-600 transition"
-                  >
-                    <span className="text-sm font-black">←</span>
-                    <span className="uppercase tracking-wider">MY ACCOUNT</span>
-                  </button>
-                )
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="grid h-7 w-7 place-items-center rounded-lg bg-orange-100 text-orange-800 text-xs font-black">
-                    👤
-                  </span>
-                  <div>
-                    <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 leading-tight">
-                      Sign In to Super-App
-                    </h3>
-                    <p className="text-[10px] text-slate-500">
-                      Login with Email OTP for saved addresses &amp; past orders
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex items-center gap-2">
-                <a
-                  href="tel:+919118863415"
-                  className="rounded-full border border-orange-200 bg-orange-50/80 px-3 py-1 text-[11px] font-black text-orange-600 hover:bg-orange-100 transition shadow-2xs"
-                  title="Bahraich Admin Helpline"
-                >
-                  Help
-                </a>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsCustomerEditing(false);
-                    setIsCustomerLoginOpen(false);
-                  }}
-                  className="grid h-7 w-7 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 bg-slate-50/50">
-              {/* If Logged In: Swiggy-Style Account Hub & Past Orders Experience */}
-              {(customerEmail || customerPhone) && !isCustomerEditing ? (
-                <div>
-                  {/* VIEW 1: Swiggy-Style My Account Menu Hub (Photo 2 Reference) */}
-                  {accountView === "menu" && (
-                    <div className="space-y-3.5">
-                      {/* User Profile Header (Photo 2: Lucky Shukla, +91-9118643415, luckyshuklar@gmail.com) */}
-                      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs space-y-1">
-                        <div className="flex items-center justify-between">
-                          <h2 className="text-xl font-black text-slate-900 leading-tight">
-                            {customerName || "Lucky Shukla"}
-                          </h2>
-                          <button
-                            type="button"
-                            onClick={handleSignOut}
-                            className="rounded-lg border border-rose-200 bg-rose-50 px-2.5 py-1 text-[10px] font-bold text-rose-700 hover:bg-rose-100 transition"
-                          >
-                            Sign Out
-                          </button>
-                        </div>
-                        <p className="text-xs text-slate-600 font-semibold">
-                          {customerPhone ? `+91 ${customerPhone}` : "Customer"}
-                        </p>
-                        <div className="flex items-center gap-2 pt-0.5">
-                          <span className="text-xs text-slate-500 font-mono">
-                            {customerEmail || "luckyshuklar@gmail.com"}
-                          </span>
-                          <span className="rounded-full bg-emerald-100 px-2 py-0.2 text-[8px] font-black text-emerald-800">
-                            Verified Email ✓
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Trustit One Membership Banner (Photo 2: one JOIN NOW) */}
-                      <div className="rounded-2xl border border-rose-100 bg-gradient-to-r from-orange-50 via-rose-50 to-amber-50 p-3.5 shadow-2xs">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-base font-black text-rose-600 tracking-tight">one</span>
-                            <span className="bg-rose-600 text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                              JOIN NOW
-                            </span>
-                          </div>
-                          <span className="text-slate-400 text-xs font-bold">⌄</span>
-                        </div>
-                        <h4 className="text-xs font-black text-slate-900 mt-1.5">
-                          Unlimited free deliveries, extra discounts &amp; more!
-                        </h4>
-                        <p className="text-[10px] text-slate-500 mt-0.5">
-                          Join now to unlock exclusive Bahraich merchant benefits
-                        </p>
-                      </div>
-
-                      {/* 4 Quick Actions Grid (Photo 2: Saved Address, Payment Modes, My Refunds, Trustit Money) */}
-                      <div className="grid grid-cols-4 gap-2">
-                        {/* 1. Saved Address */}
-                        <button
-                          type="button"
-                          onClick={() => setAccountView("addresses")}
-                          className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-slate-200 bg-white shadow-2xs hover:border-orange-300 hover:bg-orange-50/30 transition text-center"
-                        >
-                          <span className="grid h-8 w-8 place-items-center rounded-xl bg-orange-50 text-orange-600 text-base mb-1">
-                            📍
-                          </span>
-                          <span className="text-[10px] font-black text-slate-900 leading-tight">Saved Address</span>
-                          <span className="text-[8.5px] text-slate-400 mt-0.5">{savedAddresses.length} saved</span>
-                        </button>
-
-                        {/* 2. Payment Modes */}
-                        <button
-                          type="button"
-                          onClick={() => setAccountView("payments")}
-                          className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-slate-200 bg-white shadow-2xs hover:border-orange-300 hover:bg-orange-50/30 transition text-center"
-                        >
-                          <span className="grid h-8 w-8 place-items-center rounded-xl bg-blue-50 text-blue-600 text-base mb-1">
-                            💳
-                          </span>
-                          <span className="text-[10px] font-black text-slate-900 leading-tight">Payment Modes</span>
-                          <span className="text-[8.5px] text-slate-400 mt-0.5">UPI / Cards</span>
-                        </button>
-
-                        {/* 3. My Refunds */}
-                        <button
-                          type="button"
-                          onClick={() => setAccountView("refunds")}
-                          className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-slate-200 bg-white shadow-2xs hover:border-orange-300 hover:bg-orange-50/30 transition text-center"
-                        >
-                          <span className="grid h-8 w-8 place-items-center rounded-xl bg-purple-50 text-purple-600 text-base mb-1">
-                            🔄
-                          </span>
-                          <span className="text-[10px] font-black text-slate-900 leading-tight">My Refunds</span>
-                          <span className="text-[8.5px] text-slate-400 mt-0.5">Source direct</span>
-                        </button>
-
-                        {/* 4. Trustit Money */}
-                        <button
-                          type="button"
-                          onClick={() => setAccountView("wallet")}
-                          className="flex flex-col items-center justify-center p-2.5 rounded-2xl border border-slate-200 bg-white shadow-2xs hover:border-orange-300 hover:bg-orange-50/30 transition text-center"
-                        >
-                          <span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-50 text-emerald-600 text-base mb-1">
-                            👛
-                          </span>
-                          <span className="text-[10px] font-black text-slate-900 leading-tight">Trustit Money</span>
-                          <span className="text-[8.5px] text-slate-400 mt-0.5">₹0 Balance</span>
-                        </button>
-                      </div>
-
-                      {/* Menu List Rows with Right Chevron (Photo 2) */}
-                      <div className="rounded-2xl border border-slate-200 bg-white overflow-hidden shadow-2xs divide-y divide-slate-100">
-                        {/* Row 1: Past Orders */}
-                        <button
-                          type="button"
-                          onClick={() => setAccountView("past_orders")}
-                          className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 transition text-left"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">📋</span>
-                            <div>
-                              <div className="text-xs font-black text-slate-900">Past Orders &amp; Receipts</div>
-                              <div className="text-[10px] text-slate-500">
-                                View previous orders &amp; reorder ({customerPastOrders.length})
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-black text-orange-700">
-                              {customerPastOrders.length}
-                            </span>
-                            <span className="text-slate-400 text-xs font-bold">&gt;</span>
-                          </div>
-                        </button>
-
-                        {/* Row 2: My Vouchers */}
-                        <div
-                          onClick={() => setAccountView("payments")}
-                          className="flex items-center justify-between p-3.5 hover:bg-slate-50 transition text-left cursor-pointer"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">🎟️</span>
-                            <div>
-                              <div className="text-xs font-black text-slate-900">My Vouchers &amp; Coupons</div>
-                              <div className="text-[10px] text-slate-500">Bahraich special discount codes</div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black text-emerald-700">
-                              2 Active
-                            </span>
-                            <span className="text-slate-400 text-xs font-bold">&gt;</span>
-                          </div>
-                        </div>
-
-                        {/* Row 3: Help & Support */}
-                        <a
-                          href="tel:+919118863415"
-                          className="flex items-center justify-between p-3.5 hover:bg-slate-50 transition text-left"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">📞</span>
-                            <div>
-                              <div className="text-xs font-black text-slate-900">Help &amp; Customer Support</div>
-                              <div className="text-[10px] text-slate-500">Direct call to Bahraich Admin Helpline</div>
-                            </div>
-                          </div>
-                          <span className="text-slate-400 text-xs font-bold">&gt;</span>
-                        </a>
-
-                        {/* Row 4: Account Statements */}
-                        <button
-                          type="button"
-                          onClick={() => setAccountView("past_orders")}
-                          className="w-full flex items-center justify-between p-3.5 hover:bg-slate-50 transition text-left"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">📄</span>
-                            <div>
-                              <div className="text-xs font-black text-slate-900">Account Statements</div>
-                              <div className="text-[10px] text-slate-500">Invoices &amp; order bill summaries</div>
-                            </div>
-                          </div>
-                          <span className="text-slate-400 text-xs font-bold">&gt;</span>
-                        </button>
-
-                        {/* Row 5: Sign Out */}
-                        <button
-                          type="button"
-                          onClick={handleSignOut}
-                          className="w-full flex items-center justify-between p-3.5 hover:bg-rose-50/50 transition text-left text-rose-600"
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className="text-lg">🚪</span>
-                            <div>
-                              <div className="text-xs font-black text-rose-700">Sign Out</div>
-                              <div className="text-[10px] text-rose-500">Log out from this session</div>
-                            </div>
-                          </div>
-                          <span className="text-rose-400 text-xs font-bold">&gt;</span>
-                        </button>
-                      </div>
-
-                      {/* Floating Bottom Black Pill Button (Photo 2: BROWSE PAST ORDERS) */}
-                      <div className="pt-2 pb-1 flex justify-center">
-                        <button
-                          type="button"
-                          onClick={() => setAccountView("past_orders")}
-                          className="w-full max-w-xs py-3 rounded-full bg-slate-950 hover:bg-black text-white text-xs font-black tracking-wider uppercase shadow-xl flex items-center justify-center gap-2 transition active:scale-95"
-                        >
-                          <span>BROWSE PAST ORDERS</span>
-                          <span className="text-sm font-bold">&gt;</span>
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* VIEW 2: Swiggy-Style Past Orders & Dual Rating Screen (Photo 4 Reference) */}
-                  {accountView === "past_orders" && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between px-1">
-                        <span className="text-xs font-black tracking-wider text-slate-800 uppercase">
-                          PAST ORDERS ({customerPastOrders.length})
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => fetchCustomerOrders(customerId, customerPhone)}
-                          className="text-[10px] font-bold text-slate-600 hover:text-slate-900 flex items-center gap-0.5"
-                        >
-                          {isLoadingPastOrders ? "↻ Refreshing..." : "↻ Refresh"}
-                        </button>
-                      </div>
-
-                      {customerPastOrders.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center space-y-2">
-                          <span className="text-3xl">🍽️</span>
-                          <h4 className="text-xs font-extrabold text-slate-800">No Past Orders Found</h4>
-                          <p className="text-[10px] text-slate-500">
-                            Browse restaurants in Bahraich and place your first delicious food order!
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-3">
-                          {customerPastOrders.map((ord) => {
-                            const formattedDate = new Date(ord.created_at).toLocaleDateString("en-US", {
-                              month: "long",
-                              day: "numeric",
-                              hour: "numeric",
-                              minute: "2-digit",
-                              hour12: true,
-                            });
-                            const isDelivered = ord.status === "delivered" || ord.status === "completed";
-                            const isCancelled = ord.status === "cancelled" || ord.status === "rejected";
-                            const currentFoodRating = foodRatings[ord.id] || 0;
-                            const currentDeliveryRating = deliveryRatings[ord.id] || 0;
-
-                            return (
-                              <div
-                                key={ord.id}
-                                className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-3 shadow-xs hover:border-slate-300 transition"
-                              >
-                                {/* Top Row: Thumbnail + Restaurant Info + Status Badge (Photo 4) */}
-                                <div className="flex items-start justify-between gap-2.5">
-                                  <div className="flex items-start gap-2.5 min-w-0">
-                                    <img
-                                      src={getRestaurantThumbnail(ord.businesses?.name)}
-                                      alt={ord.businesses?.name || "Restaurant"}
-                                      className="h-14 w-14 rounded-xl object-cover shrink-0 shadow-2xs border border-slate-100"
-                                    />
-                                    <div className="min-w-0">
-                                      <h4 className="text-sm font-black text-slate-900 truncate leading-snug">
-                                        {ord.businesses?.name || "Local Restaurant"}
-                                      </h4>
-                                      <p className="text-[11px] text-slate-500 truncate">
-                                        {ord.businesses?.address || "Bahraich Locality"}
-                                      </p>
-                                      <p className="text-[9.5px] font-mono font-bold text-slate-400 mt-0.5">
-                                        {formatUnifiedOrderCode(ord.id, ord.businesses?.name)}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {/* Status Badge (Photo 4: Delivered ✓ in emerald or Cancelled ✕ in rose) */}
-                                  <div className="shrink-0 pt-0.5">
-                                    {isDelivered ? (
-                                      <div className="flex items-center gap-1 text-emerald-600 text-xs font-black">
-                                        <span>Delivered</span>
-                                        <span className="grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white text-[9px] font-black">
-                                          ✓
-                                        </span>
-                                      </div>
-                                    ) : isCancelled ? (
-                                      <div className="text-right">
-                                        <div className="flex items-center justify-end gap-1 text-rose-600 text-xs font-black">
-                                          <span>Cancelled</span>
-                                          <span className="grid h-4 w-4 place-items-center rounded-full bg-rose-500 text-white text-[9px] font-black">
-                                            ✕
-                                          </span>
-                                        </div>
-                                        {ord.cancellation_reason && (
-                                          <span className="text-[9px] text-rose-500 font-semibold block mt-0.5">
-                                            {ord.cancellation_reason.replace(/_/g, " ")}
-                                          </span>
-                                        )}
-                                      </div>
-                                    ) : (
-                                      <span className="rounded-md bg-amber-100 text-amber-800 px-2 py-0.5 text-[10px] font-black">
-                                        {ord.status}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Line Items Summary (Photo 4: 1 X Item Name) */}
-                                <div className="space-y-1 pt-1">
-                                  {(ord.hyperlocal_order_items && ord.hyperlocal_order_items.length > 0
-                                    ? ord.hyperlocal_order_items
-                                    : [{ quantity: 1, item_name: "Fresh Food Items", unit_price: ord.subtotal_amount }]
-                                  ).map((item, idx) => (
-                                    <div key={idx} className="flex items-center text-xs text-slate-700 font-medium">
-                                      <span className="bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-black mr-2 font-mono">
-                                        {item.quantity} X
-                                      </span>
-                                      <span className="truncate">{item.item_name}</span>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                <hr className="border-slate-100" />
-
-                                {/* Dual 5-Star Interactive Rating Block (Photo 4: Your Food Rating & Delivery Rating) */}
-                                <div className="grid grid-cols-2 gap-3 py-1">
-                                  {/* Food Rating */}
-                                  <div className="text-center">
-                                    <div className="text-[11px] font-bold text-slate-600 mb-1">Your Food Rating</div>
-                                    <div className="flex items-center justify-center gap-1">
-                                      {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                          key={star}
-                                          type="button"
-                                          onClick={() => setFoodRatings((prev) => ({ ...prev, [ord.id]: star }))}
-                                          className="text-lg leading-none transition transform hover:scale-110 active:scale-95"
-                                          title={`${star} Star Food Rating`}
-                                        >
-                                          {star <= currentFoodRating ? (
-                                            <span className="text-amber-400">★</span>
-                                          ) : (
-                                            <span className="text-slate-300">☆</span>
-                                          )}
-                                        </button>
-                                      ))}
-                                    </div>
-                                    {currentFoodRating > 0 && (
-                                      <span className="block text-[9px] text-emerald-600 font-bold mt-0.5 animate-in fade-in">
-                                        Rated {currentFoodRating}★
-                                      </span>
-                                    )}
-                                  </div>
-
-                                  {/* Delivery Rating */}
-                                  <div className="text-center">
-                                    <div className="text-[11px] font-bold text-slate-600 mb-1">Delivery Rating</div>
-                                    <div className="flex items-center justify-center gap-1">
-                                      {[1, 2, 3, 4, 5].map((star) => (
-                                        <button
-                                          key={star}
-                                          type="button"
-                                          onClick={() => setDeliveryRatings((prev) => ({ ...prev, [ord.id]: star }))}
-                                          className="text-lg leading-none transition transform hover:scale-110 active:scale-95"
-                                          title={`${star} Star Delivery Rating`}
-                                        >
-                                          {star <= currentDeliveryRating ? (
-                                            <span className="text-amber-400">★</span>
-                                          ) : (
-                                            <span className="text-slate-300">☆</span>
-                                          )}
-                                        </button>
-                                      ))}
-                                    </div>
-                                    {currentDeliveryRating > 0 && (
-                                      <span className="block text-[9px] text-emerald-600 font-bold mt-0.5 animate-in fade-in">
-                                        Rated {currentDeliveryRating}★
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {/* Wide Peach/Orange Reorder Button (Photo 4: REORDER >) */}
-                                <button
-                                  type="button"
-                                  onClick={() => handleReorder(ord)}
-                                  className="w-full py-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-600 text-xs font-black tracking-wide uppercase transition active:scale-98 flex items-center justify-center gap-1.5 shadow-2xs"
-                                >
-                                  <span>REORDER</span>
-                                  <span className="font-bold">&gt;</span>
-                                </button>
-
-                                {/* Footer: Ordered Date & Bill Total (Photo 4) */}
-                                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-0.5 font-medium">
-                                  <span>Ordered: {formattedDate}</span>
-                                  <span>
-                                    Bill Total:{" "}
-                                    <strong className="text-slate-900 font-mono font-bold">₹{ord.total_amount}</strong>
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* VIEW 3: Saved Addresses */}
-                  {accountView === "addresses" && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                          SAVED ADDRESSES
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setIsAddressModalOpen(true)}
-                          className="text-xs font-black text-blue-600 hover:underline"
-                        >
-                          + Add New Address
-                        </button>
-                      </div>
-
-                      {savedAddresses.length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center space-y-2">
-                          <span className="text-3xl">📍</span>
-                          <p className="text-xs font-semibold text-slate-600">No saved addresses yet.</p>
-                          <button
-                            type="button"
-                            onClick={() => setIsAddressModalOpen(true)}
-                            className="mt-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800"
-                          >
-                            + Add Home or Work Address
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {savedAddresses.map((addr) => {
-                            const isDefault = addr.isDefault || selectedAddressId === addr.id;
-                            const label = addr.label || addr.tag || "Home";
-                            const icon = label === "Home" ? "🏠" : label === "Work" ? "🏢" : "📍";
-                            const streetText =
-                              addr.street ||
-                              buildAddressString(
-                                addr.houseNo || "",
-                                addr.mohalla || "",
-                                addr.road || "",
-                                addr.pincode || "",
-                                addr.district || "Bahraich",
-                              );
-
-                            return (
-                              <div
-                                key={addr.id}
-                                className={`rounded-2xl border p-3 transition ${
-                                  isDefault
-                                    ? "border-orange-400 bg-orange-50/50 ring-1 ring-orange-300"
-                                    : "border-slate-200 bg-white"
-                                }`}
-                              >
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-1.5">
-                                    <span>{icon}</span>
-                                    <span className="text-xs font-black text-slate-900">{label}</span>
-                                    {isDefault && (
-                                      <span className="rounded bg-orange-100 px-1.5 py-0.2 text-[8px] font-black text-orange-800">
-                                        Default
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    {!isDefault && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          setSelectedAddressId(addr.id);
-                                          setCustomerAddress(streetText);
-                                        }}
-                                        className="rounded px-2 py-0.5 text-[9px] font-bold text-blue-600 hover:bg-blue-50"
-                                      >
-                                        Use Default
-                                      </button>
-                                    )}
-                                    <button
-                                      type="button"
-                                      onClick={() => handleDeleteAddress(addr.id)}
-                                      className="rounded px-1.5 py-0.5 text-[9px] font-bold text-rose-500 hover:bg-rose-50"
-                                    >
-                                      ✕
-                                    </button>
-                                  </div>
-                                </div>
-                                <p className="text-[11px] text-slate-600 mt-1.5">{streetText}</p>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* VIEW 4: Payment Modes */}
-                  {accountView === "payments" && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                          PAYMENT MODES
-                        </span>
-                        <span className="text-[10px] text-emerald-600 font-black">100% RBI Compliant</span>
-                      </div>
-                      <div className="space-y-2">
-                        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-1 shadow-2xs">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">⚡</span>
-                            <div>
-                              <h5 className="text-xs font-black text-slate-900">Cashfree Instant UPI</h5>
-                              <p className="text-[10px] text-slate-500">Google Pay, PhonePe, Paytm, BHIM</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-1 shadow-2xs">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">💳</span>
-                            <div>
-                              <h5 className="text-xs font-black text-slate-900">Credit &amp; Debit Cards</h5>
-                              <p className="text-[10px] text-slate-500">Visa, Mastercard, RuPay, Maestro</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="rounded-2xl border border-slate-200 bg-white p-3.5 space-y-1 shadow-2xs">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">💵</span>
-                            <div>
-                              <h5 className="text-xs font-black text-slate-900">Cash on Delivery (COD)</h5>
-                              <p className="text-[10px] text-slate-500">Pay cash directly to rider at doorstep upon delivery</p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* VIEW 5: My Refunds */}
-                  {accountView === "refunds" && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                          MY REFUNDS
-                        </span>
-                        <span className="text-[10px] text-slate-500">Cashfree Direct Rails</span>
-                      </div>
-                      {customerPastOrders.filter((o) => o.status === "cancelled").length === 0 ? (
-                        <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center space-y-1.5">
-                          <span className="text-3xl">🔄</span>
-                          <h5 className="text-xs font-black text-slate-800">No Pending Refunds</h5>
-                          <p className="text-[10px] text-slate-500">
-                            All your orders are either delivered or paid directly on delivery. Cancelled prepaid orders are automatically settled to your source bank account within 24-48 hours.
-                          </p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {customerPastOrders
-                            .filter((o) => o.status === "cancelled")
-                            .map((ord) => (
-                              <div
-                                key={ord.id}
-                                className="rounded-2xl border border-slate-200 bg-white p-3 space-y-1.5 shadow-2xs"
-                              >
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-black text-slate-900">
-                                    Refund for {formatUnifiedOrderCode(ord.id, ord.businesses?.name)}
-                                  </span>
-                                  <span className="text-xs font-black text-emerald-600">₹{ord.total_amount}</span>
-                                </div>
-                                <p className="text-[10px] text-slate-500">
-                                  {ord.payment_mode === "online_cashfree"
-                                    ? "Processed to original payment account via Cashfree"
-                                    : "COD Order (Zero Amount Deducted)"}
-                                </p>
-                              </div>
-                            ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* VIEW 6: Trustit Money */}
-                  {accountView === "wallet" && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-black text-slate-800 uppercase tracking-wider">
-                          TRUSTIT MONEY
-                        </span>
-                        <span className="text-[10px] text-emerald-600 font-bold">1-Tap Checkout</span>
-                      </div>
-                      <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 p-4 space-y-1 shadow-2xs">
-                        <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
-                          Available Balance
-                        </span>
-                        <div className="text-2xl font-black text-emerald-950 font-mono">₹0.00</div>
-                        <p className="text-[10px] text-emerald-700 pt-1">
-                          Instant cashback and wallet credits will appear here for 1-tap checkout.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                /* When NOT Logged In: Email OTP Flow */
-                <div className="space-y-3">
-                  {otpNotice && (
-                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5 text-xs text-emerald-800">
-                      {otpNotice}
-                    </div>
-                  )}
-                  {otpError && (
-                    <div className="rounded-xl border border-rose-200 bg-rose-50 p-2.5 text-xs text-rose-800">
-                      {otpError}
-                    </div>
-                  )}
-
-                  {loginStep === "email" ? (
-                    <div className="space-y-3.5">
-                      {/* Top Header */}
-                      <div className="text-center pt-1 pb-1">
-                        <div className="inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-600 text-white font-black text-lg shadow-md mb-1.5">
-                          🛡️
-                        </div>
-                        <h3 className="text-base font-black text-slate-900">Sign in with Mobile</h3>
-                        <p className="text-[11px] text-slate-500">Bahraich Hyperlocal Commerce &amp; Super-App</p>
-                      </div>
-
-                      {/* Clean Mobile Number + WhatsApp OTP Login */}
-                      <div className="space-y-3">
-                        <div>
-                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                            Mobile Number
-                          </label>
-                          <div className="flex items-center rounded-xl border-2 border-emerald-300 focus-within:border-emerald-600 bg-emerald-50/20 px-3 py-2.5 transition">
-                            <span className="text-xs font-bold text-slate-700 mr-2 border-r border-slate-300 pr-2">
-                              🇮🇳 +91
-                            </span>
-                            <input
-                              type="tel"
-                              maxLength={10}
-                              placeholder="10 अंकों का मोबाइल नंबर दर्ज करें"
-                              value={loginPhone}
-                              onChange={(e) => setLoginPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                              onKeyDown={(e) => {
-                                if (e.key === "Enter" && loginPhone.length === 10) handleSendOtp();
-                              }}
-                              className="w-full text-xs font-bold text-slate-900 bg-transparent outline-none placeholder:text-slate-400 placeholder:font-normal font-mono tracking-wider"
-                            />
-                          </div>
-                          <p className="text-[10px] text-emerald-700 font-semibold mt-1.5 flex items-center gap-1">
-                            <span>💬</span>
-                            <span>सुरक्षित 6-अंकों का OTP आपके WhatsApp पर तुरंत भेजा जाएगा।</span>
-                          </p>
-                        </div>
-
-                        {/* Primary Get WhatsApp OTP CTA Button */}
-                        <button
-                          type="button"
-                          disabled={isSendingOtp || loginPhone.length < 10}
-                          onClick={() => handleSendOtp(undefined, "whatsapp")}
-                          className="w-full rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 py-3 text-xs font-black text-white shadow-md shadow-emerald-500/20 disabled:opacity-50 transition active:scale-98 flex items-center justify-center gap-2 cursor-pointer"
-                        >
-                          {isSendingOtp ? (
-                            <>
-                              <span className="animate-spin text-sm">⏳</span>
-                              <span>WhatsApp OTP भेजा जा रहा है...</span>
-                            </>
-                          ) : (
-                            <>
-                              <span>WhatsApp OTP प्राप्त करें</span>
-                              <span>→</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-
-                      {/* Skip & Explore as Guest Link */}
-                      <div className="text-center pt-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setIsCustomerEditing(false);
-                            setIsCustomerLoginOpen(false);
-                          }}
-                          className="text-[11px] font-bold text-slate-500 hover:text-slate-800 hover:underline cursor-pointer"
-                        >
-                          Skip &amp; Explore as Guest →
-                        </button>
-                      </div>
-
-                      {/* Terms & Agreement Section (Shifted down) */}
-                      <div className="pt-4 mt-2 border-t border-slate-100 text-center">
-                        <p className="text-[10px] text-slate-400 leading-relaxed">
-                          By continuing, you agree to TRUSTIT’s Terms of Service &amp; Safety Policy.
-                        </p>
-                      </div>
-                    </div>
-                  ) : loginStep === "otp" ? (
-                    /* Step 2: 6-Digit OTP Entry Matching Template */
-                    <div className="space-y-3.5">
-                      <div className="text-center space-y-1">
-                        <div className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-violet-100 text-violet-600 text-lg shadow-2xs mb-1">
-                          📱
-                        </div>
-                        <h4 className="text-base font-black text-slate-900">Verify Your Number</h4>
-                        <p className="text-[11px] text-slate-500">
-                          Enter the 6-digit code sent to <br />
-                          <span className="font-bold text-slate-800">
-                            {authMode === "phone" ? `+91 ${loginPhone}` : loginEmail}
-                          </span>
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setLoginStep("email");
-                            setOtpError("");
-                            setOtpNotice("");
-                          }}
-                          className="text-[10.5px] text-violet-600 hover:underline font-bold inline-block mt-0.5"
-                        >
-                          ← Change {authMode === "phone" ? "Mobile Number" : "Email"}
-                        </button>
-                      </div>
-
-                      <div>
-                        <input
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={6}
-                          placeholder="• • • • • •"
-                          value={loginOtp}
-                          onChange={(e) => setLoginOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && loginOtp.length === 6) handleVerifyOtp();
-                          }}
-                          className="w-full rounded-xl border-2 border-violet-400 py-2.5 text-center font-mono text-2xl font-black tracking-[0.35em] text-violet-950 bg-violet-50/30 focus:border-violet-600 focus:ring-2 focus:ring-violet-200 outline-none"
-                        />
-                      </div>
-
-                      {/* Resend & WhatsApp Channel Switch */}
-                      <div className="flex flex-col items-center gap-1.5 text-xs text-center">
-                        <div className="flex items-center justify-between w-full text-[11px] px-1">
-                          <span className="text-slate-400">Didn't receive code?</span>
-                          {loginOtpCountdown > 0 ? (
-                            <span className="text-slate-400 font-mono">Resend in {loginOtpCountdown}s</span>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleSendOtp(undefined, loginChannel)}
-                              className="font-bold text-violet-600 hover:underline"
-                            >
-                              ↻ Resend Code
-                            </button>
-                          )}
-                        </div>
-
-                        {authMode === "phone" && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const nextChan = loginChannel === "sms" ? "whatsapp" : "sms";
-                              setLoginChannel(nextChan);
-                              handleSendOtp(undefined, nextChan);
-                            }}
-                            className="text-[11px] font-bold text-emerald-600 hover:underline mt-1"
-                          >
-                            {loginChannel === "sms"
-                              ? "💬 Didn't get SMS? Send via WhatsApp OTP"
-                              : "📱 Didn't get WhatsApp? Send via SMS OTP"}
-                          </button>
-                        )}
-                      </div>
-
-                      <button
-                        type="button"
-                        disabled={isVerifyingOtp || loginOtp.length !== 6}
-                        onClick={handleVerifyOtp}
-                        className="w-full rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 py-2.5 text-xs font-black text-white shadow-md shadow-violet-500/20 disabled:opacity-50 transition active:scale-98"
-                      >
-                        {isVerifyingOtp ? "Verifying Code..." : "Verify & Continue →"}
-                      </button>
-                    </div>
-                  ) : loginStep === "name_prompt" ? (
-                    /* Step 3: New Customer Name & Phone Prompt */
-                    <div className="space-y-3">
-                      <div className="text-center space-y-1">
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-800">
-                          🎉 Welcome to Trustit!
-                        </span>
-                        <h4 className="text-sm font-extrabold text-slate-900">What is your name?</h4>
-                        <p className="text-[11px] text-slate-500">
-                          Please enter your full name so restaurants know who this order is for.
-                        </p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-700 mb-0.5">
-                            Full Name <span className="text-rose-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="e.g. Ramesh Kumar"
-                            value={newCustomerName}
-                            onChange={(e) => setNewCustomerName(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && newCustomerName.trim()) handleCreateProfile();
-                            }}
-                            className="w-full rounded-xl border border-slate-300 px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-orange-500"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[10px] font-bold text-slate-700 mb-0.5">
-                            Mobile No (Optional)
-                          </label>
-                          <input
-                            type="tel"
-                            maxLength={10}
-                            placeholder="e.g. 9876543210"
-                            value={newCustomerPhone}
-                            onChange={(e) => setNewCustomerPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                            className="w-full rounded-xl border border-slate-300 px-2.5 py-1.5 text-xs text-slate-900 outline-none focus:border-orange-500 font-mono"
-                          />
-                        </div>
-                      </div>
-
-                      <button
-                        type="button"
-                        disabled={isVerifyingOtp || !newCustomerName.trim()}
-                        onClick={handleCreateProfile}
-                        className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 py-2.5 text-xs font-black text-white shadow-md hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 transition"
-                      >
-                        {isVerifyingOtp ? "Creating Account..." : "Save Name & Open Profile →"}
-                      </button>
-                    </div>
-                  ) : null}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      {/* ── Address Management Modal (+ Add Another Address) (Image 3 Benchmark) ── */}
-      {isAddressModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-3 sm:p-4 backdrop-blur-xs">
-          <div className="w-full max-w-sm sm:max-w-md rounded-2xl bg-white p-3.5 sm:p-4 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <h3 className="text-xs sm:text-sm font-black text-slate-900">📍 Add Delivery Address</h3>
-              <button
-                type="button"
-                onClick={() => setIsAddressModalOpen(false)}
-                className="grid h-6 w-6 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 text-xs"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* Address Tag Selector */}
-            <div>
-              <label className="block text-[10px] font-bold text-slate-600 mb-1">Save Address As:</label>
-              <div className="grid grid-cols-3 gap-1.5">
-                {[
-                  { tag: "Home", icon: "🏠" },
-                  { tag: "Work", icon: "💼" },
-                  { tag: "Other", icon: "📍" },
-                ].map((item) => (
-                  <button
-                    key={item.tag}
-                    type="button"
-                    onClick={() => setNewAddressTag(item.tag as typeof newAddressTag)}
-                    className={`py-1.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-1 transition ${
-                      newAddressTag === item.tag
-                        ? "bg-blue-50 border-blue-400 text-blue-900 ring-1 ring-blue-300"
-                        : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>{item.icon}</span>
-                    <span>{item.tag}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Structured Address Form */}
-            <div className="space-y-2 text-xs">
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500">House / Shop / Flat No.</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Shop 14 / House 28"
-                    value={addrHouseNo}
-                    onChange={(e) => setAddrHouseNo(e.target.value)}
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500">Colony / Mohalla / Area</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Civil Lines / Chowk"
-                    value={addrMohalla}
-                    onChange={(e) => setAddrMohalla(e.target.value)}
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500">Road / Landmark</label>
-                <input
-                  type="text"
-                  placeholder="e.g. KDC Lucknow Road, Near Petrol Pump"
-                  value={addrRoad}
-                  onChange={(e) => setAddrRoad(e.target.value)}
-                  className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500">Pincode</label>
-                  <input
-                    type="text"
-                    value={addrPincode}
-                    onChange={(e) => setAddrPincode(e.target.value)}
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold text-slate-500">District / City</label>
-                  <input
-                    type="text"
-                    value={addrDistrict}
-                    onChange={(e) => setAddrDistrict(e.target.value)}
-                    className="mt-0.5 w-full rounded-xl border border-slate-200 px-2.5 py-1.5 text-xs text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={async () => {
-                const full = buildAddressString(addrHouseNo, addrMohalla, addrRoad, addrPincode, addrDistrict);
-                setCustomerAddress(full);
-
-                if (customerId) {
-                  try {
-                    const res = await fetch("/api/customer/addresses", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        customerId,
-                        address: {
-                          label: newAddressTag,
-                          street: full,
-                          city: addrDistrict || "Bahraich",
-                          pincode: addrPincode || "271801",
-                          isDefault: true,
-                        },
-                      }),
-                    });
-                    const d = await res.json();
-                    if (d.success && d.address) {
-                      const newEntry: CustomerSavedAddress = {
-                        id: d.address.id,
-                        customerId: d.address.customerId,
-                        label: d.address.label,
-                        tag: d.address.label,
-                        street: d.address.street,
-                        city: d.address.city,
-                        pincode: d.address.pincode,
-                        isDefault: true,
-                      };
-                      const updated = [newEntry, ...savedAddresses.filter((a) => a.id !== newEntry.id).map((a) => ({ ...a, isDefault: false }))];
-                      setSavedAddresses(updated);
-                      setSelectedAddressId(newEntry.id);
-                      try {
-                        localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(updated));
-                        localStorage.setItem("trustit_cust_addr", full);
-                      } catch {}
-                      setIsAddressModalOpen(false);
-                      return;
-                    }
-                  } catch {}
-                }
-
-                const newId = `addr_${Date.now()}`;
-                const newEntry: CustomerSavedAddress = {
-                  id: newId,
-                  label: newAddressTag,
-                  tag: newAddressTag,
-                  street: full,
-                  houseNo: addrHouseNo,
-                  mohalla: addrMohalla,
-                  road: addrRoad,
-                  pincode: addrPincode,
-                  district: addrDistrict,
-                  city: addrDistrict || "Bahraich",
-                  isDefault: true,
-                };
-                const updated = [newEntry, ...savedAddresses.filter(a => a.tag !== newAddressTag)];
-                setSavedAddresses(updated);
-                setSelectedAddressId(newId);
-                try {
-                  localStorage.setItem("trustit_saved_addresses_v1", JSON.stringify(updated));
-                  localStorage.setItem("trustit_cust_addr", full);
-                } catch {}
-                setIsAddressModalOpen(false);
-              }}
-              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-2.5 text-xs font-black text-white shadow-md hover:from-blue-700 hover:to-indigo-700 transition"
-            >
-              Save Address &amp; Use for Delivery →
-            </button>
+            <p className="text-[10px] text-[#737783]">100% RBI Compliant &amp; Encrypted</p>
           </div>
         </div>
       )}
@@ -4830,21 +2485,20 @@ export default function CustomerSuperAppClient({
         isOpen={isGoogleModalOpen}
         onClose={() => setIsGoogleModalOpen(false)}
         role="customer"
-        defaultName={customerName || "Lucky Shukla"}
-        defaultEmail={customerEmail || "lucky.trustit@gmail.com"}
+        defaultName={customerName}
+        defaultEmail={customerEmail}
         onSuccess={({ email, fullName }) => {
           handleGoogleSignIn(email, fullName);
         }}
       />
 
-      {/* Realistic WhatsApp Notification Banner with 1-Tap Auto-Fill */}
+      {/* WhatsApp Notification Banner with 1-Tap Auto-Fill */}
       <WhatsAppOtpNotificationBanner
         otpCode={activeWhatsAppOtp}
         phone={loginPhone}
         onAutoFill={(code) => setLoginOtp(code)}
         onDismiss={() => setActiveWhatsAppOtp(null)}
       />
-
-    </div>
+    </>
   );
 }
