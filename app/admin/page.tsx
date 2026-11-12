@@ -293,10 +293,10 @@ export default async function HomePage() {
     },
     {
       href: "/merchants",
-      title: "Merchants",
-      description: "Manage merchant accounts and access",
+      title: "Merchants & Order Access",
+      description: "Grant/Revoke taking orders access, verify badges & manage accounts",
       tone: "blue",
-      icon: "♙",
+      icon: "🏪",
     },
     {
       href: "/payments",

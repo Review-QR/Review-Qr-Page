@@ -26,7 +26,7 @@ export default async function MerchantsPage() {
   try {
     const adminClient = createSupabaseAdminClient();
     const baseSelect =
-      "id, name, owner, phone, type, plan, expiry, status, qr_status, registration_date, merchant_status, address, review_link, deleted_at, deleted_by";
+      "id, name, owner, phone, type, plan, expiry, status, qr_status, registration_date, merchant_status, address, review_link, deleted_at, deleted_by, allow_taking_orders, is_taking_orders, is_outlet_open";
 
     const [withVerifiedRes, mRes, pReqs] = await Promise.all([
       supabase

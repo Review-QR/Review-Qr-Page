@@ -182,9 +182,15 @@ export async function toggleAllowTakingOrdersAction(
 
   try {
     const adminClient = createSupabaseAdminClient();
+    const updates: { allow_taking_orders: boolean; is_taking_orders?: boolean } = {
+      allow_taking_orders: allowTakingOrders,
+    };
+    if (!allowTakingOrders) {
+      updates.is_taking_orders = false;
+    }
     const { error } = await adminClient
       .from("businesses")
-      .update({ allow_taking_orders: allowTakingOrders })
+      .update(updates)
       .eq("id", businessIdInput);
 
     if (error) {

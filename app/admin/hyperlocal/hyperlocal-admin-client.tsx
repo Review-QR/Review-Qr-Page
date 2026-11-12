@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import type { HyperlocalOrder } from "@/lib/hyperlocal/types";
 import { formatUnifiedOrderCode } from "@/lib/hyperlocal/order-id";
 import RiderApprovalsPanel from "./rider-approvals-panel";
@@ -444,6 +445,14 @@ export default function HyperlocalLiveAdminClient() {
           >
             <span>🎁 Customer Points</span>
           </button>
+
+          <Link
+            href="/merchants"
+            className="px-3 py-1.5 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200"
+            title="Manage Merchant taking-orders access & permissions"
+          >
+            <span>🏪 Merchant Order Access</span>
+          </Link>
         </div>
 
         {/* Status indicator */}

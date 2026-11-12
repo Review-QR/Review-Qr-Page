@@ -161,12 +161,14 @@ function DetailDialog({
   onClose,
   onOpenQr,
   onVerifiedChange,
+  onTakingOrdersChange,
 }: {
   business: Business;
   provisioned: boolean;
   onClose: () => void;
   onOpenQr: (business: Business) => void;
   onVerifiedChange: (businessId: string, nextVerified: boolean) => void;
+  onTakingOrdersChange?: (businessId: string, nextAllowed: boolean) => void;
 }) {
   const [allowedTakingOrders, setAllowedTakingOrders] = useState(Boolean(business.allow_taking_orders));
   const [isTogglingOrders, setIsTogglingOrders] = useState(false);
@@ -326,6 +328,7 @@ function DetailDialog({
               const res = await toggleAllowTakingOrdersAction(business.id, nextVal);
               if (res.success) {
                 setAllowedTakingOrders(nextVal);
+                onTakingOrdersChange?.(business.id, nextVal);
                 alert(res.message);
               } else {
                 alert(res.message);
@@ -356,6 +359,7 @@ function MerchantActions({
   onProvisioned,
   onStatusChange,
   onVerifiedChange,
+  onTakingOrdersChange,
   onView,
   onOpenQr,
   onDelete,
@@ -365,6 +369,7 @@ function MerchantActions({
   onProvisioned: (businessId: string) => void;
   onStatusChange: (businessId: string, status: MerchantStatus) => void;
   onVerifiedChange: (businessId: string, isVerified: boolean) => void;
+  onTakingOrdersChange: (businessId: string, allowed: boolean) => void;
   onView: () => void;
   onOpenQr: () => void;
   onDelete: () => void;
@@ -372,7 +377,9 @@ function MerchantActions({
   const status = normalized(business.merchant_status || "pending");
   const canManage = provisioned && (status === "active" || status === "suspended");
   const isVerified = Boolean(business.is_verified);
+  const isAllowedOrders = Boolean(business.allow_taking_orders);
   const [togglingVerify, setTogglingVerify] = useState(false);
+  const [togglingOrders, setTogglingOrders] = useState(false);
   const handleProvisioned = useCallback(
     () => onProvisioned(business.id),
     [business.id, onProvisioned]
@@ -395,9 +402,39 @@ function MerchantActions({
     setTogglingVerify(false);
   }
 
+  async function handleToggleOrders() {
+    if (togglingOrders) return;
+    setTogglingOrders(true);
+    const nextVal = !isAllowedOrders;
+    const res = await toggleAllowTakingOrdersAction(business.id, nextVal);
+    if (res.success) {
+      onTakingOrdersChange(business.id, nextVal);
+    } else {
+      alert(res.message);
+    }
+    setTogglingOrders(false);
+  }
+
   return (
     <div className="flex min-w-64 flex-col items-start gap-2">
       <div className="flex flex-wrap items-start gap-2">
+        <button
+          type="button"
+          disabled={togglingOrders}
+          onClick={handleToggleOrders}
+          title={
+            isAllowedOrders
+              ? "Online orders intake is ALLOWED. Click to Revoke (Pause)."
+              : "Online orders intake is REVOKED. Click to Allow (Enable)."
+          }
+          className={`rounded-lg border px-3 py-2 text-xs font-bold transition ${
+            isAllowedOrders
+              ? "border-emerald-300 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+              : "border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100"
+          }`}
+        >
+          {togglingOrders ? "Saving…" : isAllowedOrders ? "🛵 Orders: Allowed" : "⏸ Orders: Revoked"}
+        </button>
         <button
           type="button"
           disabled={togglingVerify}
@@ -727,6 +764,29 @@ export default function MerchantManagement({
     );
   }, []);
 
+  const updateTakingOrders = useCallback((businessId: string, allowed: boolean) => {
+    setRows((current) =>
+      current.map((business) =>
+        business.id === businessId
+          ? {
+              ...business,
+              allow_taking_orders: allowed,
+              is_taking_orders: allowed ? business.is_taking_orders : false,
+            }
+          : business
+      )
+    );
+    setSelectedBusiness((current) =>
+      current && current.id === businessId
+        ? {
+            ...current,
+            allow_taking_orders: allowed,
+            is_taking_orders: allowed ? current.is_taking_orders : false,
+          }
+        : current
+    );
+  }, []);
+
   const selectedProvisioned = selectedBusiness
     ? provisionedIds.has(selectedBusiness.id)
     : false;
@@ -896,6 +956,7 @@ export default function MerchantManagement({
                           onProvisioned={markProvisioned}
                           onStatusChange={updateStatus}
                           onVerifiedChange={updateVerified}
+                          onTakingOrdersChange={updateTakingOrders}
                           onView={() => setSelectedBusiness(business)}
                           onOpenQr={() => setQrTargetBusiness(business)}
                           onDelete={() => { setDeleteNotice(""); setDeleteNoticeIsError(false); setDeleteTarget(business); }}
@@ -924,6 +985,7 @@ export default function MerchantManagement({
           onClose={() => setSelectedBusiness(null)}
           onOpenQr={(b) => setQrTargetBusiness(b)}
           onVerifiedChange={updateVerified}
+          onTakingOrdersChange={updateTakingOrders}
         />
       )}
       {deleteTarget && (
