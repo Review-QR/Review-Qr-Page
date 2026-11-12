@@ -234,9 +234,7 @@ public class TrustitNativeBridge extends Plugin {
                     responded[0] = true;
                     if (timeoutRef[0] != null) handler.removeCallbacks(timeoutRef[0]);
                     if (netGraceRef[0] != null) handler.removeCallbacks(netGraceRef[0]);
-                    try {
-                        lm.removeUpdates(this);
-                    } catch (Exception ignored) {}
+                    safeRemoveLocationUpdates(lm, this);
                     resolveLocationResult(call, bestActive[0]);
                 }
             }
@@ -251,9 +249,7 @@ public class TrustitNativeBridge extends Plugin {
             if (!responded[0] && bestActive[0] != null) {
                 responded[0] = true;
                 if (timeoutRef[0] != null) handler.removeCallbacks(timeoutRef[0]);
-                try {
-                    lm.removeUpdates(listener);
-                } catch (Exception ignored) {}
+                safeRemoveLocationUpdates(lm, listener);
                 resolveLocationResult(call, bestActive[0]);
             }
         };
@@ -263,9 +259,7 @@ public class TrustitNativeBridge extends Plugin {
             if (!responded[0]) {
                 responded[0] = true;
                 if (netGraceRef[0] != null) handler.removeCallbacks(netGraceRef[0]);
-                try {
-                    lm.removeUpdates(listener);
-                } catch (Exception ignored) {}
+                safeRemoveLocationUpdates(lm, listener);
                 Location chosen = bestActive[0] != null ? bestActive[0] : fallbackLoc;
                 if (chosen != null) {
                     resolveLocationResult(call, chosen);
@@ -308,6 +302,21 @@ public class TrustitNativeBridge extends Plugin {
         } else {
             call.reject("Location permission is required for live GPS tracking.");
         }
+    }
+
+    // Permission is explicitly verified below and SecurityException is caught; SuppressLint avoids AGP 8.2 1..22 removeUpdates false positive.
+    @android.annotation.SuppressLint("MissingPermission")
+    private void safeRemoveLocationUpdates(LocationManager lm, LocationListener listener) {
+        Context context = getContext();
+        if (lm == null || listener == null || context == null) return;
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        try {
+            lm.removeUpdates(listener);
+        } catch (SecurityException ignored) {
+        } catch (Exception ignored) {}
     }
 
     private void resolveLocationResult(PluginCall call, Location loc) {

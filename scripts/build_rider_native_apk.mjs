@@ -4,9 +4,11 @@ import { execSync } from 'child_process';
 import { generateSplashPng } from './generate_splash_screens.mjs';
 
 const rootDir = process.cwd();
-const androidAppDir = path.join(rootDir, 'android', 'app');
-const resDir = path.join(androidAppDir, 'src', 'main', 'res');
+const androidDir = path.join(rootDir, 'android');
+const androidAppDir = path.join(androidDir, 'app');
+const flavorResDir = path.join(androidAppDir, 'src', 'rider', 'res');
 const bundleDir = path.join(rootDir, 'android-rider-bundle');
+const capConfigPath = path.join(rootDir, 'capacitor.config.json');
 
 console.log('======================================================');
 console.log('🏍️ TRUSTIT RIDER PARTNER — TRUE NATIVE APK COMPILATION');
@@ -179,7 +181,7 @@ const brandFiles = [
   'rider-icon-512.png',
   'trustit-icon.svg',
   'trustit-logo.png',
-  'sw-rider.js'
+  'sw-rider.js',
 ];
 for (const bf of brandFiles) {
   const p = path.join(rootDir, 'public', bf);
@@ -201,105 +203,95 @@ const bundleSizeBytes = getDirSize(bundleDir);
 const bundleSizeMb = (bundleSizeBytes / (1024 * 1024)).toFixed(2);
 console.log(`   📊 Total Embedded Bundle Size: ${bundleSizeMb} MB`);
 
-// 2. Configure capacitor.config.json (WITHOUT server.url)
-console.log('\n⚙️ Step 2: Configuring Capacitor for Pure Native Embedded Boot...');
+// 2. Stage capacitor.config.json (WITHOUT server.url, allowMixedContent: false)
+console.log('\n⚙️ Step 2: Staging Capacitor for Pure Native Embedded Boot...');
+const originalCapConfig = fs.existsSync(capConfigPath) ? fs.readFileSync(capConfigPath, 'utf8') : null;
 const capConfig = {
-  appId: "com.trustit.rider",
-  appName: "Trustit Rider",
-  webDir: "android-rider-bundle",
+  appId: 'com.trustit.rider',
+  appName: 'Trustit Rider',
+  webDir: 'android-rider-bundle',
   android: {
-    allowMixedContent: true,
+    allowMixedContent: false,
     captureInput: true,
-    backgroundColor: "#064E3B"
+    backgroundColor: '#064E3B',
   },
   plugins: {
     CapacitorHttp: {
-      enabled: true
+      enabled: true,
     },
     SplashScreen: {
       launchShowDuration: 1200,
       launchAutoHide: true,
-      backgroundColor: "#064E3B",
-      androidSplashResourceName: "splash",
-      androidScaleType: "CENTER_CROP",
+      backgroundColor: '#064E3B',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
       showSpinner: true,
-      androidSpinnerStyle: "large",
-      spinnerColor: "#ffffff",
+      androidSpinnerStyle: 'large',
+      spinnerColor: '#ffffff',
       splashFullScreen: true,
-      splashImmersive: true
-    }
-  }
+      splashImmersive: true,
+    },
+  },
 };
-fs.writeFileSync(path.join(rootDir, 'capacitor.config.json'), JSON.stringify(capConfig, null, 2));
-console.log('   ✔ Written capacitor.config.json (server.url OMITTED — 100% Native Local Boot)');
 
-// 3. Update Android strings.xml
-console.log('\n📝 Step 3: Setting Android Package & App Name...');
-const stringsXml = `<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">Trustit Rider</string>
-    <string name="title_activity_main">Trustit Rider</string>
-    <string name="package_name">com.trustit.rider</string>
-    <string name="custom_url_scheme">com.trustit.rider</string>
-</resources>
-`;
-fs.writeFileSync(path.join(resDir, 'values', 'strings.xml'), stringsXml);
-console.log('   ✔ strings.xml configured for "Trustit Rider" (com.trustit.rider)');
+try {
+  fs.writeFileSync(capConfigPath, JSON.stringify(capConfig, null, 2));
+  console.log('   ✔ Staged capacitor.config.json (server.url OMITTED, allowMixedContent: false)');
 
-// 4. Update build.gradle
-const gradlePath = path.join(androidAppDir, 'build.gradle');
-let gradleContent = fs.readFileSync(gradlePath, 'utf8');
-gradleContent = gradleContent.replace(/applicationId\s+"[^"]+"/, `applicationId "com.trustit.rider"`);
-gradleContent = gradleContent.replace(/versionCode\s+\d+/, `versionCode 26`);
-gradleContent = gradleContent.replace(/versionName\s+"[^"]+"/, `versionName "5.3.0"`);
-fs.writeFileSync(gradlePath, gradleContent);
-console.log('   ✔ build.gradle updated (applicationId: com.trustit.rider, v5.3.0 New Hardware GPS Build)');
+  // 3. Gradle Product Flavor "rider" manages strings.xml, build.gradle, colors, icons, and ACCESS_BACKGROUND_LOCATION
+  console.log('\n📝 Step 3: Using Gradle flavor "rider" (build.gradle, strings.xml & colors.xml untouched).');
 
-// 5. Install PNG Icons (Trustit Rider branding - delivery rider logo)
-// PNG icons were pre-generated in mipmap-* folders; update colors.xml for adaptive icon background
-const colorsXml = `<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <color name="ic_launcher_background">#FFFFFF</color>
-</resources>`;
-const colorsDir = path.join(resDir, 'values');
-fs.writeFileSync(path.join(colorsDir, 'colors.xml'), colorsXml);
-console.log('   ✔ PNG icons already installed in mipmap folders; colors.xml set to white background');
+  // 4. Generate Splash Screens into rider flavor res/
+  console.log('\n🎨 Step 4: Generating High-Res Native Splash Screens into src/rider/res...');
+  const splashTemp = path.join(rootDir, 'temp_splash_rider.png');
+  try {
+    generateSplashPng('rider', splashTemp);
+    const splashTargets = [
+      path.join(flavorResDir, 'drawable', 'splash.png'),
+      path.join(flavorResDir, 'drawable-port-hdpi', 'splash.png'),
+      path.join(flavorResDir, 'drawable-port-mdpi', 'splash.png'),
+      path.join(flavorResDir, 'drawable-port-xhdpi', 'splash.png'),
+      path.join(flavorResDir, 'drawable-port-xxhdpi', 'splash.png'),
+      path.join(flavorResDir, 'drawable-port-xxxhdpi', 'splash.png'),
+    ];
+    for (const target of splashTargets) {
+      const p = path.dirname(target);
+      if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
+      fs.copyFileSync(splashTemp, target);
+    }
+    if (fs.existsSync(splashTemp)) fs.unlinkSync(splashTemp);
+    console.log('   ✔ Installed branded splash screen into src/rider/res/');
+  } catch (err) {
+    console.warn(`   ⚠ Skipping splash regeneration (${err.message}); using existing splash resources.`);
+  }
 
-// 6. Generate Splash Screens
-console.log('\n🎨 Step 4: Generating High-Res Native Splash Screens...');
-const splashTemp = path.join(rootDir, 'temp_splash_rider.png');
-generateSplashPng('rider', splashTemp);
-const splashTargets = [
-  path.join(resDir, 'drawable', 'splash.png'),
-  path.join(resDir, 'drawable-port-hdpi', 'splash.png'),
-  path.join(resDir, 'drawable-port-mdpi', 'splash.png'),
-  path.join(resDir, 'drawable-port-xhdpi', 'splash.png'),
-  path.join(resDir, 'drawable-port-xxhdpi', 'splash.png'),
-  path.join(resDir, 'drawable-port-xxxhdpi', 'splash.png')
-];
-for (const target of splashTargets) {
-  const p = path.dirname(target);
-  if (!fs.existsSync(p)) fs.mkdirSync(p, { recursive: true });
-  fs.copyFileSync(splashTemp, target);
+  // 5. Capacitor Sync
+  console.log('\n🔄 Step 5: Syncing Capacitor Android Project with Embedded Bundle...');
+  execSync('npx cap sync android', { cwd: rootDir, stdio: 'inherit' });
+} finally {
+  if (originalCapConfig !== null) {
+    fs.writeFileSync(capConfigPath, originalCapConfig);
+  }
 }
-if (fs.existsSync(splashTemp)) fs.unlinkSync(splashTemp);
-console.log('   ✔ Installed branded splash screen across all Android densities');
 
-// 7. Capacitor Sync
-console.log('\n🔄 Step 5: Syncing Capacitor Android Project with Embedded Bundle...');
-execSync('npx cap sync android', { cwd: rootDir, stdio: 'inherit' });
-
-// 8. Compile Signed Production Release APK
-console.log('\n🔨 Step 6: Compiling Signed Production APK via Gradle (clean assembleRelease)...');
-const androidDir = path.join(rootDir, 'android');
-execSync('.\\gradlew.bat clean assembleRelease --no-daemon', {
+// 6. Compile Signed Production Release APK via Gradle Product Flavor
+console.log('\n🔨 Step 6: Compiling Signed Production APK via Gradle (clean assembleRiderRelease)...');
+const gradlewCmd = process.platform === 'win32' ? '.\\gradlew.bat' : './gradlew';
+execSync(`${gradlewCmd} clean assembleRiderRelease --no-daemon`, {
   cwd: androidDir,
-  stdio: 'inherit'
+  stdio: 'inherit',
 });
 
-// 9. Copy output APK
-const outputApkSrc = path.join(androidAppDir, 'build', 'outputs', 'apk', 'release', 'app-release.apk');
+// 7. Copy output APK
+const releaseDir = path.join(androidAppDir, 'build', 'outputs', 'apk', 'rider', 'release');
+const outputApkSrc = path.join(releaseDir, 'app-rider-release.apk');
+const unsignedApkSrc = path.join(releaseDir, 'app-rider-release-unsigned.apk');
 if (!fs.existsSync(outputApkSrc)) {
+  if (fs.existsSync(unsignedApkSrc)) {
+    throw new Error(
+      `Gradle built an unsigned APK (${unsignedApkSrc}). Configure TRUSTIT_* env vars or android/keystore.properties for signed release builds.`,
+    );
+  }
   throw new Error(`Production build failed, output apk not found at: ${outputApkSrc}`);
 }
 

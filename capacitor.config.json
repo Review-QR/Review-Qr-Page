@@ -3,7 +3,7 @@
   "appName": "Trustit Customer",
   "webDir": "android-customer-bundle",
   "android": {
-    "allowMixedContent": true,
+    "allowMixedContent": false,
     "captureInput": true,
     "backgroundColor": "#1E3A8A"
   },

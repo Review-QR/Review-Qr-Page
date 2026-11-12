@@ -1,5 +1,38 @@
 apply plugin: 'com.android.application'
 
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { stream ->
+        keystoreProperties.load(stream)
+    }
+}
+
+def resolvedStorePath = System.getenv('TRUSTIT_KEYSTORE_PATH') ?: keystoreProperties.getProperty('storeFile')
+def resolvedStorePassword = System.getenv('TRUSTIT_STORE_PASSWORD') ?: keystoreProperties.getProperty('storePassword')
+def resolvedKeyAlias = System.getenv('TRUSTIT_KEY_ALIAS') ?: keystoreProperties.getProperty('keyAlias')
+def resolvedKeyPassword = System.getenv('TRUSTIT_KEY_PASSWORD') ?: keystoreProperties.getProperty('keyPassword')
+
+def resolvedStoreFile = null
+if (resolvedStorePath != null && !resolvedStorePath.trim().isEmpty()) {
+    def candidate = new File(resolvedStorePath.trim())
+    if (candidate.isAbsolute()) {
+        resolvedStoreFile = candidate
+    } else if (file(resolvedStorePath.trim()).exists()) {
+        resolvedStoreFile = file(resolvedStorePath.trim())
+    } else {
+        resolvedStoreFile = rootProject.file(resolvedStorePath.trim())
+    }
+}
+
+def hasReleaseSigning = (
+    resolvedStoreFile != null &&
+    resolvedStoreFile.exists() &&
+    resolvedStorePassword != null && !resolvedStorePassword.trim().isEmpty() &&
+    resolvedKeyAlias != null && !resolvedKeyAlias.trim().isEmpty() &&
+    resolvedKeyPassword != null && !resolvedKeyPassword.trim().isEmpty()
+)
+
 android {
     namespace "com.trustit.customer"
     compileSdk rootProject.ext.compileSdkVersion
@@ -14,27 +47,65 @@ android {
             ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~:downloads:*.apk'
         }
     }
+    flavorDimensions "app"
+    productFlavors {
+        customer {
+            dimension "app"
+            applicationId "com.trustit.customer"
+            versionCode 19
+            versionName "2.7.2"
+            manifestPlaceholders = [
+                mainActivityClass: "com.trustit.customer.MainActivity"
+            ]
+        }
+        partner {
+            dimension "app"
+            applicationId "com.trustit.partner"
+            versionCode 24
+            versionName "3.6.0"
+            manifestPlaceholders = [
+                mainActivityClass: "com.trustit.partner.MainActivity"
+            ]
+        }
+        rider {
+            dimension "app"
+            applicationId "com.trustit.rider"
+            versionCode 26
+            versionName "5.3.0"
+            manifestPlaceholders = [
+                mainActivityClass: "com.trustit.customer.MainActivity"
+            ]
+        }
+    }
     signingConfigs {
         release {
-            storeFile file('../trustit-production.keystore')
-            storePassword 'trustit2026'
-            keyAlias 'trustit'
-            keyPassword 'trustit2026'
+            if (hasReleaseSigning) {
+                storeFile resolvedStoreFile
+                storePassword resolvedStorePassword
+                keyAlias resolvedKeyAlias
+                keyPassword resolvedKeyPassword
+            }
         }
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            } else {
+                logger.warn('[Trustit] Release signing credentials not configured (set TRUSTIT_KEYSTORE_PATH, TRUSTIT_STORE_PASSWORD, TRUSTIT_KEY_ALIAS, TRUSTIT_KEY_PASSWORD or create android/keystore.properties). Release APK will be unsigned.')
+            }
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
         debug {
-            signingConfig signingConfigs.release
+            // Uses standard Android debug keystore; never requires or leaks release signing secrets.
         }
     }
-    lintOptions {
-        checkReleaseBuilds false
-        abortOnError false
+    lint {
+        checkReleaseBuilds true
+        abortOnError true
+        disable 'MissingTranslation', 'ExtraTranslation'
     }
 }
 
