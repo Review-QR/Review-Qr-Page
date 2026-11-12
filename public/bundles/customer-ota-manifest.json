@@ -1,8 +1,8 @@
 {
-  "version": "2.7.3",
+  "version": "2.7.4",
   "minAppVersion": "2.2.0",
-  "bundleUrl": "https://trustitreview.com/bundles/customer-bundle-latest.zip?v=1794476872181",
-  "updatedAt": "2026-11-12T09:47:52.181Z",
-  "notes": "Customer Super-App v2.7.3: Guest + WhatsApp OTP gate, slim Reward Points banner (350 pts = ₹100), dynamic district GPS detection, admin verified shop badges, horizontal drawer icon, and Option B bottom navigation.",
-  "sizeBytes": 3515928
+  "bundleUrl": "https://trustitreview.com/bundles/customer-bundle-latest.zip?v=1794489296797",
+  "updatedAt": "2026-11-12T13:14:56.798Z",
+  "notes": "Customer Super-App v2.7.4: Guest + WhatsApp OTP gate, slim Reward Points banner (350 pts = ₹100), dynamic district GPS detection, admin verified shop badges, horizontal drawer icon, and Option B bottom navigation.",
+  "sizeBytes": 3519035
 }
