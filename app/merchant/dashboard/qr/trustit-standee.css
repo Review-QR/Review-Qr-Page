@@ -218,23 +218,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: 8px;
   height: 44px;
-  padding: 0 24px;
+  max-width: 316px;
+  padding: 0 20px;
   margin-top: 10px;
   border-radius: 99px;
   background: #fff;
   border: 1px solid #e5e8f0;
   box-shadow: 0 3px 9px rgba(30, 40, 80, 0.14);
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
-  letter-spacing: -0.4px;
+  letter-spacing: -0.3px;
+  white-space: nowrap;
   color: #1d2230;
 }
 
 .trustit-standee-scope .g svg {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
 }
 
 .trustit-standee-scope .g b {
@@ -293,7 +296,7 @@
   bottom: 0;
   height: 78px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.55) 55%, rgba(255, 255, 255, 0.2));
-  border-radius: 60% 40% 0 0 / 40px 30px 0 0;
+  border-radius: 60% 40% 36px 36px / 40px 30px 36px 36px;
 }
 
 /* ==========================================================================
@@ -392,6 +395,7 @@
   bottom: 0;
   height: 86px;
   background: linear-gradient(180deg, #ff8a2b, #f2600a);
+  border-radius: 0 0 36px 36px;
 }
 
 .trustit-standee-scope .t5 .logo + .rule {

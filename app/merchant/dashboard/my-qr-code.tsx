@@ -239,6 +239,64 @@ export default function MyQrCode({
     }
   }
 
+  /**
+   * Renders the active standee `.card` at 3x resolution (1050x1986) and clips all
+   * four corners uniformly to the 36px card radius so exported PNG/PDF/Print assets
+   * never show pseudo-element bleed at the bottom corners.
+   */
+  async function renderStandeeExportPng(posterRoot: HTMLElement): Promise<string> {
+    const { domToPng } = await import("modern-screenshot");
+    await document.fonts.ready;
+    const scale = 3;
+    const cardWidth = 350;
+    const cardHeight = 662;
+    const cornerRadius = 36 * scale;
+    const targetEl = (posterRoot.querySelector(".card") as HTMLElement) || posterRoot;
+    const rawPng = await domToPng(targetEl, {
+      scale,
+      width: cardWidth,
+      height: cardHeight,
+      style: {
+        transform: "none",
+        margin: "0",
+        boxShadow: "none",
+      },
+    });
+
+    const img = new Image();
+    img.src = rawPng;
+    await img.decode();
+
+    const canvas = document.createElement("canvas");
+    canvas.width = cardWidth * scale;
+    canvas.height = cardHeight * scale;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return rawPng;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.beginPath();
+    if (typeof ctx.roundRect === "function") {
+      ctx.roundRect(0, 0, canvas.width, canvas.height, cornerRadius);
+    } else {
+      const w = canvas.width;
+      const h = canvas.height;
+      const r = cornerRadius;
+      ctx.moveTo(r, 0);
+      ctx.lineTo(w - r, 0);
+      ctx.quadraticCurveTo(w, 0, w, r);
+      ctx.lineTo(w, h - r);
+      ctx.quadraticCurveTo(w, h, w - r, h);
+      ctx.lineTo(r, h);
+      ctx.quadraticCurveTo(0, h, 0, h - r);
+      ctx.lineTo(0, r);
+      ctx.quadraticCurveTo(0, 0, r, 0);
+      ctx.closePath();
+    }
+    ctx.clip();
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/png");
+  }
+
   async function downloadFullPoster(format: "png" | "pdf") {
     setMessage("");
     if (!isCurrentUnlocked) {
@@ -253,19 +311,7 @@ export default function MyQrCode({
     setIsExporting(true);
     setMessage(`Preparing high-resolution ${format.toUpperCase()} standee poster…`);
     try {
-      const { domToPng } = await import("modern-screenshot");
-      await document.fonts.ready;
-      const targetEl = (posterRef.current.querySelector(".card") as HTMLElement) || posterRef.current;
-      const png = await domToPng(targetEl, {
-        scale: 3,
-        width: 350,
-        height: 662,
-        style: {
-          transform: "none",
-          margin: "0",
-          boxShadow: "none",
-        },
-      });
+      const png = await renderStandeeExportPng(posterRef.current);
       const filename = `Trustit-${safeFilename(currentStandee.name)}-${safeFilename(businessName || businessId)}-Standee.${format}`;
       if (format === "pdf") {
         const { jsPDF } = await import("jspdf");
@@ -357,18 +403,7 @@ export default function MyQrCode({
     }
     if (posterRef.current) {
       try {
-        const { domToPng } = await import("modern-screenshot");
-        const targetEl = (posterRef.current.querySelector(".card") as HTMLElement) || posterRef.current;
-        const png = await domToPng(targetEl, {
-          scale: 3,
-          width: 350,
-          height: 662,
-          style: {
-            transform: "none",
-            margin: "0",
-            boxShadow: "none",
-          },
-        });
+        const png = await renderStandeeExportPng(posterRef.current);
         const printWindow = window.open("", "_blank");
         if (!printWindow) {
           setMessageTone("error");
@@ -416,7 +451,7 @@ export default function MyQrCode({
               object-fit: contain;
               display: block;
               margin: 0 auto;
-              border-radius: 32px;
+              border-radius: 10.29% / 5.44%;
               box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
             }
             @media screen {
