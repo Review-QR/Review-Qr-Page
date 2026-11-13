@@ -1823,7 +1823,13 @@ export default function CustomerSuperAppClient({
           window.removeEventListener("trustit:payment-return", onCustomPaymentReturn);
         };
 
-        // Strategy A: Native Cashfree Drop Checkout inside APK
+        const hostedPayUrl = `https://trustitreview.com/pay/cashfree?sessionId=${encodeURIComponent(
+          sessionData.paymentSessionId,
+        )}&orderId=${encodeURIComponent(currentOrderId!)}&mode=${encodeURIComponent(
+          sessionData.checkoutMode || "sandbox",
+        )}&fromApp=1`;
+
+        // Strategy A: Inside Native APK
         let nativeLaunched = false;
         if (isCapacitorOrLocalhost) {
           try {
@@ -1835,19 +1841,26 @@ export default function CustomerSuperAppClient({
             if (nativeDropRes?.launched) {
               nativeLaunched = true;
               setIsPaymentLaunching(false);
-              setPaymentRetryState({
-                orderId: currentOrderId!,
-                amount: cartGrandTotal || 100,
-                storeName,
-                deliveryOtp: deliveryOtp || "4821",
-                reason:
-                  "Complete your UPI / Card payment in Cashfree sheet. Order will confirm automatically as soon as payment succeeds.",
-              });
+              // Clean launch: do NOT set retry state while payment is actively processing
+            } else {
+              // Fallback for native APK: In-App Dialog Checkout (Zero Chrome popup, full UPI intents)
+              const inAppRes = await TrustitNative.openInAppCheckout(hostedPayUrl);
+              if (inAppRes?.opened) {
+                nativeLaunched = true;
+                setIsPaymentLaunching(false);
+              }
             }
-          } catch {}
+          } catch (err) {
+            console.warn("[Trustit] Native drop checkout failed, falling back to in-app dialog:", err);
+            const inAppRes = await TrustitNative.openInAppCheckout(hostedPayUrl);
+            if (inAppRes?.opened) {
+              nativeLaunched = true;
+              setIsPaymentLaunching(false);
+            }
+          }
         }
 
-        // Strategy B: In-App Cashfree Web SDK Modal (Zero Chrome popup, UPI apps + Cards in sheet)
+        // Strategy B: In-App Cashfree Web SDK Modal (for pure web browsers)
         if (!nativeLaunched) {
           try {
             await loadCashfreeSdk();
@@ -1889,11 +1902,6 @@ export default function CustomerSuperAppClient({
             });
           } else {
             // Extreme fallback if Cashfree script blocked: in-app dialog
-            const hostedPayUrl = `https://trustitreview.com/pay/cashfree?sessionId=${encodeURIComponent(
-              sessionData.paymentSessionId,
-            )}&orderId=${encodeURIComponent(currentOrderId!)}&mode=${encodeURIComponent(
-              sessionData.checkoutMode || "sandbox",
-            )}&fromApp=1`;
             await launchHostedCheckout(hostedPayUrl);
           }
         }
