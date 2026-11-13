@@ -100,14 +100,6 @@ public final class CashfreeDropCheckoutHelper {
                     .setOrderId(trimmedOrderId)
                     .build();
 
-                // UPI first (opens PhonePe/GPay/Paytm natively), followed by Cards, Wallets & NetBanking
-                CFPaymentComponent paymentComponent = new CFPaymentComponent.CFPaymentComponentBuilder()
-                    .add(CFPaymentComponent.CFPaymentModes.UPI)
-                    .add(CFPaymentComponent.CFPaymentModes.CARD)
-                    .add(CFPaymentComponent.CFPaymentModes.WALLET)
-                    .add(CFPaymentComponent.CFPaymentModes.NB)
-                    .build();
-
                 CFTheme theme = new CFTheme.CFThemeBuilder()
                     .setNavigationBarBackgroundColor("#0F172A")
                     .setNavigationBarTextColor("#FFFFFF")
@@ -117,12 +109,24 @@ public final class CashfreeDropCheckoutHelper {
                     .setSecondaryTextColor("#475569")
                     .build();
 
-                CFDropCheckoutPayment dropCheckoutPayment = new CFDropCheckoutPayment.CFDropCheckoutPaymentBuilder()
-                    .setSession(cfSession)
-                    .setCFUIPaymentModes(paymentComponent)
-                    .setCFNativeCheckoutUITheme(theme)
-                    .build();
+                CFDropCheckoutPayment.CFDropCheckoutPaymentBuilder dropBuilder =
+                    new CFDropCheckoutPayment.CFDropCheckoutPaymentBuilder()
+                        .setSession(cfSession)
+                        .setCFNativeCheckoutUITheme(theme);
 
+                try {
+                    // UPI first (opens PhonePe/GPay/Paytm natively), followed by active merchant payment modes
+                    CFPaymentComponent paymentComponent = new CFPaymentComponent.CFPaymentComponentBuilder()
+                        .add(CFPaymentComponent.CFPaymentModes.UPI)
+                        .build();
+                    dropBuilder.setCFUIPaymentModes(paymentComponent);
+                } catch (Throwable ignored) {
+                    // Fall back to all active merchant payment modes configured in Cashfree dashboard
+                }
+
+                CFDropCheckoutPayment dropCheckoutPayment = dropBuilder.build();
+
+                android.util.Log.d("TrustitNativeCashfree", "Initiating native Cashfree drop checkout for order: " + trimmedOrderId + ", env: " + cfEnv);
                 gatewayService.doPayment(activity, dropCheckoutPayment);
 
                 JSObject res = new JSObject();
@@ -130,6 +134,7 @@ public final class CashfreeDropCheckoutHelper {
                 res.put("mode", "cashfree_native_drop");
                 call.resolve(res);
             } catch (Throwable err) {
+                android.util.Log.e("TrustitNativeCashfree", "Cashfree SDK launch failed: " + err.getMessage(), err);
                 JSObject fail = new JSObject();
                 fail.put("launched", false);
                 fail.put("mode", "native_sdk_error");

@@ -364,6 +364,61 @@ export async function PUT(request: NextRequest) {
 
     if (action === "switch_to_cod") {
       const admin = createSupabaseAdminClient();
+
+      if (String(orderId).startsWith("cdraft_")) {
+        const { data: draft, error: draftErr } = await admin
+          .from("hyperlocal_checkout_drafts")
+          .select("*")
+          .eq("id", orderId)
+          .maybeSingle();
+
+        if (draftErr || !draft) {
+          return Response.json({ success: false, error: "Draft checkout session not found" }, { status: 404 });
+        }
+
+        if (draft.placed_order_id) {
+          await admin
+            .from("hyperlocal_orders")
+            .update({
+              payment_mode: "cod",
+              payment_status: "pending",
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", draft.placed_order_id)
+            .neq("payment_status", "paid");
+
+          return Response.json({ success: true, orderId: draft.placed_order_id, paymentMode: "cod" });
+        }
+
+        const createdOrder = await createHyperlocalOrder({
+          businessId: draft.business_id,
+          customerId: draft.customer_id,
+          orderType: draft.order_type || "food_delivery",
+          customerName: draft.customer_name,
+          customerPhone: draft.customer_phone,
+          customerAddress: draft.customer_address,
+          items: Array.isArray(draft.items) ? draft.items : [],
+          paymentMode: "cod",
+          customerNotes: draft.customer_notes || undefined,
+        });
+
+        await admin
+          .from("hyperlocal_checkout_drafts")
+          .update({
+            payment_status: "converted_to_cod",
+            placed_order_id: createdOrder.orderId,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", orderId);
+
+        return Response.json({
+          success: true,
+          orderId: createdOrder.orderId,
+          deliveryOtp: createdOrder.deliveryOtp,
+          paymentMode: "cod",
+        });
+      }
+
       const { data: currentOrder } = await admin
         .from("hyperlocal_orders")
         .select("id, business_id, customer_id, customer_phone, payment_status")
@@ -389,7 +444,7 @@ export async function PUT(request: NextRequest) {
         .neq("payment_status", "paid");
 
       if (error) throw new Error(error.message);
-      return Response.json({ success: true, paymentMode: "cod" });
+      return Response.json({ success: true, orderId, paymentMode: "cod" });
     }
 
     if (action === "reject" || action === "cancel") {
@@ -500,15 +555,25 @@ export async function GET(request: NextRequest) {
     // OR Cash on Delivery (payment_mode = 'cod')
     query = query
       .eq("business_id", businessId)
+      .neq("status", "cancelled")
       .or("payment_status.eq.paid,payment_mode.eq.cod");
   } else if (customerId && phone) {
     const clean = phone.replace(/\D/g, "").slice(-10);
-    query = query.or(`customer_id.eq.${customerId},customer_phone.eq.${clean},customer_phone.eq.+91${clean}`);
+    query = query
+      .neq("status", "cancelled")
+      .or("payment_status.eq.paid,payment_mode.eq.cod")
+      .or(`customer_id.eq.${customerId},customer_phone.eq.${clean},customer_phone.eq.+91${clean}`);
   } else if (customerId) {
-    query = query.eq("customer_id", customerId);
+    query = query
+      .neq("status", "cancelled")
+      .or("payment_status.eq.paid,payment_mode.eq.cod")
+      .eq("customer_id", customerId);
   } else if (phone) {
     const clean = phone.replace(/\D/g, "").slice(-10);
-    query = query.or(`customer_phone.eq.${clean},customer_phone.eq.+91${clean}`);
+    query = query
+      .neq("status", "cancelled")
+      .or("payment_status.eq.paid,payment_mode.eq.cod")
+      .or(`customer_phone.eq.${clean},customer_phone.eq.+91${clean}`);
   }
 
   const { data, error } = await query;

@@ -2,6 +2,8 @@ import { randomUUID, randomInt } from "node:crypto";
 
 export const HYPERLOCAL_ORDER_ID_PREFIX = "hord_";
 export const HYPERLOCAL_ORDER_ID_PATTERN = /^hord_[a-f0-9]{24,36}$/;
+export const HYPERLOCAL_DRAFT_ID_PREFIX = "cdraft_";
+export const HYPERLOCAL_DRAFT_ID_PATTERN = /^cdraft_[a-zA-Z0-9_-]{16,42}$/;
 
 /**
  * Generates unique hyperlocal order reference.
@@ -12,9 +14,28 @@ export function generateHyperlocalOrderId(): string {
   return `${HYPERLOCAL_ORDER_ID_PREFIX}${hex}`;
 }
 
+/**
+ * Generates unique hyperlocal checkout draft reference for pre-payment holding.
+ * Example: cdraft_1712345678_9b1c2d3e4f5a6b7c
+ */
+export function generateHyperlocalDraftId(): string {
+  const hex = randomUUID().replaceAll("-", "").slice(0, 16);
+  return `${HYPERLOCAL_DRAFT_ID_PREFIX}${Date.now()}_${hex}`;
+}
+
 export function isValidHyperlocalOrderId(orderId: unknown): orderId is string {
   if (typeof orderId !== "string") return false;
   return HYPERLOCAL_ORDER_ID_PATTERN.test(orderId);
+}
+
+export function isValidHyperlocalDraftId(draftId: unknown): draftId is string {
+  if (typeof draftId !== "string") return false;
+  return HYPERLOCAL_DRAFT_ID_PATTERN.test(draftId);
+}
+
+export function isValidHyperlocalPaymentReference(ref: unknown): ref is string {
+  if (typeof ref !== "string") return false;
+  return HYPERLOCAL_ORDER_ID_PATTERN.test(ref) || HYPERLOCAL_DRAFT_ID_PATTERN.test(ref);
 }
 
 /**

@@ -7,6 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createCashfreeWebhookHandler } from "@/lib/cashfree-webhook-handler";
 import { handleProductOrderWebhook } from "@/lib/product-orders/webhook-handler";
 import { creditMerchantConnectWallet } from "@/lib/customer-crm-service";
+import { verifyCashfreeHyperlocalPayment } from "@/lib/hyperlocal/cashfree-hyperlocal-service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,9 +54,9 @@ export async function POST(request: Request): Promise<Response> {
     const orderId = payload?.data?.order?.order_id;
     const targetOrderTag = payload?.data?.order?.order_tags?.target_order_id;
     const resolvedHyperlocalOrderId =
-      typeof orderId === "string" && orderId.startsWith("hord_")
+      typeof orderId === "string" && (orderId.startsWith("hord_") || orderId.startsWith("cdraft_"))
         ? orderId
-        : typeof targetOrderTag === "string" && targetOrderTag.startsWith("hord_")
+        : typeof targetOrderTag === "string" && (targetOrderTag.startsWith("hord_") || targetOrderTag.startsWith("cdraft_"))
           ? targetOrderTag
           : null;
 
@@ -152,6 +153,14 @@ export async function POST(request: Request): Promise<Response> {
       const isSuccess = paymentStatus === "SUCCESS" || eventType === "PAYMENT_SUCCESS_WEBHOOK";
 
       if (isSuccess) {
+        if (resolvedHyperlocalOrderId.startsWith("cdraft_")) {
+          const verifyResult = await verifyCashfreeHyperlocalPayment(resolvedHyperlocalOrderId);
+          if (verifyResult.status === "VERIFIED_SUCCESS") {
+            return Response.json({ success: true, orderId: verifyResult.orderId, paymentStatus: "paid" });
+          }
+          return Response.json({ result: "draft_verification_failed", reason: verifyResult.reason }, { status: 400 });
+        }
+
         // Anti-tampering & idempotency check: require DB order and exact numeric amount match
         const { data: dbOrder } = await admin
           .from("hyperlocal_orders")

@@ -440,7 +440,9 @@ export default function CustomerSuperAppClient({
         setCustomerPastOrders(orders);
         setActiveOrders(
           orders.filter(
-            (o) => !["delivered", "completed", "cancelled", "rejected"].includes(o.status),
+            (o) =>
+              !["delivered", "completed", "cancelled", "rejected"].includes(o.status) &&
+              (o.payment_mode === "cod" || o.payment_status === "paid"),
           ),
         );
       }
@@ -464,7 +466,9 @@ export default function CustomerSuperAppClient({
         setCustomerPastOrders(all);
         setActiveOrders(
           all.filter(
-            (o: any) => !["delivered", "completed", "cancelled", "rejected"].includes(o.status),
+            (o: any) =>
+              !["delivered", "completed", "cancelled", "rejected"].includes(o.status) &&
+              (o.payment_mode === "cod" || o.payment_status === "paid"),
           ),
         );
       }
@@ -1578,11 +1582,13 @@ export default function CustomerSuperAppClient({
           setPaymentRetryState(null);
           setIsCheckoutOpen(false);
           setActiveStoreModal(null);
+          const finalOrderId = verifyData.orderId || retryOrderId;
+          const finalDeliveryOtp = verifyData.deliveryOtp || retryDeliveryOtp || "4821";
           setConfirmedOrderOverlay({
-            orderId: retryOrderId,
-            displayCode: formatUnifiedOrderCode(retryOrderId, retryStoreName),
+            orderId: finalOrderId,
+            displayCode: formatUnifiedOrderCode(finalOrderId, retryStoreName),
             storeName: retryStoreName,
-            deliveryOtp: retryDeliveryOtp,
+            deliveryOtp: finalDeliveryOtp,
             paymentLabel: "Cashfree Paid ✓",
           });
           fetchActiveBookings(customerPhone);
@@ -1682,32 +1688,13 @@ export default function CustomerSuperAppClient({
           activeDraftOrderRef.current?.signature === checkoutCartSignature
             ? activeDraftOrderRef.current
             : null;
-        let currentOrderId = existingOrderId || matchedDraft?.orderId;
+        const initialPaymentReference =
+          (existingOrderId && activeDraftOrderRef.current?.signature === checkoutCartSignature)
+            ? existingOrderId
+            : matchedDraft?.orderId;
         let deliveryOtp = (!existingOrderId && matchedDraft?.deliveryOtp) || "";
-
-        if (!currentOrderId) {
-          const resOrder = await fetch("/api/hyperlocal/orders", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(buildOrderPayload(targetBizId, "online_cashfree")),
-          });
-          const orderData = await resOrder.json();
-          if (!orderData.success) {
-            setIsPaymentLaunching(false);
-            showToast(orderData.error || "Order initialization failed.");
-            return;
-          }
-          currentOrderId = orderData.orderId;
-          deliveryOtp = orderData.deliveryOtp || "4821";
-          if (currentOrderId) {
-            activeDraftOrderRef.current = {
-              orderId: currentOrderId,
-              deliveryOtp,
-              signature: checkoutCartSignature,
-            };
-            setActiveDraftOrderId(currentOrderId);
-          }
-        }
+        const orderPayload = buildOrderPayload(targetBizId, "online_cashfree");
+        const storeName = businesses.find((b) => b.id === targetBizId)?.name || "Bahraich Partner";
 
         const isCapacitorOrLocalhost =
           typeof window !== "undefined" &&
@@ -1715,47 +1702,70 @@ export default function CustomerSuperAppClient({
             window.location.hostname === "127.0.0.1" ||
             Boolean((window as any).Capacitor?.isNativePlatform?.()));
 
-        const storeName = businesses.find((b) => b.id === targetBizId)?.name || "Bahraich Partner";
+        const sessionPayload: Record<string, any> = {
+          businessId: targetBizId,
+          businessName: storeName,
+          customerName: customerName || "Trustit Customer",
+          customerPhone,
+          customerEmail: customerEmail || undefined,
+          fromApp: isCapacitorOrLocalhost,
+          returnUrl: `https://trustitreview.com/order?returned=1`,
+        };
+
+        if (initialPaymentReference) {
+          sessionPayload.orderId = initialPaymentReference;
+          sessionPayload.amount = cartGrandTotal || 100;
+        } else {
+          sessionPayload.items = orderPayload.items;
+          sessionPayload.customerAddress = orderPayload.customerAddress;
+          sessionPayload.customerNotes = orderPayload.customerNotes;
+          sessionPayload.orderType = orderPayload.orderType;
+          sessionPayload.amount = cartGrandTotal || 100;
+        }
+
         const resSession = await fetch("/api/hyperlocal/payment/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId: currentOrderId,
-            amount: cartGrandTotal || 100,
-            businessId: targetBizId,
-            businessName: storeName,
-            customerName: customerName || "Trustit Customer",
-            customerPhone,
-            customerEmail: customerEmail || undefined,
-            fromApp: isCapacitorOrLocalhost,
-            returnUrl: `https://trustitreview.com/order?order_id=${encodeURIComponent(currentOrderId!)}&returned=1`,
-          }),
+          body: JSON.stringify(sessionPayload),
         });
         const sessionData = await resSession.json();
+
+        const currentPaymentRef = sessionData.draftId || sessionData.orderId || initialPaymentReference;
+
         if (!sessionData.success || !sessionData.paymentSessionId) {
           if (
             typeof sessionData.error === "string" &&
             sessionData.error.toLowerCase().includes("already paid") &&
-            currentOrderId
+            currentPaymentRef
           ) {
             const resVerify = await TrustitNative.nativeFetch(
-              `/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(currentOrderId)}&_ts=${Date.now()}`,
+              `/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(currentPaymentRef)}&_ts=${Date.now()}`,
             );
             const verifyData = await resVerify.json().catch(() => null);
             if (verifyData?.status === "VERIFIED_SUCCESS") {
-              handlePaymentSuccess(currentOrderId, storeName, deliveryOtp);
+              const finalOrderId = verifyData.orderId || currentPaymentRef;
+              handlePaymentSuccess(finalOrderId, storeName, verifyData.deliveryOtp || deliveryOtp);
               return;
             }
           }
           setIsPaymentLaunching(false);
           setPaymentRetryState({
-            orderId: currentOrderId!,
+            orderId: currentPaymentRef || "",
             amount: cartGrandTotal,
             storeName,
             deliveryOtp: deliveryOtp || "4821",
             reason: sessionData.error || "Payment session initialization timed out.",
           });
           return;
+        }
+
+        if (currentPaymentRef && String(currentPaymentRef).startsWith("cdraft_")) {
+          activeDraftOrderRef.current = {
+            orderId: currentPaymentRef,
+            deliveryOtp: "",
+            signature: checkoutCartSignature,
+          };
+          setActiveDraftOrderId(currentPaymentRef);
         }
 
         let isPaymentCompleted = false;
@@ -1772,14 +1782,17 @@ export default function CustomerSuperAppClient({
           if (isPaymentCompleted) return true;
           try {
             const resVerify = await fetch(
-              `/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(currentOrderId!)}&_ts=${Date.now()}`,
+              `/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(currentPaymentRef!)}&_ts=${Date.now()}`,
               { cache: "no-store" }
             );
             const verifyData = await resVerify.json().catch(() => null);
             if (verifyData?.status === "VERIFIED_SUCCESS") {
               isPaymentCompleted = true;
               stopPolling();
-              handlePaymentSuccess(currentOrderId!, storeName, deliveryOtp);
+              cleanupListeners();
+              const finalOrderId = verifyData.orderId || currentPaymentRef!;
+              const finalOtp = verifyData.deliveryOtp || deliveryOtp || "4821";
+              handlePaymentSuccess(finalOrderId, storeName, finalOtp);
               return true;
             }
           } catch {}
@@ -1796,7 +1809,12 @@ export default function CustomerSuperAppClient({
           verifyPaymentStatus();
         };
         const onCustomPaymentReturn = (evt: any) => {
-          if (evt?.detail?.status === "success" || evt?.detail?.orderId === currentOrderId) {
+          if (
+            evt?.detail?.status === "success" ||
+            evt?.detail?.status === "paid" ||
+            evt?.detail?.orderId === currentPaymentRef ||
+            evt?.detail?.cfOrderId === currentPaymentRef
+          ) {
             verifyPaymentStatus();
           }
         };
@@ -1825,7 +1843,7 @@ export default function CustomerSuperAppClient({
 
         const hostedPayUrl = `https://trustitreview.com/pay/cashfree?sessionId=${encodeURIComponent(
           sessionData.paymentSessionId,
-        )}&orderId=${encodeURIComponent(currentOrderId!)}&mode=${encodeURIComponent(
+        )}&orderId=${encodeURIComponent(currentPaymentRef!)}&mode=${encodeURIComponent(
           sessionData.checkoutMode || "sandbox",
         )}&fromApp=1`;
 
@@ -1835,7 +1853,7 @@ export default function CustomerSuperAppClient({
           try {
             const nativeDropRes = await TrustitNative.startNativeDropCheckout({
               paymentSessionId: sessionData.paymentSessionId,
-              orderId: currentOrderId!,
+              orderId: currentPaymentRef!,
               environment: sessionData.checkoutMode === "sandbox" ? "SANDBOX" : "PRODUCTION",
             });
             if (nativeDropRes?.launched) {
@@ -1875,17 +1893,32 @@ export default function CustomerSuperAppClient({
               redirectTarget: "_modal",
             }).then(async (result: any) => {
               if (isPaymentCompleted) return;
-              const paid = await verifyPaymentStatus();
-              if (paid) return;
 
-              cleanupListeners();
-              setPaymentRetryState({
-                orderId: currentOrderId!,
-                amount: cartGrandTotal || 100,
-                storeName,
-                deliveryOtp: deliveryOtp || "4821",
-                reason: result?.error?.message || "Cashfree payment closed. You can retry or choose Cash on Delivery.",
-              });
+              // If paymentDetails present, user completed payment in modal
+              if (result?.paymentDetails) {
+                await verifyPaymentStatus();
+                return;
+              }
+
+              // If redirecting, external bank or UPI app intent is processing - do NOT trigger retry!
+              if (result?.redirect) {
+                return;
+              }
+
+              // Only trigger retry if Cashfree explicitly reported an error or user closed modal
+              if (result?.error) {
+                const paid = await verifyPaymentStatus();
+                if (paid) return;
+
+                cleanupListeners();
+                setPaymentRetryState({
+                  orderId: currentPaymentRef!,
+                  amount: cartGrandTotal || 100,
+                  storeName,
+                  deliveryOtp: deliveryOtp || "4821",
+                  reason: result.error.message || "Cashfree payment closed. You can retry or choose Cash on Delivery.",
+                });
+              }
             }).catch(async (err: any) => {
               if (isPaymentCompleted) return;
               const paid = await verifyPaymentStatus();
@@ -1893,7 +1926,7 @@ export default function CustomerSuperAppClient({
 
               cleanupListeners();
               setPaymentRetryState({
-                orderId: currentOrderId!,
+                orderId: currentPaymentRef!,
                 amount: cartGrandTotal || 100,
                 storeName,
                 deliveryOtp: deliveryOtp || "4821",
@@ -2754,6 +2787,7 @@ export default function CustomerSuperAppClient({
             });
             const d = await res.json();
             if (d.success) {
+              TrustitNative.playHapticFeedback("success");
               activeDraftOrderRef.current = null;
               setActiveDraftOrderId(null);
               setPaymentRetryState(null);
@@ -2761,8 +2795,21 @@ export default function CustomerSuperAppClient({
               setIsCheckoutOpen(false);
               setActiveStoreModal(null);
               showToast("Switched to Cash on Delivery (COD)!");
-              setIsMyBookingsOpen(true);
+              if (d.orderId) {
+                const storeName = businesses.find((b) => b.id === cartStoreId)?.name || "Bahraich Partner";
+                setConfirmedOrderOverlay({
+                  orderId: d.orderId,
+                  displayCode: formatUnifiedOrderCode(d.orderId, storeName),
+                  storeName,
+                  deliveryOtp: d.deliveryOtp || "4821",
+                  paymentLabel: "Cash on Delivery",
+                });
+              } else {
+                setIsMyBookingsOpen(true);
+              }
               fetchActiveBookings(customerPhone);
+            } else {
+              showToast(d.error || "Could not switch payment mode.");
             }
           } catch {
             showToast("Could not switch payment mode.");

@@ -2,8 +2,14 @@ import "server-only";
 
 import { randomUUID } from "node:crypto";
 import { createCashfreeClient } from "@/lib/cashfree";
-import { isValidHyperlocalOrderId, getOutletCode, formatUnifiedOrderCode } from "./order-id";
+import {
+  isValidHyperlocalOrderId,
+  isValidHyperlocalPaymentReference,
+  getOutletCode,
+  formatUnifiedOrderCode,
+} from "./order-id.ts";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { createHyperlocalOrder } from "./hyperlocal-service.ts";
 
 export interface CreateHyperlocalPaymentOrderInput {
   orderId: string;
@@ -36,11 +42,13 @@ export type VerifyHyperlocalPaymentResult =
   | {
       status: "VERIFIED_SUCCESS";
       orderId: string;
+      draftId?: string;
       paymentId: string;
       amount: number;
       currency: "INR";
       paidAt: string;
       paymentMethod?: string;
+      deliveryOtp?: string;
     }
   | {
       status: "PENDING" | "FAILED" | "USER_DROPPED" | "NOT_FOUND" | "VERIFICATION_ERROR";
@@ -55,7 +63,7 @@ export type VerifyHyperlocalPaymentResult =
 export async function createCashfreeHyperlocalPaymentOrder(
   input: CreateHyperlocalPaymentOrderInput,
 ): Promise<CreateHyperlocalPaymentOrderResult> {
-  if (!isValidHyperlocalOrderId(input.orderId)) {
+  if (!isValidHyperlocalPaymentReference(input.orderId)) {
     return {
       success: false,
       error: "Invalid hyperlocal order reference format.",
@@ -78,22 +86,43 @@ export async function createCashfreeHyperlocalPaymentOrder(
 
   // 1. Authoritative DB verification to prevent client-side price parameter tampering
   const admin = createSupabaseAdminClient();
-  const { data: dbOrder } = await admin
-    .from("hyperlocal_orders")
-    .select("total_amount, payment_status, business_id")
-    .eq("id", input.orderId)
-    .maybeSingle();
+  let authoritativeAmount = Math.round(input.amount * 100) / 100;
 
-  if (dbOrder && dbOrder.payment_status === "paid") {
-    return {
-      success: false,
-      error: "This order has already been paid.",
-      httpStatus: 400,
-    };
+  if (input.orderId.startsWith("cdraft_")) {
+    const { data: dbDraft } = await admin
+      .from("hyperlocal_checkout_drafts")
+      .select("total_amount, payment_status, business_id, placed_order_id")
+      .eq("id", input.orderId)
+      .maybeSingle();
+
+    if (dbDraft && (dbDraft.payment_status === "paid" || dbDraft.placed_order_id)) {
+      return {
+        success: false,
+        error: "This order has already been paid.",
+        httpStatus: 400,
+      };
+    }
+    if (dbDraft?.total_amount) {
+      authoritativeAmount = Number(dbDraft.total_amount);
+    }
+  } else {
+    const { data: dbOrder } = await admin
+      .from("hyperlocal_orders")
+      .select("total_amount, payment_status, business_id")
+      .eq("id", input.orderId)
+      .maybeSingle();
+
+    if (dbOrder && dbOrder.payment_status === "paid") {
+      return {
+        success: false,
+        error: "This order has already been paid.",
+        httpStatus: 400,
+      };
+    }
+    if (dbOrder?.total_amount) {
+      authoritativeAmount = Number(dbOrder.total_amount);
+    }
   }
-
-  // Use authoritative database amount if available
-  const authoritativeAmount = dbOrder?.total_amount ? Number(dbOrder.total_amount) : Math.round(input.amount * 100) / 100;
 
   // Note: All online payments are handled directly via Cashfree Payment Gateway rails.
   const upiString = "";
@@ -210,7 +239,7 @@ export async function createCashfreeHyperlocalPaymentOrder(
 export async function verifyCashfreeHyperlocalPayment(
   orderId: string,
 ): Promise<VerifyHyperlocalPaymentResult> {
-  if (!isValidHyperlocalOrderId(orderId)) {
+  if (!isValidHyperlocalPaymentReference(orderId)) {
     return {
       status: "VERIFICATION_ERROR",
       reason: "Invalid hyperlocal order reference format.",
@@ -219,28 +248,70 @@ export async function verifyCashfreeHyperlocalPayment(
   }
 
   const admin = createSupabaseAdminClient();
+  const isDraft = orderId.startsWith("cdraft_");
 
-  // Check if order exists in DB
-  const { data: order, error: orderFetchError } = await admin
-    .from("hyperlocal_orders")
-    .select("id, status, payment_status, payment_mode, total_amount, business_id")
-    .eq("id", orderId)
-    .maybeSingle();
+  let expectedAmount = 0;
+  let existingPlacedOrderId: string | null = null;
+  let draftRecord: any = null;
 
-  if (orderFetchError || !order) {
-    return { status: "NOT_FOUND", httpStatus: 404, reason: "Order not found in database." };
-  }
+  if (isDraft) {
+    const { data: draft, error: draftFetchError } = await admin
+      .from("hyperlocal_checkout_drafts")
+      .select("*")
+      .eq("id", orderId)
+      .maybeSingle();
 
-  // If already marked paid
-  if (order.payment_status === "paid") {
-    return {
-      status: "VERIFIED_SUCCESS",
-      orderId: order.id,
-      paymentId: "already_verified",
-      amount: Number(order.total_amount),
-      currency: "INR",
-      paidAt: new Date().toISOString(),
-    };
+    if (draftFetchError || !draft) {
+      return { status: "NOT_FOUND", httpStatus: 404, reason: "Checkout session not found." };
+    }
+
+    draftRecord = draft;
+    expectedAmount = Number(draft.total_amount);
+
+    if (draft.placed_order_id && draft.payment_status === "paid") {
+      const { data: placedOrder } = await admin
+        .from("hyperlocal_orders")
+        .select("delivery_otp")
+        .eq("id", draft.placed_order_id)
+        .maybeSingle();
+
+      return {
+        status: "VERIFIED_SUCCESS",
+        orderId: draft.placed_order_id,
+        draftId: orderId,
+        paymentId: "already_verified",
+        amount: expectedAmount,
+        currency: "INR",
+        paidAt: draft.updated_at || new Date().toISOString(),
+        deliveryOtp: placedOrder?.delivery_otp || "4821",
+      };
+    }
+  } else {
+    // Check if order exists in DB
+    const { data: order, error: orderFetchError } = await admin
+      .from("hyperlocal_orders")
+      .select("id, status, payment_status, payment_mode, total_amount, business_id, delivery_otp")
+      .eq("id", orderId)
+      .maybeSingle();
+
+    if (orderFetchError || !order) {
+      return { status: "NOT_FOUND", httpStatus: 404, reason: "Order not found in database." };
+    }
+
+    expectedAmount = Number(order.total_amount);
+
+    // If already marked paid
+    if (order.payment_status === "paid") {
+      return {
+        status: "VERIFIED_SUCCESS",
+        orderId: order.id,
+        paymentId: "already_verified",
+        amount: expectedAmount,
+        currency: "INR",
+        paidAt: new Date().toISOString(),
+        deliveryOtp: order.delivery_otp || "4821",
+      };
+    }
   }
 
   let client;
@@ -295,7 +366,6 @@ export async function verifyCashfreeHyperlocalPayment(
     }
 
     // Anti-Tampering Check: Verify that the amount paid to Cashfree matches the database total
-    const expectedAmount = Number(order.total_amount);
     const gatewayAmount = typeof orderData.order_amount === "number" ? Number(orderData.order_amount) : expectedAmount;
 
     if (Math.abs(gatewayAmount - expectedAmount) > 0.01) {
@@ -340,8 +410,85 @@ export async function verifyCashfreeHyperlocalPayment(
       }
     }
 
-    // 3. Mark order as paid in Supabase (recording Cashfree IDs for real PG refunds)
     const now = new Date().toISOString();
+
+    // 3. If this was a pre-payment checkout draft, place the actual order now!
+    if (isDraft && draftRecord) {
+      // Check concurrency again
+      const { data: freshDraft } = await admin
+        .from("hyperlocal_checkout_drafts")
+        .select("placed_order_id, payment_status")
+        .eq("id", orderId)
+        .maybeSingle();
+
+      let finalOrderId = freshDraft?.placed_order_id;
+      let finalDeliveryOtp = "4821";
+
+      if (!finalOrderId) {
+        const createdOrder = await createHyperlocalOrder({
+          businessId: draftRecord.business_id,
+          customerId: draftRecord.customer_id,
+          orderType: draftRecord.order_type || "food_delivery",
+          customerName: draftRecord.customer_name,
+          customerPhone: draftRecord.customer_phone,
+          customerAddress: draftRecord.customer_address,
+          items: Array.isArray(draftRecord.items) ? draftRecord.items : [],
+          paymentMode: "online_cashfree",
+          customerNotes: draftRecord.customer_notes || undefined,
+        });
+        finalOrderId = createdOrder.orderId;
+        finalDeliveryOtp = createdOrder.deliveryOtp || "4821";
+      } else {
+        const { data: placedOrder } = await admin
+          .from("hyperlocal_orders")
+          .select("delivery_otp")
+          .eq("id", finalOrderId)
+          .maybeSingle();
+        if (placedOrder?.delivery_otp) {
+          finalDeliveryOtp = placedOrder.delivery_otp;
+        }
+      }
+
+      await admin
+        .from("hyperlocal_orders")
+        .update({
+          payment_status: "paid",
+          payment_mode: "online_cashfree",
+          cashfree_order_id: orderId,
+          cashfree_payment_id: paymentId,
+          updated_at: now,
+        })
+        .eq("id", finalOrderId);
+
+      await admin
+        .from("hyperlocal_checkout_drafts")
+        .update({
+          payment_status: "paid",
+          placed_order_id: finalOrderId,
+          updated_at: now,
+        })
+        .eq("id", orderId);
+
+      return {
+        status: "VERIFIED_SUCCESS",
+        orderId: finalOrderId,
+        draftId: orderId,
+        paymentId,
+        amount: expectedAmount,
+        currency: "INR",
+        paidAt,
+        paymentMethod,
+        deliveryOtp: finalDeliveryOtp,
+      };
+    }
+
+    // Legacy direct order flow: Mark existing order as paid
+    const { data: ordRow } = await admin
+      .from("hyperlocal_orders")
+      .select("delivery_otp")
+      .eq("id", orderId)
+      .maybeSingle();
+
     await admin
       .from("hyperlocal_orders")
       .update({
@@ -357,10 +504,11 @@ export async function verifyCashfreeHyperlocalPayment(
       status: "VERIFIED_SUCCESS",
       orderId,
       paymentId,
-      amount: Number(order.total_amount),
+      amount: expectedAmount,
       currency: "INR",
       paidAt,
       paymentMethod,
+      deliveryOtp: ordRow?.delivery_otp || "4821",
     };
   } catch (err) {
     return {
