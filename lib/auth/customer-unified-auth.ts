@@ -3,7 +3,7 @@ import "server-only";
 import { createHash } from "crypto";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { checkRateLimit } from "@/lib/rate-limiter";
-import { fetchCustomerRewardPoints, type CustomerProfile } from "./email-service";
+import { fetchCustomerRewardPoints, type CustomerProfile, type CustomerSavedAddress } from "./email-service";
 
 const OTP_EXPIRY_MINUTES = 5;
 
@@ -219,6 +219,7 @@ export async function verifyCustomerPhoneOtp(
   message: string;
   customer?: CustomerProfile;
   isNewCustomer?: boolean;
+  addresses?: CustomerSavedAddress[];
 }> {
   const phone10 = cleanPhone(rawPhone);
   const cleanOtp = enteredOtp.trim();
@@ -291,6 +292,28 @@ export async function verifyCustomerPhoneOtp(
       typeof cust.full_name === "string" &&
       cust.full_name.trim().length > 0 &&
       cust.full_name.trim().toLowerCase() !== "trustit customer";
+
+    const { data: rawAddrs } = await admin
+      .from("customer_addresses")
+      .select("id, customer_id, label, street, landmark, city, pincode, latitude, longitude, is_default")
+      .eq("customer_id", cust.id)
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    const formattedAddrs: CustomerSavedAddress[] = (rawAddrs || []).map((a) => ({
+      id: a.id,
+      customerId: a.customer_id,
+      label: a.label || "Home",
+      tag: (a.label || "Home") as "Home" | "Work" | "Other",
+      street: a.street,
+      landmark: a.landmark || "",
+      city: a.city || "Bahraich",
+      pincode: a.pincode || "271801",
+      latitude: a.latitude,
+      longitude: a.longitude,
+      isDefault: Boolean(a.is_default),
+    }));
+
     return {
       success: true,
       message: "Verification successful!",
@@ -303,6 +326,7 @@ export async function verifyCustomerPhoneOtp(
         rewardPoints: await fetchCustomerRewardPoints(cust.id),
       },
       isNewCustomer: !hasRealName,
+      addresses: formattedAddrs,
     };
   }
 
@@ -354,6 +378,7 @@ export async function authenticateCustomerWithGoogle(
   success: boolean;
   message: string;
   customer?: CustomerProfile;
+  addresses?: CustomerSavedAddress[];
 }> {
   const cleanEmail = email.trim().toLowerCase();
   if (!cleanEmail || !cleanEmail.includes("@")) {
@@ -400,6 +425,27 @@ export async function authenticateCustomerWithGoogle(
         .eq("id", cust.id);
     }
 
+    const { data: rawAddrs } = await admin
+      .from("customer_addresses")
+      .select("id, customer_id, label, street, landmark, city, pincode, latitude, longitude, is_default")
+      .eq("customer_id", cust.id)
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: false });
+
+    const formattedAddrs: CustomerSavedAddress[] = (rawAddrs || []).map((a) => ({
+      id: a.id,
+      customerId: a.customer_id,
+      label: a.label || "Home",
+      tag: (a.label || "Home") as "Home" | "Work" | "Other",
+      street: a.street,
+      landmark: a.landmark || "",
+      city: a.city || "Bahraich",
+      pincode: a.pincode || "271801",
+      latitude: a.latitude,
+      longitude: a.longitude,
+      isDefault: Boolean(a.is_default),
+    }));
+
     return {
       success: true,
       message: `Welcome back, ${cust.full_name}!`,
@@ -411,6 +457,7 @@ export async function authenticateCustomerWithGoogle(
         createdAt: cust.created_at,
         rewardPoints: await fetchCustomerRewardPoints(cust.id),
       },
+      addresses: formattedAddrs,
     };
   }
 

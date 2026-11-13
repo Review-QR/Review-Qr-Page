@@ -454,7 +454,9 @@ export async function saveCustomerAddress(
   address: {
     id?: string;
     label: string;
-    street: string;
+    street?: string;
+    fullAddress?: string;
+    full_address?: string;
     landmark?: string;
     city?: string;
     pincode?: string;
@@ -466,7 +468,8 @@ export async function saveCustomerAddress(
   const admin = createSupabaseAdminClient();
   const now = new Date().toISOString();
 
-  if (!address.street?.trim()) {
+  const streetText = (address.street || address.fullAddress || address.full_address || "").trim();
+  if (!streetText) {
     return { success: false, error: "Street address is required." };
   }
 
@@ -484,7 +487,7 @@ export async function saveCustomerAddress(
       .from("customer_addresses")
       .update({
         label: address.label || "Home",
-        street: address.street.trim(),
+        street: streetText,
         landmark: address.landmark?.trim() || null,
         city: address.city || "Bahraich",
         pincode: address.pincode || null,
@@ -522,7 +525,7 @@ export async function saveCustomerAddress(
     .insert({
       customer_id: customerId,
       label: address.label || "Home",
-      street: address.street.trim(),
+      street: streetText,
       landmark: address.landmark?.trim() || null,
       city: address.city || "Bahraich",
       pincode: address.pincode || null,

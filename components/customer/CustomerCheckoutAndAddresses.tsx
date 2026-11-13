@@ -632,26 +632,32 @@ export default function CustomerCheckoutAndAddresses({
                       <button
                         type="button"
                         onClick={() => setPaymentMethodChoice("online_cashfree")}
-                        className={`rounded-2xl border p-2.5 text-left ${
+                        className={`rounded-2xl border p-2.5 text-left transition ${
                           paymentMethodChoice === "online_cashfree"
-                            ? "border-[#003178] bg-[#f2f3ff] ring-1 ring-[#003178]"
-                            : "border-[#c3c6d4]"
+                            ? "border-[#003178] bg-[#f2f3ff] ring-2 ring-[#003178]/30 shadow-xs"
+                            : "border-[#c3c6d4] bg-white hover:bg-slate-50"
                         }`}
                       >
-                        <div className="font-black text-[#003178]">⚡ Cashfree 1-Tap</div>
-                        <div className="text-[10px] text-[#434652]">GPay, PhonePe, Paytm, Card</div>
+                        <div className="flex items-center gap-1 font-black text-[#003178] text-xs">
+                          <span>⚡ Cashfree UPI</span>
+                        </div>
+                        <div className="text-[10px] font-semibold text-[#434652] mt-0.5 leading-tight">
+                          PhonePe • GPay • Paytm • Cards
+                        </div>
                       </button>
                       <button
                         type="button"
                         onClick={() => setPaymentMethodChoice("cod")}
-                        className={`rounded-2xl border p-2.5 text-left ${
+                        className={`rounded-2xl border p-2.5 text-left transition ${
                           paymentMethodChoice === "cod"
-                            ? "border-[#003178] bg-[#f2f3ff] ring-1 ring-[#003178]"
-                            : "border-[#c3c6d4]"
+                            ? "border-[#003178] bg-[#f2f3ff] ring-2 ring-[#003178]/30 shadow-xs"
+                            : "border-[#c3c6d4] bg-white hover:bg-slate-50"
                         }`}
                       >
-                        <div className="font-black text-[#131b2e]">💵 Cash on Delivery</div>
-                        <div className="text-[10px] text-[#434652]">Pay rider at your gate</div>
+                        <div className="font-black text-[#131b2e] text-xs">💵 Cash on Delivery</div>
+                        <div className="text-[10px] font-semibold text-[#434652] mt-0.5 leading-tight">
+                          Pay rider at doorstep
+                        </div>
                       </button>
                     </div>
                   </div>

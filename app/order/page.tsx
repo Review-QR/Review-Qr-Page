@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import CustomerSuperAppClient, {
   type SuperAppBusiness,
@@ -115,11 +116,17 @@ export default async function CustomerOrderPortalPage({
   }));
 
   return (
-    <CustomerSuperAppClient
-      businesses={businesses}
-      catalogItems={catalogItems}
-      initialSearchQuery={initialSearchQuery}
-      initialStoreName={initialStoreName}
-    />
+    <>
+      <Script
+        src="https://sdk.cashfree.com/js/v3/cashfree.js"
+        strategy="afterInteractive"
+      />
+      <CustomerSuperAppClient
+        businesses={businesses}
+        catalogItems={catalogItems}
+        initialSearchQuery={initialSearchQuery}
+        initialStoreName={initialStoreName}
+      />
+    </>
   );
 }

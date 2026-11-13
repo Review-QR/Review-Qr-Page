@@ -69,6 +69,15 @@ function loadCashfreeSdk(): Promise<void> {
   if (cashfreeSdkPromise) return cashfreeSdkPromise;
 
   cashfreeSdkPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(
+      'script[src="https://sdk.cashfree.com/js/v3/cashfree.js"]',
+    );
+    if (existing) {
+      if ((window as any).Cashfree) return resolve();
+      existing.addEventListener("load", () => resolve());
+      existing.addEventListener("error", () => reject(new Error("Cashfree checkout could not be loaded.")));
+      return;
+    }
     const script = document.createElement("script");
     script.src = "https://sdk.cashfree.com/js/v3/cashfree.js";
     script.async = true;
@@ -541,22 +550,35 @@ export default function CustomerSuperAppClient({
 
       if (savedId) {
         fetchCustomerPoints(savedId, savedPhone, savedEmail);
-        fetch(`/api/customer/addresses?customerId=${encodeURIComponent(savedId)}`)
+        fetchCustomerOrders(savedId, savedPhone);
+      } else if (savedPhone || savedEmail) {
+        fetchCustomerPoints(undefined, savedPhone, savedEmail);
+        if (savedPhone) fetchCustomerOrders(undefined, savedPhone);
+      }
+
+      const addressQuery = savedId
+        ? `customerId=${encodeURIComponent(savedId)}${savedPhone ? `&phone=${encodeURIComponent(savedPhone)}` : ""}`
+        : savedPhone
+        ? `phone=${encodeURIComponent(savedPhone)}`
+        : "";
+
+      if (addressQuery) {
+        fetch(`/api/customer/addresses?${addressQuery}`)
           .then((r) => (r.ok ? r.json() : null))
           .then((d) => {
             if (d && Array.isArray(d.addresses) && d.addresses.length > 0) {
               const formatted: CustomerSavedAddress[] = d.addresses.map((a: any) => ({
                 id: a.id,
-                customerId: a.customer_id,
+                customerId: a.customer_id || a.customerId || savedId,
                 label: a.label || "Home",
-                tag: a.label || "Home",
-                street: a.street,
-                landmark: a.landmark,
+                tag: (a.label || "Home") as "Home" | "Work" | "Other",
+                street: a.street || a.full_address || a.fullAddress || "",
+                landmark: a.landmark || "",
                 city: a.city || "Bahraich",
                 pincode: a.pincode || "271801",
-                latitude: a.latitude,
-                longitude: a.longitude,
-                isDefault: Boolean(a.is_default),
+                latitude: a.latitude ?? null,
+                longitude: a.longitude ?? null,
+                isDefault: Boolean(a.is_default || a.isDefault),
               }));
               setSavedAddresses(formatted);
               setAddressVerified(true);
@@ -564,6 +586,9 @@ export default function CustomerSuperAppClient({
               if (def) {
                 setSelectedAddressId(def.id);
                 setCustomerAddress(def.street);
+                if (def.latitude && def.longitude) {
+                  setUserCoords({ lat: def.latitude, lng: def.longitude });
+                }
               }
               try {
                 localStorage.setItem("trustit_addr_verified", "1");
@@ -572,9 +597,6 @@ export default function CustomerSuperAppClient({
             }
           })
           .catch(() => {});
-        fetchCustomerOrders(savedId, savedPhone);
-      } else if (savedPhone || savedEmail) {
-        fetchCustomerPoints(undefined, savedPhone, savedEmail);
       }
 
       if (savedAddrVerified) setAddressVerified(true);
@@ -1628,6 +1650,28 @@ export default function CustomerSuperAppClient({
     };
   }, [paymentRetryState?.orderId, paymentRetryState?.hostedPayUrl, paymentRetryState?.storeName, paymentRetryState?.deliveryOtp, customerPhone, fetchActiveBookings]);
 
+  const handlePaymentSuccess = useCallback(
+    (orderId: string, storeName: string, deliveryOtp: string) => {
+      TrustitNative.playHapticFeedback("success");
+      activeDraftOrderRef.current = null;
+      setActiveDraftOrderId(null);
+      setCart({});
+      setRiderTip(0);
+      setPaymentRetryState(null);
+      setIsCheckoutOpen(false);
+      setActiveStoreModal(null);
+      setConfirmedOrderOverlay({
+        orderId,
+        displayCode: formatUnifiedOrderCode(orderId, storeName),
+        storeName,
+        deliveryOtp: deliveryOtp || "4821",
+        paymentLabel: "Cashfree Paid ✓",
+      });
+      fetchActiveBookings(customerPhone);
+    },
+    [customerPhone, fetchActiveBookings],
+  );
+
   const handleInitiateCashfreeGateway = (targetBizId: string, existingOrderId?: string) => {
     if (inFlightPaymentRef.current) return;
     inFlightPaymentRef.current = true;
@@ -1684,7 +1728,7 @@ export default function CustomerSuperAppClient({
             customerPhone,
             customerEmail: customerEmail || undefined,
             fromApp: isCapacitorOrLocalhost,
-            returnUrl: `https://trustitreview.com/pay/cashfree?order_id=${encodeURIComponent(currentOrderId!)}&returned=1${isCapacitorOrLocalhost ? "&fromApp=1" : ""}`,
+            returnUrl: `https://trustitreview.com/order?order_id=${encodeURIComponent(currentOrderId!)}&returned=1`,
           }),
         });
         const sessionData = await resSession.json();
@@ -1699,22 +1743,7 @@ export default function CustomerSuperAppClient({
             );
             const verifyData = await resVerify.json().catch(() => null);
             if (verifyData?.status === "VERIFIED_SUCCESS") {
-              TrustitNative.playHapticFeedback("success");
-              activeDraftOrderRef.current = null;
-              setActiveDraftOrderId(null);
-              setCart({});
-              setRiderTip(0);
-              setPaymentRetryState(null);
-              setIsCheckoutOpen(false);
-              setActiveStoreModal(null);
-              setConfirmedOrderOverlay({
-                orderId: currentOrderId,
-                displayCode: formatUnifiedOrderCode(currentOrderId, storeName),
-                storeName,
-                deliveryOtp: deliveryOtp || "4821",
-                paymentLabel: "Cashfree Paid ✓",
-              });
-              fetchActiveBookings(customerPhone);
+              handlePaymentSuccess(currentOrderId, storeName, deliveryOtp);
               return;
             }
           }
@@ -1729,90 +1758,144 @@ export default function CustomerSuperAppClient({
           return;
         }
 
-        // Prefer Native Cashfree Drop Checkout SDK (UPI-first with PhonePe/GPay/Paytm + Cards)
-        // inside Android APK so Chrome never opens. Fall back to Hosted Checkout only if native SDK is unavailable.
-        if (isCapacitorOrLocalhost) {
-          const nativeDropRes = await TrustitNative.startNativeDropCheckout({
-            paymentSessionId: sessionData.paymentSessionId,
-            orderId: currentOrderId!,
-            environment: sessionData.checkoutMode === "sandbox" ? "SANDBOX" : "PRODUCTION",
-          });
+        let isPaymentCompleted = false;
+        let pollTimer: any = null;
 
-          if (nativeDropRes.launched) {
-            setIsPaymentLaunching(false);
-            setPaymentRetryState({
-              orderId: currentOrderId!,
-              amount: cartGrandTotal || 100,
-              storeName,
-              deliveryOtp: deliveryOtp || "4821",
-              reason:
-                "Complete your UPI / Card payment in the Cashfree sheet. Order will confirm automatically.",
-            });
+        const stopPolling = () => {
+          if (pollTimer) {
+            clearInterval(pollTimer);
+            pollTimer = null;
+          }
+        };
+
+        const verifyPaymentStatus = async (): Promise<boolean> => {
+          if (isPaymentCompleted) return true;
+          try {
+            const resVerify = await fetch(
+              `/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(currentOrderId!)}&_ts=${Date.now()}`,
+              { cache: "no-store" }
+            );
+            const verifyData = await resVerify.json().catch(() => null);
+            if (verifyData?.status === "VERIFIED_SUCCESS") {
+              isPaymentCompleted = true;
+              stopPolling();
+              handlePaymentSuccess(currentOrderId!, storeName, deliveryOtp);
+              return true;
+            }
+          } catch {}
+          return false;
+        };
+
+        // Listen for visibility / focus returns (e.g. customer switches back from PhonePe/GPay app)
+        const onVisibilityChange = () => {
+          if (document.visibilityState === "visible") {
+            verifyPaymentStatus();
+          }
+        };
+        const onWindowFocus = () => {
+          verifyPaymentStatus();
+        };
+        const onCustomPaymentReturn = (evt: any) => {
+          if (evt?.detail?.status === "success" || evt?.detail?.orderId === currentOrderId) {
+            verifyPaymentStatus();
+          }
+        };
+
+        window.addEventListener("visibilitychange", onVisibilityChange);
+        window.addEventListener("focus", onWindowFocus);
+        window.addEventListener("trustit:payment-return", onCustomPaymentReturn);
+
+        // Start background polling every 2.5s while checkout is open
+        let pollCount = 0;
+        pollTimer = setInterval(async () => {
+          pollCount++;
+          if (pollCount > 40) {
+            stopPolling();
             return;
           }
+          await verifyPaymentStatus();
+        }, 2500);
 
-          const hostedPayUrl = `https://trustitreview.com/pay/cashfree?sessionId=${encodeURIComponent(
-            sessionData.paymentSessionId,
-          )}&orderId=${encodeURIComponent(currentOrderId!)}&mode=${encodeURIComponent(
-            sessionData.checkoutMode || "sandbox",
-          )}&fromApp=1`;
-          setIsPaymentLaunching(false);
+        const cleanupListeners = () => {
+          stopPolling();
+          window.removeEventListener("visibilitychange", onVisibilityChange);
+          window.removeEventListener("focus", onWindowFocus);
+          window.removeEventListener("trustit:payment-return", onCustomPaymentReturn);
+        };
+
+        // Strategy A: Native Cashfree Drop Checkout inside APK
+        let nativeLaunched = false;
+        if (isCapacitorOrLocalhost) {
           try {
-            await launchHostedCheckout(hostedPayUrl);
+            const nativeDropRes = await TrustitNative.startNativeDropCheckout({
+              paymentSessionId: sessionData.paymentSessionId,
+              orderId: currentOrderId!,
+              environment: sessionData.checkoutMode === "sandbox" ? "SANDBOX" : "PRODUCTION",
+            });
+            if (nativeDropRes?.launched) {
+              nativeLaunched = true;
+              setIsPaymentLaunching(false);
+              setPaymentRetryState({
+                orderId: currentOrderId!,
+                amount: cartGrandTotal || 100,
+                storeName,
+                deliveryOtp: deliveryOtp || "4821",
+                reason:
+                  "Complete your UPI / Card payment in Cashfree sheet. Order will confirm automatically as soon as payment succeeds.",
+              });
+            }
           } catch {}
-          setPaymentRetryState({
-            orderId: currentOrderId!,
-            amount: cartGrandTotal || 100,
-            storeName,
-            deliveryOtp: deliveryOtp || "4821",
-            hostedPayUrl,
-            reason:
-              "Complete your UPI / Card payment in the secure in-app checkout. This screen will auto-confirm as soon as payment succeeds.",
-          });
-          return;
         }
 
-        await loadCashfreeSdk();
-        setIsPaymentLaunching(false);
+        // Strategy B: In-App Cashfree Web SDK Modal (Zero Chrome popup, UPI apps + Cards in sheet)
+        if (!nativeLaunched) {
+          try {
+            await loadCashfreeSdk();
+          } catch {}
 
-        if ((window as any).Cashfree) {
-          const cashfree = (window as any).Cashfree({ mode: sessionData.checkoutMode || "sandbox" });
-          await cashfree.checkout({
-            paymentSessionId: sessionData.paymentSessionId,
-            redirectTarget: "_modal",
-          });
-        }
+          setIsPaymentLaunching(false);
 
-        const resVerify = await fetch(
-          `/api/hyperlocal/payment/verify?orderId=${encodeURIComponent(currentOrderId!)}`,
-        );
-        const verifyData = await resVerify.json();
+          if ((window as any).Cashfree) {
+            const cashfree = (window as any).Cashfree({ mode: sessionData.checkoutMode || "sandbox" });
+            cashfree.checkout({
+              paymentSessionId: sessionData.paymentSessionId,
+              redirectTarget: "_modal",
+            }).then(async (result: any) => {
+              if (isPaymentCompleted) return;
+              const paid = await verifyPaymentStatus();
+              if (paid) return;
 
-        if (verifyData.status === "VERIFIED_SUCCESS") {
-          TrustitNative.playHapticFeedback("success");
-          activeDraftOrderRef.current = null;
-          setActiveDraftOrderId(null);
-          setCart({});
-          setRiderTip(0);
-          setPaymentRetryState(null);
-          setIsCheckoutOpen(false);
-          setActiveStoreModal(null);
-          setConfirmedOrderOverlay({
-            orderId: currentOrderId!,
-            displayCode: formatUnifiedOrderCode(currentOrderId, storeName),
-            storeName,
-            deliveryOtp: deliveryOtp || "4821",
-            paymentLabel: "Cashfree Paid ✓",
-          });
-          fetchActiveBookings(customerPhone);
-        } else {
-          setPaymentRetryState({
-            orderId: currentOrderId!,
-            amount: cartGrandTotal,
-            storeName,
-            deliveryOtp: deliveryOtp || "4821",
-            reason: verifyData.reason || "UPI verification pending. Retry or switch to COD.",
-          });
+              cleanupListeners();
+              setPaymentRetryState({
+                orderId: currentOrderId!,
+                amount: cartGrandTotal || 100,
+                storeName,
+                deliveryOtp: deliveryOtp || "4821",
+                reason: result?.error?.message || "Cashfree payment closed. You can retry or choose Cash on Delivery.",
+              });
+            }).catch(async (err: any) => {
+              if (isPaymentCompleted) return;
+              const paid = await verifyPaymentStatus();
+              if (paid) return;
+
+              cleanupListeners();
+              setPaymentRetryState({
+                orderId: currentOrderId!,
+                amount: cartGrandTotal || 100,
+                storeName,
+                deliveryOtp: deliveryOtp || "4821",
+                reason: err?.message || "Cashfree payment cancelled. You can retry or choose Cash on Delivery.",
+              });
+            });
+          } else {
+            // Extreme fallback if Cashfree script blocked: in-app dialog
+            const hostedPayUrl = `https://trustitreview.com/pay/cashfree?sessionId=${encodeURIComponent(
+              sessionData.paymentSessionId,
+            )}&orderId=${encodeURIComponent(currentOrderId!)}&mode=${encodeURIComponent(
+              sessionData.checkoutMode || "sandbox",
+            )}&fromApp=1`;
+            await launchHostedCheckout(hostedPayUrl);
+          }
         }
       } catch {
         setIsPaymentLaunching(false);

@@ -28,26 +28,61 @@ export async function GET(request: NextRequest) {
   if (rateLimited) return rateLimited;
 
   const { searchParams } = new URL(request.url);
-  const customerId = searchParams.get("customerId");
+  let customerId = searchParams.get("customerId")?.trim() || "";
+  const phoneParam = searchParams.get("phone")?.trim();
+  const admin = createSupabaseAdminClient();
+
+  if (!isUuid(customerId) && phoneParam) {
+    const clean = phoneParam.replace(/\D/g, "").slice(-10);
+    if (clean.length === 10) {
+      const { data: cust } = await admin
+        .from("customers")
+        .select("id")
+        .or(`phone.eq.${clean},email.eq.${clean}@customer.trustitreview.com`)
+        .limit(1)
+        .maybeSingle();
+      if (cust?.id) {
+        customerId = cust.id;
+      }
+    }
+  }
 
   if (!isUuid(customerId)) {
-    return NextResponse.json({ error: "Valid Customer ID is required." }, { status: 400 });
+    return NextResponse.json({ addresses: [] });
   }
   const forbidden = checkCustomerSessionOwnership(request, customerId);
   if (forbidden) return forbidden;
 
-  const admin = createSupabaseAdminClient();
   const { data: addresses, error } = await admin
     .from("customer_addresses")
-    .select("id, customer_id, label, full_address, landmark, latitude, longitude, is_default, created_at")
+    .select("id, customer_id, label, street, landmark, city, pincode, latitude, longitude, is_default, created_at")
     .eq("customer_id", customerId)
-    .order("is_default", { ascending: false });
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: false });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json({ addresses: addresses || [] });
+  const formatted = (addresses || []).map((a: any) => ({
+    id: a.id,
+    customer_id: a.customer_id,
+    customerId: a.customer_id,
+    label: a.label || "Home",
+    street: a.street || "",
+    full_address: a.street || "",
+    fullAddress: a.street || "",
+    landmark: a.landmark || "",
+    city: a.city || "Bahraich",
+    pincode: a.pincode || "271801",
+    latitude: a.latitude ?? null,
+    longitude: a.longitude ?? null,
+    is_default: Boolean(a.is_default),
+    isDefault: Boolean(a.is_default),
+    created_at: a.created_at,
+  }));
+
+  return NextResponse.json({ addresses: formatted });
 }
 
 export async function POST(request: NextRequest) {
@@ -56,7 +91,23 @@ export async function POST(request: NextRequest) {
     if (rateLimited) return rateLimited;
 
     const body = await request.json();
-    const { customerId, address } = body;
+    let { customerId, phone, address } = body;
+    const admin = createSupabaseAdminClient();
+
+    if (!isUuid(customerId) && phone) {
+      const clean = String(phone).replace(/\D/g, "").slice(-10);
+      if (clean.length === 10) {
+        const { data: cust } = await admin
+          .from("customers")
+          .select("id")
+          .or(`phone.eq.${clean},email.eq.${clean}@customer.trustitreview.com`)
+          .limit(1)
+          .maybeSingle();
+        if (cust?.id) {
+          customerId = cust.id;
+        }
+      }
+    }
 
     if (!isUuid(customerId) || !address) {
       return NextResponse.json({ error: "Valid Customer ID and address data are required." }, { status: 400 });
@@ -64,7 +115,12 @@ export async function POST(request: NextRequest) {
     const forbidden = checkCustomerSessionOwnership(request, customerId);
     if (forbidden) return forbidden;
 
-    const result = await saveCustomerAddress(customerId, address);
+    const normalizedAddress = {
+      ...address,
+      street: (address.street || address.fullAddress || address.full_address || "").trim(),
+    };
+
+    const result = await saveCustomerAddress(customerId, normalizedAddress);
     if (!result.success) {
       return NextResponse.json(result, { status: 400 });
     }
