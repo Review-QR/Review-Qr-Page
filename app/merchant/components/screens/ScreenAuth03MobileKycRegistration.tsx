@@ -388,6 +388,8 @@ export default function ScreenAuth03MobileKycRegistration({
           address: address.trim(),
           latitude: latitude || 27.5744,
           longitude: longitude || 81.5977,
+          locality: resolvedMohalla || undefined,
+          pincode: resolvedPincode || undefined,
         }),
       });
 

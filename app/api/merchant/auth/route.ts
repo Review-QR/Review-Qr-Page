@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   const corsHeaders = buildCorsHeaders(request.headers.get("origin"));
   try {
     const body = await request.json();
-    const { action, phone, otp, storeName, ownerName, category, city, address, latitude, longitude, email, fullName, channel, idToken } = body;
+    const { action, phone, otp, storeName, ownerName, category, city, address, latitude, longitude, locality, pincode, email, fullName, channel, idToken } = body;
 
     const rateLimited = enforceRateLimit(
       request,
@@ -61,6 +61,8 @@ export async function POST(request: NextRequest) {
         address,
         latitude,
         longitude,
+        locality,
+        pincode,
       });
       return NextResponse.json(res, { status: res.success ? 200 : 400, headers: corsHeaders });
     }

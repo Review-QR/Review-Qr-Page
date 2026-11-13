@@ -572,15 +572,27 @@ export async function POST(request: NextRequest) {
         deliveryRadiusKm: Number(deliveryRadiusKm) || undefined,
       });
 
-      if (resolvedBizId && latitude && longitude) {
-        const locPatch: Record<string, unknown> = {
-          location_latitude: Number(latitude),
-          location_longitude: Number(longitude),
-        };
-        if (address && String(address).trim()) {
-          locPatch.address = String(address).trim();
+      if (resolvedBizId && latitude !== undefined && longitude !== undefined && latitude !== null && longitude !== null) {
+        const numLat = Number(latitude);
+        const numLng = Number(longitude);
+        if (
+          !Number.isNaN(numLat) &&
+          !Number.isNaN(numLng) &&
+          numLat >= -90 &&
+          numLat <= 90 &&
+          numLng >= -180 &&
+          numLng <= 180
+        ) {
+          const locPatch: Record<string, unknown> = {
+            location_latitude: numLat,
+            location_longitude: numLng,
+            location_captured_at: new Date().toISOString(),
+          };
+          if (address && String(address).trim()) {
+            locPatch.address = String(address).trim();
+          }
+          await admin.from("businesses").update(locPatch).eq("id", resolvedBizId);
         }
-        await admin.from("businesses").update(locPatch).eq("id", resolvedBizId);
       }
 
       return NextResponse.json({

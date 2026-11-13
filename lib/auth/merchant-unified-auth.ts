@@ -252,6 +252,8 @@ export async function registerMerchantProfile(params: {
   address?: string;
   latitude?: number;
   longitude?: number;
+  locality?: string;
+  pincode?: string;
 }): Promise<{
   success: boolean;
   message: string;
@@ -266,41 +268,67 @@ export async function registerMerchantProfile(params: {
   const ownerName = params.ownerName?.trim() || "Shop Owner";
   const category = params.category?.toLowerCase() || "kirana";
   const city = params.city?.trim() || "Bahraich";
-  const latitude = Number(params.latitude) || 27.5744;
-  const longitude = Number(params.longitude) || 81.5977;
+
+  const numLat = params.latitude !== undefined && params.latitude !== null ? Number(params.latitude) : NaN;
+  const numLng = params.longitude !== undefined && params.longitude !== null ? Number(params.longitude) : NaN;
+
+  const hasValidCoords =
+    !Number.isNaN(numLat) &&
+    !Number.isNaN(numLng) &&
+    numLat >= -90 &&
+    numLat <= 90 &&
+    numLng >= -180 &&
+    numLng <= 180;
+
+  const latitude = hasValidCoords ? numLat : 27.5744;
+  const longitude = hasValidCoords ? numLng : 81.5977;
+  const nowIso = new Date().toISOString();
 
   const admin = createSupabaseAdminClient();
 
   // Create or update business in businesses table
   const businessId = `m_${phone10}_${Date.now().toString().slice(-4)}`;
+  const insertPayload: Record<string, unknown> = {
+    id: businessId,
+    name: storeName,
+    owner: ownerName,
+    phone: `+91${phone10}`,
+    type: category,
+    city: city,
+    address: params.address || `${storeName}, ${city}`,
+    location_latitude: latitude,
+    location_longitude: longitude,
+    location_captured_at: nowIso,
+    status: "active",
+    merchant_status: "active",
+    plan: "growth",
+    is_outlet_open: true,
+    allow_taking_orders: true,
+    is_taking_orders: true,
+    registration_date: nowIso,
+  };
+
+  if (params.locality && params.locality.trim()) {
+    insertPayload.locality = params.locality.trim().slice(0, 160);
+  }
+  if (params.pincode && /^[0-9]{6}$/.test(params.pincode.trim())) {
+    insertPayload.pincode = params.pincode.trim();
+  }
+
   const { data: createdBiz, error: bizErr } = await admin
     .from("businesses")
-    .insert({
-      id: businessId,
-      name: storeName,
-      owner: ownerName,
-      phone: `+91${phone10}`,
-      type: category,
-      city: city,
-      address: params.address || `${storeName}, ${city}`,
-      location_latitude: latitude,
-      location_longitude: longitude,
-      status: "active",
-      merchant_status: "active",
-      plan: "growth",
-      is_outlet_open: true,
-      allow_taking_orders: true,
-      is_taking_orders: true,
-      registration_date: new Date().toISOString(),
-    })
+    .insert(insertPayload)
     .select("id, name, owner, type")
     .single();
 
   if (bizErr || !createdBiz) {
     console.error("[registerMerchantProfile] Insert error:", bizErr);
+    const friendlyMessage = bizErr?.message?.includes("businesses_location_coordinates_range_check")
+      ? "Location coordinates could not be saved. Please re-fetch GPS and try again."
+      : (bizErr?.message || "Failed to create store profile in database.");
     return {
       success: false,
-      message: bizErr?.message || "Failed to create store profile in database.",
+      message: friendlyMessage,
     };
   }
 
@@ -424,6 +452,9 @@ export async function authenticateMerchantWithGoogle(
     type: "restaurant",
     city: "Bahraich",
     address: `Civil Lines, Bahraich`,
+    location_latitude: 27.5744,
+    location_longitude: 81.5977,
+    location_captured_at: new Date().toISOString(),
     status: "active",
     merchant_status: "active",
     plan: "growth",
