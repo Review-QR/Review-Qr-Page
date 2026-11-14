@@ -52,8 +52,8 @@ android {
         customer {
             dimension "app"
             applicationId "com.trustit.customer"
-            versionCode 21
-            versionName "2.7.6"
+            versionCode 22
+            versionName "2.8.1"
             manifestPlaceholders = [
                 mainActivityClass: "com.trustit.customer.MainActivity"
             ]
