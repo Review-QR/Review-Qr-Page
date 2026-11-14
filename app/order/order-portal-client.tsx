@@ -2932,7 +2932,7 @@ export default function CustomerSuperAppClient({
               ⚡
             </div>
             <div>
-              <h4 className="text-sm font-black text-[#003178]">Opening Secure Payment</h4>
+              <h4 className="text-sm font-black text-[#003178]">Connecting to Cashfree</h4>
               <p className="text-[11px] text-[#434652] mt-0.5">
                 Pay Online via UPI, Cards &amp; NetBanking
               </p>

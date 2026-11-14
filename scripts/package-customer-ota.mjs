@@ -6,7 +6,7 @@ const rootDir = process.cwd();
 const bundleDir = path.join(rootDir, 'android-customer-bundle');
 const publicBundlesDir = path.join(rootDir, 'public', 'bundles');
 
-const targetVersion = process.argv[2] || '2.6.0';
+const targetVersion = process.argv[2] || '2.8.2';
 
 console.log('========================================================');
 console.log(`🚀 TRUSTIT CUSTOMER SUPER-APP — OTA v${targetVersion} PACKAGER`);

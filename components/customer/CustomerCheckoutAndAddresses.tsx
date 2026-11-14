@@ -1114,6 +1114,9 @@ export default function CustomerCheckoutAndAddresses({
           <div className="w-full max-w-sm rounded-3xl bg-white overflow-hidden shadow-2xl border border-amber-300">
             <div className="bg-amber-500 text-slate-950 px-5 py-3.5 flex items-center justify-between">
               <div>
+                <div className="text-[10px] font-black uppercase tracking-wider text-slate-950/80">
+                  N-24 • Stock Held Safely
+                </div>
                 <h4 className="text-sm font-black">Payment Incomplete</h4>
                 <div className="text-[10px] font-semibold text-slate-950/80">
                   No money deducted from your bank

@@ -15,6 +15,7 @@ import com.cashfree.pg.core.api.utils.CFErrorResponse;
 import com.cashfree.pg.core.api.utils.CFUPIApp;
 import com.cashfree.pg.core.api.utils.CFUPIUtil;
 import com.cashfree.pg.ui.api.CFDropCheckoutPayment;
+import com.cashfree.pg.ui.api.CFPaymentComponent;
 import com.cashfree.pg.ui.api.upi.intent.CFIntentTheme;
 import com.cashfree.pg.ui.api.upi.intent.CFUPIIntentCheckout;
 import com.cashfree.pg.ui.api.upi.intent.CFUPIIntentCheckoutPayment;
@@ -240,10 +241,20 @@ public final class CashfreeDropCheckoutHelper {
                     .setSecondaryTextColor("#475569")
                     .build();
 
-                CFDropCheckoutPayment dropCheckoutPayment = new CFDropCheckoutPayment.CFDropCheckoutPaymentBuilder()
-                    .setSession(cfSession)
-                    .setCFNativeCheckoutUITheme(theme)
-                    .build();
+                CFDropCheckoutPayment.CFDropCheckoutPaymentBuilder dropBuilder =
+                    new CFDropCheckoutPayment.CFDropCheckoutPaymentBuilder()
+                        .setSession(cfSession)
+                        .setCFNativeCheckoutUITheme(theme);
+
+                try {
+                    CFPaymentComponent paymentComponent = new CFPaymentComponent.CFPaymentComponentBuilder()
+                        .add(CFPaymentComponent.CFPaymentModes.UPI)
+                        .build();
+                    dropBuilder.setCFUIPaymentModes(paymentComponent);
+                } catch (Throwable ignored) {
+                }
+
+                CFDropCheckoutPayment dropCheckoutPayment = dropBuilder.build();
 
                 android.util.Log.d("TrustitNativeCashfree", "Initiating native Cashfree drop checkout for order: " + trimmedOrderId + ", env: " + cfEnv);
                 gatewayService.doPayment(activity, dropCheckoutPayment);
