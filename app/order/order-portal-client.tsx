@@ -1678,7 +1678,12 @@ export default function CustomerSuperAppClient({
     [customerPhone, fetchActiveBookings],
   );
 
-  const handleInitiateCashfreeGateway = (targetBizId: string, existingOrderId?: string, selectedUpiAppId?: string) => {
+  const handleInitiateCashfreeGateway = (
+    targetBizId: string,
+    existingOrderId?: string,
+    selectedUpiAppId?: string,
+    isRetry?: boolean,
+  ) => {
     if (inFlightPaymentRef.current) return;
     inFlightPaymentRef.current = true;
     setIsPaymentLaunching(true);
@@ -1710,6 +1715,7 @@ export default function CustomerSuperAppClient({
           customerEmail: customerEmail || undefined,
           fromApp: isCapacitorOrLocalhost,
           returnUrl: `https://trustitreview.com/order?returned=1`,
+          isRetry: Boolean(isRetry),
         };
 
         if (initialPaymentReference) {
@@ -2764,7 +2770,7 @@ export default function CustomerSuperAppClient({
           if (inFlightPaymentRef.current) return;
           const targetBiz = cartStoreId || businesses[0]?.id || "";
           setPaymentRetryState(null);
-          handleInitiateCashfreeGateway(targetBiz, orderId);
+          handleInitiateCashfreeGateway(targetBiz, orderId, undefined, true);
         }}
         onSwitchOrderToCod={async (orderId) => {
           if (inFlightPaymentRef.current) return;
@@ -2918,17 +2924,17 @@ export default function CustomerSuperAppClient({
         onRegisterSubBack={registerProfileSubBack}
       />
 
-      {/* Cashfree Instant Launcher Modal (Zero Perceived Lag) */}
-      {isPaymentLaunching && (
+      {/* Web-only Cashfree Instant Launcher Modal (Zero Perceived Lag on desktop/mobile web) */}
+      {isPaymentLaunching && typeof window !== "undefined" && !Boolean((window as any).Capacitor?.isNativePlatform?.()) && window.location.hostname !== "localhost" && (
         <div className="fixed inset-0 z-[75] flex items-center justify-center bg-slate-950/70 p-4 backdrop-blur-xs">
           <div className="w-full max-w-xs rounded-3xl bg-white p-5 text-center shadow-2xl space-y-3 border border-[#c3c6d4]">
             <div className="mx-auto h-12 w-12 rounded-2xl bg-[#f2f3ff] text-2xl flex items-center justify-center text-[#003178]">
               ⚡
             </div>
             <div>
-              <h4 className="text-sm font-black text-[#003178]">Connecting to Cashfree</h4>
+              <h4 className="text-sm font-black text-[#003178]">Opening Secure Payment</h4>
               <p className="text-[11px] text-[#434652] mt-0.5">
-                Pay Online via UPI, PhonePe, GPay, Cards &amp; NetBanking
+                Pay Online via UPI, Cards &amp; NetBanking
               </p>
             </div>
             <div className="h-1.5 w-full bg-[#eaedff] rounded-full overflow-hidden">

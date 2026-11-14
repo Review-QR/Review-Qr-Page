@@ -61,6 +61,7 @@ export async function POST(request: Request) {
       items,
       returnUrl,
       fromApp,
+      isRetry,
     } = body;
 
     if (!businessId) {
@@ -84,6 +85,8 @@ export async function POST(request: Request) {
     let orderId = inputOrderId;
     let authoritativeAmount = 0;
     let effectiveBusinessName = businessName;
+
+    let existingCfOrderId: string | undefined = undefined;
 
     // PATH A: Checkout with cart items directly (Strict Zero-Fake-Orders pre-payment flow)
     if (!orderId && Array.isArray(items) && items.length > 0) {
@@ -160,7 +163,7 @@ export async function POST(request: Request) {
     } else if (orderId && String(orderId).startsWith("cdraft_")) {
       const { data: dbDraft } = await admin
         .from("hyperlocal_checkout_drafts")
-        .select("id, business_id, total_amount, payment_status, placed_order_id")
+        .select("id, business_id, total_amount, payment_status, placed_order_id, cashfree_session_id, cashfree_order_id")
         .eq("id", orderId)
         .maybeSingle();
 
@@ -171,6 +174,7 @@ export async function POST(request: Request) {
         return Response.json({ success: false, error: "Order is already paid." }, { status: 400 });
       }
       authoritativeAmount = Number(dbDraft.total_amount);
+      existingCfOrderId = dbDraft.cashfree_order_id || undefined;
     } else if (orderId) {
       const { data: dbOrder } = await admin
         .from("hyperlocal_orders")
@@ -203,6 +207,8 @@ export async function POST(request: Request) {
 
     const result = await createCashfreeHyperlocalPaymentOrder({
       orderId,
+      cashfreeOrderId: isRetry ? undefined : existingCfOrderId,
+      forceNewAttempt: Boolean(isRetry),
       amount: authoritativeAmount,
       businessId,
       businessName: effectiveBusinessName,

@@ -13,6 +13,8 @@ import { createHyperlocalOrder } from "./hyperlocal-service.ts";
 
 export interface CreateHyperlocalPaymentOrderInput {
   orderId: string;
+  cashfreeOrderId?: string;
+  forceNewAttempt?: boolean;
   amount: number;
   businessId: string;
   businessName?: string;
@@ -141,9 +143,13 @@ export async function createCashfreeHyperlocalPaymentOrder(
   const outletCode = getOutletCode(input.businessName);
   const unifiedCode = formatUnifiedOrderCode(input.orderId, input.businessName);
 
+  const targetCfOrderId =
+    input.cashfreeOrderId ||
+    (input.forceNewAttempt ? `${input.orderId}_r${Date.now().toString(36)}` : input.orderId);
+
   const idempotencyKey = randomUUID();
   const requestBody = {
-    order_id: input.orderId,
+    order_id: targetCfOrderId,
     order_amount: authoritativeAmount,
     order_currency: "INR",
     customer_details: {
@@ -169,7 +175,7 @@ export async function createCashfreeHyperlocalPaymentOrder(
   };
 
   try {
-    const response = await fetch(`${client.apiBaseUrl}/orders`, client.createRequestInit({
+    let response = await fetch(`${client.apiBaseUrl}/orders`, client.createRequestInit({
       method: "POST",
       cache: "no-store",
       signal: AbortSignal.timeout(20_000),
@@ -183,14 +189,81 @@ export async function createCashfreeHyperlocalPaymentOrder(
     if (!response.ok) {
       const errText = await response.text();
       let detail = `Cashfree order creation failed with status ${response.status}`;
+      let isAlreadyExists = false;
       try {
         const parsedErr = JSON.parse(errText) as { message?: string; code?: string };
+        if (parsedErr?.code === "order_already_exists" || (parsedErr?.message && parsedErr.message.includes("already present"))) {
+          isAlreadyExists = true;
+        }
         if (parsedErr?.message) {
           detail = parsedErr.code ? `${parsedErr.message} (${parsedErr.code})` : parsedErr.message;
         }
       } catch {
         if (errText.trim()) detail = errText.trim();
+        if (detail.includes("already present") || detail.includes("order_already_exists")) {
+          isAlreadyExists = true;
+        }
       }
+
+      // If order already exists in Cashfree, query existing order or create retry attempt
+      if (isAlreadyExists) {
+        try {
+          const existingRes = await fetch(`${client.apiBaseUrl}/orders/${encodeURIComponent(targetCfOrderId)}`, client.createRequestInit({
+            method: "GET",
+            cache: "no-store",
+            signal: AbortSignal.timeout(15_000),
+          }));
+          if (existingRes.ok) {
+            const existingData = (await existingRes.json()) as {
+              order_id?: string;
+              order_status?: string;
+              payment_session_id?: string;
+            };
+            if (existingData.payment_session_id && existingData.order_status === "ACTIVE") {
+              return {
+                success: true,
+                orderId: existingData.order_id || targetCfOrderId,
+                orderStatus: existingData.order_status,
+                paymentSessionId: existingData.payment_session_id,
+                checkoutMode: client.environment,
+                upiString,
+              };
+            }
+          }
+
+          // If existing order is not active (or user is retrying), create fresh order with retry suffix
+          const retryCfId = `${input.orderId}_r${Date.now().toString(36)}`;
+          const retryBody = { ...requestBody, order_id: retryCfId };
+          const retryRes = await fetch(`${client.apiBaseUrl}/orders`, client.createRequestInit({
+            method: "POST",
+            cache: "no-store",
+            signal: AbortSignal.timeout(20_000),
+            headers: {
+              "content-type": "application/json",
+              "x-idempotency-key": randomUUID(),
+            },
+            body: JSON.stringify(retryBody),
+          }));
+          if (retryRes.ok) {
+            const retryData = (await retryRes.json()) as {
+              order_id?: string;
+              order_status?: string;
+              payment_session_id?: string;
+            };
+            if (retryData.payment_session_id) {
+              return {
+                success: true,
+                orderId: retryData.order_id || retryCfId,
+                orderStatus: retryData.order_status || "ACTIVE",
+                paymentSessionId: retryData.payment_session_id,
+                checkoutMode: client.environment,
+                upiString,
+              };
+            }
+          }
+        } catch {}
+      }
+
       return {
         success: false,
         error: detail,
@@ -205,7 +278,7 @@ export async function createCashfreeHyperlocalPaymentOrder(
     };
 
     if (
-      data.order_id !== input.orderId ||
+      (data.order_id !== targetCfOrderId && data.order_id !== input.orderId) ||
       typeof data.payment_session_id !== "string" ||
       !data.payment_session_id
     ) {
@@ -218,7 +291,7 @@ export async function createCashfreeHyperlocalPaymentOrder(
 
     return {
       success: true,
-      orderId: data.order_id,
+      orderId: data.order_id || targetCfOrderId,
       orderStatus: data.order_status || "ACTIVE",
       paymentSessionId: data.payment_session_id,
       checkoutMode: client.environment,
@@ -326,12 +399,21 @@ export async function verifyCashfreeHyperlocalPayment(
   }
 
   try {
-    // 1. Fetch order status from Cashfree
-    const orderResponse = await fetch(`${client.apiBaseUrl}/orders/${encodeURIComponent(orderId)}`, client.createRequestInit({
+    // 1. Fetch order status from Cashfree (check draft cashfree_order_id first if retried)
+    const cfTargetId = (isDraft && draftRecord?.cashfree_order_id) ? String(draftRecord.cashfree_order_id) : orderId;
+    let orderResponse = await fetch(`${client.apiBaseUrl}/orders/${encodeURIComponent(cfTargetId)}`, client.createRequestInit({
       method: "GET",
       cache: "no-store",
       signal: AbortSignal.timeout(15_000),
     }));
+
+    if (orderResponse.status === 404 && cfTargetId !== orderId) {
+      orderResponse = await fetch(`${client.apiBaseUrl}/orders/${encodeURIComponent(orderId)}`, client.createRequestInit({
+        method: "GET",
+        cache: "no-store",
+        signal: AbortSignal.timeout(15_000),
+      }));
+    }
 
     if (orderResponse.status === 404) {
       return { status: "NOT_FOUND", httpStatus: 404 };

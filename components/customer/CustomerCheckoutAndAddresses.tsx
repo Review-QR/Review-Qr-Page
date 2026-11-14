@@ -214,8 +214,10 @@ export default function CustomerCheckoutAndAddresses({
     if (submitGuardTimerRef.current) clearTimeout(submitGuardTimerRef.current);
     submitGuardTimerRef.current = setTimeout(() => {
       setIsLocalSubmitLocked(false);
-    }, 1500);
-    onPlaceOrder(paymentMethodChoice === "online_cashfree" ? selectedUpiAppId || undefined : undefined);
+    }, 2500);
+    const chosenAppId =
+      selectedUpiAppId || (installedUpiApps.length > 0 ? installedUpiApps[0].appId : undefined);
+    onPlaceOrder(paymentMethodChoice === "online_cashfree" ? chosenAppId : undefined);
   };
 
   const handleOpenHostedPaymentUrl = async (rawUrl: string) => {
@@ -821,7 +823,9 @@ export default function CustomerCheckoutAndAddresses({
                   </div>
                   <div className="flex items-center gap-1 font-black text-sm">
                     {isSubmitting || isPaymentLaunching || isLocalSubmitLocked ? (
-                      <span>Opening Securely...</span>
+                      <span>
+                        Opening {installedUpiApps.find((a) => a.appId === selectedUpiAppId)?.displayName || "UPI"}...
+                      </span>
                     ) : (
                       <span>Place Order ▶</span>
                     )}
