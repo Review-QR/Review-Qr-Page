@@ -168,33 +168,7 @@ export default function CustomerCheckoutAndAddresses({
   const [holdSeconds, setHoldSeconds] = useState(522); // 08:42 stock hold timer for N-24
   const [isAutoDetectingAddr, setIsAutoDetectingAddr] = useState(false);
   const [isLocalSubmitLocked, setIsLocalSubmitLocked] = useState(false);
-  const [installedUpiApps, setInstalledUpiApps] = useState<
-    Array<{ appId: string; displayName: string; icon?: string }>
-  >([]);
-  const [selectedUpiAppId, setSelectedUpiAppId] = useState<string>("");
   const submitGuardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    TrustitNative.getInstalledUpiApps()
-      .then((apps) => {
-        if (apps && apps.length > 0) {
-          setInstalledUpiApps(apps);
-          const phonepe = apps.find((a) => a.appId.includes("phonepe"));
-          const gpay = apps.find(
-            (a) => a.appId.includes("paisa") || a.appId.includes("gpay")
-          );
-          if (phonepe) {
-            setSelectedUpiAppId(phonepe.appId);
-          } else if (gpay) {
-            setSelectedUpiAppId(gpay.appId);
-          } else {
-            setSelectedUpiAppId(apps[0].appId);
-          }
-        }
-      })
-      .catch(() => {});
-  }, []);
 
   useEffect(() => {
     if (!isSubmitting && !isPaymentLaunching) {
@@ -215,9 +189,7 @@ export default function CustomerCheckoutAndAddresses({
     submitGuardTimerRef.current = setTimeout(() => {
       setIsLocalSubmitLocked(false);
     }, 2500);
-    const chosenAppId =
-      selectedUpiAppId || (installedUpiApps.length > 0 ? installedUpiApps[0].appId : undefined);
-    onPlaceOrder(paymentMethodChoice === "online_cashfree" ? chosenAppId : undefined);
+    onPlaceOrder();
   };
 
   const handleOpenHostedPaymentUrl = async (rawUrl: string) => {
@@ -656,136 +628,78 @@ export default function CustomerCheckoutAndAddresses({
                       <span>₹{grandTotal}</span>
                     </div>
 
-                    {/* Blinkit-Style Payment Mode Selection */}
+                    {/* Simplified Payment Options (Online vs COD) */}
                     <div className="space-y-2 pt-2">
                       <div className="text-[11px] font-bold text-[#434652] uppercase tracking-wider">
                         Select Payment Option
                       </div>
 
-                      {/* Online UPI Apps Section */}
-                      <div className="rounded-2xl border border-[#eaedff] bg-slate-50/70 p-2.5 space-y-2">
-                        <div className="flex items-center justify-between px-1">
-                          <span className="text-xs font-black text-[#131b2e] flex items-center gap-1.5">
-                            ⚡ Pay using UPI
-                          </span>
-                          <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                            Direct Bank Handoff
-                          </span>
-                        </div>
-
-                        {installedUpiApps.length > 0 ? (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                            {installedUpiApps.slice(0, 4).map((app) => {
-                              const isSelected =
-                                paymentMethodChoice === "online_cashfree" &&
-                                selectedUpiAppId === app.appId;
-                              return (
-                                <button
-                                  key={app.appId}
-                                  type="button"
-                                  onClick={() => {
-                                    setPaymentMethodChoice("online_cashfree");
-                                    setSelectedUpiAppId(app.appId);
-                                  }}
-                                  className={`flex items-center justify-between rounded-xl p-2.5 text-left transition border ${
-                                    isSelected
-                                      ? "border-[#003178] bg-[#f2f3ff] ring-2 ring-[#003178]/30 shadow-xs"
-                                      : "border-[#c3c6d4]/50 bg-white hover:bg-slate-50"
-                                  }`}
-                                >
-                                  <div className="flex items-center gap-2.5">
-                                    {app.icon ? (
-                                      <img
-                                        src={`data:image/png;base64,${app.icon}`}
-                                        alt={app.displayName}
-                                        className="h-6 w-6 rounded-md object-contain shrink-0"
-                                      />
-                                    ) : (
-                                      <div className="h-6 w-6 rounded-md bg-[#003178] text-white flex items-center justify-center text-[10px] font-bold">
-                                        UPI
-                                      </div>
-                                    )}
-                                    <div className="font-bold text-[#131b2e] text-xs">
-                                      {app.displayName} UPI
-                                    </div>
-                                  </div>
-                                  <div
-                                    className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                                      isSelected
-                                        ? "border-[#003178] bg-[#003178]"
-                                        : "border-[#737783]"
-                                    }`}
-                                  >
-                                    {isSelected && (
-                                      <div className="h-1.5 w-1.5 rounded-full bg-white" />
-                                    )}
-                                  </div>
-                                </button>
-                              );
-                            })}
+                      {/* 1. Pay Online via UPI / Credit-Debit Card */}
+                      <button
+                        type="button"
+                        onClick={() => setPaymentMethodChoice("online_cashfree")}
+                        className={`w-full flex items-center justify-between rounded-2xl p-3 text-left transition border ${
+                          paymentMethodChoice === "online_cashfree"
+                            ? "border-[#003178] bg-[#f2f3ff] ring-2 ring-[#003178]/30 shadow-xs"
+                            : "border-[#c3c6d4]/60 bg-white hover:bg-slate-50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-xl bg-[#003178] text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                            ⚡
                           </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setPaymentMethodChoice("online_cashfree");
-                              setSelectedUpiAppId("");
-                            }}
-                            className={`w-full flex items-center justify-between rounded-xl p-2.5 text-left transition border ${
-                              paymentMethodChoice === "online_cashfree"
-                                ? "border-[#003178] bg-[#f2f3ff] ring-2 ring-[#003178]/30 shadow-xs"
-                                : "border-[#c3c6d4]/50 bg-white hover:bg-slate-50"
-                            }`}
-                          >
+                          <div>
                             <div className="flex items-center gap-2">
-                              <span className="text-base">⚡</span>
-                              <div>
-                                <div className="font-bold text-[#003178] text-xs">
-                                  UPI Intent (Google Pay, PhonePe, Paytm)
-                                </div>
-                                <div className="text-[10px] text-[#434652]">
-                                  Direct app-to-app UPI payment
-                                </div>
-                              </div>
+                              <span className="font-black text-[#003178] text-xs">
+                                Pay Online via UPI / Credit-Debit Card
+                              </span>
+                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200">
+                                Instant
+                              </span>
                             </div>
-                            <div
-                              className={`h-4 w-4 rounded-full border flex items-center justify-center ${
-                                paymentMethodChoice === "online_cashfree"
-                                  ? "border-[#003178] bg-[#003178]"
-                                  : "border-[#737783]"
-                              }`}
-                            >
-                              {paymentMethodChoice === "online_cashfree" && (
-                                <div className="h-1.5 w-1.5 rounded-full bg-white" />
-                              )}
+                            <div className="text-[10.5px] font-medium text-[#434652] mt-0.5">
+                              PhonePe • GPay • Paytm • QR • Credit/Debit Cards
                             </div>
-                          </button>
-                        )}
-                      </div>
+                          </div>
+                        </div>
+                        <div
+                          className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
+                            paymentMethodChoice === "online_cashfree"
+                              ? "border-[#003178] bg-[#003178]"
+                              : "border-[#737783]"
+                          }`}
+                        >
+                          {paymentMethodChoice === "online_cashfree" && (
+                            <div className="h-1.5 w-1.5 rounded-full bg-white" />
+                          )}
+                        </div>
+                      </button>
 
-                      {/* Cash on Delivery Option */}
+                      {/* 2. Cash on Delivery (COD) */}
                       <button
                         type="button"
                         onClick={() => setPaymentMethodChoice("cod")}
-                        className={`w-full flex items-center justify-between rounded-xl p-2.5 text-left transition border ${
+                        className={`w-full flex items-center justify-between rounded-2xl p-3 text-left transition border ${
                           paymentMethodChoice === "cod"
                             ? "border-emerald-700 bg-emerald-50 ring-2 ring-emerald-500/30 shadow-xs"
-                            : "border-[#c3c6d4]/50 bg-white hover:bg-slate-50"
+                            : "border-[#c3c6d4]/60 bg-white hover:bg-slate-50"
                         }`}
                       >
-                        <div className="flex items-center gap-2.5">
-                          <span className="text-base">💵</span>
+                        <div className="flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-lg shrink-0 shadow-xs">
+                            💵
+                          </div>
                           <div>
-                            <div className="font-bold text-[#131b2e] text-xs">
+                            <div className="font-black text-[#131b2e] text-xs">
                               Cash on Delivery (COD)
                             </div>
-                            <div className="text-[10px] text-[#434652]">
+                            <div className="text-[10.5px] font-medium text-[#434652] mt-0.5">
                               Pay rider at doorstep with cash or QR
                             </div>
                           </div>
                         </div>
                         <div
-                          className={`h-4 w-4 rounded-full border flex items-center justify-center ${
+                          className={`h-4 w-4 rounded-full border flex items-center justify-center shrink-0 ${
                             paymentMethodChoice === "cod"
                               ? "border-emerald-700 bg-emerald-700"
                               : "border-[#737783]"
@@ -813,19 +727,14 @@ export default function CustomerCheckoutAndAddresses({
                   <div className="text-left">
                     <div className="text-[10px] opacity-80 uppercase tracking-wider font-semibold">
                       {paymentMethodChoice === "online_cashfree"
-                        ? `PAY USING: ${
-                            installedUpiApps.find((a) => a.appId === selectedUpiAppId)
-                              ?.displayName || "UPI Apps"
-                          } UPI`
-                        : "PAY USING: Cash on Delivery"}
+                        ? "PAY ONLINE: UPI / CARDS"
+                        : "PAYMENT: CASH ON DELIVERY"}
                     </div>
                     <div className="text-sm font-black">₹{grandTotal} TOTAL</div>
                   </div>
                   <div className="flex items-center gap-1 font-black text-sm">
                     {isSubmitting || isPaymentLaunching || isLocalSubmitLocked ? (
-                      <span>
-                        Opening {installedUpiApps.find((a) => a.appId === selectedUpiAppId)?.displayName || "UPI"}...
-                      </span>
+                      <span>Opening Cashfree...</span>
                     ) : (
                       <span>Place Order ▶</span>
                     )}

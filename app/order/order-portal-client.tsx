@@ -1861,8 +1861,7 @@ export default function CustomerSuperAppClient({
               paymentSessionId: sessionData.paymentSessionId,
               orderId: currentPaymentRef!,
               environment: sessionData.checkoutMode === "sandbox" ? "SANDBOX" : "PRODUCTION",
-              preferUpiIntent: true,
-              selectedAppId: selectedUpiAppId || undefined,
+              preferUpiIntent: false,
             });
             if (nativeDropRes?.launched) {
               nativeLaunched = true;
