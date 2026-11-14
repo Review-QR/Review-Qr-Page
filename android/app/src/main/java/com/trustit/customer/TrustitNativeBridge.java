@@ -504,6 +504,15 @@ public class TrustitNativeBridge extends Plugin {
     }
 
     /**
+     * 4a-2. getInstalledUpiApps: Lists all installed UPI applications (PhonePe, GPay, Paytm, etc.)
+     * on the device so the UI can render 1-tap UPI app buttons like Blinkit.
+     */
+    @PluginMethod
+    public void getInstalledUpiApps(PluginCall call) {
+        CashfreeDropCheckoutHelper.getInstalledUpiApps(call, getActivity());
+    }
+
+    /**
      * 4b. openInAppCheckout: Renders Cashfree hosted checkout in an embedded in-app WebView Dialog
      * on https://trustitreview.com so Google Chrome never opens externally while supporting 1-tap UPI app intents.
      */

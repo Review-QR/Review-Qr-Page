@@ -30,7 +30,12 @@ interface TrustitNativeBridgePlugin {
     paymentSessionId: string;
     orderId: string;
     environment?: "SANDBOX" | "PRODUCTION";
+    selectedAppId?: string;
+    preferUpiIntent?: boolean;
   }): Promise<{ launched: boolean; mode?: string; message?: string }>;
+  getInstalledUpiApps?(): Promise<{
+    apps: Array<{ appId: string; displayName: string; icon?: string }>;
+  }>;
   openInAppCheckout(options: { url: string }): Promise<{ opened: boolean; mode: string }>;
   checkAndApplyOta(options?: { manifestUrl?: string; currentVersion?: string }): Promise<{ hasUpdate: boolean; appliedVersion?: string; message?: string }>;
 }
@@ -312,6 +317,8 @@ export const TrustitNative = {
     paymentSessionId: string;
     orderId: string;
     environment?: "SANDBOX" | "PRODUCTION";
+    selectedAppId?: string;
+    preferUpiIntent?: boolean;
   }): Promise<{ launched: boolean; mode?: string; message?: string }> {
     const plugin = getNativePlugin();
     if (plugin && typeof plugin.startNativeDropCheckout === "function") {
@@ -320,6 +327,8 @@ export const TrustitNative = {
           paymentSessionId: options.paymentSessionId,
           orderId: options.orderId,
           environment: options.environment === "SANDBOX" ? "SANDBOX" : "PRODUCTION",
+          selectedAppId: options.selectedAppId,
+          preferUpiIntent: options.preferUpiIntent ?? true,
         });
       } catch (err: any) {
         console.warn("[TrustitNative] startNativeDropCheckout error:", err);
@@ -331,6 +340,24 @@ export const TrustitNative = {
       }
     }
     return { launched: false, mode: "unavailable" };
+  },
+
+  /**
+   * Queries all installed UPI apps on Android (PhonePe, Google Pay, Paytm, WhatsApp UPI)
+   * so the customer UI can render 1-tap UPI app buttons like Blinkit.
+   */
+  async getInstalledUpiApps(): Promise<Array<{ appId: string; displayName: string; icon?: string }>> {
+    const plugin = getNativePlugin();
+    if (plugin && typeof plugin.getInstalledUpiApps === "function") {
+      try {
+        const res = await plugin.getInstalledUpiApps();
+        return Array.isArray(res?.apps) ? res.apps : [];
+      } catch (err: any) {
+        console.warn("[TrustitNative] getInstalledUpiApps error:", err);
+        return [];
+      }
+    }
+    return [];
   },
 
   /**

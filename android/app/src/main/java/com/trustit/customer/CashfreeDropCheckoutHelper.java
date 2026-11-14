@@ -10,28 +10,87 @@ import com.cashfree.pg.core.api.CFSession;
 import com.cashfree.pg.core.api.CFTheme;
 import com.cashfree.pg.core.api.callback.CFCheckoutResponseCallback;
 import com.cashfree.pg.core.api.utils.CFErrorResponse;
+import com.cashfree.pg.core.api.utils.CFUPIApp;
+import com.cashfree.pg.core.api.utils.CFUPIUtil;
 import com.cashfree.pg.ui.api.CFDropCheckoutPayment;
-import com.cashfree.pg.ui.api.CFPaymentComponent;
+import com.cashfree.pg.ui.api.upi.intent.CFIntentTheme;
+import com.cashfree.pg.ui.api.upi.intent.CFUPIIntentCheckout;
+import com.cashfree.pg.ui.api.upi.intent.CFUPIIntentCheckoutPayment;
 import com.getcapacitor.Bridge;
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.PluginCall;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
 
 /**
- * Shared native Cashfree PG Android Drop Checkout launcher (UPI-first with Cards/Wallets/Netbanking)
- * used by Trustit Customer, Rider, and Partner APKs so PhonePe/GPay/Paytm open natively without Chrome.
+ * Dedicated native Cashfree PG Android UPI Intent & Drop Checkout launcher
+ * used by Trustit Customer APK so PhonePe, Google Pay, Paytm, and WhatsApp UPI
+ * open natively via Android app-to-app intent (exactly like Blinkit/Swiggy/Zomato),
+ * with ZERO external browser/web redirects.
  */
 public final class CashfreeDropCheckoutHelper {
 
     private CashfreeDropCheckoutHelper() {}
 
+    /**
+     * Queries all installed UPI apps on the device (PhonePe, GPay, Paytm, etc.)
+     * and returns their package IDs, display names, and base64 icons to the frontend.
+     */
+    public static void getInstalledUpiApps(final PluginCall call, final Activity activity) {
+        if (activity == null || activity.isFinishing()) {
+            JSObject res = new JSObject();
+            res.put("apps", new JSArray());
+            call.resolve(res);
+            return;
+        }
+
+        try {
+            CFUPIUtil.getInstalledUPIApps(activity, new CFUPIUtil.UPIAppsCallback() {
+                @Override
+                public void onUPIAppsFetched(ArrayList<CFUPIApp> list) {
+                    JSArray arr = new JSArray();
+                    if (list != null) {
+                        for (CFUPIApp app : list) {
+                            if (app != null) {
+                                JSObject item = new JSObject();
+                                item.put("appId", app.getAppId());
+                                item.put("displayName", app.getDisplayName());
+                                item.put("icon", app.getBase64Icon());
+                                arr.put(item);
+                            }
+                        }
+                    }
+                    JSObject res = new JSObject();
+                    res.put("apps", arr);
+                    call.resolve(res);
+                }
+            });
+        } catch (Throwable t) {
+            android.util.Log.w("TrustitNativeCashfree", "Failed to fetch installed UPI apps: " + t.getMessage());
+            JSObject res = new JSObject();
+            res.put("apps", new JSArray());
+            call.resolve(res);
+        }
+    }
+
+    /**
+     * Launches native Cashfree UPI Intent Checkout (opens native chooser sheet with PhonePe,
+     * GPay, Paytm, WhatsApp or prioritizes the user's selected app directly), with
+     * fallback to full Drop Checkout if UPI is unavailable.
+     */
     public static void startDropCheckout(final PluginCall call, final Activity activity, final Bridge bridge) {
         final String paymentSessionId = call.getString("paymentSessionId", "");
         final String orderId = call.getString("orderId", "");
         final String environmentRaw = call.getString("environment", "PRODUCTION");
+        final String selectedAppId = call.getString("selectedAppId", "");
+        final boolean preferUpiIntent = call.getBoolean("preferUpiIntent", true);
 
         if (paymentSessionId == null || paymentSessionId.trim().isEmpty() || orderId == null || orderId.trim().isEmpty()) {
             JSObject invalid = new JSObject();
@@ -100,6 +159,49 @@ public final class CashfreeDropCheckoutHelper {
                     .setOrderId(trimmedOrderId)
                     .build();
 
+                // 1. Primary Strategy: Native UPI Intent Checkout (Blinkit / Swiggy / Zomato style)
+                if (preferUpiIntent) {
+                    try {
+                        CFUPIIntentCheckout.CFUPIIntentBuilder upiBuilder = new CFUPIIntentCheckout.CFUPIIntentBuilder();
+                        if (selectedAppId != null && !selectedAppId.trim().isEmpty()) {
+                            upiBuilder.setOrderUsingPackageName(Collections.singletonList(selectedAppId.trim()));
+                        } else {
+                            upiBuilder.setOrderUsingPackageName(Arrays.asList(
+                                "com.phonepe.app",
+                                "com.google.android.apps.nbu.paisa.user",
+                                "net.one97.paytm",
+                                "com.whatsapp",
+                                "in.org.npci.upiapp",
+                                "com.dreamplug.androidapp"
+                            ));
+                        }
+                        CFUPIIntentCheckout upiCheckout = upiBuilder.build();
+
+                        CFIntentTheme intentTheme = new CFIntentTheme.CFIntentThemeBuilder()
+                            .setPrimaryTextColor("#0F172A")
+                            .setBackgroundColor("#FFFFFF")
+                            .build();
+
+                        CFUPIIntentCheckoutPayment upiPayment = new CFUPIIntentCheckoutPayment.CFUPIIntentPaymentBuilder()
+                            .setSession(cfSession)
+                            .setCfUPIIntentCheckout(upiCheckout)
+                            .setCfIntentTheme(intentTheme)
+                            .build();
+
+                        android.util.Log.d("TrustitNativeCashfree", "Initiating native Cashfree UPI intent checkout for order: " + trimmedOrderId + ", env: " + cfEnv);
+                        gatewayService.doPayment(activity, upiPayment);
+
+                        JSObject res = new JSObject();
+                        res.put("launched", true);
+                        res.put("mode", "cashfree_native_upi_intent");
+                        call.resolve(res);
+                        return;
+                    } catch (Throwable upiErr) {
+                        android.util.Log.w("TrustitNativeCashfree", "UPI Intent failed, trying native drop fallback: " + upiErr.getMessage());
+                    }
+                }
+
+                // 2. Secondary Fallback: Native Cashfree Drop Checkout with ALL payment modes
                 CFTheme theme = new CFTheme.CFThemeBuilder()
                     .setNavigationBarBackgroundColor("#0F172A")
                     .setNavigationBarTextColor("#FFFFFF")
@@ -109,22 +211,10 @@ public final class CashfreeDropCheckoutHelper {
                     .setSecondaryTextColor("#475569")
                     .build();
 
-                CFDropCheckoutPayment.CFDropCheckoutPaymentBuilder dropBuilder =
-                    new CFDropCheckoutPayment.CFDropCheckoutPaymentBuilder()
-                        .setSession(cfSession)
-                        .setCFNativeCheckoutUITheme(theme);
-
-                try {
-                    // UPI first (opens PhonePe/GPay/Paytm natively), followed by active merchant payment modes
-                    CFPaymentComponent paymentComponent = new CFPaymentComponent.CFPaymentComponentBuilder()
-                        .add(CFPaymentComponent.CFPaymentModes.UPI)
-                        .build();
-                    dropBuilder.setCFUIPaymentModes(paymentComponent);
-                } catch (Throwable ignored) {
-                    // Fall back to all active merchant payment modes configured in Cashfree dashboard
-                }
-
-                CFDropCheckoutPayment dropCheckoutPayment = dropBuilder.build();
+                CFDropCheckoutPayment dropCheckoutPayment = new CFDropCheckoutPayment.CFDropCheckoutPaymentBuilder()
+                    .setSession(cfSession)
+                    .setCFNativeCheckoutUITheme(theme)
+                    .build();
 
                 android.util.Log.d("TrustitNativeCashfree", "Initiating native Cashfree drop checkout for order: " + trimmedOrderId + ", env: " + cfEnv);
                 gatewayService.doPayment(activity, dropCheckoutPayment);

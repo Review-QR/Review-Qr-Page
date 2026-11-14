@@ -1678,7 +1678,7 @@ export default function CustomerSuperAppClient({
     [customerPhone, fetchActiveBookings],
   );
 
-  const handleInitiateCashfreeGateway = (targetBizId: string, existingOrderId?: string) => {
+  const handleInitiateCashfreeGateway = (targetBizId: string, existingOrderId?: string, selectedUpiAppId?: string) => {
     if (inFlightPaymentRef.current) return;
     inFlightPaymentRef.current = true;
     setIsPaymentLaunching(true);
@@ -1847,7 +1847,7 @@ export default function CustomerSuperAppClient({
           sessionData.checkoutMode || "sandbox",
         )}&fromApp=1`;
 
-        // Strategy A: Inside Native APK
+        // Strategy A: Inside Native APK (Blinkit / Swiggy / Zomato style UPI Intent)
         let nativeLaunched = false;
         if (isCapacitorOrLocalhost) {
           try {
@@ -1855,26 +1855,16 @@ export default function CustomerSuperAppClient({
               paymentSessionId: sessionData.paymentSessionId,
               orderId: currentPaymentRef!,
               environment: sessionData.checkoutMode === "sandbox" ? "SANDBOX" : "PRODUCTION",
+              preferUpiIntent: true,
+              selectedAppId: selectedUpiAppId || undefined,
             });
             if (nativeDropRes?.launched) {
               nativeLaunched = true;
               setIsPaymentLaunching(false);
-              // Clean launch: do NOT set retry state while payment is actively processing
-            } else {
-              // Fallback for native APK: In-App Dialog Checkout (Zero Chrome popup, full UPI intents)
-              const inAppRes = await TrustitNative.openInAppCheckout(hostedPayUrl);
-              if (inAppRes?.opened) {
-                nativeLaunched = true;
-                setIsPaymentLaunching(false);
-              }
+              return;
             }
           } catch (err) {
-            console.warn("[Trustit] Native drop checkout failed, falling back to in-app dialog:", err);
-            const inAppRes = await TrustitNative.openInAppCheckout(hostedPayUrl);
-            if (inAppRes?.opened) {
-              nativeLaunched = true;
-              setIsPaymentLaunching(false);
-            }
+            console.warn("[Trustit] Native UPI intent checkout failed:", err);
           }
         }
 
@@ -1996,7 +1986,7 @@ export default function CustomerSuperAppClient({
     } catch {}
   };
 
-  const handleCheckoutPayment = () => {
+  const handleCheckoutPayment = (selectedUpiAppId?: string) => {
     if (inFlightPaymentRef.current || isPaymentLaunching || isSubmitting) return;
     if (!customerPhone.trim() || customerPhone.length < 10) {
       openLoginOrResume();
@@ -2018,7 +2008,7 @@ export default function CustomerSuperAppClient({
         (activeDraftOrderRef.current?.signature === checkoutCartSignature
           ? activeDraftOrderRef.current.orderId
           : activeDraftOrderId || undefined);
-      handleInitiateCashfreeGateway(cartStoreId, reusableDraftId);
+      handleInitiateCashfreeGateway(cartStoreId, reusableDraftId, selectedUpiAppId);
     }
   };
 
