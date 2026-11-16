@@ -44,4 +44,9 @@ test_*.png
 temp_*.png
 temp_*.html
 
+# Legacy / one-off artifacts kept on disk but out of version control
+archive/
+backups/
+data-supabase-ready.js.txt
+
 
