@@ -9,7 +9,7 @@ import { isIP } from "node:net";
 import { appConfig, type PlanId } from "@/lib/config";
 import { classifyCashfreePaymentAttempts } from "@/lib/cashfree-payment-attempts.mjs";
 import { cashfreeLivePaymentsEnabled, resolveCashfreeServerConfiguration, type CashfreeEnvironment } from "@/lib/cashfree-environment";
-import { verifyCashfreeSignature } from "@/lib/cashfree-signature";
+import { verifyCashfreeSignature, verifyCashfreeWebhookReplayWindow } from "@/lib/cashfree-signature";
 import { logTrustitCheckoutStage, type TrustitCheckoutDiagnosticStage } from "@/lib/trustit-checkout-diagnostics";
 
 const CASHFREE_API_VERSION = "2026-01-01";
@@ -923,7 +923,13 @@ export async function verifyCashfreeWebhookOrder(
   };
 }
 
-/** Verifies Cashfree's timestamp + raw-body HMAC-SHA256 webhook signature. */
+/**
+ * Verifies Cashfree's timestamp + raw-body HMAC-SHA256 webhook signature AND the
+ * replay window. The replay window is configurable via
+ * CASHFREE_WEBHOOK_MAX_REPLAY_SECONDS (default 900; set 0 to disable). This keeps
+ * replay protection on by default while allowing operators to widen or disable
+ * it if a legitimate delayed delivery is observed being rejected.
+ */
 export function verifyCashfreeWebhookSignature(input: {
   rawBody: string;
   timestamp: string | null;
@@ -931,7 +937,16 @@ export function verifyCashfreeWebhookSignature(input: {
 }): boolean {
   try {
     const secret = requiredEnvironmentVariable("CASHFREE_CLIENT_SECRET");
-    return verifyCashfreeSignature({ ...input, secret });
+    if (!verifyCashfreeSignature({ ...input, secret })) return false;
+
+    const rawWindow = (process.env.CASHFREE_WEBHOOK_MAX_REPLAY_SECONDS ?? "900").trim();
+    const maxAgeSeconds = /^\d+$/.test(rawWindow) ? Number(rawWindow) : 900;
+    if (maxAgeSeconds === 0) return true; // replay window disabled
+
+    return verifyCashfreeWebhookReplayWindow({
+      timestamp: input.timestamp,
+      maxAgeMs: maxAgeSeconds * 1000,
+    });
   } catch {
     return false;
   }

@@ -18,11 +18,6 @@ export function cleanPhone(raw: string): string {
   return digits;
 }
 
-const FAST2SMS_BACKUP_TOKEN = Buffer.from(
-  "TWY3WW9EMm8yeHhsYVBqNndGQ0VEd2RSUUlROGRzS0E4ZmVtWDVBaUlLenV0UHhYWHowV3IxMjRWWndxVm9jaGtkd3VqMmx0ekpKWXg5TDU=",
-  "base64"
-).toString("utf-8");
-
 /**
  * Dispatches an SMS or WhatsApp OTP.
  * In development or when gateway is not configured, provides preview OTP for seamless testing.
@@ -32,7 +27,7 @@ async function dispatchCustomerOtp(
   otp: string,
   channel: "sms" | "whatsapp" = "sms"
 ): Promise<{ success: boolean; provider: string; previewOtp?: string; error?: string }> {
-  const fast2SmsKey = (process.env.FAST2SMS_API_KEY || FAST2SMS_BACKUP_TOKEN).trim();
+  const fast2SmsKey = process.env.FAST2SMS_API_KEY?.trim();
 
   // If WhatsApp channel is requested
   if (channel === "whatsapp") {

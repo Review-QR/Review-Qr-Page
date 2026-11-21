@@ -1,6 +1,6 @@
 {
-  "name": "review-qr",
-  "version": "0.1.0",
+  "name": "trustit",
+  "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@12.6.0",
   "scripts": {
@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "6.2.0",
+    "@sentry/nextjs": "^11.15.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "26.6.2",
     "@types/nodemailer": "^8.0.2",

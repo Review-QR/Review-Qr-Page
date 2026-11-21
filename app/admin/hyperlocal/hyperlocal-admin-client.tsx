@@ -57,7 +57,9 @@ interface SettlementKPIs {
   totalSettledBatchesCount: number;
 }
 
-export default function HyperlocalLiveAdminClient() {
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
+
+function HyperlocalLiveAdminClientInner() {
   const [viewMode, setViewMode] = useState<"orders" | "settlements" | "riders" | "points">("orders");
   const [pendingRidersCount, setPendingRidersCount] = useState<number>(0);
 
@@ -101,7 +103,12 @@ export default function HyperlocalLiveAdminClient() {
   const [isCashfreeConfigured, setIsCashfreeConfigured] = useState(false);
   const [settleModalData, setSettleModalData] = useState<{ type: "merchant" | "rider"; item: any } | null>(null);
   const [settleUtrInput, setSettleUtrInput] = useState("");
+  const [settleReason, setSettleReason] = useState("");
   const [settleActionPending, setSettleActionPending] = useState(false);
+
+  // Stable idempotency key per open settle modal, so a repeated Cashfree payout
+  // for the same item reuses the same transfer id (no duplicate external payout).
+  const [settleIdemKey, setSettleIdemKey] = useState("");
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -147,6 +154,11 @@ export default function HyperlocalLiveAdminClient() {
 
   async function handleConfirmDoorstepCancel(mode: "admin_cancel_refund" | "cancel_refusal" = "admin_cancel_refund") {
     if (!cancelModalOrder) return;
+    const trimmedNote = adminNote.trim();
+    if (!trimmedNote) {
+      setActionError("Please enter a mandatory reason for this cancellation/refund.");
+      return;
+    }
     setIsActionPending(true);
     setActionError(null);
     try {
@@ -156,11 +168,8 @@ export default function HyperlocalLiveAdminClient() {
         body: JSON.stringify({
           action: mode,
           orderId: cancelModalOrder.id,
-          adminNotes:
-            adminNote ||
-            (mode === "cancel_refusal"
-              ? "Customer refused delivery at doorstep"
-              : "Cancelled & refunded by Admin"),
+          reason: trimmedNote,
+          adminNotes: trimmedNote,
           issueRefund: mode === "admin_cancel_refund",
           cancelledBy: "admin",
         }),
@@ -236,7 +245,16 @@ export default function HyperlocalLiveAdminClient() {
     }
   };
 
+  // Cashfree payouts are external money moves: require a reason + a stable
+  // idempotency key BEFORE the transfer, so duplicate clicks / retries cannot
+  // issue a second payout.
   const handleCashfreeMerchantPayout = async (m: PendingMerchantItem) => {
+    const trimmedReason = settleReason.trim();
+    if (!trimmedReason) {
+      setActionError("Enter a mandatory reason, then confirm the Cashfree payout.");
+      return;
+    }
+    if (!settleIdemKey) setSettleIdemKey(`m-${m.businessId}-${m.orderIds.join("-")}`);
     setIsActionPending(true);
     setActionError(null);
     try {
@@ -247,11 +265,15 @@ export default function HyperlocalLiveAdminClient() {
           action: "payout_merchant_cashfree",
           businessId: m.businessId,
           orderIds: m.orderIds,
+          idempotencyKey: settleIdemKey,
+          reason: trimmedReason,
         }),
       });
       const data = await res.json();
       if (data.success) {
         setToastMessage(`⚡ ${data.message}`);
+        setSettleReason("");
+        setSettleIdemKey("");
         await fetchSettlements();
       } else {
         // Offer manual UTR settlement
@@ -267,6 +289,12 @@ export default function HyperlocalLiveAdminClient() {
   };
 
   const handleCashfreeRiderPayout = async (r: PendingRiderItem) => {
+    const trimmedReason = settleReason.trim();
+    if (!trimmedReason) {
+      setActionError("Enter a mandatory reason, then confirm the Cashfree payout.");
+      return;
+    }
+    if (!settleIdemKey) setSettleIdemKey(`r-${r.riderId}-${r.requestId || r.id}`);
     setIsActionPending(true);
     setActionError(null);
     try {
@@ -278,11 +306,15 @@ export default function HyperlocalLiveAdminClient() {
           riderId: r.riderId,
           amount: r.amountRequested || r.walletBalance,
           destinationUpi: r.upiId,
+          idempotencyKey: settleIdemKey,
+          reason: trimmedReason,
         }),
       });
       const data = await res.json();
       if (data.success && data.status === "completed") {
         setToastMessage(`⚡ ₹${r.amountRequested || r.walletBalance} sent to ${r.upiId} via Cashfree UPI! UTR: ${data.utr}`);
+        setSettleReason("");
+        setSettleIdemKey("");
         await fetchSettlements();
       } else {
         setSettleModalData({ type: "rider", item: r });
@@ -298,7 +330,13 @@ export default function HyperlocalLiveAdminClient() {
 
   const handleConfirmManualSettle = async () => {
     if (!settleModalData) return;
+    const trimmedReason = settleReason.trim();
+    if (!trimmedReason) {
+      setActionError("Please enter a mandatory reason for this settlement/payout.");
+      return;
+    }
     setSettleActionPending(true);
+    setActionError(null);
     try {
       if (settleModalData.type === "merchant") {
         const m = settleModalData.item;
@@ -313,6 +351,7 @@ export default function HyperlocalLiveAdminClient() {
             accountNumber: m.bankDetails?.bank_account_number,
             ifscCode: m.bankDetails?.ifsc_code,
             netPayoutAmount: m.netPayable,
+            reason: trimmedReason,
           }),
         });
         const data = await res.json();
@@ -320,7 +359,10 @@ export default function HyperlocalLiveAdminClient() {
           setToastMessage(`✅ ₹${m.netPayable.toFixed(2)} settled for ${m.businessName}! Bank UTR: ${data.utrNumber}`);
           setSettleModalData(null);
           setSettleUtrInput("");
+          setSettleReason("");
           await fetchSettlements();
+        } else if (data.reasonRequired) {
+          setActionError(data.error);
         }
       } else {
         const r = settleModalData.item;
@@ -331,6 +373,7 @@ export default function HyperlocalLiveAdminClient() {
             action: "settle_rider_payout",
             requestId: r.requestId || r.id,
             utrNumber: settleUtrInput || `UPI${Date.now().toString().slice(-8)}`,
+            reason: trimmedReason,
           }),
         });
         const data = await res.json();
@@ -338,7 +381,10 @@ export default function HyperlocalLiveAdminClient() {
           setToastMessage(`✅ Payout settled for rider ${r.riderName}! UTR: ${data.utrNumber}`);
           setSettleModalData(null);
           setSettleUtrInput("");
+          setSettleReason("");
           await fetchSettlements();
+        } else if (data.reasonRequired) {
+          setActionError(data.error);
         }
       }
     } catch {
@@ -1139,6 +1185,19 @@ export default function HyperlocalLiveAdminClient() {
             </div>
 
             <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Reason (mandatory — recorded in the audit log)
+              </label>
+              <input
+                type="text"
+                value={settleReason}
+                onChange={(e) => setSettleReason(e.target.value)}
+                placeholder="e.g. Daily settlement batch 12-Oct, rider weekly payout"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-emerald-500 focus:bg-white"
+              />
+            </div>
+
+            <div className="space-y-1">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                   Bank UTR / Transaction Reference
@@ -1163,7 +1222,7 @@ export default function HyperlocalLiveAdminClient() {
             <div className="flex gap-2 pt-1">
               <button
                 type="button"
-                disabled={settleActionPending}
+                disabled={settleActionPending || settleReason.trim().length === 0}
                 onClick={handleConfirmManualSettle}
                 className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 py-2.5 text-xs font-black text-white transition disabled:opacity-50 shadow-xs"
               >
@@ -1236,7 +1295,7 @@ export default function HyperlocalLiveAdminClient() {
               <div className="flex gap-2">
                 <button
                   type="button"
-                  disabled={isActionPending}
+                  disabled={isActionPending || adminNote.trim().length === 0}
                   onClick={() => handleConfirmDoorstepCancel("admin_cancel_refund")}
                   className="flex-1 rounded-xl bg-rose-600 hover:bg-rose-500 py-2.5 text-xs font-black text-white transition disabled:opacity-50 shadow-xs"
                 >
@@ -1252,7 +1311,7 @@ export default function HyperlocalLiveAdminClient() {
               </div>
               <button
                 type="button"
-                disabled={isActionPending}
+                disabled={isActionPending || adminNote.trim().length === 0}
                 onClick={() => handleConfirmDoorstepCancel("cancel_refusal")}
                 className="w-full rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 py-2 text-[11px] font-black text-rose-800 transition disabled:opacity-50"
               >
@@ -1263,5 +1322,13 @@ export default function HyperlocalLiveAdminClient() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function HyperlocalLiveAdminClient() {
+  return (
+    <ErrorBoundary section="admin-panel">
+      <HyperlocalLiveAdminClientInner />
+    </ErrorBoundary>
   );
 }

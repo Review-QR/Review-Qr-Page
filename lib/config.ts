@@ -1,6 +1,6 @@
 export const appConfig = {
-  name: "Review-QR",
-  description: "QR Review Management Platform",
+  name: "Trustit",
+  description: "Hyperlocal Delivery Super-App",
 
   supabase: {
     url: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",

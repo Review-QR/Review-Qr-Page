@@ -12,6 +12,48 @@ import {
 } from "@/lib/auth-cors";
 import { constantTimeEqual } from "@/lib/auth-api-guards";
 
+// ---- Simple IP-based global rate limiter (in-memory) ----
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+const rateLimitMap = new Map<string, RateLimitEntry>();
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 120; // 120 requests per minute per IP
+
+function getClientIp(request: NextRequest): string {
+  return (
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown"
+  );
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetMs: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    const resetAt = now + RATE_LIMIT_WINDOW_MS;
+    rateLimitMap.set(ip, { count: 1, resetAt });
+    // Cleanup stale entries periodically
+    if (rateLimitMap.size > 10000) {
+      for (const [key, val] of rateLimitMap) {
+        if (now > val.resetAt) rateLimitMap.delete(key);
+      }
+    }
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS - 1, resetMs: RATE_LIMIT_WINDOW_MS };
+  }
+
+  entry.count += 1;
+  const remaining = Math.max(0, RATE_LIMIT_MAX_REQUESTS - entry.count);
+  return {
+    allowed: entry.count <= RATE_LIMIT_MAX_REQUESTS,
+    remaining,
+    resetMs: entry.resetAt - now,
+  };
+}
+
 const PUBLIC_MERCHANT_PATHS = [
   "/merchant",
   "/merchant/login",
@@ -168,10 +210,6 @@ export async function proxy(request: NextRequest) {
   const PROTECTED_INTERNAL_PATHS = [
     "/businesses",
     "/qr-codes",
-    "/merchant-preview",
-    "/rider-app",
-    "/rider-preview",
-    "/test-flight",
   ];
   const isProtectedInternalPage = PROTECTED_INTERNAL_PATHS.some(
     (p) => pathname === p || pathname.startsWith(`${p}/`)
