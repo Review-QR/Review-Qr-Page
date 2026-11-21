@@ -1,0 +1,92 @@
+<!-- OPTION L: Compass Verified — direction + authenticity -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <!-- Compass body gradient -->
+    <linearGradient id="l1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#37474f"/>
+      <stop offset="50%" style="stop-color:#263238"/>
+      <stop offset="100%" style="stop-color:#1a252e"/>
+    </linearGradient>
+    <!-- Compass inner -->
+    <linearGradient id="l2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#546e7a"/>
+      <stop offset="100%" style="stop-color:#37474f"/>
+    </linearGradient>
+    <!-- North pointer (trust/verified) -->
+    <linearGradient id="l3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#2979ff"/>
+    </linearGradient>
+    <!-- Checkmark accent -->
+    <linearGradient id="l4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd740"/>
+      <stop offset="100%" style="stop-color:#ffab00"/>
+    </linearGradient>
+    <linearGradient id="lsp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#00b0ff"/>
+    </linearGradient>
+    <filter id="l_sh"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#1a252e" flood-opacity="0.35"/></filter>
+    <filter id="l_cs"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#bf360c" flood-opacity="0.3"/></filter>
+    <filter id="l_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#f5f6f8" rx="12"/>
+
+  <!-- Compass rose -->
+  <g transform="translate(8,8)" filter="url(#l_sh)">
+    <!-- Outer circle (compass rim) -->
+    <circle cx="48" cy="48" r="44" fill="url(#l1)"/>
+
+    <!-- Inner circle -->
+    <circle cx="48" cy="48" r="38" fill="url(#l2)"/>
+
+    <!-- Degree marks (compass ticks) -->
+    <g stroke="#fff" stroke-opacity="0.15" stroke-linecap="round">
+      <!-- Major ticks (N, S, E, W) -->
+      <line x1="48" y1="10" x2="48" y2="16" stroke-width="2"/>
+      <line x1="48" y1="80" x2="48" y2="86" stroke-width="2"/>
+      <line x1="10" y1="48" x2="16" y2="48" stroke-width="2"/>
+      <line x1="80" y1="48" x2="86" y2="48" stroke-width="2"/>
+      <!-- Minor ticks -->
+      <line x1="48" y1="14" x2="48" y2="18" stroke-width="1"/>
+      <line x1="48" y1="78" x2="48" y2="82" stroke-width="1"/>
+      <line x1="14" y1="48" x2="18" y2="48" stroke-width="1"/>
+      <line x1="78" y1="48" x2="82" y2="48" stroke-width="1"/>
+      <!-- Diagonal ticks -->
+      <line x1="21" y1="21" x2="25" y2="25" stroke-width="0.8" stroke-opacity="0.1"/>
+      <line x1="75" y1="21" x2="71" y2="25" stroke-width="0.8" stroke-opacity="0.1"/>
+      <line x1="21" y1="75" x2="25" y2="71" stroke-width="0.8" stroke-opacity="0.1"/>
+      <line x1="75" y1="75" x2="71" y2="71" stroke-width="0.8" stroke-opacity="0.1"/>
+    </g>
+
+    <!-- N marker (top) -->
+    <text x="48" y="22" text-anchor="middle" font-family="'Plus Jakarta Sans',system-ui,sans-serif" font-size="9" font-weight="800" fill="#00e5ff" fill-opacity="0.8">N</text>
+
+    <!-- Compass needle (North = Trust, South = Review) -->
+    <!-- North needle (bright, pointing up — trust/verified direction) -->
+    <polygon points="48,18 43,48 48,44 53,48" fill="url(#l3)" fill-opacity="0.9"/>
+    <!-- South needle (darker, pointing down) -->
+    <polygon points="48,78 43,48 48,52 53,48" fill="#fff" fill-opacity="0.15"/>
+
+    <!-- Center dot -->
+    <circle cx="48" cy="48" r="5" fill="#263238"/>
+    <circle cx="48" cy="48" r="3" fill="url(#l4)" filter="url(#l_cs)"/>
+    <!-- Checkmark in center dot -->
+    <path d="M 44 48 L 47 51 L 52 45" fill="none" stroke="#263238" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Sparkle -->
+  <g transform="translate(86,4)" filter="url(#l_glow)">
+    <path d="M10 0C11.5 5,11.5 9,10 14C8.5 9,8.5 5,10 0Z" fill="url(#lsp)"/>
+    <path d="M10 0C3.5 1.5,1 5,0 10C5 8.5,8 8.5,13 10C8 8.5,5 8.5,0 10C1 5,3.5 1.5,10 0Z" fill="url(#lsp)" transform="rotate(45 10 10)"/>
+    <circle cx="10" cy="10" r="2" fill="#fff" fill-opacity="0.8"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#37474f">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

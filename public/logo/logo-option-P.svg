@@ -1,0 +1,79 @@
+<!-- OPTION P: Triquetra Weave — three interwoven circles, Celtic-inspired knot -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="p1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42a5f5"/>
+      <stop offset="100%" style="stop-color:#1565e8"/>
+    </linearGradient>
+    <linearGradient id="p2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#69f0ae"/>
+      <stop offset="100%" style="stop-color:#00a085"/>
+    </linearGradient>
+    <linearGradient id="p3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffcc02"/>
+      <stop offset="100%" style="stop-color:#ff8f00"/>
+    </linearGradient>
+    <linearGradient id="pck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e3f2fd"/>
+    </linearGradient>
+    <linearGradient id="psp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#2979ff"/>
+    </linearGradient>
+    <filter id="p_sh"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#1565e8" flood-opacity="0.15"/></filter>
+    <filter id="p_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Subtle background triangle hint -->
+  <polygon points="42,10 78,72 6,72" fill="none" stroke="#e3f2fd" stroke-width="1" stroke-opacity="0.5"/>
+
+  <!-- Three interwoven circles (triquetra) -->
+  <g transform="translate(8,8)" filter="url(#p_sh)">
+    <!-- Top circle (Blue) -->
+    <circle cx="42" cy="24" r="22" fill="none" stroke="url(#p1)" stroke-width="9" stroke-opacity="0.8"/>
+
+    <!-- Bottom-left circle (Green) -->
+    <circle cx="22" cy="58" r="22" fill="none" stroke="url(#p2)" stroke-width="9" stroke-opacity="0.8"/>
+
+    <!-- Bottom-right circle (Orange) -->
+    <circle cx="62" cy="58" r="22" fill="none" stroke="url(#p3)" stroke-width="9" stroke-opacity="0.8"/>
+
+    <!-- Center triangle formed by intersections -->
+    <polygon points="42,40 26,52 58,52" fill="none" stroke="#1565e8" stroke-width="1.5" stroke-opacity="0.15"/>
+  </g>
+
+  <!-- Center point where all three meet — checkmark -->
+  <g transform="translate(8,8)" filter="url(#p_glow)">
+    <circle cx="42" cy="46" r="9" fill="#ffffff"/>
+    <path d="M 36 46 L 41 51 L 49 42" fill="none" stroke="#1565e8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Overlap highlights (where circles meet) -->
+  <!-- Blue-Green overlap (left) -->
+  <circle cx="30" cy="38" r="5" fill="#64ffda" fill-opacity="0.2"/>
+  <!-- Green-Orange overlap (bottom) -->
+  <circle cx="42" cy="58" r="5" fill="#ffab40" fill-opacity="0.2"/>
+  <!-- Orange-Blue overlap (right) -->
+  <circle cx="54" cy="38" r="5" fill="#93c5fd" fill-opacity="0.2"/>
+
+  <!-- Small dots at each circle center -->
+  <circle cx="42" cy="24" r="3.5" fill="#1565e8" fill-opacity="0.5"/>
+  <circle cx="22" cy="58" r="3.5" fill="#00a085" fill-opacity="0.5"/>
+  <circle cx="62" cy="58" r="3.5" fill="#ff8f00" fill-opacity="0.5"/>
+
+  <!-- Sparkle -->
+  <g transform="translate(78,4)">
+    <path d="M8 0C9 3.5,9 6,8 10C7 6.5,7 3.5,8 0Z" fill="url(#psp)"/>
+    <path d="M8 0C3 1,0.5 3,0 8C3.5 6.5,6 6.5,11 8C6 6.5,3.5 6.5,0 8C0.5 3,3 1,8 0Z" fill="url(#psp)" transform="rotate(45 8 8)"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

@@ -1,0 +1,71 @@
+<!-- OPTION H: Location Pin + Fingerprint — verified local identity -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <!-- Pin gradient -->
+    <linearGradient id="h1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565e8"/>
+      <stop offset="50%" style="stop-color:#0d47a1"/>
+      <stop offset="100%" style="stop-color:#002971"/>
+    </linearGradient>
+    <linearGradient id="h2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5c9fff"/>
+      <stop offset="100%" style="stop-color:#2979ff"/>
+    </linearGradient>
+    <!-- Checkmark -->
+    <linearGradient id="h3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#c8e0ff"/>
+    </linearGradient>
+    <linearGradient id="hsp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#00b0ff"/>
+    </linearGradient>
+    <filter id="h_sh"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#002971" flood-opacity="0.3"/></filter>
+    <filter id="h_cs"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#002288" flood-opacity="0.3"/></filter>
+    <filter id="h_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Background location pin hint (subtle) -->
+  <circle cx="48" cy="85" r="62" fill="#e3f2fd" fill-opacity="0.3"/>
+  <path d="M 48 30 C 30 30, 18 42, 18 58 C 18 78, 48 105, 48 105 C 48 105, 78 78, 78 58 C 78 42, 66 30, 48 30 Z"
+        fill="none" stroke="#1565e8" stroke-width="0.8" stroke-dasharray="4 3" stroke-opacity="0.08"/>
+
+  <!-- Location Pin (map marker) with fingerprint rings inside -->
+  <g transform="translate(8,6)" filter="url(#h_sh)">
+    <!-- Pin shadow/body -->
+    <path d="M 48 8 C 28 8, 14 22, 14 42 C 14 65, 48 95, 48 95 C 48 95, 82 65, 82 42 C 82 22, 68 8, 48 8 Z"
+          fill="url(#h1)"/>
+
+    <!-- Inner circle (fingerprint area) -->
+    <circle cx="48" cy="38" r="22" fill="url(#h2)" fill-opacity="0.4"/>
+
+    <!-- Fingerprint ridges (arcs inside the pin) -->
+    <path d="M 34 38 Q 40 28, 48 28 Q 56 28, 62 38" fill="none" stroke="#fff" stroke-width="2" stroke-opacity="0.5" stroke-linecap="round"/>
+    <path d="M 36 42 Q 41 34, 48 34 Q 55 34, 60 42" fill="none" stroke="#fff" stroke-width="2" stroke-opacity="0.4" stroke-linecap="round"/>
+    <path d="M 38 46 Q 42 40, 48 40 Q 54 40, 58 46" fill="none" stroke="#fff" stroke-width="1.8" stroke-opacity="0.35" stroke-linecap="round"/>
+    <path d="M 41 49 Q 44 45, 48 45 Q 52 45, 55 49" fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity="0.3" stroke-linecap="round"/>
+
+    <!-- Checkmark (center) -->
+    <g filter="url(#h_cs)">
+      <path d="M 32 42 L 44 54 L 64 30" fill="none" stroke="url(#h3)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <!-- Check highlight -->
+    <path d="M 33 41 L 39 47" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Sparkle (with glow) -->
+  <g transform="translate(80,8)" filter="url(#h_glow)">
+    <path d="M10 0C11.5 5,11.5 9,10 14C8.5 9,8.5 5,10 0Z" fill="url(#hsp)"/>
+    <path d="M10 0C3.5 1.5,1 5,0 10C5 8.5,8 8.5,13 10C8 8.5,5 8.5,0 10C1 5,3.5 1.5,10 0Z" fill="url(#hsp)" transform="rotate(45 10 10)"/>
+    <circle cx="10" cy="10" r="2" fill="#fff" fill-opacity="0.8"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

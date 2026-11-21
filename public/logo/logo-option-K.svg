@@ -1,0 +1,74 @@
+<!-- OPTION K: Conversation Trust Chain — speech bubbles connecting people -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <!-- Bubble 1 gradient (merchant) -->
+    <linearGradient id="k1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565e8"/>
+      <stop offset="100%" style="stop-color:#0044cc"/>
+    </linearGradient>
+    <!-- Bubble 2 gradient (customer) -->
+    <linearGradient id="k2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00c9a7"/>
+      <stop offset="100%" style="stop-color:#00806a"/>
+    </linearGradient>
+    <!-- Checkmark -->
+    <linearGradient id="k3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#d0f5ea"/>
+    </linearGradient>
+    <linearGradient id="ksp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffab00"/>
+      <stop offset="100%" style="stop-color:#ff6d00"/>
+    </linearGradient>
+    <filter id="k_sh1"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#0044cc" flood-opacity="0.2"/></filter>
+    <filter id="k_sh2"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#00806a" flood-opacity="0.2"/></filter>
+    <filter id="k_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#f8fafb" rx="12"/>
+
+  <!-- Three overlapping speech bubbles -->
+  <!-- Bubble 1 (left, merchant) — Blue -->
+  <g transform="translate(8,8)" filter="url(#k_sh1)">
+    <rect x="0" y="0" width="36" height="30" rx="10" fill="url(#k1)"/>
+    <polygon points="10,30 16,30 12,38" fill="url(#k1)"/>
+    <!-- Small checkmark inside -->
+    <path d="M 8 20 L 14 26 L 28 14" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Bubble 2 (center, trust) — larger, on top -->
+  <g transform="translate(30,18)" filter="url(#k_sh1)">
+    <rect x="0" y="0" width="38" height="34" rx="11" fill="url(#k1)"/>
+    <!-- Star/trust symbol inside -->
+    <path d="M 19 8 L 22 16 L 30 16 L 24 21 L 26 29 L 19 24 L 12 29 L 14 21 L 8 16 L 16 16 Z"
+          fill="#fff" fill-opacity="0.9"/>
+  </g>
+
+  <!-- Bubble 3 (right, customer) — Teal -->
+  <g transform="translate(58,8)" filter="url(#k_sh2)">
+    <rect x="0" y="0" width="36" height="30" rx="10" fill="url(#k2)"/>
+    <polygon points="22,30 28,30 24,38" fill="url(#k2)" transform="rotate(180 24 24)"/>
+    <!-- Small star inside -->
+    <path d="M 18 15 L 20 20 L 25 20 L 21 23 L 23 28 L 18 25 L 13 28 L 15 23 L 11 20 L 16 20 Z"
+          fill="#fff" fill-opacity="0.9"/>
+  </g>
+
+  <!-- Connection dots (trust chain) -->
+  <circle cx="44" cy="48" r="3" fill="#1565e8" fill-opacity="0.6"/>
+  <circle cx="52" cy="48" r="3" fill="#00c9a7" fill-opacity="0.6"/>
+  <!-- Connecting line -->
+  <line x1="44" y1="48" x2="52" y2="48" stroke="#738198" stroke-width="1.5" stroke-dasharray="2 2" stroke-opacity="0.3"/>
+
+  <!-- Sparkle (connecting trust) -->
+  <g transform="translate(44,36)" filter="url(#k_glow)">
+    <path d="M7 0C8 3.5,8 6,7 9C6 6,6 3.5,7 0Z" fill="url(#ksp)"/>
+    <path d="M7 0C2.5 1,0.5 3,0 7C3 6,5.5 6,9 7C5.5 6,3 6,0 7C0.5 3,2.5 1,7 0Z" fill="url(#ksp)" transform="rotate(45 7 7)"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

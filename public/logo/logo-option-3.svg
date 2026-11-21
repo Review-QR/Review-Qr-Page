@@ -1,0 +1,45 @@
+<!-- OPTION 3: Hexagonal — Bold Purple + Orange Accent -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="s3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5c3cff"/>
+      <stop offset="50%" style="stop-color:#3d22cc"/>
+      <stop offset="100%" style="stop-color:#2a14aa"/>
+    </linearGradient>
+    <linearGradient id="s3ck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e8dfff"/>
+    </linearGradient>
+    <linearGradient id="s3sp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff9500"/>
+      <stop offset="100%" style="stop-color:#ff5e00"/>
+    </linearGradient>
+    <filter id="s3sh"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#2a14aa" flood-opacity="0.3"/></filter>
+    <filter id="s3cs"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#2a14aa" flood-opacity="0.25"/></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Hexagon shield -->
+  <g transform="translate(8,8)" filter="url(#s3sh)">
+    <polygon points="40,0 76,22 76,66 40,88 4,66 4,22" fill="url(#s3)"/>
+    <!-- Inner hex highlight -->
+    <polygon points="40,8 68,26 68,58 40,76 12,58 12,26" fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity="0.12"/>
+    <!-- Checkmark -->
+    <g filter="url(#s3cs)">
+      <path d="M 18 50 L 34 66 L 62 32" fill="none" stroke="url(#s3ck)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <!-- Sparkle (orange) -->
+  <g transform="translate(74,3)">
+    <path d="M9 0C10 4.5,10 8,9 12C8 8,8 4.5,9 0Z" fill="url(#s3sp)"/>
+    <path d="M9 0C3 1,0.5 4,0 9C4.5 8,7.5 8,12 9C7.5 8,4.5 8,0 9C0.5 4,3 1,9 0Z" fill="url(#s3sp)" transform="rotate(45 9 9)"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#1a0a40" letter-spacing="-1.8">
+    Trust<tspan fill="#5c3cff">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="9" font-weight="700" fill="#7a6a9a" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

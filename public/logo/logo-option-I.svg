@@ -1,0 +1,66 @@
+<!-- OPTION I: Hands Together — trust through human connection -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <!-- Skin tone warm -->
+    <linearGradient id="i1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e07a5f"/>
+      <stop offset="100%" style="stop-color:#c44536"/>
+    </linearGradient>
+    <!-- Heart/together -->
+    <linearGradient id="i2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565e8"/>
+      <stop offset="100%" style="stop-color:#0d47a1"/>
+    </linearGradient>
+    <!-- Accent -->
+    <linearGradient id="i3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#2979ff"/>
+    </linearGradient>
+    <filter id="i_sh"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#8b3a2a" flood-opacity="0.25"/></filter>
+    <filter id="i_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#fef9f6" rx="12"/>
+
+  <!-- Two hands forming a heart shape -->
+  <g transform="translate(8,5)" filter="url(#i_sh)">
+    <!-- Left hand (skin colored, facing right) -->
+    <path d="M 15 35 C 15 25, 22 18, 30 18 C 34 18, 37 20, 38 24 L 42 32 L 46 40 L 44 48 C 44 52, 42 55, 40 56 L 38 56 C 36 56, 34 54, 34 52 L 34 42 L 30 36 L 26 46 L 26 52 C 26 55, 24 57, 22 57 L 20 57 C 17 57, 15 55, 15 52 L 15 48 Z"
+          fill="url(#i1)"/>
+    <!-- Left hand fingers detail lines -->
+    <line x1="30" y1="18" x2="30" y2="36" stroke="#a35540" stroke-width="1" stroke-opacity="0.3" stroke-linecap="round"/>
+    <line x1="34" y1="16" x2="34" y2="34" stroke="#a35540" stroke-width="1" stroke-opacity="0.3" stroke-linecap="round"/>
+    <line x1="38" y1="18" x2="38" y2="34" stroke="#a35540" stroke-width="1" stroke-opacity="0.3" stroke-linecap="round"/>
+
+    <!-- Right hand (skin colored, facing left) -->
+    <path d="M 65 35 C 65 25, 58 18, 50 18 C 46 18, 43 20, 42 24 L 38 32 L 34 40 L 36 48 C 36 52, 38 55, 40 56 L 42 56 C 44 56, 46 54, 46 52 L 46 42 L 50 36 L 54 46 L 54 52 C 54 55, 56 57, 58 57 L 60 57 C 63 57, 65 55, 65 52 L 65 48 Z"
+          fill="url(#i1)"/>
+    <!-- Right hand fingers detail -->
+    <line x1="50" y1="18" x2="50" y2="36" stroke="#a35540" stroke-width="1" stroke-opacity="0.3" stroke-linecap="round"/>
+    <line x1="46" y1="16" x2="46" y2="34" stroke="#a35540" stroke-width="1" stroke-opacity="0.3" stroke-linecap="round"/>
+    <line x1="42" y1="18" x2="42" y2="34" stroke="#a35540" stroke-width="1" stroke-opacity="0.3" stroke-linecap="round"/>
+
+    <!-- Center: blue checkmark (the trust bond) -->
+    <g filter="url(#i_glow)">
+      <path d="M 35 52 L 43 60 L 56 44" fill="none" stroke="url(#i2)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M 37 51 L 43 57" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.5" stroke-linecap="round"/>
+    </g>
+
+    <!-- Wrist circles (sleeve hint) -->
+    <rect x="8" y="56" width="14" height="12" rx="6" fill="#1565e8" fill-opacity="0.8"/>
+    <rect x="58" y="56" width="14" height="12" rx="6" fill="url(#i2)" fill-opacity="0.8"/>
+  </g>
+
+  <!-- Sparkle -->
+  <g transform="translate(82,8)">
+    <path d="M10 0C11.5 5,11.5 9,10 14C8.5 9,8.5 5,10 0Z" fill="url(#i3)"/>
+    <path d="M10 0C3.5 1.5,1 5,0 10C5 8.5,8 8.5,13 10C8 8.5,5 8.5,0 10C1 5,3.5 1.5,10 0Z" fill="url(#i3)" transform="rotate(45 10 10)"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#c44536">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#8b7355" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

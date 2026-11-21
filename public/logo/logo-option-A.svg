@@ -1,0 +1,96 @@
+<!-- OPTION A: Premium Layered Shield — multi-layer 3D depth -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <!-- Main shield gradient -->
+    <linearGradient id="a1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2979ff"/>
+      <stop offset="25%" style="stop-color:#1565e8"/>
+      <stop offset="60%" style="stop-color:#0044cc"/>
+      <stop offset="100%" style="stop-color:#002db3"/>
+    </linearGradient>
+    <!-- Inner shield gradient (depth) -->
+    <linearGradient id="a2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#5c9fff"/>
+      <stop offset="100%" style="stop-color:#1565e8"/>
+    </linearGradient>
+    <!-- Checkmark gradient -->
+    <linearGradient id="a3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="40%" style="stop-color:#e3f2fd"/>
+      <stop offset="100%" style="stop-color:#bbdefb"/>
+    </linearGradient>
+    <!-- Sparkle -->
+    <linearGradient id="a4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="50%" style="stop-color:#00b8d4"/>
+      <stop offset="100%" style="stop-color:#0091ea"/>
+    </linearGradient>
+    <!-- Glow filter -->
+    <filter id="a_glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="a_sh" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#003399" flood-opacity="0.4"/>
+    </filter>
+    <filter id="a_cs" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#002288" flood-opacity="0.4"/>
+    </filter>
+    <filter id="a_sp" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Background subtle glow circle -->
+  <circle cx="48" cy="50" r="52" fill="#e3f2fd" fill-opacity="0.3"/>
+
+  <!-- Outer ring (thin decorative) -->
+  <circle cx="48" cy="50" r="46" fill="none" stroke="#1565e8" stroke-width="0.8" stroke-opacity="0.15"/>
+
+  <!-- Main shield (multi-layer for 3D depth) -->
+  <g transform="translate(8,8)" filter="url(#a_sh)">
+    <!-- Shadow layer -->
+    <path d="M 18 3 L 58 3 Q 70 3 73 14 Q 82 42 73 70 Q 70 81 58 81 L 18 81 Q 6 81 3 70 Q -6 42 3 14 Q 6 3 18 3 Z" fill="#002288" transform="translate(2,3)"/>
+
+    <!-- Main body -->
+    <path d="M 18 3 L 58 3 Q 70 3 73 14 Q 82 42 73 70 Q 70 81 58 81 L 18 81 Q 6 81 3 70 Q -6 42 3 14 Q 6 3 18 3 Z" fill="url(#a1)"/>
+
+    <!-- Inner shield (slightly smaller, lighter) -->
+    <path d="M 20 6 L 56 6 Q 67 6 70 16 Q 78 42 70 68 Q 67 78 56 78 L 20 78 Q 9 78 6 68 Q -2 42 6 16 Q 9 6 20 6 Z" fill="url(#a2)" fill-opacity="0.3"/>
+
+    <!-- Highlight arc (top-left shine) -->
+    <path d="M 15 12 Q 55 12 58 35 Q 58 48 52 60" fill="none" stroke="#fff" stroke-width="3" stroke-opacity="0.2" stroke-linecap="round"/>
+
+    <!-- Inner decorative ring -->
+    <path d="M 22 22 Q 52 22 55 42 Q 55 56 48 66" fill="none" stroke="#fff" stroke-width="1.2" stroke-opacity="0.08" stroke-linecap="round"/>
+
+    <!-- Checkmark (3D with thickness) -->
+    <!-- Shadow of checkmark -->
+    <path d="M 14 49 L 29 64 L 54 35" fill="none" stroke="#002288" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" opacity="0.4" transform="translate(1,2)"/>
+    <!-- Main checkmark -->
+    <g filter="url(#a_cs)">
+      <path d="M 14 49 L 29 64 L 54 35" fill="none" stroke="url(#a3)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <!-- Check highlight -->
+    <path d="M 14 49 L 22 57" fill="none" stroke="#fff" stroke-width="3" stroke-opacity="0.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Sparkle (with glow) -->
+  <g transform="translate(80,4)" filter="url(#a_sp)">
+    <path d="M12 0C13.5 6,13.5 10,12 16C10.5 10,10.5 6,12 0Z" fill="url(#a4)"/>
+    <path d="M12 0C5 1.5,1.5 5,0 12C5 10.5,9 10.5,16 12C9 10.5,5 10.5,0 12C1.5 5,5 1.5,12 0Z" fill="url(#a4)" transform="rotate(45 12 12)"/>
+    <circle cx="12" cy="12" r="2.5" fill="#fff" fill-opacity="0.8"/>
+  </g>
+
+  <!-- Brand Name with text shadow for depth -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <!-- Tagline with subtle divider -->
+  <line x1="100" y1="65" x2="195" y2="65" stroke="#1565e8" stroke-width="1.5" stroke-opacity="0.2"/>
+  <text x="100" y="80" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

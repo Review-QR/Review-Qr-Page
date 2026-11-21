@@ -1,0 +1,46 @@
+<!-- OPTION 1: Classic Shield — Deep Blue + White Check -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="s1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565e8"/>
+      <stop offset="50%" style="stop-color:#0044cc"/>
+      <stop offset="100%" style="stop-color:#002db3"/>
+    </linearGradient>
+    <linearGradient id="s1ck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#c8dcff"/>
+    </linearGradient>
+    <linearGradient id="s1sp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#0088cc"/>
+    </linearGradient>
+    <filter id="s1sh"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#002db3" flood-opacity="0.3"/></filter>
+    <filter id="s1cs"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#002db3" flood-opacity="0.25"/></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Shield: classic pointed-bottom -->
+  <g transform="translate(8,8)" filter="url(#s1sh)">
+    <path d="M 18 3 L 58 3 Q 70 3 73 14 Q 82 42 73 70 Q 70 81 58 81 L 18 81 Q 6 81 3 70 Q -6 42 3 14 Q 6 3 18 3 Z" fill="url(#s1)"/>
+    <!-- Inner glow arc -->
+    <path d="M 16 10 Q 56 10 60 42 Q 60 54 54 66" fill="none" stroke="#fff" stroke-width="2" stroke-opacity="0.18" stroke-linecap="round"/>
+    <!-- Checkmark -->
+    <g filter="url(#s1cs)">
+      <path d="M 14 42 L 28 56 L 52 30" fill="none" stroke="url(#s1ck)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <!-- Sparkle -->
+  <g transform="translate(74,3)">
+    <path d="M9 0C10 4.5,10 8,9 12C8 8,8 4.5,9 0Z" fill="url(#s1sp)"/>
+    <path d="M9 0C3 1,0.5 4,0 9C4.5 8,7.5 8,12 9C7.5 8,4.5 8,0 9C0.5 4,3 1,9 0Z" fill="url(#s1sp)" transform="rotate(45 9 9)"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-1.8">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <!-- Tagline -->
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="9" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

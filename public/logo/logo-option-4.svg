@@ -1,0 +1,46 @@
+<!-- OPTION 4: Circular Badge — Dark Navy + Gold Premium -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="s4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a2744"/>
+      <stop offset="100%" style="stop-color:#0a1628"/>
+    </linearGradient>
+    <linearGradient id="s4ck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700"/>
+      <stop offset="100%" style="stop-color:#ffaa00"/>
+    </linearGradient>
+    <linearGradient id="s4sp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd700"/>
+      <stop offset="100%" style="stop-color:#ff8c00"/>
+    </linearGradient>
+    <filter id="s4sh"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#0a1628" flood-opacity="0.35"/></filter>
+    <filter id="s4cs"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#cc8800" flood-opacity="0.3"/></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Dark circular badge -->
+  <g transform="translate(8,8)" filter="url(#s4sh)">
+    <circle cx="40" cy="40" r="38" fill="url(#s4)"/>
+    <!-- Gold ring border -->
+    <circle cx="40" cy="40" r="36" fill="none" stroke="#ffd700" stroke-width="2.5" stroke-opacity="0.7"/>
+    <!-- Inner ring -->
+    <circle cx="40" cy="40" r="30" fill="none" stroke="#ffd700" stroke-width="0.8" stroke-opacity="0.2"/>
+    <!-- Gold checkmark -->
+    <g filter="url(#s4cs)">
+      <path d="M 22 42 L 34 54 L 56 28" fill="none" stroke="url(#s4ck)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <!-- Sparkle (gold) -->
+  <g transform="translate(80,3)">
+    <path d="M9 0C10 4.5,10 8,9 12C8 8,8 4.5,9 0Z" fill="url(#s4sp)"/>
+    <path d="M9 0C3 1,0.5 4,0 9C4.5 8,7.5 8,12 9C7.5 8,4.5 8,0 9C0.5 4,3 1,9 0Z" fill="url(#s4sp)" transform="rotate(45 9 9)"/>
+  </g>
+
+  <!-- Brand Name with gold accent -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-1.8">
+    Trust<tspan fill="#1a2744">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="9" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>
