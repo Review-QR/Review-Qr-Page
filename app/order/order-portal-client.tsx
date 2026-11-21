@@ -95,7 +95,9 @@ function loadCashfreeSdk(): Promise<void> {
   return cashfreeSdkPromise;
 }
 
-export default function CustomerSuperAppClient({
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
+
+function CustomerSuperAppClientInner({
   businesses: propBusinesses,
   catalogItems: propCatalogItems,
   initialSearchQuery = "",
@@ -2964,5 +2966,13 @@ export default function CustomerSuperAppClient({
         onDismiss={() => setActiveWhatsAppOtp(null)}
       />
     </>
+  );
+}
+
+export default function CustomerSuperAppClient(props: Parameters<typeof CustomerSuperAppClientInner>[0]) {
+  return (
+    <ErrorBoundary section="customer-app">
+      <CustomerSuperAppClientInner {...props} />
+    </ErrorBoundary>
   );
 }

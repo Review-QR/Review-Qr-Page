@@ -10,11 +10,6 @@ import {
   sendWhatsAppOccasionMessage,
 } from "@/lib/messaging/whatsapp-cloud-api";
 
-const FAST2SMS_BACKUP_TOKEN = Buffer.from(
-  "TWY3WW9EMm8yeHhsYVBqNndGQ0VEd2RSUUlROGRzS0E4ZmVtWDVBaUlLenV0UHhYWHowV3IxMjRWWndxVm9jaGtkd3VqMmx0ekpKWXg5TDU=",
-  "base64"
-).toString("utf-8");
-
 const DEFAULT_CELEBRATION_BANNER =
   "https://piqwsyzktzjhafkcstjl.supabase.co/storage/v1/object/public/merchant-assets/banners/trustit_default_banner.png";
 
@@ -38,7 +33,7 @@ export interface Fast2SmsTemplateDetails {
  * Fetch Fast2SMS WhatsApp WABA & Template status directly from Fast2SMS Dev API
  */
 export async function getFast2SmsTemplateStatus(): Promise<Fast2SmsTemplateDetails> {
-  const fast2SmsKey = (process.env.FAST2SMS_API_KEY || FAST2SMS_BACKUP_TOKEN).trim();
+  const fast2SmsKey = process.env.FAST2SMS_API_KEY?.trim();
   if (!fast2SmsKey) return { connected: false, status: "Unknown" };
 
   const targetMsgId = process.env.FAST2SMS_WHATSAPP_MESSAGE_ID
@@ -116,7 +111,7 @@ export async function dispatchFast2SmsWhatsAppMessage(params: {
     return { success: false, error: "Invalid 10-digit mobile number." };
   }
 
-  const fast2SmsKey = (process.env.FAST2SMS_API_KEY || FAST2SMS_BACKUP_TOKEN).trim();
+  const fast2SmsKey = process.env.FAST2SMS_API_KEY?.trim();
   if (!fast2SmsKey) {
     return { success: false, error: "Fast2SMS API Key not configured." };
   }
@@ -219,7 +214,7 @@ export async function dispatchFast2SmsMessage(
     return { success: false, error: "Invalid 10-digit mobile number." };
   }
 
-  const fast2SmsKey = (process.env.FAST2SMS_API_KEY || FAST2SMS_BACKUP_TOKEN).trim();
+  const fast2SmsKey = process.env.FAST2SMS_API_KEY?.trim();
   if (!fast2SmsKey) {
     return { success: false, error: "Fast2SMS API Key not configured." };
   }

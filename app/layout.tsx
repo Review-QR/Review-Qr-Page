@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import AdminNavigation from "@/app/admin-navigation";
 import { OtaUpdateBanner } from "@/app/components/ota-update-banner";
 import { TRUSTIT_SITE_URL } from "@/lib/public-discovery-seo";
+import { AnalyticsScript } from "@/components/analytics/analytics";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -36,6 +37,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://sdk.cashfree.com" />
         <link rel="dns-prefetch" href="https://sdk.cashfree.com" />
         <link rel="preload" href="https://sdk.cashfree.com/js/v3/cashfree.js" as="script" />
+        <Suspense fallback={null}>
+          <AnalyticsScript />
+        </Suspense>
         <link
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
           rel="stylesheet"

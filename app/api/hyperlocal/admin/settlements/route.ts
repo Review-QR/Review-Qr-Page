@@ -67,12 +67,27 @@ export async function POST(request: Request) {
       });
     }
 
+    const actorEmail = auth.admin.email ?? undefined;
+    const actorUserId = auth.admin.userId ?? undefined;
+    const requireReason = (): NextResponse | null => {
+      const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+      if (!reason) {
+        return NextResponse.json(
+          { error: "A non-empty reason is required for this financial action.", reasonRequired: true },
+          { status: 400 },
+        );
+      }
+      return null;
+    };
+
     // 2. Settle Merchant Batch Manually (with Bank UTR)
     if (action === "settle_merchant_batch") {
       const { businessId, orderIds, utrNumber, accountNumber, ifscCode, netPayoutAmount } = body;
       if (!businessId || !orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
         return NextResponse.json({ error: "Missing businessId or orderIds" }, { status: 400 });
       }
+      const reasonErr = requireReason();
+      if (reasonErr) return reasonErr;
 
       const result = await settleMerchantBatchManual({
         businessId,
@@ -81,6 +96,9 @@ export async function POST(request: Request) {
         accountNumber,
         ifscCode,
         netPayoutAmount,
+        reason: (body.reason ?? "").toString().trim(),
+        actorEmail,
+        actorUserId,
       });
 
       return NextResponse.json(result);
@@ -88,14 +106,20 @@ export async function POST(request: Request) {
 
     // 3. Payout Merchant via Cashfree IMPS
     if (action === "payout_merchant_cashfree") {
-      const { businessId, orderIds } = body;
+      const { businessId, orderIds, idempotencyKey } = body;
       if (!businessId || !orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
         return NextResponse.json({ error: "Missing businessId or orderIds" }, { status: 400 });
       }
+      const reasonErr = requireReason();
+      if (reasonErr) return reasonErr;
 
       const result = await executeMerchantPayoutCashfree({
         businessId,
         orderIds,
+        idempotencyKey: typeof idempotencyKey === "string" ? idempotencyKey : undefined,
+        reason: (body.reason ?? "").toString().trim(),
+        actorEmail,
+        actorUserId,
       });
 
       return NextResponse.json(result);
@@ -107,22 +131,36 @@ export async function POST(request: Request) {
       if (!requestId) {
         return NextResponse.json({ error: "Missing requestId" }, { status: 400 });
       }
+      const reasonErr = requireReason();
+      if (reasonErr) return reasonErr;
 
-      const result = await settleRiderPayoutManual({ requestId, utrNumber });
+      const result = await settleRiderPayoutManual({
+        requestId,
+        utrNumber,
+        reason: (body.reason ?? "").toString().trim(),
+        actorEmail,
+        actorUserId,
+      });
       return NextResponse.json(result);
     }
 
     // 5. Payout Rider via Cashfree UPI
     if (action === "payout_rider_cashfree") {
-      const { riderId, amount, destinationUpi } = body;
+      const { riderId, amount, destinationUpi, idempotencyKey } = body;
       if (!riderId || !amount) {
         return NextResponse.json({ error: "Missing riderId or amount" }, { status: 400 });
       }
+      const reasonErr = requireReason();
+      if (reasonErr) return reasonErr;
 
       const result = await executeRiderPayout({
         riderId,
         amount: Number(amount),
         destinationUpi,
+        idempotencyKey: typeof idempotencyKey === "string" ? idempotencyKey : undefined,
+        reason: (body.reason ?? "").toString().trim(),
+        actorEmail,
+        actorUserId,
       });
 
       return NextResponse.json(result);

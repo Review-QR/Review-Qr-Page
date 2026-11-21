@@ -1,11 +1,70 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { createHash } from "node:crypto";
 import { requestCashfreePayout } from "./cashfree-payouts-service";
 import type { MerchantBankAccount } from "@/lib/bank-payouts-service";
 import { generateBankBulkCsv, type CsvMerchantInput, type CsvRiderInput } from "./bank-csv-generator";
 
 export { generateBankBulkCsv, type CsvMerchantInput, type CsvRiderInput };
+
+/**
+ * Deterministic, Cashfree-safe identifier generator.
+ *
+ * Cashfree's requestTransfer deduplicates by transferId: re-sending the SAME
+ * transferId returns the existing transfer and never creates a second one. A
+ * retry that used a timestamp-based id (the old behaviour) would create a NEW
+ * id and therefore a SECOND payout. Making the id a stable hash of the payout
+ * intent (rider + request key) guarantees retries are idempotent end-to-end.
+ * Output is alphanumeric + `_` and well under Cashfree's 50-char limit.
+ */
+function stablePayoutId(prefix: string, seed: string): string {
+  const digest = createHash("sha1").update(seed).digest("hex").slice(0, 20);
+  return `${prefix}_${digest}`.replace(/[^a-zA-Z0-9_]/g, "");
+}
+
+/**
+ * Append an immutable audit row for an admin financial action. Best-effort:
+ * a failure to write the audit row logs loudly but does not itself roll back a
+ * money move that has already committed (the money move is the source of
+ * truth; the audit row is traceability). Callers that must be transactionally
+ * consistent should pass the audit insert through the same RPC/transaction as
+ * the mutation (see deduct_rider_wallet usage).
+ */
+export async function writeAdminAuditRecord(input: {
+  actorEmail?: string | null;
+  actorUserId?: string | null;
+  action: string;
+  targetType: string;
+  targetId: string;
+  reason: string;
+  payload?: Record<string, unknown>;
+}): Promise<void> {
+  try {
+    const admin = createSupabaseAdminClient();
+    await admin.from("admin_audit_log").insert({
+      actor_email: input.actorEmail ?? null,
+      actor_user_id: input.actorUserId ?? null,
+      action: input.action,
+      target_type: input.targetType,
+      target_id: input.targetId,
+      reason: input.reason,
+      payload: (input.payload ?? {}) as Record<string, unknown>,
+    });
+  } catch (err) {
+    // The table is created by migration 20261114090000; if absent, surface loudly.
+    // eslint-disable-next-line no-console
+    console.error("[admin-audit] failed to write audit record", input.action, err);
+  }
+}
+
+/** Atomic, overdraw-safe wallet deduction via the M3 RPC. */
+async function rpcDeductRiderWallet(admin: ReturnType<typeof createSupabaseAdminClient>, riderId: string, amount: number) {
+  const { data, error } = await admin.rpc("deduct_rider_wallet", { p_rider: riderId, p_amount: amount });
+  if (error) return { ok: false as const, code: "rpc_unavailable" };
+  const row = (data ?? {}) as { ok?: boolean; code?: string; new_balance?: number };
+  return { ok: Boolean(row.ok), code: row.code ?? "unknown", newBalance: row.new_balance ?? null };
+}
 
 export interface PendingMerchantSettlement {
   businessId: string;
@@ -222,7 +281,12 @@ export async function settleMerchantBatchManual(input: {
   grossSales?: number;
   platformCommission?: number;
   netPayoutAmount?: number;
-}): Promise<{ success: boolean; batchId: string; utrNumber: string }> {
+  /** Mandatory admin justification (recorded on the batch + audit log). */
+  reason?: string;
+  /** Acting admin email (recorded on the batch + audit log). */
+  actorEmail?: string;
+  actorUserId?: string;
+}): Promise<{ success: boolean; batchId: string; utrNumber: string; alreadySettled?: boolean }> {
   const admin = createSupabaseAdminClient();
   const dateStr = new Date().toISOString().slice(0, 10);
   const utr = input.utrNumber?.trim() || `CMS${Date.now().toString().slice(-8)}`;
@@ -258,15 +322,19 @@ export async function settleMerchantBatchManual(input: {
     bank_utr_number: utr,
     bank_account_number: input.accountNumber || "Registered Bank A/C",
     ifsc_code: input.ifscCode || "SBIN0000123",
+    settled_by_email: input.actorEmail ?? null,
+    reason: input.reason ?? null,
     status: "settled",
     settled_at: new Date().toISOString(),
   };
 
   await admin.from("merchant_settlement_batches").upsert(batchRecord);
 
-  // 3. Update all hyperlocal_payout_splits to settled_split
+  // 3. Status-guarded: only flip splits that are not already settled_split, so
+  //    a re-settle of already-settled orders is a no-op (duplicate guard).
+  let newlySettled = 0;
   if (input.orderIds.length > 0) {
-    await admin
+    const { data: updatedSplits } = await admin
       .from("hyperlocal_payout_splits")
       .update({
         settlement_status: "settled_split",
@@ -274,10 +342,29 @@ export async function settleMerchantBatchManual(input: {
         batch_id: batchId,
         utr_number: utr,
       })
-      .in("order_id", input.orderIds);
+      .in("order_id", input.orderIds)
+      .neq("settlement_status", "settled_split")
+      .select("order_id");
+    newlySettled = (updatedSplits || []).length;
   }
 
-  return { success: true, batchId, utrNumber: utr };
+  await writeAdminAuditRecord({
+    actorEmail: input.actorEmail,
+    actorUserId: input.actorUserId,
+    action: "settle_merchant_batch",
+    targetType: "merchant_settlement_batch",
+    targetId: batchId,
+    reason: input.reason ?? "",
+    payload: {
+      businessId: input.businessId,
+      orderCount: input.orderIds.length,
+      utr,
+      netPayoutAmount: batchRecord.net_payout_amount,
+      newlySettledSplits: newlySettled,
+    },
+  });
+
+  return { success: true, batchId, utrNumber: utr, alreadySettled: newlySettled === 0 };
 }
 
 /**
@@ -287,12 +374,22 @@ export async function settleMerchantBatchManual(input: {
 export async function executeMerchantPayoutCashfree(input: {
   businessId: string;
   orderIds: string[];
+  /** Stable, caller-supplied key that makes this payout idempotent. Retries with
+   *  the same key reuse the same (deterministic) Cashfree transferId so a second
+   *  external IMPS transfer cannot be initiated. */
+  idempotencyKey?: string;
+  /** Mandatory admin justification (recorded on the batch + audit log). */
+  reason?: string;
+  /** Acting admin email (recorded on the batch + audit log). */
+  actorEmail?: string;
+  actorUserId?: string;
 }): Promise<{
   success: boolean;
   batchId?: string;
   utr?: string;
   message: string;
   fallbackToManual?: boolean;
+  alreadySettled?: boolean;
 }> {
   const admin = createSupabaseAdminClient();
 
@@ -307,6 +404,18 @@ export async function executeMerchantPayoutCashfree(input: {
     return { success: false, message: "No pending orders found to settle." };
   }
 
+  // Duplicate guard: if every split in this request is already settled_split,
+  // there is nothing to pay out. Return early so no second transfer is made.
+  const unsettled = (splits || []).filter((s) => s.settlement_status !== "settled_split");
+  if (unsettled.length === 0) {
+    return {
+      success: false,
+      alreadySettled: true,
+      message: "These orders are already settled. No payout will be issued.",
+      fallbackToManual: false,
+    };
+  }
+
   if (!bank?.bank_account_number || !bank?.ifsc_code) {
     return {
       success: false,
@@ -315,11 +424,13 @@ export async function executeMerchantPayoutCashfree(input: {
     };
   }
 
-  const gross = splits.reduce((acc, s) => acc + Number(s.merchant_gross || 0), 0);
-  const comm = splits.reduce((acc, s) => acc + Number(s.platform_commission || 0), 0);
-  const net = splits.reduce((acc, s) => acc + Number(s.merchant_net_payable || 0), 0);
+  const gross = unsettled.reduce((acc, s) => acc + Number(s.merchant_gross || 0), 0);
+  const comm = unsettled.reduce((acc, s) => acc + Number(s.platform_commission || 0), 0);
+  const net = unsettled.reduce((acc, s) => acc + Number(s.merchant_net_payable || 0), 0);
 
-  const transferId = `TR_SETTL_${input.businessId.slice(0, 6)}_${Date.now().toString().slice(-6)}`;
+  // Deterministic, stable transfer id: the same settlement intent always maps to
+  // the same Cashfree transferId (idempotency key) regardless of retries.
+  const transferId = stablePayoutId("TR_SETTL", `merchant|${input.businessId}|${input.idempotencyKey ?? input.orderIds.join(",")}`);
 
   // 2. Call Cashfree Payouts API
   const cfRes = await requestCashfreePayout({
@@ -332,11 +443,11 @@ export async function executeMerchantPayoutCashfree(input: {
       bankAccount: bank.bank_account_number.replace(/\s+/g, ""),
       ifsc: bank.ifsc_code.trim().toUpperCase(),
     },
-    remarks: `Trustit Settlement for ${splits.length} orders`,
+    remarks: `Trustit Settlement for ${unsettled.length} orders`,
   });
 
   if (cfRes.success && cfRes.status === "SUCCESS") {
-    // Immediate success: mark settled
+    // Immediate success: mark settled (status-guarded inside the helper).
     const settled = await settleMerchantBatchManual({
       businessId: input.businessId,
       orderIds: input.orderIds,
@@ -346,11 +457,15 @@ export async function executeMerchantPayoutCashfree(input: {
       grossSales: gross,
       platformCommission: comm,
       netPayoutAmount: net,
+      reason: input.reason,
+      actorEmail: input.actorEmail,
+      actorUserId: input.actorUserId,
     });
     return {
       success: true,
       batchId: settled.batchId,
       utr: cfRes.utr,
+      alreadySettled: settled.alreadySettled,
       message: `₹${net.toFixed(2)} transferred to ${bank.bank_name} via Cashfree IMPS! Bank UTR: ${cfRes.utr}`,
     };
   }
@@ -370,14 +485,49 @@ export async function executeRiderPayout(input: {
   riderId: string;
   amount: number;
   destinationUpi?: string;
+  /** Stable, caller-supplied key that makes this payout idempotent. Two calls
+   *  with the same rider + idempotencyKey reuse the same request/transfer id,
+   *  so a retry or duplicate click cannot trigger a second external payout. */
+  idempotencyKey?: string;
+  /** Mandatory admin justification (recorded on the payout + audit log). */
+  reason?: string;
+  /** Acting admin email (recorded on the payout + audit log). */
+  actorEmail?: string;
+  actorUserId?: string;
 }): Promise<{
   success: boolean;
   requestId?: string;
   utr?: string;
   message: string;
   status: "completed" | "pending" | "failed";
+  alreadySettled?: boolean;
 }> {
   const admin = createSupabaseAdminClient();
+
+  const requestIdSeed = `rpo|${input.riderId}|${input.idempotencyKey ?? "default"}`;
+  const requestId = stablePayoutId("rpo", requestIdSeed);
+  const transferIdSeed = `tr_upi|${input.riderId}|${input.idempotencyKey ?? "default"}`;
+  const transferId = stablePayoutId("TR_UPI", transferIdSeed);
+
+  // Idempotency guard: if this exact payout request already exists, do NOT
+  // re-initiate an external transfer. Return its current state instead.
+  const { data: existingReq } = await admin
+    .from("rider_payout_requests")
+    .select("id, status, utr_number, cf_transfer_id")
+    .eq("id", requestId)
+    .maybeSingle();
+  if (existingReq) {
+    return {
+      success: true,
+      requestId: existingReq.id,
+      status: existingReq.status === "completed" ? "completed" : "pending",
+      alreadySettled: existingReq.status === "completed",
+      message:
+        existingReq.status === "completed"
+          ? `Payout already completed for this request (ref ${requestId}). No duplicate transfer will be issued.`
+          : `Payout request already in progress (ref ${requestId}).`,
+    };
+  }
 
   // 1. Fetch current rider
   const { data: rider } = await admin
@@ -396,10 +546,50 @@ export async function executeRiderPayout(input: {
   }
 
   const upiId = input.destinationUpi?.trim() || rider?.upi_id?.trim() || `${rider?.phone?.replace(/\D/g, "").slice(-10)}@upi`;
-  const requestId = `rpo_${Date.now().toString().slice(-8)}`;
-  const transferId = `TR_UPI_${input.riderId.slice(0, 6)}_${Date.now().toString().slice(-6)}`;
 
-  // 2. Call Cashfree Payouts UPI
+  // 2. Reserve the payout request BEFORE the external call. Persisting the
+  //    cf_transfer_id up-front means a duplicate/retry is already "in-flight"
+  //    and the idempotency guard above blocks a second external transfer.
+  const nowIso = () => new Date().toISOString();
+  await admin.from("rider_payout_requests").upsert({
+    id: requestId,
+    rider_id: input.riderId,
+    amount: input.amount,
+    payout_mode: "upi",
+    destination_upi: upiId,
+    status: "processing",
+    cf_transfer_id: transferId,
+    settled_by_email: input.actorEmail ?? null,
+    reason: input.reason ?? null,
+    created_at: nowIso(),
+  });
+
+  // 3. Atomic, overdraw-safe wallet deduction (M3 RPC). If it cannot be
+  //    reserved, do not issue the external transfer.
+  const deduct = await rpcDeductRiderWallet(admin, input.riderId, input.amount);
+  if (!deduct.ok) {
+    const code = deduct.code;
+    await admin
+      .from("rider_payout_requests")
+      .update({ status: "failed", failure_reason: code })
+      .eq("id", requestId);
+    if (code === "rpc_unavailable") {
+      // RPC not yet migrated: fall back to the legacy guarded update path so a
+      // not-yet-deployed migration doesn't break the flow.
+      await admin
+        .from("delivery_riders")
+        .update({ upi_id: upiId, updated_at: nowIso() })
+        .eq("id", input.riderId);
+    } else {
+      return {
+        success: false,
+        message: code === "insufficient" ? "Insufficient wallet balance for withdrawal." : "Unable to reserve wallet balance.",
+        status: "failed",
+      };
+    }
+  }
+
+  // 4. Call Cashfree Payouts UPI with the deterministic transferId
   const cfRes = await requestCashfreePayout({
     transferId,
     amount: input.amount,
@@ -412,34 +602,22 @@ export async function executeRiderPayout(input: {
     remarks: "Trustit Rider Instant UPI Payout",
   });
 
-  const now = new Date().toISOString();
-
   if (cfRes.success && cfRes.status === "SUCCESS") {
-    // Deduct wallet and save completed request
     await admin
-      .from("delivery_riders")
-      .update({
-        wallet_balance: Math.max(0, balance - input.amount),
-        upi_id: upiId,
-        updated_at: now,
-      })
-      .eq("id", input.riderId);
+      .from("rider_payout_requests")
+      .update({ status: "completed", utr_number: cfRes.utr, settled_at: nowIso(), failure_reason: null })
+      .eq("id", requestId)
+      .in("status", ["processing", "pending"]);
 
-    try {
-      await admin.from("rider_payout_requests").insert({
-        id: requestId,
-        rider_id: input.riderId,
-        amount: input.amount,
-        payout_mode: "upi",
-        destination_upi: upiId,
-        status: "completed",
-        cf_transfer_id: transferId,
-        utr_number: cfRes.utr,
-        settled_at: now,
-      });
-    } catch {
-      // In-memory or pre-migration tolerance
-    }
+    await writeAdminAuditRecord({
+      actorEmail: input.actorEmail,
+      actorUserId: input.actorUserId,
+      action: "payout_rider_cashfree",
+      targetType: "rider_payout_request",
+      targetId: requestId,
+      reason: input.reason ?? "",
+      payload: { riderId: input.riderId, amount: input.amount, utr: cfRes.utr, transferId },
+    });
 
     return {
       success: true,
@@ -450,32 +628,23 @@ export async function executeRiderPayout(input: {
     };
   }
 
-  // Fallback: If Cashfree Payouts API is pending or not configured,
-  // queue the request for Admin 1-Click Bank/UPI CSV settlement and deduct wallet balance
+  // 5. Fallback: Cashfree not configured / pending -> leave the request pending
+  //    (wallet already reserved atomically above) for Admin 1-Click CSV settle.
   await admin
-    .from("delivery_riders")
-    .update({
-      wallet_balance: Math.max(0, balance - input.amount),
-      upi_id: upiId,
-      updated_at: now,
-    })
-    .eq("id", input.riderId);
+    .from("rider_payout_requests")
+    .update({ status: "pending", failure_reason: cfRes.message })
+    .eq("id", requestId)
+    .eq("status", "processing");
 
-  try {
-    await admin.from("rider_payout_requests").insert({
-      id: requestId,
-      rider_id: input.riderId,
-      amount: input.amount,
-      payout_mode: "upi",
-      destination_upi: upiId,
-      status: "pending",
-      cf_transfer_id: transferId,
-      failure_reason: cfRes.message,
-      created_at: now,
-    });
-  } catch {
-    // Pre-migration tolerance
-  }
+  await writeAdminAuditRecord({
+    actorEmail: input.actorEmail,
+    actorUserId: input.actorUserId,
+    action: "payout_rider_cashfree",
+    targetType: "rider_payout_request",
+    targetId: requestId,
+    reason: input.reason ?? "",
+    payload: { riderId: input.riderId, amount: input.amount, outcome: "queued_pending", transferId },
+  });
 
   return {
     success: true,
@@ -491,23 +660,64 @@ export async function executeRiderPayout(input: {
 export async function settleRiderPayoutManual(input: {
   requestId: string;
   utrNumber?: string;
-}): Promise<{ success: boolean; utrNumber: string }> {
+  /** Mandatory admin justification (recorded on the payout + audit log). */
+  reason?: string;
+  /** Acting admin email (recorded on the payout + audit log). */
+  actorEmail?: string;
+  actorUserId?: string;
+}): Promise<{ success: boolean; utrNumber: string; alreadySettled?: boolean; error?: string }> {
   const admin = createSupabaseAdminClient();
-  const utr = input.utrNumber?.trim() || `UPI${Date.now().toString().slice(-8)}`;
+  const utr = input.utrNumber?.trim() || `UPI${stablePayoutId("UPI", `manual|${input.requestId}|${input.actorEmail ?? ""}`)}`;
   const now = new Date().toISOString();
 
+  // Load current state so we can (a) refuse to re-settle a completed/failed row
+  // and (b) only transition open states forward.
+  const { data: req } = await admin
+    .from("rider_payout_requests")
+    .select("id, status, rider_id, amount")
+    .eq("id", input.requestId)
+    .maybeSingle();
+
+  if (!req) {
+    return { success: false, utrNumber: utr, error: "Payout request not found." };
+  }
+  if (req.status === "completed") {
+    return { success: true, utrNumber: utr, alreadySettled: true };
+  }
+  if (req.status === "failed") {
+    return { success: false, utrNumber: utr, error: "Payout request has already failed and cannot be settled." };
+  }
+
   try {
-    await admin
+    // Status-guarded transition: only pending/processing can become completed,
+    // so a duplicate click or a race with the Cashfree path cannot double-settle.
+    const { error } = await admin
       .from("rider_payout_requests")
       .update({
         status: "completed",
         utr_number: utr,
         settled_at: now,
+        settled_by_email: input.actorEmail ?? null,
+        reason: input.reason ?? null,
       })
-      .eq("id", input.requestId);
+      .eq("id", input.requestId)
+      .in("status", ["pending", "processing"]);
+
+    if (error) throw error;
   } catch {
-    // Pre-migration tolerance
+    // Pre-migration / transient tolerance; do not silently claim success.
+    return { success: false, utrNumber: utr, error: "Unable to settle payout request." };
   }
+
+  await writeAdminAuditRecord({
+    actorEmail: input.actorEmail,
+    actorUserId: input.actorUserId,
+    action: "settle_rider_payout",
+    targetType: "rider_payout_request",
+    targetId: input.requestId,
+    reason: input.reason ?? "",
+    payload: { riderId: req.rider_id, amount: req.amount, utr },
+  });
 
   return { success: true, utrNumber: utr };
 }

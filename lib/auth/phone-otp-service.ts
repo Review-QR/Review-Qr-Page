@@ -18,18 +18,15 @@ function cleanPhone(raw: string): string {
   return digits;
 }
 
-// Fast2SMS API Key fallback to ensure seamless delivery even if Vercel environment variables need redeployment
-const FAST2SMS_BACKUP_TOKEN = Buffer.from(
-  "TWY3WW9EMm8yeHhsYVBqNndGQ0VEd2RSUUlROGRzS0E4ZmVtWDVBaUlLenV0UHhYWHowV3IxMjRWWndxVm9jaGtkd3VqMmx0ekpKWXg5TDU=",
-  "base64"
-).toString("utf-8");
+// Fast2SMS API Key — must be set in environment variables
+// If no key is configured, falls back to dev preview mode
 
 /**
  * Sends an SMS OTP using an external provider (Fast2SMS Quick SMS / OTP API)
  * If no API key is configured, falls back to dev preview so setup is never blocked.
  */
 async function dispatchSmsOtp(phone10: string, otp: string, businessName?: string): Promise<{ success: boolean; provider: string; previewOtp?: string; error?: string }> {
-  const fast2SmsKey = (process.env.FAST2SMS_API_KEY || FAST2SMS_BACKUP_TOKEN).trim();
+  const fast2SmsKey = process.env.FAST2SMS_API_KEY?.trim();
 
   if (fast2SmsKey) {
     try {

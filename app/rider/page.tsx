@@ -66,7 +66,9 @@ import Screen48LowBatterySafeMode from "@/app/rider/components/screens/Screen48L
 
 type TabKey = "cockpit" | "orders" | "earnings" | "navigation" | "profile";
 
-export default function StandaloneRiderProductionApp() {
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
+
+function StandaloneRiderProductionAppInner() {
   const workflow = useRiderWorkflow();
   const {
     currentScreenId,
@@ -1518,5 +1520,13 @@ export default function StandaloneRiderProductionApp() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function StandaloneRiderProductionApp() {
+  return (
+    <ErrorBoundary section="rider-app">
+      <StandaloneRiderProductionAppInner />
+    </ErrorBoundary>
   );
 }

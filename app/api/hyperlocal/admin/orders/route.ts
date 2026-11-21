@@ -4,6 +4,7 @@ import {
   adminCancelOrderDoorstepRefusal,
   cancelHyperlocalOrderWithRefund,
 } from "@/lib/hyperlocal/hyperlocal-service";
+import { writeAdminAuditRecord } from "@/lib/hyperlocal/settlement-service";
 import { requireAdminApi } from "@/lib/auth-api-guards";
 
 export const dynamic = "force-dynamic";
@@ -105,26 +106,55 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { action, orderId, adminNotes, cancelledBy } = body;
+    const actorEmail = auth.admin.email;
+    const actorUserId = auth.admin.userId;
 
     if (!orderId) {
       return NextResponse.json({ error: "Missing orderId" }, { status: 400 });
+    }
+
+    // Mandatory justification for any action that mutates order state / money.
+    const resolvedReason = (typeof body.reason === "string" ? body.reason : adminNotes || "").trim();
+    const isFinancialAction = action === "admin_cancel_refund" || action === "cancel_refusal";
+    if (isFinancialAction && !resolvedReason) {
+      return NextResponse.json(
+        { error: "A non-empty reason is required for this financial action.", reasonRequired: true },
+        { status: 400 },
+      );
     }
 
     if (action === "admin_cancel_refund") {
       const result = await cancelHyperlocalOrderWithRefund({
         orderId,
         cancelledBy: "admin",
-        reason: adminNotes || body.reason || "Cancelled by Admin",
+        reason: resolvedReason,
         issueRefund: body.issueRefund !== false,
         adminNotes,
+      });
+      await writeAdminAuditRecord({
+        actorEmail,
+        actorUserId,
+        action: "admin_cancel_refund",
+        targetType: "hyperlocal_order",
+        targetId: orderId,
+        reason: resolvedReason,
+        payload: { issueRefund: body.issueRefund !== false },
       });
       return NextResponse.json({ success: true, result });
     }
 
     if (action === "cancel_refusal") {
       const result = await adminCancelOrderDoorstepRefusal(orderId, {
-        adminNotes: adminNotes || "Customer refused delivery at doorstep",
+        adminNotes: resolvedReason || "Customer refused delivery at doorstep",
         cancelledBy: cancelledBy || "admin",
+      });
+      await writeAdminAuditRecord({
+        actorEmail,
+        actorUserId,
+        action: "cancel_refusal",
+        targetType: "hyperlocal_order",
+        targetId: orderId,
+        reason: resolvedReason,
       });
       return NextResponse.json({ success: true, result });
     }

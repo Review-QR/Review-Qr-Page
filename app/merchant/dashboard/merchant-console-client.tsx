@@ -48,7 +48,9 @@ type ModuleId =
   | "profile"
   | "support";
 
-export default function MerchantConsoleClient({
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
+
+function MerchantConsoleClientInner({
   merchant,
   stats,
   activity,
@@ -664,9 +666,16 @@ export default function MerchantConsoleClient({
               </div>
             </div>
           )}
-
       </div>
 
     </div>
+  );
+}
+
+export default function MerchantConsoleClient(props: Parameters<typeof MerchantConsoleClientInner>[0]) {
+  return (
+    <ErrorBoundary section="merchant-dashboard">
+      <MerchantConsoleClientInner {...props} />
+    </ErrorBoundary>
   );
 }

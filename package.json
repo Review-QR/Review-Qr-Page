@@ -1,6 +1,6 @@
 {
-  "name": "review-qr",
-  "version": "0.1.0",
+  "name": "trustit",
+  "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@12.6.0",
   "scripts": {
@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit --incremental false",
-    "test": "node --test --test-concurrency=1",
+    "test": "node --experimental-strip-types --test --test-concurrency=1",
     "test:cashfree": "node --test lib/cashfree-production-readiness.test.mjs lib/cashfree-webhook-handler.test.mjs",
     "audit:public-indexability": "node scripts/verify-public-indexability.mjs",
     "audit:secrets": "node scripts/git-guard.mjs secret-scan",
@@ -32,6 +32,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "6.2.0",
+    "@sentry/nextjs": "^11.15.0",
     "@tailwindcss/postcss": "4.3.3",
     "@types/node": "26.6.2",
     "@types/nodemailer": "^8.0.2",
