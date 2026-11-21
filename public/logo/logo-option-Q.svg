@@ -1,0 +1,96 @@
+<!-- OPTION Q: Dot Matrix Network — three clusters connected by lines, tech/startup feel -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="q1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42a5f5"/>
+      <stop offset="100%" style="stop-color:#1565e8"/>
+    </linearGradient>
+    <linearGradient id="q2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#69f0ae"/>
+      <stop offset="100%" style="stop-color:#00897b"/>
+    </linearGradient>
+    <linearGradient id="q3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffab40"/>
+      <stop offset="100%" style="stop-color:#ff6d00"/>
+    </linearGradient>
+    <linearGradient id="qck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#c8e0ff"/>
+    </linearGradient>
+    <linearGradient id="qsp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#2979ff"/>
+    </linearGradient>
+    <filter id="q_sh"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1565e8" flood-opacity="0.15"/></filter>
+    <filter id="q_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Subtle dot grid background -->
+  <g fill="#1565e8" fill-opacity="0.03">
+    <circle cx="10" cy="10" r="1.5"/><circle cx="22" cy="10" r="1.5"/><circle cx="34" cy="10" r="1.5"/>
+    <circle cx="10" cy="22" r="1.5"/><circle cx="22" cy="22" r="1.5"/><circle cx="34" cy="22" r="1.5"/>
+    <circle cx="50" cy="10" r="1.5"/><circle cx="62" cy="10" r="1.5"/><circle cx="74" cy="10" r="1.5"/>
+    <circle cx="50" cy="22" r="1.5"/><circle cx="62" cy="22" r="1.5"/><circle cx="74" cy="22" r="1.5"/>
+    <circle cx="10" cy="74" r="1.5"/><circle cx="22" cy="74" r="1.5"/><circle cx="34" cy="74" r="1.5"/>
+    <circle cx="50" cy="74" r="1.5"/><circle cx="62" cy="74" r="1.5"/><circle cx="74" cy="74" r="1.5"/>
+  </g>
+
+  <!-- Network graph: 3 clusters connected -->
+  <!-- Connection lines first (behind dots) -->
+  <g stroke="#738198" stroke-width="1.5" stroke-opacity="0.2" stroke-linecap="round">
+    <line x1="28" y1="28" x2="56" y2="36"/>
+    <line x1="56" y1="36" x2="38" y2="62"/>
+    <line x1="38" y1="62" x2="28" y2="28"/>
+  </g>
+
+  <!-- Cluster 1: Merchant (top-left, Blue) — 3 dots -->
+  <g filter="url(#q_sh)">
+    <circle cx="28" cy="28" r="11" fill="url(#q1)" fill-opacity="0.12"/>
+    <circle cx="24" cy="24" r="6" fill="url(#q1)" fill-opacity="0.8"/>
+    <circle cx="24" cy="24" r="2.5" fill="#ffffff" fill-opacity="0.5"/>
+    <!-- Satellite dots -->
+    <circle cx="34" cy="30" r="3.5" fill="url(#q1)" fill-opacity="0.5"/>
+    <circle cx="20" cy="34" r="3" fill="url(#q1)" fill-opacity="0.35"/>
+  </g>
+
+  <!-- Cluster 2: Customer (right, Green) — 3 dots -->
+  <g filter="url(#q_sh)">
+    <circle cx="56" cy="36" r="11" fill="url(#q2)" fill-opacity="0.12"/>
+    <circle cx="58" cy="34" r="6" fill="url(#q2)" fill-opacity="0.8"/>
+    <circle cx="58" cy="34" r="2.5" fill="#ffffff" fill-opacity="0.5"/>
+    <!-- Satellite dots -->
+    <circle cx="50" cy="40" r="3.5" fill="url(#q2)" fill-opacity="0.5"/>
+    <circle cx="62" cy="38" r="3" fill="url(#q2)" fill-opacity="0.35"/>
+  </g>
+
+  <!-- Cluster 3: Reviews/Trust (bottom, Orange) — 3 dots -->
+  <g filter="url(#q_sh)">
+    <circle cx="38" cy="62" r="11" fill="url(#q3)" fill-opacity="0.12"/>
+    <circle cx="38" cy="64" r="6" fill="url(#q3)" fill-opacity="0.8"/>
+    <circle cx="38" cy="64" r="2.5" fill="#ffffff" fill-opacity="0.5"/>
+    <!-- Satellite dots -->
+    <circle cx="44" cy="58" r="3.5" fill="url(#q3)" fill-opacity="0.5"/>
+    <circle cx="32" cy="68" r="3" fill="url(#q3)" fill-opacity="0.35"/>
+  </g>
+
+  <!-- Center trust checkmark (where all connect) -->
+  <g filter="url(#q_glow)">
+    <circle cx="42" cy="44" r="7" fill="#ffffff" stroke="#1565e8" stroke-width="1.5" stroke-opacity="0.3"/>
+    <path d="M 38 44 L 41 47 L 46 41" fill="none" stroke="#1565e8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Sparkle -->
+  <g transform="translate(74,4)">
+    <path d="M7 0C8 3,8 5.5,7 9C6 5.5,6 3,7 0Z" fill="url(#qsp)"/>
+    <path d="M7 0C2.5 1,0.5 3,0 7C3 5.5,5.5 5.5,10 7C5.5 5.5,3 5.5,0 7C0.5 3,2.5 1,7 0Z" fill="url(#qsp)" transform="rotate(45 7 7)"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

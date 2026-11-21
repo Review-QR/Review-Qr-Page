@@ -1,0 +1,42 @@
+<!-- OPTION 6: Minimal Flat — Orange/Amber Energy -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="s6" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff8c42"/>
+      <stop offset="100%" style="stop-color:#e8601c"/>
+    </linearGradient>
+    <linearGradient id="s6ck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#fff3e8"/>
+    </linearGradient>
+    <linearGradient id="s6sp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffdd57"/>
+      <stop offset="100%" style="stop-color:#ffb800"/>
+    </linearGradient>
+    <filter id="s6sh"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#cc5500" flood-opacity="0.25"/></filter>
+    <filter id="s6cs"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#cc5500" flood-opacity="0.2"/></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Flat shield: wide, bold, minimal -->
+  <g transform="translate(8,8)" filter="url(#s6sh)">
+    <path d="M 5 3 L 75 3 Q 82 3 82 10 L 82 55 Q 82 75 43 88 Q 4 75 4 55 L 4 10 Q 4 3 5 3 Z" fill="url(#s6)"/>
+    <!-- Minimal white check -->
+    <g filter="url(#s6cs)">
+      <path d="M 20 44 L 36 60 L 62 30" fill="none" stroke="url(#s6ck)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <!-- Sparkle (yellow) -->
+  <g transform="translate(74,3)">
+    <path d="M9 0C10 4.5,10 8,9 12C8 8,8 4.5,9 0Z" fill="url(#s6sp)"/>
+    <path d="M9 0C3 1,0.5 4,0 9C4.5 8,7.5 8,12 9C7.5 8,4.5 8,0 9C0.5 4,3 1,9 0Z" fill="url(#s6sp)" transform="rotate(45 9 9)"/>
+  </g>
+
+  <!-- Brand Name: warm dark -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#2a1000" letter-spacing="-1.8">
+    Trust<tspan fill="#e8601c">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="9" font-weight="700" fill="#8a6040" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

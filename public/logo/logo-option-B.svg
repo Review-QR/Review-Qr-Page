@@ -1,0 +1,59 @@
+<!-- OPTION B: Interlocking Community Rings — trust network concept -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="b1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00bfa5"/>
+      <stop offset="100%" style="stop-color:#00897b"/>
+    </linearGradient>
+    <linearGradient id="b2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#64ffda"/>
+      <stop offset="100%" style="stop-color:#1de9b6"/>
+    </linearGradient>
+    <linearGradient id="b3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2979ff"/>
+      <stop offset="100%" style="stop-color:#1565e8"/>
+    </linearGradient>
+    <linearGradient id="bck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e0f7fa"/>
+    </linearGradient>
+    <linearGradient id="bsp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffab00"/>
+      <stop offset="100%" style="stop-color:#ff6d00"/>
+    </linearGradient>
+    <filter id="b_sh"><feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#00695c" flood-opacity="0.2"/></filter>
+    <filter id="b_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Three interlocking rings representing Customer-Merchant-Trust -->
+  <g transform="translate(10,8)" filter="url(#b_sh)">
+    <!-- Teal ring (top-left) -->
+    <circle cx="22" cy="22" r="20" fill="none" stroke="url(#b1)" stroke-width="10" stroke-opacity="0.85"/>
+    <!-- Blue ring (bottom) -->
+    <circle cx="36" cy="36" r="20" fill="none" stroke="url(#b3)" stroke-width="10" stroke-opacity="0.85"/>
+    <!-- Light green ring (top-right) -->
+    <circle cx="50" cy="22" r="20" fill="none" stroke="url(#b2)" stroke-width="10" stroke-opacity="0.85"/>
+  </g>
+
+  <!-- Center dot (the trust connection point) -->
+  <circle cx="46" cy="46" r="8" fill="#fff" stroke="url(#b1)" stroke-width="3"/>
+  <circle cx="46" cy="46" r="4" fill="url(#bck)"/>
+
+  <!-- Checkmark in center (small) -->
+  <path d="M 40 46 L 44 50 L 52 42" fill="none" stroke="#00897b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Decorative tiny dots around the rings -->
+  <circle cx="10" cy="12" r="2.5" fill="url(#bsp)" filter="url(#b_glow)"/>
+  <circle cx="72" cy="12" r="2.5" fill="url(#bsp)" filter="url(#b_glow)"/>
+  <circle cx="10" cy="72" r="2.5" fill="url(#bsp)" filter="url(#b_glow)"/>
+  <circle cx="72" cy="72" r="2.5" fill="url(#bsp)" filter="url(#b_glow)"/>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#00897b">it</tspan>
+  </text>
+  <text x="100" y="80" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

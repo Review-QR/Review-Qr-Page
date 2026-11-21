@@ -1,0 +1,95 @@
+
+
+
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 160" width="500" height="160">
+  <defs>
+    
+    <linearGradient id="y_y_petal1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5c9fff"/>
+      <stop offset="100%" style="stop-color:#1565e8"/>
+    </linearGradient>
+    
+    <linearGradient id="y_y_petal2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#64ffda"/>
+      <stop offset="100%" style="stop-color:#00a085"/>
+    </linearGradient>
+    
+    <linearGradient id="y_y_center" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565e8"/>
+      <stop offset="100%" style="stop-color:#003399"/>
+    </linearGradient>
+    
+    <linearGradient id="y_y_ck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#c8e0ff"/>
+    </linearGradient>
+    <linearGradient id="y_ysp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#2979ff"/>
+    </linearGradient>
+    <filter id="y_y_sh"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#003399" flood-opacity="0.2"/></filter>
+    <filter id="y_y_cs"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#002288" flood-opacity="0.25"/></filter>
+    <filter id="y_y_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="500" height="160" fill="#ffffff" rx="12"/>
+
+  
+  <ellipse cx="64" cy="60" rx="56" ry="52" fill="#e3f2fd" fill-opacity="0.3"/>
+  <ellipse cx="64" cy="56" rx="42" ry="38" fill="#fff8e1" fill-opacity="0.15"/>
+
+  
+  <g transform="translate(12, 12)" filter="url(#y_y_sh)">
+    
+    <ellipse cx="50" cy="22" rx="14" ry="22" fill="url(#y_y_petal1)" fill-opacity="0.8" transform="rotate(0 50 50)"/>
+
+    
+    <ellipse cx="50" cy="22" rx="14" ry="22" fill="url(#y_y_petal2)" fill-opacity="0.8" transform="rotate(72 50 50)"/>
+
+    
+    <ellipse cx="50" cy="22" rx="14" ry="22" fill="url(#y_y_petal1)" fill-opacity="0.8" transform="rotate(144 50 50)"/>
+
+    
+    <ellipse cx="50" cy="22" rx="14" ry="22" fill="url(#y_y_petal2)" fill-opacity="0.8" transform="rotate(216 50 50)"/>
+
+    
+    <ellipse cx="50" cy="22" rx="14" ry="22" fill="url(#y_y_petal1)" fill-opacity="0.8" transform="rotate(288 50 50)"/>
+
+    
+    <circle cx="50" cy="50" r="16" fill="url(#y_y_center)"/>
+
+    
+    <circle cx="50" cy="50" r="11" fill="url(#y_y_center)" fill-opacity="0.5"/>
+
+    
+    <g filter="url(#y_y_cs)">
+      <path d="M 40 50 L 47 57 L 60 42" fill="none" stroke="url(#y_y_ck)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    
+    <path d="M 41 49 L 46 54" fill="none" stroke="#fff" stroke-width="2" stroke-opacity="0.45" stroke-linecap="round"/>
+
+    
+    <g stroke="#fff" stroke-width="0.8" stroke-opacity="0.12" stroke-linecap="round">
+      <line x1="50" y1="34" x2="50" y2="22"/>
+      <line x1="50" y1="34" x2="50" y2="22" transform="rotate(72 50 50)"/>
+      <line x1="50" y1="34" x2="50" y2="22" transform="rotate(144 50 50)"/>
+      <line x1="50" y1="34" x2="50" y2="22" transform="rotate(216 50 50)"/>
+      <line x1="50" y1="34" x2="50" y2="22" transform="rotate(288 50 50)"/>
+    </g>
+  </g>
+
+  
+  <g transform="translate(88, 4)" filter="url(#y_y_glow)">
+    <path d="M9 0C10 4,10 7,9 11C8 7,8 4,9 0Z" fill="url(#y_ysp)"/>
+    <path d="M9 0C3 1,0.5 3,0 9C4.5 7.5,7.5 7.5,12 9C7.5 7.5,4.5 7.5,0 9C0.5 3,3 1,9 0Z" fill="url(#y_ysp)" transform="rotate(45 9 9)"/>
+  </g>
+
+  
+  <text x="112" y="62" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="52" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <line x1="112" y1="70" x2="280" y2="70" stroke="#1565e8" stroke-width="1.2" stroke-opacity="0.2"/>
+  <text x="112" y="86" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="9" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

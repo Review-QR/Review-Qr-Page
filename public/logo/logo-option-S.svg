@@ -1,0 +1,85 @@
+
+
+
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 160" width="500" height="160">
+  <defs>
+    
+    <linearGradient id="s_s_p1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5c9fff"/>
+      <stop offset="100%" style="stop-color:#003399"/>
+    </linearGradient>
+    
+    <linearGradient id="s_s_p2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#64ffda"/>
+      <stop offset="100%" style="stop-color:#00897b"/>
+    </linearGradient>
+    
+    <linearGradient id="s_s_p3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565e8"/>
+      <stop offset="100%" style="stop-color:#002971"/>
+    </linearGradient>
+    
+    <linearGradient id="s_s_ck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#c8e0ff"/>
+    </linearGradient>
+    
+    <linearGradient id="s_s_sp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#0091ea"/>
+    </linearGradient>
+    <filter id="s_s_sh"><feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#002971" flood-opacity="0.3"/></filter>
+    <filter id="s_s_cs"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#002288" flood-opacity="0.35"/></filter>
+    <filter id="s_s_sp_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="500" height="160" fill="#ffffff" rx="12"/>
+
+  
+  <g transform="translate(12, 10)" filter="url(#s_s_sh)">
+
+    
+    <path d="M 42 4 C 22 4, 6 20, 6 40 C 6 58, 18 72, 32 78
+             L 32 68 C 22 64, 16 54, 16 40 C 16 26, 26 14, 42 14 Z"
+          fill="url(#s_s_p1)"/>
+
+    
+    <path d="M 42 4 C 62 4, 78 20, 78 40 C 78 58, 66 72, 52 78
+             L 52 68 C 62 64, 68 54, 68 40 C 68 26, 58 14, 42 14 Z"
+          fill="url(#s_s_p2)"/>
+
+    
+    <path d="M 32 68 L 42 88 L 52 68 C 52 74, 48 78, 42 78 C 36 78, 32 74, 32 68 Z"
+          fill="url(#s_s_p3)"/>
+
+    
+    <line x1="42" y1="4" x2="42" y2="78" stroke="#fff" stroke-width="1" stroke-opacity="0.2"/>
+    <line x1="32" y1="68" x2="52" y2="68" stroke="#fff" stroke-width="1" stroke-opacity="0.15"/>
+
+    
+    <g filter="url(#s_s_cs)">
+      <path d="M 18 52 L 34 68 L 66 32"
+            fill="none" stroke="url(#s_s_ck)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    
+    <path d="M 20 51 L 28 59" fill="none" stroke="#fff" stroke-width="3" stroke-opacity="0.45" stroke-linecap="round"/>
+  </g>
+
+  
+  <g transform="translate(88, 8)" filter="url(#s_s_sp_glow)">
+    <path d="M10 0C11.5 5,11.5 9,10 14C8.5 9,8.5 5,10 0Z" fill="url(#s_s_sp)"/>
+    <path d="M10 0C3.5 1.5,1 5,0 10C5 8.5,8 8.5,13 10C8 8.5,5 8.5,0 10C1 5,3.5 1.5,10 0Z" fill="url(#s_s_sp)" transform="rotate(45 10 10)"/>
+    <circle cx="10" cy="10" r="2" fill="#fff" fill-opacity="0.9"/>
+  </g>
+
+  
+  <text x="112" y="62" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="52" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  
+  <line x1="112" y1="70" x2="270" y2="70" stroke="#1565e8" stroke-width="1.2" stroke-opacity="0.2"/>
+  
+  <text x="112" y="86" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="9" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

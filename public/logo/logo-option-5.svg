@@ -1,0 +1,47 @@
+<!-- OPTION 5: Squircle Modern — Gradient Blue to Cyan -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="s5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0088ff"/>
+      <stop offset="50%" style="stop-color:#0066dd"/>
+      <stop offset="100%" style="stop-color:#0055cc"/>
+    </linearGradient>
+    <linearGradient id="s5ck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#b3d9ff"/>
+    </linearGradient>
+    <linearGradient id="s5sp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#00aaff"/>
+    </linearGradient>
+    <filter id="s5sh"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-color="#0055cc" flood-opacity="0.3"/></filter>
+    <filter id="s5cs"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0044aa" flood-opacity="0.2"/></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Squircle (super-ellipse) shield -->
+  <g transform="translate(8,8)" filter="url(#s5sh)">
+    <rect x="0" y="0" width="80" height="80" rx="20" fill="url(#s5)"/>
+    <!-- Bottom point accent -->
+    <path d="M 20 75 Q 40 90 60 75" fill="url(#s5)"/>
+    <!-- Shine -->
+    <rect x="8" y="8" width="64" height="30" rx="14" fill="#fff" fill-opacity="0.08"/>
+    <!-- Checkmark -->
+    <g filter="url(#s5cs)">
+      <path d="M 22 40 L 34 52 L 56 28" fill="none" stroke="url(#s5ck)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <!-- Sparkle -->
+  <g transform="translate(74,3)">
+    <path d="M9 0C10 4.5,10 8,9 12C8 8,8 4.5,9 0Z" fill="url(#s5sp)"/>
+    <path d="M9 0C3 1,0.5 4,0 9C4.5 8,7.5 8,12 9C7.5 8,4.5 8,0 9C0.5 4,3 1,9 0Z" fill="url(#s5sp)" transform="rotate(45 9 9)"/>
+  </g>
+
+  <!-- Brand Name: modern feel -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-1.8">
+    Trust<tspan fill="#0088ff">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="9" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

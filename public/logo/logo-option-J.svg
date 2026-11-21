@@ -1,0 +1,94 @@
+<!-- OPTION J: Sunrise over Local — warm, optimistic, community-first -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <!-- Sun gradient -->
+    <linearGradient id="j1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffab00"/>
+      <stop offset="50%" style="stop-color:#ff8f00"/>
+      <stop offset="100%" style="stop-color:#f57c00"/>
+    </linearGradient>
+    <!-- Sun inner -->
+    <linearGradient id="j2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffd740"/>
+      <stop offset="100%" style="stop-color:#ffab00"/>
+    </linearGradient>
+    <!-- Checkmark -->
+    <linearGradient id="j3" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#ffe0b2"/>
+    </linearGradient>
+    <!-- Sky/blue accent -->
+    <linearGradient id="j4" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565e8"/>
+      <stop offset="100%" style="stop-color:#0044cc"/>
+    </linearGradient>
+    <linearGradient id="jsp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6d00"/>
+      <stop offset="100%" style="stop-color:#ff3d00"/>
+    </linearGradient>
+    <filter id="j_sh"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#e65100" flood-opacity="0.25"/></filter>
+    <filter id="j_cs"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#bf360c" flood-opacity="0.2"/></filter>
+    <filter id="j_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#fef9f6" rx="12"/>
+
+  <!-- Warm background glow (sunrise feel) -->
+  <ellipse cx="48" cy="50" rx="52" ry="48" fill="#fff3e0" fill-opacity="0.5"/>
+  <ellipse cx="48" cy="48" rx="40" ry="36" fill="#ffe0b2" fill-opacity="0.25"/>
+
+  <!-- Sun rays (subtle background) -->
+  <g transform="translate(8,8)" opacity="0.06">
+    <line x1="48" y1="0" x2="48" y2="96" stroke="#ff8f00" stroke-width="12" stroke-linecap="round"/>
+    <line x1="0" y1="48" x2="96" y2="48" stroke="#ff8f00" stroke-width="12" stroke-linecap="round"/>
+    <line x1="12" y1="12" x2="84" y2="84" stroke="#ff8f00" stroke-width="8" stroke-linecap="round"/>
+    <line x1="84" y1="12" x2="12" y2="84" stroke="#ff8f00" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <!-- Main icon: Rising sun with checkmark -->
+  <g transform="translate(8,8)" filter="url(#j_sh)">
+    <!-- Sun body (circle) -->
+    <circle cx="48" cy="42" r="36" fill="url(#j1)"/>
+
+    <!-- Sun inner glow -->
+    <circle cx="48" cy="42" r="28" fill="url(#j2)" fill-opacity="0.4"/>
+
+    <!-- Sun rays (small triangles around) -->
+    <polygon points="48,-4 45,2 51,2" fill="url(#j1)"/>
+    <polygon points="48,88 45,82 51,82" fill="url(#j1)"/>
+    <polygon points="-4,42 2,39 2,45" fill="url(#j1)"/>
+    <polygon points="100,42 94,39 94,45" fill="url(#j1)"/>
+    <polygon points="12,12 17,17 14,20" fill="url(#j1)"/>
+    <polygon points="84,12 79,17 82,20" fill="url(#j1)"/>
+    <polygon points="12,72 17,67 20,70" fill="url(#j1)"/>
+    <polygon points="84,72 79,67 82,64" fill="url(#j1)"/>
+
+    <!-- Checkmark (center) -->
+    <g filter="url(#j_cs)">
+      <path d="M 28 44 L 42 58 L 68 28" fill="none" stroke="url(#j3)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <!-- Check highlight -->
+    <path d="M 30 43 L 38 51" fill="none" stroke="#fff" stroke-width="3" stroke-opacity="0.45" stroke-linecap="round"/>
+
+    <!-- Horizon line (city silhouette hint) -->
+    <rect x="2" y="70" width="92" height="3" rx="1.5" fill="#bf360c" fill-opacity="0.2"/>
+    <rect x="10" y="64" width="8" height="9" rx="1" fill="#bf360c" fill-opacity="0.15"/>
+    <rect x="22" y="60" width="6" height="13" rx="1" fill="#bf360c" fill-opacity="0.12"/>
+    <rect x="70" y="60" width="6" height="13" rx="1" fill="#bf360c" fill-opacity="0.12"/>
+    <rect x="80" y="64" width="8" height="9" rx="1" fill="#bf360c" fill-opacity="0.15"/>
+  </g>
+
+  <!-- Sparkle -->
+  <g transform="translate(82,4)" filter="url(#j_glow)">
+    <path d="M10 0C11.5 5,11.5 9,10 14C8.5 9,8.5 5,10 0Z" fill="url(#jsp)"/>
+    <path d="M10 0C3.5 1.5,1 5,0 10C5 8.5,8 8.5,13 10C8 8.5,5 8.5,0 10C1 5,3.5 1.5,10 0Z" fill="url(#jsp)" transform="rotate(45 10 10)"/>
+    <circle cx="10" cy="10" r="2" fill="#fff" fill-opacity="0.9"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#1a1000" letter-spacing="-2">
+    Trust<tspan fill="#f57c00">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#8b6914" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

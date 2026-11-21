@@ -1,0 +1,100 @@
+<!-- OPTION G: Hand-Drawn Sketch — wobbly organic lines, watercolor feel -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <!-- Warm sketchy gradient -->
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#d4a373"/>
+      <stop offset="40%" style="stop-color:#b8864f"/>
+      <stop offset="100%" style="stop-color:#8b5e3c"/>
+    </linearGradient>
+    <!-- Watercolor wash (translucent overlay) -->
+    <radialGradient id="g1wash" cx="40%" cy="40%" r="50%">
+      <stop offset="0%" style="stop-color:#d4a373;stop-opacity:0.15"/>
+      <stop offset="100%" style="stop-color:#d4a373;stop-opacity:0"/>
+    </radialGradient>
+    <!-- Inner shield -->
+    <linearGradient id="g2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#e8c9a0"/>
+      <stop offset="100%" style="stop-color:#c49a6c"/>
+    </linearGradient>
+    <!-- Checkmark -->
+    <linearGradient id="g3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4a3728"/>
+      <stop offset="100%" style="stop-color:#2d1f14"/>
+    </linearGradient>
+    <linearGradient id="gsp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#e07a5f"/>
+      <stop offset="100%" style="stop-color:#c44536"/>
+    </linearGradient>
+    <!-- Sketchy drop shadow -->
+    <filter id="g_sh">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" result="displaced"/>
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#5c3a28" flood-opacity="0.3"/>
+    </filter>
+    <filter id="g_cs">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#5c3a28" flood-opacity="0.2"/>
+    </filter>
+    <!-- Pencil texture -->
+    <filter id="g_pencil">
+      <feTurbulence type="fractalNoise" baseFrequency="0.5" numOctaves="3" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.5"/>
+    </filter>
+  </defs>
+  <rect width="460" height="160" fill="#faf6f1" rx="12"/>
+
+  <!-- Watercolor wash background -->
+  <ellipse cx="48" cy="50" rx="55" ry="50" fill="url(#g1wash)"/>
+
+  <!-- Pencil guideline circles (decorative sketch lines) -->
+  <circle cx="48" cy="50" r="46" fill="none" stroke="#8b5e3c" stroke-width="0.6" stroke-dasharray="4 3" stroke-opacity="0.15"/>
+
+  <!-- Shield: hand-drawn style with slightly irregular path -->
+  <g transform="translate(8,8)" filter="url(#g_sh)">
+    <!-- Rough outline layer (pencil sketch effect) -->
+    <path d="M 16 4 C 16 2, 20 1, 24 1 L 54 1 C 58 1, 62 2, 62 4 C 65 10, 78 30, 75 55 C 74 60, 72 64, 69 68 C 65 73, 60 76, 56 76 L 24 76 C 19 76, 15 73, 12 68 C 9 64, 7 60, 7 55 C 4 30, 15 10, 16 4 Z"
+          fill="none" stroke="#8b5e3c" stroke-width="1.8" stroke-opacity="0.25" stroke-linecap="round" filter="url(#g_pencil)"/>
+
+    <!-- Main filled shield (slightly organic edges) -->
+    <path d="M 18 3 L 58 3 Q 70 3 73 14 Q 82 42 73 70 Q 70 81 58 81 L 18 81 Q 6 81 3 70 Q -6 42 3 14 Q 6 3 18 3 Z"
+          fill="url(#g1)"/>
+
+    <!-- Watercolor wash inside -->
+    <ellipse cx="38" cy="38" rx="30" ry="28" fill="url(#g1wash)"/>
+
+    <!-- Inner shield (lighter) -->
+    <path d="M 21 6 L 55 6 Q 65 6 68 16 Q 76 42 68 68 Q 65 78 55 78 L 21 78 Q 11 78 8 68 Q 0 42 8 16 Q 11 6 21 6 Z"
+          fill="url(#g2)" fill-opacity="0.3"/>
+
+    <!-- Decorative crosshatch pattern (warm sketch lines) -->
+    <line x1="12" y1="20" x2="22" y2="30" stroke="#8b5e3c" stroke-width="0.8" stroke-opacity="0.1" stroke-linecap="round"/>
+    <line x1="14" y1="25" x2="24" y2="35" stroke="#8b5e3c" stroke-width="0.8" stroke-opacity="0.1" stroke-linecap="round"/>
+    <line x1="54" y1="20" x2="64" y2="30" stroke="#8b5e3c" stroke-width="0.8" stroke-opacity="0.1" stroke-linecap="round"/>
+    <line x1="56" y1="25" x2="66" y2="35" stroke="#8b5e3c" stroke-width="0.8" stroke-opacity="0.1" stroke-linecap="round"/>
+
+    <!-- Hand-drawn style checkmark (thick, slightly organic) -->
+    <g filter="url(#g_cs)">
+      <path d="M 14 48 C 18 44, 22 44, 26 50 C 29 54, 33 57, 37 60 C 44 64, 50 64, 56 58 C 58 56, 62 53, 64 52"
+            fill="none" stroke="url(#g3)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <!-- Checkmark highlight (pencil line) -->
+    <path d="M 16 47 C 20 43, 24 43, 28 49" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.35" stroke-linecap="round"/>
+  </g>
+
+  <!-- Sketch-style sparkle -->
+  <g transform="translate(78,4)">
+    <path d="M10 0C11.5 5,11.5 9,10 14C8.5 9,8.5 5,10 0Z" fill="url(#gsp)" opacity="0.85"/>
+    <path d="M10 0C3.5 1.5,1 5,0 10C5 8.5,8 8.5,13 10C8 8.5,5 8.5,0 10C1 5,3.5 1.5,10 0Z" fill="url(#gsp)" opacity="0.85" transform="rotate(45 10 10)"/>
+    <!-- Sketch dots around sparkle -->
+    <circle cx="2" cy="3" r="1.2" fill="#8b5e3c" fill-opacity="0.3"/>
+    <circle cx="18" cy="5" r="1" fill="#8b5e3c" fill-opacity="0.3"/>
+  </g>
+
+  <!-- Brand Name: warm brown-black -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#2d1f14" letter-spacing="-2">
+    Trust<tspan fill="#b8864f">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#8b7355" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

@@ -4,6 +4,7 @@ import AdminNavigation from "@/app/admin-navigation";
 import { OtaUpdateBanner } from "@/app/components/ota-update-banner";
 import { TRUSTIT_SITE_URL } from "@/lib/public-discovery-seo";
 import { AnalyticsScript } from "@/components/analytics/analytics";
+import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -77,7 +78,9 @@ export default function RootLayout({
           <AdminNavigation />
         </Suspense>
         <OtaUpdateBanner />
-        {children}
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

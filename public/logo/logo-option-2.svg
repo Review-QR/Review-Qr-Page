@@ -1,0 +1,45 @@
+<!-- OPTION 2: Rounded Shield — Vibrant Teal + Green Gradient -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="s2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00c9a7"/>
+      <stop offset="50%" style="stop-color:#00a085"/>
+      <stop offset="100%" style="stop-color:#00806a"/>
+    </linearGradient>
+    <linearGradient id="s2ck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#d0f5ea"/>
+    </linearGradient>
+    <linearGradient id="s2sp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ffcc"/>
+      <stop offset="100%" style="stop-color:#00e5ff"/>
+    </linearGradient>
+    <filter id="s2sh"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#00806a" flood-opacity="0.25"/></filter>
+    <filter id="s2cs"><feDropShadow dx="1" dy="2" stdDeviation="3" flood-color="#006655" flood-opacity="0.2"/></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Shield: rounded-bottom, organic shape -->
+  <g transform="translate(8,8)" filter="url(#s2sh)">
+    <path d="M 10 5 C 10 2, 13 0, 18 0 L 58 0 C 63 0, 66 2, 66 5 C 66 20, 78 35, 78 55 C 78 70, 72 78, 60 82 C 55 84, 50 82, 46 78 C 42 82, 37 84, 32 82 C 20 78, 14 70, 14 55 C 14 35, 10 20, 10 5 Z" fill="url(#s2)"/>
+    <!-- Subtle inner shine -->
+    <ellipse cx="40" cy="30" rx="22" ry="16" fill="#fff" fill-opacity="0.08"/>
+    <!-- Checkmark -->
+    <g filter="url(#s2cs)">
+      <path d="M 20 48 L 34 62 L 62 30" fill="none" stroke="url(#s2ck)" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+  <!-- Sparkle -->
+  <g transform="translate(74,3)">
+    <path d="M9 0C10 4.5,10 8,9 12C8 8,8 4.5,9 0Z" fill="url(#s2sp)"/>
+    <path d="M9 0C3 1,0.5 4,0 9C4.5 8,7.5 8,12 9C7.5 8,4.5 8,0 9C0.5 4,3 1,9 0Z" fill="url(#s2sp)" transform="rotate(45 9 9)"/>
+  </g>
+
+  <!-- Brand Name: green tint -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a2e28" letter-spacing="-1.8">
+    Trust<tspan fill="#00a085">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="9" font-weight="700" fill="#5a8a80" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

@@ -1,0 +1,95 @@
+<!-- OPTION D: City Skyline Shield — hyperlocal Bahraich focus -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="d1" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#1565e8"/>
+      <stop offset="50%" style="stop-color:#0d47a1"/>
+      <stop offset="100%" style="stop-color:#002971"/>
+    </linearGradient>
+    <linearGradient id="d2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#e3f2fd"/>
+    </linearGradient>
+    <linearGradient id="d3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffab00"/>
+      <stop offset="100%" style="stop-color:#ff6d00"/>
+    </linearGradient>
+    <linearGradient id="dsp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="50%" style="stop-color:#00b0ff"/>
+      <stop offset="100%" style="stop-color:#2979ff"/>
+    </linearGradient>
+    <filter id="d_sh"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#002971" flood-opacity="0.3"/></filter>
+    <filter id="d_cs"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#002288" flood-opacity="0.3"/></filter>
+    <filter id="d_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- City skyline shield -->
+  <g transform="translate(8,8)" filter="url(#d_sh)">
+    <!-- Shield body with city skyline cutout at bottom -->
+    <path d="M 18 3 L 58 3 Q 70 3 73 14 Q 82 42 73 65 L 73 58
+             L 73 65 L 62 65 L 62 52 L 58 52 L 58 60 L 50 60 L 50 45
+             L 46 45 L 46 55 L 38 55 L 38 40 L 34 40 L 34 52 L 26 52
+             L 26 58 L 18 58 L 18 70 Q 6 42 3 14 Q 6 3 18 3 Z"
+          fill="url(#d1)"/>
+
+    <!-- City buildings (white, inside shield bottom) -->
+    <!-- Building 1 -->
+    <rect x="19" y="48" width="5" height="10" rx="0.5" fill="#fff" fill-opacity="0.4"/>
+    <rect x="20" y="45" width="3" height="3" rx="0.3" fill="#ffab00" fill-opacity="0.7"/>
+
+    <!-- Building 2 (tallest) -->
+    <rect x="27" y="42" width="5" height="16" rx="0.5" fill="#fff" fill-opacity="0.35"/>
+    <rect x="28" y="38" width="3" height="4" rx="0.3" fill="#ff6d00" fill-opacity="0.8"/>
+    <!-- Windows -->
+    <rect x="28" y="44" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+    <rect x="30" y="44" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+    <rect x="28" y="47" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+    <rect x="30" y="47" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+
+    <!-- Building 3 -->
+    <rect x="35" y="46" width="5" height="12" rx="0.5" fill="#fff" fill-opacity="0.4"/>
+    <rect x="36" y="43" width="3" height="3" rx="0.3" fill="#ffab00" fill-opacity="0.7"/>
+    <rect x="36" y="49" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+    <rect x="38.5" y="49" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+
+    <!-- Building 4 -->
+    <rect x="43" y="44" width="5" height="14" rx="0.5" fill="#fff" fill-opacity="0.35"/>
+    <rect x="44" y="40" width="3" height="4" rx="0.3" fill="#ff6d00" fill-opacity="0.8"/>
+    <rect x="44" y="47" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+    <rect x="46.5" y="47" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+    <rect x="44" y="51" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+    <rect x="46.5" y="51" width="1.5" height="1.5" rx="0.2" fill="#fff" fill-opacity="0.6"/>
+
+    <!-- Building 5 -->
+    <rect x="51" y="48" width="5" height="10" rx="0.5" fill="#fff" fill-opacity="0.4"/>
+    <rect x="52" y="45" width="3" height="3" rx="0.3" fill="#ffab00" fill-opacity="0.7"/>
+
+    <!-- Building 6 (small) -->
+    <rect x="59" y="50" width="4" height="8" rx="0.5" fill="#fff" fill-opacity="0.3"/>
+
+    <!-- Shield inner highlight -->
+    <path d="M 16 10 Q 56 10 59 38" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.15" stroke-linecap="round"/>
+
+    <!-- Small checkmark overlay (subtle) -->
+    <g filter="url(#d_cs)" transform="translate(0,-4)">
+      <path d="M 18 30 L 28 40 L 48 18" fill="none" stroke="url(#d2)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+  </g>
+
+  <!-- Sparkle -->
+  <g transform="translate(80,3)" filter="url(#d_glow)">
+    <path d="M12 0C13.5 6,13.5 10,12 16C10.5 10,10.5 6,12 0Z" fill="url(#dsp)"/>
+    <path d="M12 0C5 1.5,1.5 5,0 12C5 10.5,9 10.5,16 12C9 10.5,5 10.5,0 12C1.5 5,5 1.5,12 0Z" fill="url(#dsp)" transform="rotate(45 12 12)"/>
+    <circle cx="12" cy="12" r="2" fill="#fff" fill-opacity="0.9"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <text x="100" y="80" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

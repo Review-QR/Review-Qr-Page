@@ -1,0 +1,90 @@
+<!-- OPTION R: Concentric Ripple — trust spreading outward like waves -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <linearGradient id="r1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#42a5f5"/>
+      <stop offset="50%" style="stop-color:#1565e8"/>
+      <stop offset="100%" style="stop-color:#0044cc"/>
+    </linearGradient>
+    <linearGradient id="r2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#64ffda"/>
+      <stop offset="100%" style="stop-color:#00a085"/>
+    </linearGradient>
+    <linearGradient id="r3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffab40"/>
+      <stop offset="100%" style="stop-color:#ff6d00"/>
+    </linearGradient>
+    <linearGradient id="rck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffffff"/>
+      <stop offset="100%" style="stop-color:#c8e0ff"/>
+    </linearGradient>
+    <linearGradient id="rsp" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00e5ff"/>
+      <stop offset="100%" style="stop-color:#2979ff"/>
+    </linearGradient>
+    <filter id="r_sh"><feDropShadow dx="0" dy="5" stdDeviation="7" flood-color="#003399" flood-opacity="0.2"/></filter>
+    <filter id="r_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Ripple rings (concentric, fading outward) -->
+  <g transform="translate(8,8)" opacity="0.06">
+    <circle cx="42" cy="42" r="44" fill="none" stroke="#1565e8" stroke-width="2"/>
+    <circle cx="42" cy="42" r="38" fill="none" stroke="#1565e8" stroke-width="1.5"/>
+    <circle cx="42" cy="42" r="32" fill="none" stroke="#1565e8" stroke-width="1"/>
+    <circle cx="42" cy="42" r="26" fill="none" stroke="#1565e8" stroke-width="0.8"/>
+  </g>
+
+  <!-- Central core (Trustit checkmark) -->
+  <g transform="translate(8,8)" filter="url(#r_sh)">
+    <circle cx="42" cy="42" r="30" fill="url(#r1)"/>
+    <!-- Inner glow ring -->
+    <circle cx="42" cy="42" r="24" fill="none" stroke="#fff" stroke-width="1.5" stroke-opacity="0.15"/>
+    <!-- Checkmark -->
+    <g filter="url(#r_glow)">
+      <path d="M 26 42 L 38 54 L 58 30" fill="none" stroke="url(#rck)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <!-- Highlight -->
+    <path d="M 28 41 L 35 48" fill="none" stroke="#fff" stroke-width="2.5" stroke-opacity="0.4" stroke-linecap="round"/>
+  </g>
+
+  <!-- Three colored ripple segments (showing who trust spreads to) -->
+  <!-- Blue arc segment (top-left, Merchant) -->
+  <g transform="translate(8,8)" filter="url(#r_glow)">
+    <circle cx="42" cy="42" r="40" fill="none" stroke="url(#r1)" stroke-width="3" stroke-opacity="0.3"
+            stroke-dasharray="30 160" stroke-linecap="round"/>
+    <!-- Dot at arc end -->
+    <circle cx="12" cy="30" r="4.5" fill="url(#r1)" fill-opacity="0.8"/>
+    <circle cx="12" cy="30" r="2" fill="#fff" fill-opacity="0.5"/>
+  </g>
+
+  <!-- Green arc segment (right, Customer) -->
+  <g transform="translate(8,8)" filter="url(#r_glow)">
+    <circle cx="42" cy="42" r="40" fill="none" stroke="url(#r2)" stroke-width="3" stroke-opacity="0.3"
+            stroke-dasharray="30 160" stroke-dashoffset="-55" stroke-linecap="round"/>
+    <circle cx="72" cy="48" r="4.5" fill="url(#r2)" fill-opacity="0.8"/>
+    <circle cx="72" cy="48" r="2" fill="#fff" fill-opacity="0.5"/>
+  </g>
+
+  <!-- Orange arc segment (bottom, Community) -->
+  <g transform="translate(8,8)" filter="url(#r_glow)">
+    <circle cx="42" cy="42" r="40" fill="none" stroke="url(#r3)" stroke-width="3" stroke-opacity="0.3"
+            stroke-dasharray="30 160" stroke-dashoffset="-110" stroke-linecap="round"/>
+    <circle cx="42" cy="76" r="4.5" fill="url(#r3)" fill-opacity="0.8"/>
+    <circle cx="42" cy="76" r="2" fill="#fff" fill-opacity="0.5"/>
+  </g>
+
+  <!-- Sparkle -->
+  <g transform="translate(80,4)">
+    <path d="M8 0C9 3.5,9 6,8 10C7 6.5,7 3.5,8 0Z" fill="url(#rsp)"/>
+    <path d="M8 0C3 1,0.5 3,0 8C3.5 6.5,6 6.5,11 8C6 6.5,3.5 6.5,0 8C0.5 3,3 1,8 0Z" fill="url(#rsp)" transform="rotate(45 8 8)"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>

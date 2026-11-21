@@ -1,0 +1,61 @@
+<!-- OPTION M: Venn Overlap — three circles overlapping, blend where they meet -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 460 160" width="460" height="160">
+  <defs>
+    <!-- Three brand colors -->
+    <linearGradient id="m_blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#5c9fff"/>
+      <stop offset="100%" style="stop-color:#1565e8"/>
+    </linearGradient>
+    <linearGradient id="m_green" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#64ffda"/>
+      <stop offset="100%" style="stop-color:#00a085"/>
+    </linearGradient>
+    <linearGradient id="m_orange" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ffcc02"/>
+      <stop offset="100%" style="stop-color:#ff8f00"/>
+    </linearGradient>
+    <filter id="m_sh"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#003399" flood-opacity="0.15"/></filter>
+    <filter id="m_glow"><feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="460" height="160" fill="#ffffff" rx="12"/>
+
+  <!-- Subtle background glow -->
+  <circle cx="46" cy="46" r="44" fill="#e3f2fd" fill-opacity="0.3"/>
+
+  <!-- Three overlapping circles (Venn diagram style) -->
+  <g transform="translate(8,8)" filter="url(#m_sh)">
+    <!-- Left circle (Merchant) - Blue -->
+    <circle cx="28" cy="36" r="24" fill="url(#m_blue)" fill-opacity="0.85"/>
+
+    <!-- Right circle (Customer) - Green -->
+    <circle cx="56" cy="36" r="24" fill="url(#m_green)" fill-opacity="0.85"/>
+
+    <!-- Bottom circle (Trust/Platform) - Orange -->
+    <circle cx="42" cy="52" r="24" fill="url(#m_orange)" fill-opacity="0.85"/>
+  </g>
+
+  <!-- Center where all three meet — white with checkmark (Trustit is the intersection) -->
+  <g transform="translate(8,8)" filter="url(#m_glow)">
+    <circle cx="42" cy="42" r="11" fill="#ffffff"/>
+    <path d="M 35 42 L 40 47 L 49 37" fill="none" stroke="#1565e8" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Small labels (tiny dots representing each stakeholder) -->
+  <circle cx="16" cy="22" r="3.5" fill="#1565e8" fill-opacity="0.7"/>
+  <circle cx="70" cy="22" r="3.5" fill="#00a085" fill-opacity="0.7"/>
+  <circle cx="42" cy="66" r="3.5" fill="#ff8f00" fill-opacity="0.7"/>
+
+  <!-- Connection sparkle -->
+  <g transform="translate(44,30)">
+    <path d="M6 0C7 3,7 5.5,6 8C5 5.5,5 3,6 0Z" fill="#ff8f00"/>
+    <path d="M6 0C2 1,0.5 3,0 6C2.5 5,5 5,8 6C5 5,2.5 5,0 6C0.5 3,2 1,6 0Z" fill="#ff8f00" transform="rotate(45 6 6)"/>
+  </g>
+
+  <!-- Brand Name -->
+  <text x="100" y="58" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="46" font-weight="800" fill="#0a1628" letter-spacing="-2">
+    Trust<tspan fill="#1565e8">it</tspan>
+  </text>
+  <text x="100" y="78" font-family="'Plus Jakarta Sans','Segoe UI',system-ui,sans-serif" font-size="8.5" font-weight="700" fill="#738198" letter-spacing="5">
+    REAL REVIEWS. REAL TRUST.
+  </text>
+</svg>
